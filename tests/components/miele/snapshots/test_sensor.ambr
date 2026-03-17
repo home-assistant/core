@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -95,8 +96,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -147,8 +149,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -199,8 +202,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -251,8 +255,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -373,8 +378,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -452,8 +458,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -515,8 +522,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -565,8 +573,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -615,8 +624,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -665,8 +675,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -715,8 +726,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -765,8 +777,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -815,8 +828,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -865,8 +879,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -917,8 +932,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -969,8 +985,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1063,8 +1080,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1157,8 +1175,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1256,8 +1275,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1355,8 +1375,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1454,8 +1475,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_2_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1553,8 +1575,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1652,8 +1675,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_3_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1751,8 +1775,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1850,8 +1875,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_4_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1949,8 +1975,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2048,8 +2075,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2142,8 +2170,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2194,8 +2223,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2244,8 +2274,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2294,8 +2325,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2344,8 +2376,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2394,8 +2427,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2444,8 +2478,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2494,8 +2529,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2544,8 +2580,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2596,8 +2633,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2648,8 +2686,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2742,8 +2781,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2836,8 +2876,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2893,8 +2934,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2950,8 +2992,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_zone_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3007,8 +3050,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3059,8 +3103,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3109,8 +3154,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3159,8 +3205,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3209,8 +3256,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3259,8 +3307,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3309,8 +3358,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3359,8 +3409,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3409,8 +3460,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3461,8 +3513,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3513,8 +3566,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3607,8 +3661,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3706,8 +3761,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3805,8 +3861,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3904,8 +3961,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4003,8 +4061,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4102,8 +4161,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4154,8 +4214,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4204,8 +4265,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4254,8 +4316,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4304,8 +4367,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4354,8 +4418,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4404,8 +4469,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4454,8 +4520,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4504,8 +4571,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4556,8 +4624,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4608,8 +4677,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4702,8 +4772,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4759,8 +4830,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4853,8 +4925,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4905,8 +4978,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4999,8 +5073,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_core_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5056,8 +5131,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5110,8 +5186,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5160,8 +5237,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6361,8 +6439,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6432,8 +6511,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6495,8 +6575,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6549,8 +6630,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6599,8 +6681,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6656,8 +6739,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6713,8 +6797,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6770,8 +6855,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6820,8 +6906,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6914,8 +7001,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.refrigerator_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6971,8 +7059,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7021,8 +7110,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7071,8 +7161,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7121,8 +7212,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7171,8 +7263,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7265,8 +7358,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7319,8 +7413,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7376,8 +7471,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7426,8 +7522,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7476,8 +7573,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7621,8 +7719,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7718,8 +7817,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7781,8 +7881,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7835,8 +7936,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7885,8 +7987,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7935,8 +8038,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7992,8 +8096,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8049,8 +8154,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8099,8 +8205,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8149,8 +8256,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8206,8 +8314,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8256,8 +8365,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8308,8 +8418,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8360,8 +8471,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8454,8 +8566,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8511,8 +8624,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8605,8 +8719,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8657,8 +8772,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8751,8 +8867,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_core_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8808,8 +8925,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8862,8 +8980,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8912,8 +9031,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -10113,8 +10233,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -10184,8 +10305,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -10247,8 +10369,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10301,8 +10424,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10351,8 +10475,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10408,8 +10533,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10465,8 +10591,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10522,8 +10649,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10572,8 +10700,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -10666,8 +10795,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.refrigerator_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10723,8 +10853,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10773,8 +10904,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10823,8 +10955,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10873,8 +11006,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10923,8 +11057,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11017,8 +11152,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11071,8 +11207,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11128,8 +11265,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11178,8 +11316,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11228,8 +11367,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11373,8 +11513,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11470,8 +11611,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11533,8 +11675,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11587,8 +11730,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_spin_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11637,8 +11781,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11687,8 +11832,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11744,8 +11890,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11801,8 +11948,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11851,8 +11999,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11901,8 +12050,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11958,8 +12108,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12008,8 +12159,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12060,8 +12212,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12112,8 +12265,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12164,8 +12318,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12214,8 +12369,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12264,8 +12420,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12358,8 +12515,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12409,8 +12567,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12463,8 +12622,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12513,8 +12673,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12578,8 +12739,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12641,8 +12803,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12695,8 +12858,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12745,8 +12909,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12795,8 +12960,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12845,8 +13011,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12895,8 +13062,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12945,8 +13113,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

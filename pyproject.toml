@@ -28,10 +28,6 @@ dependencies = [
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
   "aiogithubapi==26.0.0",
-  # Integrations may depend on hassio integration without listing it to
-  # change behavior based on presence of supervisor. Deprecated with #127228
-  # Lib can be removed with 2025.11
-  "aiohasupervisor==0.3.3",
   "aiohttp==3.13.3",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
@@ -48,7 +44,7 @@ dependencies = [
   "certifi>=2021.5.30",
   "ciso8601==2.3.3",
   "cronsim==2.7",
-  "fnv-hash-fast==1.6.0",
+  "fnv-hash-fast==2.0.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
   "hass-nabucasa==2.0.0",
@@ -64,8 +60,8 @@ dependencies = [
   "cryptography==46.0.5",
   "Pillow==12.1.1",
   "propcache==0.4.1",
-  "pyOpenSSL==25.3.0",
-  "orjson==3.11.5",
+  "pyOpenSSL==26.0.0",
+  "orjson==3.11.7",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
@@ -76,7 +72,7 @@ dependencies = [
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.15.0,<5.0",
-  "ulid-transform==1.5.2",
+  "ulid-transform==2.0.2",
   "urllib3>=2.0",
   "uv==0.10.6",
   "voluptuous==0.15.2",
