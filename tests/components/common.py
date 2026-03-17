@@ -44,8 +44,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_device_registry
 
-pytest.register_assert_rewrite("tests.common")
-
 
 async def target_entities(hass: HomeAssistant, domain: str) -> dict[str, list[str]]:
     """Create multiple entities associated with different targets.
