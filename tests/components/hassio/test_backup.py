@@ -625,7 +625,7 @@ async def test_agent_upload(
         """Mock upload that consumes the wrapped stream."""
         async for chunk in stream:
             received_bytes.extend(chunk)
-        return "test_slug"
+        return TEST_BACKUP_DETAILS.slug
 
     supervisor_client.backups.upload_backup.side_effect = mock_upload
 
