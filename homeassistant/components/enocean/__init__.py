@@ -3,7 +3,7 @@
 from enocean_async import Gateway
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -15,8 +15,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
-
-type EnOceanConfigEntry = ConfigEntry[Gateway]
+from .types import EnOceanConfigEntry, EnOceanConfigEntryData
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -59,7 +58,7 @@ async def async_setup_entry(
         gateway.stop()
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
-    config_entry.runtime_data = gateway
+    config_entry.runtime_data = EnOceanConfigEntryData(gateway=gateway)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
@@ -72,5 +71,5 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry: stop the gateway."""
 
-    config_entry.runtime_data.stop()
+    config_entry.runtime_data.gateway.stop()
     return True
