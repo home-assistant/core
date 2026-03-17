@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_all_entities[device_tracker.2021_honda_accord-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.2021_honda_accord',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lojack',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[device_tracker.2021_honda_accord-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '2021 Honda Accord',
+      'gps_accuracy': 10,
+      'latitude': 37.7749,
+      'longitude': -122.4194,
+      'source_type': <SourceType.GPS: 'gps'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.2021_honda_accord',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---

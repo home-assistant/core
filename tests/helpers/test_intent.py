@@ -705,9 +705,7 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
     hass.services.async_register("light", "turn_on", mock_service)
 
     # Create intent handler with a service timeout of 0.05 seconds
-    handler = intent.ServiceIntentHandler(
-        "TestType", "light", "turn_on", "Turned {} on"
-    )
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
     handler.service_timeout = 0.05
     intent.async_register(hass, handler)
 
@@ -729,9 +727,7 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
 
 async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
     """Test that we throw an appropriate errors with invalid area/floor names."""
-    handler = intent.ServiceIntentHandler(
-        "TestType", "light", "turn_on", "Turned {} on"
-    )
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
     intent.async_register(hass, handler)
 
     # Need a light to avoid domain error
@@ -766,7 +762,6 @@ async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> N
         "TestType",
         "homeassistant",
         "turn_on",
-        "Turned {} on",
         required_domains={"light"},
     )
     intent.async_register(hass, handler)
@@ -806,7 +801,6 @@ async def test_service_handler_empty_strings(hass: HomeAssistant) -> None:
         "TestType",
         "light",
         "turn_on",
-        "Turned {} on",
     )
     intent.async_register(hass, handler)
 
@@ -832,9 +826,7 @@ async def test_service_handler_empty_strings(hass: HomeAssistant) -> None:
 
 async def test_service_handler_no_filter(hass: HomeAssistant) -> None:
     """Test that targeting all devices in the house fails."""
-    handler = intent.ServiceIntentHandler(
-        "TestType", "light", "turn_on", "Turned {} on"
-    )
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
     intent.async_register(hass, handler)
 
     with pytest.raises(intent.IntentHandleError):
@@ -866,7 +858,6 @@ async def test_service_handler_device_classes(
         "TestType",
         "switch",
         "turn_on",
-        "Turned {} on",
         device_classes={switch.SwitchDeviceClass},
     )
     intent.async_register(hass, handler)

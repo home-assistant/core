@@ -14,7 +14,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.climate.trigger import CONF_HVAC_MODE
 from homeassistant.const import (
-    ATTR_LABEL_ID,
     ATTR_TEMPERATURE,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
@@ -26,6 +25,7 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_gated_by_labs_flag,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -37,9 +37,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_climates(hass: HomeAssistant) -> list[str]:
+async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple climate entities associated with different targets."""
-    return (await target_entities(hass, "climate"))["included"]
+    return await target_entities(hass, "climate")
 
 
 @pytest.mark.parametrize(
@@ -59,13 +59,7 @@ async def test_climate_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the climate triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -162,7 +156,7 @@ async def test_climate_trigger_validation(
 async def test_climate_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -171,10 +165,10 @@ async def test_climate_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -239,7 +233,7 @@ async def test_climate_state_trigger_behavior_any(
 async def test_climate_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -248,10 +242,10 @@ async def test_climate_state_attribute_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -312,7 +306,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
 async def test_climate_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entities_in_target: int,
     entity_id: str,
@@ -321,10 +315,10 @@ async def test_climate_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -384,7 +378,7 @@ async def test_climate_state_trigger_behavior_first(
 async def test_climate_state_attribute_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -393,10 +387,10 @@ async def test_climate_state_attribute_trigger_behavior_first(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when the first climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -458,7 +452,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
 async def test_climate_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entities_in_target: int,
     entity_id: str,
@@ -467,10 +461,10 @@ async def test_climate_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -529,7 +523,7 @@ async def test_climate_state_trigger_behavior_last(
 async def test_climate_state_attribute_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -538,10 +532,10 @@ async def test_climate_state_attribute_trigger_behavior_last(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when the last climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
