@@ -578,20 +578,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         target_device = self._get_command_target_device("play_media")
 
         if media_source.is_media_source_id(media_id):
-            if not target_device.supports_http_api:
-                raise ServiceValidationError(
-                    "Media sources are not supported on this device"
-                )
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_id = play_item.url
-
-            url = async_process_play_media_url(self.hass, media_id)
-            LOGGER.debug("HTTP media_type for play_media: %s", url)
-            await target_device.play_url(url)
-            self._attr_state = MediaPlayerState.PLAYING
-        elif media_type in {MediaType.MUSIC, MEDIA_TYPE_WIIM_LIBRARY}:
+            await self._async_play_url(target_device, play_item.url)
+        elif media_type == MEDIA_TYPE_WIIM_LIBRARY:
             if not media_id.isdigit():
                 raise ServiceValidationError(f"Invalid preset ID: {media_id}")
 
@@ -600,6 +591,17 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_content_id = f"wiim_preset_{preset_number}"
             self._attr_media_content_type = MediaType.PLAYLIST
             self._attr_state = MediaPlayerState.PLAYING
+        elif media_type == MediaType.MUSIC:
+            if media_id.isdigit():
+                preset_number = int(media_id)
+                await target_device.play_preset(preset_number)
+                self._attr_media_content_id = f"wiim_preset_{preset_number}"
+                self._attr_media_content_type = MediaType.PLAYLIST
+                self._attr_state = MediaPlayerState.PLAYING
+            else:
+                await self._async_play_url(target_device, media_id)
+        elif media_type == MediaType.URL:
+            await self._async_play_url(target_device, media_id)
         elif media_type == MediaType.TRACK:
             if not media_id.isdigit():
                 raise ServiceValidationError(
@@ -614,28 +616,41 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         else:
             raise ServiceValidationError(f"Unsupported media type: {media_type}")
 
+    async def _async_play_url(self, target_device: WiimDevice, media_id: str) -> None:
+        """Play a direct media URL on the target device."""
+        if not target_device.supports_http_api:
+            raise ServiceValidationError(
+                "Direct URL playback is not supported on this device"
+            )
+
+        url = async_process_play_media_url(self.hass, media_id)
+        LOGGER.debug("HTTP media_type for play_media: %s", url)
+        await target_device.play_url(url)
+        self._attr_state = MediaPlayerState.PLAYING
+
     @media_player_exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        await self._device.async_set_loop_mode(
-            self._device.build_loop_mode(WiimRepeatMode(repeat), self._attr_shuffle)
+        target_device = self._get_command_target_device("repeat_set")
+        await target_device.async_set_loop_mode(
+            target_device.build_loop_mode(WiimRepeatMode(repeat), self._attr_shuffle)
         )
 
     @media_player_exception_wrap
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         repeat = self._attr_repeat or WiimRepeatMode.OFF
-        await self._device.async_set_loop_mode(
-            self._device.build_loop_mode(
-                WiimRepeatMode(repeat),
-                shuffle,
-            )
+        target_device = self._get_command_target_device("shuffle_set")
+        await target_device.async_set_loop_mode(
+            target_device.build_loop_mode(WiimRepeatMode(repeat), shuffle)
         )
 
     @media_player_exception_wrap
     async def async_select_source(self, source: str) -> None:
         """Select input mode."""
-        await self._device.async_set_play_mode(source)
+        await self._get_command_target_device("select_source").async_set_play_mode(
+            source
+        )
 
     async def async_browse_media(
         self,
