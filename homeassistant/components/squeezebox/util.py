@@ -11,7 +11,7 @@ from .const import DOMAIN
 
 
 async def safe_library_call(
-    method: Callable[..., Awaitable[Any] | Any],
+    method: Callable[..., Any],
     *args: Any,
     translation_key: str,
     translation_placeholders: dict[str, Any] | None = None,
