@@ -11,7 +11,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.EVENT, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.EVENT,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) -> bool:

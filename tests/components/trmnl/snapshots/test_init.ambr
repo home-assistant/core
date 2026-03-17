@@ -16,6 +16,10 @@
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
+      tuple(
+        'trmnl',
+        '42793',
+      ),
     }),
     'labels': set({
     }),
