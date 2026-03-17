@@ -9,8 +9,11 @@ from typing import Any
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature, ValveState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
+
+from . import DOMAIN
 
 OPEN_CLOSE_DELAY = 2  # Used to give a realistic open/close experience in frontend
 
@@ -47,6 +50,10 @@ class DemoValve(ValveEntity):
         """Initialize the valve."""
         self._attr_unique_id = unique_id
         self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+        )
         if moveable:
             self._attr_supported_features = (
                 ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
