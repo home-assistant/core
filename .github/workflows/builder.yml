@@ -192,7 +192,7 @@ jobs:
           name: build-context
 
       - name: Build base image
-        uses: home-assistant/builder/actions/build-image@gha-builder # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -269,7 +269,7 @@ jobs:
           fi
 
       - name: Build machine image
-        uses: home-assistant/builder/actions/build-image@gha-builder # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
         with:
           arch: ${{ matrix.arch }}
           build-args: |
