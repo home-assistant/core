@@ -37,13 +37,13 @@ class GatewayDeviceCoordinator(DataUpdateCoordinator[None]):
             config_entry=entry,
             update_interval=UPDATE_INTERVAL,
         )
-        self._sub_device = sub_device
+        self.sub_device = sub_device
 
     async def _async_update_data(self) -> None:
         """Fetch data from the subdevice."""
         try:
-            await self.hass.async_add_executor_job(self._sub_device.update)
+            await self.hass.async_add_executor_job(self.sub_device.update)
         except GatewayException as ex:
             raise UpdateFailed(
-                f"Error fetching data from subdevice {self._sub_device.sid}: {ex}"
+                f"Error fetching data from subdevice {self.sub_device.sid}: {ex}"
             ) from ex
