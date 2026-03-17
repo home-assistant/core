@@ -240,7 +240,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
-    _update_listeners: list[Callable[[list[JsonValueType] | None], None]] | None = None
+    _update_listeners: list[Callable[[list[JsonValueType]], None]] | None = None
 
     @property
     def state(self) -> int | None:
@@ -281,8 +281,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @callback
     def async_subscribe_updates(
-        self,
-        listener: Callable[[list[JsonValueType] | None], None],
+        self, listener: Callable[[list[JsonValueType]], None]
     ) -> CALLBACK_TYPE:
         """Subscribe to To-do list item updates.
 
@@ -341,7 +340,7 @@ async def websocket_handle_subscribe_todo_items(
         return
 
     @callback
-    def todo_item_listener(todo_items: list[JsonValueType] | None) -> None:
+    def todo_item_listener(todo_items: list[JsonValueType]) -> None:
         """Push updated To-do list items to websocket."""
         connection.send_message(
             websocket_api.event_message(
