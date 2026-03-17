@@ -8,7 +8,7 @@ from homeassistant.components.siren import DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,

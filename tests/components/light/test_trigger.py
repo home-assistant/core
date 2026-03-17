@@ -20,7 +20,7 @@ from homeassistant.helpers.trigger import (
     ThresholdType,
 )
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,

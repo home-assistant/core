@@ -100,6 +100,8 @@ if TYPE_CHECKING:
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
 
+pytest.register_assert_rewrite("tests.components.common")
+
 # Regex for accessing the integration name from the test path
 RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
 

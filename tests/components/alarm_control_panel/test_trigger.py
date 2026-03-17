@@ -11,7 +11,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,
