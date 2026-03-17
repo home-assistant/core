@@ -12,9 +12,8 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .coordinator import NetgearConfigEntry
+from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -42,10 +41,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button for Netgear component."""
-    router = entry.runtime_data.router
-    coordinator = entry.runtime_data.coordinator
+    coordinator_tracker = entry.runtime_data.coordinator_tracker
     async_add_entities(
-        NetgearRouterButtonEntity(coordinator, router, entity_description)
+        NetgearRouterButtonEntity(coordinator_tracker, entity_description)
         for entity_description in BUTTONS
     )
 
@@ -57,14 +55,15 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[bool],
-        router: NetgearRouter,
+        coordinator: NetgearTrackerCoordinator,
         entity_description: NetgearButtonEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router)
+        super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.router.serial_number}-{entity_description.key}"
+        )
 
     async def async_press(self) -> None:
         """Triggers the button press service."""

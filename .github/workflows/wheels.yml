@@ -74,7 +74,7 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: env_file
           path: ./.env_file
@@ -82,7 +82,7 @@ jobs:
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -94,7 +94,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -142,7 +142,7 @@ jobs:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
+          wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
           env-file: true
           apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
@@ -200,7 +200,7 @@ jobs:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
+          wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl

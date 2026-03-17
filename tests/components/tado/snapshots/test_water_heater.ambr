@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[water_heater.second_water_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_temp': 31.0,
@@ -71,8 +72,9 @@
 # ---
 # name: test_entities[water_heater.water_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_temp': 31.0,

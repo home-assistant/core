@@ -7,7 +7,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.components import (
+from tests.components.common import (
     ConditionStateDescription,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
