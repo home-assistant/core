@@ -418,6 +418,78 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
     assert state.attributes[ATTR_MEDIA_POSITION] == 90
 
 
+async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
+    hass: HomeAssistant,
+    mock_wiim_device,
+    mock_wiim_controller: MagicMock,
+    init_wiim_media_player,
+) -> None:
+    """Test follower repeat, shuffle, and source changes are sent to the leader."""
+    leader_device = type(mock_wiim_device)(
+        udn="uuid:leader-1234",
+        name="Leader WiiM Device",
+    )
+    leader_device.loop_state = WiimLoopState(
+        repeat=WiimRepeatMode.OFF,
+        shuffle=False,
+    )
+    leader_device.play_mode = "Network"
+    leader_device.async_get_transport_capabilities = AsyncMock(
+        return_value=WiimTransportCapabilities(
+            can_next=True,
+            can_previous=True,
+            can_repeat=True,
+            can_shuffle=True,
+        )
+    )
+
+    mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
+        role=WiimGroupRole.FOLLOWER,
+        leader_udn=leader_device.udn,
+        member_udns=(leader_device.udn, mock_wiim_device.udn),
+    )
+    mock_wiim_controller.get_device.side_effect = lambda udn: (
+        leader_device if udn == leader_device.udn else mock_wiim_device
+    )
+
+    await mock_wiim_device.fire_general_update(hass)
+
+    repeat_loop_mode = object()
+    leader_device.build_loop_mode.return_value = repeat_loop_mode
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        blocking=True,
+    )
+    leader_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.ALL, False)
+    leader_device.async_set_loop_mode.assert_awaited_once_with(repeat_loop_mode)
+    mock_wiim_device.async_set_loop_mode.assert_not_awaited()
+
+    leader_device.build_loop_mode.reset_mock()
+    leader_device.async_set_loop_mode.reset_mock()
+    shuffle_loop_mode = object()
+    leader_device.build_loop_mode.return_value = shuffle_loop_mode
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SHUFFLE_SET,
+        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
+        blocking=True,
+    )
+    leader_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.OFF, True)
+    leader_device.async_set_loop_mode.assert_awaited_once_with(shuffle_loop_mode)
+    mock_wiim_device.async_set_loop_mode.assert_not_awaited()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_INPUT_SOURCE: "Bluetooth"},
+        blocking=True,
+    )
+    leader_device.async_set_play_mode.assert_awaited_once_with("Bluetooth")
+    mock_wiim_device.async_set_play_mode.assert_not_awaited()
+
+
 async def test_play_media_services_call_device_commands(
     hass: HomeAssistant,
     mock_wiim_device,
@@ -454,6 +526,35 @@ async def test_play_media_services_call_device_commands(
         blocking=True,
     )
     mock_wiim_device.async_play_queue_with_index.assert_awaited_once_with(2)
+
+
+@pytest.mark.parametrize("media_type", [MediaType.MUSIC, MediaType.URL])
+async def test_play_media_url_service_uses_processed_url(
+    hass: HomeAssistant,
+    mock_wiim_device,
+    init_wiim_media_player,
+    media_type: MediaType,
+) -> None:
+    """Test direct URL playback goes through the URL processor."""
+    mock_wiim_device.supports_http_api = True
+
+    with patch(
+        "homeassistant.components.wiim.media_player.async_process_play_media_url",
+        return_value="http://processed/song.mp3",
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: WIIM_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_type,
+                ATTR_MEDIA_CONTENT_ID: "http://example.com/song.mp3",
+            },
+            blocking=True,
+        )
+
+    mock_wiim_device.play_url.assert_awaited_once_with("http://processed/song.mp3")
+    mock_wiim_device.play_preset.assert_not_awaited()
 
 
 async def test_play_media_source_service_uses_resolved_url(
