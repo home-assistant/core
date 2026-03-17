@@ -84,6 +84,10 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import from YAML."""
         errors: dict[str, str] = {}
 
+        # Abort if an entry with the same host already exists, to avoid duplicates
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+        # Validate the user input allows us to connect
         try:
             unique_id = await _async_validate_input(self.hass, user_input)
         except CannotConnect:

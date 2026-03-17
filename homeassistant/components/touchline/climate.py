@@ -16,8 +16,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -82,16 +83,44 @@ async def async_setup_platform(
     Touchline now uses config entries. If an entry exists in configuration.yaml,
     the import flow will attempt to import it and create a config entry.
     """
-    _LOGGER.warning(
-        "Loading touchline via platform config is deprecated; the configuration"
-        " has been migrated to a config entry and can be safely removed"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
     )
-    if not hass.config_entries.async_entries(DOMAIN):
-        await hass.config_entries.flow.async_init(
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
             DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.9.0",
+            is_fixable=False,
+            is_persistent=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Touchline",
+            },
         )
+        return
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.9.0",
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "Touchline"},
+    )
 
 
 class Touchline(ClimateEntity):
