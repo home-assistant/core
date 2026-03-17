@@ -76,7 +76,7 @@ def create_mock_account(
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=Account)
     account.connect = AsyncMock()
-    account.refresh_robots = AsyncMock()
+    account.load_robots = AsyncMock()
     account.user_id = ACCOUNT_USER_ID
     account.robots = (
         []

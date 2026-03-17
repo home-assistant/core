@@ -8,8 +8,8 @@ from typing import Any
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
 from tuya_device_handlers.device_wrapper.event import (
-    Base64Utf8RawWrapper,
-    Base64Utf8StringWrapper,
+    Base64Utf8RawEventWrapper,
+    Base64Utf8StringEventWrapper,
     SimpleEventEnumWrapper,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -44,13 +44,13 @@ EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
             key=DPCode.ALARM_MESSAGE,
             device_class=EventDeviceClass.DOORBELL,
             translation_key="doorbell_message",
-            wrapper_class=Base64Utf8StringWrapper,
+            wrapper_class=Base64Utf8StringEventWrapper,
         ),
         TuyaEventEntityDescription(
             key=DPCode.DOORBELL_PIC,
             device_class=EventDeviceClass.DOORBELL,
             translation_key="doorbell_picture",
-            wrapper_class=Base64Utf8RawWrapper,
+            wrapper_class=Base64Utf8RawEventWrapper,
         ),
     ),
     DeviceCategory.WXKG: (

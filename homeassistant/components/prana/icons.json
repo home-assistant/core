@@ -8,6 +8,20 @@
         "default": "mdi:arrow-expand-left"
       }
     },
+    "sensor": {
+      "inside_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "inside_temperature_2": {
+        "default": "mdi:home-thermometer"
+      },
+      "outside_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "outside_temperature_2": {
+        "default": "mdi:thermometer"
+      }
+    },
     "switch": {
       "auto": {
         "default": "mdi:fan-auto"

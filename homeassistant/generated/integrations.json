@@ -3828,6 +3828,12 @@
         }
       }
     },
+    "lojack": {
+      "name": "LoJack",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "london_air": {
       "name": "London Air",
       "integration_type": "hub",
@@ -5008,7 +5014,7 @@
     },
     "orvibo": {
       "name": "Orvibo",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
