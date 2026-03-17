@@ -214,6 +214,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "test.indoortemp",
@@ -292,6 +293,7 @@ async def test_sensor_changed(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
@@ -330,6 +332,7 @@ async def test_unavailable_sensor_recovery(hass: HomeAssistant, new_state: str) 
     )
     await hass.async_block_till_done()
     await hass.async_start()
+    await hass.async_block_till_done()
 
     # Initial state should be valid
     moldind = hass.states.get("sensor.mold_indicator")
@@ -378,6 +381,7 @@ async def test_all_sensors_unavailable_recovery(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     await hass.async_start()
+    await hass.async_block_till_done()
 
     # Initial state should be valid
     moldind = hass.states.get("sensor.mold_indicator")
