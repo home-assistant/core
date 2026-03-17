@@ -15,7 +15,7 @@ from . import init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "sensor.test_door"
+ENTITY_ID = "sensor.test_door_battery"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
