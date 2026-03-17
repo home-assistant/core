@@ -63,6 +63,7 @@ BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
+SERVICE_START_SELECTED_PROGRAM = "start_selected_program"
 
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"

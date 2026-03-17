@@ -1,7 +1,7 @@
 {
   "domain": "proxmoxve",
   "name": "Proxmox VE",
-  "codeowners": ["@jhollowe", "@Corbeno", "@erwindouna"],
+  "codeowners": ["@Corbeno", "@erwindouna", "@CoMPaTech"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/proxmoxve",
   "integration_type": "service",

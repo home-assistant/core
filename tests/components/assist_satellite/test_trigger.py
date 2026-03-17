@@ -5,12 +5,13 @@ from typing import Any
 import pytest
 
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_gated_by_labs_flag,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -20,9 +21,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_assist_satellites(hass: HomeAssistant) -> list[str]:
+async def target_assist_satellites(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple assist satellite entities associated with different targets."""
-    return (await target_entities(hass, "assist_satellite"))["included"]
+    return await target_entities(hass, "assist_satellite")
 
 
 @pytest.mark.parametrize(
@@ -38,13 +39,7 @@ async def test_assist_satellite_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the Assist satellite triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -80,7 +75,7 @@ async def test_assist_satellite_triggers_gated_by_labs_flag(
 async def test_assist_satellite_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_assist_satellites: list[str],
+    target_assist_satellites: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -89,10 +84,10 @@ async def test_assist_satellite_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    for eid in target_assist_satellites["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -148,7 +143,7 @@ async def test_assist_satellite_state_trigger_behavior_any(
 async def test_assist_satellite_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_assist_satellites: list[str],
+    target_assist_satellites: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -157,10 +152,10 @@ async def test_assist_satellite_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when the first assist satellite changes to a specific state."""
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    for eid in target_assist_satellites["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -215,7 +210,7 @@ async def test_assist_satellite_state_trigger_behavior_first(
 async def test_assist_satellite_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_assist_satellites: list[str],
+    target_assist_satellites: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -224,10 +219,10 @@ async def test_assist_satellite_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the assist_satellite state trigger fires when the last assist_satellite changes to a specific state."""
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    for eid in target_assist_satellites["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

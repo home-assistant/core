@@ -87,6 +87,9 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     _current_position_value: ZwaveValue | None = None
     _target_position_value: ZwaveValue | None = None
     _stop_position_value: ZwaveValue | None = None
+    # Keep track of the target position for legacy devices
+    # that don't include the targetValue in their reports.
+    _commanded_target_position: int | None = None
 
     def _set_position_values(
         self,
@@ -153,12 +156,19 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         if not self._attr_is_opening and not self._attr_is_closing:
             return
 
-        if (
-            (current := self._current_position_value) is not None
-            and (target := self._target_position_value) is not None
-            and current.value is not None
-            and current.value == target.value
-        ):
+        if (current := self._current_position_value) is None or current.value is None:
+            return
+
+        # Prefer the Z-Wave targetValue property when the device reports it.
+        # Legacy multilevel switches only report currentValue, so fall back to
+        # the target position we commanded when targetValue is not available.
+        target_val = (
+            t.value
+            if (t := self._target_position_value) is not None and t.value is not None
+            else self._commanded_target_position
+        )
+
+        if target_val is not None and current.value == target_val:
             self._attr_is_opening = False
             self._attr_is_closing = False
 
@@ -202,6 +212,8 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             self._attr_is_closing = True
         else:
             return
+
+        self._commanded_target_position = target_position
 
         self.async_write_ha_state()
 
