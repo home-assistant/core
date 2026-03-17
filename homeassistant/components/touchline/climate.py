@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, NamedTuple
 
 from pytouchline_extended import PyTouchline
@@ -13,11 +14,19 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PresetMode(NamedTuple):
@@ -44,22 +53,45 @@ TOUCHLINE_HA_PRESETS = {
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Touchline devices."""
-
-    host = config[CONF_HOST]
+    """Set up Touchline devices from a config entry."""
+    host = entry.data[CONF_HOST]
     py_touchline = PyTouchline(url=host)
-    number_of_devices = int(py_touchline.get_number_of_devices())
+    number_of_devices = int(
+        await hass.async_add_executor_job(py_touchline.get_number_of_devices)
+    )
     devices = [
         Touchline(PyTouchline(id=device_id, url=host))
         for device_id in range(number_of_devices)
     ]
-    add_entities(devices, True)
+    async_add_entities(devices, True)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Touchline devices from YAML.
+
+    Touchline now uses config entries. If an entry exists in configuration.yaml,
+    the import flow will attempt to import it and create a config entry.
+    """
+    _LOGGER.warning(
+        "Loading touchline via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
+    )
+    if not hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
 
 
 class Touchline(ClimateEntity):
@@ -79,11 +111,17 @@ class Touchline(ClimateEntity):
         self._attr_name = None
         self._current_operation_mode = None
         self._attr_preset_mode = None
+        self._device_id = None
+        self._controller_id = None
+        self._attr_unique_id = None
 
     def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
         self._attr_name = self.unit.get_name()
+        self._device_id = self.unit.get_device_id()
+        self._controller_id = self.unit.get_controller_id()
+        self._attr_unique_id = f"{self._device_id}_{self._controller_id}"
         self._attr_current_temperature = self.unit.get_current_temperature()
         self._attr_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
