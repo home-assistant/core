@@ -9,10 +9,21 @@ import logging
 import os
 import re
 import struct
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
+from aiohasupervisor.models import (
+    GreenOptions,
+    HomeAssistantInfo,
+    HostInfo,
+    InstalledAddon,
+    NetworkInfo,
+    OSInfo,
+    RootInfo,
+    StoreInfo,
+    SupervisorInfo,
+    YellowOptions,
+)
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -65,7 +76,7 @@ from . import (  # noqa: F401
     system_health,
     update,
 )
-from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
+from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .config import HassioConfig
@@ -82,7 +93,9 @@ from .const import (
     ATTR_INPUT,
     ATTR_LOCATION,
     ATTR_PASSWORD,
+    ATTR_REPOSITORIES,
     ATTR_SLUG,
+    DATA_ADDONS_LIST,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
     DATA_CORE_INFO,
@@ -100,18 +113,21 @@ from .const import (
 from .coordinator import (
     HassioDataUpdateCoordinator,
     get_addons_info,
-    get_addons_stats,  # noqa: F401
-    get_core_info,  # noqa: F401
-    get_core_stats,  # noqa: F401
-    get_host_info,  # noqa: F401
+    get_addons_list,
+    get_addons_stats,
+    get_core_info,
+    get_core_stats,
+    get_host_info,
     get_info,
-    get_issues_info,  # noqa: F401
+    get_issues_info,
+    get_network_info,
     get_os_info,
-    get_supervisor_info,  # noqa: F401
-    get_supervisor_stats,  # noqa: F401
+    get_store,
+    get_supervisor_info,
+    get_supervisor_stats,
 )
 from .discovery import async_setup_discovery_view
-from .handler import (  # noqa: F401
+from .handler import (
     HassIO,
     HassioAPIError,
     async_update_diagnostics,
@@ -121,6 +137,35 @@ from .http import HassIOView
 from .ingress import async_setup_ingress_view
 from .issues import SupervisorIssues
 from .websocket_api import async_load_websocket_api
+
+# Expose the future safe name now so integrations can use it
+# All references to addons will eventually be refactored and deprecated
+get_apps_list = get_addons_list
+__all__ = [
+    "AddonError",
+    "AddonInfo",
+    "AddonManager",
+    "AddonState",
+    "GreenOptions",
+    "SupervisorError",
+    "YellowOptions",
+    "async_update_diagnostics",
+    "get_addons_info",
+    "get_addons_list",
+    "get_addons_stats",
+    "get_apps_list",
+    "get_core_info",
+    "get_core_stats",
+    "get_host_info",
+    "get_info",
+    "get_issues_info",
+    "get_network_info",
+    "get_os_info",
+    "get_store",
+    "get_supervisor_client",
+    "get_supervisor_info",
+    "get_supervisor_stats",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -504,27 +549,55 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         try:
             (
-                hass.data[DATA_INFO],
-                hass.data[DATA_HOST_INFO],
+                root_info,
+                host_info,
                 store_info,
-                hass.data[DATA_CORE_INFO],
-                hass.data[DATA_SUPERVISOR_INFO],
-                hass.data[DATA_OS_INFO],
-                hass.data[DATA_NETWORK_INFO],
-            ) = await asyncio.gather(
-                create_eager_task(hassio.get_info()),
-                create_eager_task(hassio.get_host_info()),
-                create_eager_task(supervisor_client.store.info()),
-                create_eager_task(hassio.get_core_info()),
-                create_eager_task(hassio.get_supervisor_info()),
-                create_eager_task(hassio.get_os_info()),
-                create_eager_task(hassio.get_network_info()),
+                homeassistant_info,
+                supervisor_info,
+                os_info,
+                network_info,
+                addons_list,
+            ) = cast(
+                tuple[
+                    RootInfo,
+                    HostInfo,
+                    StoreInfo,
+                    HomeAssistantInfo,
+                    SupervisorInfo,
+                    OSInfo,
+                    NetworkInfo,
+                    list[InstalledAddon],
+                ],
+                await asyncio.gather(
+                    create_eager_task(supervisor_client.info()),
+                    create_eager_task(supervisor_client.host.info()),
+                    create_eager_task(supervisor_client.store.info()),
+                    create_eager_task(supervisor_client.homeassistant.info()),
+                    create_eager_task(supervisor_client.supervisor.info()),
+                    create_eager_task(supervisor_client.os.info()),
+                    create_eager_task(supervisor_client.network.info()),
+                    create_eager_task(supervisor_client.addons.list()),
+                ),
             )
 
-        except HassioAPIError as err:
+        except SupervisorError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
         else:
+            hass.data[DATA_INFO] = root_info.to_dict()
+            hass.data[DATA_HOST_INFO] = host_info.to_dict()
             hass.data[DATA_STORE] = store_info.to_dict()
+            hass.data[DATA_CORE_INFO] = homeassistant_info.to_dict()
+            hass.data[DATA_SUPERVISOR_INFO] = supervisor_info.to_dict()
+            hass.data[DATA_OS_INFO] = os_info.to_dict()
+            hass.data[DATA_NETWORK_INFO] = network_info.to_dict()
+            hass.data[DATA_ADDONS_LIST] = [addon.to_dict() for addon in addons_list]
+
+            # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
+            # Can drop this after removal period
+            hass.data[DATA_SUPERVISOR_INFO]["repositories"] = hass.data[DATA_STORE][
+                ATTR_REPOSITORIES
+            ]
+            hass.data[DATA_SUPERVISOR_INFO]["addons"] = hass.data[DATA_ADDONS_LIST]
 
         async_call_later(
             hass,

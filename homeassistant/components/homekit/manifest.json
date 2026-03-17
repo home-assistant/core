@@ -10,7 +10,8 @@
   "loggers": ["pyhap"],
   "requirements": [
     "HAP-python==5.0.0",
-    "fnv-hash-fast==1.6.0",
+    "fnv-hash-fast==2.0.0",
+    "homekit-audio-proxy==1.2.1",
     "PyQRCode==1.2.1",
     "base36==0.1.1"
   ],

@@ -89,18 +89,18 @@
     "step": {
       "advanced": {
         "data": {
-          "api_key": "API Token",
+          "api_key": "API token",
           "api_user": "User ID",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "api_key": "API Token of the Habitica account",
+          "api_key": "API token of the Habitica account",
           "api_user": "User ID of your Habitica account",
           "url": "URL of the Habitica installation to connect to. Defaults to `{default_url}`",
           "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to a Habitica instance using a self-signed certificate"
         },
-        "description": "You can retrieve your `User ID` and `API Token` from [**Settings -> Site Data**]({site_data}) on Habitica or the instance you want to connect to",
+        "description": "You can retrieve your 'User ID' and 'API token' from [**Settings -> Site Data**]({site_data}) on Habitica or the instance you want to connect to",
         "title": "[%key:component::habitica::config::step::user::menu_options::advanced%]"
       },
       "login": {
@@ -126,7 +126,7 @@
               "api_key": "[%key:component::habitica::config::step::advanced::data_description::api_key%]"
             },
             "description": "Enter your new API token below. You can find it in Habitica under 'Settings -> Site Data'",
-            "name": "Re-authorize via API Token"
+            "name": "Re-authorize via API token"
           },
           "reauth_login": {
             "data": {

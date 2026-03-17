@@ -621,6 +621,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "MOTION_*",
     },
     {
+        "connectable": True,
+        "domain": "opendisplay",
+        "manufacturer_id": 9286,
+    },
+    {
         "domain": "oralb",
         "manufacturer_id": 220,
     },
