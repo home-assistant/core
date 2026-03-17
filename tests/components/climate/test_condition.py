@@ -25,9 +25,9 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_climates(hass: HomeAssistant) -> list[str]:
+async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple climate entities associated with different targets."""
-    return (await target_entities(hass, "climate"))["included"]
+    return await target_entities(hass, "climate")
 
 
 @pytest.mark.parametrize(
@@ -76,7 +76,7 @@ async def test_climate_conditions_gated_by_labs_flag(
 )
 async def test_climate_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -85,10 +85,10 @@ async def test_climate_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the climate state condition with the 'any' behavior."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -141,7 +141,7 @@ async def test_climate_state_condition_behavior_any(
 )
 async def test_climate_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -150,10 +150,10 @@ async def test_climate_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the climate state condition with the 'all' behavior."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -205,7 +205,7 @@ async def test_climate_state_condition_behavior_all(
 )
 async def test_climate_attribute_condition_behavior_any(
     hass: HomeAssistant,
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -214,10 +214,10 @@ async def test_climate_attribute_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the climate attribute condition with the 'any' behavior."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -268,7 +268,7 @@ async def test_climate_attribute_condition_behavior_any(
 )
 async def test_climate_attribute_condition_behavior_all(
     hass: HomeAssistant,
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -277,10 +277,10 @@ async def test_climate_attribute_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the climate attribute condition with the 'all' behavior."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

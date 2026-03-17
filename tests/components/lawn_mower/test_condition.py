@@ -21,9 +21,9 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_lawn_mowers(hass: HomeAssistant) -> list[str]:
+async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple lawn mower entities associated with different targets."""
-    return (await target_entities(hass, "lawn_mower"))["included"]
+    return await target_entities(hass, "lawn_mower")
 
 
 @pytest.mark.parametrize(
@@ -80,7 +80,7 @@ async def test_lawn_mower_conditions_gated_by_labs_flag(
 )
 async def test_lawn_mower_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_lawn_mowers: list[str],
+    target_lawn_mowers: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -89,10 +89,10 @@ async def test_lawn_mower_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the lawn mower state condition with the 'any' behavior."""
-    other_entity_ids = set(target_lawn_mowers) - {entity_id}
+    other_entity_ids = set(target_lawn_mowers["included"]) - {entity_id}
 
     # Set all lawn mowers, including the tested lawn mower, to the initial state
-    for eid in target_lawn_mowers:
+    for eid in target_lawn_mowers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -153,7 +153,7 @@ async def test_lawn_mower_state_condition_behavior_any(
 )
 async def test_lawn_mower_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_lawn_mowers: list[str],
+    target_lawn_mowers: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -162,10 +162,10 @@ async def test_lawn_mower_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the lawn mower state condition with the 'all' behavior."""
-    other_entity_ids = set(target_lawn_mowers) - {entity_id}
+    other_entity_ids = set(target_lawn_mowers["included"]) - {entity_id}
 
     # Set all lawn mowers, including the tested lawn mower, to the initial state
-    for eid in target_lawn_mowers:
+    for eid in target_lawn_mowers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
