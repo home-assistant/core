@@ -4147,13 +4147,13 @@ async def test_compile_hourly_statistics_equivalent_units_2(
 async def test_compile_hourly_statistics_custom_equivalent_units(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    device_class,
-    state_unit,
-    state_unit2,
-    unit_class,
-    mean,
-    min,
-    max,
+    device_class: SensorDeviceClass | None,
+    state_unit: str,
+    state_unit2: str,
+    unit_class: str | None,
+    mean: float,
+    min: float,
+    max: float,
 ) -> None:
     """Test compiling hourly statistics where units change during an hour and the integration provides custom equivalent units."""
     zero = get_start_time(dt_util.utcnow())
