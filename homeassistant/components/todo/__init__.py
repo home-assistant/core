@@ -321,7 +321,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not self._update_listeners:
             return
 
-        todo_items = self.todo_items or []
+        todo_items = [dataclasses.replace(item) for item in self.todo_items or []]
         for listener in self._update_listeners:
             listener(todo_items)
 
