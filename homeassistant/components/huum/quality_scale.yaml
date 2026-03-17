@@ -45,7 +45,7 @@ rules:
     comment: |
       PLANNED: Remove _LOGGER.error from coordinator.py — the message is already
       passed to UpdateFailed, so logging it separately is redundant.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage:
     status: todo
