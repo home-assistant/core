@@ -60,7 +60,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: done
+    comment: >
+      Username changes are blocked by unique ID mismatch, as the username is
+      used as the unique ID (pyfreshr provides no stable account identifier).
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios exist; authentication failures are handled via the reauthentication flow.

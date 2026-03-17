@@ -101,6 +101,87 @@ async def test_form_already_configured(
 
 
 @pytest.mark.usefixtures("mock_freshr_client")
+async def test_reconfigure_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reconfiguration updates the entry and reloads."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: "test-user", CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-pass"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (LoginError("bad credentials"), "invalid_auth"),
+        (RuntimeError("unexpected"), "unknown"),
+        (ClientError("network"), "cannot_connect"),
+    ],
+)
+async def test_reconfigure_error(
+    hass: HomeAssistant,
+    mock_freshr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfiguration handles errors and recovers correctly."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_freshr_client.login.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: "test-user", CONF_PASSWORD: "wrong-pass"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_freshr_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: "test-user", CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-pass"
+
+
+@pytest.mark.usefixtures("mock_freshr_client")
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration aborts when credentials belong to a different account."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: "other-user", CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_freshr_client")
 async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
