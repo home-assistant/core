@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 from homeassistant.util import dt as dt_util
 
-from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
 VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
@@ -260,24 +260,18 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             raise UpdateFailed(e.message) from e
         self.updated_once = True
 
-        if not data or not isinstance(data.get("time_series"), list):
-            raise UpdateFailed("Received invalid data")
-
-        time_series = data["time_series"]
-        if not time_series:
-            raise UpdateFailed("Received invalid data")
-
-        first_period = time_series[0]
-        if not isinstance(first_period, dict):
-            raise UpdateFailed("Received invalid data")
-
-        timestamp = first_period.get("timestamp")
-        if not isinstance(timestamp, str):
-            raise UpdateFailed("Received invalid data")
-
-        period_start = dt_util.parse_datetime(timestamp)
-        if period_start is None:
-            raise UpdateFailed("Received invalid data")
+        if (
+            not data
+            or not isinstance((time_series := data.get("time_series")), list)
+            or not time_series
+            or not isinstance((first_period := time_series[0]), dict)
+            or not isinstance((timestamp := first_period.get("timestamp")), str)
+            or (period_start := dt_util.parse_datetime(timestamp)) is None
+        ):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_data",
+            )
 
         # Add all time periods together
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
