@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_button_entities_snapshot[button.focused_einstein_restart_container-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_button_entities_snapshot[button.funny_chatelet_restart_container-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_button_entities_snapshot[button.my_environment_prune_unused_images-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -201,8 +205,9 @@
 # ---
 # name: test_all_button_entities_snapshot[button.practical_morse_restart_container-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -251,8 +256,9 @@
 # ---
 # name: test_all_button_entities_snapshot[button.serene_banach_restart_container-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -301,8 +307,9 @@
 # ---
 # name: test_all_button_entities_snapshot[button.stoic_turing_restart_container-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

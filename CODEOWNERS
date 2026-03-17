@@ -974,6 +974,8 @@ build.json @home-assistant/supervisor
 /tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
+/homeassistant/components/lojack/ @devinslick
+/tests/components/lojack/ @devinslick
 /homeassistant/components/london_underground/ @jpbede
 /tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco

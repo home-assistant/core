@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.home_air_quality_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -67,8 +68,9 @@
 # ---
 # name: test_sensor[sensor.home_air_quality_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -133,8 +135,9 @@
 # ---
 # name: test_sensor[sensor.home_air_quality_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -199,8 +202,9 @@
 # ---
 # name: test_sensor[sensor.home_air_quality_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -265,8 +269,9 @@
 # ---
 # name: test_sensor[sensor.home_air_quality_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -331,8 +336,9 @@
 # ---
 # name: test_sensor[sensor.home_apparent_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -389,8 +395,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_ceiling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -447,8 +454,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -501,8 +509,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -552,8 +561,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -603,8 +613,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -654,8 +665,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -705,8 +717,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -756,8 +769,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_night_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -807,8 +821,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_night_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -858,8 +873,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_night_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -909,8 +925,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_night_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -960,8 +977,9 @@
 # ---
 # name: test_sensor[sensor.home_cloud_cover_night_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1011,8 +1029,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1061,8 +1080,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1111,8 +1131,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1161,8 +1182,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1211,8 +1233,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1261,8 +1284,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_night_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1311,8 +1335,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_night_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1361,8 +1386,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_night_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1411,8 +1437,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_night_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1461,8 +1488,9 @@
 # ---
 # name: test_sensor[sensor.home_condition_night_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1511,8 +1539,9 @@
 # ---
 # name: test_sensor[sensor.home_dew_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1569,8 +1598,9 @@
 # ---
 # name: test_sensor[sensor.home_grass_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1621,8 +1651,9 @@
 # ---
 # name: test_sensor[sensor.home_grass_pollen_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1673,8 +1704,9 @@
 # ---
 # name: test_sensor[sensor.home_grass_pollen_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1725,8 +1757,9 @@
 # ---
 # name: test_sensor[sensor.home_grass_pollen_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1777,8 +1810,9 @@
 # ---
 # name: test_sensor[sensor.home_grass_pollen_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1829,8 +1863,9 @@
 # ---
 # name: test_sensor[sensor.home_hours_of_sun_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1880,8 +1915,9 @@
 # ---
 # name: test_sensor[sensor.home_hours_of_sun_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1931,8 +1967,9 @@
 # ---
 # name: test_sensor[sensor.home_hours_of_sun_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1982,8 +2019,9 @@
 # ---
 # name: test_sensor[sensor.home_hours_of_sun_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2033,8 +2071,9 @@
 # ---
 # name: test_sensor[sensor.home_hours_of_sun_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2084,8 +2123,9 @@
 # ---
 # name: test_sensor[sensor.home_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2139,8 +2179,9 @@
 # ---
 # name: test_sensor[sensor.home_mold_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2191,8 +2232,9 @@
 # ---
 # name: test_sensor[sensor.home_mold_pollen_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2243,8 +2285,9 @@
 # ---
 # name: test_sensor[sensor.home_mold_pollen_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2295,8 +2338,9 @@
 # ---
 # name: test_sensor[sensor.home_mold_pollen_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2347,8 +2391,9 @@
 # ---
 # name: test_sensor[sensor.home_mold_pollen_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2399,8 +2444,9 @@
 # ---
 # name: test_sensor[sensor.home_precipitation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2458,8 +2504,9 @@
 # ---
 # name: test_sensor[sensor.home_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2516,8 +2563,9 @@
 # ---
 # name: test_sensor[sensor.home_pressure_tendency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2578,8 +2626,9 @@
 # ---
 # name: test_sensor[sensor.home_ragweed_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2630,8 +2679,9 @@
 # ---
 # name: test_sensor[sensor.home_ragweed_pollen_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2682,8 +2732,9 @@
 # ---
 # name: test_sensor[sensor.home_ragweed_pollen_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2734,8 +2785,9 @@
 # ---
 # name: test_sensor[sensor.home_ragweed_pollen_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2786,8 +2838,9 @@
 # ---
 # name: test_sensor[sensor.home_ragweed_pollen_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2838,8 +2891,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2896,8 +2950,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_max_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2951,8 +3006,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_max_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3006,8 +3062,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_max_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3061,8 +3118,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_max_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3116,8 +3174,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_max_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3171,8 +3230,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_min_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3226,8 +3286,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_min_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3281,8 +3342,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_min_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3336,8 +3398,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_min_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3391,8 +3454,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_min_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3446,8 +3510,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3504,8 +3569,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3559,8 +3625,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3614,8 +3681,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3669,8 +3737,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3724,8 +3793,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3779,8 +3849,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3834,8 +3905,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3889,8 +3961,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3944,8 +4017,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3999,8 +4073,9 @@
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4054,8 +4129,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4109,8 +4185,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4164,8 +4241,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4219,8 +4297,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4274,8 +4353,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4329,8 +4409,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_night_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4384,8 +4465,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_night_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4439,8 +4521,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_night_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4494,8 +4577,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_night_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4549,8 +4633,9 @@
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_night_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4604,8 +4689,9 @@
 # ---
 # name: test_sensor[sensor.home_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4662,8 +4748,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4713,8 +4800,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4764,8 +4852,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4815,8 +4904,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4866,8 +4956,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4917,8 +5008,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_night_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4968,8 +5060,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_night_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5019,8 +5112,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_night_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5070,8 +5164,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_night_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5121,8 +5216,9 @@
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_night_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5172,8 +5268,9 @@
 # ---
 # name: test_sensor[sensor.home_tree_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5224,8 +5321,9 @@
 # ---
 # name: test_sensor[sensor.home_tree_pollen_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5276,8 +5374,9 @@
 # ---
 # name: test_sensor[sensor.home_tree_pollen_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5328,8 +5427,9 @@
 # ---
 # name: test_sensor[sensor.home_tree_pollen_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5380,8 +5480,9 @@
 # ---
 # name: test_sensor[sensor.home_tree_pollen_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5432,8 +5533,9 @@
 # ---
 # name: test_sensor[sensor.home_uv_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5487,8 +5589,9 @@
 # ---
 # name: test_sensor[sensor.home_uv_index_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5539,8 +5642,9 @@
 # ---
 # name: test_sensor[sensor.home_uv_index_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5591,8 +5695,9 @@
 # ---
 # name: test_sensor[sensor.home_uv_index_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5643,8 +5748,9 @@
 # ---
 # name: test_sensor[sensor.home_uv_index_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5695,8 +5801,9 @@
 # ---
 # name: test_sensor[sensor.home_uv_index_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5747,8 +5854,9 @@
 # ---
 # name: test_sensor[sensor.home_wet_bulb_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5805,8 +5913,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_chill_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5863,8 +5972,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5921,8 +6031,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5977,8 +6088,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6033,8 +6145,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6089,8 +6202,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6145,8 +6259,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6201,8 +6316,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_night_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6257,8 +6373,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_night_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6313,8 +6430,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_night_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6369,8 +6487,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_night_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6425,8 +6544,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_gust_speed_night_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6481,8 +6601,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6539,8 +6660,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_day_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6595,8 +6717,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_day_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6651,8 +6774,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_day_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6707,8 +6831,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_day_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6763,8 +6888,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_day_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6819,8 +6945,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_night_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6875,8 +7002,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_night_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6931,8 +7059,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_night_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6987,8 +7116,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_night_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7043,8 +7173,9 @@
 # ---
 # name: test_sensor[sensor.home_wind_speed_night_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
