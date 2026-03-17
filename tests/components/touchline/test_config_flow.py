@@ -72,7 +72,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.touchline.config_flow.PyTouchline.get_number_of_devices",
-        side_effect=Exception,
+        side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -172,7 +172,7 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     """Test YAML import aborts when it cannot connect."""
     with patch(
         "homeassistant.components.touchline.config_flow.PyTouchline.get_number_of_devices",
-        side_effect=Exception,
+        side_effect=ConnectionError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
