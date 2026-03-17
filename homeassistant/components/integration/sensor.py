@@ -338,7 +338,7 @@ class IntegrationSensor(RestoreSensor):
         self._attr_device_class: SensorDeviceClass | None = None
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
-        self._source_device_class: Any | None = None
+        self._source_device_class: SensorDeviceClass | str | None = None
         self._last_valid_state: Decimal | None = None
         self._refresh_device_class: bool = True
         self.device_entry = async_entity_id_to_device(
