@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.envertech_evt800.const import DOMAIN
-from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE, MOCK_USER_INPUT
 
@@ -14,13 +13,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
 
     return MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_DEVICE["name"],
-        unique_id=str(MOCK_DEVICE["serial"]),
         data=MOCK_USER_INPUT,
         minor_version=1,
         entry_id="evt800_entry_123",
@@ -31,7 +29,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry."""
     with patch(
-        "homeassistant.components.envertech_evt800.pyenvertechevt800.EnvertechEVT800",
+        "homeassistant.components.envertech_evt800.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
@@ -44,10 +42,11 @@ def mock_evt800_client() -> Generator[MagicMock]:
         "homeassistant.components.envertech_evt800.pyenvertechevt800.EnvertechEVT800",
         autospec=True,
     ) as client:
-        client.return_value.device_info.return_value = MOCK_DEVICE
-        client.online.return_value = True
-
-        client.data.return_value = {
+        mock_instance = client.return_value
+        mock_instance.test_connection = AsyncMock(return_value=True)
+        mock_instance.start = MagicMock()
+        mock_instance.set_data_listener = MagicMock()
+        mock_instance.data = {
             "id_1": 39828832,
             "id_2": 39828833,
             "sw_version": "7A.7A",

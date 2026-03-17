@@ -2,15 +2,17 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pyenvertechevt800
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import EnvertechEVT800ConfigEntry
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import EnvertechEVT800ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

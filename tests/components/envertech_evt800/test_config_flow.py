@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.envertech_evt800.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,12 +26,13 @@ async def test_form(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_USER_INPUT,
+        {
+            CONF_IP_ADDRESS: MOCK_USER_INPUT[CONF_IP_ADDRESS],
+            CONF_PORT: MOCK_USER_INPUT[CONF_PORT],
+        },
     )
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_USER_INPUT["host"]
+    assert result["title"] == "Envertech EVT800"
     assert result["data"] == MOCK_USER_INPUT
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -51,7 +53,10 @@ async def test_form_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_USER_INPUT,
+        user_input={
+            CONF_IP_ADDRESS: MOCK_USER_INPUT[CONF_IP_ADDRESS],
+            CONF_PORT: MOCK_USER_INPUT[CONF_PORT],
+        },
     )
     await hass.async_block_till_done()
 

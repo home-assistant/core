@@ -49,6 +49,8 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             )
 
+            self._data[CONF_IP_ADDRESS] = ip_address
+            self._data[CONF_PORT] = port
             evt800 = pyenvertechevt800.EnvertechEVT800(ip_address, port)
 
             can_connect = await evt800.test_connection()

@@ -4,6 +4,7 @@
   "codeowners": ["@daniel-bergmann-00"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/envertech_evt800",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyenvertechevt800"],
   "quality_scale": "bronze",

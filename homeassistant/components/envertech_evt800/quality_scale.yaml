@@ -1,7 +1,7 @@
 rules:
   # Bronze
   action-setup:
-    status: done
+    status: exempt
     comment: |
       The integration does not provide any additional actions.
   appropriate-polling: done
@@ -11,7 +11,7 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: done
+    status: exempt
     comment: |
       The integration does not provide any additional actions.
   docs-high-level-description: done
@@ -30,7 +30,7 @@ rules:
 
   # Silver
   action-exceptions:
-    status: todo
+    status: exempt
     comment: |
       The integration does not provide any actions.
   config-entry-unloading: done
@@ -41,8 +41,6 @@ rules:
   log-when-unavailable: done
   parallel-updates:
     status: todo
-    comment: |
-      The integration does not support parallel updates.
   reauthentication-flow:
     status: todo
     comment: |
@@ -70,31 +68,26 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: todo
+    status: exempt
     comment: |
-      The integration does not have any dynamic devices
+      Integration connects to a single device
+
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
-    status: todo
+    status: exempt
     comment: |
       The integration does not have any own exceptions.
-  icon-translations:
-    status: todo
-    comment: |
-      The integration does not support icon translations.
-  reconfiguration-flow:
-    status: todo
-    comment: |
-      The integration does not support reconfiguration flow.
+  icon-translations: todo
+  reconfiguration-flow: todo
   repair-issues:
-    status: todo
+    status: exempt
     comment: |
       The integration does not support repairing issues.
   stale-devices:
-    status: todo
+    status: exempt
     comment: |
       This integration connects to a single device per configuration entry.
 
