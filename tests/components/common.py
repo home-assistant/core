@@ -235,7 +235,7 @@ def _parametrize_condition_states(
                     "attributes": additional_attributes,
                 },
                 "excluded": {
-                    "state": state if additional_attributes else None,
+                    "state": state,
                     "attributes": {},
                 },
                 "condition_true": condition_true,
@@ -247,7 +247,7 @@ def _parametrize_condition_states(
                 "attributes": state[1] | additional_attributes,
             },
             "excluded": {
-                "state": state[0] if additional_attributes else None,
+                "state": state[0],
                 "attributes": state[1],
             },
             "condition_true": condition_true,
