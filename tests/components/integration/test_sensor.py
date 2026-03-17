@@ -748,6 +748,85 @@ async def test_units(hass: HomeAssistant) -> None:
     assert new_state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("source_sensor", "source_unit", "device_class", "expected_class"),
+    [
+        # Water is supports m3 unit so will be allowed
+        (
+            "sensor.cubic_meters_per_hour",
+            "m³/h",
+            SensorDeviceClass.WATER,
+            SensorDeviceClass.WATER,
+        ),
+        # Energy does not support unit so will not be applied
+        ("sensor.cubic_meters_per_hour", "m³/h", SensorDeviceClass.ENERGY, None),
+        # No user supplied device class infers from sensor which is none for test source
+        ("sensor.cubic_meters_per_hour", "m³/h", None, None),
+        # No user supplied device class infers from sensor which is energy for test source
+        ("sensor.power", UnitOfPower.KILO_WATT, None, SensorDeviceClass.ENERGY),
+        # Date is not allowed as has no supported state class
+        ("sensor.cubic_meters_per_hour", "m³/h", SensorDeviceClass.DATE, None),
+        # Monetary allows any unit, so will be applied even if unit is nonsense
+        (
+            "sensor.cubic_meters_per_hour",
+            "m³/h",
+            SensorDeviceClass.MONETARY,
+            SensorDeviceClass.MONETARY,
+        ),
+    ],
+)
+async def test_device_class_user(
+    hass: HomeAssistant, source_sensor, source_unit, device_class, expected_class
+) -> None:
+    """Test integration sensor state."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": source_sensor,
+            "round": 2,
+            "method": "trapezoidal",
+            "unit_time": UnitOfTime.HOURS,
+        }
+    }
+    if device_class is not None:
+        config["sensor"]["device_class"] = device_class
+
+    if source_unit == UnitOfPower.KILO_WATT:
+        source_config = {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_UNIT_OF_MEASUREMENT: source_unit,
+        }
+    else:
+        source_config = {ATTR_UNIT_OF_MEASUREMENT: source_unit}
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    hass.states.async_set(entity_id, 100, source_config)
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow() + timedelta(hours=1)
+    with freeze_time(now):
+        hass.states.async_set(
+            entity_id,
+            100,
+            source_config,
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+
+    # Ensure user device class matches expected
+    actual_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    if expected_class is None:
+        assert actual_class is None
+    else:
+        assert actual_class == expected_class
+
+
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
 async def test_device_class(hass: HomeAssistant, method) -> None:
     """Test integration sensor units using a power source."""
