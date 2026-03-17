@@ -54,17 +54,17 @@ async def async_setup_platform(
 
     if (
         result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
+        and (reason := result.get("reason")) != "already_configured"
     ):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            f"deprecated_yaml_import_issue_{reason}",
             breaks_in_ha_version="2026.10.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": INTEGRATION_TITLE,
@@ -75,7 +75,7 @@ async def async_setup_platform(
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
+        f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version="2026.10.0",
         is_fixable=False,
         issue_domain=DOMAIN,

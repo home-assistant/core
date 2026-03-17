@@ -74,11 +74,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -
 
     entry.runtime_data = data
 
-    async def _logout(event: Event) -> None:
+    async def _logout(_: Event | None = None) -> None:
         with suppress(ValueError):
             await hass.async_add_executor_job(Person.logout, data.session)
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _logout))
+    entry.async_on_unload(_logout)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -87,8 +88,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -> bool:
     """Unload a Decora Wi-Fi config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        with suppress(ValueError):
-            await hass.async_add_executor_job(Person.logout, entry.runtime_data.session)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
