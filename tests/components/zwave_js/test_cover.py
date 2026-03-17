@@ -1696,7 +1696,7 @@ async def test_multilevel_switch_cover_unsupervised_no_target_value_update(
     assert state
     assert state.state == CoverState.CLOSED
 
-    # Set cover to fully open position via an unsolicited device report.
+    # Set cover to fully open position via an unsolicited device report,
     # while keeping targetValue unknown. This is the case when
     # the device was never controlled.
     node.receive_event(
