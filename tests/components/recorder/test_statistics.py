@@ -4138,7 +4138,7 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
     caplog: pytest.LogCaptureFixture,
     invalid_custom_equivalent_units: Any,
 ) -> None:
-    """Test recorder platforms providing custom equivalent units are skipped if they raise an exception."""
+    """Test recorder platforms providing custom equivalent units are skipped if they are of invalid type."""
     recorder_data = hass.data["recorder"]
     assert not recorder_data.recorder_platforms
 
