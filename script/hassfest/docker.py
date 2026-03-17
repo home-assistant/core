@@ -117,7 +117,7 @@ def _generate_machine_dockerfile(
 ) -> str:
     """Generate a machine Dockerfile from configuration."""
     if machine_config.packages:
-        pkg_lines = " \\\n        ".join(machine_config.packages)
+        pkg_lines = " \\\n    ".join(machine_config.packages)
         extra_packages = f"\nRUN apk --no-cache add \\\n    {pkg_lines}\n"
     else:
         extra_packages = ""
