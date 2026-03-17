@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from level_ws_client import LevelWebsocketManager
-
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
@@ -29,6 +27,7 @@ from .const import (
     OAUTH2_CLIENT_ID,
 )
 from .coordinator import LevelLocksCoordinator
+from .level_ws_client import LevelWebsocketManager
 
 # For your initial PR, limit it to 1 platform.
 _PLATFORMS: list[Platform] = [Platform.LOCK]

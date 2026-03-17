@@ -9,8 +9,6 @@ import logging
 import time
 from typing import Any, Literal
 
-from level_ws_client import LevelWebsocketManager
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,6 +18,7 @@ from .const import (
     STATE_RETRY_INITIAL_DELAY,
     STATE_RETRY_MAX_ELAPSED,
 )
+from .level_ws_client import LevelWebsocketManager
 
 LOGGER = logging.getLogger(__name__)
 FALLBACK_SCAN_INTERVAL = timedelta(minutes=5)
