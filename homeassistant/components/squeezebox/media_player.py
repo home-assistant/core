@@ -862,7 +862,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 translation_placeholders={"track_id": media_image_id},
             )
 
-        if not image_url:
+        if image_url == "":
             return (None, None)
 
         result = await self._async_fetch_image(image_url)
