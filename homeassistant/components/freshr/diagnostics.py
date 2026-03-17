@@ -22,7 +22,9 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "devices": [dataclasses.asdict(device) for device in runtime_data.devices.data],
+        "devices": [
+            dataclasses.asdict(device) for device in runtime_data.devices.data.values()
+        ],
         "readings": {
             device_id: dataclasses.asdict(coordinator.data)
             for device_id, coordinator in runtime_data.readings.items()
