@@ -751,22 +751,22 @@ async def test_units(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("source_sensor", "source_unit", "device_class", "expected_class"),
     [
-        # Water is supports m3 unit so will be allowed
+        # Water supports the m³ unit, so it will be allowed
         (
             "sensor.cubic_meters_per_hour",
             "m³/h",
             SensorDeviceClass.WATER,
             SensorDeviceClass.WATER,
         ),
-        # Energy does not support unit so will not be applied
+        # Energy does not support this unit, so the device class will not be applied
         ("sensor.cubic_meters_per_hour", "m³/h", SensorDeviceClass.ENERGY, None),
-        # No user supplied device class infers from sensor which is none for test source
+        # With no user-supplied device class, infer it from the source sensor (which has none for this test source)
         ("sensor.cubic_meters_per_hour", "m³/h", None, None),
-        # No user supplied device class infers from sensor which is energy for test source
+        # With no user-supplied device class, infer it from the source sensor (which is energy for this test source)
         ("sensor.power", UnitOfPower.KILO_WATT, None, SensorDeviceClass.ENERGY),
-        # Date is not allowed as has no supported state class
+        # Date is not allowed because it has no supported state class
         ("sensor.cubic_meters_per_hour", "m³/h", SensorDeviceClass.DATE, None),
-        # Monetary allows any unit, so will be applied even if unit is nonsense
+        # Monetary allows any unit, so the device class will be applied even if the unit is nonsense
         (
             "sensor.cubic_meters_per_hour",
             "m³/h",
@@ -776,7 +776,11 @@ async def test_units(hass: HomeAssistant) -> None:
     ],
 )
 async def test_device_class_user(
-    hass: HomeAssistant, source_sensor, source_unit, device_class, expected_class
+    hass: HomeAssistant,
+    source_sensor: str,
+    source_unit: str,
+    device_class: SensorDeviceClass | None,
+    expected_class: SensorDeviceClass | None,
 ) -> None:
     """Test integration sensor state."""
     config = {
