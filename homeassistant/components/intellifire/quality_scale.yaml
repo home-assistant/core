@@ -28,39 +28,94 @@ rules:
     status: exempt
     comment: This integration does not register any custom service actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
+  docs-configuration-parameters:
+    status: todo
+    comment: Documentation page is missing a section describing the read_mode and control_mode options (local vs cloud API selection).
+  docs-installation-parameters:
+    status: todo
+    comment: Documentation page is missing a section describing the required installation parameters (username/password for IntelliFire cloud authentication).
+  entity-unavailable:
+    status: todo
+    comment: Entities inherit availability from CoordinatorEntity but no per-entity unavailability logic is implemented for fireplace-specific error states.
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable:
+    status: todo
+    comment: No logging is implemented when entities become unavailable; CoordinatorEntity does not log at the entity level when coordinator updates fail.
+  parallel-updates:
+    status: todo
+    comment: No PARALLEL_UPDATES constant is defined in any platform module.
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: Test coverage is incomplete; several platforms (climate, fan, number, switch, light) lack comprehensive test suites.
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics:
+    status: todo
+    comment: No diagnostics.py file exists; need to implement async_get_config_entry_diagnostics to expose fireplace poll data.
   discovery: done
-  discovery-update-info: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  discovery-update-info:
+    status: todo
+    comment: DHCP discovery is implemented but does not update the IP address in an existing config entry when a device is rediscovered with a new IP.
+  docs-data-update:
+    status: todo
+    comment: Documentation page is missing a section explaining how data is fetched (local polling every 15 seconds or cloud polling).
+  docs-examples:
+    status: todo
+    comment: Documentation page is missing automation and template examples.
+  docs-known-limitations:
+    status: todo
+    comment: Documentation page is missing a known limitations section (e.g. local API limitations, thermostat/fan availability depending on hardware).
+  docs-supported-devices:
+    status: todo
+    comment: Documentation page is missing a list of supported IntelliFire fireplace models.
+  docs-supported-functions:
+    status: todo
+    comment: Documentation page is missing a section listing supported functions (flame on/off, thermostat, fan speed, pilot light, etc.).
+  docs-troubleshooting:
+    status: todo
+    comment: Documentation page is missing a troubleshooting section (e.g. local vs cloud connectivity issues, re-authentication steps).
+  docs-use-cases:
+    status: todo
+    comment: Documentation page is missing a use-cases section describing common automation scenarios.
+  dynamic-devices:
+    status: todo
+    comment: Each config entry represents a single fixed fireplace; no dynamic device addition or removal within an entry is implemented.
+  entity-category:
+    status: done
+  entity-device-class:
+    status: todo
+    comment: Device classes are set on sensor and binary_sensor entities where applicable, but some status sensors (flame_height, fan_speed) are missing appropriate device classes.
+  entity-disabled-by-default:
+    status: todo
+    comment: Only connection_quality and ecm_latency are disabled by default; other low-value diagnostic entities (error binary sensors, uptime, downtime, ipv4_address) should also be disabled by default.
+  entity-translations:
+    status: todo
+    comment: The climate entity uses a hardcoded name ("Thermostat") instead of a translation_key; all entities must use translation_key with entries in strings.json.
+  exception-translations:
+    status: todo
+    comment: No exceptions section exists in strings.json; raised HomeAssistantError messages are not translatable.
+  icon-translations:
+    status: todo
+    comment: No icon overrides are defined in strings.json.
+  reconfiguration-flow:
+    status: todo
+    comment: No async_step_reconfigure is implemented in config_flow.py to allow users to change the fireplace IP address or credentials without removing the entry.
+  repair-issues:
+    status: todo
+    comment: No repair issues are implemented; authentication failures and connectivity problems could surface as repair flows instead of just log entries.
+  stale-devices:
+    status: todo
+    comment: One device is registered per config entry; stale device cleanup is not explicitly implemented, though device removal follows entry removal.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
-  strict-typing: todo
+  async-dependency:
+    status: todo
+    comment: intellifire4py uses aiohttp internally but it needs to be verified that the library is fully async-compatible with no blocking I/O.
+  inject-websession:
+    status: todo
+    comment: The library creates its own aiohttp ClientSession (via IntelliFireCloudInterface context manager) rather than accepting Home Assistant's websession.
+  strict-typing:
+    status: todo
+    comment: The integration has not been verified to pass mypy in strict mode.
