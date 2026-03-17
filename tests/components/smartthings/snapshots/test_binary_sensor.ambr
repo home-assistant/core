@@ -306,8 +306,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_000001][binary_sensor.table_de_cuisson_operating_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1112,8 +1113,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_operating_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1973,8 +1975,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][binary_sensor.robot_vacuum_dust_bag_full-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3986,8 +3989,9 @@
 # ---
 # name: test_all_entities[ikea_leak_battery][binary_sensor.waschkeller_feuchtigkeitssensor_moisture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4036,8 +4040,9 @@
 # ---
 # name: test_all_entities[ikea_motion_illuminance_battery][binary_sensor.gaderobe_bewegungsmelder_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4290,8 +4295,9 @@
 # ---
 # name: test_all_entities[virtual_water_sensor][binary_sensor.virtual_water_sensor_moisture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

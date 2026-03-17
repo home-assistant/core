@@ -715,8 +715,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zeo_one_detergent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -765,8 +766,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zeo_one_softener-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

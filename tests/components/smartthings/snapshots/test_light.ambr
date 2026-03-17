@@ -129,8 +129,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][light.range_hood_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -188,8 +189,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][light.microwave_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -247,8 +249,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][light.oven_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -305,8 +308,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][light.kitchen_oven_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -363,8 +367,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][light.vulcan_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -421,8 +426,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][light.four_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -479,8 +485,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][light.four_light_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -745,8 +752,9 @@
 # ---
 # name: test_all_entities[ikea_plug_powermeter][light.ikea_plug_powermeter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([

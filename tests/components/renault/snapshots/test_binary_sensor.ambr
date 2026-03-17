@@ -507,8 +507,9 @@
 # ---
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -557,8 +558,9 @@
 # ---
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -606,8 +608,9 @@
 # ---
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

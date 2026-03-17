@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[aeotec_smart_home_hub][update.smart_home_hub_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -378,8 +379,9 @@
 # ---
 # name: test_all_entities[ikea_leak_battery][update.waschkeller_feuchtigkeitssensor_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -440,8 +442,9 @@
 # ---
 # name: test_all_entities[ikea_motion_illuminance_battery][update.gaderobe_bewegungsmelder_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -502,8 +505,9 @@
 # ---
 # name: test_all_entities[ikea_plug_powermeter][update.ikea_plug_powermeter_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -564,8 +568,9 @@
 # ---
 # name: test_all_entities[meross_plug][update.waschkeller_trockner_plug_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

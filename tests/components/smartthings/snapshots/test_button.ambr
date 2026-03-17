@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_ac_air_01011][button.air_filter_reset_hepa_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,8 +501,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][button.robot_vacuum_reset_hepa_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

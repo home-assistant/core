@@ -3414,8 +3414,9 @@
 # ---
 # name: test_sensors[sensor.zeo_one_times_after_clean-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

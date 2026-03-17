@@ -1235,8 +1235,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1288,8 +1289,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_odor_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1337,8 +1339,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1391,8 +1394,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1445,8 +1449,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm10_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1512,8 +1517,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm1_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1579,8 +1585,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1633,8 +1640,9 @@
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm2_5_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1700,8 +1708,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][sensor.air_filter_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1753,8 +1762,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1810,8 +1820,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1867,8 +1878,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1924,8 +1936,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][sensor.air_filter_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1983,8 +1996,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][sensor.air_filter_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -19504,8 +19518,9 @@
 # ---
 # name: test_all_entities[ikea_leak_battery][sensor.waschkeller_feuchtigkeitssensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19555,8 +19570,9 @@
 # ---
 # name: test_all_entities[ikea_motion_illuminance_battery][sensor.gaderobe_bewegungsmelder_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19606,8 +19622,9 @@
 # ---
 # name: test_all_entities[ikea_motion_illuminance_battery][sensor.gaderobe_bewegungsmelder_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19660,8 +19677,9 @@
 # ---
 # name: test_all_entities[ikea_plug_powermeter][sensor.ikea_plug_powermeter_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19717,8 +19735,9 @@
 # ---
 # name: test_all_entities[ikea_plug_powermeter][sensor.ikea_plug_powermeter_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -20000,8 +20019,9 @@
 # ---
 # name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -20057,8 +20077,9 @@
 # ---
 # name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -20114,8 +20135,9 @@
 # ---
 # name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -20171,8 +20193,9 @@
 # ---
 # name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

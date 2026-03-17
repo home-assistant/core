@@ -735,8 +735,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

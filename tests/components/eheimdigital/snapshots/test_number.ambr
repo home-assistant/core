@@ -663,8 +663,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_booster_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 20160,
@@ -723,8 +724,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_daily_burn_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1440,
@@ -783,8 +785,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_pause_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 20160,
@@ -843,8 +846,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,

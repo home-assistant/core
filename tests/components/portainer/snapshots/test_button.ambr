@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

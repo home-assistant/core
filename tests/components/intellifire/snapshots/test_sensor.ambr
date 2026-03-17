@@ -52,8 +52,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_control_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -374,8 +375,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_read_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

@@ -1401,8 +1401,9 @@
 # ---
 # name: test_buttons[megane_e_tech][button.reg_meg_0_flash_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1450,8 +1451,9 @@
 # ---
 # name: test_buttons[megane_e_tech][button.reg_meg_0_sound_horn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1499,8 +1501,9 @@
 # ---
 # name: test_buttons[megane_e_tech][button.reg_meg_0_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1548,8 +1551,9 @@
 # ---
 # name: test_buttons[megane_e_tech][button.reg_meg_0_start_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

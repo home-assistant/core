@@ -641,8 +641,9 @@
 # ---
 # name: test_setup[select.mock_reeflex_operation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

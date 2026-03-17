@@ -420,8 +420,9 @@
 # ---
 # name: test_numbers[color_temperature_light][number.mock_color_temperature_light_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -720,8 +721,9 @@
 # ---
 # name: test_numbers[extended_color_light][number.mock_extended_color_light_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1314,8 +1316,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_power_on_level_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1372,8 +1375,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_power_on_level_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1728,8 +1732,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_power_on_level_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1786,8 +1791,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_power_on_level_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2083,8 +2089,9 @@
 # ---
 # name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2260,8 +2267,9 @@
 # ---
 # name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2975,8 +2983,9 @@
 # ---
 # name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3272,8 +3281,9 @@
 # ---
 # name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3569,8 +3579,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3866,8 +3877,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_no_name][number.mock_light_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -4403,8 +4415,9 @@
 # ---
 # name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_power_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,

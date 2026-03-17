@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entities[number.hdfury_vrroom_02_earc_unmute_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000,
@@ -61,8 +62,9 @@
 # ---
 # name: test_number_entities[number.hdfury_vrroom_02_oled_fade_timer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -121,8 +123,9 @@
 # ---
 # name: test_number_entities[number.hdfury_vrroom_02_restart_timer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -181,8 +184,9 @@
 # ---
 # name: test_number_entities[number.hdfury_vrroom_02_unmute_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000,
