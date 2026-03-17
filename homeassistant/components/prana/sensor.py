@@ -21,8 +21,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PranaConfigEntry
-from .entity import PranaBaseEntity, PranaCoordinator
+from .coordinator import PranaConfigEntry, PranaCoordinator
+from .entity import PranaBaseEntity
 
 PARALLEL_UPDATES = 1
 
