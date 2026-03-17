@@ -12,15 +12,13 @@ from pysnmp.hlapi.v3arch.asyncio import (
     UsmUserData,
 )
 
-from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-    ScannerEntity,
-)
+from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -43,15 +41,21 @@ from .util import async_create_request_cmd_args
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
-    """Validate the configuration and trigger an import flow."""
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Trigger an import flow to migrate YAML config to a config entry."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config[DEVICE_TRACKER_DOMAIN],
+            data=config,
         )
     )
+    return True
 
 
 async def async_setup_entry(

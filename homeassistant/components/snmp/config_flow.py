@@ -160,7 +160,24 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             ) and entry.data.get(CONF_BASEOID) == user_input.get(CONF_BASEOID):
                 return self.async_abort(reason="already_configured")
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+        # Filter to only include keys that are relevant to SNMP config entries.
+        # The legacy platform schema adds extra keys (platform, consider_home,
+        # new_device_defaults) that are not serializable or not needed.
+        allowed_keys = {
+            CONF_HOST,
+            CONF_PORT,
+            CONF_BASEOID,
+            CONF_COMMUNITY,
+            CONF_VERSION,
+            CONF_USERNAME,
+            CONF_AUTH_KEY,
+            CONF_AUTH_PROTOCOL,
+            CONF_PRIV_KEY,
+            CONF_PRIV_PROTOCOL,
+        }
+        clean_data = {k: v for k, v in user_input.items() if k in allowed_keys}
+
+        return self.async_create_entry(title=clean_data[CONF_HOST], data=clean_data)
 
 
 class CannotConnect(Exception):
