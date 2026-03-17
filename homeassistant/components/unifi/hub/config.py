@@ -25,18 +25,11 @@ from ..const import (
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
-    CONF_SSID_FILTER,
-    CONF_TRACK_CLIENTS,
-    CONF_TRACK_DEVICES,
-    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
-    DEFAULT_TRACK_CLIENTS,
-    DEFAULT_TRACK_DEVICES,
-    DEFAULT_TRACK_WIRED_CLIENTS,
 )
 
 
@@ -53,19 +46,11 @@ class UnifiConfig:
     site: str
     ssl_context: ssl.SSLContext | Literal[False]
 
-    option_supported_clients: list[str]
+    option_tracked_clients: list[str]
     """Allow creating entities from clients."""
 
     # Device tracker options
 
-    option_track_clients: list[str]
-    """Config entry option to not track clients."""
-    option_track_wired_clients: list[str]
-    """Config entry option to not track wired clients."""
-    option_track_devices: bool
-    """Config entry option to not track devices."""
-    option_ssid_filter: set[str]
-    """Config entry option listing what SSIDs are being used to track clients."""
     option_detection_time: timedelta
     """Config entry option defining number of seconds from last seen to away"""
     option_ignore_wired_bug: bool
@@ -98,13 +83,7 @@ class UnifiConfig:
             port=config[CONF_PORT],
             site=config[CONF_SITE_ID],
             ssl_context=config.get(CONF_VERIFY_SSL, False),
-            option_supported_clients=options.get(CONF_CLIENT_SOURCE, []),
-            option_track_clients=options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS),
-            option_track_wired_clients=options.get(
-                CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
-            ),
-            option_track_devices=options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES),
-            option_ssid_filter=set(options.get(CONF_SSID_FILTER, [])),
+            option_tracked_clients=options.get(CONF_CLIENT_SOURCE, []),
             option_detection_time=timedelta(
                 seconds=options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
             ),

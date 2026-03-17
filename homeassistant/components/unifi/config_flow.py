@@ -51,10 +51,6 @@ from .const import (
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
-    CONF_SSID_FILTER,
-    CONF_TRACK_CLIENTS,
-    CONF_TRACK_DEVICES,
-    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
 )
@@ -76,6 +72,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Network config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     sites: Sites
 
@@ -263,7 +260,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         self.options[CONF_BLOCK_CLIENT] = self.hub.config.option_block_clients
 
         if self.show_advanced_options:
-            return await self.async_step_configure_entity_sources()
+            return await self.async_step_client_selection()
 
         return await self.async_step_simple_options()
 
@@ -275,41 +272,43 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             self.options.update(user_input)
             return await self._update_options()
 
-        clients_to_block = {}
-
-        for client in self.hub.api.clients.values():
-            clients_to_block[client.mac] = (
-                f"{client.name or client.hostname} ({client.mac})"
-            )
+        clients_to_block = self._block_client_options()
+        selected_clients_to_block = [
+            client
+            for client in self.options.get(CONF_BLOCK_CLIENT, [])
+            if client in clients_to_block
+        ]
 
         return self.async_show_form(
             step_id="simple_options",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_TRACK_CLIENTS,
-                        default=self.hub.config.option_track_clients,
+                        CONF_CLIENT_SOURCE,
+                        default=self.options.get(
+                            CONF_CLIENT_SOURCE, self.hub.config.option_tracked_clients
+                        ),
+                    ): cv.multi_select(self._client_options()),
+                    vol.Optional(
+                        CONF_ALLOW_BANDWIDTH_SENSORS,
+                        default=self.hub.config.option_allow_bandwidth_sensors,
                     ): bool,
                     vol.Optional(
-                        CONF_TRACK_DEVICES,
-                        default=self.hub.config.option_track_devices,
+                        CONF_ALLOW_UPTIME_SENSORS,
+                        default=self.hub.config.option_allow_uptime_sensors,
                     ): bool,
                     vol.Optional(
-                        CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
+                        CONF_BLOCK_CLIENT,
+                        default=selected_clients_to_block,
                     ): cv.multi_select(clients_to_block),
                 }
             ),
             last_step=True,
         )
 
-    async def async_step_configure_entity_sources(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select sources for entities."""
-        if user_input is not None:
-            self.options.update(user_input)
-            return await self.async_step_device_tracker()
-
+    @callback
+    def _client_options(self) -> dict[str, str]:
+        """Return current clients as options for selection."""
         clients = {
             client.mac: f"{client.name or client.hostname} ({client.mac})"
             for client in self.hub.api.clients.values()
@@ -319,17 +318,40 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             for mac in self.options.get(CONF_CLIENT_SOURCE, [])
             if mac not in clients
         }
+        return dict(sorted(clients.items(), key=operator.itemgetter(1)))
+
+    @callback
+    def _block_client_options(self) -> dict[str, str]:
+        """Return current clients as options for client control."""
+        clients = {
+            client.mac: f"{client.name or client.hostname} ({client.mac})"
+            for client in self.hub.api.clients.values()
+        }
+        clients |= {
+            mac: f"Unknown ({mac})"
+            for mac in self.options.get(CONF_BLOCK_CLIENT, [])
+            if mac not in clients
+        }
+        return dict(sorted(clients.items(), key=operator.itemgetter(1)))
+
+    async def async_step_client_selection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select clients to expose."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self.async_step_device_tracker()
 
         return self.async_show_form(
-            step_id="configure_entity_sources",
+            step_id="client_selection",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_CLIENT_SOURCE,
-                        default=self.options.get(CONF_CLIENT_SOURCE, []),
-                    ): cv.multi_select(
-                        dict(sorted(clients.items(), key=operator.itemgetter(1)))
-                    ),
+                        default=self.options.get(
+                            CONF_CLIENT_SOURCE, self.hub.config.option_tracked_clients
+                        ),
+                    ): cv.multi_select(self._client_options()),
                 }
             ),
             last_step=False,
@@ -338,60 +360,28 @@ class UnifiOptionsFlowHandler(OptionsFlow):
     async def async_step_device_tracker(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the device tracker options."""
+        """Manage device tracker behavior."""
         if user_input is not None:
             self.options.update(user_input)
             return await self.async_step_client_control()
-
-        ssids = (
-            {wlan.name for wlan in self.hub.api.wlans.values()}
-            | {
-                f"{wlan.name}{wlan.name_combine_suffix}"
-                for wlan in self.hub.api.wlans.values()
-                if not wlan.name_combine_enabled
-                and wlan.name_combine_suffix is not None
-            }
-            | {
-                wlan["name"]
-                for ap in self.hub.api.devices.values()
-                for wlan in ap.wlan_overrides
-                if "name" in wlan
-            }
-        )
-        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
-
-        selected_ssids_to_filter = [
-            ssid for ssid in self.hub.config.option_ssid_filter if ssid in ssid_filter
-        ]
 
         return self.async_show_form(
             step_id="device_tracker",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_TRACK_CLIENTS,
-                        default=self.hub.config.option_track_clients,
-                    ): bool,
-                    vol.Optional(
-                        CONF_TRACK_WIRED_CLIENTS,
-                        default=self.hub.config.option_track_wired_clients,
-                    ): bool,
-                    vol.Optional(
-                        CONF_TRACK_DEVICES,
-                        default=self.hub.config.option_track_devices,
-                    ): bool,
-                    vol.Optional(
-                        CONF_SSID_FILTER, default=selected_ssids_to_filter
-                    ): cv.multi_select(ssid_filter),
-                    vol.Optional(
                         CONF_DETECTION_TIME,
-                        default=int(
-                            self.hub.config.option_detection_time.total_seconds()
+                        default=self.options.get(
+                            CONF_DETECTION_TIME,
+                            int(self.hub.config.option_detection_time.total_seconds()),
                         ),
                     ): int,
                     vol.Optional(
                         CONF_IGNORE_WIRED_BUG,
-                        default=self.hub.config.option_ignore_wired_bug,
+                        default=self.options.get(
+                            CONF_IGNORE_WIRED_BUG,
+                            self.hub.config.option_ignore_wired_bug,
+                        ),
                     ): bool,
                 }
             ),
@@ -406,13 +396,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_statistics_sensors()
 
-        clients_to_block = {}
-
-        for client in self.hub.api.clients.values():
-            clients_to_block[client.mac] = (
-                f"{client.name or client.hostname} ({client.mac})"
-            )
-
+        clients_to_block = self._block_client_options()
         selected_clients_to_block = [
             client
             for client in self.options.get(CONF_BLOCK_CLIENT, [])
