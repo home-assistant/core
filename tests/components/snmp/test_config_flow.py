@@ -14,30 +14,22 @@ from tests.common import MockConfigEntry
 
 async def test_user_flow_success(hass: HomeAssistant) -> None:
     """Test successful user setup flow."""
-    # 1. Initialize the config flow in 'user' mode.
-    # This simulates a user going to Settings -> Integrations -> Add Integration -> SNMP.
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    # We expect to see a FORM (the text boxes for host, community, etc.).
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # 2. Simulate user filling the form and clicking 'Submit'.
-    # We MOCK the network calls so we don't actually need a real SNMP device.
     with (
         patch(
-            # Mocking the GET command to return a dummy value
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            # Mocking the transport creation (which checks IP validity)
             "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
             return_value="mock_target",
         ),
         patch(
-            # Mocking the setup_entry because we only want to test the flow logic here
             "homeassistant.components.snmp.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
@@ -52,8 +44,6 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # 3. Verify the result is a success.
-    # We expect a CREATE_ENTRY type, and the data should contain all the defaults we set.
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.1"
     assert result["data"] == {
@@ -65,18 +55,15 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         "auth_protocol": "none",
         "priv_protocol": "none",
     }
-    # Ensure Home Assistant actually called the setup function for this new entry.
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test user setup flow failure - cannot connect."""
-    # Start the flow.
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Mock the GET command to return a 'Timeout' error.
     with (
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
@@ -95,15 +82,12 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    # Verify the flow shows the FORM again but with an error message.
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:
     """Test successful YAML import flow."""
-    # YAML configuration doesn't usually require validation during boot to keep startup fast.
-    # We test that the SOURCE_IMPORT data is correctly turned into a config entry.
     with patch(
         "homeassistant.components.snmp.async_setup_entry", return_value=True
     ) as mock_setup:

@@ -71,8 +71,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # 1. Extract values from the 'data' dictionary provided by the Config Flow UI.
-    # CONF_HOST and CONF_BASEOID are required, others use defaults if missing.
     host = data[CONF_HOST]
     port = int(data.get(CONF_PORT, DEFAULT_PORT))
     community = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
@@ -84,56 +82,37 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     privkey = data.get(CONF_PRIV_KEY)
     privproto = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
 
-    # 2. Setup the 'Target' (where we are sending the SNMP request).
-    # We try IPv4 first (UdpTransportTarget), and if that fails due to a library error,
-    # we fallback to IPv6 (Udp6TransportTarget).
     try:
         target = await UdpTransportTarget.create((host, port))
     except PySnmpError:
         try:
             target = Udp6TransportTarget((host, port))
         except PySnmpError:
-            # If both fail, we raise our custom exception which shows 'cannot_connect' in the UI.
             raise CannotConnect from None
 
-    # 3. Setup Authentication (SNMP v3 vs v1/v2c).
-    # SNMP v3 uses User-based Security (USM) with passwords and encryption keys.
-    # SNMP v1/v2c uses simple 'Community Strings' (like a shared password).
     if version == "3":
-        # If keys are empty strings, we treat them as 'none' (unauthenticated/unencrypted).
         if not authkey:
             authproto = "none"
         if not privkey:
             privproto = "none"
 
-        # UsmUserData creates the secure identity for the SNMP v3 request.
         auth_data = UsmUserData(
             username,
             authKey=authkey or None,
             privKey=privkey or None,
-            # We map protocol names (like 'SHA') to the actual pysnmp library objects.
             authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
             privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
         )
     else:
-        # For v1/v2c, we just need the community string and the 'mpModel' (version flag).
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
-    # 4. Preparation for the actual request.
-    # This utility function combines the engine, auth, target, and OID into a standard format.
     request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
 
-    # 5. Execute a 'smoke test' request.
-    # We perform a simple GET command. If the OID exists and the credentials are correct,
-    # it returns success. If not, we get an 'err_indication' or 'err_status'.
     err_indication, err_status, _, _ = await get_cmd(*request_args)
 
-    # 6. Check for failure results.
     if err_indication:
-        # A network-level error (timeout, host unreachable).
         raise CannotConnect(err_indication) from None
     if err_status:
-        # An SNMP-level error (wrong password, OID not authorized).
         raise InvalidAuth(err_status.prettyPrint()) from None
 
 
