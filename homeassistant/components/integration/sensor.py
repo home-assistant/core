@@ -425,7 +425,7 @@ class IntegrationSensor(RestoreSensor):
         # or if a manual update has been requested (e.g. on sensor being added)
         if (
             self._refresh_device_class
-            or unit_of_measurement != self.unit_of_measurement
+            or unit_of_measurement != self._unit_of_measurement
             or source_device_class != self._source_device_class
         ):
             self._attr_device_class = self._calculate_device_class(
