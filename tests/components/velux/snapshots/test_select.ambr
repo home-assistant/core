@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select_setup[select.test_blind_velocity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -61,8 +62,9 @@
 # ---
 # name: test_select_setup[select.test_dual_roller_shutter_velocity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -121,8 +123,9 @@
 # ---
 # name: test_select_setup[select.test_window_velocity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
