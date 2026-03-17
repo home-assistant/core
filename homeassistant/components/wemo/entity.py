@@ -65,7 +65,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         return self._device_info
 
     async def _async_wemo_call(self, message: str, action: Callable[[], Any]) -> None:
-        """Run a wemo device action in the executor and update listeners.
+        """Run a WeMo device action in the executor and update listeners.
 
         Handles errors from the device and ensures all entities sharing the
         same coordinator are aware of updates to the device state.
