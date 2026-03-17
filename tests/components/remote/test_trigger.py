@@ -20,9 +20,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_remotes(hass: HomeAssistant) -> list[str]:
+async def target_remotes(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple remotes entities associated with different targets."""
-    return (await target_entities(hass, DOMAIN))["included"]
+    return await target_entities(hass, DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -59,7 +59,7 @@ async def test_remote_triggers_gated_by_labs_flag(
 async def test_remote_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_remotes: list[str],
+    target_remotes: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -68,10 +68,10 @@ async def test_remote_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the remote triggers when any remote changes to a specific state."""
-    other_entity_ids = set(target_remotes) - {entity_id}
+    other_entity_ids = set(target_remotes["included"]) - {entity_id}
 
     # Set all remotes, including the tested remote, to the initial state
-    for eid in target_remotes:
+    for eid in target_remotes["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -117,7 +117,7 @@ async def test_remote_state_trigger_behavior_any(
 async def test_remote_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_remotes: list[str],
+    target_remotes: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -126,10 +126,10 @@ async def test_remote_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the remote triggers when the first remote changes to a specific state."""
-    other_entity_ids = set(target_remotes) - {entity_id}
+    other_entity_ids = set(target_remotes["included"]) - {entity_id}
 
     # Set all remotes, including the tested remote, to the initial state
-    for eid in target_remotes:
+    for eid in target_remotes["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -174,7 +174,7 @@ async def test_remote_state_trigger_behavior_first(
 async def test_remote_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_remotes: list[str],
+    target_remotes: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -183,10 +183,10 @@ async def test_remote_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the remote triggers when the last remote changes to a specific state."""
-    other_entity_ids = set(target_remotes) - {entity_id}
+    other_entity_ids = set(target_remotes["included"]) - {entity_id}
 
     # Set all remotes, including the tested remote, to the initial state
-    for eid in target_remotes:
+    for eid in target_remotes["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

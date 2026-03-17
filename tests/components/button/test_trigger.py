@@ -16,9 +16,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_buttons(hass: HomeAssistant) -> list[str]:
+async def target_buttons(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple button entities associated with different targets."""
-    return (await target_entities(hass, "button"))["included"]
+    return await target_entities(hass, "button")
 
 
 @pytest.mark.parametrize("trigger_key", ["button.pressed"])
@@ -130,7 +130,7 @@ async def test_button_triggers_gated_by_labs_flag(
 async def test_button_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_buttons: list[str],
+    target_buttons: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -138,10 +138,10 @@ async def test_button_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the button state trigger fires when any button state changes to a specific state."""
-    other_entity_ids = set(target_buttons) - {entity_id}
+    other_entity_ids = set(target_buttons["included"]) - {entity_id}
 
     # Set all buttons, including the tested button, to the initial state
-    for eid in target_buttons:
+    for eid in target_buttons["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

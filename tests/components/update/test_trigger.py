@@ -20,9 +20,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_updates(hass: HomeAssistant) -> list[str]:
+async def target_updates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple update entities associated with different targets."""
-    return (await target_entities(hass, DOMAIN))["included"]
+    return await target_entities(hass, DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -56,7 +56,7 @@ async def test_update_triggers_gated_by_labs_flag(
 async def test_update_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_updates: list[str],
+    target_updates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -65,10 +65,10 @@ async def test_update_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the update state trigger fires when any update state changes to a specific state."""
-    other_entity_ids = set(target_updates) - {entity_id}
+    other_entity_ids = set(target_updates["included"]) - {entity_id}
 
     # Set all updates, including the tested one, to the initial state
-    for eid in target_updates:
+    for eid in target_updates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -109,7 +109,7 @@ async def test_update_state_trigger_behavior_any(
 async def test_update_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_updates: list[str],
+    target_updates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -118,10 +118,10 @@ async def test_update_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the update state trigger fires when the first update changes to a specific state."""
-    other_entity_ids = set(target_updates) - {entity_id}
+    other_entity_ids = set(target_updates["included"]) - {entity_id}
 
     # Set all updates, including the tested one, to the initial state
-    for eid in target_updates:
+    for eid in target_updates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -161,7 +161,7 @@ async def test_update_state_trigger_behavior_first(
 async def test_update_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_updates: list[str],
+    target_updates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -170,10 +170,10 @@ async def test_update_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the update state trigger fires when the last update changes to a specific state."""
-    other_entity_ids = set(target_updates) - {entity_id}
+    other_entity_ids = set(target_updates["included"]) - {entity_id}
 
     # Set all updates, including the tested one, to the initial state
-    for eid in target_updates:
+    for eid in target_updates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

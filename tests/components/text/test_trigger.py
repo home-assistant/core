@@ -16,9 +16,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_texts(hass: HomeAssistant) -> list[str]:
+async def target_texts(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple text entities associated with different targets."""
-    return (await target_entities(hass, "text"))["included"]
+    return await target_entities(hass, "text")
 
 
 @pytest.mark.parametrize("trigger_key", ["text.changed"])
@@ -91,7 +91,7 @@ async def test_text_triggers_gated_by_labs_flag(
 async def test_text_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_texts: list[str],
+    target_texts: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -99,10 +99,10 @@ async def test_text_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the text state trigger fires when any text state changes to a specific state."""
-    other_entity_ids = set(target_texts) - {entity_id}
+    other_entity_ids = set(target_texts["included"]) - {entity_id}
 
     # Set all texts, including the tested text, to the initial state
-    for eid in target_texts:
+    for eid in target_texts["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

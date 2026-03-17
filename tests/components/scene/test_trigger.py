@@ -16,9 +16,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_scenes(hass: HomeAssistant) -> list[str]:
+async def target_scenes(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple scene entities associated with different targets."""
-    return (await target_entities(hass, "scene"))["included"]
+    return await target_entities(hass, "scene")
 
 
 @pytest.mark.parametrize("trigger_key", ["scene.activated"])
@@ -130,7 +130,7 @@ async def test_scene_triggers_gated_by_labs_flag(
 async def test_scene_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_scenes: list[str],
+    target_scenes: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -138,10 +138,10 @@ async def test_scene_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the scene state trigger fires when any scene state changes to a specific state."""
-    other_entity_ids = set(target_scenes) - {entity_id}
+    other_entity_ids = set(target_scenes["included"]) - {entity_id}
 
     # Set all scenes, including the tested scene, to the initial state
-    for eid in target_scenes:
+    for eid in target_scenes["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

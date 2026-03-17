@@ -20,9 +20,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_input_booleans(hass: HomeAssistant) -> list[str]:
+async def target_input_booleans(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple input_boolean entities associated with different targets."""
-    return (await target_entities(hass, DOMAIN))["included"]
+    return await target_entities(hass, DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -62,7 +62,7 @@ async def test_input_boolean_triggers_gated_by_labs_flag(
 async def test_input_boolean_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_input_booleans: list[str],
+    target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -71,10 +71,10 @@ async def test_input_boolean_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the input_boolean state trigger fires when any input_boolean state changes to a specific state."""
-    other_entity_ids = set(target_input_booleans) - {entity_id}
+    other_entity_ids = set(target_input_booleans["included"]) - {entity_id}
 
     # Set all input_booleans, including the tested one, to the initial state
-    for eid in target_input_booleans:
+    for eid in target_input_booleans["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
     await hass.async_block_till_done()
 
@@ -120,7 +120,7 @@ async def test_input_boolean_state_trigger_behavior_any(
 async def test_input_boolean_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_input_booleans: list[str],
+    target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -129,10 +129,10 @@ async def test_input_boolean_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the input_boolean state trigger fires when the first input_boolean changes to a specific state."""
-    other_entity_ids = set(target_input_booleans) - {entity_id}
+    other_entity_ids = set(target_input_booleans["included"]) - {entity_id}
 
     # Set all input_booleans, including the tested one, to the initial state
-    for eid in target_input_booleans:
+    for eid in target_input_booleans["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
     await hass.async_block_till_done()
 
@@ -177,7 +177,7 @@ async def test_input_boolean_state_trigger_behavior_first(
 async def test_input_boolean_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_input_booleans: list[str],
+    target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -186,10 +186,10 @@ async def test_input_boolean_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the input_boolean state trigger fires when the last input_boolean changes to a specific state."""
-    other_entity_ids = set(target_input_booleans) - {entity_id}
+    other_entity_ids = set(target_input_booleans["included"]) - {entity_id}
 
     # Set all input_booleans, including the tested one, to the initial state
-    for eid in target_input_booleans:
+    for eid in target_input_booleans["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
     await hass.async_block_till_done()
 

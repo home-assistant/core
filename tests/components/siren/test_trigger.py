@@ -20,9 +20,9 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_sirens(hass: HomeAssistant) -> list[str]:
+async def target_sirens(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple siren entities associated with different targets."""
-    return (await target_entities(hass, DOMAIN))["included"]
+    return await target_entities(hass, DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -62,7 +62,7 @@ async def test_siren_triggers_gated_by_labs_flag(
 async def test_siren_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_sirens: list[str],
+    target_sirens: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -71,10 +71,10 @@ async def test_siren_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when any siren state changes to a specific state."""
-    other_entity_ids = set(target_sirens) - {entity_id}
+    other_entity_ids = set(target_sirens["included"]) - {entity_id}
 
     # Set all sirens, including the tested one, to the initial state
-    for eid in target_sirens:
+    for eid in target_sirens["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -120,7 +120,7 @@ async def test_siren_state_trigger_behavior_any(
 async def test_siren_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_sirens: list[str],
+    target_sirens: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -129,10 +129,10 @@ async def test_siren_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when the first siren changes to a specific state."""
-    other_entity_ids = set(target_sirens) - {entity_id}
+    other_entity_ids = set(target_sirens["included"]) - {entity_id}
 
     # Set all sirens, including the tested one, to the initial state
-    for eid in target_sirens:
+    for eid in target_sirens["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -177,7 +177,7 @@ async def test_siren_state_trigger_behavior_first(
 async def test_siren_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_sirens: list[str],
+    target_sirens: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -186,10 +186,10 @@ async def test_siren_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when the last siren changes to a specific state."""
-    other_entity_ids = set(target_sirens) - {entity_id}
+    other_entity_ids = set(target_sirens["included"]) - {entity_id}
 
     # Set all sirens, including the tested one, to the initial state
-    for eid in target_sirens:
+    for eid in target_sirens["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
