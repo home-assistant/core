@@ -6,7 +6,6 @@ from contextlib import suppress
 import logging
 import os
 
-from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
