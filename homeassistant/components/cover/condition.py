@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.condition import Condition, EntityConditionBase
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
-from .trigger import CoverDomainSpec
+from .models import CoverDomainSpec
 
 
 class CoverConditionBase(EntityConditionBase[CoverDomainSpec]):
