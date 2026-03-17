@@ -14,6 +14,7 @@ from homeassistant.components.aurorawatch.const import (
     DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -111,14 +112,17 @@ async def test_sensor_update_failure_network_error(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Sensors should be unavailable
+        # Initial setup should fail and transition the entry to SETUP_RETRY,
+        # and entities should not be created yet.
+        entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+        assert entry is not None
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+
         status_state = hass.states.get("sensor.aurorawatch_uk_aurora_status")
-        assert status_state
-        assert status_state.state == STATE_UNAVAILABLE
+        assert status_state is None
 
         activity_state = hass.states.get("sensor.aurorawatch_uk_geomagnetic_activity")
-        assert activity_state
-        assert activity_state.state == STATE_UNAVAILABLE
+        assert activity_state is None
 
 
 async def test_sensor_update_failure_invalid_xml(
@@ -126,7 +130,7 @@ async def test_sensor_update_failure_invalid_xml(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor update with invalid XML."""
-    from unittest.mock import patch
+    from unittest.mock import Mock, patch
 
     from tests.components.aurorawatch.conftest import MOCK_MALFORMED_XML
 
@@ -139,17 +143,21 @@ async def test_sensor_update_failure_invalid_xml(
         # Mock malformed XML response
         mock_response = AsyncMock()
         mock_response.text = AsyncMock(return_value=MOCK_MALFORMED_XML)
-        mock_response.raise_for_status = AsyncMock()
+        mock_response.raise_for_status = Mock()
         mock_session.get.return_value = mock_response
 
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Sensors should be unavailable due to parsing error
+        # Initial setup should fail due to parsing error; entry should be in
+        # SETUP_RETRY and entities should not be created yet.
+        entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+        assert entry is not None
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+
         status_state = hass.states.get("sensor.aurorawatch_uk_aurora_status")
-        assert status_state
-        assert status_state.state == STATE_UNAVAILABLE
+        assert status_state is None
 
 
 async def test_sensor_update_failure_missing_fields(
@@ -157,7 +165,7 @@ async def test_sensor_update_failure_missing_fields(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor update with missing required fields."""
-    from unittest.mock import patch
+    from unittest.mock import Mock, patch
 
     from tests.components.aurorawatch.conftest import MOCK_INVALID_STATUS_XML
 
@@ -170,7 +178,7 @@ async def test_sensor_update_failure_missing_fields(
         # Mock invalid XML response (missing required fields)
         mock_response = AsyncMock()
         mock_response.text = AsyncMock(return_value=MOCK_INVALID_STATUS_XML)
-        mock_response.raise_for_status = AsyncMock()
+        mock_response.raise_for_status = Mock()
         mock_session.get.return_value = mock_response
 
         mock_config_entry.add_to_hass(hass)

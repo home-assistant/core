@@ -23,10 +23,12 @@ class AurowatchEntity(CoordinatorEntity[AurowatchDataUpdateCoordinator]):
         super().__init__(coordinator=coordinator)
 
         self._attr_translation_key = translation_key
-        self._attr_unique_id = f"{DOMAIN}_{translation_key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{translation_key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, DOMAIN)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Lancaster University",
             model="AuroraWatch UK",
             name="AuroraWatch UK",

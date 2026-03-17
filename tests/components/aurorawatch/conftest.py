@@ -1,7 +1,7 @@
 """Common fixtures for the AuroraWatch UK tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -67,11 +67,11 @@ def mock_aiohttp_session() -> Generator[AsyncMock]:
         # Create mock responses
         mock_status_response = AsyncMock()
         mock_status_response.text = AsyncMock(return_value=MOCK_STATUS_XML)
-        mock_status_response.raise_for_status = AsyncMock()
+        mock_status_response.raise_for_status = Mock()
 
         mock_activity_response = AsyncMock()
         mock_activity_response.text = AsyncMock(return_value=MOCK_ACTIVITY_XML)
-        mock_activity_response.raise_for_status = AsyncMock()
+        mock_activity_response.raise_for_status = Mock()
 
         # Mock session.get to return different responses based on URL
         async def mock_get(url):

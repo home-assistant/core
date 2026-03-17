@@ -1,10 +1,10 @@
 """Data coordinator for AuroraWatch UK integration."""
 
 import logging
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 from datetime import timedelta
 
-import async_timeout
+import asyncio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -32,14 +32,14 @@ class AurowatchDataUpdateCoordinator(DataUpdateCoordinator):
             session = async_get_clientsession(self.hass)
 
             # Fetch both status and activity data
-            async with async_timeout.timeout(API_TIMEOUT):
-                status_response = await session.get(API_URL)
-                status_response.raise_for_status()
-                status_xml = await status_response.text()
+            async with asyncio.timeout(API_TIMEOUT):
+                async with session.get(API_URL) as status_response:
+                    status_response.raise_for_status()
+                    status_xml = await status_response.text()
 
-                activity_response = await session.get(API_ACTIVITY_URL)
-                activity_response.raise_for_status()
-                activity_xml = await activity_response.text()
+                async with session.get(API_ACTIVITY_URL) as activity_response:
+                    activity_response.raise_for_status()
+                    activity_xml = await activity_response.text()
 
             # Parse status XML
             try:

@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = AurowatchDataUpdateCoordinator(hass)
 
     # Fetch initial data
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
 
     # Store coordinator
     hass.data.setdefault(DOMAIN, {})

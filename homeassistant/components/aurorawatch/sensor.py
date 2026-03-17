@@ -1,6 +1,7 @@
 """Sensor platform for AuroraWatch UK integration."""
 
 import logging
+from typing import cast
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +28,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the AuroraWatch sensor."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = cast(AurowatchDataUpdateCoordinator, entry.runtime_data)
     async_add_entities(
         [
             AurowatchSensor(coordinator),
@@ -44,7 +45,7 @@ class AurowatchSensor(AurowatchEntity, SensorEntity):
         super().__init__(coordinator, "aurora_status")
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.get("status")
@@ -76,7 +77,7 @@ class AurowatchActivitySensor(AurowatchEntity, SensorEntity):
         super().__init__(coordinator, "geomagnetic_activity")
 
     @property
-    def native_value(self):
+    def native_value(self) -> int | float | None:
         """Return the geomagnetic activity value."""
         if self.coordinator.data:
             return self.coordinator.data.get("activity")
