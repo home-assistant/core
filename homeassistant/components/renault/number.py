@@ -65,37 +65,35 @@ class RenaultNumberEntity(
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
+        if self.entity_description.key not in {
+            "charge_limit_min",
+            "charge_limit_target",
+        }:
+            raise NotImplementedError(
+                f"Unsupported Renault number entity key: {self.entity_description.key}"
+            )
+
         if (
             self.coordinator.data is None
-            or (current_min := self.coordinator.data.socMin) is None
-            or (current_target := self.coordinator.data.socTarget) is None
+            or (min_soc := self.coordinator.data.socMin) is None
+            or (target_soc := self.coordinator.data.socTarget) is None
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="battery_soc_unavailable",
             )
 
-        int_value = round(value)
-
-        # Update the appropriate value based on which entity this is
         if self.entity_description.key == "charge_limit_min":
-            await self.vehicle.set_battery_soc(
-                min_soc=int_value, target_soc=current_target
-            )
-            # Optimistically update local coordinator data so the new
-            # limits are reflected immediately without a remote refresh.
-            self.coordinator.data.socMin = int_value
+            min_soc = round(value)
         elif self.entity_description.key == "charge_limit_target":
-            await self.vehicle.set_battery_soc(
-                min_soc=current_min, target_soc=int_value
-            )
-            # Optimistically update local coordinator data so the new
-            # limits are reflected immediately without a remote refresh.
-            self.coordinator.data.socTarget = int_value
-        else:
-            raise NotImplementedError(
-                f"Unsupported Renault number entity key: {self.entity_description.key}"
-            )
+            target_soc = round(value)
+
+        await self.vehicle.set_battery_soc(min_soc=min_soc, target_soc=target_soc)
+
+        # Optimistically update local coordinator data so the new
+        # limits are reflected immediately without a remote refresh.
+        self.coordinator.data.socMin = min_soc
+        self.coordinator.data.socTarget = target_soc
 
         # Notify listeners about the updated SoC limits without triggering
         # a remote refresh, as Renault servers may still cache old values.
