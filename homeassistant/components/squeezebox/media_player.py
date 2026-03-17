@@ -859,7 +859,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
         if not image_url:
             return (None, None)
-        
+
         result = await self._async_fetch_image(image_url)
         if result == (None, None):
             _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
