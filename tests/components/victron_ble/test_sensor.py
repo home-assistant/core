@@ -4,7 +4,7 @@ from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.victron_ble.const import DOMAIN
+from homeassistant.components.victron_ble.const import DOMAIN, VICTRON_IDENTIFIER
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -26,8 +26,6 @@ from .fixtures import (
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.bluetooth import inject_bluetooth_service_info
-
-VICTRON_IDENTIFIER = 0x02E1
 
 # Crafted solar charger advertisements with specific charger_error values.
 # These are real encrypted payloads using VICTRON_SOLAR_CHARGER_TOKEN.
