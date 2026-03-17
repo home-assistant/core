@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[select.3dprinter_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -61,8 +62,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.3dprinter_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -121,8 +123,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.4_433_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -181,8 +184,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.6294ha_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -241,8 +245,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aqi_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -303,8 +308,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.arida_stavern_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -363,8 +369,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.arida_stavern_target_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -421,8 +428,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_cooker_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -481,8 +489,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_cooker_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -541,8 +550,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_washing_machine_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -601,8 +611,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_washing_machine_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -661,8 +672,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.balkonbewasserung_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -723,8 +735,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.bathroom_light_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -783,8 +796,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.bathroom_light_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -843,8 +857,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.blinds_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -901,8 +916,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.bree_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -967,8 +983,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_anti_flicker-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1027,8 +1044,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1087,8 +1105,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_night_vision-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1147,8 +1166,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1205,8 +1225,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_sound_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1263,8 +1284,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.c9_ipc_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1321,8 +1343,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.c9_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1381,8 +1404,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.c9_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1439,8 +1463,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1499,8 +1524,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_night_vision-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1559,8 +1585,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1617,8 +1644,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_sound_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1675,8 +1703,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_porch_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1735,8 +1764,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_porch_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1793,8 +1823,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_porch_sound_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1851,8 +1882,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cbe_pro_2_inverter_work_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1909,8 +1941,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ceiling_fan_with_light_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1973,8 +2006,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.dehumidifer_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2035,8 +2069,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.dehumidifier_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2097,8 +2132,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.dehumidifier_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2157,8 +2193,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.dehumidifier_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2217,8 +2254,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2279,8 +2317,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.dining_1_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2455,8 +2494,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.elivco_kitchen_socket_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2515,8 +2555,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.elivco_kitchen_socket_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2575,8 +2616,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.elivco_tv_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2635,8 +2677,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.elivco_tv_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2695,8 +2738,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.framboisier_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2755,8 +2799,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.framboisier_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2815,8 +2860,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.framboisiers_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2875,8 +2921,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.garage_camera_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2935,8 +2982,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.garage_camera_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2993,8 +3041,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.garden_valve_yard_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3055,8 +3104,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ha_socket_delta_test_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3115,8 +3165,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ha_socket_delta_test_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3175,8 +3226,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.hoover_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3237,8 +3289,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ineox_sp2_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3297,8 +3350,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.intercom_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3357,8 +3411,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ion1000pro_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3423,8 +3478,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ion1000pro_countdown_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3489,8 +3545,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.jardim_frontal_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3549,8 +3606,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.jardin_fraises_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3609,8 +3667,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3669,8 +3728,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3729,8 +3789,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.kalado_air_purifier_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3795,8 +3856,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.kitchen_blinds_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3853,8 +3915,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.klarta_humea_spraying_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3925,8 +3988,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.lave_linge_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3985,8 +4049,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.lave_linge_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4045,8 +4110,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.living_room_dehumidifier_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4107,8 +4173,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.mesa_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4169,8 +4236,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.mesa_up_down-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4229,8 +4297,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4289,8 +4358,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.mirilla_puerta_ipc_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4347,8 +4417,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.office_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4407,8 +4478,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.office_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4467,8 +4539,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.persiana_do_quarto_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4525,8 +4598,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.projector_screen_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4583,8 +4657,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.puerta_casa_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4643,8 +4718,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.raspy4_home_assistant_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4703,8 +4779,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.raspy4_home_assistant_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4763,8 +4840,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.seating_side_6_ch_smart_switch_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4823,8 +4901,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.security_light_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4883,8 +4962,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.security_light_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4943,8 +5023,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.server_fan_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5003,8 +5084,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.siren_siren_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5065,8 +5147,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.siren_veranda_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5127,8 +5210,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.siren_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5189,8 +5273,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.smart_odor_eliminator_pro_odor_elimination_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5247,8 +5332,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.smart_water_timer_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5309,8 +5395,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.socket3_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5369,8 +5456,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.socket4_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5429,8 +5517,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.socket4_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5489,8 +5578,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.spot_1_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5549,8 +5639,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.spot_1_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5609,8 +5700,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.sunbeam_bedding_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5684,8 +5776,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5759,8 +5852,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5834,8 +5928,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.v20_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5896,8 +5991,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.v20_water_tank_adjustment-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5956,8 +6052,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.valve_controller_2_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6018,8 +6115,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.vividstorm_screen_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6076,8 +6174,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.wallwasher_front_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6136,8 +6235,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.wallwasher_front_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6196,8 +6296,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.weihnachtsmann_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6256,8 +6357,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.weihnachtsmann_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6316,8 +6418,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.wi_fi_hub_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
