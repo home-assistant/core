@@ -43,6 +43,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_SETPOINT_PROPERTY,
 )
 from zwave_js_server.exceptions import UnknownValueData
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -68,6 +69,7 @@ from .discovery_data_template import (
 from .entity import NewZwaveDiscoveryInfo
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .models import (
+    CommandClassVersionRange,
     FirmwareVersionRange,
     NewZWaveDiscoverySchema,
     ValueType,
@@ -128,6 +130,12 @@ class ZWaveDiscoverySchema:
     entity_registry_enabled_default: bool = True
     # [optional] the entity category for the discovered entity
     entity_category: EntityCategory | None = None
+    # [optional] the primary value's endpoint must support ALL of these CCs
+    # at a version within the specified range
+    required_cc_versions: dict[int, CommandClassVersionRange] | None = None
+    # [optional] the primary value's endpoint must NOT support ANY of these CCs
+    # at a version within the specified range
+    absent_cc_versions: dict[int, CommandClassVersionRange] | None = None
 
 
 DOOR_LOCK_CURRENT_MODE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -1223,6 +1231,26 @@ DISCOVERY_SCHEMAS = [
 
 
 @callback
+def _check_cc_version_ranges(
+    node_endpoint: Endpoint,
+    cc_version_ranges: dict[int, CommandClassVersionRange],
+) -> bool:
+    """Return True if ALL CC version ranges are satisfied on the endpoint."""
+    for cc_id, version_range in cc_version_ranges.items():
+        cc_version = next(
+            (cc.version for cc in node_endpoint.command_classes if cc.id == cc_id),
+            None,
+        )
+        if cc_version is None:
+            return False
+        if version_range.min is not None and cc_version < version_range.min:
+            return False
+        if version_range.max is not None and cc_version > version_range.max:
+            return False
+    return True
+
+
+@callback
 def async_discover_node_values(
     node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
 ) -> Generator[ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo]:
@@ -1332,6 +1360,24 @@ def async_discover_single_value(
             )
         ):
             continue
+
+        # check required_cc_versions
+        if schema.required_cc_versions is not None:
+            endpoint_idx = value.endpoint if value.endpoint is not None else 0
+            node_endpoint = value.node.endpoints.get(endpoint_idx)
+            if node_endpoint is None or not _check_cc_version_ranges(
+                node_endpoint, schema.required_cc_versions
+            ):
+                continue
+
+        # check absent_cc_versions
+        if schema.absent_cc_versions is not None:
+            endpoint_idx = value.endpoint if value.endpoint is not None else 0
+            node_endpoint = value.node.endpoints.get(endpoint_idx)
+            if node_endpoint is not None and _check_cc_version_ranges(
+                node_endpoint, schema.absent_cc_versions
+            ):
+                continue
 
         # check primary value
         if not check_value(value, schema.primary_value):

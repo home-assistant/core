@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -20,9 +21,11 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.components.zwave_js.discovery import (
+    CommandClassVersionRange,
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
     ZWaveValueDiscoverySchema,
+    _check_cc_version_ranges,
 )
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
@@ -546,6 +549,178 @@ async def test_nabu_casa_zwa2(
     )
     assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
         "The LED should have the correct friendly name"
+    )
+
+
+def test_command_class_version_range_any_version() -> None:
+    """Test CommandClassVersionRange.any() matches any version (presence check)."""
+    cc_id = CommandClass.SWITCH_MULTILEVEL
+
+    # CC present at any version passes
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 1),
+        {cc_id: CommandClassVersionRange.any()},
+    )
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 99),
+        {cc_id: CommandClassVersionRange.any()},
+    )
+
+    # CC absent fails
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, None),
+        {cc_id: CommandClassVersionRange.any()},
+    )
+
+
+def _make_mock_endpoint(cc_id: int, cc_version: int | None) -> MagicMock:
+    """Build a mock endpoint with a single command class entry."""
+    endpoint = MagicMock()
+    if cc_version is not None:
+        cc_info = MagicMock()
+        cc_info.id = cc_id
+        cc_info.version = cc_version
+        endpoint.command_classes = [cc_info]
+    else:
+        endpoint.command_classes = []
+    return endpoint
+
+
+def test_check_cc_version_ranges_required() -> None:
+    """Test _check_cc_version_ranges for required CC version matching."""
+    cc_id = CommandClass.SWITCH_MULTILEVEL
+
+    # Version within range (min=2, max=5) passes
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 3),
+        {cc_id: CommandClassVersionRange(min=2, max=5)},
+    )
+
+    # Version at min boundary passes
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 2),
+        {cc_id: CommandClassVersionRange(min=2, max=5)},
+    )
+
+    # Version at max boundary passes
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 5),
+        {cc_id: CommandClassVersionRange(min=2, max=5)},
+    )
+
+    # Version below min fails
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 1),
+        {cc_id: CommandClassVersionRange(min=2, max=5)},
+    )
+
+    # Version above max fails
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 6),
+        {cc_id: CommandClassVersionRange(min=2, max=5)},
+    )
+
+    # min-only (>=2): version 1 fails, version 2 passes, version 99 passes
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 1),
+        {cc_id: CommandClassVersionRange(min=2)},
+    )
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 2),
+        {cc_id: CommandClassVersionRange(min=2)},
+    )
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 99),
+        {cc_id: CommandClassVersionRange(min=2)},
+    )
+
+    # max-only (<=3): version 4 fails, version 3 passes, version 1 passes
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 4),
+        {cc_id: CommandClassVersionRange(max=3)},
+    )
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 3),
+        {cc_id: CommandClassVersionRange(max=3)},
+    )
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 1),
+        {cc_id: CommandClassVersionRange(max=3)},
+    )
+
+    # Exact match (min=4, max=4): version 4 passes, others fail
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 4),
+        {cc_id: CommandClassVersionRange(min=4, max=4)},
+    )
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 3),
+        {cc_id: CommandClassVersionRange(min=4, max=4)},
+    )
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 5),
+        {cc_id: CommandClassVersionRange(min=4, max=4)},
+    )
+
+    # CC not present in command_classes fails
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, None),
+        {cc_id: CommandClassVersionRange(min=2)},
+    )
+
+    # Multiple CCs: all must pass
+    cc_id2 = CommandClass.SWITCH_BINARY
+    endpoint = MagicMock()
+    cc_info1 = MagicMock()
+    cc_info1.id = cc_id
+    cc_info1.version = 3
+    cc_info2 = MagicMock()
+    cc_info2.id = cc_id2
+    cc_info2.version = 2
+    endpoint.command_classes = [cc_info1, cc_info2]
+
+    assert _check_cc_version_ranges(
+        endpoint,
+        {
+            cc_id: CommandClassVersionRange(min=2, max=4),
+            cc_id2: CommandClassVersionRange(min=1, max=3),
+        },
+    )
+
+    # Second CC version out of range → fails
+    assert not _check_cc_version_ranges(
+        endpoint,
+        {
+            cc_id: CommandClassVersionRange(min=2, max=4),
+            cc_id2: CommandClassVersionRange(min=3),  # cc_id2 version=2 < 3
+        },
+    )
+
+
+def test_check_cc_version_ranges_absent() -> None:
+    """Test absent_cc_versions logic via _check_cc_version_ranges.
+
+    For absent_cc_versions, the schema skips if _check_cc_version_ranges returns True
+    (meaning an absent condition IS satisfied — the CC is present and in the range).
+    """
+    cc_id = CommandClass.SWITCH_MULTILEVEL
+
+    # CC present and version in range → function returns True → schema would skip
+    assert _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 3),
+        {cc_id: CommandClassVersionRange(min=1)},
+    )
+
+    # CC present but version out of range → returns False → schema proceeds
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, 1),
+        {cc_id: CommandClassVersionRange(min=2)},
+    )
+
+    # CC absent entirely → returns False → schema proceeds
+    assert not _check_cc_version_ranges(
+        _make_mock_endpoint(cc_id, None),
+        {cc_id: CommandClassVersionRange(min=1)},
     )
 
 

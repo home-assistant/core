@@ -86,6 +86,19 @@ class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
 
 
 @dataclass
+class CommandClassVersionRange:
+    """Command class version range."""
+
+    min: int | None = None
+    max: int | None = None
+
+    @classmethod
+    def any(cls) -> CommandClassVersionRange:
+        """Match any version (presence check only)."""
+        return cls()
+
+
+@dataclass
 class PlatformZwaveDiscoveryInfo:
     """Info discovered from (primary) ZWave Value to create entity."""
 
@@ -204,6 +217,12 @@ class NewZWaveDiscoverySchema:
     # [optional] bool to specify whether state is assumed
     # and events should be fired on value update
     assumed_state: bool = False
+    # [optional] the primary value's endpoint must support ALL of these CCs
+    # at a version within the specified range
+    required_cc_versions: dict[int, CommandClassVersionRange] | None = None
+    # [optional] the primary value's endpoint must NOT support ANY of these CCs
+    # at a version within the specified range
+    absent_cc_versions: dict[int, CommandClassVersionRange] | None = None
 
 
 @dataclass
