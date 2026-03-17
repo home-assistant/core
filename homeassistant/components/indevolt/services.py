@@ -188,22 +188,23 @@ async def _execute_realtime_action(
         return_exceptions=True,
     )
 
+    errors: list[str] = []
     exception: BaseException | None = None
+
     for coordinator, result in zip(coordinators, results, strict=True):
         if isinstance(result, BaseException):
-            _LOGGER.error(
-                "Coordinator %s failed: %s", coordinator.friendly_name, result
-            )
+            if len(coordinators) == 1:
+                raise result
+
+            errors.append(f"{coordinator.friendly_name}: {result}")
             if exception is None:
                 exception = result
 
-    if exception:
-        if len(coordinators) == 1:
-            raise exception
-
+    if errors:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="service_call_failed",
+            translation_key="multi_device_errors",
+            translation_placeholders={"errors": "; ".join(errors)},
         ) from exception
 
 
