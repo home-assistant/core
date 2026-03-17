@@ -19,9 +19,10 @@ ID_TYPE_SERIAL = "serial"
 FEATUREMAP_ATTRIBUTE_ID = 65532
 
 # Cluster IDs relevant for direct device-to-device bindings.
-# Derived from the Matter Device Library Specification -- each ID corresponds
-# to a cluster for which a standard controller device type with the Binding
-# cluster exists (e.g. On/Off Light Switch, Door Lock Controller, etc.).
+# Primarily derived from the Matter Device Library specification: these are
+# clusters that typically have a standard controller device type including the
+# Binding cluster (e.g. On/Off Light Switch, Door Lock Controller, etc.), plus
+# a few pragmatic additions based on real-world devices (such as Thermostat).
 BINDABLE_CLUSTER_IDS: frozenset[int] = frozenset(
     {
         6,  # OnOff
