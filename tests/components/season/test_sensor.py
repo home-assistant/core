@@ -180,7 +180,9 @@ async def test_season_local_midnight(
     hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        mock_config_entry, unique_id=TYPE_METEOROLOGICAL, data={CONF_TYPE: TYPE_METEOROLOGICAL}
+        mock_config_entry,
+        unique_id=TYPE_METEOROLOGICAL,
+        data={CONF_TYPE: TYPE_METEOROLOGICAL},
     )
 
     sydney_tz = ZoneInfo("Australia/Sydney")
