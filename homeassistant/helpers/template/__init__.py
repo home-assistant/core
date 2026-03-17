@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from ast import literal_eval
 import asyncio
-from enum import Enum
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
 from datetime import datetime, timedelta
+from enum import Enum
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
