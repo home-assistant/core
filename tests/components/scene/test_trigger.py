@@ -20,7 +20,7 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_scenes(hass: HomeAssistant) -> list[str]:
+async def target_scenes(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple scene entities associated with different targets."""
     return await target_entities(hass, "scene")
 
@@ -140,7 +140,7 @@ async def test_scene_triggers_gated_by_labs_flag(
 async def test_scene_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_scenes: list[str],
+    target_scenes: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,

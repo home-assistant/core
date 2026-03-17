@@ -19,7 +19,7 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_media_players(hass: HomeAssistant) -> list[str]:
+async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple media player entities associated with different targets."""
     return await target_entities(hass, "media_player")
 
@@ -69,7 +69,7 @@ async def test_media_player_triggers_gated_by_labs_flag(
 async def test_media_player_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_media_players: list[str],
+    target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -130,7 +130,7 @@ async def test_media_player_state_trigger_behavior_any(
 async def test_media_player_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_media_players: list[str],
+    target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -190,7 +190,7 @@ async def test_media_player_state_trigger_behavior_first(
 async def test_media_player_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_media_players: list[str],
+    target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,

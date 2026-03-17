@@ -34,25 +34,25 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_sensors(hass: HomeAssistant) -> list[str]:
+async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple sensor entities associated with different targets."""
     return await target_entities(hass, "sensor")
 
 
 @pytest.fixture
-async def target_climates(hass: HomeAssistant) -> list[str]:
+async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple climate entities associated with different targets."""
     return await target_entities(hass, "climate")
 
 
 @pytest.fixture
-async def target_humidifiers(hass: HomeAssistant) -> list[str]:
+async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple humidifier entities associated with different targets."""
     return await target_entities(hass, "humidifier")
 
 
 @pytest.fixture
-async def target_weathers(hass: HomeAssistant) -> list[str]:
+async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple weather entities associated with different targets."""
     return await target_entities(hass, "weather")
 
@@ -99,7 +99,7 @@ async def test_humidity_triggers_gated_by_labs_flag(
 async def test_humidity_trigger_sensor_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_sensors: list[str],
+    target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -148,7 +148,7 @@ async def test_humidity_trigger_sensor_behavior_any(
 async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_sensors: list[str],
+    target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -198,7 +198,7 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
 async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_sensors: list[str],
+    target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -256,7 +256,7 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
 async def test_humidity_trigger_climate_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -307,7 +307,7 @@ async def test_humidity_trigger_climate_behavior_any(
 async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -359,7 +359,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
 async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_climates: list[str],
+    target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -417,7 +417,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
 async def test_humidity_trigger_humidifier_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_humidifiers: list[str],
+    target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -468,7 +468,7 @@ async def test_humidity_trigger_humidifier_behavior_any(
 async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_humidifiers: list[str],
+    target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -520,7 +520,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
 async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_humidifiers: list[str],
+    target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -578,7 +578,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
 async def test_humidity_trigger_weather_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_weathers: list[str],
+    target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -629,7 +629,7 @@ async def test_humidity_trigger_weather_behavior_any(
 async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_weathers: list[str],
+    target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -681,7 +681,7 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
 async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_weathers: list[str],
+    target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,

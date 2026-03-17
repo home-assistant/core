@@ -23,7 +23,7 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_alarm_control_panels(hass: HomeAssistant) -> list[str]:
+async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple alarm control panel entities associated with different targets."""
     return await target_entities(hass, "alarm_control_panel")
 
@@ -129,7 +129,7 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
 async def test_alarm_control_panel_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_alarm_control_panels: list[str],
+    target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -240,7 +240,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
 async def test_alarm_control_panel_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_alarm_control_panels: list[str],
+    target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -350,7 +350,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
 async def test_alarm_control_panel_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_alarm_control_panels: list[str],
+    target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,

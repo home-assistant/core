@@ -20,7 +20,7 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_vacuums(hass: HomeAssistant) -> list[str]:
+async def target_vacuums(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple vacuum entities associated with different targets."""
     return await target_entities(hass, "vacuum")
 
@@ -86,7 +86,7 @@ async def test_vacuum_triggers_gated_by_labs_flag(
 async def test_vacuum_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_vacuums: list[str],
+    target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -159,7 +159,7 @@ async def test_vacuum_state_trigger_behavior_any(
 async def test_vacuum_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_vacuums: list[str],
+    target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -231,7 +231,7 @@ async def test_vacuum_state_trigger_behavior_first(
 async def test_vacuum_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_vacuums: list[str],
+    target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,

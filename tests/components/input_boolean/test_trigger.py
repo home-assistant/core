@@ -19,7 +19,7 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_input_booleans(hass: HomeAssistant) -> list[str]:
+async def target_input_booleans(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple input_boolean entities associated with different targets."""
     return await target_entities(hass, DOMAIN)
 
@@ -67,7 +67,7 @@ async def test_input_boolean_triggers_gated_by_labs_flag(
 async def test_input_boolean_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_input_booleans: list[str],
+    target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -125,7 +125,7 @@ async def test_input_boolean_state_trigger_behavior_any(
 async def test_input_boolean_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_input_booleans: list[str],
+    target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -182,7 +182,7 @@ async def test_input_boolean_state_trigger_behavior_first(
 async def test_input_boolean_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_input_booleans: list[str],
+    target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
