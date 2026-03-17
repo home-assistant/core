@@ -7098,6 +7098,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[rirsc4vhpbv2whkp2gw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'rirsc4vhpbv2whkp2gw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'C30 (unsupported)',
+    'model_id': 'pkhw2vbphv4csrir',
+    'name': 'C30',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[rl39uwgaqwjwc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
