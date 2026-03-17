@@ -16,6 +16,58 @@ from tests.components.common import (
     target_entities,
 )
 
+TEST_TRIGGER_STATES = [
+    (
+        "text.changed",
+        [
+            {"included": {"state": None, "attributes": {}}, "count": 0},
+            {"included": {"state": "bar", "attributes": {}}, "count": 0},
+            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+        ],
+    ),
+    (
+        "text.changed",
+        [
+            {"included": {"state": "foo", "attributes": {}}, "count": 0},
+            {"included": {"state": "bar", "attributes": {}}, "count": 1},
+            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+        ],
+    ),
+    (
+        "text.changed",
+        [
+            {"included": {"state": "foo", "attributes": {}}, "count": 0},
+            # empty string
+            {"included": {"state": "", "attributes": {}}, "count": 1},
+            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+        ],
+    ),
+    (
+        "text.changed",
+        [
+            {
+                "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                "count": 0,
+            },
+            {"included": {"state": "bar", "attributes": {}}, "count": 0},
+            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+            {
+                "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                "count": 0,
+            },
+        ],
+    ),
+    (
+        "text.changed",
+        [
+            {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+            {"included": {"state": "bar", "attributes": {}}, "count": 0},
+            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+            {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+        ],
+    ),
+]
+
 
 @pytest.fixture
 async def target_texts(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -42,60 +94,7 @@ async def test_text_triggers_gated_by_labs_flag(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
 )
-@pytest.mark.parametrize(
-    ("trigger", "states"),
-    [
-        (
-            "text.changed",
-            [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 1},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
-                # empty string
-                {"included": {"state": "", "attributes": {}}, "count": 1},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                    "count": 0,
-                },
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-                {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                    "count": 0,
-                },
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-            ],
-        ),
-    ],
-)
+@pytest.mark.parametrize(("trigger", "states"), TEST_TRIGGER_STATES)
 async def test_text_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -138,60 +137,7 @@ async def test_text_state_trigger_behavior_any(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(INPUT_TEXT_DOMAIN),
 )
-@pytest.mark.parametrize(
-    ("trigger", "states"),
-    [
-        (
-            "text.changed",
-            [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 1},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
-                # empty string
-                {"included": {"state": "", "attributes": {}}, "count": 1},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                    "count": 0,
-                },
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-                {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                    "count": 0,
-                },
-            ],
-        ),
-        (
-            "text.changed",
-            [
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-            ],
-        ),
-    ],
-)
+@pytest.mark.parametrize(("trigger", "states"), TEST_TRIGGER_STATES)
 async def test_input_text_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
