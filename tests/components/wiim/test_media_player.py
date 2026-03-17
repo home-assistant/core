@@ -30,7 +30,6 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_BROWSE_MEDIA,
     SERVICE_MEDIA_PAUSE,
@@ -38,7 +37,6 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_SEEK,
     SERVICE_PLAY_MEDIA,
     SERVICE_REPEAT_SET,
-    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_MUTE,
@@ -66,7 +64,6 @@ async def test_state_machine_updates_from_device_callbacks(
     assert state.state == MediaPlayerState.IDLE
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
     assert state.attributes[ATTR_INPUT_SOURCE] == "Network"
-    assert state.attributes[ATTR_SOUND_MODE] == "speaker"
     assert state.attributes["supported_features"] == int(
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
@@ -76,7 +73,6 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.SEEK
     )
@@ -116,7 +112,6 @@ async def test_state_machine_updates_from_device_callbacks(
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.6
     assert state.attributes[ATTR_INPUT_SOURCE] == "Bluetooth"
-    assert state.attributes[ATTR_SOUND_MODE] == "optical"
     assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.ALL
     assert state.attributes[ATTR_MEDIA_SHUFFLE] is True
     assert state.attributes["supported_features"] == int(
@@ -128,7 +123,6 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -202,15 +196,6 @@ async def test_state_machine_updates_from_transport_events(
             {"play_mode": "Bluetooth"},
             ATTR_INPUT_SOURCE,
             "Bluetooth",
-        ),
-        (
-            SERVICE_SELECT_SOUND_MODE,
-            {ATTR_SOUND_MODE: "optical"},
-            "async_set_output_mode",
-            ("optical",),
-            {"output_mode": "optical"},
-            ATTR_SOUND_MODE,
-            "optical",
         ),
     ],
 )
@@ -477,6 +462,8 @@ async def test_play_media_source_service_uses_resolved_url(
     init_wiim_media_player,
 ) -> None:
     """Test media_source playback goes through the resolver."""
+    mock_wiim_device.supports_http_api = True
+
     with (
         patch(
             "homeassistant.components.wiim.media_player.media_source.is_media_source_id",

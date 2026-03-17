@@ -53,6 +53,7 @@ class MockWiimDevice:
         self.firmware_version = "4.8.523456"
         self.ip_address = "192.168.1.100"
         self.http_api_url = "http://192.168.1.100:8080"
+        self.presentation_url = "http://192.168.1.100:8080/web_interface"
         self.available = True
         self.model = "WiiM Pro"
         self.volume = 50
@@ -94,7 +95,7 @@ class MockWiimDevice:
         self.upnp_device.model_name = self.model_name
         self.upnp_device.manufacturer = self.manufacturer
         self.upnp_device.serial_number = "TESTSERIAL123"
-        self.upnp_device.presentation_url = "http://192.168.1.100:8080/web_interface"
+        self.upnp_device.presentation_url = self.presentation_url
         self.upnp_device.get_device_info = MagicMock(
             return_value={
                 "udn": self.udn,

@@ -1,7 +1,7 @@
 """Tests for the WiiM config flow."""
 
-from typing import Any
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
