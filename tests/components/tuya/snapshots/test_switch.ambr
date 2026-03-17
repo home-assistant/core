@@ -1820,6 +1820,104 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[switch.c30_alarm_push-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.c30_alarm_push',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm push',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm push',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_push',
+    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwswitch_alarm_propel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.c30_alarm_push-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'C30 Alarm push',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.c30_alarm_push',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.c30_keyboard_tone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.c30_keyboard_tone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Keyboard tone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keyboard tone',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keyboard_tone',
+    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwswitch_kb_sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.c30_keyboard_tone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'C30 Keyboard tone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.c30_keyboard_tone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform_setup_and_discovery[switch.c9_flip-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
