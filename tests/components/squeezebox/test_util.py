@@ -30,6 +30,7 @@ async def test_safe_library_call_success() -> None:
         == "future_success"
     )
 
+
 async def test_safe_library_call_raises_error() -> None:
     """Test that False or None return values raise HomeAssistantError."""
     fail_method = MagicMock(return_value=False)
