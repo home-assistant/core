@@ -202,7 +202,7 @@ async def test_input_text_state_trigger_behavior_any(
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the input_text state trigger fires when any input_text state changes to a specific state."""
+    """Test that the input_text state trigger fires when any input_text state changes."""
     other_entity_ids = set(target_input_texts["included"]) - {entity_id}
 
     # Set all input_texts, including the tested input_text, to the initial state
@@ -221,7 +221,7 @@ async def test_input_text_state_trigger_behavior_any(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other texts also triggers
+        # Check if changing other input_texts also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
