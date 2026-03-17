@@ -6,10 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: done
-    comment: |
-      PLANNED: Rename result2 -> result throughout test_config_flow.py.
+  config-flow-test-coverage: done
   config-flow:
     status: done
     comment: |
@@ -53,9 +50,7 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      PLANNED: Remove unique_id from mock config entry in conftest.py. Use
-      freezer-based time advancement instead of directly calling async_refresh().
-      Rename result2 -> result in test files.
+      PLANNED: Use freezer-based time advancement instead of directly calling async_refresh().
 
   # Gold
   devices: done
