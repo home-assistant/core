@@ -1,7 +1,7 @@
 {
   "domain": "cert_expiry",
   "name": "Certificate Expiry",
-  "codeowners": ["@jjlawren","@kupka"],
+  "codeowners": ["@jjlawren", "@kupka"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cert_expiry",
   "integration_type": "service",
