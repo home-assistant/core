@@ -120,7 +120,7 @@ class WolSwitch(SwitchEntity):
             service_kwargs["interface"] = self._broadcast_interface
 
         _LOGGER.debug(
-            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            "Send magic packet to mac %s (broadcast: %s, port: %s, interface: %s)",
             self._mac_address,
             self._broadcast_address,
             self._broadcast_port,

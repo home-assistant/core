@@ -49,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             service_kwargs["interface"] = broadcast_interface
 
         _LOGGER.debug(
-            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            "Send magic packet to mac %s (broadcast: %s, port: %s, interface: %s)",
             mac_address,
             broadcast_address,
             broadcast_port,
