@@ -25,12 +25,10 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonValueType
 
 from .const import (
     ATTR_DESCRIPTION,
@@ -282,25 +280,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @callback
-    @deprecated_function("async_subscribe", breaks_in_ha_version="2026.10")
     def async_subscribe_updates(
-        self, listener: Callable[[list[JsonValueType] | None], None]
-    ) -> CALLBACK_TYPE:
-        """Subscribe to To-do list item updates.
-
-        Will be removed in Home Assistant Core 2026.10. async_subscribe should
-        be used instead.
-        """
-
-        def wrapped_listener(items: list[TodoItem]) -> None:
-            """Wrap listener to convert To-do items to JSON-serializable format."""
-            listener([dataclasses.asdict(item) for item in items])
-
-        return self.async_subscribe(wrapped_listener)
-
-    @final
-    @callback
-    def async_subscribe(
         self, listener: Callable[[list[TodoItem]], None]
     ) -> CALLBACK_TYPE:
         """Subscribe to To-do list item updates."""
@@ -366,7 +346,9 @@ async def websocket_handle_subscribe_todo_items(
             )
         )
 
-    connection.subscriptions[msg["id"]] = entity.async_subscribe(todo_item_listener)
+    connection.subscriptions[msg["id"]] = entity.async_subscribe_updates(
+        todo_item_listener
+    )
     connection.send_result(msg["id"])
 
     # Push an initial list update

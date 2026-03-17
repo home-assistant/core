@@ -1233,10 +1233,10 @@ async def test_list_todo_items_extended_fields(
     }
 
 
-async def test_async_subscribe(
+async def test_async_subscribe_updates(
     hass: HomeAssistant, test_entity: TodoListEntity
 ) -> None:
-    """Test async_subscribe delivers list updates to listeners."""
+    """Test async_subscribe_updates delivers list updates to listeners."""
     await create_mock_platform(hass, [test_entity])
 
     received_updates: list[list[TodoItem]] = []
@@ -1244,7 +1244,7 @@ async def test_async_subscribe(
     def listener(items: list[TodoItem]) -> None:
         received_updates.append(items)
 
-    unsub = test_entity.async_subscribe(listener)
+    unsub = test_entity.async_subscribe_updates(listener)
 
     # Trigger an update
     test_entity.async_write_ha_state()
@@ -1281,53 +1281,3 @@ async def test_async_subscribe(
     unsub()
     test_entity.async_write_ha_state()
     assert len(received_updates) == 2
-
-
-async def test_async_subscribe_updates_deprecated(
-    hass: HomeAssistant, test_entity: TodoListEntity, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test async_subscribe_updates is deprecated and wraps async_subscribe."""
-    await create_mock_platform(hass, [test_entity])
-
-    received_items: list[list[dict[str, Any]]] = []
-
-    def listener(items: list[dict[str, Any]] | None) -> None:
-        received_items.append(items)
-
-    unsub = test_entity.async_subscribe_updates(listener)
-
-    assert (
-        "The deprecated function async_subscribe_updates was called."
-        " It will be removed in HA Core 2026.10."
-        " Use async_subscribe instead"
-    ) in caplog.text
-
-    # Trigger an update
-    test_entity.async_write_ha_state()
-
-    assert len(received_items) == 1
-    items = received_items[0]
-    # async_subscribe_updates wraps items as dicts via dataclasses.asdict
-    assert len(items) == 2
-    assert isinstance(items[0], dict)
-    assert items[0] == {
-        "completed": None,
-        "description": None,
-        "due": None,
-        "status": TodoItemStatus.NEEDS_ACTION,
-        "summary": "Item #1",
-        "uid": "1",
-    }
-    assert items[1] == {
-        "completed": None,
-        "description": None,
-        "due": None,
-        "status": TodoItemStatus.COMPLETED,
-        "summary": "Item #2",
-        "uid": "2",
-    }
-
-    # Unsubscribe and verify no more updates
-    unsub()
-    test_entity.async_write_ha_state()
-    assert len(received_items) == 1
