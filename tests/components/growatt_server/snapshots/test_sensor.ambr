@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_min_sensors_v1_api[sensor.min123456_ac_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -56,8 +57,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_all_batteries_charged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -114,8 +116,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_all_batteries_discharged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -172,8 +175,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_batteries_charged_from_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -230,8 +234,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_battery_1_charging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -288,8 +293,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_battery_1_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -346,8 +352,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_battery_2_charging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -404,8 +411,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_battery_2_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -462,8 +470,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -520,8 +529,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_energy_today_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -578,8 +588,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_energy_today_input_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -636,8 +647,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_energy_today_input_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -694,8 +706,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_energy_today_input_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -752,8 +765,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_export_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -810,8 +824,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_export_to_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -868,8 +883,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_import_from_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -926,8 +942,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_import_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -984,8 +1001,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_1_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1039,8 +1057,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1094,8 +1113,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_1_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1152,8 +1172,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_2_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1207,8 +1228,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1262,8 +1284,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_2_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1320,8 +1343,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_3_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1375,8 +1399,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_3_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1430,8 +1455,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_3_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1488,8 +1514,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_4_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1543,8 +1570,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_4_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1598,8 +1626,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_input_4_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1656,8 +1685,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_internal_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1714,8 +1744,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_batteries_charged_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1772,8 +1803,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1830,8 +1862,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_import_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1888,8 +1921,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_self_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1946,8 +1980,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_system_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2004,8 +2039,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_all_batteries_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2062,8 +2098,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_all_batteries_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2120,8 +2157,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_battery_1_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2178,8 +2216,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_battery_1_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2236,8 +2275,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_battery_2_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2294,8 +2334,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_battery_2_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2352,8 +2393,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_energy_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2410,8 +2452,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_energy_input_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2468,8 +2511,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_energy_input_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2526,8 +2570,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_energy_input_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2584,8 +2629,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_export_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2642,8 +2688,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2700,8 +2747,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_lifetime_total_solar_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2758,8 +2806,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_load_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2816,8 +2865,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_local_load_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2874,8 +2924,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2932,8 +2983,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_reactive_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2987,8 +3039,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_self_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3045,8 +3098,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_self_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3103,8 +3157,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_solar_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3161,8 +3216,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_state_of_charge_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3213,8 +3269,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_system_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3271,8 +3328,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_system_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3329,8 +3387,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3384,8 +3443,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3439,8 +3499,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_temperature_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3494,8 +3555,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_temperature_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3549,8 +3611,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.min123456_temperature_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3604,8 +3667,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.test_plant_total_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3662,8 +3726,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.test_plant_total_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3720,8 +3785,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.test_plant_total_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3778,8 +3844,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.test_plant_total_money_lifetime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3828,8 +3895,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.test_plant_total_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3886,8 +3954,9 @@
 # ---
 # name: test_min_sensors_v1_api[sensor.test_plant_total_total_money_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3936,8 +4005,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_ac_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3994,8 +4064,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4052,8 +4123,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_1_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4110,8 +4182,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4168,8 +4241,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_1_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4226,8 +4300,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_2_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4284,8 +4359,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4342,8 +4418,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_2_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4400,8 +4477,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_3_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4458,8 +4536,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_3_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4516,8 +4595,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_input_3_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4574,8 +4654,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_intelligent_power_management_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4632,8 +4713,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_internal_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4690,8 +4772,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_inverter_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4748,8 +4831,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4806,8 +4890,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4864,8 +4949,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_reactive_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4922,8 +5008,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_reactive_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4980,8 +5067,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.inv123456_reactive_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5038,8 +5126,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.test_plant_total_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5096,8 +5185,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.test_plant_total_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5154,8 +5244,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.test_plant_total_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5212,8 +5303,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.test_plant_total_money_lifetime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5263,8 +5355,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.test_plant_total_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5321,8 +5414,9 @@
 # ---
 # name: test_sensors_classic_api[inverter][sensor.test_plant_total_total_money_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5372,8 +5466,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_all_pv_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5430,8 +5525,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_battery_charged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5488,8 +5584,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_battery_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5546,8 +5643,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_battery_discharged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5604,8 +5702,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_battery_discharging_kw-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5662,8 +5761,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_battery_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5720,8 +5820,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5775,8 +5876,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_export_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5833,8 +5935,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_export_to_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5891,8 +5994,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_grid_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5946,8 +6050,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_import_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6004,8 +6109,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_import_from_grid_today_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6062,8 +6168,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_import_from_grid_today_load_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6120,8 +6227,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_last_data_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6171,8 +6279,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_lifetime_battery_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6229,8 +6338,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_lifetime_battery_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6287,8 +6397,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_lifetime_export_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6345,8 +6456,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_lifetime_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6403,8 +6515,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_lifetime_solar_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6461,8 +6574,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6519,8 +6633,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_load_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6577,8 +6692,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_load_consumption_today_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6635,8 +6751,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_load_consumption_today_solar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6693,8 +6810,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_pv1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6748,8 +6866,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_pv1_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6806,8 +6925,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_pv2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6861,8 +6981,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_pv2_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6919,8 +7040,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_self_consumption_today_solar_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6977,8 +7099,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_solar_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7035,8 +7158,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_state_of_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7087,8 +7211,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_system_production_today_self_consumption_export-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7145,8 +7270,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.test_plant_total_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7203,8 +7329,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.test_plant_total_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -7261,8 +7388,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.test_plant_total_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7319,8 +7447,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.test_plant_total_money_lifetime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7370,8 +7499,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.test_plant_total_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7428,8 +7558,9 @@
 # ---
 # name: test_sensors_classic_api[mix][sensor.test_plant_total_total_money_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7479,8 +7610,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_ac_input_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7537,8 +7669,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_ac_input_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7595,8 +7728,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_ac_output_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7653,8 +7787,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_battery_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7708,8 +7843,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7766,8 +7902,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_charge_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7824,8 +7961,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_grid_charge_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7882,8 +8020,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_grid_charged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7940,8 +8079,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_grid_discharged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7998,8 +8138,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_grid_out_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8056,8 +8197,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_import_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8114,8 +8256,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_import_from_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8172,8 +8315,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_import_from_grid_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8230,8 +8374,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_lifetime_grid_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8288,8 +8433,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_lifetime_grid_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8346,8 +8492,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_lifetime_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8404,8 +8551,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_lifetime_solar_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8462,8 +8610,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_lifetime_storage_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8520,8 +8669,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_lifetime_stored_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8578,8 +8728,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8636,8 +8787,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_load_consumption_solar_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8690,8 +8842,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_load_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8748,8 +8901,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_load_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8803,8 +8957,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_output_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8861,8 +9016,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_pv1_charging_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8919,8 +9075,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_pv1_current_to_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8977,8 +9134,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_pv2_charging_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9035,8 +9193,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_pv2_current_to_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9093,8 +9252,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_solar_charge_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9151,8 +9311,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_solar_output_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9209,8 +9370,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_solar_power_production_pv1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9267,8 +9429,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_solar_power_production_pv2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9325,8 +9488,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_storage_charging_discharging_ve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9383,8 +9547,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_storage_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9441,8 +9606,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.test_plant_total_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9499,8 +9665,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.test_plant_total_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -9557,8 +9724,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.test_plant_total_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9615,8 +9783,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.test_plant_total_money_lifetime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9666,8 +9835,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.test_plant_total_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9724,8 +9894,9 @@
 # ---
 # name: test_sensors_classic_api[storage][sensor.test_plant_total_total_money_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9775,8 +9946,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.test_plant_total_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9833,8 +10005,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.test_plant_total_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -9891,8 +10064,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.test_plant_total_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9949,8 +10123,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.test_plant_total_money_lifetime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10000,8 +10175,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.test_plant_total_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10058,8 +10234,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.test_plant_total_total_money_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10109,8 +10286,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_ac_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10164,8 +10342,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_all_batteries_charged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10222,8 +10401,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_all_batteries_discharged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10280,8 +10460,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_batteries_charged_from_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10338,8 +10519,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_battery_1_charging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10396,8 +10578,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_battery_1_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10454,8 +10637,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_battery_2_charging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10512,8 +10696,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_battery_2_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10570,8 +10755,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10628,8 +10814,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_energy_today_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10686,8 +10873,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_energy_today_input_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10744,8 +10932,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_energy_today_input_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10802,8 +10991,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_energy_today_input_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10860,8 +11050,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_export_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10918,8 +11109,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_export_to_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10976,8 +11168,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_import_from_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11034,8 +11227,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_import_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11092,8 +11286,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_1_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11147,8 +11342,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11202,8 +11398,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_1_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11260,8 +11457,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_2_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11315,8 +11513,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11370,8 +11569,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_2_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11428,8 +11628,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_3_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11483,8 +11684,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_3_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11538,8 +11740,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_3_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11596,8 +11799,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_4_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11651,8 +11855,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_4_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11706,8 +11911,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_input_4_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11764,8 +11970,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_internal_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11822,8 +12029,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_batteries_charged_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11880,8 +12088,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11938,8 +12147,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_import_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11996,8 +12206,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_self_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12054,8 +12265,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_system_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12112,8 +12324,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_all_batteries_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12170,8 +12383,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_all_batteries_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12228,8 +12442,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_battery_1_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12286,8 +12501,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_battery_1_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12344,8 +12560,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_battery_2_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12402,8 +12619,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_battery_2_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12460,8 +12678,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_energy_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12518,8 +12737,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_energy_input_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12576,8 +12796,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_energy_input_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12634,8 +12855,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_energy_input_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12692,8 +12914,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_export_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12750,8 +12973,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12808,8 +13032,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_lifetime_total_solar_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12866,8 +13091,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_load_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12924,8 +13150,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_local_load_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12982,8 +13209,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13040,8 +13268,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_reactive_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13095,8 +13324,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_self_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13153,8 +13383,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_self_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13211,8 +13442,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_solar_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13269,8 +13501,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_state_of_charge_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13321,8 +13554,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_system_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13379,8 +13613,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_system_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13437,8 +13672,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13492,8 +13728,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13547,8 +13784,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_temperature_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13602,8 +13840,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_temperature_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13657,8 +13896,9 @@
 # ---
 # name: test_sensors_classic_api[tlx][sensor.tlx123456_temperature_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13712,8 +13952,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_ac_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13770,8 +14011,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_all_pv_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13828,8 +14070,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_battery_charged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13886,8 +14129,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_battery_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13944,8 +14188,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_battery_discharged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14002,8 +14247,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_battery_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14060,8 +14306,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14115,8 +14362,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_export_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14173,8 +14421,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_export_to_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14231,8 +14480,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_grid_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14286,8 +14536,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_import_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14344,8 +14595,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_import_from_grid_today_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14402,8 +14654,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_last_data_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14453,8 +14706,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_lifetime_battery_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14511,8 +14765,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_lifetime_battery_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14569,8 +14824,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_lifetime_export_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14627,8 +14883,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_lifetime_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14685,8 +14942,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_lifetime_solar_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14743,8 +15001,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_load_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14801,8 +15060,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_load_consumption_today_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14859,8 +15119,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_load_consumption_today_solar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14917,8 +15178,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_pv1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14972,8 +15234,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_pv1_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15030,8 +15293,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_pv2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -15085,8 +15349,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_pv2_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15143,8 +15408,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_self_consumption_today_solar_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15201,8 +15467,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_solar_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15259,8 +15526,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_state_of_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -15311,8 +15579,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_system_production_today_self_consumption_export-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15369,8 +15638,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15427,8 +15697,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15485,8 +15756,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_temperature_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15543,8 +15815,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_temperature_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15601,8 +15874,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.sph123456_temperature_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15659,8 +15933,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.test_plant_total_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15717,8 +15992,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.test_plant_total_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -15775,8 +16051,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.test_plant_total_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15833,8 +16110,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.test_plant_total_money_lifetime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -15883,8 +16161,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.test_plant_total_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15941,8 +16220,9 @@
 # ---
 # name: test_sph_sensors_v1_api[sensor.test_plant_total_total_money_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -15991,8 +16271,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.test_plant_total_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16049,8 +16330,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.test_plant_total_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -16107,8 +16389,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.test_plant_total_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16165,8 +16448,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.test_plant_total_money_lifetime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16216,8 +16500,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.test_plant_total_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16274,8 +16559,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.test_plant_total_total_money_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16325,8 +16611,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_ac_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16380,8 +16667,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_all_batteries_charged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16438,8 +16726,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_all_batteries_discharged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16496,8 +16785,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_batteries_charged_from_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16554,8 +16844,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_battery_1_charging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16612,8 +16903,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_battery_1_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16670,8 +16962,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_battery_2_charging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16728,8 +17021,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_battery_2_discharging_w-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16786,8 +17080,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16844,8 +17139,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_energy_today_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16902,8 +17198,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_energy_today_input_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16960,8 +17257,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_energy_today_input_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17018,8 +17316,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_energy_today_input_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17076,8 +17375,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_export_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17134,8 +17434,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_export_to_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17192,8 +17493,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_import_from_grid_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17250,8 +17552,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_import_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17308,8 +17611,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_1_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17363,8 +17667,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17418,8 +17723,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_1_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17476,8 +17782,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_2_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17531,8 +17838,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17586,8 +17894,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_2_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17644,8 +17953,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_3_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17699,8 +18009,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_3_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17754,8 +18065,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_3_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17812,8 +18124,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_4_amperage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17867,8 +18180,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_4_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17922,8 +18236,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_input_4_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17980,8 +18295,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_internal_wattage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18038,8 +18354,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_batteries_charged_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18096,8 +18413,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_energy_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18154,8 +18472,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_import_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18212,8 +18531,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_self_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18270,8 +18590,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_system_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18328,8 +18649,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_all_batteries_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18386,8 +18708,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_all_batteries_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18444,8 +18767,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_battery_1_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18502,8 +18826,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_battery_1_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18560,8 +18885,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_battery_2_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18618,8 +18944,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_battery_2_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18676,8 +19003,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_energy_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18734,8 +19062,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_energy_input_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18792,8 +19121,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_energy_input_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18850,8 +19180,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_energy_input_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18908,8 +19239,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_export_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18966,8 +19298,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_load_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19024,8 +19357,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_lifetime_total_solar_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19082,8 +19416,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_load_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19140,8 +19475,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_local_load_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19198,8 +19534,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19256,8 +19593,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_reactive_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19311,8 +19649,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_self_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19369,8 +19708,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_self_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19427,8 +19767,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_solar_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19485,8 +19826,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_state_of_charge_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19537,8 +19879,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_system_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19595,8 +19938,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_system_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19653,8 +19997,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19708,8 +20053,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19763,8 +20109,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_temperature_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19818,8 +20165,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_temperature_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19873,8 +20221,9 @@
 # ---
 # name: test_total_sensors_classic_api[sensor.tlx123456_temperature_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

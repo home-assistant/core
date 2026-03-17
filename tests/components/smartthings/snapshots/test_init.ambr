@@ -103,8 +103,16 @@
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
+        'bluetooth',
+        '68:3a:48:50:1a:77',
+      ),
+      tuple(
         'mac',
         '68:3a:48:50:1a:75',
+      ),
+      tuple(
+        'mac',
+        '68:3a:48:50:1a:76',
       ),
       tuple(
         'zigbee',

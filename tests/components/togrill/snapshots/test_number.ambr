@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[no_data][number.pro_05_alarm_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 15,
@@ -61,8 +62,9 @@
 # ---
 # name: test_setup[no_data][number.probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -122,8 +124,9 @@
 # ---
 # name: test_setup[no_data][number.probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -183,8 +186,9 @@
 # ---
 # name: test_setup[no_data][number.probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -244,8 +248,9 @@
 # ---
 # name: test_setup[no_data][number.probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -305,8 +310,9 @@
 # ---
 # name: test_setup[no_data][number.probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -366,8 +372,9 @@
 # ---
 # name: test_setup[no_data][number.probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -427,8 +434,9 @@
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.pro_05_alarm_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 15,
@@ -487,8 +495,9 @@
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -548,8 +557,9 @@
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -609,8 +619,9 @@
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -670,8 +681,9 @@
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -731,8 +743,9 @@
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -792,8 +805,9 @@
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -853,8 +867,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.pro_05_alarm_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 15,
@@ -913,8 +928,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.pro_05_ambient_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 400,
@@ -974,8 +990,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.pro_05_ambient_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 400,
@@ -1035,8 +1052,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1096,8 +1114,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1157,8 +1176,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1218,8 +1238,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1279,8 +1300,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1340,8 +1362,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_with_range][number.probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1401,8 +1424,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_alarm_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 15,
@@ -1461,8 +1485,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_ambient_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 400,
@@ -1522,8 +1547,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_ambient_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 400,
@@ -1583,8 +1609,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1644,8 +1671,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1705,8 +1733,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1766,8 +1795,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1827,8 +1857,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1888,8 +1919,9 @@
 # ---
 # name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -1949,8 +1981,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.pro_05_alarm_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 15,
@@ -2009,8 +2042,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.pro_05_ambient_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 400,
@@ -2070,8 +2104,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.pro_05_ambient_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 400,
@@ -2131,8 +2166,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -2192,8 +2228,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -2253,8 +2290,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -2314,8 +2352,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -2375,8 +2414,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
@@ -2436,8 +2476,9 @@
 # ---
 # name: test_setup_with_ambient[no_data][number.probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 250,
