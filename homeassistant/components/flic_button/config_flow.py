@@ -296,8 +296,10 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     timeout=PAIRING_TIMEOUT,
                 )
 
-                # Disconnect after pairing
+                # Disconnect after pairing and clear reference so the
+                # finally block does not disconnect a second time.
                 await self._client.disconnect()
+                self._client = None
 
                 # Use device type detected from service UUID (set in async_step_bluetooth)
                 # Twist has a unique service UUID, so trust that detection.
