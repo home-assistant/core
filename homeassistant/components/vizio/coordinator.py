@@ -10,7 +10,7 @@ from typing import Any
 from pyvizio import VizioAsync
 from pyvizio.api.apps import AppConfig
 from pyvizio.api.input import InputItem
-from pyvizio.const import APPS
+from pyvizio.const import APPS, INPUT_APPS
 from pyvizio.util import gen_apps_list_from_url
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -132,7 +132,7 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         if (
             self.config_entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
             and input_list
-            and any(input_item.name == APPS for input_item in input_list)
+            and any(input_item.name in INPUT_APPS for input_item in input_list)
         ):
             current_app_config = await self.device.get_current_app_config(
                 log_api_exception=False
