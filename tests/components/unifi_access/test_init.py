@@ -16,6 +16,9 @@ from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
     LocationUpdateV2,
+    SettingUpdate,
+    SettingUpdateData,
+    ThumbnailInfo,
     V2LocationState,
     V2LocationUpdate,
     V2LocationUpdateData,
@@ -241,3 +244,109 @@ async def test_ws_location_update_no_state_ignored(
     await hass.async_block_till_done()
 
     assert coordinator.data is original_data
+
+
+async def test_ws_location_update_with_thumbnail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test location_update_v2 with thumbnail updates door_thumbnails."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    assert "door-002" not in coordinator.data.door_thumbnails
+
+    handlers = _get_ws_handlers(mock_client)
+    msg = LocationUpdateV2(
+        event="access.data.device.location_update_v2",
+        data=LocationUpdateData(
+            id="door-002",
+            location_type="DOOR",
+            state=None,
+            thumbnail=ThumbnailInfo(
+                url="/thumb/door-002.jpg",
+                door_thumbnail_last_update=1700000000,
+            ),
+        ),
+    )
+
+    await handlers["access.data.device.location_update_v2"](msg)
+    await hass.async_block_till_done()
+
+    assert "door-002" in coordinator.data.door_thumbnails
+    thumb = coordinator.data.door_thumbnails["door-002"]
+    assert thumb.url == "/thumb/door-002.jpg"
+    assert thumb.door_thumbnail_last_update == 1700000000
+
+
+async def test_coordinator_timeout_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test coordinator handles timeout from API."""
+    mock_client.get_doors.side_effect = TimeoutError
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_ws_location_update_thumbnail_only_no_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test location update with thumbnail but no state keeps door unchanged."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    door_before = coordinator.data.doors["door-001"]
+
+    handlers = _get_ws_handlers(mock_client)
+    msg = LocationUpdateV2(
+        event="access.data.device.location_update_v2",
+        data=LocationUpdateData(
+            id="door-001",
+            location_type="DOOR",
+            state=None,
+            thumbnail=ThumbnailInfo(
+                url="/thumb/door-001-new.jpg",
+                door_thumbnail_last_update=1700002000,
+            ),
+        ),
+    )
+
+    await handlers["access.data.device.location_update_v2"](msg)
+    await hass.async_block_till_done()
+
+    # Door state unchanged, thumbnail updated
+    assert coordinator.data.doors["door-001"] == door_before
+    thumb = coordinator.data.door_thumbnails["door-001"]
+    assert thumb.url == "/thumb/door-001-new.jpg"
+
+
+async def test_ws_setting_update_before_data_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test setting update is ignored when coordinator has no data yet."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    # Force data to None to simulate pre-first-refresh state
+    coordinator.data = None  # type: ignore[assignment]
+
+    handlers = _get_ws_handlers(mock_client)
+    msg = SettingUpdate(
+        event="access.data.setting.update",
+        data=SettingUpdateData(evacuation=True, lockdown=False),
+    )
+
+    await handlers["access.data.setting.update"](msg)
+    await hass.async_block_till_done()
+
+    assert coordinator.data is None
