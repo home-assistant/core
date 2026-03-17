@@ -985,7 +985,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
         coordinator: GatewayDeviceCoordinator,
         description: XiaomiMiioSensorDescription,
     ) -> None:
-        """Initialize the XiaomiSensor."""
+        """Initialize the XiaomiGatewaySensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{self._sub_device.sid}-{description.key}"
         self._attr_name = f"{description.key} ({self._sub_device.sid})".capitalize()

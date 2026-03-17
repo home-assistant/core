@@ -38,6 +38,8 @@ class GatewayDeviceCoordinator(DataUpdateCoordinator[None]):
             update_interval=UPDATE_INTERVAL,
         )
         self.sub_device = sub_device
+        # Mark as unavailable until the first update is successful
+        self.last_update_success = False
 
     async def _async_update_data(self) -> None:
         """Fetch data from the subdevice."""

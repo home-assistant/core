@@ -769,7 +769,7 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     _sub_device: Switch
 
     def __init__(self, coordinator: GatewayDeviceCoordinator, variable: str) -> None:
-        """Initialize the XiaomiSensor."""
+        """Initialize the XiaomiGatewaySwitch."""
         super().__init__(coordinator)
         self._channel = GATEWAY_SWITCH_VARS[variable][KEY_CHANNEL]
         self._data_key = f"status_ch{self._channel}"
