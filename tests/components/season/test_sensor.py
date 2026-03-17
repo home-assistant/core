@@ -1,6 +1,7 @@
 """The tests for the Season integration."""
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
 import pytest
@@ -20,6 +21,7 @@ from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_TYPE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import UTC
 
 from tests.common import MockConfigEntry
@@ -174,10 +176,6 @@ async def test_season_local_midnight(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that season changes at local midnight, not UTC."""
-    from zoneinfo import ZoneInfo
-
-    from homeassistant.helpers.entity_component import async_update_entity
-
     await hass.config.async_set_time_zone("Australia/Sydney")
     hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
     mock_config_entry.add_to_hass(hass)
