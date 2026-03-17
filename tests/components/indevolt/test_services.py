@@ -478,7 +478,7 @@ async def test_multi_device_execution_failure(
     mock_config_entry: MockConfigEntry,
     alt_mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that service_call_failed is raised when execution fails for multiple devices."""
+    """Test that multi_device_errors is raised when execution fails for multiple devices."""
 
     # Set up multiple devices (gen 1 & gen 2)
     await setup_integration(hass, mock_config_entry)
@@ -504,4 +504,4 @@ async def test_multi_device_execution_failure(
         )
 
     # Verify correct translation key is used for the error (for multiple coordinators)
-    assert exc_info.value.translation_key == "service_call_failed"
+    assert exc_info.value.translation_key == "multi_device_errors"
