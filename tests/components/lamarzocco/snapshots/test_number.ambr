@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_brew_by_weight_dose[Linea Mini][entry-dose-1]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -42,8 +43,9 @@
 # ---
 # name: test_brew_by_weight_dose[Linea Mini][entry-dose-2]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -140,8 +142,9 @@
 # ---
 # name: test_general_numbers[coffee_target_temperature-94-set_coffee_target_temperature-kwargs0].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 104,
@@ -200,8 +203,9 @@
 # ---
 # name: test_general_numbers[smart_standby_time-23-set_smart_standby-kwargs1].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 240,
@@ -260,8 +264,9 @@
 # ---
 # name: test_prebrew_off[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -320,8 +325,9 @@
 # ---
 # name: test_prebrew_on[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -380,8 +386,9 @@
 # ---
 # name: test_preinfusion[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -440,8 +447,9 @@
 # ---
 # name: test_steam_temperature[GS3 AV].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 134,

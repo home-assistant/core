@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    intent,
     start,
 )
 from homeassistant.helpers.event import async_call_later
@@ -597,7 +598,6 @@ class GoogleEntity:
         state = self.state
         traits = self.traits()
         entity_config = self.config.entity_config.get(state.entity_id, {})
-        name = (entity_config.get(CONF_NAME) or state.name).strip()
 
         # Find entity/device/area registry entries
         entity_entry, device_entry, area_entry = _get_registry_entries(
@@ -607,7 +607,6 @@ class GoogleEntity:
         # Build the device info
         device = {
             "id": state.entity_id,
-            "name": {"name": name},
             "attributes": {},
             "traits": [trait.name for trait in traits],
             "willReportState": self.config.should_report_state,
@@ -615,13 +614,18 @@ class GoogleEntity:
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
         }
-        # Add aliases
-        if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
-            entity_entry and entity_entry.aliases
-        ):
-            device["name"]["nicknames"] = [name, *config_aliases]
-            if entity_entry:
-                device["name"]["nicknames"].extend(entity_entry.aliases)
+        # Add name and aliases.
+        # The entity's alias list is ordered: the first slot naturally serves
+        # as the primary name (set to the auto-generated full entity name by
+        # default), while the rest serve as alternative names (nicknames).
+        aliases = intent.async_get_entity_aliases(
+            self.hass, entity_entry, state=state, allow_empty=False
+        )
+        name, *aliases = aliases
+        name = entity_config.get(CONF_NAME) or name
+        device["name"] = {"name": name}
+        if (config_aliases := entity_config.get(CONF_ALIASES, [])) or aliases:
+            device["name"]["nicknames"] = [name, *config_aliases, *aliases]
 
         # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():

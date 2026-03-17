@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_and_device_data[site_payload0-wlan_payload0][image.ssid_1_qr_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

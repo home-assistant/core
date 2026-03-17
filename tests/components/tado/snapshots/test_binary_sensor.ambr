@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[binary_sensor.air_conditioning_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -102,8 +104,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -152,8 +155,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -202,8 +206,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -252,8 +257,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -303,8 +309,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -353,8 +360,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -403,8 +411,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_swing_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -453,8 +462,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_swing_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -503,8 +513,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_swing_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -553,8 +564,9 @@
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_swing_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -603,8 +615,9 @@
 # ---
 # name: test_entities[binary_sensor.baseboard_heater_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -653,8 +666,9 @@
 # ---
 # name: test_entities[binary_sensor.baseboard_heater_early_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -703,8 +717,9 @@
 # ---
 # name: test_entities[binary_sensor.baseboard_heater_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -754,8 +769,9 @@
 # ---
 # name: test_entities[binary_sensor.baseboard_heater_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -804,8 +820,9 @@
 # ---
 # name: test_entities[binary_sensor.baseboard_heater_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -854,8 +871,9 @@
 # ---
 # name: test_entities[binary_sensor.second_water_heater_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -904,8 +922,9 @@
 # ---
 # name: test_entities[binary_sensor.second_water_heater_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -955,8 +974,9 @@
 # ---
 # name: test_entities[binary_sensor.second_water_heater_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1005,8 +1025,9 @@
 # ---
 # name: test_entities[binary_sensor.water_heater_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1055,8 +1076,9 @@
 # ---
 # name: test_entities[binary_sensor.water_heater_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1105,8 +1127,9 @@
 # ---
 # name: test_entities[binary_sensor.water_heater_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1155,8 +1178,9 @@
 # ---
 # name: test_entities[binary_sensor.wr1_connection_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1205,8 +1229,9 @@
 # ---
 # name: test_entities[binary_sensor.wr4_connection_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

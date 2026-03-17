@@ -14,8 +14,9 @@
 # ---
 # name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -98,8 +99,9 @@
 # ---
 # name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -183,8 +185,9 @@
 # ---
 # name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -267,8 +270,9 @@
 # ---
 # name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -351,8 +355,9 @@
 # ---
 # name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -436,8 +441,9 @@
 # ---
 # name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -520,8 +526,9 @@
 # ---
 # name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -604,8 +611,9 @@
 # ---
 # name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -688,8 +696,9 @@
 # ---
 # name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -772,8 +781,9 @@
 # ---
 # name: test_switch_entities[SDM230-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -856,8 +866,9 @@
 # ---
 # name: test_switch_entities[SDM630-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.zinvolt_batterij_maximum_charge_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -60,8 +61,9 @@
 # ---
 # name: test_all_entities[number.zinvolt_batterij_maximum_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 800,
@@ -120,8 +122,9 @@
 # ---
 # name: test_all_entities[number.zinvolt_batterij_minimum_charge_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -179,8 +182,9 @@
 # ---
 # name: test_all_entities[number.zinvolt_batterij_standby_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60,

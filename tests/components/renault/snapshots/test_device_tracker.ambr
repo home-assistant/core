@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_device_tracker_empty[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_device_tracker_errors[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +102,9 @@
 # ---
 # name: test_device_trackers[captur_fuel][device_tracker.reg_captur_fuel_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -153,8 +156,9 @@
 # ---
 # name: test_device_trackers[captur_phev][device_tracker.reg_captur_phev_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -206,8 +210,9 @@
 # ---
 # name: test_device_trackers[megane_e_tech][device_tracker.reg_meg_0_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -259,8 +264,9 @@
 # ---
 # name: test_device_trackers[twingo_3_electric][device_tracker.reg_twingo_iii_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -312,8 +318,9 @@
 # ---
 # name: test_device_trackers[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

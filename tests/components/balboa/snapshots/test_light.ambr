@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_lights[light.fakespa_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([

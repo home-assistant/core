@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_air_purifier[fan.air_purifier_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([

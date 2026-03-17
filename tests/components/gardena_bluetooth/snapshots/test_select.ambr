@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[aqua_contour][select.mock_title_active_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -65,8 +66,9 @@
 # ---
 # name: test_setup[aqua_contour][select.mock_title_operation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -127,8 +129,9 @@
 # ---
 # name: test_setup[aqua_contour][select.mock_title_watering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

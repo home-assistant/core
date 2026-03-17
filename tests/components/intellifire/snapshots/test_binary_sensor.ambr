@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_accessory_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -52,8 +53,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_cloud_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -103,8 +105,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_disabled_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -154,8 +157,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_ecm_offline_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -205,8 +209,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_delay_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -256,8 +261,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -307,8 +313,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -357,8 +364,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -408,8 +416,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_lights_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -459,8 +468,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_local_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -510,8 +520,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -561,8 +572,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_offline_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -612,8 +624,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_flame_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -663,8 +676,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_light_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -713,8 +727,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_soft_lock_out_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -764,8 +779,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_thermostat_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -814,8 +830,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_timer_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

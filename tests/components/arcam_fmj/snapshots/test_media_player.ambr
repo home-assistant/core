@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[media_player.arcam_fmj_127_0_0_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -53,8 +54,9 @@
 # ---
 # name: test_setup[media_player.arcam_fmj_127_0_0_1_zone_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),

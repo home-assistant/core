@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_fans[fan.prana_recuperator_extract_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -63,8 +64,9 @@
 # ---
 # name: test_fans[fan.prana_recuperator_supply_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([

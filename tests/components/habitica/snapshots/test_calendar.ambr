@@ -929,8 +929,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_dailies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -985,8 +986,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_daily_reminders-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1040,8 +1042,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_to_do_reminders-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1095,8 +1098,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_to_do_s-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

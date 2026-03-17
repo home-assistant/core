@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +102,9 @@
 # ---
 # name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -150,8 +153,9 @@
 # ---
 # name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -200,8 +204,9 @@
 # ---
 # name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -249,8 +254,9 @@
 # ---
 # name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -299,8 +305,9 @@
 # ---
 # name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -348,8 +355,9 @@
 # ---
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -398,8 +406,9 @@
 # ---
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -447,8 +456,9 @@
 # ---
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -497,8 +507,9 @@
 # ---
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -547,8 +558,9 @@
 # ---
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -596,8 +608,9 @@
 # ---
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -646,8 +659,9 @@
 # ---
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -696,8 +710,9 @@
 # ---
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -745,8 +760,9 @@
 # ---
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -795,8 +811,9 @@
 # ---
 # name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -845,8 +862,9 @@
 # ---
 # name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -894,8 +912,9 @@
 # ---
 # name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -944,8 +963,9 @@
 # ---
 # name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -994,8 +1014,9 @@
 # ---
 # name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1043,8 +1064,9 @@
 # ---
 # name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

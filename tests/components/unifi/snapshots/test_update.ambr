@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_and_device_data[site_payload0-device_payload0][update.device_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -63,8 +64,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-device_payload0][update.device_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -125,8 +127,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload1-device_payload0][update.device_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -187,8 +190,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload1-device_payload0][update.device_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

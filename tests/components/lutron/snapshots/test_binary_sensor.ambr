@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_setup[binary_sensor.test_occupancy_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

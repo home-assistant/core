@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors_are_created[sensor.gaming_pc_amd_ryzen_7_7800x3d_core_tctl_tdie_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -56,8 +57,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_amd_ryzen_7_7800x3d_cpu_total_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -111,8 +113,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_amd_ryzen_7_7800x3d_package_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -166,8 +169,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_amd_ryzen_7_7800x3d_package_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -221,8 +225,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_amd_ryzen_7_7800x3d_vddcr_soc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -276,8 +281,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_amd_ryzen_7_7800x3d_vddcr_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -331,8 +337,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -386,8 +393,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_5v_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -441,8 +449,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -496,8 +505,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -551,8 +561,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -606,8 +617,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -660,8 +672,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -715,8 +728,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_vcore_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -770,8 +784,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_core_clock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -825,8 +840,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_core_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -880,8 +896,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_core_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -935,8 +952,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -990,8 +1008,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1045,8 +1064,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_hot_spot_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1100,8 +1120,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_memory_clock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1155,8 +1176,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_memory_controller_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1210,8 +1232,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_package_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1265,8 +1288,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1320,8 +1344,9 @@
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_video_engine_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

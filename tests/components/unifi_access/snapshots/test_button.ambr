@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_entities[button.back_door_unlock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_button_entities[button.front_door_unlock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.de_jongweg_utrecht_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -108,8 +110,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -178,8 +181,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -233,8 +237,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -286,8 +291,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_ozone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -339,8 +345,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -392,8 +399,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -445,8 +453,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -503,8 +512,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -556,8 +566,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -614,8 +625,9 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_visibility_using_nephelometry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

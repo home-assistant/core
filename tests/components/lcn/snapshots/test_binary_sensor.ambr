@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup_lcn_binary_sensor[binary_sensor.testmodule_binary_sensor1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

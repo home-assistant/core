@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -70,8 +71,9 @@
 # ---
 # name: test_climate[climate.test_climate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -148,8 +150,9 @@
 # ---
 # name: test_climate_alt[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -216,8 +219,9 @@
 # ---
 # name: test_climate_alt[climate.test_climate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -294,8 +298,9 @@
 # ---
 # name: test_climate_offline[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -362,8 +367,9 @@
 # ---
 # name: test_climate_offline[climate.test_climate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

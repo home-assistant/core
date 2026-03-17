@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_lock[ex30_2024][lock.volvo_ex30_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_lock[s90_diesel_2018][lock.volvo_s90_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_lock[xc40_electric_2024][lock.volvo_xc40_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -151,8 +154,9 @@
 # ---
 # name: test_lock[xc90_petrol_2019][lock.volvo_xc90_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -18,8 +18,9 @@
 # ---
 # name: test_numbers[number.wled_rgb_light_segment_1_intensity-42-intensity].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -111,8 +112,9 @@
 # ---
 # name: test_numbers[number.wled_rgb_light_segment_1_speed-42-speed].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -187,8 +189,9 @@
 # ---
 # name: test_snapshots[number.wled_rgb_light_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -245,8 +248,9 @@
 # ---
 # name: test_snapshots[number.wled_rgb_light_segment_1_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -303,8 +307,9 @@
 # ---
 # name: test_snapshots[number.wled_rgb_light_segment_1_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -361,8 +366,9 @@
 # ---
 # name: test_snapshots[number.wled_rgb_light_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,

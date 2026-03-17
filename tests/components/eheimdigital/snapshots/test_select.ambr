@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[select.mock_classicvario_filter_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -61,8 +62,9 @@
 # ---
 # name: test_setup[select.mock_filter_constant_flow_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -146,8 +148,9 @@
 # ---
 # name: test_setup[select.mock_filter_day_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -231,8 +234,9 @@
 # ---
 # name: test_setup[select.mock_filter_filter_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -293,8 +297,9 @@
 # ---
 # name: test_setup[select.mock_filter_high_pulse_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -378,8 +383,9 @@
 # ---
 # name: test_setup[select.mock_filter_low_pulse_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -463,8 +469,9 @@
 # ---
 # name: test_setup[select.mock_filter_manual_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -548,8 +555,9 @@
 # ---
 # name: test_setup[select.mock_filter_night_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -633,8 +641,9 @@
 # ---
 # name: test_setup[select.mock_reeflex_operation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

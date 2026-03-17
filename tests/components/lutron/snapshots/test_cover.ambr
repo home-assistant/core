@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover_setup[cover.test_cover-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

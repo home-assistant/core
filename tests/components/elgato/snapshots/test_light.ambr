@@ -36,8 +36,9 @@
 # ---
 # name: test_light_state_temperature[key-light-state].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
@@ -149,8 +150,9 @@
 # ---
 # name: test_light_state_temperature[light-strip-state-color-temperature].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -263,8 +265,9 @@
 # ---
 # name: test_light_state_temperature[light-strip-state].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,

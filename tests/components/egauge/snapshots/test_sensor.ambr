@@ -32,8 +32,9 @@
 # ---
 # name: test_sensors[sensor.egauge_home_grid_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -92,8 +93,9 @@
 # ---
 # name: test_sensors[sensor.egauge_home_grid_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -149,8 +151,9 @@
 # ---
 # name: test_sensors[sensor.egauge_home_l1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -206,8 +209,9 @@
 # ---
 # name: test_sensors[sensor.egauge_home_s1_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -263,8 +267,9 @@
 # ---
 # name: test_sensors[sensor.egauge_home_solar_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -323,8 +328,9 @@
 # ---
 # name: test_sensors[sensor.egauge_home_solar_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

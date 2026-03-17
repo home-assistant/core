@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_ac_air_01011][button.air_filter_reset_hepa_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][button.range_hood_reset_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,8 +101,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][button.microwave_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -148,8 +151,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][button.oven_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -197,8 +201,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][button.kitchen_oven_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -246,8 +251,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][button.vulcan_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -295,8 +301,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][button.four_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -344,8 +351,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][button.refrigerator_reset_water_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -393,8 +401,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][button.refrigerator_1_reset_water_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -442,8 +451,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][button.frigo_reset_water_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -491,8 +501,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][button.robot_vacuum_reset_hepa_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

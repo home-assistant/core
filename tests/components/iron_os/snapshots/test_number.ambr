@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state[number.pinecil_boost_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 450,
@@ -60,8 +61,9 @@
 # ---
 # name: test_state[number.pinecil_calibration_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2500,
@@ -119,8 +121,9 @@
 # ---
 # name: test_state[number.pinecil_display_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -177,8 +180,9 @@
 # ---
 # name: test_state[number.pinecil_hall_effect_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9,
@@ -235,8 +239,9 @@
 # ---
 # name: test_state[number.pinecil_hall_sensor_sleep_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60,
@@ -294,8 +299,9 @@
 # ---
 # name: test_state[number.pinecil_keep_awake_pulse_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 22.5,
@@ -353,8 +359,9 @@
 # ---
 # name: test_state[number.pinecil_keep_awake_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2250,
@@ -412,8 +419,9 @@
 # ---
 # name: test_state[number.pinecil_keep_awake_pulse_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.9,
@@ -471,8 +479,9 @@
 # ---
 # name: test_state[number.pinecil_long_press_temperature_step-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 90,
@@ -530,8 +539,9 @@
 # ---
 # name: test_state[number.pinecil_min_voltage_per_cell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.8,
@@ -589,8 +599,9 @@
 # ---
 # name: test_state[number.pinecil_motion_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9,
@@ -647,8 +658,9 @@
 # ---
 # name: test_state[number.pinecil_power_delivery_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5.0,
@@ -707,8 +719,9 @@
 # ---
 # name: test_state[number.pinecil_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 120,
@@ -766,8 +779,9 @@
 # ---
 # name: test_state[number.pinecil_quick_charge_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 22.0,
@@ -826,8 +840,9 @@
 # ---
 # name: test_state[number.pinecil_setpoint_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 450,
@@ -885,8 +900,9 @@
 # ---
 # name: test_state[number.pinecil_short_press_temperature_step-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 50,
@@ -944,8 +960,9 @@
 # ---
 # name: test_state[number.pinecil_shutdown_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60,
@@ -1004,8 +1021,9 @@
 # ---
 # name: test_state[number.pinecil_sleep_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 450,
@@ -1063,8 +1081,9 @@
 # ---
 # name: test_state[number.pinecil_sleep_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 15,
@@ -1122,8 +1141,9 @@
 # ---
 # name: test_state[number.pinecil_voltage_divider-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 900,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_setup[sensor.mock_title_connection_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_cpu_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -108,8 +110,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_download_throughput-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -165,8 +168,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_external_ip-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -214,8 +218,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_external_ipv6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -263,8 +268,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_gb_received-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -320,8 +326,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_gb_sent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -377,8 +384,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -427,8 +435,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_link_download_noise_margin-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -477,8 +486,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_link_download_power_attenuation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -527,8 +537,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_link_download_throughput-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -581,8 +592,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_link_upload_noise_margin-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -631,8 +643,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_link_upload_power_attenuation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -681,8 +694,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_link_upload_throughput-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -735,8 +749,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_max_connection_download_throughput-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -789,8 +804,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_max_connection_upload_throughput-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -843,8 +859,9 @@
 # ---
 # name: test_sensor_setup[sensor.mock_title_upload_throughput-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

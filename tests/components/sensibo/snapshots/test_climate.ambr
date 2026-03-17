@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate[load_platforms0][climate.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -65,8 +66,9 @@
 # ---
 # name: test_climate[load_platforms0][climate.hallway-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -174,8 +176,9 @@
 # ---
 # name: test_climate[load_platforms0][climate.kitchen-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([

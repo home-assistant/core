@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_event[event.sonic_duration_auto_shut_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -58,8 +59,9 @@
 # ---
 # name: test_event[event.sonic_volume_auto_shut_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

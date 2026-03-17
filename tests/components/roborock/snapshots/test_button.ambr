@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_buttons[button.roborock_s7_2_reset_air_filter_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_reset_main_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,8 +101,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_reset_sensor_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -148,8 +151,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_reset_side_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -197,8 +201,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_sc1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -246,8 +251,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_sc2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -295,8 +301,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_air_filter_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -344,8 +351,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_main_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -393,8 +401,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_sensor_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -442,8 +451,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_side_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -491,8 +501,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_sc1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -540,8 +551,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_sc2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -589,8 +601,9 @@
 # ---
 # name: test_buttons[button.zeo_one_pause-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -638,8 +651,9 @@
 # ---
 # name: test_buttons[button.zeo_one_shutdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -687,8 +701,9 @@
 # ---
 # name: test_buttons[button.zeo_one_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

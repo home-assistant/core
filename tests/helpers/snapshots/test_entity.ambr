@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_change_entity_id_config_entry[None]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -49,8 +50,9 @@
 # ---
 # name: test_change_entity_id_config_entry[None].2
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -97,8 +99,9 @@
 # ---
 # name: test_change_entity_id_config_entry[mock-subentry-id-1]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -145,8 +148,9 @@
 # ---
 # name: test_change_entity_id_config_entry[mock-subentry-id-1].2
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

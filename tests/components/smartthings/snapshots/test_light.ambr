@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[abl_light_b_001][light.kitchen_light_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 9000,
@@ -68,8 +69,9 @@
 # ---
 # name: test_all_entities[centralite][light.dimmer_debian-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -127,8 +129,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][light.range_hood_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -186,8 +189,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][light.microwave_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -245,8 +249,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][light.oven_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -303,8 +308,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][light.kitchen_oven_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -361,8 +367,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][light.vulcan_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -419,8 +426,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][light.four_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -477,8 +485,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][light.four_light_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -535,8 +544,9 @@
 # ---
 # name: test_all_entities[ge_in_wall_smart_dimmer][light.basement_exit_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -594,8 +604,9 @@
 # ---
 # name: test_all_entities[hue_color_temperature_bulb][light.bathroom_spot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 9000,
@@ -671,8 +682,9 @@
 # ---
 # name: test_all_entities[hue_rgbw_color_bulb][light.standing_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 9000,
@@ -740,8 +752,9 @@
 # ---
 # name: test_all_entities[ikea_plug_powermeter][light.ikea_plug_powermeter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([

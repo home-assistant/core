@@ -331,8 +331,9 @@
 # name: test_humidifier_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'available_modes': list([
@@ -432,8 +433,9 @@
 # name: test_humidifier_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'available_modes': list([
@@ -537,8 +539,9 @@
 # name: test_humidifier_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'available_modes': list([

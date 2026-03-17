@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[device_tracker.2021_honda_accord-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

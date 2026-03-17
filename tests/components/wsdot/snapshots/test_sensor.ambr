@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_travel_sensor_details[sensor.seattle_bellevue_via_i_90_eb_am-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
