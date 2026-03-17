@@ -14360,6 +14360,60 @@
     'state': '1336.2',
   })
 # ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_water_filter_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.filtro_in_microfibra_water_filter_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water filter usage',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water filter usage',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_filter_usage',
+    'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_water_filter_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Filtro in microfibra Water filter usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filtro_in_microfibra_water_filter_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '78',
+  })
+# ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_completion_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
