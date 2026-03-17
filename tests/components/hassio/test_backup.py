@@ -674,10 +674,14 @@ async def test_agent_upload(
         if event == {"manager_state": "idle"}:
             break
 
-    assert len(upload_progress_events) > 1
+    assert upload_progress_events
     # Verify intermediate progress events (not just the final 100% event)
     assert any(
         event["uploaded_bytes"] < event["total_bytes"]
+        for event in upload_progress_events
+    )
+    assert all(
+        event["uploaded_bytes"] <= event["total_bytes"]
         for event in upload_progress_events
     )
 
