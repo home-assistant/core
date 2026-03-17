@@ -224,8 +224,9 @@
 # ---
 # name: test_platform_setup_and_discovery[camera.dolni_vchod_zapad-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

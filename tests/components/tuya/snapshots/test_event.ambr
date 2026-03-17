@@ -388,8 +388,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -447,8 +448,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_picture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

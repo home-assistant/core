@@ -3433,8 +3433,9 @@
 # ---
 # name: test_platform_setup_and_discovery[switch.dolni_vchod_zapad_flip-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3482,8 +3483,9 @@
 # ---
 # name: test_platform_setup_and_discovery[switch.dolni_vchod_zapad_time_watermark-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
