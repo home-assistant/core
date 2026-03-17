@@ -34,9 +34,9 @@ async def _async_validate_input(hass: HomeAssistant, data: dict[str, Any]) -> st
         await hass.async_add_executor_job(client.get_number_of_devices)
         await hass.async_add_executor_job(client.update)
         return str(client.get_controller_id())
-    except Exception as err:
-        _LOGGER.exception(
-            "Unexpected exception while connecting to Touchline controller"
+    except (OSError, ConnectionError, TimeoutError) as err:
+        _LOGGER.debug(
+            "Error while connecting to Touchline controller at %s", host, exc_info=True
         )
         raise CannotConnect from err
 
