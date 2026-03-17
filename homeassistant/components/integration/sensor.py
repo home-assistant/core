@@ -335,9 +335,12 @@ class IntegrationSensor(RestoreSensor):
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._unit_time_str = unit_time
+        self._attr_device_class: SensorDeviceClass | None = None
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
+        self._source_device_class: Any | None = None
         self._last_valid_state: Decimal | None = None
+        self._refresh_device_class: bool = True
         self.device_entry = async_entity_id_to_device(
             hass,
             source_entity,
@@ -381,7 +384,8 @@ class IntegrationSensor(RestoreSensor):
 
         If a device class value has been set in the config, try to use that instead.
         """
-        # Use the user supplied device class if one was supplied, and it supports the current unit and state class
+        # Use the user supplied device class if one was supplied, and it supports
+        # the current unit and state class
         if (device_class := self._configured_device_class) is not None:
             state_classes = DEVICE_CLASS_STATE_CLASSES.get(device_class)
             allowed_units = DEVICE_CLASS_UNITS.get(device_class)
@@ -410,15 +414,27 @@ class IntegrationSensor(RestoreSensor):
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
         source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        source_device_class = source_state.attributes.get(ATTR_DEVICE_CLASS)
         if source_unit is not None:
-            self._unit_of_measurement = self._calculate_unit(source_unit)
+            unit_of_measurement = self._calculate_unit(source_unit)
         else:
             # If the source has no defined unit we cannot derive a unit for the integral
-            self._unit_of_measurement = None
+            unit_of_measurement = None
 
-        self._attr_device_class = self._calculate_device_class(
-            source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
-        )
+        # Only update device class if unit of measurement or source device class change,
+        # or if a manual update has been requested (e.g. on sensor being added)
+        if (
+            self._refresh_device_class
+            or unit_of_measurement != self.unit_of_measurement
+            or source_device_class != self._source_device_class
+        ):
+            self._attr_device_class = self._calculate_device_class(
+                source_device_class, unit_of_measurement
+            )
+        self._refresh_device_class = False
+        self._unit_of_measurement = unit_of_measurement
+        self._source_device_class = source_device_class
+
         if self._attr_device_class:
             self._attr_icon = None  # Remove this sensors icon default and allow to fallback to the device class default
         else:
@@ -465,6 +481,7 @@ class IntegrationSensor(RestoreSensor):
             handle_state_change = self._integrate_on_state_change_callback
             handle_state_report = self._integrate_on_state_report_callback
 
+        self._refresh_device_class = True
         if (
             state := self.hass.states.get(self._source_entity)
         ) and state.state != STATE_UNAVAILABLE:
