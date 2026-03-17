@@ -1,0 +1,80 @@
+.condition_common_fields: &condition_common_fields
+  behavior:
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: condition_behavior
+        options:
+          - all
+          - any
+
+awning_is_closed:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: awning
+
+awning_is_open:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: awning
+
+blind_is_closed:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: blind
+
+blind_is_open:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: blind
+
+curtain_is_closed:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: curtain
+
+curtain_is_open:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: curtain
+
+shade_is_closed:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shade
+
+shade_is_open:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shade
+
+shutter_is_closed:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shutter
+
+shutter_is_open:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shutter
