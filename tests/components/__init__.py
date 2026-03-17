@@ -850,3 +850,17 @@ async def assert_condition_gated_by_labs_flag(
         "conditions' feature to be enabled in Home Assistant Labs settings "
         "(feature flag: 'new_triggers_conditions')"
     ) in caplog.text
+
+
+async def assert_trigger_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger: str
+) -> None:
+    """Helper to check that a trigger is gated by the labs flag."""
+
+    await arm_trigger(hass, trigger, None, {ATTR_LABEL_ID: "test_label"})
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
+        f"'{trigger}' requires the experimental 'New triggers and conditions' "
+        "feature to be enabled in Home Assistant Labs settings (feature flag: "
+        "'new_triggers_conditions')"
+    ) in caplog.text
