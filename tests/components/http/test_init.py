@@ -15,6 +15,7 @@ import pytest
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
 from homeassistant.components.cloud import CloudNotAvailable
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
@@ -743,6 +744,9 @@ async def test_unix_socket_started_with_supervisor(
     tmp_path: Path,
 ) -> None:
     """Test unix socket is started when running under Supervisor."""
+    await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=["system-admin"]
+    )
     socket_path = tmp_path / "core.sock"
     loop = asyncio.get_running_loop()
     mock_sock = Mock()
