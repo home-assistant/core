@@ -7,4 +7,4 @@ FROM ${BUILD_FROM}
 RUN apk --no-cache add \
     libva-intel-driver
 
-LABEL io.hass.type="core"
+LABEL io.hass.machine="generic-x86-64"

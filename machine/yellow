@@ -7,4 +7,4 @@ FROM ${BUILD_FROM}
 RUN apk --no-cache add \
     raspberrypi-utils
 
-LABEL io.hass.type="core"
+LABEL io.hass.machine="yellow"
