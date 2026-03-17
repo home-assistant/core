@@ -15,7 +15,7 @@ from homeassistant.components.vera.const import (
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -66,9 +66,7 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
     assert entries
 
 
-async def test_async_step_import_success(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_async_step_import_success(hass: HomeAssistant) -> None:
     """Test import step success."""
     with patch("pyvera.VeraController") as vera_controller_class_mock:
         controller = MagicMock()
@@ -91,18 +89,9 @@ async def test_async_step_import_success(
         }
         assert result["result"].unique_id == controller.serial_number
 
-        # Check that a deprecation repair issue was created
-        issue = issue_registry.async_get_issue(
-            "homeassistant", f"deprecated_yaml_{DOMAIN}"
-        )
-        assert issue is not None
-        assert issue.severity == "warning"
-
 
 async def test_async_step_import_success_with_legacy_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test import step success with legacy unique id."""
     entity_registry.async_get_or_create(
@@ -129,13 +118,6 @@ async def test_async_step_import_success_with_legacy_unique_id(
             CONF_LEGACY_UNIQUE_ID: True,
         }
         assert result["result"].unique_id == controller.serial_number
-
-        # Check that a deprecation repair issue was created
-        issue = issue_registry.async_get_issue(
-            "homeassistant", f"deprecated_yaml_{DOMAIN}"
-        )
-        assert issue is not None
-        assert issue.severity == "warning"
 
 
 async def test_async_step_finish_error(hass: HomeAssistant) -> None:

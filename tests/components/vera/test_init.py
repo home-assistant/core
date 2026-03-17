@@ -14,7 +14,7 @@ from homeassistant.components.vera import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .common import ComponentFactory, ConfigSource, new_simple_controller_config
 
@@ -53,6 +53,7 @@ async def test_init_from_file(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     vera_component_factory: ComponentFactory,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test function."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
@@ -75,6 +76,11 @@ async def test_init_from_file(
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
+
+    # Check that a deprecation repair issue was created
+    issue = issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+    assert issue is not None
+    assert issue.severity == "warning"
 
 
 async def test_multiple_controllers_with_legacy_one(
