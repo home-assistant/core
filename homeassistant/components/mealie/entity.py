@@ -1,5 +1,6 @@
 """Base class for Mealie entities."""
 
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,4 +21,5 @@ class MealieEntity(CoordinatorEntity[MealieDataUpdateCoordinator]):
         self._attr_unique_id = f"{unique_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
+            configuration_url=coordinator.config_entry.data[CONF_HOST],
         )
