@@ -616,13 +616,8 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
                 description_placeholders["error_message"] = str(err)
 
             if not errors:
-                title = (
-                    f"{chat_info.effective_name} ({chat_id})"
-                    if chat_info.effective_name
-                    else str(chat_id)
-                )
                 return self.async_create_entry(
-                    title=title,
+                    title=chat_info.effective_name or str(chat_id),
                     data={CONF_CHAT_ID: chat_id},
                     unique_id=str(chat_id),
                 )
