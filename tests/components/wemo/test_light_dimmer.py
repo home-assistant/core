@@ -73,11 +73,6 @@ async def test_turn_on_brightness(
         {ATTR_ENTITY_ID: [wemo_entity.entity_id], ATTR_BRIGHTNESS: 204},
         blocking=True,
     )
-    # _wemo_call_wrapper schedules async_update_listeners via hass.add_job
-    # from the executor thread, which goes through two levels of call_soon
-    # before the entity state is written.
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     pywemo_device.set_brightness.assert_called_once_with(80)
     states = hass.states.get(wemo_entity.entity_id)
