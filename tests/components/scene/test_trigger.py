@@ -127,7 +127,7 @@ async def test_scene_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_scene_state_trigger_behavior_any(
+async def test_scene_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_scenes: dict[str, list[str]],
@@ -137,7 +137,7 @@ async def test_scene_state_trigger_behavior_any(
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the scene state trigger fires when any scene state changes to a specific state."""
+    """Test that the scene state trigger fires when targeted scene state changes."""
     other_entity_ids = set(target_scenes["included"]) - {entity_id}
 
     # Set all scenes, including the tested scene, to the initial state
