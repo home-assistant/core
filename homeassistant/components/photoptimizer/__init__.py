@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN
 from .coordinator import PhotoptimizerCoordinator
@@ -64,9 +65,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        _LOGGER.debug("Coordinator first refresh failed: %s", err)
-        raise ConfigEntryNotReady from err
+    except ConfigEntryNotReady as err:
+        if isinstance(err.__cause__, UpdateFailed) and str(err.__cause__) == (
+            "EMHASS optimization failed"
+        ):
+            _LOGGER.warning(
+                "Initial EMHASS refresh failed; loading integration with unavailable entities"
+            )
+        else:
+            raise
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     entry.runtime_data = coordinator

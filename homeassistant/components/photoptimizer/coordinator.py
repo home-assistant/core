@@ -1,9 +1,8 @@
-"""Photoptimizer coordinator using Forecast.Solar client."""
+"""Photoptimizer coordinator."""
 
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
@@ -19,43 +18,32 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_BATTERY_CAPACITY_KWH,
+    CONF_BATTERY_EFFICIENCY_ROUND_TRIP,
     CONF_BATTERY_SOC_ENTITY,
+    CONF_BATTERY_SOC_RESERVE_PERCENT,
+    CONF_ELECTRICITY_PRICE_ENTITY,
+    CONF_EMHASS_TOKEN,
     CONF_EMHASS_URL,
     CONF_HORIZON_HOURS,
+    CONF_LOAD_FORECAST_ENTITY,
     CONF_PV_FORECAST_ENTITY,
     CONF_TIMEZONE,
+    CONF_WEAR_COST_PER_KWH,
+    DEFAULT_BATTERY_EFFICIENCY_ROUND_TRIP,
+    DEFAULT_BATTERY_SOC_RESERVE_PERCENT,
     DEFAULT_EMHASS_URL,
     DEFAULT_HORIZON_HOURS,
+    DEFAULT_WEAR_COST_PER_KWH,
 )
 from .emhass_client import EmhassClient
+from .models import OptimizationBucket, OptimizationInputs
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class HourlyBucket:
-    """Normalized hourly input for optimization.
-
-    start: timezone-aware hour-aligned timestamp
-    price: float import/export price for the hour (VAT applied as chosen)
-    pv: float PV production forecast for the hour in kWh
-    load: float consumption forecast for the hour in kWh
-
-    Add fields here (e.g., export price, battery constraints) when we enrich the
-    optimizer payload. Keep it simple and flat because the list will be exposed
-    for diagnostics and tests.
-
-    uv pip install "aiodns>=3.2,<4" "pycares>=4.2,<4.4"
-    """
-
-    start: datetime
-    price: float
-    pv: float
-    load: float
-
-
 class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
-    """Coordinator that fetches data from Forecast.Solar."""
+    """Aggregate inputs for EMHASS and expose the combined result."""
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, client: ForecastSolar
@@ -72,10 +60,41 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
         self.client = client
         self.entry = entry
         self.emhass_url = entry.data.get(CONF_EMHASS_URL, DEFAULT_EMHASS_URL)
-        self.emhass = EmhassClient(hass, self.emhass_url)
+        self.emhass_token = entry.data.get(CONF_EMHASS_TOKEN)
+        self.emhass = EmhassClient(
+            hass,
+            self.emhass_url,
+            self.emhass_token,
+            battery_capacity_kwh=float(
+                entry.data.get(
+                    CONF_BATTERY_CAPACITY_KWH,
+                    5.0,
+                )
+            ),
+            battery_efficiency=(
+                float(
+                    entry.data.get(
+                        CONF_BATTERY_EFFICIENCY_ROUND_TRIP,
+                        DEFAULT_BATTERY_EFFICIENCY_ROUND_TRIP,
+                    )
+                )
+                / 100.0
+            ),
+            battery_soc_reserve=(
+                entry.data.get(
+                    CONF_BATTERY_SOC_RESERVE_PERCENT,
+                    DEFAULT_BATTERY_SOC_RESERVE_PERCENT,
+                )
+                / 100.0
+            ),
+            wear_cost_per_kwh=entry.data.get(
+                CONF_WEAR_COST_PER_KWH,
+                DEFAULT_WEAR_COST_PER_KWH,
+            ),
+        )
 
     async def _hourly_from_price_entity(
-        self, entity_id: str, buckets: list[HourlyBucket]
+        self, entity_id: str, buckets: list[OptimizationBucket]
     ) -> None:
         state = self.hass.states.get(entity_id)
 
@@ -105,7 +124,7 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
                 bucket.price = last_price
 
     async def _hourly_from_load_entity(
-        self, entity_id: str, buckets: list[HourlyBucket]
+        self, entity_id: str, buckets: list[OptimizationBucket]
     ) -> None:
         state = self.hass.states.get(entity_id)
 
@@ -136,7 +155,7 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
                 bucket.load = last_load
 
     async def _hourly_from_forecast_solar(
-        self, buckets: list[HourlyBucket], raw_pv
+        self, buckets: list[OptimizationBucket], raw_pv
     ) -> None:
         tz_name = self.entry.data.get(CONF_TIMEZONE) or self.hass.config.time_zone
         tz = dt_util.get_time_zone(tz_name) or dt_util.UTC
@@ -150,7 +169,7 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
                 bucket_index[hour_start].pv += float(wh) / 1000.0
 
     async def _hourly_from_pv_entity(
-        self, entity_id: str, buckets: list[HourlyBucket]
+        self, entity_id: str, buckets: list[OptimizationBucket]
     ) -> None:
         """Fill PV from a forecast entity with datetime-keyed attributes."""
 
@@ -177,7 +196,7 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
                 bucket_index[hour_start].pv = val
 
     async def _hourly_from_load_profile(
-        self, buckets: list[HourlyBucket], profile: list[float]
+        self, buckets: list[OptimizationBucket], profile: list[float]
     ) -> None:
         """Fill load buckets from a 24-hour profile."""
 
@@ -276,62 +295,40 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
 
         return profile
 
-    def _build_emhass_payload(self, timeline: list[HourlyBucket]) -> dict:
-        """Convert timeline to EMHASS payload."""
-
-        pv_power_forecast = [bucket.pv * 1000.0 for bucket in timeline]
-        load_power_forecast = [bucket.load * 1000.0 for bucket in timeline]
-        load_cost_forecast = [bucket.price for bucket in timeline]
-        prod_price_forecast = [price * 0.9 for price in load_cost_forecast]
-
+    def _read_battery_soc(self) -> float:
+        """Read and normalize the current battery SOC from Home Assistant."""
         soc_entity = self.entry.data.get(CONF_BATTERY_SOC_ENTITY)
         soc_state = self.hass.states.get(soc_entity) if soc_entity else None
         try:
             soc_value = float(soc_state.state) if soc_state and soc_state.state else 0.0
         except (TypeError, ValueError):
             soc_value = 0.0
-        soc_init = soc_value / 100.0 if soc_value > 1 else soc_value
 
-        horizon = len(timeline)
+        if soc_value > 1:
+            soc_value = soc_value / 100.0
 
-        return {
-            "pv_power_forecast": pv_power_forecast,
-            "load_power_forecast": load_power_forecast,
-            "load_cost_forecast": load_cost_forecast,
-            "prod_price_forecast": prod_price_forecast,
-            "soc_init": soc_init,
-            "prediction_horizon": horizon,
-            "soc_final": soc_init,
-            "def_total_hours": horizon,
-        }
+        return max(0.0, min(1.0, soc_value))
 
-    def _extract_emhass_action(self, result: dict) -> float | None:
-        """Return the first battery power command if present."""
-
-        table = result.get("table_results")
-        if not table or not isinstance(table, list):
-            return None
-        first = table[0]
-        if not isinstance(first, dict):
-            return None
-        batt_power = first.get("p_batt_forecast")
-        if batt_power is None:
-            return None
-        try:
-            return float(batt_power)
-        except (TypeError, ValueError):
-            return None
-
-    async def _apply_inverter_strategy(self, target_batt_power: float) -> None:
-        """Handle inverter control decision placeholder."""
-
-        _LOGGER.info("EMHASS target battery power: %s W", target_batt_power)
+    def _log_timeline(self, timeline: list[OptimizationBucket]) -> None:
+        """Log the aggregated inputs passed into EMHASS."""
+        _LOGGER.debug(
+            "Photoptimizer inputs (%d hours):\n  %s\n%s",
+            len(timeline),
+            f"{'Hour':<17} {'Price':>9} {'PV (kWh)':>10} {'Load (kWh)':>11}",
+            "\n".join(
+                f"  {bucket.start.strftime('%Y-%m-%d %H:%M')} "
+                f"{bucket.price:9.4f} "
+                f"{bucket.pv:10.3f} "
+                f"{bucket.load:11.3f}"
+                for bucket in timeline
+            ),
+        )
 
     async def _async_update_data(self) -> dict:
         """Fetch forecast data."""
         try:
             async with asyncio.timeout(30):
-                timeline: list[HourlyBucket] = []
+                timeline: list[OptimizationBucket] = []
                 horizon_hours = self.entry.data.get(
                     CONF_HORIZON_HOURS, DEFAULT_HORIZON_HOURS
                 )
@@ -343,7 +340,7 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
                 for hour_offset in range(horizon_hours):
                     bucket_start = now + timedelta(hours=hour_offset)
                     timeline.append(
-                        HourlyBucket(
+                        OptimizationBucket(
                             start=bucket_start,
                             price=0.0,
                             pv=0.0,
@@ -351,7 +348,7 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
                         )
                     )
 
-                price_entity = self.entry.data.get("electricity_price_entity")
+                price_entity = self.entry.data.get(CONF_ELECTRICITY_PRICE_ENTITY)
                 if price_entity:
                     await self._hourly_from_price_entity(price_entity, timeline)
 
@@ -363,30 +360,36 @@ class PhotoptimizerCoordinator(DataUpdateCoordinator[dict]):
                     raw_pv = await self.client.estimate()
                     await self._hourly_from_forecast_solar(timeline, raw_pv)
 
-                load_entity = self.entry.data.get("load_forecast_entity")
+                load_entity = self.entry.data.get(CONF_LOAD_FORECAST_ENTITY)
                 if load_entity:
                     await self._hourly_from_load_entity(load_entity, timeline)
                 else:
                     load_profile = await self._build_load_profile(None)
                     await self._hourly_from_load_profile(timeline, load_profile)
 
-                payload = self._build_emhass_payload(timeline)
-                emhass_result = await self.emhass.async_post_mpc_optim(payload)
+                optimization_inputs = OptimizationInputs(
+                    timeline=timeline,
+                    battery_soc=self._read_battery_soc(),
+                    raw_forecast_solar=raw_pv,
+                )
+                emhass_result = await self.emhass.async_run_naive_mpc(
+                    optimization_inputs
+                )
 
                 if emhass_result is None:
                     raise UpdateFailed("EMHASS optimization failed")
 
-                action = self._extract_emhass_action(emhass_result)
-                if action is not None:
-                    await self._apply_inverter_strategy(action)
-
-                return {
-                    "timeline": [bucket.__dict__ for bucket in timeline],
+                result = {
+                    "timeline": [bucket.as_dict() for bucket in timeline],
+                    "inputs": {"battery_soc": optimization_inputs.battery_soc},
                     "raw": {"forecast_solar": raw_pv},
-                    "emhass_payload": payload,
-                    "emhass_result": emhass_result,
-                    "emhass_action": action,
+                    "emhass": emhass_result.as_dict(),
                 }
+
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    self._log_timeline(timeline)
+
+                return result
 
         except ForecastSolarError as err:
             raise UpdateFailed(f"Forecast.Solar API error: {err}") from err

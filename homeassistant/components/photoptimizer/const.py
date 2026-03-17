@@ -22,6 +22,7 @@ CONF_API_KEY = "api_key"
 CONF_LOAD_FORECAST_ENTITY = "load_forecast_entity"  # optional
 CONF_PV_FORECAST_ENTITY = "pv_forecast_entity"  # optional
 CONF_EMHASS_URL = "emhass_url"
+CONF_EMHASS_TOKEN = "emhass_token"  # optional
 
 # Battery and inverter configuration
 CONF_BATTERY_CAPACITY_KWH = "battery_capacity_kwh"  # required

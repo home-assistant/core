@@ -40,12 +40,23 @@
           "battery_capacity_kwh": "Battery capacity (kWh)",
           "battery_soc_reserve_percent": "Reserve state of charge (%)",
           "battery_efficiency_round_trip": "Round-trip efficiency (%)",
-          "wear_cost_per_kwh": "Battery wear cost (per kWh)"
+          "wear_cost_per_kwh": "Battery wear cost (per kWh)",
+          "emhass_url": "EMHASS URL",
+          "emhass_token": "EMHASS access token (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure EMHASS connection",
+        "description": "Update the EMHASS URL or access token.",
+        "data": {
+          "emhass_url": "EMHASS URL",
+          "emhass_token": "EMHASS access token (optional)"
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to Forecast.Solar",
+      "cannot_connect_emhass": "Failed to connect to EMHASS",
       "unknown": "Unexpected error occurred"
     }
   }

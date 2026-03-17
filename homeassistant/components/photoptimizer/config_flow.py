@@ -21,6 +21,7 @@ from .const import (
     CONF_CURRENT_SOLAR_PRODUCTION_ENTITY,
     CONF_DECLINATION,
     CONF_ELECTRICITY_PRICE_ENTITY,
+    CONF_EMHASS_TOKEN,
     CONF_EMHASS_URL,
     CONF_GRID_POWER_ENTITY,
     CONF_HORIZON_HOURS,
@@ -216,6 +217,9 @@ class PhotoptimizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_WEAR_COST_PER_KWH, default=DEFAULT_WEAR_COST_PER_KWH
                 ): vol.Coerce(float),
                 vol.Required(CONF_EMHASS_URL, default=DEFAULT_EMHASS_URL): str,
+                vol.Optional(CONF_EMHASS_TOKEN): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                ),
             }
         )
 
@@ -223,4 +227,43 @@ class PhotoptimizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="inverter",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle reconfiguration of EMHASS connection settings."""
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates={
+                    CONF_EMHASS_URL: user_input[CONF_EMHASS_URL],
+                    CONF_EMHASS_TOKEN: user_input.get(CONF_EMHASS_TOKEN) or None,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_EMHASS_URL): str,
+                        vol.Optional(CONF_EMHASS_TOKEN): selector.TextSelector(
+                            selector.TextSelectorConfig(
+                                type=selector.TextSelectorType.PASSWORD
+                            )
+                        ),
+                    }
+                ),
+                {
+                    CONF_EMHASS_URL: entry.data.get(
+                        CONF_EMHASS_URL,
+                        DEFAULT_EMHASS_URL,
+                    ),
+                    CONF_EMHASS_TOKEN: entry.data.get(CONF_EMHASS_TOKEN),
+                },
+            ),
+            errors={},
         )

@@ -1,50 +1,89 @@
-"""Test the photoptimizer integration."""
+"""Test the photoptimizer integration setup behavior."""
+
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.photoptimizer import async_setup_entry
 from homeassistant.components.photoptimizer.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ["sensor"])
-async def test_setup_and_remove_config_entry(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    platform: str,
-) -> None:
-    """Test setting up and removing a config entry."""
-    input_sensor_entity_id = "sensor.input"
-    photoptimizer_entity_id = f"{platform}.my_photoptimizer"
+async def _raise_emhass_update_failed() -> None:
+    """Raise ConfigEntryNotReady caused by an EMHASS update failure."""
+    raise ConfigEntryNotReady from UpdateFailed("EMHASS optimization failed")
 
-    # Setup the config entry
+
+async def _raise_non_emhass_update_failed() -> None:
+    """Raise ConfigEntryNotReady caused by a different update failure."""
+    raise ConfigEntryNotReady from UpdateFailed("Forecast.Solar API error")
+
+
+async def test_setup_entry_loads_when_emhass_first_refresh_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup continues when first refresh fails due to EMHASS unavailability."""
     config_entry = MockConfigEntry(
-        data={},
         domain=DOMAIN,
-        options={
-            "entity_id": input_sensor_entity_id,
-            "name": "My photoptimizer",
-        },
-        title="My photoptimizer",
+        data={"latitude": 49.5962536, "longitude": 18.3395664},
     )
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    # Check the entity is registered in the entity registry
-    assert entity_registry.async_get(photoptimizer_entity_id) is not None
+    forecast_client = AsyncMock()
+    forecast_client.estimate.return_value = object()
 
-    # Check the platform is setup correctly
-    state = hass.states.get(photoptimizer_entity_id)
-    assert state.state == "unknown"
-    assert state.attributes == {}
+    with (
+        patch(
+            "homeassistant.components.photoptimizer.ForecastSolar",
+            return_value=forecast_client,
+        ),
+        patch(
+            "homeassistant.components.photoptimizer.PhotoptimizerCoordinator.async_config_entry_first_refresh",
+            side_effect=_raise_emhass_update_failed,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(return_value=True),
+        ),
+    ):
+        assert await async_setup_entry(hass, config_entry)
 
-    # Remove the config entry
-    assert await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert config_entry.runtime_data is hass.data[DOMAIN][config_entry.entry_id]
 
-    # Check the state and entity registry entry are removed
-    assert hass.states.get(photoptimizer_entity_id) is None
-    assert entity_registry.async_get(photoptimizer_entity_id) is None
+
+async def test_setup_entry_raises_for_non_emhass_first_refresh_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup still retries when the first refresh fails for other reasons."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"latitude": 49.5962536, "longitude": 18.3395664},
+    )
+    config_entry.add_to_hass(hass)
+
+    forecast_client = AsyncMock()
+    forecast_client.estimate.return_value = object()
+
+    with (
+        patch(
+            "homeassistant.components.photoptimizer.ForecastSolar",
+            return_value=forecast_client,
+        ),
+        patch(
+            "homeassistant.components.photoptimizer.PhotoptimizerCoordinator.async_config_entry_first_refresh",
+            side_effect=_raise_non_emhass_update_failed,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(return_value=True),
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
+        await async_setup_entry(hass, config_entry)
