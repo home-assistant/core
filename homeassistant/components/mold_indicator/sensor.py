@@ -203,105 +203,80 @@ class MoldIndicator(SensorEntity):
     def _async_setup_sensor(self) -> None:
         """Set up the sensor and start tracking state changes."""
 
-        @callback
-        def mold_indicator_sensors_state_listener(
-            event: Event[EventStateChangedData],
-        ) -> None:
-            """Handle for state changes for dependent sensors."""
-            new_state = event.data["new_state"]
-            old_state = event.data["old_state"]
-            entity = event.data["entity_id"]
-            _LOGGER.debug(
-                "Sensor state change for %s that had old state %s and new state %s",
-                entity,
-                old_state,
-                new_state,
-            )
-
-            if self._update_sensor(entity, old_state, new_state):
-                if self._preview_callback:
-                    calculated_state = self._async_calculate_state()
-                    self._preview_callback(
-                        calculated_state.state, calculated_state.attributes
-                    )
-                # only write state to the state machine if we are not in preview mode
-                else:
-                    self.async_schedule_update_ha_state(True)
-
-        @callback
-        def mold_indicator_startup() -> None:
-            """Add listeners and get 1st state."""
-            _LOGGER.debug("Startup for %s", self.entity_id)
-
+        self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
-                list(self._entities.values()),
-                mold_indicator_sensors_state_listener,
+                self._entities.values(),
+                self._async_mold_indicator_sensor_state_listener,
+            )
+        )
+
+        # Replay current state of source entities
+        for entity_id in self._entities.values():
+            state = self.hass.states.get(entity_id)
+            state_event: Event[EventStateChangedData] = Event(
+                "", {"entity_id": entity_id, "new_state": state, "old_state": None}
+            )
+            self._async_mold_indicator_sensor_state_listener(
+                state_event, update_state=False
             )
 
-            # Read initial state
-            indoor_temp = self.hass.states.get(self._entities[CONF_INDOOR_TEMP])
-            outdoor_temp = self.hass.states.get(self._entities[CONF_OUTDOOR_TEMP])
-            indoor_hum = self.hass.states.get(self._entities[CONF_INDOOR_HUMIDITY])
+        self._recalculate()
 
-            schedule_update = self._update_sensor(
-                self._entities[CONF_INDOOR_TEMP], None, indoor_temp
-            )
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
 
-            schedule_update = (
-                False
-                if not self._update_sensor(
-                    self._entities[CONF_OUTDOOR_TEMP], None, outdoor_temp
-                )
-                else schedule_update
-            )
+    @callback
+    def _async_mold_indicator_sensor_state_listener(
+        self, event: Event[EventStateChangedData], update_state: bool = True
+    ) -> None:
+        """Handle state changes for dependent sensors."""
+        entity_id = event.data["entity_id"]
+        new_state = event.data["new_state"]
 
-            schedule_update = (
-                False
-                if not self._update_sensor(
-                    self._entities[CONF_INDOOR_HUMIDITY], None, indoor_hum
-                )
-                else schedule_update
-            )
+        _LOGGER.debug(
+            "Sensor state change for %s that had old state %s and new state %s",
+            entity_id,
+            event.data["old_state"],
+            new_state,
+        )
 
-            if schedule_update and not self._preview_callback:
-                self.async_schedule_update_ha_state(True)
-            if self._preview_callback:
-                # re-calculate dewpoint and mold indicator
-                self._calc_dewpoint()
-                self._calc_moldindicator()
-                if self._attr_native_value is None:
-                    self._attr_available = False
-                else:
-                    self._attr_available = True
-                calculated_state = self._async_calculate_state()
-                self._preview_callback(
-                    calculated_state.state, calculated_state.attributes
-                )
-
-        mold_indicator_startup()
-
-    def _update_sensor(
-        self, entity: str, old_state: State | None, new_state: State | None
-    ) -> bool:
-        """Update information based on new sensor states."""
-        _LOGGER.debug("Sensor update for %s", entity)
-        if new_state is None:
-            return False
-
-        # If old_state is not set and new state is unknown then it means
-        # that the sensor just started up
-        if old_state is None and new_state.state == STATE_UNKNOWN:
-            return False
-
-        if entity == self._entities[CONF_INDOOR_TEMP]:
+        # update state depending on which sensor changed
+        if entity_id == self._entities[CONF_INDOOR_TEMP]:
             self._indoor_temp = self._get_temperature_from_state(new_state)
-        elif entity == self._entities[CONF_OUTDOOR_TEMP]:
+        elif entity_id == self._entities[CONF_OUTDOOR_TEMP]:
             self._outdoor_temp = self._get_temperature_from_state(new_state)
-        elif entity == self._entities[CONF_INDOOR_HUMIDITY]:
+        elif entity_id == self._entities[CONF_INDOOR_HUMIDITY]:
             self._indoor_hum = self._get_humidity_from_state(new_state)
 
-        return True
+        if not update_state:
+            return
+
+        self._recalculate()
+
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        # only write state to the state machine if we are not in preview mode
+        else:
+            self.async_write_ha_state()
+
+    @callback
+    def _recalculate(self) -> None:
+        """Recalculate mold indicator from cached sensor values."""
+        # Check if all sensors are available
+        if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
+            self._attr_available = False
+            self._attr_native_value = None
+            self._dewpoint = None
+            self._crit_temp = None
+            return
+
+        # Calculate dewpoint and mold indicator
+        self._calc_dewpoint()
+        self._calc_moldindicator()
+        self._attr_available = self._attr_native_value is not None
 
     def _get_value_from_state(
         self,
