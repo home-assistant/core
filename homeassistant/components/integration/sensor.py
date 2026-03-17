@@ -382,7 +382,8 @@ class IntegrationSensor(RestoreSensor):
         """
         # If user supplied device class, use it if the unit is supported
         if (device_class := self._configured_device_class) is not None:
-            if unit_of_measurement in DEVICE_CLASS_UNITS.get(device_class, set()):
+            allowed_units = DEVICE_CLASS_UNITS.get(device_class)
+            if allowed_units is None or unit_of_measurement in allowed_units:
                 return device_class
 
         # Otherwise try to infer device class from source sensor
@@ -392,7 +393,8 @@ class IntegrationSensor(RestoreSensor):
         ):
             return None
 
-        if unit_of_measurement not in DEVICE_CLASS_UNITS.get(device_class, set()):
+        allowed_units = DEVICE_CLASS_UNITS.get(device_class)
+        if allowed_units is not None and unit_of_measurement not in allowed_units:
             return None
         return device_class
 
