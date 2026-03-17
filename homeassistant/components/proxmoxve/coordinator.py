@@ -85,8 +85,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.proxmox: ProxmoxAPI
 
         self.known_nodes: set[str] = set()
-        self.known_vms: set[tuple[str, int]] = set()
-        self.known_containers: set[tuple[str, int]] = set()
+        self.known_vms: set[int] = set()
+        self.known_containers: set[int] = set()
         self.known_storages: set[tuple[str, str]] = set()
         self.permissions: dict[str, dict[str, int]] = {}
 
@@ -277,38 +277,40 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             for nodes_callback in self.new_nodes_callbacks:
                 nodes_callback(new_node_data)
 
-        # And yes, track new VM's and containers as well
-        current_vms = {
-            (node_name, vmid)
-            for node_name, node_data in data.items()
-            for vmid in node_data.vms
-        }
-        self.known_vms &= current_vms
+        # Track VMs by VMID only (not by node), since VMIDs are globally
+        # unique in a Proxmox cluster and VMs can migrate between nodes.
+        current_vms = {vmid for node_data in data.values() for vmid in node_data.vms}
         new_vms = current_vms - self.known_vms
         if new_vms:
             _LOGGER.debug("New VMs found: %s", new_vms)
             self.known_vms.update(new_vms)
-            new_vm_data = [
-                (data[node_name], data[node_name].vms[vmid])
-                for node_name, vmid in new_vms
-            ]
+            new_vm_data: list[tuple[ProxmoxNodeData, dict[str, Any]]] = []
+            seen_vmids: set[int] = set()
+            for node_data in data.values():
+                for vmid in node_data.vms:
+                    if vmid in new_vms and vmid not in seen_vmids:
+                        seen_vmids.add(vmid)
+                        new_vm_data.append((node_data, node_data.vms[vmid]))
             for vms_callback in self.new_vms_callbacks:
                 vms_callback(new_vm_data)
 
+        # Track containers by VMID only, same rationale as VMs.
         current_containers = {
-            (node_name, vmid)
-            for node_name, node_data in data.items()
-            for vmid in node_data.containers
+            vmid for node_data in data.values() for vmid in node_data.containers
         }
-        self.known_containers &= current_containers
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
-            new_container_data = [
-                (data[node_name], data[node_name].containers[vmid])
-                for node_name, vmid in new_containers
-            ]
+            new_container_data: list[tuple[ProxmoxNodeData, dict[str, Any]]] = []
+            seen_container_ids: set[int] = set()
+            for node_data in data.values():
+                for vmid in node_data.containers:
+                    if vmid in new_containers and vmid not in seen_container_ids:
+                        seen_container_ids.add(vmid)
+                        new_container_data.append(
+                            (node_data, node_data.containers[vmid])
+                        )
             for containers_callback in self.new_containers_callbacks:
                 containers_callback(new_container_data)
 
