@@ -1,6 +1,7 @@
 """Common fixtures for Hunter Douglas Powerview tests."""
 
 from collections.abc import Generator
+from contextlib import ExitStack
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiopvapi.resources.shade import ShadePosition
@@ -23,15 +24,17 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_hunterdouglas_hub(
+    api_version: int,
     device_json: str,
     home_json: str,
     firmware_json: str,
     rooms_json: str,
     scenes_json: str,
     shades_json: str,
+    scenemembers_json: str | None,
 ) -> Generator[None]:
     """Return a mocked Powerview Hub with all data populated."""
-    with (
+    patches = [
         patch(
             "homeassistant.components.hunterdouglas_powerview.util.Hub.request_raw_data",
             return_value=load_json_object_fixture(device_json, DOMAIN),
@@ -64,7 +67,18 @@ def mock_hunterdouglas_hub(
             new_callable=PropertyMock,
             return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
         ),
-    ):
+    ]
+    if api_version == 2 and scenemembers_json is not None:
+        patches.append(
+            patch(
+                "homeassistant.components.hunterdouglas_powerview.SceneMembers.get_resources",
+                return_value=load_json_value_fixture(scenemembers_json, DOMAIN),
+            ),
+        )
+
+    with ExitStack() as stack:
+        for p in patches:
+            stack.enter_context(p)
         yield
 
 
@@ -144,3 +158,11 @@ def shades_json(api_version: int) -> str:
         return "gen3/home/shades.json"
     # Add more conditions for different api_versions if needed
     raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def scenemembers_json(api_version: int) -> str | None:
+    """Return the get_resources fixture for scene members, or None if unsupported."""
+    if api_version == 2:
+        return "gen2/scenemembers.json"
+    return None
