@@ -19,10 +19,9 @@ from homeassistant.components.valve import (
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 FRONT_GARDEN = "valve.front_garden"
 ORCHARD = "valve.orchard"
@@ -41,11 +40,12 @@ def valve_only() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass: HomeAssistant, valve_only: None):
-    """Set up demo component."""
-    assert await async_setup_component(
-        hass, VALVE_DOMAIN, {VALVE_DOMAIN: {"platform": DOMAIN}}
-    )
+async def setup_comp(hass: HomeAssistant, valve_only: None) -> None:
+    """Set up demo component from config entry."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 
