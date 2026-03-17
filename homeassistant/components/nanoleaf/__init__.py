@@ -57,10 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> 
                     "Received unknown touch gesture ID %s", event.gesture_id
                 )
                 return
-            _LOGGER.debug("Received touch gesture %s", gesture_type)
+            _LOGGER.debug("Received touch gesture %s from panel %s", gesture_type, event.panel_id)
             hass.bus.async_fire(
                 NANOLEAF_EVENT,
-                {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: gesture_type},
+                {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: {"type":gesture_type, "panel_id": event.panel_id}},
             )
             async_dispatcher_send(
                 hass, f"nanoleaf_gesture_{nanoleaf.serial_no}", gesture_type

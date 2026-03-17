@@ -30,6 +30,8 @@
   },
   "device_automation": {
     "trigger_type": {
+      "single_tap": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::single_tap%]",
+      "double_tap": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::double_tap%]",
       "swipe_down": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_down%]",
       "swipe_left": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_left%]",
       "swipe_right": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_right%]",
@@ -43,6 +45,8 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "single_tap": "Single tap",
+              "double_tap": "Double tap",
               "swipe_down": "Swipe down",
               "swipe_left": "Swipe left",
               "swipe_right": "Swipe right",

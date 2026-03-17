@@ -25,6 +25,8 @@ class NanoleafGestureEvent(NanoleafEntity, EventEntity):
     """Representation of a Nanoleaf event entity."""
 
     _attr_event_types = [
+        "single_tap",
+        "double_tap",
         "swipe_up",
         "swipe_down",
         "swipe_left",
