@@ -313,7 +313,9 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
         # Container power actions fall under vms
-        if not is_granted(self.coordinator.permissions, p_type="vms"):
+        if not is_granted(
+            self.coordinator.permissions, p_type="vms", vmid=str(self.vm_data["vmid"])
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
