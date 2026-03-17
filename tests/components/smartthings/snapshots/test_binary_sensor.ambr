@@ -2327,8 +2327,9 @@
 # ---
 # name: test_all_entities[da_wm_mf_01001][binary_sensor.filtro_in_microfibra_filter_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

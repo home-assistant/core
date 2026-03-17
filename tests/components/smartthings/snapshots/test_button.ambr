@@ -551,8 +551,9 @@
 # ---
 # name: test_all_entities[da_wm_mf_01001][button.filtro_in_microfibra_reset_water_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

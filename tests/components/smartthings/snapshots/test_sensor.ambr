@@ -14362,8 +14362,9 @@
 # ---
 # name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_water_filter_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
