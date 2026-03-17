@@ -279,7 +279,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.4.1
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.30.0
+aiohomeconnect==0.32.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -1448,6 +1448,9 @@ livisi==0.0.25
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
 
+# homeassistant.components.lojack
+lojack-api==0.7.1
+
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
@@ -1688,7 +1691,7 @@ onedrive-personal-sdk==0.1.7
 onvif-zeep-async==4.0.4
 
 # homeassistant.components.onvif
-onvif_parsers==1.2.2
+onvif_parsers==2.3.0
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -2254,7 +2257,7 @@ pylitterbot==2025.1.0
 pylutron-caseta==0.27.0
 
 # homeassistant.components.lutron
-pylutron==0.3.0
+pylutron==0.4.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2491,7 +2494,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.7.0
+pysmartthings==3.7.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2648,7 +2651,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==4.20.0
+python-roborock==4.25.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
