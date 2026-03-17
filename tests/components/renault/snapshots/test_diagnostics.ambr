@@ -17,6 +17,8 @@
       'charge_mode': dict({
         'chargeMode': 'always',
       }),
+      'charging_settings': dict({
+      }),
       'cockpit': dict({
         'totalMileage': 49114.27,
       }),
@@ -219,6 +221,8 @@
           }),
           'charge_mode': dict({
             'chargeMode': 'always',
+          }),
+          'charging_settings': dict({
           }),
           'cockpit': dict({
             'totalMileage': 49114.27,

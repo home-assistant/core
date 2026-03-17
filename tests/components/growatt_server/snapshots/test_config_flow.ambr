@@ -1,0 +1,170 @@
+# serializer version: 1
+# name: test_reauth_password_error_then_recovery[None-login_return_value0]
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'name': 'Mock Title',
+    }),
+    'errors': dict({
+      'base': 'invalid_auth',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'growatt_server',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'reauth_confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_reauth_password_error_then_recovery[login_side_effect1-None]
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'name': 'Mock Title',
+    }),
+    'errors': dict({
+      'base': 'cannot_connect',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'growatt_server',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'reauth_confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_reauth_password_exception
+  dict({
+    'auth_type': 'password',
+    'name': 'Test Plant',
+    'password': 'password',
+    'plant_id': '123456',
+    'url': 'https://openapi.growatt.com/',
+    'username': 'username',
+  })
+# ---
+# name: test_reauth_password_non_auth_login_failure
+  dict({
+    'auth_type': 'password',
+    'name': 'Test Plant',
+    'password': 'password',
+    'plant_id': '123456',
+    'url': 'https://openapi.growatt.com/',
+    'username': 'username',
+  })
+# ---
+# name: test_reauth_password_success[https://openapi-us.growatt.com/-user_input1-north_america]
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'name': 'Mock Title',
+    }),
+    'errors': dict({
+    }),
+    'flow_id': <ANY>,
+    'handler': 'growatt_server',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'reauth_confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_reauth_password_success[https://openapi-us.growatt.com/-user_input1-north_america].1
+  dict({
+    'auth_type': 'password',
+    'name': 'Test Plant',
+    'password': 'password',
+    'plant_id': '123456',
+    'url': 'https://openapi-us.growatt.com/',
+    'username': 'username',
+  })
+# ---
+# name: test_reauth_password_success[https://openapi.growatt.com/-user_input0-other_regions]
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'name': 'Mock Title',
+    }),
+    'errors': dict({
+    }),
+    'flow_id': <ANY>,
+    'handler': 'growatt_server',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'reauth_confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_reauth_password_success[https://openapi.growatt.com/-user_input0-other_regions].1
+  dict({
+    'auth_type': 'password',
+    'name': 'Test Plant',
+    'password': 'password',
+    'plant_id': '123456',
+    'url': 'https://openapi.growatt.com/',
+    'username': 'username',
+  })
+# ---
+# name: test_reauth_token_error_then_recovery[plant_list_side_effect0]
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'name': 'Mock Title',
+    }),
+    'errors': dict({
+      'base': 'invalid_auth',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'growatt_server',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'reauth_confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_reauth_token_error_then_recovery[plant_list_side_effect1]
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'name': 'Mock Title',
+    }),
+    'errors': dict({
+      'base': 'cannot_connect',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'growatt_server',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'reauth_confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_reauth_token_exception
+  dict({
+    'auth_type': 'api_token',
+    'name': 'Test Plant',
+    'plant_id': '123456',
+    'token': 'test_api_token_12345',
+    'url': 'https://openapi.growatt.com/',
+    'user_id': '12345',
+  })
+# ---
+# name: test_reauth_token_success
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'name': 'Mock Title',
+    }),
+    'errors': dict({
+    }),
+    'flow_id': <ANY>,
+    'handler': 'growatt_server',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'reauth_confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_reauth_token_success.1
+  dict({
+    'auth_type': 'api_token',
+    'name': 'Test Plant',
+    'plant_id': '123456',
+    'token': 'test_api_token_12345',
+    'url': 'https://openapi.growatt.com/',
+    'user_id': '12345',
+  })
+# ---

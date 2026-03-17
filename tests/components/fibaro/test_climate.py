@@ -30,9 +30,9 @@ async def test_climate_setup(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("climate.room_1_test_climate_4")
+        entry = entity_registry.async_get("climate.room_1_test_climate_13")
         assert entry
-        assert entry.unique_id == "hc2_111111.4"
+        assert entry.unique_id == "hc2_111111.13"
         assert entry.original_name == "Room 1 Test climate"
         assert entry.supported_features == (
             ClimateEntityFeature.TURN_ON
@@ -63,9 +63,9 @@ async def test_climate_setup_2_quickapps(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry1 = entity_registry.async_get("climate.room_1_test_climate_6")
+        entry1 = entity_registry.async_get("climate.room_1_test_climate_9")
         assert entry1
-        entry2 = entity_registry.async_get("climate.room_1_test_climate_2_7")
+        entry2 = entity_registry.async_get("climate.room_1_test_climate_2_10")
         assert entry2
 
 
@@ -86,7 +86,7 @@ async def test_hvac_mode_preset(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("climate.room_1_test_climate_4")
+        state = hass.states.get("climate.room_1_test_climate_13")
         assert state.state == HVACMode.AUTO
         assert state.attributes["preset_mode"] == "CustomerSpecific"
 
@@ -109,7 +109,7 @@ async def test_hvac_mode_heat(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("climate.room_1_test_climate_4")
+        state = hass.states.get("climate.room_1_test_climate_13")
         assert state.state == HVACMode.HEAT
         assert state.attributes["preset_mode"] is None
 
@@ -133,7 +133,7 @@ async def test_set_hvac_mode(
         await hass.services.async_call(
             "climate",
             "set_hvac_mode",
-            {"entity_id": "climate.room_1_test_climate_4", "hvac_mode": HVACMode.HEAT},
+            {"entity_id": "climate.room_1_test_climate_13", "hvac_mode": HVACMode.HEAT},
             blocking=True,
         )
 
