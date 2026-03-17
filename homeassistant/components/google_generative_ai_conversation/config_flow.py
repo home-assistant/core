@@ -457,12 +457,6 @@ async def google_generative_ai_config_option_schema(
     )
 
     if subentry_type != "tts":
-        thinking_level_options: list[SelectOptionDict] = [
-            SelectOptionDict(label="Auto", value="auto"),
-            SelectOptionDict(label="Low", value="low"),
-            SelectOptionDict(label="Medium", value="medium"),
-            SelectOptionDict(label="High", value="high"),
-        ]
         schema.update(
             {
                 vol.Optional(
@@ -482,7 +476,14 @@ async def google_generative_ai_config_option_schema(
                 ): SelectSelector(
                     SelectSelectorConfig(
                         mode=SelectSelectorMode.DROPDOWN,
-                        options=thinking_level_options,
+                        translation_key=CONF_THINKING_LEVEL,
+                        options=[
+                            "auto",
+                            "minimal",
+                            "low",
+                            "medium",
+                            "high",
+                        ],
                     )
                 ),
             }

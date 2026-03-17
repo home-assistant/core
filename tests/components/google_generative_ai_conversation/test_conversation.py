@@ -826,6 +826,7 @@ def test_create_thinking_config_non_thinking_models(
 @pytest.mark.parametrize(
     ("model", "thinking_level"),
     [
+        ("models/gemini-3-flash", "minimal"),
         ("models/gemini-3-flash", "low"),
         ("gemini-3-pro", "medium"),
         ("models/gemini-3-ultra", "high"),
@@ -837,6 +838,7 @@ def test_create_thinking_config_gemini3_levels(
 ) -> None:
     """Test Gemini 3 models with explicit thinking levels."""
     level_map = {
+        "minimal": ThinkingLevel.MINIMAL,
         "low": ThinkingLevel.LOW,
         "medium": ThinkingLevel.MEDIUM,
         "high": ThinkingLevel.HIGH,

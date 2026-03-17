@@ -90,7 +90,7 @@
             "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\".",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "thinking_budget": "Token budget for model reasoning (Gemini 2.5 only). Use -1 for automatic or 0 to disable (not available for Gemini 2.5 Pro).",
-            "thinking_level": "Thinking level for Gemini 3 models. Ignored for Gemini 2.5 models, which use the thinking budget instead."
+            "thinking_level": "Thinking level for Gemini 3 models. Ignored for Gemini 2.5 models, which use the thinking budget instead. \"Minimal\" does not guarantee that thinking is off."
           }
         }
       }
@@ -155,6 +155,17 @@
             "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]"
           }
         }
+      }
+    }
+  },
+  "selector": {
+    "thinking_level": {
+      "options": {
+        "auto": "Auto",
+        "minimal": "Minimal",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
       }
     }
   },

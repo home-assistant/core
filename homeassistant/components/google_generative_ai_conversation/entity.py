@@ -127,7 +127,7 @@ def _create_thinking_config(
             0 = disable thinking,
             >0 = custom token budget (Gemini 2.5 only).
         thinking_level: The user-configured thinking level for Gemini 3 models:
-            "auto" = automatic (default), "low", "medium", "high".
+            "auto" = automatic (default), "minimal", "low", "medium", "high".
 
     """
     if not _is_thinking_model(model):
@@ -136,6 +136,7 @@ def _create_thinking_config(
     if _is_gemini_3_model(model):
         # Gemini 3 models use ThinkingLevel enum, not integer budgets.
         level_map: dict[str, ThinkingLevel] = {
+            "minimal": ThinkingLevel.MINIMAL,
             "low": ThinkingLevel.LOW,
             "medium": ThinkingLevel.MEDIUM,
             "high": ThinkingLevel.HIGH,
