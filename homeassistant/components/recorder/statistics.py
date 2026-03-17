@@ -15,7 +15,6 @@ import re
 from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
-from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import (
     Label,
     Select,
@@ -32,6 +31,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
+from voluptuous import MultipleInvalid
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
@@ -687,7 +687,7 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
-_custom_equivalent_units_schema = TypeAdapter(dict[str, dict[str, str]])
+CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {str: str}})
 
 
 def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str]]:
@@ -718,16 +718,17 @@ def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str
             continue
 
         try:
-            validated_data = _custom_equivalent_units_schema.validate_python(
-                platform_custom_equivalent_units, strict=True
+            validated_data = CUSTOM_EQUIVALENT_UNITS_SCHEMA(
+                platform_custom_equivalent_units
             )
             custom_equivalent_units_per_entity |= validated_data
-        except ValidationError as ve:
+        except MultipleInvalid as ve:
             _LOGGER.warning(
-                "Error processing result of %s for recorder platform domain %s: %s",
+                "Error processing result of %s for recorder platform domain %s: %s for object: %s",
                 INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
                 domain,
                 ve,
+                platform_custom_equivalent_units,
             )
 
     return custom_equivalent_units_per_entity

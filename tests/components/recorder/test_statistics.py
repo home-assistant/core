@@ -4202,6 +4202,7 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
     recorder_platform_one.async_custom_equivalent_units.assert_called_once()
     recorder_platform_two.async_custom_equivalent_units.assert_called_once()
 
+    # If the dict is None or empty it will be skipped before validation
     if invalid_custom_equivalent_units:
         assert (
             "Error processing result of async_custom_equivalent_units for recorder platform domain some_domain_one"
