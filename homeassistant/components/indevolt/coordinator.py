@@ -28,6 +28,8 @@ from .const import (
     SENSOR_KEYS,
 )
 
+EMERGENCY_SOC_READ_KEY: Final = "6105"
+
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL: Final = 30
 
@@ -69,10 +71,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
         )
 
-        self.friendly_name = entry.title
-        self.serial_number = entry.data[CONF_SERIAL_NUMBER]
-        self.device_model = entry.data[CONF_MODEL]
-        self.generation = entry.data[CONF_GENERATION]
+        self.friendly_name: str = entry.title
+        self.serial_number: str = entry.data[CONF_SERIAL_NUMBER]
+        self.device_model: str = entry.data[CONF_MODEL]
+        self.generation: int = entry.data[CONF_GENERATION]
 
     async def _async_setup(self) -> None:
         """Fetch device info once on boot."""
@@ -163,3 +165,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         await self.async_request_refresh()
+
+    def get_emergency_soc(self) -> int:
+        """Get the emergency SOC value."""
+        return int(self.data.get(EMERGENCY_SOC_READ_KEY, 10))

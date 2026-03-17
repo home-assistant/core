@@ -1,5 +1,6 @@
 """Constants for the Indevolt integration."""
 
+from enum import IntEnum
 from typing import Final
 
 DOMAIN: Final = "indevolt"
@@ -18,6 +19,15 @@ PORTABLE_MODE: Final = 0
 
 # Value for real-time control mode
 REALTIME_ACTION_MODE: Final = 4
+
+
+class RealtimeAction(IntEnum):
+    """Actions for real-time control mode."""
+
+    STOP = 0
+    CHARGE = 1
+    DISCHARGE = 2
+
 
 # API key fields
 SENSOR_KEYS: Final[dict[int, list[str]]] = {
@@ -114,4 +124,10 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         "6105",
         "1505",
     ],
+}
+
+# The map of Power Limits per device generation
+POWER_LIMITS: Final[dict[int, dict[str, int]]] = {
+    1: {"max_discharge_power": 800, "max_charge_power": 1200},
+    2: {"max_discharge_power": 2400, "max_charge_power": 2400},
 }
