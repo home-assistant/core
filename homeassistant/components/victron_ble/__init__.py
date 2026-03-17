@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     consecutive_failures,
                 )
                 entry.async_start_reauth(hass)
+                consecutive_failures = 0
         else:
             consecutive_failures = 0
 
