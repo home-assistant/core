@@ -947,7 +947,7 @@ async def assert_trigger_behavior_first(
         service_calls.clear()
 
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, excluded_state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
