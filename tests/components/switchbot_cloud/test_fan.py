@@ -32,6 +32,7 @@ from . import (
     AIR_PURIFIER_INFO,
     BATTERY_CIRCULATOR_FAN_INFO,
     CIRCULATOR_FAN_INFO,
+    STANDING_FAN_INFO,
     configure_integration,
 )
 
@@ -69,6 +70,7 @@ async def test_coordinator_data_is_none(
     [
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (STANDING_FAN_INFO, "fan.standing_fan_1"),
     ],
 )
 async def test_turn_on(
@@ -153,6 +155,7 @@ async def test_turn_off(
     [
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (STANDING_FAN_INFO, "fan.standing_fan_1"),
     ],
 )
 async def test_set_percentage(
@@ -195,6 +198,7 @@ async def test_set_percentage(
     [
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (STANDING_FAN_INFO, "fan.standing_fan_1"),
     ],
 )
 async def test_set_preset_mode(
