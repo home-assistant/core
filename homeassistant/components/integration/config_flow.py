@@ -9,7 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
+    DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICE_CLASS,
@@ -110,7 +116,9 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
                 options=[
                     cls.value
                     for cls in SensorDeviceClass
-                    if cls != SensorDeviceClass.ENUM
+                    if cls in DEVICE_CLASS_UNITS
+                    and (state_cls := DEVICE_CLASS_STATE_CLASSES.get(cls)) is not None
+                    and SensorStateClass.TOTAL in state_cls
                 ],
                 mode=selector.SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_DEVICE_CLASS,
