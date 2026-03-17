@@ -81,7 +81,6 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         self.entity_description = NumberEntityDescription(
             name=player_option.name,
             key=player_option.key,
-            translation_key=player_option.translation_key,
         )
 
         if player_option.min_value is not None:

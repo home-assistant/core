@@ -98,6 +98,8 @@ class MusicAssistantPlayerOptionEntity(_MusicAssistantEntityBase):
         self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
     ) -> None:
         """Initialize MusicAssistantPlayerOptionEntity."""
+        super().__init__(mass, player_id)
+
         self.mass_value = player_option.value
         self.mass_option_key = player_option.key
         self.mass_type = player_option.type
@@ -105,10 +107,10 @@ class MusicAssistantPlayerOptionEntity(_MusicAssistantEntityBase):
             player_option
         )  # sets the entity_description as well
         self._attr_entity_category = EntityCategory.CONFIG
-        super().__init__(mass, player_id)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        # main callback for player options
         self.async_on_remove(
             self.mass.subscribe(
                 self.__on_mass_player_options_update,
