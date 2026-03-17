@@ -27,7 +27,7 @@ async def async_setup_entry(
     """Set up the HomematicIP button from a config entry."""
     hap = config_entry.runtime_data
 
-    entities = [
+    entities: list[ButtonEntity] = [
         HomematicipGarageDoorControllerButton(hap, device)
         for device in hap.home.devices
         if isinstance(device, WallMountedGarageDoorController)
