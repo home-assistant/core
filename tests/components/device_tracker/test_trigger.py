@@ -4,17 +4,13 @@ from typing import Any
 
 import pytest
 
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    STATE_HOME,
-    STATE_NOT_HOME,
-)
+from homeassistant.const import CONF_ENTITY_ID, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_gated_by_labs_flag,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
@@ -25,9 +21,9 @@ STATE_WORK_ZONE = "work"
 
 
 @pytest.fixture
-async def target_device_trackers(hass: HomeAssistant) -> list[str]:
+async def target_device_trackers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple device_trackers entities associated with different targets."""
-    return (await target_entities(hass, "device_tracker"))["included"]
+    return await target_entities(hass, "device_tracker")
 
 
 @pytest.mark.parametrize(
@@ -38,13 +34,7 @@ async def test_device_tracker_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the device_tracker triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -70,7 +60,7 @@ async def test_device_tracker_triggers_gated_by_labs_flag(
 async def test_device_tracker_home_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_device_trackers: list[str],
+    target_device_trackers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -79,10 +69,10 @@ async def test_device_tracker_home_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the device_tracker home triggers when any device_tracker changes to a specific state."""
-    other_entity_ids = set(target_device_trackers) - {entity_id}
+    other_entity_ids = set(target_device_trackers["included"]) - {entity_id}
 
     # Set all device_trackers, including the tested device_tracker, to the initial state
-    for eid in target_device_trackers:
+    for eid in target_device_trackers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -128,7 +118,7 @@ async def test_device_tracker_home_trigger_behavior_any(
 async def test_device_tracker_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_device_trackers: list[str],
+    target_device_trackers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -137,10 +127,10 @@ async def test_device_tracker_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the device_tracker home triggers when the first device_tracker changes to a specific state."""
-    other_entity_ids = set(target_device_trackers) - {entity_id}
+    other_entity_ids = set(target_device_trackers["included"]) - {entity_id}
 
     # Set all device_trackers, including the tested device_tracker, to the initial state
-    for eid in target_device_trackers:
+    for eid in target_device_trackers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -185,7 +175,7 @@ async def test_device_tracker_state_trigger_behavior_first(
 async def test_device_tracker_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_device_trackers: list[str],
+    target_device_trackers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -194,10 +184,10 @@ async def test_device_tracker_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the device_tracker home triggers when the last device_tracker changes to a specific state."""
-    other_entity_ids = set(target_device_trackers) - {entity_id}
+    other_entity_ids = set(target_device_trackers["included"]) - {entity_id}
 
     # Set all device_trackers, including the tested device_tracker, to the initial state
-    for eid in target_device_trackers:
+    for eid in target_device_trackers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

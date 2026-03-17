@@ -49,6 +49,20 @@
         }
       }
     },
+    "sensor": {
+      "inside_temperature": {
+        "name": "Inside temperature"
+      },
+      "inside_temperature_2": {
+        "name": "Inside temperature 2"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "outside_temperature_2": {
+        "name": "Outside temperature 2"
+      }
+    },
     "switch": {
       "auto": {
         "name": "Auto"
