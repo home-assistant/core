@@ -235,7 +235,7 @@ def _parametrize_condition_states(
                     "attributes": additional_attributes,
                 },
                 "excluded": {
-                    "state": state,
+                    "state": state if additional_attributes else None,
                     "attributes": {},
                 },
                 "condition_true": condition_true,
@@ -247,7 +247,7 @@ def _parametrize_condition_states(
                 "attributes": state[1] | additional_attributes,
             },
             "excluded": {
-                "state": state[0],
+                "state": state[0] if additional_attributes else None,
                 "attributes": state[1],
             },
             "condition_true": condition_true,
@@ -862,6 +862,51 @@ async def assert_trigger_gated_by_labs_flag(
         "feature to be enabled in Home Assistant Labs settings (feature flag: "
         "'new_triggers_conditions')"
     ) in caplog.text
+
+
+async def assert_condition_behavior_any(
+    hass: HomeAssistant,
+    *,
+    target_entities: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test condition with the 'any' behavior."""
+    other_entity_ids = set(target_entities["included"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+
+    for eid in target_entities["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
+        await hass.async_block_till_done()
+
+    condition = await create_target_condition(
+        hass,
+        condition=condition,
+        target=condition_target_config,
+        behavior="any",
+    )
+
+    for state in states:
+        included_state = state["included"]
+        excluded_state = state["excluded"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert condition(hass) == state["condition_true"]
+
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert condition(hass) == state["condition_true"]
 
 
 async def assert_trigger_behavior_any(
