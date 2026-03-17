@@ -10,13 +10,13 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -164,39 +164,16 @@ async def test_cover_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test cover condition with the 'all' behavior."""
-    other_entity_ids = set(target_covers["included"]) - {entity_id}
-    excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
-
-    for eid in target_covers["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-    for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_all(
         hass,
+        target_entities=target_covers,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="all",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included"]
-        excluded_state = state["excluded"]
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
-
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        for excluded_entity_id in excluded_entity_ids:
-            set_or_remove_state(hass, excluded_entity_id, excluded_state)
-            await hass.async_block_till_done()
-
-        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
