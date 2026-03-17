@@ -613,10 +613,10 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.api.refresh()
         except RoborockException as ex:
-            _LOGGER.debug("Failed to update Q10 data: %s", ex)
+            _LOGGER.debug("Failed to request Q10 data: %s", ex)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_data_fail",
+                translation_key="request_fail",
             ) from ex
 
     @cached_property
