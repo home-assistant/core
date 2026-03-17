@@ -19,7 +19,15 @@ async def test_safe_library_call_success() -> None:
     assert (
         await safe_library_call(async_method, translation_key="test") == "async_success"
     )
-
+    
+    # Test a sync method that returns an asyncio.Future (WHICH IS an Awaitable)
+    future = asyncio.Future()
+    future.set_result("future_success")
+    future_method = MagicMock(return_value=future)
+    assert (
+        await safe_library_call(future_method, translation_key="test")
+        == "future_success"
+    )
 
 async def test_safe_library_call_raises_error() -> None:
     """Test that False or None return values raise HomeAssistantError."""
