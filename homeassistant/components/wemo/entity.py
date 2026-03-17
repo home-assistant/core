@@ -70,16 +70,12 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         Handles errors from the device and ensures all entities sharing the
         same coordinator are aware of updates to the device state.
         """
-
-        def _call() -> None:
-            try:
-                action()
-            except ActionException as err:
-                _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
-                self.coordinator.last_exception = err
-                self.coordinator.last_update_success = False
-
-        await self.hass.async_add_executor_job(_call)
+        try:
+            await self.hass.async_add_executor_job(action)
+        except ActionException as err:
+            _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
+            self.coordinator.last_exception = err
+            self.coordinator.last_update_success = False
         self.coordinator.async_update_listeners()
 
 
