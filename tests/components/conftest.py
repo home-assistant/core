@@ -7,23 +7,52 @@ from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapp
 from functools import lru_cache
 from importlib.util import find_spec
 import inspect
+from ipaddress import IPv4Address, IPv4Network
 from pathlib import Path
 import re
 import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohasupervisor import SupervisorNotFoundError
+from aiohasupervisor import SupervisorClient, SupervisorNotFoundError
+from aiohasupervisor.addons import AddonsClient
+from aiohasupervisor.backups import BackupsClient
+from aiohasupervisor.discovery import DiscoveryClient
+from aiohasupervisor.homeassistant import HomeAssistantClient
+from aiohasupervisor.host import HostClient
+from aiohasupervisor.jobs import JobsClient
 from aiohasupervisor.models import (
+    AddonStage,
+    AddonState,
     Discovery,
+    DockerNetwork,
     GreenInfo,
+    HomeAssistantInfo,
+    HomeAssistantStats,
+    HostInfo,
+    InstalledAddon,
     JobsInfo,
+    LogLevel,
+    MountsInfo,
+    NetworkInfo,
+    OSInfo,
     Repository,
     ResolutionInfo,
+    RootInfo,
     StoreAddon,
     StoreInfo,
+    SupervisorInfo,
+    SupervisorState,
+    SupervisorStats,
+    UpdateChannel,
     YellowInfo,
 )
+from aiohasupervisor.mounts import MountsClient
+from aiohasupervisor.network import NetworkClient
+from aiohasupervisor.os import OSClient
+from aiohasupervisor.resolution import ResolutionClient
+from aiohasupervisor.store import StoreClient
+from aiohasupervisor.supervisor import SupervisorManagementClient
 import pytest
 import voluptuous as vol
 
@@ -538,23 +567,239 @@ def os_green_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.os.green_info
 
 
+@pytest.fixture(name="supervisor_root_info")
+def supervisor_root_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock root info API from supervisor."""
+    supervisor_client.info.return_value = RootInfo(
+        supervisor="222",
+        homeassistant="0.110.0",
+        hassos="1.2.3",
+        docker="",
+        hostname=None,
+        operating_system=None,
+        features=[],
+        machine=None,
+        machine_id=None,
+        arch="",
+        state=SupervisorState.RUNNING,
+        supported_arch=[],
+        supported=True,
+        channel=UpdateChannel.STABLE,
+        logging=LogLevel.INFO,
+        timezone="Etc/UTC",
+    )
+    return supervisor_client.info
+
+
+@pytest.fixture(name="host_info")
+def host_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock host info API from supervisor."""
+    supervisor_client.host.info.return_value = HostInfo(
+        agent_version=None,
+        apparmor_version=None,
+        chassis="vm",
+        virtualization=None,
+        cpe=None,
+        deployment=None,
+        disk_free=1.6,
+        disk_total=100.0,
+        disk_used=98.4,
+        disk_life_time=None,
+        features=[],
+        hostname=None,
+        llmnr_hostname=None,
+        kernel="4.19.0-6-amd64",
+        operating_system="Debian GNU/Linux 10 (buster)",
+        timezone=None,
+        dt_utc=None,
+        dt_synchronized=None,
+        use_ntp=None,
+        startup_time=None,
+        boot_timestamp=None,
+        broadcast_llmnr=None,
+        broadcast_mdns=None,
+    )
+    return supervisor_client.host.info
+
+
+@pytest.fixture(name="homeassistant_info")
+def homeassistant_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock Home Assistant info API from supervisor."""
+    supervisor_client.homeassistant.info.return_value = HomeAssistantInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        machine=None,
+        ip_address=IPv4Address("172.30.32.1"),
+        arch=None,
+        image="homeassistant",
+        boot=True,
+        port=8123,
+        ssl=False,
+        watchdog=True,
+        audio_input=None,
+        audio_output=None,
+        backups_exclude_database=False,
+        duplicate_log_file=False,
+    )
+    return supervisor_client.homeassistant.info
+
+
+@pytest.fixture(name="supervisor_info")
+def supervisor_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock supervisor info API from supervisor."""
+    supervisor_client.supervisor.info.return_value = SupervisorInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        channel=UpdateChannel.STABLE,
+        arch="",
+        supported=True,
+        healthy=True,
+        ip_address=IPv4Address("172.30.32.2"),
+        timezone=None,
+        logging=LogLevel.INFO,
+        debug=False,
+        debug_block=False,
+        diagnostics=None,
+        auto_update=True,
+        country=None,
+        detect_blocking_io=False,
+    )
+    return supervisor_client.supervisor.info
+
+
+@pytest.fixture(name="addons_list")
+def addons_list_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addons list API from supervisor."""
+    supervisor_client.addons.list.return_value = [
+        InstalledAddon(
+            detached=False,
+            advanced=False,
+            available=True,
+            build=False,
+            description="",
+            homeassistant=None,
+            icon=False,
+            logo=False,
+            name="test",
+            repository="core",
+            slug="test",
+            stage=AddonStage.STABLE,
+            update_available=True,
+            url="https://github.com/home-assistant/addons/test",
+            version_latest="2.0.1",
+            version="2.0.0",
+            state=AddonState.STARTED,
+        ),
+        InstalledAddon(
+            detached=False,
+            advanced=False,
+            available=True,
+            build=False,
+            description="",
+            homeassistant=None,
+            icon=False,
+            logo=False,
+            name="test2",
+            repository="core",
+            slug="test2",
+            stage=AddonStage.STABLE,
+            update_available=False,
+            url="https://github.com",
+            version_latest="3.1.0",
+            version="3.1.0",
+            state=AddonState.STOPPED,
+        ),
+    ]
+    return supervisor_client.addons.list
+
+
+@pytest.fixture(name="network_info")
+def network_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock network info API from supervisor."""
+    supervisor_client.network.info.return_value = NetworkInfo(
+        interfaces=[],
+        docker=DockerNetwork(
+            interface="hassio",
+            address=IPv4Network("172.30.32.0/23"),
+            gateway=IPv4Address("172.30.32.1"),
+            dns=IPv4Address("172.30.32.3"),
+        ),
+        host_internet=True,
+        supervisor_internet=True,
+    )
+    return supervisor_client.network.info
+
+
+@pytest.fixture(name="os_info")
+def os_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock os info API from supervisor."""
+    supervisor_client.os.info.return_value = OSInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        board=None,
+        boot=None,
+        data_disk=None,
+        boot_slots={},
+    )
+    return supervisor_client.os.info
+
+
+@pytest.fixture(name="homeassistant_stats")
+def homeassistant_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock Home Assistant stats API from supervisor."""
+    supervisor_client.homeassistant.stats.return_value = HomeAssistantStats(
+        cpu_percent=0.99,
+        memory_usage=182611968,
+        memory_limit=3977146368,
+        memory_percent=4.59,
+        network_rx=362570232,
+        network_tx=82374138,
+        blk_read=46010945536,
+        blk_write=15051526144,
+    )
+    return supervisor_client.homeassistant.stats
+
+
+@pytest.fixture(name="supervisor_stats")
+def supervisor_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock supervisor stats API from supervisor."""
+    supervisor_client.supervisor.stats.return_value = SupervisorStats(
+        cpu_percent=0.99,
+        memory_usage=182611968,
+        memory_limit=3977146368,
+        memory_percent=4.59,
+        network_rx=362570232,
+        network_tx=82374138,
+        blk_read=46010945536,
+        blk_write=15051526144,
+    )
+    return supervisor_client.supervisor.stats
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
-    mounts_info_mock = AsyncMock(spec_set=["default_backup_mount", "mounts"])
-    mounts_info_mock.default_backup_mount = None
-    mounts_info_mock.mounts = []
-    supervisor_client = AsyncMock()
-    supervisor_client.addons = AsyncMock()
-    supervisor_client.discovery = AsyncMock()
-    supervisor_client.homeassistant = AsyncMock()
-    supervisor_client.host = AsyncMock()
-    supervisor_client.jobs = AsyncMock()
-    supervisor_client.jobs.info.return_value = MagicMock()
-    supervisor_client.mounts.info.return_value = mounts_info_mock
-    supervisor_client.os = AsyncMock()
-    supervisor_client.resolution = AsyncMock()
-    supervisor_client.supervisor = AsyncMock()
+    supervisor_client = AsyncMock(spec=SupervisorClient)
+    supervisor_client.addons = AsyncMock(spec=AddonsClient)
+    supervisor_client.backups = AsyncMock(spec=BackupsClient)
+    supervisor_client.discovery = AsyncMock(spec=DiscoveryClient)
+    supervisor_client.homeassistant = AsyncMock(spec=HomeAssistantClient)
+    supervisor_client.host = AsyncMock(spec=HostClient)
+    supervisor_client.jobs = AsyncMock(spec=JobsClient)
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
+    supervisor_client.mounts = AsyncMock(spec=MountsClient)
+    supervisor_client.mounts.info.return_value = MagicMock(
+        spec=MountsInfo, default_backup_mount=None, mounts=[]
+    )
+    supervisor_client.network = AsyncMock(spec=NetworkClient)
+    supervisor_client.os = AsyncMock(spec=OSClient)
+    supervisor_client.resolution = AsyncMock(spec=ResolutionClient)
+    supervisor_client.supervisor = AsyncMock(spec=SupervisorManagementClient)
+    supervisor_client.store = AsyncMock(spec=StoreClient)
+
     with (
         patch(
             "homeassistant.components.hassio.get_supervisor_client",

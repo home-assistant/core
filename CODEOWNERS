@@ -974,6 +974,8 @@ build.json @home-assistant/supervisor
 /tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
+/homeassistant/components/lojack/ @devinslick
+/tests/components/lojack/ @devinslick
 /homeassistant/components/london_underground/ @jpbede
 /tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
@@ -1770,6 +1772,8 @@ build.json @home-assistant/supervisor
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
 /tests/components/triggercmd/ @rvmey
+/homeassistant/components/trmnl/ @joostlek
+/tests/components/trmnl/ @joostlek
 /homeassistant/components/tts/ @home-assistant/core
 /tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuya/ @Tuya @zlinoliver
