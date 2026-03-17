@@ -151,21 +151,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         if not device_entry:
             return
 
+        update_kwargs: dict[str, Any] = {}
         if state.firmware_version is not None:
-            device_registry_inner.async_update_device(
-                device_entry.id,
-                sw_version=str(state.firmware_version),
-            )
+            update_kwargs["sw_version"] = str(state.firmware_version)
         if state.device_name and device_entry.name_by_user is None:
-            device_registry_inner.async_update_device(
-                device_entry.id,
-                name_by_user=state.device_name,
-            )
+            update_kwargs["name_by_user"] = state.device_name
             _LOGGER.debug(
                 "Synced device name from %s: %s",
                 client.address,
                 state.device_name,
             )
+        if update_kwargs:
+            device_registry_inner.async_update_device(device_entry.id, **update_kwargs)
 
     entry.async_on_unload(client.register_state_callback(_handle_state_change))
 
