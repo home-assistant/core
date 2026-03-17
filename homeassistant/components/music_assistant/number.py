@@ -81,12 +81,12 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         self.entity_description = NumberEntityDescription(
             name=player_option.name,
             key=player_option.key,
-            translation_key=player_option.translation_key or player_option.name,
+            translation_key=player_option.translation_key,
         )
 
-        if min_value := player_option.min_value:
-            self._attr_native_min_value = min_value
-        if max_value := player_option.max_value:
-            self._attr_native_max_value = max_value
-        if step := player_option.step:
-            self._attr_native_step = step
+        if player_option.min_value is not None:
+            self._attr_native_min_value = player_option.min_value
+        if player_option.max_value is not None:
+            self._attr_native_max_value = player_option.max_value
+        if player_option.step is not None:
+            self._attr_native_step = player_option.step
