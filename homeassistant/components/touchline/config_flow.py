@@ -93,7 +93,8 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         if errors:
-            return self.async_abort(reason="cannot_connect")
+            # Use the specific error reason determined above (e.g. cannot_connect or unknown)
+            return self.async_abort(reason=errors.get("base", "unknown"))
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
