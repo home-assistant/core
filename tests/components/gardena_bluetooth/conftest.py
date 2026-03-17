@@ -11,24 +11,18 @@ from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic, Service
 import pytest
 
-from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from . import WATER_TIMER_SERVICE_INFO
+from . import WATER_TIMER_SERVICE_INFO, get_config_entry
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
 def mock_entry():
     """Create hass config fixture."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address},
-        unique_id=WATER_TIMER_SERVICE_INFO.address,
-    )
+    return get_config_entry(WATER_TIMER_SERVICE_INFO)
 
 
 @pytest.fixture(scope="module")

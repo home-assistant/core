@@ -7,7 +7,7 @@ import logging
 
 from bleak.backends.device import BLEDevice
 from gardena_bluetooth.client import CachedConnection, Client
-from gardena_bluetooth.const import DeviceConfiguration, DeviceInformation
+from gardena_bluetooth.const import AquaContour, DeviceConfiguration, DeviceInformation
 from gardena_bluetooth.exceptions import (
     CharacteristicNoAccess,
     CharacteristicNotFound,
@@ -35,6 +35,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VALVE,
@@ -90,8 +91,10 @@ async def async_setup_entry(
 
         name = entry.title
         name = await client.read_char(DeviceConfiguration.custom_device_name, name)
+        name = await client.read_char(AquaContour.custom_device_name, name)
 
         await _update_timestamp(client, DeviceConfiguration.unix_timestamp)
+        await _update_timestamp(client, AquaContour.unix_timestamp)
 
     except (TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
         await client.disconnect()
