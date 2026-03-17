@@ -7,12 +7,12 @@ import voluptuous as vol
 import wakeonlan
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC, CONF_BROADCAST_INTERFACE
+from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, CONF_BROADCAST_INTERFACE
 
 _LOGGER = logging.getLogger(__name__)
 
