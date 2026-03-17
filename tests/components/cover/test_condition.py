@@ -65,6 +65,7 @@ async def test_cover_conditions_gated_by_labs_flag(
                 target_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
                 other_states=[
                     (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
@@ -81,6 +82,7 @@ async def test_cover_conditions_gated_by_labs_flag(
                 other_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
                 additional_attributes={ATTR_DEVICE_CLASS: device_class},
             ),
@@ -147,6 +149,7 @@ async def test_cover_condition_behavior_any(
                 target_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
                 other_states=[
                     (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
@@ -163,6 +166,7 @@ async def test_cover_condition_behavior_any(
                 other_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
                 additional_attributes={ATTR_DEVICE_CLASS: device_class},
             ),
