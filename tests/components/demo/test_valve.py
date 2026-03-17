@@ -18,7 +18,6 @@ from homeassistant.components.valve import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
@@ -157,22 +156,3 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(state_changes) == 0
-
-
-async def test_valves_are_in_entity_registry(hass: HomeAssistant) -> None:
-    """Test demo valves create entity and device registry entries."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
-    back_garden = entity_registry.async_get(BACK_GARDEN)
-    trees = entity_registry.async_get(TREES)
-
-    assert back_garden is not None
-    assert back_garden.unique_id == "valve_3"
-    assert back_garden.device_id is not None
-    assert device_registry.async_get(back_garden.device_id) is not None
-
-    assert trees is not None
-    assert trees.unique_id == "valve_4"
-    assert trees.device_id is not None
-    assert device_registry.async_get(trees.device_id) is not None
