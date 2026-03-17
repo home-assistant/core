@@ -19,7 +19,7 @@ CONF_CONTACT_INFO = "contact_info"
 # ---------------------------------------------------------------------------
 # Environment-based configuration
 # Set LEVEL_ENVIRONMENT to "dev", "staging", or "production".
-# Defaults to "dev" when the variable is absent.
+# Defaults to "production" when the variable is absent.
 # ---------------------------------------------------------------------------
 
 LEVEL_ENV_VAR = "LEVEL_ENVIRONMENT"
@@ -38,9 +38,9 @@ ENVIRONMENTS: dict[str, _EnvConfig] = {
         "partner_base_url": "https://sidewalk-dev.level.co",
         "client_id": "97e9b7976b48481681cb8fe79dc612504a9453688ea549b38014b9202adc5f90",
     },
-    "staging": {
-        "oauth2_base_url": "https://oauth2-staging.level.co",
-        "partner_base_url": "https://sidewalk-staging.level.co",
+    "stage": {
+        "oauth2_base_url": "https://oauth2-stage.level.co",
+        "partner_base_url": "https://sidewalk-stage.level.co",
         "client_id": "deeba2a1cd67445fb4319084d76a739624134ef879d54c83aee5b23ca10abffd",
     },
     "production": {
@@ -64,12 +64,6 @@ def get_env_config() -> _EnvConfig:
     return ENVIRONMENTS[get_level_environment()]
 
 
-# Convenience aliases so existing code that references these constants still
-# works.  They resolve to the *active* environment's values at import time.
-_active = get_env_config()
-DEFAULT_OAUTH2_BASE_URL: str = _active["oauth2_base_url"]
-DEFAULT_PARTNER_BASE_URL: str = _active["partner_base_url"]
-OAUTH2_CLIENT_ID: str = _active["client_id"]
 
 DEVICE_CODE_INITIATE_PATH = "/oauth2/device-code/initiate"
 DEVICE_CODE_VERIFY_PATH = "/oauth2/device-code/verify"

@@ -26,11 +26,10 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from .const import (
     CONF_CONTACT_INFO,
     CONF_PARTNER_BASE_URL,
-    DEFAULT_PARTNER_BASE_URL,
     DEVICE_CODE_INITIATE_PATH,
     DEVICE_CODE_POLL_PATH,
     DOMAIN,
-    OAUTH2_CLIENT_ID,
+    get_env_config,
 )
 
 
@@ -47,7 +46,7 @@ class OAuth2FlowHandler(
         self._device_code: str | None = None
         self._user_code: str | None = None
         self._code_verifier: str | None = None
-        self._partner_base_url: str = DEFAULT_PARTNER_BASE_URL
+        self._partner_base_url: str = get_env_config()["partner_base_url"]
         self._poll_interval: int = 5
         self._contact_info: str | None = None
         self._delivery_method: str = "email"
@@ -83,7 +82,7 @@ class OAuth2FlowHandler(
         await async_import_client_credential(
             self.hass,
             DOMAIN,
-            ClientCredential(OAUTH2_CLIENT_ID, "", name="Level Home"),
+            ClientCredential(get_env_config()["client_id"], "", name="Level Home"),
         )
 
         implementations = await config_entry_oauth2_flow.async_get_implementations(
@@ -109,7 +108,7 @@ class OAuth2FlowHandler(
                 ),
             )
 
-        self._partner_base_url = DEFAULT_PARTNER_BASE_URL.rstrip("/")
+        self._partner_base_url = get_env_config()["partner_base_url"].rstrip("/")
 
         contact_info = user_input[CONF_CONTACT_INFO]
         self._delivery_method, self._contact_info = self._detect_contact_type(
@@ -137,7 +136,7 @@ class OAuth2FlowHandler(
         await async_import_client_credential(
             self.hass,
             DOMAIN,
-            ClientCredential(OAUTH2_CLIENT_ID, "", name="Level Home"),
+            ClientCredential(get_env_config()["client_id"], "", name="Level Home"),
         )
 
         implementations = await config_entry_oauth2_flow.async_get_implementations(

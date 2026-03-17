@@ -22,9 +22,8 @@ from . import auth as auth_mod
 from .const import (
     CONF_OAUTH2_BASE_URL,
     CONF_PARTNER_BASE_URL,
-    DEFAULT_PARTNER_BASE_URL,
     DOMAIN,
-    OAUTH2_CLIENT_ID,
+    get_env_config,
 )
 from .coordinator import LevelLocksCoordinator
 from .level_ws_client import LevelWebsocketManager
@@ -46,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_import_client_credential(
         hass,
         DOMAIN,
-        ClientCredential(OAUTH2_CLIENT_ID, "", name="Level Home"),
+        ClientCredential(get_env_config()["client_id"], "", name="Level Home"),
     )
     return True
 
@@ -79,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LevelHomeConfigEntry) ->
 
     base_url = (hass.data.get(DOMAIN) or {}).get(
         CONF_PARTNER_BASE_URL
-    ) or DEFAULT_PARTNER_BASE_URL
+    ) or get_env_config()["partner_base_url"]
     _LOGGER.info("Using base URL: %s", base_url)
 
     async def _get_token() -> str:
