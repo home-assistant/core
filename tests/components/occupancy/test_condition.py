@@ -7,14 +7,15 @@ import pytest
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.components import (
+from tests.components.common import (
     ConditionStateDescription,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -51,13 +52,13 @@ async def test_occupancy_conditions_gated_by_labs_flag(
             condition="occupancy.is_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "occupancy"},
         ),
         *parametrize_condition_states_any(
             condition="occupancy.is_not_detected",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "occupancy"},
         ),
     ],
 )
@@ -72,37 +73,16 @@ async def test_occupancy_binary_sensor_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test occupancy condition for binary_sensor with 'any' behavior."""
-    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
-    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
-
-    for eid in target_binary_sensors["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-    for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_any(
         hass,
+        target_entities=target_binary_sensors,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="any",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included"]
-        excluded_state = state["excluded"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
-
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        for excluded_entity_id in excluded_entity_ids:
-            set_or_remove_state(hass, excluded_entity_id, excluded_state)
-            await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -117,13 +97,13 @@ async def test_occupancy_binary_sensor_condition_behavior_any(
             condition="occupancy.is_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "occupancy"},
         ),
         *parametrize_condition_states_all(
             condition="occupancy.is_not_detected",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "occupancy"},
         ),
     ],
 )
@@ -138,39 +118,16 @@ async def test_occupancy_binary_sensor_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test occupancy condition for binary_sensor with 'all' behavior."""
-    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
-    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
-
-    for eid in target_binary_sensors["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-    for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_all(
         hass,
+        target_entities=target_binary_sensors,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="all",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included"]
-        excluded_state = state["excluded"]
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
-
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        for excluded_entity_id in excluded_entity_ids:
-            set_or_remove_state(hass, excluded_entity_id, excluded_state)
-            await hass.async_block_till_done()
-
-        assert condition(hass) == state["condition_true"]
 
 
 # --- Device class exclusion test ---
