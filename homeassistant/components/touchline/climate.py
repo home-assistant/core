@@ -64,7 +64,7 @@ async def async_setup_entry(
 
     number_of_devices = entry.runtime_data["number_of_devices"]
     devices = [
-        Touchline(PyTouchline(id=device_id, url=host), device_id, entry.entry_id)
+        Touchline(PyTouchline(id=device_id, url=host), device_id, entry.unique_id)
         for device_id in range(number_of_devices)
     ]
     async_add_entities(devices, True)
@@ -85,7 +85,7 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=config,
+        data={CONF_HOST: config[CONF_HOST]},
     )
     if (
         result.get("type") is FlowResultType.ABORT

@@ -18,7 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up touchline from a config entry."""
     host = entry.data[CONF_HOST]
-    _LOGGER.debug("Touchline entry id: %s", entry.entry_id)
+    _LOGGER.debug(
+        "Touchline entry id: %s Unique id: %s", entry.entry_id, entry.unique_id
+    )
     try:
         py_touchline = PyTouchline(url=host)
         number_of_devices = int(
