@@ -57,12 +57,9 @@ def mock_qube_state() -> QubeState:
 
 @pytest.fixture
 def mock_qube_client(mock_qube_state: QubeState) -> Generator[MagicMock]:
-    """Mock the QubeClient to avoid real network calls.
-
-    Note: This fixture is NOT autouse. Tests that need it should explicitly use it.
-    """
+    """Mock the QubeClient to avoid real network calls."""
     with patch(
-        "homeassistant.components.qube_heatpump.hub.QubeClient", autospec=True
+        "homeassistant.components.qube_heatpump.QubeClient", autospec=True
     ) as mock_client_cls:
         client = mock_client_cls.return_value
         client.host = "1.2.3.4"
@@ -72,6 +69,5 @@ def mock_qube_client(mock_qube_state: QubeState) -> Generator[MagicMock]:
         client.is_connected = True
         client.close = AsyncMock(return_value=None)
         client.get_all_data = AsyncMock(return_value=mock_qube_state)
+        client.async_get_software_version = AsyncMock(return_value="2.15")
         yield client
-
-

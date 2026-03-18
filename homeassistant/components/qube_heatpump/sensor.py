@@ -31,7 +31,6 @@ if TYPE_CHECKING:
 
     from . import QubeConfigEntry
     from .coordinator import QubeCoordinator
-    from .hub import QubeHub
 
 # Status code to state mapping
 STATUS_MAP: dict[int, str] = {
@@ -200,19 +199,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Qube sensors."""
-    data = entry.runtime_data
-    hub = data.hub
-    coordinator = data.coordinator
-    version = data.version or "unknown"
-    device_name = data.device_name
+    coordinator = entry.runtime_data.coordinator
 
     entities: list[SensorEntity] = [
         QubeSensor(
             coordinator,
-            hub,
             entry,
-            version,
-            device_name,
             description,
         )
         for description in SENSOR_TYPES
@@ -222,10 +214,7 @@ async def async_setup_entry(
     entities.append(
         QubeStatusSensor(
             coordinator,
-            hub,
             entry,
-            version,
-            device_name,
         )
     )
 
@@ -240,14 +229,11 @@ class QubeSensor(QubeEntity, SensorEntity):
     def __init__(
         self,
         coordinator: QubeCoordinator,
-        hub: QubeHub,
         entry: QubeConfigEntry,
-        version: str,
-        device_name: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, hub, version, device_name)
+        super().__init__(coordinator, entry)
         self.entity_description = description
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
 
@@ -280,13 +266,10 @@ class QubeStatusSensor(QubeEntity, SensorEntity):
     def __init__(
         self,
         coordinator: QubeCoordinator,
-        hub: QubeHub,
         entry: QubeConfigEntry,
-        version: str,
-        device_name: str,
     ) -> None:
         """Initialize status sensor."""
-        super().__init__(coordinator, hub, version, device_name)
+        super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.unique_id}-status_heatpump"
 
     @property

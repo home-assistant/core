@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import QubeConfigEntry
 from .const import DOMAIN
 from .coordinator import QubeCoordinator
-
-if TYPE_CHECKING:
-    from .hub import QubeHub
 
 
 class QubeEntity(CoordinatorEntity[QubeCoordinator]):
@@ -22,23 +18,14 @@ class QubeEntity(CoordinatorEntity[QubeCoordinator]):
     def __init__(
         self,
         coordinator: QubeCoordinator,
-        hub: QubeHub,
-        version: str,
-        device_name: str,
+        entry: QubeConfigEntry,
     ) -> None:
         """Initialize the base entity."""
         super().__init__(coordinator)
-        self._hub = hub
-        self._version = version
-        self._device_name = device_name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=self._device_name,
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            name=entry.title,
             manufacturer="Qube",
             model="Heat Pump",
-            sw_version=self._version,
+            sw_version=entry.runtime_data.sw_version,
         )
