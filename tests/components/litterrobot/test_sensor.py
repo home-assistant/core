@@ -10,12 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    STATE_UNKNOWN,
-    UnitOfMass,
-)
+from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
@@ -177,23 +172,6 @@ async def test_litter_robot_5_sensor(
     assert sensor
     assert sensor.state == "12.0"
     assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
-
-    sensor = hass.states.get("sensor.test_wi_fi_signal")
-    assert sensor
-    assert sensor.state == "-53"
-    assert (
-        sensor.attributes["unit_of_measurement"] == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-
-    sensor = hass.states.get("sensor.test_firmware")
-    assert sensor
-    assert "ESP:" in sensor.state
-    assert "MCU:" in sensor.state
-
-    sensor = hass.states.get("sensor.test_setup_date")
-    assert sensor
-    assert sensor.state == "2022-08-28T17:01:12+00:00"
-    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
 
     sensor = hass.states.get("sensor.test_scoops_saved")
     assert sensor

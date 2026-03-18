@@ -13,12 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    EntityCategory,
-    UnitOfMass,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -172,29 +167,6 @@ ROBOT_SENSOR_MAP: dict[
         ),
     ],
     LitterRobot5: [
-        RobotSensorEntityDescription[LitterRobot5](
-            key="wifi_rssi",
-            translation_key="wifi_rssi",
-            native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda robot: robot.wifi_rssi,
-        ),
-        RobotSensorEntityDescription[LitterRobot5](
-            key="firmware",
-            translation_key="firmware",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            value_fn=lambda robot: robot.firmware,
-        ),
-        RobotSensorEntityDescription[LitterRobot5](
-            key="setup_date",
-            translation_key="setup_date",
-            device_class=SensorDeviceClass.TIMESTAMP,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            value_fn=lambda robot: robot.setup_date,
-        ),
         RobotSensorEntityDescription[LitterRobot5](
             key="scoops_saved_count",
             translation_key="scoops_saved_count",

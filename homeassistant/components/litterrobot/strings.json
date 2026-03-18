@@ -77,6 +77,9 @@
       "give_snack": {
         "name": "Give snack"
       },
+      "recalibrate": {
+        "name": "Recalibrate"
+      },
       "reset": {
         "name": "Reset"
       },
@@ -226,9 +229,6 @@
       }
     },
     "time": {
-      "sleep_mode_end_time": {
-        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_end_time::name%]"
-      },
       "sleep_mode_start_time": {
         "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
       }

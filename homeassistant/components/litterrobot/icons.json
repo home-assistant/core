@@ -30,6 +30,9 @@
       "give_snack": {
         "default": "mdi:candy-outline"
       },
+      "recalibrate": {
+        "default": "mdi:restore"
+      },
       "reset_waste_drawer": {
         "default": "mdi:delete-variant"
       }
