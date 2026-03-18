@@ -1,6 +1,7 @@
 """Support for Wyoming intent recognition services."""
 
 import logging
+from typing import Literal
 
 from wyoming.asr import Transcript
 from wyoming.client import AsyncTcpClient
@@ -10,6 +11,7 @@ from wyoming.intent import Intent, NotRecognized
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -89,8 +91,11 @@ class WyomingConversationEntity(
         self._attr_unique_id = f"{config_entry.entry_id}-conversation"
 
     @property
-    def supported_languages(self) -> list[str]:
+    def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
+        if not self._supported_languages:
+            return MATCH_ALL
+
         return self._supported_languages
 
     async def async_process(
@@ -100,11 +105,17 @@ class WyomingConversationEntity(
         conversation_id = user_input.conversation_id or ulid_util.ulid_now()
         intent_response = intent.IntentResponse(language=user_input.language)
 
+        context = {"conversation_id": conversation_id}
+        if user_input.satellite_id:
+            context["satellite_id"] = user_input.satellite_id
+
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
                 await client.write_event(
                     Transcript(
-                        user_input.text, context={"conversation_id": conversation_id}
+                        user_input.text,
+                        context=context,
+                        language=user_input.language,
                     ).event()
                 )
 
@@ -138,6 +149,8 @@ class WyomingConversationEntity(
                             intent_slots,
                             text_input=user_input.text,
                             language=user_input.language,
+                            satellite_id=user_input.satellite_id,
+                            device_id=user_input.device_id,
                         )
 
                         if (not intent_response.speech) and recognized_intent.text:

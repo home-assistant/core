@@ -78,7 +78,7 @@
           "name": "Sonarr entry"
         },
         "space_unit": {
-          "description": "Unit for space values. Use binary units (kib, mib, gib, tib, pib) for 1024-based values or decimal units (kb, mb, gb, tb, pb) for 1000-based values.",
+          "description": "Unit for space values. Use binary units (KiB, MiB, GiB, TiB, PiB) for 1024-based values or decimal units (KB, MB, GB, TB, PB) for 1000-based values. The default is bytes.",
           "name": "Space unit"
         }
       },

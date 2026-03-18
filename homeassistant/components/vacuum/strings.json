@@ -89,14 +89,15 @@
       }
     }
   },
+  "exceptions": {
+    "area_mapping_not_configured": {
+      "message": "Area mapping is not configured for `{entity_id}`. Configure the segment-to-area mapping before using this action."
+    }
+  },
   "issues": {
     "segments_changed": {
       "description": "",
       "title": "Vacuum segments have changed for {entity_id}"
-    },
-    "segments_mapping_not_configured": {
-      "description": "",
-      "title": "Vacuum segment mapping not configured for {entity_id}"
     }
   },
   "selector": {
@@ -116,7 +117,7 @@
   },
   "services": {
     "clean_area": {
-      "description": "Tells a vacuum cleaner to clean an area.",
+      "description": "Tells a vacuum cleaner to clean one or more areas.",
       "fields": {
         "cleaning_area_id": {
           "description": "Areas to clean.",

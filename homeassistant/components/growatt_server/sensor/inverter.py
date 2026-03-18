@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -131,6 +132,8 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     GrowattSensorEntityDescription(
         key="inverter_inverter_reactive_amperage",
@@ -140,6 +143,8 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     GrowattSensorEntityDescription(
         key="inverter_frequency",
@@ -149,6 +154,8 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     GrowattSensorEntityDescription(
         key="inverter_current_wattage",
@@ -167,6 +174,8 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     GrowattSensorEntityDescription(
         key="inverter_ipm_temperature",
@@ -176,6 +185,8 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     GrowattSensorEntityDescription(
         key="inverter_temperature",
@@ -185,5 +196,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )

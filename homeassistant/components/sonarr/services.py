@@ -46,7 +46,7 @@ CONF_SEASON_NUMBER = "season_number"
 CONF_SPACE_UNIT = "space_unit"
 
 # Valid space units
-SPACE_UNITS = ["bytes", "kb", "kib", "mb", "mib", "gb", "gib", "tb", "tib", "pb", "pib"]
+SPACE_UNITS = ["bytes", "KB", "KiB", "MB", "MiB", "GB", "GiB", "TB", "TiB", "PB", "PiB"]
 DEFAULT_SPACE_UNIT = "bytes"
 
 # Default values - 0 means no limit

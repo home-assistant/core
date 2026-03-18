@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover_setup[cover.test_cover-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -40,7 +41,8 @@
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'friendly_name': 'Test Cover',
-      'lutron_integration_id': 'cover_id',
+      'is_closed': True,
+      'lutron_integration_id': 3,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
