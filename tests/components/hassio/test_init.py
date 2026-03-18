@@ -5,7 +5,7 @@ from datetime import timedelta
 import os
 from pathlib import PurePath
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
@@ -13,12 +13,14 @@ from aiohasupervisor.models import (
     AddonStage,
     AddonState,
     CIFSMountResponse,
+    HomeAssistantOptions,
     InstalledAddon,
     InstalledAddonComplete,
     MountsInfo,
     MountState,
     MountType,
     MountUsage,
+    SupervisorOptions,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -228,9 +230,9 @@ async def test_setup_api_push_api_data(
 
     assert result
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 9999
-    assert "watchdog" not in aioclient_mock.mock_calls[0][2]
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
+    )
 
 
 async def test_setup_api_push_api_data_server_host(
@@ -249,9 +251,9 @@ async def test_setup_api_push_api_data_server_host(
 
     assert result
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 9999
-    assert not aioclient_mock.mock_calls[0][2]["watchdog"]
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY, watchdog=False)
+    )
 
 
 async def test_setup_api_push_api_data_default(
@@ -270,9 +272,12 @@ async def test_setup_api_push_api_data_default(
 
     assert result
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 8123
-    refresh_token = aioclient_mock.mock_calls[0][2]["refresh_token"]
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=8123, refresh_token=ANY)
+    )
+    refresh_token = (
+        supervisor_client.homeassistant.set_options.mock_calls[0].args[0].refresh_token
+    )
     hassio_user = await hass.auth.async_get_user(
         hass_storage[STORAGE_KEY]["data"]["hassio_user"]
     )
@@ -351,9 +356,9 @@ async def test_setup_api_existing_hassio_user(
 
     assert result
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 8123
-    assert aioclient_mock.mock_calls[0][2]["refresh_token"] == token.token
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
+    )
 
 
 async def test_setup_core_push_config(
@@ -370,13 +375,16 @@ async def test_setup_core_push_config(
 
     assert result
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
-    assert aioclient_mock.mock_calls[1][2]["timezone"] == "testzone"
+    supervisor_client.supervisor.set_options.assert_called_once_with(
+        SupervisorOptions(timezone="testzone", country=ANY)
+    )
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
         await hass.config.async_update(time_zone="America/New_York", country="US")
     await hass.async_block_till_done()
-    assert aioclient_mock.mock_calls[-1][2]["timezone"] == "America/New_York"
-    assert aioclient_mock.mock_calls[-1][2]["country"] == "US"
+    supervisor_client.supervisor.set_options.assert_called_with(
+        SupervisorOptions(timezone="America/New_York", country="US")
+    )
 
 
 async def test_setup_hassio_no_additional_data(
