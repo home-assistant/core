@@ -1640,6 +1640,8 @@ build.json @home-assistant/supervisor
 /tests/components/sun/ @home-assistant/core
 /homeassistant/components/sunricher_dali/ @niracler
 /tests/components/sunricher_dali/ @niracler
+/homeassistant/components/sunsynk/ @chattersley
+/tests/components/sunsynk/ @chattersley
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen

@@ -687,6 +687,7 @@ FLOWS = {
         "suez_water",
         "sun",
         "sunricher_dali",
+        "sunsynk",
         "sunweg",
         "surepetcare",
         "swiss_public_transport",

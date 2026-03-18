@@ -1,0 +1,238 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This SunSynk account is already configured.",
+      "reauth_successful": "Re-authentication successful.",
+      "reconfigure_successful": "Reconfiguration successful."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to SunSynk API",
+      "invalid_auth": "Invalid email or password",
+      "unknown": "Unexpected error occurred"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "email": "Email Address",
+          "password": "Password"
+        },
+        "description": "Your SunSynk credentials are no longer valid. Please enter updated credentials.",
+        "title": "Re-authenticate SunSynk"
+      },
+      "reconfigure": {
+        "data": {
+          "email": "Email Address",
+          "password": "Password",
+          "region": "SunSynk Region"
+        },
+        "description": "Update your SunSynk connection settings.",
+        "title": "Reconfigure SunSynk"
+      },
+      "user": {
+        "data": {
+          "email": "Email Address",
+          "password": "Password",
+          "region": "SunSynk Region"
+        },
+        "description": "Enter your SunSynk credentials to connect to your inverter plant.",
+        "title": "SunSynk Connection"
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "battery_max_charge_current": { "name": "Battery max charge current" },
+      "battery_restart_cap": { "name": "Battery restart cap" },
+      "battery_shutdown_cap": { "name": "Battery shutdown cap" },
+      "cap_soc_floor_1": { "name": "SOC floor 1" },
+      "cap_soc_floor_2": { "name": "SOC floor 2" },
+      "cap_soc_floor_3": { "name": "SOC floor 3" },
+      "cap_soc_floor_4": { "name": "SOC floor 4" },
+      "cap_soc_floor_5": { "name": "SOC floor 5" },
+      "cap_soc_floor_6": { "name": "SOC floor 6" }
+    },
+    "select": {
+      "sell_time_1": { "name": "Sell time 1" },
+      "sell_time_2": { "name": "Sell time 2" },
+      "sell_time_3": { "name": "Sell time 3" },
+      "sell_time_4": { "name": "Sell time 4" },
+      "sell_time_5": { "name": "Sell time 5" },
+      "sell_time_6": { "name": "Sell time 6" },
+      "sys_work_mode": { "name": "System work mode" }
+    },
+    "sensor": {
+      "alarm_events": { "name": "Alarm events" },
+      "api_errors": { "name": "API errors" },
+      "battery_capacity": { "name": "Battery capacity" },
+      "battery_charge_current_limit": {
+        "name": "Battery charge current limit"
+      },
+      "battery_charge_voltage": { "name": "Battery charge voltage" },
+      "battery_current": { "name": "Battery current" },
+      "battery_discharge_current_limit": {
+        "name": "Battery discharge current limit"
+      },
+      "battery_power": { "name": "Battery power" },
+      "battery_soc": { "name": "Battery SOC" },
+      "battery_status": { "name": "Battery status" },
+      "battery_temperature": { "name": "Battery temperature" },
+      "battery_today_charge": { "name": "Battery today charge" },
+      "battery_today_discharge": { "name": "Battery today discharge" },
+      "battery_total_charge": { "name": "Battery total charge" },
+      "battery_total_discharge": { "name": "Battery total discharge" },
+      "battery_voltage": { "name": "Battery voltage" },
+      "computed_battery_efficiency": { "name": "Battery efficiency" },
+      "computed_gen_total_current": { "name": "Generator total current" },
+      "computed_grid_current": { "name": "Grid current" },
+      "computed_internal_power_usage": { "name": "Internal power usage" },
+      "computed_load_current": { "name": "Load current" },
+      "computed_output_total_current": { "name": "Output total current" },
+      "computed_pv_total_current": { "name": "PV total current" },
+      "dc_temperature": { "name": "DC temperature" },
+      "gateway_signal": { "name": "Signal strength" },
+      "gateway_status": { "name": "Status" },
+      "generator_daily_energy": { "name": "Generator daily energy" },
+      "generator_frequency": { "name": "Generator frequency" },
+      "generator_power": { "name": "Generator power" },
+      "generator_total_energy": { "name": "Generator total energy" },
+      "generator_voltage": { "name": "Generator voltage" },
+      "grid_frequency": { "name": "Grid frequency" },
+      "grid_limiter_total_power": { "name": "Grid limiter total power" },
+      "grid_power": { "name": "Grid power" },
+      "grid_power_factor": { "name": "Grid power factor" },
+      "grid_status": { "name": "Grid status" },
+      "grid_today_export": { "name": "Grid today export" },
+      "grid_today_import": { "name": "Grid today import" },
+      "grid_total_export": { "name": "Grid total export" },
+      "grid_total_import": { "name": "Grid total import" },
+      "grid_voltage": { "name": "Grid voltage" },
+      "igbt_temperature": { "name": "IGBT temperature" },
+      "info_events": { "name": "Info events" },
+      "inverter_power": { "name": "Inverter power" },
+      "inverter_power_output": { "name": "Power output" },
+      "load_daily_used": { "name": "Load daily used" },
+      "load_frequency": { "name": "Load frequency" },
+      "load_power": { "name": "Load power" },
+      "load_total_used": { "name": "Load total used" },
+      "load_ups_power": { "name": "Load UPS power" },
+      "load_voltage": { "name": "Load voltage" },
+      "notifications": { "name": "Notifications" },
+      "output_frequency": { "name": "Output frequency" },
+      "output_voltage": { "name": "Output voltage" },
+      "plant_battery_power": { "name": "Battery power" },
+      "plant_generator_power": { "name": "Generator power" },
+      "plant_grid_power": { "name": "Grid power" },
+      "plant_home_load_power": { "name": "Home load power" },
+      "plant_load_power": { "name": "Load power" },
+      "plant_min_power": { "name": "Min power" },
+      "plant_pv_power": { "name": "PV power" },
+      "plant_smart_load_power": { "name": "Smart load power" },
+      "plant_soc": { "name": "State of charge" },
+      "plant_ups_load_power": { "name": "UPS load power" },
+      "pv_energy_today": { "name": "PV energy today" },
+      "pv_energy_total": { "name": "PV energy total" },
+      "pv_power": { "name": "PV power" },
+      "pv_string_current": { "name": "PV{string_num} current" },
+      "pv_string_power": { "name": "PV{string_num} power" },
+      "pv_string_voltage": { "name": "PV{string_num} voltage" },
+      "settings_battery_max_charge_current": {
+        "name": "Battery max charge current"
+      },
+      "settings_battery_restart_cap": { "name": "Battery restart cap" },
+      "settings_battery_shutdown_cap": { "name": "Battery shutdown cap" },
+      "settings_energy_mode": { "name": "Energy mode" },
+      "settings_gen_timer_1_on": { "name": "Gen timer 1 on" },
+      "settings_gen_timer_2_on": { "name": "Gen timer 2 on" },
+      "settings_gen_timer_3_on": { "name": "Gen timer 3 on" },
+      "settings_gen_timer_4_on": { "name": "Gen timer 4 on" },
+      "settings_gen_timer_5_on": { "name": "Gen timer 5 on" },
+      "settings_gen_timer_6_on": { "name": "Gen timer 6 on" },
+      "settings_sell_time_1": { "name": "Sell time 1" },
+      "settings_sell_time_1_pac": { "name": "Sell time 1 power" },
+      "settings_sell_time_2": { "name": "Sell time 2" },
+      "settings_sell_time_2_pac": { "name": "Sell time 2 power" },
+      "settings_sell_time_3": { "name": "Sell time 3" },
+      "settings_sell_time_3_pac": { "name": "Sell time 3 power" },
+      "settings_sell_time_4": { "name": "Sell time 4" },
+      "settings_sell_time_4_pac": { "name": "Sell time 4 power" },
+      "settings_sell_time_5": { "name": "Sell time 5" },
+      "settings_sell_time_5_pac": { "name": "Sell time 5 power" },
+      "settings_sell_time_6": { "name": "Sell time 6" },
+      "settings_sell_time_6_pac": { "name": "Sell time 6 power" },
+      "settings_soc_cap_1": { "name": "SOC cap 1" },
+      "settings_soc_cap_2": { "name": "SOC cap 2" },
+      "settings_soc_cap_3": { "name": "SOC cap 3" },
+      "settings_soc_cap_4": { "name": "SOC cap 4" },
+      "settings_soc_cap_5": { "name": "SOC cap 5" },
+      "settings_soc_cap_6": { "name": "SOC cap 6" },
+      "settings_sys_work_mode": { "name": "System work mode" },
+      "settings_timer_1_on": { "name": "Timer 1 on" },
+      "settings_timer_2_on": { "name": "Timer 2 on" },
+      "settings_timer_3_on": { "name": "Timer 3 on" },
+      "settings_timer_4_on": { "name": "Timer 4 on" },
+      "settings_timer_5_on": { "name": "Timer 5 on" },
+      "settings_timer_6_on": { "name": "Timer 6 on" },
+      "settings_use_timer": { "name": "Use timer" },
+      "smart_load_status": { "name": "Smart load status" },
+      "stats_last_update": { "name": "Last update" },
+      "total_battery_current": { "name": "Total battery current" },
+      "total_battery_power": { "name": "Total battery power" },
+      "total_generator_power": { "name": "Total generator power" },
+      "total_grid_power": { "name": "Total grid power" },
+      "total_load_power": { "name": "Total load power" },
+      "total_output_power": { "name": "Total output power" },
+      "total_pv_power": { "name": "Total PV power" },
+      "warning_events": { "name": "Warning events" }
+    },
+    "switch": {
+      "energy_mode": { "name": "Energy mode" },
+      "gen_timer_1_on": { "name": "Gen timer 1" },
+      "gen_timer_2_on": { "name": "Gen timer 2" },
+      "gen_timer_3_on": { "name": "Gen timer 3" },
+      "gen_timer_4_on": { "name": "Gen timer 4" },
+      "gen_timer_5_on": { "name": "Gen timer 5" },
+      "gen_timer_6_on": { "name": "Gen timer 6" },
+      "timer_1_on": { "name": "Timer 1" },
+      "timer_2_on": { "name": "Timer 2" },
+      "timer_3_on": { "name": "Timer 3" },
+      "timer_4_on": { "name": "Timer 4" },
+      "timer_5_on": { "name": "Timer 5" },
+      "timer_6_on": { "name": "Timer 6" },
+      "use_timer": { "name": "Use timer" }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error communicating with the SunSynk API: {error}"
+    },
+    "auth_error": {
+      "message": "Authentication with SunSynk failed: {error}"
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to the SunSynk API."
+    },
+    "invalid_auth": {
+      "message": "Invalid SunSynk email or password."
+    },
+    "sunsynk_error": {
+      "message": "An error occurred with the SunSynk integration: {error}"
+    }
+  },
+  "issues": {
+    "persistent_api_failure": {
+      "description": "The SunSynk integration has failed to communicate with the API {count} times in a row.\n\nLast error: {error}\n\nThis may indicate a temporary API outage or a network issue. The integration will continue retrying automatically and this issue will be resolved when communication is restored.",
+      "title": "SunSynk API communication failure"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "plant_ignore_list": "Plant IDs to ignore (comma-separated)",
+          "update_interval": "Update interval (seconds)"
+        },
+        "description": "Configure SunSynk integration options"
+      }
+    }
+  }
+}

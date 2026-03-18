@@ -526,6 +526,7 @@ homeassistant.components.streamlabswater.*
 homeassistant.components.stt.*
 homeassistant.components.suez_water.*
 homeassistant.components.sun.*
+homeassistant.components.sunsynk.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
 homeassistant.components.switch_as_x.*

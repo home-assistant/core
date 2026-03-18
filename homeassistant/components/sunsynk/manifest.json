@@ -1,0 +1,11 @@
+{
+  "domain": "sunsynk",
+  "name": "SunSynk",
+  "codeowners": ["@chattersley"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/sunsynk",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["cryptography==46.0.5", "sunsynk-python==0.1.8"]
+}

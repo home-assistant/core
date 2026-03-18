@@ -683,6 +683,9 @@ crownstone-sse==2.0.5
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
 
+# homeassistant.components.sunsynk
+cryptography==46.0.5
+
 # homeassistant.components.datadog
 datadog==0.52.0
 
@@ -2560,6 +2563,9 @@ streamlabswater==1.0.1
 
 # homeassistant.components.subaru
 subarulink==0.7.15
+
+# homeassistant.components.sunsynk
+sunsynk-python==0.1.8
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
