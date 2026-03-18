@@ -170,7 +170,7 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 
 
 class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
-    """Class to represent a single entity selector config.
+    """Class to legacy entity filters to EntitySelectorConfig.
 
     Provided for backwards compatibility and remains feature frozen.
     """
@@ -178,9 +178,9 @@ class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
     integration: str
     domain: str | list[str]
     device_class: str | list[str]
-    # supported_features is supported by the schema, but included here
-    # because it was allowed before the separate TypedDict for legacy
-    # schema was added.
+    # supported_features is not supported by the schema, included here
+    # to not break instantiation of EntitySelectorConfig when used with
+    # legacy config that includes supported_features.
     supported_features: list[str]
 
 
