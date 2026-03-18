@@ -99,24 +99,6 @@ def test_icon_connected(gateway_sensor: EasywaveGatewaySensor) -> None:
     assert gateway_sensor.icon == "mdi:usb"
 
 
-def test_icon_connecting(gateway_sensor: EasywaveGatewaySensor) -> None:
-    """Test icon when connecting."""
-    gateway_sensor._current_status = "connecting"
-    assert gateway_sensor.icon == "mdi:usb-flash-drive"
-
-
-def test_icon_hardware_error(gateway_sensor: EasywaveGatewaySensor) -> None:
-    """Test icon for hardware error."""
-    gateway_sensor._current_status = "hardware_error"
-    assert gateway_sensor.icon == "mdi:usb-port"
-
-
-def test_icon_error(gateway_sensor: EasywaveGatewaySensor) -> None:
-    """Test icon for error state."""
-    gateway_sensor._current_status = "error"
-    assert gateway_sensor.icon == "mdi:alert-circle"
-
-
 def test_icon_disconnected(gateway_sensor: EasywaveGatewaySensor) -> None:
     """Test icon when disconnected."""
     gateway_sensor._current_status = "disconnected"

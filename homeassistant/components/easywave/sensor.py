@@ -53,10 +53,6 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
     STATUS_KEYS = [
         "connected",
         "disconnected",
-        "connecting",
-        "error",
-        "hardware_error",
-        "not_configured",
     ]
 
     _attr_has_entity_name = True
@@ -178,8 +174,14 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
             _LOGGER.info("Gateway status: %s -> %s", old_status, new_status)
             self._last_status = new_status
 
+            registry = dr.async_get(self.hass)
+            device = registry.async_get_device(
+                identifiers={(DOMAIN, f"{self._entry.entry_id}_gateway")}
+            )
+            device_id = device.id if device is not None else None
+
             event_data = {
-                "device_id": f"{self._entry.entry_id}_gateway",
+                "device_id": device_id,
                 "old_status": old_status,
                 "new_status": new_status,
                 "entry_id": self._entry.entry_id,
@@ -187,7 +189,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
             self.hass.bus.async_fire(EVENT_GATEWAY_STATUS_CHANGED, event_data)
             if new_status == "connected":
                 self.hass.bus.async_fire(EVENT_GATEWAY_CONNECTED, event_data)
-            elif new_status in ("disconnected", "error", "hardware_error"):
+            elif new_status == "disconnected":
                 self.hass.bus.async_fire(EVENT_GATEWAY_DISCONNECTED, event_data)
 
         self._current_status = new_status
@@ -239,16 +241,9 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
     @property
     def icon(self) -> str:
         """Return icon based on connection status."""
-        status = self._current_status
-        if status == "connected":
+        if self._current_status == "connected":
             return "mdi:usb"
-        if status == "connecting":
-            return "mdi:usb-flash-drive"
-        if status == "hardware_error":
-            return "mdi:usb-port"
-        if status == "error":
-            return "mdi:alert-circle"
-        # None / disconnected / not_configured
+        # None / disconnected
         return "mdi:close-thick"
 
     @property

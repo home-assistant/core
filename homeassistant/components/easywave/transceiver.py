@@ -193,7 +193,19 @@ class RX11Transceiver:
 
             # Fetch versions BEFORE starting any continuous receive loops
             # Both queries use synchronous request/response matching
-            await self._ensure_versions_fetched()
+            versions_ok = await self._ensure_versions_fetched()
+            if not versions_ok:
+                _LOGGER.warning(
+                    "Failed to query RX11 versions at %s; disconnecting",
+                    device_path,
+                )
+                if self._rxmodule:
+                    with contextlib.suppress(*_SERIAL_ERRORS):
+                        await self.hass.async_add_executor_job(self._rxmodule.dispose)
+                    self._rxmodule = None
+                self.is_connected = False
+                self.device_path = None
+                return False
 
             _LOGGER.info(
                 "Connected to RX11 at %s (SN:%s, HW=%s, FW=%s)",
@@ -469,7 +481,7 @@ class RX11Transceiver:
         Implements pattern from RxModule:
         - Adds delay if recently disconnected for device reset
         - Increments reconnect attempt counter
-        - Searches device freshly (device_path was cleared on disconnect)
+        - Searches for the device again if needed
         - Calls reconnect callback on success
 
         Returns:

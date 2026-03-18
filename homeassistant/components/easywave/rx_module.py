@@ -387,7 +387,7 @@ class RxModule:
         self._rx_stuffing = False
 
         # Threading
-        self._protocol_lock = threading.Lock()
+        self._protocol_lock = threading.RLock()
         self._file_lock = threading.Lock()
         self._serial_handler_thread: threading.Thread | None = None
 
@@ -1116,7 +1116,9 @@ class RxModule:
         req = self._create_request(irp, 1, 19, "MA_QUERY_HW_VER")
 
         self._place_request(req)
-        req.wait(timeout)
+        if not req.wait(timeout):
+            self.cancel_all_io_requests()
+            return ErrorCode.ERR_RF_TIMEOUT, bytes(16)
 
         if req.icp.result == ErrorCode.SUCCESS:
             parsed = parse_icp_data(req.icp, FunctionCode.MA_QUERY_HW_VER)
@@ -1130,7 +1132,9 @@ class RxModule:
         req = self._create_request(irp, 1, 6, "MA_QUERY_FW_VER")
 
         self._place_request(req)
-        req.wait(timeout)
+        if not req.wait(timeout):
+            self.cancel_all_io_requests()
+            return ErrorCode.ERR_RF_TIMEOUT, 0, 0, False
 
         if req.icp.result == ErrorCode.SUCCESS:
             parsed = parse_icp_data(req.icp, FunctionCode.MA_QUERY_FW_VER)

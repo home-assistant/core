@@ -30,11 +30,7 @@
         "name": "Connection Status",
         "state": {
           "connected": "Connected",
-          "connecting": "Connecting",
-          "disconnected": "Not Connected",
-          "error": "Error",
-          "hardware_error": "Hardware Error",
-          "not_configured": "Not Configured"
+          "disconnected": "Not Connected"
         }
       }
     }
