@@ -214,12 +214,7 @@ class MoldIndicator(SensorEntity):
         # Replay current state of source entities
         for entity_id in self._entities.values():
             state = self.hass.states.get(entity_id)
-            state_event: Event[EventStateChangedData] = Event(
-                "", {"entity_id": entity_id, "new_state": state, "old_state": None}
-            )
-            self._async_mold_indicator_sensor_state_listener(
-                state_event, update_state=False
-            )
+            self._update_cached_values(entity_id, state)
 
         self._recalculate()
 
@@ -228,8 +223,18 @@ class MoldIndicator(SensorEntity):
             self._preview_callback(calculated_state.state, calculated_state.attributes)
 
     @callback
+    def _update_cached_values(self, entity_id: str, new_state: State | None) -> None:
+        """Update cached sensor values from a state."""
+        if entity_id == self._entities[CONF_INDOOR_TEMP]:
+            self._indoor_temp = self._get_temperature_from_state(new_state)
+        elif entity_id == self._entities[CONF_OUTDOOR_TEMP]:
+            self._outdoor_temp = self._get_temperature_from_state(new_state)
+        elif entity_id == self._entities[CONF_INDOOR_HUMIDITY]:
+            self._indoor_hum = self._get_humidity_from_state(new_state)
+
+    @callback
     def _async_mold_indicator_sensor_state_listener(
-        self, event: Event[EventStateChangedData], update_state: bool = True
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state changes for dependent sensors."""
         entity_id = event.data["entity_id"]
@@ -242,16 +247,7 @@ class MoldIndicator(SensorEntity):
             new_state,
         )
 
-        # update state depending on which sensor changed
-        if entity_id == self._entities[CONF_INDOOR_TEMP]:
-            self._indoor_temp = self._get_temperature_from_state(new_state)
-        elif entity_id == self._entities[CONF_OUTDOOR_TEMP]:
-            self._outdoor_temp = self._get_temperature_from_state(new_state)
-        elif entity_id == self._entities[CONF_INDOOR_HUMIDITY]:
-            self._indoor_hum = self._get_humidity_from_state(new_state)
-
-        if not update_state:
-            return
+        self._update_cached_values(entity_id, new_state)
 
         self._recalculate()
 
