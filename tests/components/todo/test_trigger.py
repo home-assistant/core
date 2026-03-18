@@ -45,7 +45,17 @@ async def todo_lists(
     hass: HomeAssistant,
 ) -> tuple[MockTodoListEntity, MockTodoListEntity]:
     """Create two todo list entities via the mock platform."""
-    entity1 = _make_entity(TODO_ENTITY_ID1, unique_id="list_one")
+    entity1 = _make_entity(
+        TODO_ENTITY_ID1,
+        unique_id="list_one",
+        items=[
+            TodoItem(
+                summary="existing_item",
+                uid="existing_id",
+                status=TodoItemStatus.NEEDS_ACTION,
+            )
+        ],
+    )
     entity2 = _make_entity(TODO_ENTITY_ID2, unique_id="list_two")
     await create_mock_platform(hass, [entity1, entity2])
     return entity1, entity2
@@ -215,10 +225,14 @@ async def test_item_change_triggers(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test item change triggers fire."""
-    entity = _make_entity(TODO_ENTITY_ID1)
-    await create_mock_platform(hass, [entity])
 
     await _setup_automation(hass, {CONF_ENTITY_ID: TODO_ENTITY_ID1})
+
+    # ensure that there is 1 pre-existing item in the list,
+    # so that we test that triggers only fire for new ones
+    state = hass.states.get(TODO_ENTITY_ID1)
+    assert state is not None
+    assert state.state == "1"
 
     item1 = "item_id"
     await _add_item(hass, TODO_ENTITY_ID1, item1)

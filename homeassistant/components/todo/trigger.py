@@ -60,6 +60,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
         hass: HomeAssistant,
         target_selection: TargetSelection,
         listener: Callable[[TodoItemChangeEvent], None],
+        entity_listener: Callable[[str, list[TodoItem]], None],
     ) -> None:
         """Initialize the item change tracker."""
 
@@ -72,6 +73,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
 
         super().__init__(hass, target_selection, entity_filter)
         self._listener = listener
+        self._entity_listener = entity_listener
 
         self._pending_listener_task: asyncio.Task[None] | None = None
         self._unsubscribe_listeners: list[CALLBACK_TYPE] = []
@@ -98,6 +100,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
         self._unsubscribe_listeners = []
         for entity_id in tracked_entities:
             entity = get_entity(self._hass, entity_id)
+            self._entity_listener(entity_id, entity.todo_items or [])
             unsub = entity.async_subscribe_updates(
                 functools.partial(_listener_wrapper, entity_id)
             )
@@ -144,13 +147,23 @@ class ItemTriggerBase(Trigger, abc.ABC):
         listener = ItemChangeListener(
             self._hass,
             target_selection,
-            functools.partial(self.handle_item_change_event, run_action=run_action),
+            functools.partial(self._handle_item_change, run_action=run_action),
+            self._handle_new_entity,
         )
         return listener.async_setup()
 
     @callback
     @abc.abstractmethod
-    def handle_item_change_event(
+    def _handle_new_entity(self, entity_id: str, items: list[TodoItem]) -> None:
+        """Handle when a new entity starts being tracked.
+
+        Called before subscribing to updates, so the trigger can seed its
+        internal tracking state.
+        """
+
+    @callback
+    @abc.abstractmethod
+    def _handle_item_change(
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Handle todo item change event."""
@@ -166,7 +179,15 @@ class ItemAddedTrigger(ItemTriggerBase):
 
     @override
     @callback
-    def handle_item_change_event(
+    def _handle_new_entity(self, entity_id: str, items: list[TodoItem]) -> None:
+        """Seed item IDs for a newly tracked entity."""
+        self._entity_item_ids[entity_id] = {
+            item.uid for item in items if item.uid is not None
+        }
+
+    @override
+    @callback
+    def _handle_item_change(
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Listen for todo item changes."""
@@ -197,7 +218,15 @@ class ItemRemovedTrigger(ItemTriggerBase):
 
     @override
     @callback
-    def handle_item_change_event(
+    def _handle_new_entity(self, entity_id: str, items: list[TodoItem]) -> None:
+        """Seed item IDs for a newly tracked entity."""
+        self._entity_item_ids[entity_id] = {
+            item.uid for item in items if item.uid is not None
+        }
+
+    @override
+    @callback
+    def _handle_item_change(
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Listen for todo item changes."""
@@ -228,7 +257,17 @@ class ItemCompletedTrigger(ItemTriggerBase):
 
     @override
     @callback
-    def handle_item_change_event(
+    def _handle_new_entity(self, entity_id: str, items: list[TodoItem]) -> None:
+        """Seed completed item IDs for a newly tracked entity."""
+        self._entity_completed_item_ids[entity_id] = {
+            item.uid
+            for item in items
+            if item.uid is not None and item.status == TodoItemStatus.COMPLETED
+        }
+
+    @override
+    @callback
+    def _handle_item_change(
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Listen for todo item changes."""
