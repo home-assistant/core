@@ -104,7 +104,7 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
     ProxmoxVMButtonEntityDescription(
         key="restart",
         press_action=lambda coordinator, node, vmid: (
-            coordinator.proxmox.nodes(node).qemu(vmid).status.restart.post()
+            coordinator.proxmox.nodes(node).qemu(vmid).status.reboot.post()
         ),
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
@@ -147,7 +147,7 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
     ProxmoxContainerButtonEntityDescription(
         key="restart",
         press_action=lambda coordinator, node, vmid: (
-            coordinator.proxmox.nodes(node).lxc(vmid).status.restart.post()
+            coordinator.proxmox.nodes(node).lxc(vmid).status.reboot.post()
         ),
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
