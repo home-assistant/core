@@ -17,7 +17,7 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_events(hass: HomeAssistant) -> list[str]:
+async def target_events(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple event entities associated with different targets."""
     return await target_entities(hass, "event")
 
@@ -252,7 +252,7 @@ async def test_event_triggers_gated_by_labs_flag(
 async def test_event_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_events: list[str],
+    target_events: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,

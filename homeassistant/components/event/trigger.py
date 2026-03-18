@@ -42,7 +42,7 @@ class EventReceivedTrigger(EntityTriggerBase):
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and different from the current state."""
 
-        # UNKNOWN is a valid from_state, otherwise the first time the button is pressed
+        # UNKNOWN is a valid from_state, otherwise the first time the event is received
         # would not trigger
         if from_state.state == STATE_UNAVAILABLE:
             return False
