@@ -142,7 +142,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         self.new_devices = set_of_data - self._current_devices
         for device_id in self.new_devices:
             self._firmware_list.setdefault(device_id, data[device_id].get("firmware"))
-        
+
         current_devices = (
             self._stored_devices if not self._current_devices else self._current_devices
         )
@@ -154,7 +154,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         """Clean registries when removed devices found."""
         device_reg = dr.async_get(self.hass)
         for device_id in removed_devices:
-            if (device_entry := device_reg.async_get_device({(DOMAIN, device_id)})) is not None:
+            if (
+                device_entry := device_reg.async_get_device({(DOMAIN, device_id)})
+            ) is not None:
                 device_reg.async_update_device(
                     device_entry.id, remove_config_entry_id=self.config_entry.entry_id
                 )
@@ -172,7 +174,8 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         for device_id, device in data.items():
             if (
                 device_id in self._firmware_list
-                and (new_firmware := device.get("firmware")) != self._firmware_list[device_id]
+                and (new_firmware := device.get("firmware"))
+                != self._firmware_list[device_id]
             ):
                 updated = self._update_firmware_in_dr(device_id, new_firmware)
                 if updated:
@@ -181,7 +184,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
     def _update_firmware_in_dr(self, device_id: str, firmware: str | None) -> bool:
         """Update device sw_version in device_registry."""
         device_reg = dr.async_get(self.hass)
-        if (device_entry := device_reg.async_get_device({(DOMAIN, device_id)})) is not None:
+        if (
+            device_entry := device_reg.async_get_device({(DOMAIN, device_id)})
+        ) is not None:
             device_reg.async_update_device(device_entry.id, sw_version=firmware)
             LOGGER.debug(
                 "Firmware in device_registry updated for %s %s %s",
