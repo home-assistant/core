@@ -372,7 +372,6 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         suggested_unit_of_measurement=PERCENTAGE,
-        translation_key="battery_level",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescriptionB01(
