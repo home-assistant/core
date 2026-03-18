@@ -45,9 +45,16 @@ class HIVISpeakerOptionsFlow(config_entries.OptionsFlow):
         self.open_num = 0
         if user_input is not None:
             if user_input.get("confirm_refresh"):
-                await self.hass.services.async_call(
-                    DOMAIN, "refresh_discovery", {}, blocking=False
+                domain_data = self.hass.data.get(DOMAIN, {}).get(
+                    self.config_entry.entry_id, {}
                 )
+                device_manager = domain_data.get("device_manager")
+                if device_manager is not None:
+                    await device_manager.refresh_discovery()
+                else:
+                    _LOGGER.warning(
+                        "Device manager not available; skipping refresh from options"
+                    )
                 return await self.async_step_success()
 
             return self.async_create_entry(title="", data={})
