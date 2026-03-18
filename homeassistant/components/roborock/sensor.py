@@ -371,7 +371,6 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.quantity,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        suggested_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescriptionB01(
