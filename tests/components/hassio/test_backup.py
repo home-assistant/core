@@ -664,7 +664,7 @@ async def test_agent_upload(
 
     # Verify upload progress events were emitted
     upload_progress_events: list[dict[str, Any]] = []
-    for _ in range(20):
+    while True:
         response = await ws_client.receive_json()
         event = response.get("event")
         if event is None:
