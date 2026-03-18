@@ -14,7 +14,7 @@ from homeassistant.components.time import (
     DOMAIN as TIME_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -62,8 +62,7 @@ async def test_set_value(
     expected_kwargs: dict[str, int],
 ) -> None:
     """Test setting a time value calls the client and triggers a coordinator refresh."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.TIME]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         TIME_DOMAIN,
@@ -82,8 +81,7 @@ async def test_action_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a TRMNLError during a time action raises HomeAssistantError."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.TIME]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     mock_trmnl_client.update_device.side_effect = TRMNLError("connection failed")
 
@@ -97,6 +95,29 @@ async def test_action_error(
             },
             blocking=True,
         )
+
+
+async def test_coordinator_unavailable(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that time entities become unavailable when the coordinator fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("time.test_trmnl_sleep_start_time").state != STATE_UNAVAILABLE
+    )
+
+    mock_trmnl_client.get_devices.side_effect = TRMNLError
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("time.test_trmnl_sleep_start_time").state == STATE_UNAVAILABLE
+    )
 
 
 async def test_dynamic_new_device(

@@ -72,7 +72,7 @@ jobs:
       - name: Download Translations
         run: python3 -m script.translations download
         env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
 
       - name: Archive translations
         shell: bash
@@ -203,7 +203,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
         with:
           cosign-release: "v2.5.3"
 
@@ -400,7 +400,7 @@ jobs:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
         with:
           cosign-release: "v2.5.3"
 
@@ -614,7 +614,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}

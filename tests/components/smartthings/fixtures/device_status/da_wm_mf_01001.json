@@ -1,0 +1,331 @@
+{
+  "components": {
+    "main": {
+      "refresh": {},
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "20349241",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "releaseCountry": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "3A000000001511000A90020200000000",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "description": {
+          "value": "AMF-WW-TP1-22-COMMON_FT-MF/DC92-03492A_0001",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "releaseYear": {
+          "value": 21,
+          "timestamp": "2025-06-16T00:39:32.549Z"
+        },
+        "binaryId": {
+          "value": "AMF-WW-TP1-22-COMMON",
+          "timestamp": "2026-03-17T09:56:51.547Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2026-03-17T09:56:51.608Z"
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": null
+        },
+        "minVersion": {
+          "value": null
+        },
+        "supportedWiFiFreq": {
+          "value": null
+        },
+        "supportedAuthType": {
+          "value": null
+        },
+        "protocolType": {
+          "value": null
+        }
+      },
+      "samsungce.microfiberFilterOperatingState": {
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2026-03-17T10:27:51.168Z"
+        },
+        "supportedJobStates": {
+          "value": [
+            "none",
+            "filtering",
+            "bypassing",
+            "waiting",
+            "stopping",
+            "sensing"
+          ],
+          "timestamp": "2026-03-17T07:49:18.985Z"
+        },
+        "supportedOperatingStates": {
+          "value": ["ready", "running", "paused"],
+          "timestamp": "2026-03-17T07:49:18.985Z"
+        },
+        "microfiberFilterJobState": {
+          "value": "waiting",
+          "timestamp": "2026-03-17T10:27:51.168Z"
+        }
+      },
+      "samsungce.selfCheck": {
+        "result": {
+          "value": null
+        },
+        "supportedActions": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        },
+        "errors": {
+          "value": null
+        },
+        "status": {
+          "value": null
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "03334A230323(A603)",
+              "description": "AMF-WW-TP1-22-COMMON|20349241|3A000000001511000A90020200000000"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "23051057,FFFFFFFF",
+              "description": "Firmware_1_DB_20349241230510571FFFFFFFFFFFFFFFFFFFFFFFFFFE(018020349241FFFFFFFF_30000000)(FileDown:0)(Type:0)"
+            }
+          ],
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        }
+      },
+      "samsungce.microfiberFilterSettings": {
+        "bypassMode": {
+          "value": "disabled",
+          "timestamp": "2026-03-17T09:56:51.095Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "AMF-WW-TP1-22-COMMON_30230323",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "mnhw": {
+          "value": "Realtek",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "di": {
+          "value": "42e80b4d-24c4-a810-11b3-f90375c56a39",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "n": {
+          "value": "[microfiber] Samsung",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "mnmo": {
+          "value": "AMF-WW-TP1-22-COMMON|20349241|3A000000001511000A90020200000000",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "vid": {
+          "value": "DA-WM-MF-01001",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "mnos": {
+          "value": "TizenRT 3.1",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "pi": {
+          "value": "42e80b4d-24c4-a810-11b3-f90375c56a39",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-06-18T08:56:52.092Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [],
+          "timestamp": "2026-03-17T09:19:46.018Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 25040101,
+          "timestamp": "2025-06-16T01:24:28.272Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2026-03-17T09:56:51.716Z"
+        },
+        "otnDUID": {
+          "value": "MTCHUODPC4IYE",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "WM0",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "protocolType": {
+          "value": "wifi_https",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2026-03-17T09:56:51.548Z"
+        }
+      },
+      "samsungce.bladeFilter": {
+        "bladeFilterStatus": {
+          "value": null
+        },
+        "bladeFilterLastResetDate": {
+          "value": null
+        },
+        "bladeFilterUsage": {
+          "value": null
+        },
+        "bladeFilterResetType": {
+          "value": null
+        },
+        "bladeFilterUsageStep": {
+          "value": null
+        },
+        "bladeFilterCapacity": {
+          "value": null
+        }
+      },
+      "samsungce.microfiberFilterStatus": {
+        "supportedStatus": {
+          "value": ["blockage", "normal"],
+          "timestamp": "2026-03-17T07:49:18.985Z"
+        },
+        "status": {
+          "value": "normal",
+          "timestamp": "2026-03-17T07:49:18.985Z"
+        }
+      },
+      "custom.waterFilter": {
+        "waterFilterUsageStep": {
+          "value": 1,
+          "timestamp": "2026-03-17T09:19:46.018Z"
+        },
+        "waterFilterResetType": {
+          "value": ["replaceable"],
+          "timestamp": "2026-03-17T09:19:46.018Z"
+        },
+        "waterFilterCapacity": {
+          "value": 12,
+          "unit": "Hour",
+          "timestamp": "2026-03-17T09:19:46.018Z"
+        },
+        "waterFilterLastResetDate": {
+          "value": null
+        },
+        "waterFilterUsage": {
+          "value": 78,
+          "timestamp": "2026-03-17T10:17:49.492Z"
+        },
+        "waterFilterStatus": {
+          "value": "normal",
+          "timestamp": "2026-03-17T09:19:46.018Z"
+        }
+      }
+    }
+  }
+}
