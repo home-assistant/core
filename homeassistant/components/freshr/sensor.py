@@ -117,6 +117,8 @@ async def async_setup_entry(
 
     @callback
     def _check_devices() -> None:
+        if not coordinator.data:
+            return
         new_ids = set(coordinator.data) - known_devices
         if not new_ids:
             return

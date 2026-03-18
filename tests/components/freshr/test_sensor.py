@@ -112,5 +112,9 @@ async def test_dynamic_device_added(
     await hass.async_block_till_done()
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID_2)})
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID_2}_t1")
+    t1_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{DEVICE_ID_2}_t1"
+    )
+    assert t1_entity_id
     assert entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID_2}_co2")
+    assert hass.states.get(t1_entity_id).state != "unavailable"

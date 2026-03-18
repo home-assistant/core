@@ -27,6 +27,8 @@ async def async_get_config_entry_diagnostics(
         ],
         "readings": {
             device_id: dataclasses.asdict(coordinator.data)
+            if coordinator.data is not None
+            else None
             for device_id, coordinator in runtime_data.readings.items()
         },
     }
