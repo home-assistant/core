@@ -101,9 +101,9 @@ def mock_receiver() -> Generator[MagicMock]:
 def mock_find_receiver_model() -> Generator[AsyncMock]:
     """Return a mocked async_find_receiver_model function."""
     with patch(
-        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model"
+        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
+        new=AsyncMock(return_value=LyngdorfModel.MP_60),
     ) as find_mock:
-        find_mock.return_value = LyngdorfModel.MP_60
         yield find_mock
 
 

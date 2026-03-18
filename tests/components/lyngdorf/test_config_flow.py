@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -156,7 +157,7 @@ async def test_manual_flow_errors(
         context={"source": SOURCE_USER},
     )
 
-    mock_kwargs: dict = {}
+    mock_kwargs: dict[str, Any] = {}
     if side_effect is not None:
         mock_kwargs["side_effect"] = side_effect
     else:
@@ -164,7 +165,7 @@ async def test_manual_flow_errors(
 
     with patch(
         "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
-        **mock_kwargs,
+        new=AsyncMock(**mock_kwargs),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
