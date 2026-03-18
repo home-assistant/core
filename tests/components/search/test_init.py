@@ -2,6 +2,7 @@
 
 from pytest_unordered import unordered
 
+from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.components.search import ItemType, Searcher
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -1006,4 +1007,73 @@ async def test_search(
             ["scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id]
         ),
         ItemType.SCRIPT: unordered(["script.device", "script.hue"]),
+    }
+
+
+async def test_search_entity_dashboard_views(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test searching an entity includes Lovelace dashboard views."""
+    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, "search", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light",
+        suggested_object_id="dashboard_light",
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/create",
+            "url_path": "test-dashboard",
+            "title": "Test dashboard",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await (
+        hass.data[LOVELACE_DATA]
+        .dashboards["test-dashboard"]
+        .async_save(
+            {
+                "views": [
+                    {
+                        "path": "badges-view",
+                        "badges": [{"entity": entity_entry.entity_id}],
+                    },
+                    {
+                        "path": "sections-view",
+                        "sections": [
+                            {
+                                "cards": [
+                                    {
+                                        "type": "tile",
+                                        "entity": entity_entry.entity_id,
+                                    }
+                                ]
+                            }
+                        ],
+                    },
+                    {
+                        "path": "other-view",
+                        "cards": [{"type": "entity", "entity": "light.other"}],
+                    },
+                ]
+            }
+        )
+    )
+
+    searcher = Searcher(hass, {})
+    assert searcher.async_search(ItemType.ENTITY, entity_entry.entity_id) == {
+        ItemType.DASHBOARD: {
+            "test-dashboard/badges-view",
+            "test-dashboard/sections-view",
+        }
     }

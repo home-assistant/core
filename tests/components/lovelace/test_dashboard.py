@@ -7,10 +7,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import frontend
+from homeassistant.components import frontend, lovelace
 from homeassistant.components.lovelace import const, dashboard
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
@@ -847,3 +847,68 @@ async def test_lovelace_info_yaml_mode_fallback(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"resource_mode": "yaml"}
+
+
+async def test_dashboards_with_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test looking up dashboards that reference an entity."""
+    assert await async_setup_component(hass, "lovelace", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light",
+        suggested_object_id="dashboard_light",
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/create",
+            "url_path": "test-dashboard",
+            "title": "Test dashboard",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await (
+        hass.data[const.LOVELACE_DATA]
+        .dashboards["test-dashboard"]
+        .async_save(
+            {
+                "views": [
+                    {
+                        "path": "badges-view",
+                        "badges": [{"entity": entity_entry.entity_id}],
+                    },
+                    {
+                        "path": "sections-view",
+                        "sections": [
+                            {
+                                "cards": [
+                                    {
+                                        "type": "tile",
+                                        "entity": entity_entry.entity_id,
+                                    }
+                                ]
+                            }
+                        ],
+                    },
+                    {
+                        "path": "other-view",
+                        "cards": [{"type": "entity", "entity": "light.other"}],
+                    },
+                ]
+            }
+        )
+    )
+
+    assert set(lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
+        "test-dashboard/badges-view",
+        "test-dashboard/sections-view",
+    }

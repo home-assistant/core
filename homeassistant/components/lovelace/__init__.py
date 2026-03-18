@@ -481,3 +481,43 @@ def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
         translation_key="yaml_mode_deprecated",
         translation_placeholders={"config_file": LOVELACE_CONFIG_FILE},
     )
+
+
+@callback
+def dashboards_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return dashboard/view combinations referencing an entity."""
+    if LOVELACE_DATA not in hass.data:
+        return []
+
+    dashboard_views: list[str] = []
+
+    for dashboard_config in hass.data[LOVELACE_DATA].dashboards.values():
+        config = dashboard_config.loaded_config
+        if config is None:
+            continue
+
+        dashboard_path = dashboard_config.url_path or "lovelace"
+
+        for idx, view in enumerate(config.get("views", [])):
+            if not _view_references_entity(view, entity_id):
+                continue
+
+            view_path = view.get("path", str(idx))
+            dashboard_views.append(f"{dashboard_path}/{view_path}")
+
+    return dashboard_views
+
+
+@callback
+def _view_references_entity(value: Any, entity_id: str) -> bool:
+    """Return if a view config value references an entity."""
+    if isinstance(value, str):
+        return value == entity_id
+
+    if isinstance(value, list):
+        return any(_view_references_entity(item, entity_id) for item in value)
+
+    if isinstance(value, dict):
+        return any(_view_references_entity(item, entity_id) for item in value.values())
+
+    return False

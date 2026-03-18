@@ -10,7 +10,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import automation, group, person, script, websocket_api
+from homeassistant.components import (
+    automation,
+    group,
+    lovelace,
+    person,
+    script,
+    websocket_api,
+)
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
@@ -40,6 +47,7 @@ class ItemType(StrEnum):
     AUTOMATION_BLUEPRINT = "automation_blueprint"
     CONFIG_ENTRY = "config_entry"
     DEVICE = "device"
+    DASHBOARD = "dashboard"
     ENTITY = "entity"
     FLOOR = "floor"
     GROUP = "group"
@@ -345,6 +353,12 @@ class Searcher:
 
         # Scenes referencing this entity
         self._add(ItemType.SCENE, scene.scenes_with_entity(self.hass, entity_id))
+
+        # Dashboard/view combinations referencing this entity
+        self._add(
+            ItemType.DASHBOARD,
+            lovelace.dashboards_with_entity(self.hass, entity_id),
+        )
 
     @callback
     def _async_search_floor(self, floor_id: str) -> None:
