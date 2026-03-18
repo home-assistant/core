@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from gardena_bluetooth.const import DeviceConfiguration, Sensor, Valve
+from gardena_bluetooth.const import DeviceConfiguration, Sensor, Spray, Valve
 from gardena_bluetooth.parse import (
     Characteristic,
     CharacteristicInt,
@@ -18,7 +18,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import DEGREE, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,6 +34,7 @@ class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
         default_factory=lambda: CharacteristicInt("")
     )
     connected_state: Characteristic | None = None
+    scale: float = 1.0
 
     @property
     def context(self) -> set[str]:
@@ -104,6 +105,27 @@ DESCRIPTIONS = (
         char=Sensor.threshold,
         connected_state=Sensor.connected_state,
     ),
+    GardenaBluetoothNumberEntityDescription(
+        key="spray_sector",
+        translation_key="spray_sector",
+        native_unit_of_measurement=DEGREE,
+        mode=NumberMode.BOX,
+        native_min_value=0.0,
+        native_max_value=359.0,
+        native_step=1.0,
+        char=Spray.sector,
+    ),
+    GardenaBluetoothNumberEntityDescription(
+        key="spray_distance",
+        translation_key="spray_distance",
+        native_unit_of_measurement=PERCENTAGE,
+        mode=NumberMode.SLIDER,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=0.1,
+        char=Spray.distance,
+        scale=10.0,
+    ),
 )
 
 
@@ -134,7 +156,7 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
         if data is None:
             self._attr_native_value = None
         else:
-            self._attr_native_value = float(data)
+            self._attr_native_value = float(data) / self.entity_description.scale
 
         if char := self.entity_description.connected_state:
             self._attr_available = bool(self.coordinator.get_cached(char))
@@ -145,7 +167,9 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.coordinator.write(self.entity_description.char, int(value))
+        await self.coordinator.write(
+            self.entity_description.char, int(value * self.entity_description.scale)
+        )
         self.async_write_ha_state()
 
 
