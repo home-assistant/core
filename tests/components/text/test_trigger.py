@@ -5,7 +5,7 @@ import pytest
 from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_gated_by_labs_flag,
@@ -40,55 +40,103 @@ async def test_text_triggers_gated_by_labs_flag(
         (
             "text.changed",
             [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
+                {
+                    "included_state": {"state": None, "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {"state": "bar", "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {"state": "baz", "attributes": {}},
+                    "count": 1,
+                },
             ],
         ),
         (
             "text.changed",
             [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 1},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
+                {
+                    "included_state": {"state": "foo", "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {"state": "bar", "attributes": {}},
+                    "count": 1,
+                },
+                {
+                    "included_state": {"state": "baz", "attributes": {}},
+                    "count": 1,
+                },
             ],
         ),
         (
             "text.changed",
             [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": "foo", "attributes": {}},
+                    "count": 0,
+                },
                 # empty string
-                {"included": {"state": "", "attributes": {}}, "count": 1},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            ],
-        ),
-        (
-            "text.changed",
-            [
+                {"included_state": {"state": "", "attributes": {}}, "count": 1},
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                    "count": 0,
-                },
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-                {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                    "count": 0,
+                    "included_state": {"state": "baz", "attributes": {}},
+                    "count": 1,
                 },
             ],
         ),
         (
             "text.changed",
             [
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-                {"included": {"state": "bar", "attributes": {}}, "count": 0},
-                {"included": {"state": "baz", "attributes": {}}, "count": 1},
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+                {
+                    "included_state": {
+                        "state": STATE_UNAVAILABLE,
+                        "attributes": {},
+                    },
+                    "count": 0,
+                },
+                {
+                    "included_state": {"state": "bar", "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {"state": "baz", "attributes": {}},
+                    "count": 1,
+                },
+                {
+                    "included_state": {
+                        "state": STATE_UNAVAILABLE,
+                        "attributes": {},
+                    },
+                    "count": 0,
+                },
+            ],
+        ),
+        (
+            "text.changed",
+            [
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {"state": "bar", "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {"state": "baz", "attributes": {}},
+                    "count": 1,
+                },
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
             ],
         ),
     ],
 )
-async def test_text_state_trigger_behavior_any(
+async def test_text_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_texts: dict[str, list[str]],
@@ -98,18 +146,18 @@ async def test_text_state_trigger_behavior_any(
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the text state trigger fires when any text state changes to a specific state."""
-    other_entity_ids = set(target_texts["included"]) - {entity_id}
+    """Test that the text state trigger fires when targeted text state changes."""
+    other_entity_ids = set(target_texts["included_entities"]) - {entity_id}
 
     # Set all texts, including the tested text, to the initial state
-    for eid in target_texts["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_texts["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]

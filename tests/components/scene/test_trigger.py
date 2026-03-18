@@ -5,7 +5,7 @@ import pytest
 from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_gated_by_labs_flag,
@@ -40,36 +40,19 @@ async def test_scene_triggers_gated_by_labs_flag(
         (
             "scene.activated",
             [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
                 {
-                    "included": {
+                    "included_state": {"state": None, "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {
                         "state": "2021-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
-                        "state": "2022-01-01T23:59:59+00:00",
-                        "attributes": {},
-                    },
-                    "count": 1,
-                },
-            ],
-        ),
-        (
-            "scene.activated",
-            [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
-                {
-                    "included": {
-                        "state": "2021-01-01T23:59:59+00:00",
-                        "attributes": {},
-                    },
-                    "count": 1,
-                },
-                {
-                    "included": {
+                    "included_state": {
                         "state": "2022-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
@@ -81,25 +64,54 @@ async def test_scene_triggers_gated_by_labs_flag(
             "scene.activated",
             [
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {"state": "foo", "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
+                        "state": "2021-01-01T23:59:59+00:00",
+                        "attributes": {},
+                    },
+                    "count": 1,
+                },
+                {
+                    "included_state": {
+                        "state": "2022-01-01T23:59:59+00:00",
+                        "attributes": {},
+                    },
+                    "count": 1,
+                },
+            ],
+        ),
+        (
+            "scene.activated",
+            [
+                {
+                    "included_state": {
+                        "state": STATE_UNAVAILABLE,
+                        "attributes": {},
+                    },
+                    "count": 0,
+                },
+                {
+                    "included_state": {
                         "state": "2021-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2022-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 1,
                 },
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {
+                        "state": STATE_UNAVAILABLE,
+                        "attributes": {},
+                    },
                     "count": 0,
                 },
             ],
@@ -107,27 +119,33 @@ async def test_scene_triggers_gated_by_labs_flag(
         (
             "scene.activated",
             [
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
                 {
-                    "included": {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {
                         "state": "2021-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 1,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2022-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 1,
                 },
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
             ],
         ),
     ],
 )
-async def test_scene_state_trigger_behavior_any(
+async def test_scene_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_scenes: dict[str, list[str]],
@@ -137,18 +155,18 @@ async def test_scene_state_trigger_behavior_any(
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the scene state trigger fires when any scene state changes to a specific state."""
-    other_entity_ids = set(target_scenes["included"]) - {entity_id}
+    """Test that the scene state trigger fires when targeted scene state changes."""
+    other_entity_ids = set(target_scenes["included_entities"]) - {entity_id}
 
     # Set all scenes, including the tested scene, to the initial state
-    for eid in target_scenes["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_scenes["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
