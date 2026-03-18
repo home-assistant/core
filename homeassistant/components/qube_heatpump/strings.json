@@ -1,37 +1,23 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Device is already configured.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect. Check the host address.",
-      "duplicate_ip": "A Qube heat pump using this IP address already exists."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_qube_device": "Could not verify this is a Qube heat pump. Check the host address.",
+      "mac_not_found": "Could not determine device identity. Ensure the heat pump is on the same network."
     },
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50).",
-          "name": "Name for this heat pump (e.g. 'qube 1'). This determines entity IDs."
+          "host": "The IP address or hostname of your Qube heat pump."
         },
         "description": "Enter the heat pump IP or host.",
         "title": "Qube heat pump"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
-        },
-        "data_description": {
-          "host": "[%key:component::qube_heatpump::config::step::user::data_description::host%]",
-          "name": "[%key:component::qube_heatpump::config::step::user::data_description::name%]"
-        },
-        "description": "Update the connection settings for your Qube heat pump.",
-        "title": "Reconfigure Qube heat pump"
       }
     }
   },
