@@ -1,5 +1,7 @@
 """Tests for the To-do integration."""
 
+import uuid
+
 from homeassistant.components.todo import DOMAIN, TodoItem, TodoListEntity
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -28,7 +30,15 @@ class MockTodoListEntity(TodoListEntity):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        self._attr_todo_items.append(item)
+        self._attr_todo_items.append(
+            TodoItem(
+                summary=item.summary,
+                uid=item.uid or uuid.uuid4().hex,
+                status=item.status,
+                due=item.due,
+                description=item.description,
+            )
+        )
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
