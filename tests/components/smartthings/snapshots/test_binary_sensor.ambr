@@ -2409,7 +2409,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'microfiber_filter_blockage',
-    'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_samsungce.microfiberFilterStatus_supportedStatus_supportedStatus',
+    'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_samsungce.microfiberFilterStatus_status_status',
     'unit_of_measurement': None,
   })
 # ---

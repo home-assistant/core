@@ -209,8 +209,8 @@ CAPABILITY_TO_SENSORS: dict[
         )
     },
     Capability.SAMSUNG_CE_MICROFIBER_FILTER_STATUS: {
-        Attribute.SUPPORTED_STATUS: SmartThingsBinarySensorEntityDescription(
-            key=Attribute.SUPPORTED_STATUS,
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
             translation_key="microfiber_filter_blockage",
             is_on_key="blockage",
             device_class=BinarySensorDeviceClass.PROBLEM,
