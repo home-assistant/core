@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from lyngdorf.const import LyngdorfModel
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -25,7 +27,9 @@ async def test_setup_entry_unsupported_model(
 
 
 async def test_setup_entry_connection_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lyngdorf_model
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lyngdorf_model: LyngdorfModel,
 ) -> None:
     """Test setup retries when connection to receiver fails."""
     mock_config_entry.add_to_hass(hass)
@@ -51,7 +55,9 @@ async def test_setup_entry_connection_error(
 
 
 async def test_setup_entry_os_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lyngdorf_model
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lyngdorf_model: LyngdorfModel,
 ) -> None:
     """Test setup retries when OS-level socket error occurs."""
     mock_config_entry.add_to_hass(hass)
@@ -77,7 +83,9 @@ async def test_setup_entry_os_error(
 
 
 async def test_setup_entry_timeout(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lyngdorf_model
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lyngdorf_model: LyngdorfModel,
 ) -> None:
     """Test setup retries when connection times out."""
     mock_config_entry.add_to_hass(hass)
