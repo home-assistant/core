@@ -18,7 +18,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
-from .sensor.sensor_entity_description import GrowattRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +27,10 @@ PARALLEL_UPDATES = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class GrowattSwitchEntityDescription(SwitchEntityDescription, GrowattRequiredKeysMixin):
+class GrowattSwitchEntityDescription(SwitchEntityDescription):
     """Describes Growatt switch entity."""
 
+    api_key: str
     write_key: str | None = None  # Parameter ID for writing (if different from api_key)
 
 

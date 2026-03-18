@@ -62,5 +62,22 @@
         "name": "Used storage in Drive Trash"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "authentication_not_valid": {
+      "message": "OAuth session is not valid, reauth required"
+    },
+    "failed_to_get_folder": {
+      "message": "Failed to get {folder} folder"
+    },
+    "invalid_response_google_drive_error": {
+      "message": "Invalid response from Google Drive: {error}"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
   }
 }
