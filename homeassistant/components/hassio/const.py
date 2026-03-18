@@ -77,6 +77,7 @@ EVENT_JOB = "job"
 UPDATE_KEY_SUPERVISOR = "supervisor"
 STARTUP_COMPLETE = "complete"
 
+COORDINATOR = "hassio_coordinator"
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
 
@@ -95,6 +96,7 @@ DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
 DATA_ADDONS_LIST = "hassio_addons_list"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
+HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)
 
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"

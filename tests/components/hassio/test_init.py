@@ -732,12 +732,12 @@ async def test_service_calls_core(
     await hass.async_block_till_done()
 
     supervisor_client.homeassistant.stop.assert_called_once_with()
-    assert len(supervisor_client.mock_calls) == 20
+    assert len(supervisor_client.mock_calls) == 19
 
     await hass.services.async_call("homeassistant", "check_config")
     await hass.async_block_till_done()
 
-    assert len(supervisor_client.mock_calls) == 20
+    assert len(supervisor_client.mock_calls) == 19
 
     with patch(
         "homeassistant.config.async_check_ha_config_file", return_value=None
@@ -747,7 +747,7 @@ async def test_service_calls_core(
         assert mock_check_config.called
 
     supervisor_client.homeassistant.restart.assert_called_once_with()
-    assert len(supervisor_client.mock_calls) == 21
+    assert len(supervisor_client.mock_calls) == 20
 
 
 @pytest.mark.parametrize(
@@ -903,13 +903,13 @@ async def test_coordinator_updates(
         await hass.async_block_till_done()
 
         # Initial refresh, no update refresh call
-        supervisor_client.refresh_updates.assert_not_called()
+        supervisor_client.reload_updates.assert_not_called()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Scheduled refresh, no update refresh call
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -924,15 +924,15 @@ async def test_coordinator_updates(
     )
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
     async_fire_time_changed(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done(wait_background_tasks=True)
-    supervisor_client.refresh_updates.assert_called_once()
+    supervisor_client.reload_updates.assert_called_once()
 
-    supervisor_client.refresh_updates.reset_mock()
-    supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
+    supervisor_client.reload_updates.reset_mock()
+    supervisor_client.reload_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -949,7 +949,7 @@ async def test_coordinator_updates(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
-    supervisor_client.refresh_updates.assert_called_once()
+    supervisor_client.reload_updates.assert_called_once()
     assert "Error on Supervisor API: Unknown" in caplog.text
 
 
@@ -967,7 +967,7 @@ async def test_coordinator_updates_stats_entities_enabled(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         # Initial refresh without stats
-        supervisor_client.refresh_updates.assert_not_called()
+        supervisor_client.reload_updates.assert_not_called()
 
         # Refresh with stats once we know which ones are needed
         async_fire_time_changed(
@@ -975,12 +975,12 @@ async def test_coordinator_updates_stats_entities_enabled(
         )
         await hass.async_block_till_done()
 
-        supervisor_client.refresh_updates.assert_called_once()
+        supervisor_client.reload_updates.assert_called_once()
 
-    supervisor_client.refresh_updates.reset_mock()
+    supervisor_client.reload_updates.reset_mock()
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
     await hass.async_block_till_done()
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -993,7 +993,7 @@ async def test_coordinator_updates_stats_entities_enabled(
         },
         blocking=True,
     )
-    supervisor_client.refresh_updates.assert_not_called()
+    supervisor_client.reload_updates.assert_not_called()
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
@@ -1001,8 +1001,8 @@ async def test_coordinator_updates_stats_entities_enabled(
     )
     await hass.async_block_till_done()
 
-    supervisor_client.refresh_updates.reset_mock()
-    supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
+    supervisor_client.reload_updates.reset_mock()
+    supervisor_client.reload_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -1019,7 +1019,7 @@ async def test_coordinator_updates_stats_entities_enabled(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
-    supervisor_client.refresh_updates.assert_called_once()
+    supervisor_client.reload_updates.assert_called_once()
     assert "Error on Supervisor API: Unknown" in caplog.text
 
 

@@ -28,7 +28,6 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_HEALTHY,
     ATTR_SLUG,
@@ -38,6 +37,7 @@ from .const import (
     ATTR_UNSUPPORTED_REASONS,
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
+    COORDINATOR,
     DOMAIN,
     EVENT_HEALTH_CHANGED,
     EVENT_ISSUE_CHANGED,
@@ -418,7 +418,7 @@ class SupervisorIssues:
     def _async_coordinator_refresh(self) -> None:
         """Refresh coordinator to update latest data in entities."""
         coordinator: HassioDataUpdateCoordinator | None
-        if coordinator := self._hass.data.get(ADDONS_COORDINATOR):
+        if coordinator := self._hass.data.get(COORDINATOR):
             coordinator.config_entry.async_create_task(
                 self._hass, coordinator.async_refresh()
             )

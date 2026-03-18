@@ -32,7 +32,7 @@ from homeassistant.helpers import (
 from homeassistant.util.dt import now
 
 from .const import (
-    ADDONS_COORDINATOR,
+    COORDINATOR,
     ATTR_ADDON,
     ATTR_ADDONS,
     ATTR_APP,
@@ -417,7 +417,7 @@ def async_register_network_storage_services(
         if (
             device.name is None
             or device.model != SupervisorEntityModel.MOUNT
-            or (coordinator := hass.data.get(ADDONS_COORDINATOR)) is None
+            or (coordinator := hass.data.get(COORDINATOR)) is None
             or coordinator.entry_id not in device.config_entries
         ):
             raise ServiceValidationError(

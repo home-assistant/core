@@ -19,6 +19,7 @@ from .const import (
     ATTR_MEMORY_PERCENT,
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
+    COORDINATOR,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
@@ -114,20 +115,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Sensor set up for Hass.io config entry."""
-    coordinator = hass.data[ADDONS_COORDINATOR]
+    addons_coordinator = hass.data[ADDONS_COORDINATOR]
 
     entities: list[
         HassioOSSensor | HassioAddonSensor | CoreSensor | SupervisorSensor | HostSensor
     ] = [
         HassioAddonSensor(
             addon=addon,
-            coordinator=coordinator,
+            coordinator=addons_coordinator,
             entity_description=entity_description,
         )
-        for addon in coordinator.data[DATA_KEY_ADDONS].values()
+        for addon in addons_coordinator.data[DATA_KEY_ADDONS].values()
         for entity_description in ADDON_ENTITY_DESCRIPTIONS
     ]
 
+    coordinator = hass.data[COORDINATOR]
     entities.extend(
         CoreSensor(
             coordinator=coordinator,

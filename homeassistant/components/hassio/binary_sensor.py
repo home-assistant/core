@@ -20,6 +20,7 @@ from .const import (
     ADDONS_COORDINATOR,
     ATTR_STARTED,
     ATTR_STATE,
+    COORDINATOR,
     DATA_KEY_ADDONS,
     DATA_KEY_MOUNTS,
 )
@@ -60,17 +61,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Binary sensor set up for Hass.io config entry."""
-    coordinator = hass.data[ADDONS_COORDINATOR]
+    addons_coordinator = hass.data[ADDONS_COORDINATOR]
+    coordinator = hass.data[COORDINATOR]
 
     async_add_entities(
         itertools.chain(
             [
                 HassioAddonBinarySensor(
                     addon=addon,
-                    coordinator=coordinator,
+                    coordinator=addons_coordinator,
                     entity_description=entity_description,
                 )
-                for addon in coordinator.data[DATA_KEY_ADDONS].values()
+                for addon in addons_coordinator.data[DATA_KEY_ADDONS].values()
                 for entity_description in ADDON_ENTITY_DESCRIPTIONS
             ],
             [

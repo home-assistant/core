@@ -79,6 +79,7 @@ from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_REPOSITORIES,
+    COORDINATOR,
     DATA_ADDONS_LIST,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
@@ -94,6 +95,7 @@ from .const import (
     HASSIO_UPDATE_INTERVAL,
 )
 from .coordinator import (
+    HassioAddOnDataUpdateCoordinator,
     HassioDataUpdateCoordinator,
     get_addons_info,
     get_addons_list,
@@ -462,9 +464,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
+
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
     await coordinator.async_config_entry_first_refresh()
-    hass.data[ADDONS_COORDINATOR] = coordinator
+    hass.data[COORDINATOR] = coordinator
+
+    addon_coordinator = HassioAddOnDataUpdateCoordinator(hass, entry, dev_reg)
+    addon_coordinator.set_jobs(coordinator.jobs)
+    await addon_coordinator.async_config_entry_first_refresh()
+    hass.data[ADDONS_COORDINATOR] = addon_coordinator
 
     def deprecated_setup_issue() -> None:
         os_info = get_os_info(hass)
@@ -531,10 +539,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Unload coordinator
-    coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    coordinator: HassioDataUpdateCoordinator = hass.data[COORDINATOR]
     coordinator.unload()
 
-    # Pop coordinator
+    # Pop coordinators
+    hass.data.pop(COORDINATOR, None)
     hass.data.pop(ADDONS_COORDINATOR, None)
 
     return unload_ok
