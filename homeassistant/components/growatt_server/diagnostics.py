@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import GrowattConfigEntry
 
-TO_REDACT = {"password", "token", "username"}
+TO_REDACT = {"password", "token", "username", "user_id", "plant_id", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
