@@ -9,6 +9,7 @@ from pytouchline_extended import PyTouchline
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 PLATFORMS = [Platform.CLIMATE]
 _LOGGER = logging.getLogger(__name__)
@@ -23,11 +24,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         number_of_devices = int(
             await hass.async_add_executor_job(py_touchline.get_number_of_devices)
         )
-    except OSError, ConnectionError, TimeoutError:
+    except (OSError, ConnectionError, TimeoutError) as err:
         _LOGGER.warning(
             "Error while connecting to Touchline controller at %s", host, exc_info=True
         )
-        return False
+        raise ConfigEntryNotReady(
+            f"Error while connecting to Touchline controller at {host}"
+        ) from err
 
     entry.runtime_data = {
         "touchline": py_touchline,
