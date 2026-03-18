@@ -101,7 +101,6 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
         self.entity_description = description
 
         self._attr_unique_id = unique_id
-        self._attr_icon = "mdi:solar-power"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_id)},
