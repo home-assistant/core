@@ -7,7 +7,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
-from .const import MAX_RETRIES
 from .coordinator import CometBlueDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
@@ -30,9 +29,9 @@ class CometBlueBluetoothEntity(CoordinatorEntity[CometBlueDataUpdateCoordinator]
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            self.coordinator.failed_update_count < MAX_RETRIES
-            and bluetooth.async_address_present(
-                self.hass, self.coordinator.address, True
-            )
+        # As long the device is currently connectable via Bluetooth it is available, even if the last update failed.
+        # This is because Bluetooth connectivity can be intermittent and a failed update doesn't necessarily mean the device is unavailable.
+        # The BluetoothManager will check every 300s (same interval as DataUpdateCoordinator) if the device is still present and connectable.
+        return bluetooth.async_address_present(
+            self.hass, address=self.coordinator.address, connectable=True
         )
