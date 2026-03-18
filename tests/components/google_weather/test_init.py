@@ -62,10 +62,10 @@ async def test_coordinator_update_failed(
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
 ) -> None:
-    """Test that the coordinator raises UpdateFailed with the correct translation key."""
+    """Test that the coordinator stores UpdateFailed with the correct translation key."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    subentry_id = list(mock_config_entry.subentries.keys())[0]
+    subentry_id = "home-subentry-id"
     coordinator: GoogleWeatherCurrentConditionsCoordinator = (
         mock_config_entry.runtime_data.subentries_runtime_data[
             subentry_id
