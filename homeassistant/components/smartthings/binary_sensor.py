@@ -208,6 +208,15 @@ CAPABILITY_TO_SENSORS: dict[
             supported_states_attributes=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
         )
     },
+    Capability.SAMSUNG_CE_MICROFIBER_FILTER_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            translation_key="microfiber_filter_blockage",
+            is_on_key="blockage",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
 }
 
 
