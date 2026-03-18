@@ -251,7 +251,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_data(
         self, entity_description: GrowattSensorEntityDescription
-    ) -> str | int | float | None:
+    ) -> str | int | float | datetime.datetime | datetime.date | None:
         """Get the data."""
         variable = entity_description.api_key
         api_value = self.data.get(variable)
