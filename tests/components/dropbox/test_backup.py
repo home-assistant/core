@@ -179,6 +179,35 @@ async def test_agents_list_backups_metadata_without_tar(
     assert "without matching backup file" in caplog.text
 
 
+async def test_agents_list_backups_invalid_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_dropbox_client: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that invalid metadata files are skipped with a warning."""
+
+    async def _invalid_stream() -> AsyncIterator[bytes]:
+        yield b"not valid json"
+
+    mock_dropbox_client.list_folder = AsyncMock(
+        return_value=[
+            SimpleNamespace(name="backup.tar"),
+            SimpleNamespace(name="backup.metadata.json"),
+        ]
+    )
+    mock_dropbox_client.download_file = Mock(return_value=_invalid_stream())
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == []
+    assert "Skipping invalid metadata file" in caplog.text
+
+
 async def test_agents_list_backups_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

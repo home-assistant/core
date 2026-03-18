@@ -12,7 +12,7 @@
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "wrong_account": "Wrong account: Please authenticate with the right account."
+      "wrong_account": "Wrong account: Please authenticate with the correct account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -22,7 +22,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "description": "The Dropbox integration needs to re-authenticate your account",
+        "description": "The Dropbox integration needs to re-authenticate your account.",
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }

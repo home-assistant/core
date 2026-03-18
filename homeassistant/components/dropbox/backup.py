@@ -137,7 +137,16 @@ class DropboxBackupAgent(BackupAgent):
 
             metadata_stream = self._api.download_file(f"/{metadata_file.name}")
             raw = b"".join([chunk async for chunk in metadata_stream])
-            backup = AgentBackup.from_dict(json.loads(raw))
+            try:
+                data = json.loads(raw)
+                backup = AgentBackup.from_dict(data)
+            except (json.JSONDecodeError, ValueError, TypeError, KeyError) as err:
+                _LOGGER.warning(
+                    "Skipping invalid metadata file '%s': %s",
+                    metadata_file.name,
+                    err,
+                )
+                continue
             backups.append((backup, tar_name))
 
         return backups
