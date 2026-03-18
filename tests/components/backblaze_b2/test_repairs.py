@@ -45,7 +45,8 @@ async def test_repair_issue_creation(
     expected_issues: int,
 ) -> None:
     """Test repair issue creation for different exception types."""
-    with patch.object(hass, "async_add_executor_job", side_effect=exception):
+    mock_entry.runtime_data.api.account_info.get_allowed.side_effect = exception
+    with patch.object(mock_entry, "async_start_reauth"):
         await async_check_for_repair_issues(hass, mock_entry)
 
     issues = ir.async_get(hass).issues
