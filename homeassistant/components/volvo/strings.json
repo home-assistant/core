@@ -432,7 +432,7 @@
           "name": "Command"
         },
         "engine_runtime": {
-          "description": "Engine runtime in minutes. Only applicable to engine_start.",
+          "description": "Engine runtime in minutes. Only applicable to the 'Start engine' command.",
           "name": "Engine runtime"
         },
         "entry": {
