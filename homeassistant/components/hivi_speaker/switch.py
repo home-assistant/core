@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import collections.abc
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -422,7 +421,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> collections.abc.Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Extra state attributes."""
         master_device = self.get_master_device()
         return {
