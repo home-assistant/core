@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Door 1',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -16,8 +17,9 @@
 # ---
 # name: test_cover_entities[cover.door_1].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -86,6 +88,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Door 2',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -98,8 +101,9 @@
 # ---
 # name: test_cover_entities[cover.door_2].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

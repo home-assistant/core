@@ -118,6 +118,9 @@
       }
     },
     "sensor": {
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
       "current_page": {
         "name": "Current page"
       },

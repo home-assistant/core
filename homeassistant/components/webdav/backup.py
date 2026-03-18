@@ -17,6 +17,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -140,6 +141,7 @@ class WebDavBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -154,6 +156,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename_tar}",
             timeout=BACKUP_TIMEOUT,
             content_length=backup.size,
+            progress=lambda current, total: on_progress(bytes_uploaded=current),
         )
 
         _LOGGER.debug(

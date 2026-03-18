@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[event.testdevice_button_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -59,8 +60,9 @@
 # ---
 # name: test_entities[event.testdevice_button_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -117,8 +119,9 @@
 # ---
 # name: test_entities[event.testdevice_button_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

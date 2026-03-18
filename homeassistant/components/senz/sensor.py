@@ -19,8 +19,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SENZConfigEntry, SENZDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import SENZConfigEntry, SENZDataUpdateCoordinator
 
 
 @dataclass(kw_only=True, frozen=True)

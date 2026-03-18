@@ -83,6 +83,11 @@
         "name": "Charge permitted"
       }
     },
+    "device_tracker": {
+      "gps_tracker": {
+        "name": "GPS tracker"
+      }
+    },
     "number": {
       "current_set": {
         "name": "Charging current"

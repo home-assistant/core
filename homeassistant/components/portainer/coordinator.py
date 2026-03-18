@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONTAINER_STATE_RUNNING, DOMAIN, ENDPOINT_STATUS_DOWN
+from .const import DOMAIN, ContainerState, EndpointStatus
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -154,7 +154,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
-            if endpoint.status == ENDPOINT_STATUS_DOWN:
+            if endpoint.status == EndpointStatus.DOWN:
                 _LOGGER.debug(
                     "Skipping offline endpoint: %s (ID: %d)",
                     endpoint.name,
@@ -196,6 +196,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     # Check if container belongs to a stack via docker compose label
                     stack_name: str | None = (
                         container.labels.get("com.docker.compose.project")
+                        or container.labels.get("com.docker.stack.namespace")
                         if container.labels
                         else None
                     )
@@ -215,7 +216,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 running_containers = [
                     container
                     for container in containers
-                    if container.state == CONTAINER_STATE_RUNNING
+                    if container.state == ContainerState.RUNNING
                 ]
                 if running_containers:
                     container_stats = dict(

@@ -7,7 +7,6 @@ import io
 import logging
 import os
 from pathlib import Path
-from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -48,8 +47,8 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.json import JsonValueType
-from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
     ATTR_ARGS,
@@ -142,6 +141,7 @@ class BaseTelegramBot:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+        self.most_recent_chat_id: int | None = None
         self._bot = bot
 
     @abstractmethod
@@ -151,8 +151,6 @@ class BaseTelegramBot:
     async def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot application set up by the respective platform."""
         _LOGGER.debug("Handling update %s", update)
-        if not self.authorize_update(update):
-            return False
 
         # establish event type: text, command or callback_query
         if update.callback_query:
@@ -168,6 +166,11 @@ class BaseTelegramBot:
         else:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
+
+        self.most_recent_chat_id = event_data[ATTR_CHAT_ID]
+
+        if not self.authorize_update(update):
+            return False
 
         event_data["bot"] = _get_bot_info(self._bot, self.config)
 
@@ -566,11 +569,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME, ""),
             password=kwargs.get(ATTR_PASSWORD, ""),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=(
-                get_default_context()
-                if kwargs.get(ATTR_VERIFY_SSL, False)
-                else get_default_no_verify_context()
-            ),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
         )
 
         media: InputMedia
@@ -738,11 +737,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME, ""),
             password=kwargs.get(ATTR_PASSWORD, ""),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=(
-                get_default_context()
-                if kwargs.get(ATTR_VERIFY_SSL, False)
-                else get_default_no_verify_context()
-            ),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
         )
 
         if file_type == SERVICE_SEND_PHOTO:
@@ -1028,12 +1023,14 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = HTTPXRequest(proxy=proxy)
     else:
         request = HTTPXRequest(
             connection_pool_size=8,
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = None
 
     base_url: str = p_config[CONF_API_ENDPOINT]
 
@@ -1042,6 +1039,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
         base_url=f"{base_url}/bot",
         base_file_url=f"{base_url}/file/bot",
         request=request,
+        get_updates_request=get_updates_request,
     )
 
 
@@ -1052,7 +1050,7 @@ async def load_data(
     username: str,
     password: str,
     authentication: str | None,
-    verify_ssl: SSLContext,
+    verify_ssl: bool,
     num_retries: int = 5,
 ) -> io.BytesIO:
     """Load data into ByteIO/File container from a source."""
@@ -1068,16 +1066,13 @@ async def load_data(
         elif authentication == HTTP_BASIC_AUTHENTICATION:
             params["auth"] = httpx.BasicAuth(username, password)
 
-        if verify_ssl is not None:
-            params["verify"] = verify_ssl
-
         retry_num = 0
-        async with httpx.AsyncClient(
-            timeout=DEFAULT_TIMEOUT_SECONDS, headers=headers, **params
-        ) as client:
+        async with get_async_client(hass, verify_ssl) as client:
             while retry_num < num_retries:
                 try:
-                    req = await client.get(url)
+                    response = await client.get(
+                        url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
+                    )
                 except (httpx.HTTPError, httpx.InvalidURL) as err:
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
@@ -1085,15 +1080,15 @@ async def load_data(
                         translation_placeholders={"error": str(err)},
                     ) from err
 
-                if req.status_code != 200:
+                if response.status_code != 200:
                     _LOGGER.warning(
                         "Status code %s (retry #%s) loading %s",
-                        req.status_code,
+                        response.status_code,
                         retry_num + 1,
                         url,
                     )
                 else:
-                    data = io.BytesIO(req.content)
+                    data = io.BytesIO(response.content)
                     if data.read():
                         data.seek(0)
                         data.name = url
@@ -1108,7 +1103,7 @@ async def load_data(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",
-                translation_placeholders={"error": str(req.status_code)},
+                translation_placeholders={"error": str(response.status_code)},
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
