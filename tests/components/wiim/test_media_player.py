@@ -17,6 +17,7 @@ from wiim.models import (
     WiimRepeatMode,
     WiimTransportCapabilities,
 )
+from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -51,16 +52,22 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .conftest import WIIM_ENTITY_ID
+from . import fire_general_update, fire_transport_update, setup_integration
+
+from tests.common import MockConfigEntry
+
+MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
 
 
 async def test_state_machine_updates_from_device_callbacks(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test cached device state is reflected in Home Assistant."""
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.IDLE
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
     assert state.attributes[ATTR_INPUT_SOURCE] == "Network"
@@ -102,9 +109,9 @@ async def test_state_machine_updates_from_device_callbacks(
         )
     )
 
-    await mock_wiim_device.fire_general_update(hass)
+    await fire_general_update(hass, mock_wiim_device)
 
-    state = hass.states.get(WIIM_ENTITY_ID)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "New Song"
     assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Test Album"
@@ -133,28 +140,30 @@ async def test_state_machine_updates_from_device_callbacks(
 
 async def test_state_machine_updates_from_transport_events(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test transport events update the state machine."""
+    await setup_integration(hass, mock_config_entry)
     mock_wiim_device.current_media = WiimMediaMetadata(
         title="Queued Song",
         duration=240,
         position=30,
     )
 
-    await mock_wiim_device.fire_transport_update(hass, PlayingStatus.PLAYING)
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await fire_transport_update(hass, mock_wiim_device, PlayingStatus.PLAYING)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Queued Song"
 
-    await mock_wiim_device.fire_transport_update(hass, PlayingStatus.PAUSED)
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await fire_transport_update(hass, mock_wiim_device, PlayingStatus.PAUSED)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PAUSED
 
     mock_wiim_device.current_media = None
-    await mock_wiim_device.fire_transport_update(hass, PlayingStatus.STOPPED)
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await fire_transport_update(hass, mock_wiim_device, PlayingStatus.STOPPED)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.IDLE
     assert state.attributes.get(ATTR_MEDIA_TITLE) is None
 
@@ -201,8 +210,9 @@ async def test_state_machine_updates_from_transport_events(
 )
 async def test_control_services_update_state_machine(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
     service: str,
     service_data: dict[str, object],
     device_method: str,
@@ -212,10 +222,11 @@ async def test_control_services_update_state_machine(
     state_value: object,
 ) -> None:
     """Test control services are exercised through Home Assistant."""
+    await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, **service_data},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -223,18 +234,20 @@ async def test_control_services_update_state_machine(
 
     for attr_name, attr_value in state_update.items():
         setattr(mock_wiim_device, attr_name, attr_value)
-    await mock_wiim_device.fire_general_update(hass)
+    await fire_general_update(hass, mock_wiim_device)
 
-    state = hass.states.get(WIIM_ENTITY_ID)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[state_attr] == state_value
 
 
 async def test_repeat_and_shuffle_services_update_state_machine(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test repeat and shuffle go through services and state updates."""
+    await setup_integration(hass, mock_config_entry)
     mock_wiim_device.async_get_transport_capabilities.return_value = (
         WiimTransportCapabilities(
             can_next=True,
@@ -244,14 +257,14 @@ async def test_repeat_and_shuffle_services_update_state_machine(
         )
     )
 
-    await mock_wiim_device.fire_general_update(hass)
+    await fire_general_update(hass, mock_wiim_device)
 
     repeat_loop_mode = object()
     mock_wiim_device.build_loop_mode.return_value = repeat_loop_mode
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
         blocking=True,
     )
     mock_wiim_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.ALL, False)
@@ -261,8 +274,8 @@ async def test_repeat_and_shuffle_services_update_state_machine(
         repeat=WiimRepeatMode.ALL,
         shuffle=False,
     )
-    await mock_wiim_device.fire_general_update(hass)
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.ALL
 
     mock_wiim_device.build_loop_mode.reset_mock()
@@ -272,7 +285,7 @@ async def test_repeat_and_shuffle_services_update_state_machine(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
         blocking=True,
     )
     mock_wiim_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.ALL, True)
@@ -282,21 +295,23 @@ async def test_repeat_and_shuffle_services_update_state_machine(
         repeat=WiimRepeatMode.ALL,
         shuffle=True,
     )
-    await mock_wiim_device.fire_general_update(hass)
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[ATTR_MEDIA_SHUFFLE] is True
 
 
 async def test_play_pause_and_seek_services_update_state_machine(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test playback services drive the device and state machine."""
+    await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     mock_wiim_device.async_play.assert_awaited_once()
@@ -307,29 +322,29 @@ async def test_play_pause_and_seek_services_update_state_machine(
         position=12,
     )
     mock_wiim_device.playing_status = PlayingStatus.PLAYING
-    await mock_wiim_device.fire_general_update(hass)
+    await fire_general_update(hass, mock_wiim_device)
 
-    state = hass.states.get(WIIM_ENTITY_ID)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Playing Song"
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     mock_wiim_device.async_pause.assert_awaited_once()
     mock_wiim_device.sync_device_duration_and_position.assert_awaited_once()
 
-    await mock_wiim_device.fire_transport_update(hass, PlayingStatus.PAUSED)
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await fire_transport_update(hass, mock_wiim_device, PlayingStatus.PAUSED)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PAUSED
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, "seek_position": 60},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "seek_position": 60},
         blocking=True,
     )
     mock_wiim_device.async_seek.assert_awaited_once_with(60)
@@ -339,23 +354,23 @@ async def test_play_pause_and_seek_services_update_state_machine(
         duration=200,
         position=60,
     )
-    await mock_wiim_device.fire_general_update(hass)
+    await fire_general_update(hass, mock_wiim_device)
 
-    state = hass.states.get(WIIM_ENTITY_ID)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[ATTR_MEDIA_POSITION] == 60
 
 
 async def test_follower_routes_commands_and_reads_leader_metadata(
     hass: HomeAssistant,
-    mock_wiim_device,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
     mock_wiim_controller: MagicMock,
-    init_wiim_media_player,
 ) -> None:
     """Test follower commands are routed to the leader device."""
-    leader_device = type(mock_wiim_device)(
-        udn="uuid:leader-1234",
-        name="Leader WiiM Device",
-    )
+    await setup_integration(hass, mock_config_entry)
+    leader_device = AsyncMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+    leader_device.name = "Leader WiiM Device"
     leader_device.playing_status = PlayingStatus.STOPPED
     leader_device.play_mode = "Network"
     leader_device.loop_state = WiimLoopState(
@@ -385,7 +400,7 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     leader_device.async_play.assert_awaited_once()
@@ -394,7 +409,7 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, "seek_position": 90},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "seek_position": 90},
         blocking=True,
     )
     leader_device.async_seek.assert_awaited_once_with(90)
@@ -408,9 +423,9 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
         duration=210,
         position=90,
     )
-    await mock_wiim_device.fire_general_update(hass)
+    await fire_general_update(hass, mock_wiim_device)
 
-    state = hass.states.get(WIIM_ENTITY_ID)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Leader Song"
     assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Leader Album"
@@ -420,15 +435,16 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
 
 async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
     hass: HomeAssistant,
-    mock_wiim_device,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
     mock_wiim_controller: MagicMock,
-    init_wiim_media_player,
 ) -> None:
     """Test follower repeat, shuffle, and source changes are sent to the leader."""
-    leader_device = type(mock_wiim_device)(
-        udn="uuid:leader-1234",
-        name="Leader WiiM Device",
-    )
+    await setup_integration(hass, mock_config_entry)
+    leader_device = AsyncMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+    leader_device.playing_status = PlayingStatus.STOPPED
+    leader_device.current_media = None
     leader_device.loop_state = WiimLoopState(
         repeat=WiimRepeatMode.OFF,
         shuffle=False,
@@ -452,14 +468,14 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
         leader_device if udn == leader_device.udn else mock_wiim_device
     )
 
-    await mock_wiim_device.fire_general_update(hass)
+    await fire_general_update(hass, mock_wiim_device)
 
     repeat_loop_mode = object()
     leader_device.build_loop_mode.return_value = repeat_loop_mode
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
         blocking=True,
     )
     leader_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.ALL, False)
@@ -473,7 +489,7 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
         blocking=True,
     )
     leader_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.OFF, True)
@@ -483,7 +499,7 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID, ATTR_INPUT_SOURCE: "Bluetooth"},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: "Bluetooth"},
         blocking=True,
     )
     leader_device.async_set_play_mode.assert_awaited_once_with("Bluetooth")
@@ -492,15 +508,17 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
 
 async def test_play_media_services_call_device_commands(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test play_media services are driven through Home Assistant."""
+    await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: WIIM_ENTITY_ID,
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "1",
         },
@@ -510,8 +528,8 @@ async def test_play_media_services_call_device_commands(
 
     mock_wiim_device.current_media = WiimMediaMetadata(title="Preset 1")
     mock_wiim_device.playing_status = PlayingStatus.PLAYING
-    await mock_wiim_device.fire_general_update(hass)
-    state = hass.states.get(WIIM_ENTITY_ID)
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Preset 1"
 
@@ -519,7 +537,7 @@ async def test_play_media_services_call_device_commands(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: WIIM_ENTITY_ID,
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_TYPE: MediaType.TRACK,
             ATTR_MEDIA_CONTENT_ID: "2",
         },
@@ -531,11 +549,13 @@ async def test_play_media_services_call_device_commands(
 @pytest.mark.parametrize("media_type", [MediaType.MUSIC, MediaType.URL])
 async def test_play_media_url_service_uses_processed_url(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
     media_type: MediaType,
 ) -> None:
     """Test direct URL playback goes through the URL processor."""
+    await setup_integration(hass, mock_config_entry)
     mock_wiim_device.supports_http_api = True
 
     with patch(
@@ -546,7 +566,7 @@ async def test_play_media_url_service_uses_processed_url(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: WIIM_ENTITY_ID,
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_TYPE: media_type,
                 ATTR_MEDIA_CONTENT_ID: "http://example.com/song.mp3",
             },
@@ -559,10 +579,12 @@ async def test_play_media_url_service_uses_processed_url(
 
 async def test_play_media_source_service_uses_resolved_url(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test media_source playback goes through the resolver."""
+    await setup_integration(hass, mock_config_entry)
     mock_wiim_device.supports_http_api = True
 
     with (
@@ -583,7 +605,7 @@ async def test_play_media_source_service_uses_resolved_url(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: WIIM_ENTITY_ID,
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/song.mp3",
             },
@@ -595,18 +617,20 @@ async def test_play_media_source_service_uses_resolved_url(
 
 async def test_browse_media_service_returns_wiim_library(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test browsing WiiM presets and queue via the media_player service."""
+    await setup_integration(hass, mock_config_entry)
     root_result = await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_BROWSE_MEDIA,
-        {ATTR_ENTITY_ID: WIIM_ENTITY_ID},
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
-    root_browse = root_result[WIIM_ENTITY_ID]
+    root_browse = root_result[MEDIA_PLAYER_ENTITY_ID]
     assert root_browse.title == mock_wiim_device.name
     assert [child.title for child in root_browse.children] == ["Presets", "Queue"]
 
@@ -618,14 +642,14 @@ async def test_browse_media_service_returns_wiim_library(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_BROWSE_MEDIA,
         {
-            ATTR_ENTITY_ID: WIIM_ENTITY_ID,
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: "wiim_library/library_root/favorites",
         },
         blocking=True,
         return_response=True,
     )
-    preset_browse = preset_result[WIIM_ENTITY_ID]
+    preset_browse = preset_result[MEDIA_PLAYER_ENTITY_ID]
     assert [child.title for child in preset_browse.children] == ["Preset 1", "Preset 2"]
 
     mock_wiim_device.async_get_queue_snapshot.return_value = WiimQueueSnapshot(
@@ -639,23 +663,25 @@ async def test_browse_media_service_returns_wiim_library(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_BROWSE_MEDIA,
         {
-            ATTR_ENTITY_ID: WIIM_ENTITY_ID,
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: "wiim_library/library_root/playlists",
         },
         blocking=True,
         return_response=True,
     )
-    queue_browse = queue_result[WIIM_ENTITY_ID]
+    queue_browse = queue_result[MEDIA_PLAYER_ENTITY_ID]
     assert [child.title for child in queue_browse.children] == ["Song A", "Song B"]
 
 
 async def test_browse_media_service_includes_media_sources_when_supported(
     hass: HomeAssistant,
-    mock_wiim_device,
-    init_wiim_media_player,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test media sources are exposed through browse_media when HTTP API exists."""
+    await setup_integration(hass, mock_config_entry)
     mock_wiim_device.supports_http_api = True
 
     media_source_root = BrowseMedia(
@@ -684,12 +710,12 @@ async def test_browse_media_service_includes_media_sources_when_supported(
         result = await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_BROWSE_MEDIA,
-            {ATTR_ENTITY_ID: WIIM_ENTITY_ID},
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
             return_response=True,
         )
 
-    browse = result[WIIM_ENTITY_ID]
+    browse = result[MEDIA_PLAYER_ENTITY_ID]
     assert [child.title for child in browse.children] == [
         "Presets",
         "Queue",
