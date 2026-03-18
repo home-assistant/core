@@ -21,12 +21,12 @@
     }),
     'manufacturer': 'Zinvolt',
     'model': None,
-    'model_id': None,
+    'model_id': 'ZVS4000',
     'name': 'Zinvolt Batterij',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'ZVG011025120088',
-    'sw_version': None,
+    'sw_version': 'V1.02-V0.00.000',
     'via_device_id': None,
   })
 # ---
