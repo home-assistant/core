@@ -27,7 +27,6 @@ class SolarmanEntity(CoordinatorEntity[SolarmanDeviceUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
             identifiers={(DOMAIN, sn)},
-            name=MODEL_NAME_MAP[model_id],
             manufacturer="SOLARMAN",
             model=MODEL_NAME_MAP[model_id],
             model_id=model_id,

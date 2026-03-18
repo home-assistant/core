@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TYPE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_PRODUCT_TYPE,
@@ -60,16 +61,14 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 self.device_sn = device_info[CONF_SN]
                 self.model = device_info[CONF_TYPE]
-                self.mac = ":".join(
-                    device_info[CONF_MAC][i : i + 2] for i in range(0, 12, 2)
-                )
+                self.mac = dr.format_mac(device_info[CONF_MAC])
 
                 await self.async_set_unique_id(self.device_sn)
                 self._abort_if_unique_id_configured()
 
                 if not errors:
                     return self.async_create_entry(
-                        title=f"{MODEL_NAME_MAP[self.model]!s} ({self.host})",
+                        title=f"{MODEL_NAME_MAP[self.model]} ({self.host})",
                         data={
                             CONF_HOST: self.host,
                             CONF_SN: self.device_sn,
@@ -93,6 +92,8 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
+        self.model = discovery_info.properties[CONF_PRODUCT_TYPE]
+        self.device_sn = discovery_info.properties[CONF_SERIAL]
 
         self.client = Solarman(
             async_get_clientsession(self.hass), self.host, DEFAULT_PORT
@@ -108,11 +109,8 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unknown error occurred while verifying device")
             return self.async_abort(reason="unknown")
 
-        self.model = discovery_info.properties[CONF_PRODUCT_TYPE]
-        self.device_sn = discovery_info.properties[CONF_SERIAL]
-
         device_info = config_data.get(CONF_DEVICE, config_data)
-        self.mac = ":".join(device_info[CONF_MAC][i : i + 2] for i in range(0, 12, 2))
+        self.mac = dr.format_mac(device_info[CONF_MAC])
 
         await self.async_set_unique_id(self.device_sn)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
@@ -129,7 +127,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{MODEL_NAME_MAP[self.model]!s} ({self.host})",
+                title=f"{MODEL_NAME_MAP[self.model]} ({self.host})",
                 data={
                     CONF_HOST: self.host,
                     CONF_SN: self.device_sn,
@@ -149,6 +147,6 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: self.model,
                 CONF_SN: self.device_sn,
                 CONF_HOST: self.host,
-                CONF_MAC: str(self.mac),
+                CONF_MAC: self.mac or "",
             },
         )

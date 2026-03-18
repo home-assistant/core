@@ -47,7 +47,7 @@ rules:
   test-coverage: todo
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: done
   discovery: done

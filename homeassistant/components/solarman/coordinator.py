@@ -42,7 +42,7 @@ class SolarmanDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch and update device data."""
         try:
-            return await self.api.fetch_data()  # type: ignore[no-any-return]
+            return await self.api.fetch_data()
         except ConnectionError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

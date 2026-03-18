@@ -1,20 +1,18 @@
-from unittest.mock import patch, AsyncMock
+"""Test init of Solarman integration."""
+
+from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
 
-from homeassistant.components.solarman.const import DOMAIN
+from tests.common import MockConfigEntry
 
-from tests.common import MockConfigEntry, load_json_object_fixture
 
-@pytest.mark.parametrize(
-    "device_fixture", ["SP-2W-EU"], indirect=True
-)
+@pytest.mark.parametrize("device_fixture", ["SP-2W-EU"], indirect=True)
 async def test_load_unload(
-    hass: HomeAssistant, 
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_solarman: AsyncMock,
 ) -> None:
@@ -39,15 +37,10 @@ async def test_load_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "device_fixture", ["SP-2W-EU"], indirect=True
-)
+@pytest.mark.parametrize("device_fixture", ["SP-2W-EU"], indirect=True)
 async def test_load_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_solarman
-):
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_solarman: AsyncMock
+) -> None:
     """Test setup failure."""
     mock_solarman.fetch_data.side_effect = TimeoutError
 

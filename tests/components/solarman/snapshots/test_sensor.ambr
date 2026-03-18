@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_a_current-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_a_current',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,23 +40,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_a_current-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'P1 Meter Reader AC Phase-A current',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) AC Phase-A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_a_current',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_a_voltage-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,7 +71,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_a_voltage',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -97,23 +97,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_a_voltage-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'P1 Meter Reader AC Phase-A voltage',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) AC Phase-A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_a_voltage',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '237',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_b_current-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_b_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -128,7 +128,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_b_current',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_b_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -154,23 +154,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_b_current-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_b_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'P1 Meter Reader AC Phase-B current',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) AC Phase-B current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_b_current',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_b_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_b_voltage-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_b_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -185,7 +185,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_b_voltage',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_b_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -211,23 +211,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_b_voltage-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_b_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'P1 Meter Reader AC Phase-B voltage',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) AC Phase-B voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_b_voltage',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_b_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '237',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_c_current-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_c_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -242,7 +242,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_c_current',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_c_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -268,23 +268,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_c_current-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_c_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'P1 Meter Reader AC Phase-C current',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) AC Phase-C current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_c_current',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_c_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_c_voltage-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_c_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -299,7 +299,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_c_voltage',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_c_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -325,23 +325,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_ac_phase_c_voltage-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_ac_phase_c_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'P1 Meter Reader AC Phase-C voltage',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) AC Phase-C voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_ac_phase_c_voltage',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_ac_phase_c_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '236',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_power_phase_a-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_power_phase_a-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -356,7 +356,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_active_power_phase_a',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_power_phase_a',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -382,23 +382,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_power_phase_a-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_power_phase_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Active power phase-A',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Active power phase-A',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_active_power_phase_a',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_power_phase_a',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_power_phase_b-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_power_phase_b-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -413,7 +413,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_active_power_phase_b',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_power_phase_b',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -439,23 +439,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_power_phase_b-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_power_phase_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Active power phase-B',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Active power phase-B',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_active_power_phase_b',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_power_phase_b',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_power_phase_c-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_power_phase_c-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -470,7 +470,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_active_power_phase_c',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_power_phase_c',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -496,23 +496,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_power_phase_c-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_power_phase_c-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Active power phase-C',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Active power phase-C',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_active_power_phase_c',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_power_phase_c',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_returned_power_phase_a-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_a-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -527,7 +527,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_active_returned_power_phase_a',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_a',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -553,23 +553,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_returned_power_phase_a-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Active returned power phase-A',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Active returned power phase-A',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_active_returned_power_phase_a',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_a',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.95',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_returned_power_phase_b-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_b-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -584,7 +584,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_active_returned_power_phase_b',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_b',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -610,23 +610,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_returned_power_phase_b-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Active returned power phase-B',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Active returned power phase-B',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_active_returned_power_phase_b',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_b',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_returned_power_phase_c-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_c-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -641,7 +641,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_active_returned_power_phase_c',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_c',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -667,23 +667,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_active_returned_power_phase_c-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_c-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Active returned power phase-C',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Active returned power phase-C',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_active_returned_power_phase_c',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_active_returned_power_phase_c',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_energy_low_tariff-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_energy_low_tariff-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -698,7 +698,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_energy_low_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_energy_low_tariff',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -724,23 +724,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_energy_low_tariff-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_energy_low_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Meter Reader Total actual energy low tariff',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Total actual energy low tariff',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_energy_low_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_energy_low_tariff',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '53754.58',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_energy_normal_tariff-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_energy_normal_tariff-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -755,7 +755,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_energy_normal_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_energy_normal_tariff',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -781,23 +781,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_energy_normal_tariff-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_energy_normal_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Meter Reader Total actual energy normal tariff',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Total actual energy normal tariff',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_energy_normal_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_energy_normal_tariff',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9818.93',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_power-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -812,7 +812,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_power',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -838,23 +838,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_power-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Total actual power',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Total actual power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_power',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_returned_energy_low_tariff-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_low_tariff-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -869,7 +869,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_returned_energy_low_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_low_tariff',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -895,23 +895,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_returned_energy_low_tariff-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_low_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Meter Reader Total actual returned energy low tariff',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Total actual returned energy low tariff',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_returned_energy_low_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_low_tariff',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '53754.58',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_returned_energy_normal_tariff-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_normal_tariff-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -926,7 +926,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_returned_energy_normal_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_normal_tariff',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -952,23 +952,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_returned_energy_normal_tariff-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_normal_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Meter Reader Total actual returned energy normal tariff',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Total actual returned energy normal tariff',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_returned_energy_normal_tariff',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_returned_energy_normal_tariff',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9818.93',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_returned_power-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_returned_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -983,7 +983,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_returned_power',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_returned_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1009,23 +1009,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_returned_power-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_actual_returned_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Meter Reader Total actual returned power',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Total actual returned power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_total_actual_returned_power',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_actual_returned_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.94',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_gas_consumption-entry]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_gas_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1040,7 +1040,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_meter_reader_total_gas_consumption',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_gas_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1066,23 +1066,23 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_total_gas_consumption-state]
+# name: test_sensor[P1-2W][sensor.p1_meter_reader_192_168_1_100_total_gas_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'gas',
-      'friendly_name': 'P1 Meter Reader Total gas consumption',
+      'friendly_name': 'P1 Meter Reader (192.168.1.100) Total gas consumption',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_total_gas_consumption',
+    'entity_id': 'sensor.p1_meter_reader_192_168_1_100_total_gas_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_current-entry]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1097,7 +1097,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_plug_current',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1123,23 +1123,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_current-state]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Smart Plug Current',
+      'friendly_name': 'Smart Plug (192.168.1.100) Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_plug_current',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_positive_active_energy-entry]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_positive_active_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1154,7 +1154,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_plug_positive_active_energy',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_positive_active_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1180,23 +1180,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_positive_active_energy-state]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_positive_active_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Smart Plug Positive active energy',
+      'friendly_name': 'Smart Plug (192.168.1.100) Positive active energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_plug_positive_active_energy',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_positive_active_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.730654',
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_power-entry]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1211,7 +1211,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_plug_power',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1237,23 +1237,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_power-state]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Smart Plug Power',
+      'friendly_name': 'Smart Plug (192.168.1.100) Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_plug_power',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.217517',
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_reverse_active_energy-entry]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_reverse_active_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1268,7 +1268,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_plug_reverse_active_energy',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_reverse_active_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1294,23 +1294,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_reverse_active_energy-state]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_reverse_active_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Smart Plug Reverse active energy',
+      'friendly_name': 'Smart Plug (192.168.1.100) Reverse active energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_plug_reverse_active_energy',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_reverse_active_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_voltage-entry]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1325,7 +1325,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_plug_voltage',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1351,23 +1351,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[SP-2W-EU][sensor.smart_plug_voltage-state]
+# name: test_sensor[SP-2W-EU][sensor.smart_plug_192_168_1_100_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Smart Plug Voltage',
+      'friendly_name': 'Smart Plug (192.168.1.100) Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_plug_voltage',
+    'entity_id': 'sensor.smart_plug_192_168_1_100_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_active_power-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_active_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1382,7 +1382,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_active_power',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_active_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1408,23 +1408,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_active_power-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_active_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Smart Meter Active power',
+      'friendly_name': 'Smart Meter (192.168.1.100) Active power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_active_power',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_active_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '133.5',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_apparent_power-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1439,7 +1439,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_apparent_power',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1462,23 +1462,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_apparent_power-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter Apparent power',
+      'friendly_name': 'Smart Meter (192.168.1.100) Apparent power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_apparent_power',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_apparent_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '209.6',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_current-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1493,7 +1493,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_current',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1519,23 +1519,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_current-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Smart Meter Current',
+      'friendly_name': 'Smart Meter (192.168.1.100) Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_current',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.66',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_frequency-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1550,7 +1550,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_frequency',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_frequency',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1576,23 +1576,23 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_frequency-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Smart Meter Frequency',
+      'friendly_name': 'Smart Meter (192.168.1.100) Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_frequency',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.03',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_power_factor-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_power_factor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1607,7 +1607,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_power_factor',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_power_factor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1630,23 +1630,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_power_factor-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter Power factor',
+      'friendly_name': 'Smart Meter (192.168.1.100) Power factor',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_power_factor',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_power_factor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.63',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_reactive_power-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_reactive_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1661,7 +1661,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_reactive_power',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_reactive_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1684,23 +1684,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_reactive_power-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_reactive_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter Reactive power',
+      'friendly_name': 'Smart Meter (192.168.1.100) Reactive power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_reactive_power',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_reactive_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-29.8',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_total_actual_energy-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_total_actual_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1715,7 +1715,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_total_actual_energy',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_total_actual_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1741,23 +1741,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_total_actual_energy-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_total_actual_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Smart Meter Total actual energy',
+      'friendly_name': 'Smart Meter (192.168.1.100) Total actual energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_total_actual_energy',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_total_actual_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.53',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_total_actual_returned_energy-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_total_actual_returned_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1772,7 +1772,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_total_actual_returned_energy',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_total_actual_returned_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1798,23 +1798,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_total_actual_returned_energy-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_total_actual_returned_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Smart Meter Total actual returned energy',
+      'friendly_name': 'Smart Meter (192.168.1.100) Total actual returned energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_total_actual_returned_energy',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_total_actual_returned_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.18',
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_voltage-entry]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1829,7 +1829,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_voltage',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1855,16 +1855,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[gl meter][sensor.smart_meter_voltage-state]
+# name: test_sensor[gl meter][sensor.smart_meter_192_168_1_100_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Smart Meter Voltage',
+      'friendly_name': 'Smart Meter (192.168.1.100) Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_voltage',
+    'entity_id': 'sensor.smart_meter_192_168_1_100_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

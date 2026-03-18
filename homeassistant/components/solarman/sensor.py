@@ -257,7 +257,7 @@ async def async_setup_entry(
     async_add_entities(
         SolarmanSensorEntity(entry.runtime_data, description)
         for description in SENSORS
-        if entry.runtime_data.data.get(description.key) is not None
+        if description.key in entry.runtime_data.data
     )
 
 
@@ -278,4 +278,4 @@ class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.coordinator.data[self.entity_description.key]  # type: ignore[no-any-return]
+        return self.coordinator.data[self.entity_description.key]
