@@ -56,6 +56,7 @@ class _ClientAdapter:
             LOGGER.info("Processing device: uuid=%s, name=%s", device_uuid, name)
             is_locked: bool | None = None
             state: str | None = None
+            reachable = True
             device_state = await self._ws_manager.async_get_device_state(
                 str(device_uuid)
             )
@@ -73,6 +74,8 @@ class _ClientAdapter:
                     )
                 else:
                     LOGGER.warning("Device %s: No bolt_state in response", device_uuid)
+                if "reachable" in device_state:
+                    reachable = bool(device_state["reachable"])
             else:
                 LOGGER.warning("Device %s: No device_state received", device_uuid)
             devices.append(
@@ -82,6 +85,7 @@ class _ClientAdapter:
                     name=str(name),
                     is_locked=is_locked,
                     state=state,
+                    reachable=reachable,
                 )
             )
             LOGGER.info(
@@ -282,24 +286,28 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         )
         self._refreshing_devices.add(lock_id)
         self.async_set_updated_data(dict(self.data))
-        bolt_state = await self._async_fetch_state_with_retry(lock_id)
+        device_state = await self._async_fetch_state_with_retry(lock_id)
         self._refreshing_devices.discard(lock_id)
-        if bolt_state:
-            is_locked = str(bolt_state).lower() == "locked"
-            new_state = str(bolt_state).lower()
+        if device_state:
+            bolt_state = device_state.get("bolt_state")
+            is_locked = str(bolt_state).lower() == "locked" if bolt_state else None
+            new_state = str(bolt_state).lower() if bolt_state else None
+            reachable = bool(device_state.get("reachable", True))
             current_data = dict(self.data or {})
             if lock_id in current_data:
                 updated_device = replace(
                     current_data[lock_id],
                     is_locked=is_locked,
                     state=new_state,
+                    reachable=reachable,
                 )
                 current_data[lock_id] = updated_device
                 LOGGER.info(
-                    "Updated device %s after timeout: is_locked=%s, state=%s",
+                    "Updated device %s after timeout: is_locked=%s, state=%s, reachable=%s",
                     lock_id,
                     is_locked,
                     new_state,
+                    reachable,
                 )
                 self.async_set_updated_data(current_data)
                 return
@@ -317,7 +325,9 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             current_data[lock_id] = updated_device
             self.async_set_updated_data(current_data)
 
-    async def _async_fetch_state_with_retry(self, lock_id: str) -> str | None:
+    async def _async_fetch_state_with_retry(
+        self, lock_id: str
+    ) -> dict[str, Any] | None:
         """Fetch device state with exponential backoff retries."""
         delay = STATE_RETRY_INITIAL_DELAY
         elapsed = 0.0
@@ -342,7 +352,7 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                         lock_id,
                         bolt_state,
                     )
-                    return str(bolt_state)
+                    return device_state
             remaining = STATE_RETRY_MAX_ELAPSED - elapsed
             if remaining <= 0:
                 break
@@ -383,19 +393,21 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
 
     async def _async_recover_reachability(self, lock_id: str) -> None:
         """Attempt to restore reachability by fetching state with retries."""
-        bolt_state = await self._async_fetch_state_with_retry(lock_id)
+        device_state = await self._async_fetch_state_with_retry(lock_id)
         self._pending_reachability.pop(lock_id, None)
-        if bolt_state is None:
+        if device_state is None:
             LOGGER.info("Reachability recovery for %s failed after retries", lock_id)
             return
         current_data = dict(self.data or {})
         device = current_data.get(lock_id)
         if device is None:
             return
-        is_locked = str(bolt_state).lower() == "locked"
-        new_state = str(bolt_state).lower()
+        bolt_state = device_state.get("bolt_state")
+        is_locked = str(bolt_state).lower() == "locked" if bolt_state else device.is_locked
+        new_state = str(bolt_state).lower() if bolt_state else device.state
+        reachable = bool(device_state.get("reachable", True))
         current_data[lock_id] = replace(
-            device, reachable=True, is_locked=is_locked, state=new_state
+            device, reachable=reachable, is_locked=is_locked, state=new_state
         )
         LOGGER.info(
             "Reachability recovery for %s succeeded: is_locked=%s, state=%s",

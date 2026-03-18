@@ -64,6 +64,7 @@ def get_env_config() -> _EnvConfig:
     return ENVIRONMENTS[get_level_environment()]
 
 
+DEFAULT_PARTNER_BASE_URL = ENVIRONMENTS[DEFAULT_ENVIRONMENT]["partner_base_url"]
 
 DEVICE_CODE_INITIATE_PATH = "/oauth2/device-code/initiate"
 DEVICE_CODE_VERIFY_PATH = "/oauth2/device-code/verify"

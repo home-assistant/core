@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import logging
+import os
 from typing import Any
 
 from homeassistant.components import logbook, persistent_notification
@@ -92,7 +93,10 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
         """Initialize the Level Lock entity."""
         super().__init__(coordinator)
         self._lock_id = lock_id
-        self._attr_unique_id = f"{DOMAIN}_{lock_id}"
+        unique_suffix = lock_id
+        if os.environ.get("LEVELHOME_FRESH_DEVICES"):
+            unique_suffix = f"{lock_id}_{coordinator.config_entry.entry_id}"
+        self._attr_unique_id = f"{DOMAIN}_{unique_suffix}"
         self._attr_name = None
         self._previous_state: str | None = None
 
@@ -135,8 +139,11 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         device = self._device
+        lock_id = device.lock_id
+        if os.environ.get("LEVELHOME_FRESH_DEVICES"):
+            lock_id = f"{lock_id}_{self.coordinator.config_entry.entry_id}"
         return DeviceInfo(
-            identifiers={(DOMAIN, device.lock_id)},
+            identifiers={(DOMAIN, lock_id)},
             name=device.name,
             manufacturer="Level Home",
             model="Lock",
