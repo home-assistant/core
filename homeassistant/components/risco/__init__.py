@@ -99,6 +99,13 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             message = str(error)
             if CLOCK_TIMEOUT_ERROR_FRAGMENT in message:
                 _LOGGER.warning("Risco keep-alive timeout, waiting for reconnection")
+                if not hass.is_stopping:
+                    _LOGGER.debug(
+                        "Reloading integration after Risco keep-alive timeout"
+                    )
+                    hass.async_create_task(
+                        hass.config_entries.async_reload(entry.entry_id)
+                    )
                 return
 
         _LOGGER.error(
