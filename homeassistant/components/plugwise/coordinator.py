@@ -172,7 +172,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         for device_id, device in data.items():
             if (
                 device_id in self._firmware_list
-                and (new_firmware := device.get(FIRMWARE)) != self._firmware_list[device_id]
+                and (new_firmware := device.get("firmware")) != self._firmware_list[device_id]
             ):
                 updated = self._update_firmware_in_dr(device_id, new_firmware)
                 if updated:
