@@ -855,6 +855,7 @@ def test_create_thinking_config_gemini3_levels(
     [
         ("models/gemini-3-flash", "auto"),
         ("models/gemini-3-flash", None),
+        ("gemini-3-pro", "minimal"),
     ],
 )
 def test_create_thinking_config_gemini3_auto(
@@ -865,7 +866,6 @@ def test_create_thinking_config_gemini3_auto(
     result = _create_thinking_config(model, -1, thinking_level)
     assert result is not None
     assert result.include_thoughts is True
-    # No explicit level set — the API decides
     assert result.thinking_level is None
 
 

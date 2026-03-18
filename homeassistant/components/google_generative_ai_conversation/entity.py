@@ -134,19 +134,20 @@ def _create_thinking_config(
         return None
 
     if _is_gemini_3_model(model):
-        # Gemini 3 models use ThinkingLevel enum, not integer budgets.
+        name = model.removeprefix("models/")
         level_map: dict[str, ThinkingLevel] = {
             "minimal": ThinkingLevel.MINIMAL,
             "low": ThinkingLevel.LOW,
             "medium": ThinkingLevel.MEDIUM,
             "high": ThinkingLevel.HIGH,
         }
+        if name.startswith("gemini-3") and "pro" in name:
+            level_map.pop("minimal")
         if thinking_level and thinking_level in level_map:
             return ThinkingConfig(
                 include_thoughts=True,
                 thinking_level=level_map[thinking_level],
             )
-        # "auto" or unset: let the API decide
         return ThinkingConfig(include_thoughts=True)
 
     # Gemini 2.5 models use integer thinking_budget
