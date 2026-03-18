@@ -249,7 +249,6 @@ async def test_assist_api(
         "data": {
             "failed": [],
             "success": [],
-            "targets": [],
         },
         "reprompt": {
             "plain": {
@@ -308,7 +307,6 @@ async def test_assist_api(
         "data": {
             "failed": [],
             "success": [],
-            "targets": [],
         },
         "response_type": "action_done",
         "reprompt": {
