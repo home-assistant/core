@@ -66,11 +66,7 @@ rules:
     comment: All entities are core functionality.
   entity-translations: done
   exception-translations: todo
-  icon-translations:
-    status: done
-    comment: |
-      PLANNED: Remove the icon property from climate.py — entities should not set
-      custom icons. Use HA defaults or icon translations instead.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
