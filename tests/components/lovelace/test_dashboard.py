@@ -908,7 +908,54 @@ async def test_dashboards_with_entity(
         )
     )
 
-    assert set(lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
+    assert set(await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
         "test-dashboard/badges-view",
         "test-dashboard/sections-view",
     }
+
+
+async def test_dashboards_with_entity_loads_unloaded_yaml_dashboard(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dashboard lookup loads YAML configs that are not yet in memory."""
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light-yaml",
+        suggested_object_id="dashboard_light_yaml",
+    )
+
+    with patch(
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
+        return_value={
+            "views": [
+                {
+                    "path": "yaml-view",
+                    "cards": [{"type": "entity", "entity": entity_entry.entity_id}],
+                }
+            ]
+        },
+    ):
+        assert await async_setup_component(
+            hass,
+            "lovelace",
+            {
+                "lovelace": {
+                    "dashboards": {
+                        "test-dashboard": {
+                            "mode": "yaml",
+                            "title": "Test dashboard",
+                            "icon": "mdi:view-dashboard",
+                            "show_in_sidebar": True,
+                            "require_admin": False,
+                            "filename": "test-dashboard.yaml",
+                        }
+                    }
+                }
+            },
+        )
+
+        assert set(
+            await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)
+        ) == {"test-dashboard/yaml-view"}

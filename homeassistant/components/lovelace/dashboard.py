@@ -66,11 +66,6 @@ class LovelaceConfig(ABC):
     def mode(self) -> str:
         """Return mode of the lovelace config."""
 
-    @property
-    @abstractmethod
-    def loaded_config(self) -> dict[str, Any] | None:
-        """Return the currently loaded config, if available."""
-
     @abstractmethod
     async def async_get_info(self) -> dict[str, Any]:
         """Return the config info."""
@@ -121,11 +116,6 @@ class LovelaceStorage(LovelaceConfig):
     def mode(self) -> str:
         """Return mode of the lovelace config."""
         return MODE_STORAGE
-
-    @property
-    def loaded_config(self) -> dict[str, Any] | None:
-        """Return the currently loaded config, if available."""
-        return self._data.get("config") if self._data else None
 
     async def async_get_info(self) -> dict[str, Any]:
         """Return the Lovelace storage info."""
@@ -210,11 +200,6 @@ class LovelaceYAML(LovelaceConfig):
     def mode(self) -> str:
         """Return mode of the lovelace config."""
         return MODE_YAML
-
-    @property
-    def loaded_config(self) -> dict[str, Any] | None:
-        """Return the currently loaded config, if available."""
-        return self._cache[0] if self._cache else None
 
     async def async_get_info(self) -> dict[str, Any]:
         """Return the YAML storage mode."""

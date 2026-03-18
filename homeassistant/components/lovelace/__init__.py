@@ -483,8 +483,7 @@ def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
     )
 
 
-@callback
-def dashboards_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+async def dashboards_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return dashboard/view combinations referencing an entity."""
     if LOVELACE_DATA not in hass.data:
         return []
@@ -492,11 +491,12 @@ def dashboards_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     dashboard_views: list[str] = []
 
     for dashboard_config in hass.data[LOVELACE_DATA].dashboards.values():
-        config = dashboard_config.loaded_config
-        if config is None:
+        try:
+            config = await dashboard_config.async_load(False)
+        except dashboard.ConfigNotFound:
             continue
 
-        dashboard_path = dashboard_config.url_path or "lovelace"
+        dashboard_path = dashboard_config.url_path or DOMAIN
 
         for idx, view in enumerate(config.get("views", [])):
             if not _view_references_entity(view, entity_id):
