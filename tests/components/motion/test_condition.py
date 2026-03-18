@@ -137,8 +137,8 @@ async def test_motion_binary_sensor_condition_behavior_all(
 @pytest.mark.parametrize(
     (
         "condition_key",
-        "binary_sensor_matching",
-        "binary_sensor_non_matching",
+        "state_matching",
+        "state_non_matching",
     ),
     [
         (
@@ -156,8 +156,8 @@ async def test_motion_binary_sensor_condition_behavior_all(
 async def test_motion_condition_excludes_non_motion_device_class(
     hass: HomeAssistant,
     condition_key: str,
-    binary_sensor_matching: str,
-    binary_sensor_non_matching: str,
+    state_matching: str,
+    state_non_matching: str,
 ) -> None:
     """Test motion condition excludes entities without device_class motion."""
     entity_id_motion = "binary_sensor.test_motion"
@@ -165,11 +165,11 @@ async def test_motion_condition_excludes_non_motion_device_class(
 
     # Set matching states on all entities
     hass.states.async_set(
-        entity_id_motion, binary_sensor_matching, {ATTR_DEVICE_CLASS: "motion"}
+        entity_id_motion, state_matching, {ATTR_DEVICE_CLASS: "motion"}
     )
     hass.states.async_set(
         entity_id_occupancy,
-        binary_sensor_matching,
+        state_non_matching,
         {ATTR_DEVICE_CLASS: "occupancy"},
     )
     await hass.async_block_till_done()
@@ -187,7 +187,7 @@ async def test_motion_condition_excludes_non_motion_device_class(
     # Set matching entity to non-matching state
     hass.states.async_set(
         entity_id_motion,
-        binary_sensor_non_matching,
+        state_non_matching,
         {ATTR_DEVICE_CLASS: "motion"},
     )
     await hass.async_block_till_done()
