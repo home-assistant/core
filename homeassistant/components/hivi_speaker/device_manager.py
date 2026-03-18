@@ -29,6 +29,7 @@ from .device import ConnectionStatus, HIVIDevice, SlaveDeviceInfo, SyncGroupStat
 from .device_data_registry import DeviceDataRegistry
 from .discovery_scheduler import HIVIDiscoveryScheduler
 from .group_coordinator import HIVIGroupCoordinator
+from .switch import HIVISlaveControlSwitchHub, HIVISlaveControlSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,6 @@ class HIVIDeviceManager:
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the device manager."""
-        from .switch import HIVISlaveControlSwitchHub
 
         self.hass = hass
         self.config_entry = config_entry
@@ -316,7 +316,7 @@ class HIVIDeviceManager:
                 ent_reg.async_remove(entity_id)
             _LOGGER.debug(
                 "Removed entities for device %s: %s", ha_device_id, entity_ids
-                )
+            )
         except Exception:
             _LOGGER.exception("Error removing entities for device %s", ha_device_id)
 
@@ -361,7 +361,6 @@ class HIVIDeviceManager:
 
     async def _add_or_remove_switches(self):
         """Create or delete switch entities for controlling other speakers for each device."""
-        from .switch import HIVISlaveControlSwitch
 
         ha_device_list = await self._get_devices_for_device()
 
