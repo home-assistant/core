@@ -214,6 +214,7 @@ CAPABILITY_TO_SENSORS: dict[
             translation_key="microfiber_filter_blockage",
             is_on_key="blockage",
             device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
     },
 }
