@@ -617,9 +617,11 @@ def compile_statistics(  # noqa: C901
 
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
-            equivalent_units_for_entity = (
-                EQUIVALENT_UNITS | custom_units_for_entities.get(entity_id, {})
-            )
+            if custom_units_for_entity := custom_units_for_entities.get(entity_id):
+                equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
+            else:
+                equivalent_units_for_entity = EQUIVALENT_UNITS
+
             if not _equivalent_units(
                 {old_metadata[1]["unit_of_measurement"], statistics_unit},
                 equivalent_units_for_entity,
