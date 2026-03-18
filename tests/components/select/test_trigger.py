@@ -173,7 +173,7 @@ async def _assert_select_trigger_fires(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other input_selects also triggers
+        # Check if changing other targeted entities also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
