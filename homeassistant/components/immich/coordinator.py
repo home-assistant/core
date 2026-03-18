@@ -47,21 +47,23 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
 
     config_entry: ImmichConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: Immich) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ImmichConfigEntry, api: Immich
+    ) -> None:
         """Initialize the data update coordinator."""
         self.api = api
         self.is_admin = False
         self.configuration_url = str(
             URL.build(
-                scheme="https" if entry.data[CONF_SSL] else "http",
-                host=entry.data[CONF_HOST],
-                port=entry.data[CONF_PORT],
+                scheme="https" if config_entry.data[CONF_SSL] else "http",
+                host=config_entry.data[CONF_HOST],
+                port=config_entry.data[CONF_PORT],
             )
         )
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=entry,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )
