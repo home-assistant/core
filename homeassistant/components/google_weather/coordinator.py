@@ -103,7 +103,6 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 translation_domain=DOMAIN,
                 translation_key="update_error",
                 translation_placeholders={
-                    "data_type_name": self._data_type_name,
                     "error": str(err),
                 },
             ) from err

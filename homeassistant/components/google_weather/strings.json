@@ -101,7 +101,7 @@
   },
   "exceptions": {
     "update_error": {
-      "message": "Error fetching {data_type_name}: {error}"
+      "message": "Error fetching weather data: {error}"
     }
   }
 }

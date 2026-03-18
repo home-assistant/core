@@ -82,7 +82,6 @@ async def test_coordinator_update_failed(
     assert coordinator.last_exception.translation_domain == DOMAIN
     assert coordinator.last_exception.translation_key == "update_error"
     assert coordinator.last_exception.translation_placeholders == {
-        "data_type_name": "current weather conditions",
         "error": "API error",
     }
 
