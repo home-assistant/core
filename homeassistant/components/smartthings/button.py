@@ -22,7 +22,7 @@ class SmartThingsButtonDescription(ButtonEntityDescription):
 
     key: Capability
     command: Command
-    component: str = MAIN
+    components: list[str] | None = None
 
 
 CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = {
@@ -48,7 +48,7 @@ CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = 
         translation_key="reset_hepa_filter",
         command=Command.RESET_HEPA_FILTER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        component="station",
+        components=[MAIN, "station"],
     ),
 }
 
@@ -61,11 +61,11 @@ async def async_setup_entry(
     """Add button entities for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsButtonEntity(entry_data.client, device, description)
+        SmartThingsButtonEntity(entry_data.client, device, description, component)
         for capability, description in CAPABILITIES_TO_BUTTONS.items()
         for device in entry_data.devices.values()
-        if description.component in device.status
-        and capability in device.status[description.component]
+        for component in description.components or [MAIN]
+        if component in device.status and capability in device.status[component]
     )
 
 
@@ -79,11 +79,12 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsButtonDescription,
+        component: str,
     ) -> None:
         """Initialize the instance."""
-        super().__init__(client, device, set(), component=entity_description.component)
+        super().__init__(client, device, set(), component=component)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{entity_description.component}_{entity_description.key}_{entity_description.command}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.command}"
 
     async def async_press(self) -> None:
         """Press the button."""
