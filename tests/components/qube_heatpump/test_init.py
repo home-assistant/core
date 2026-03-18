@@ -47,4 +47,4 @@ async def test_async_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    mock_qube_client.close.assert_called_once()
+    mock_qube_client.close.assert_awaited_once()
