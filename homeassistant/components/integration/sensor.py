@@ -399,13 +399,14 @@ class IntegrationSensor(RestoreSensor):
                 and (allowed_units is None or unit_of_measurement in allowed_units)
             ):
                 return device_class
-            # Otherwise log incompatible user device class
+            # User device class is not compatible, issue warning and fail back to
+            # inferred class.
             _LOGGER.warning(
                 "Specified device class '%s' is not compatible with inferred unit or state class of this sensor",
                 device_class,
             )
 
-        # Otherwise try to infer device class from source sensor
+        # Try to infer device class from source sensor
         if (
             source_device_class is None
             or (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None
