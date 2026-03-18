@@ -1,5 +1,7 @@
 """Tests for the diagnostics data provided by the Growatt Server integration."""
 
+from unittest.mock import MagicMock
+
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -16,7 +18,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test diagnostics."""
