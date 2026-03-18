@@ -9,9 +9,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-# Patch ServiceRegistry.async_call (read-only on instance, so patch on class)
-SERVICE_ASYNC_CALL = "homeassistant.core.ServiceRegistry.async_call"
-
 
 async def test_user_flow(
     hass: HomeAssistant,
@@ -44,7 +41,9 @@ async def test_single_instance_allowed(
     with patch(
         "homeassistant.helpers.translation.async_get_translations",
         new_callable=AsyncMock,
-        return_value={"config.abort.single_instance_allowed": "Only one instance allowed."},
+        return_value={
+            "config.abort.single_instance_allowed": "Only one instance allowed."
+        },
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -77,58 +76,60 @@ async def test_options_flow_skip_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test options flow: user unchecks confirm_refresh -> entry updated, no service call."""
+    """Test options flow: user unchecks confirm_refresh -> entry updated, no refresh."""
     mock_config_entry.add_to_hass(hass)
+    mock_dm = AsyncMock()
+    mock_dm.refresh_discovery = AsyncMock()
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][mock_config_entry.entry_id] = {"device_manager": mock_dm}
 
-    with patch(SERVICE_ASYNC_CALL, new_callable=AsyncMock) as mock_async_call:
-        result = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id,
-            data=None,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        data=None,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={"confirm_refresh": False},
-        )
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"confirm_refresh": False},
+    )
 
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {}
-        mock_async_call.assert_not_called()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {}
+    mock_dm.refresh_discovery.assert_not_called()
 
 
 async def test_options_flow_confirm_refresh_then_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test options flow: user confirms refresh -> service called -> success step -> done."""
+    """Test options flow: user confirms refresh -> device_manager.refresh_discovery -> success."""
     mock_config_entry.add_to_hass(hass)
+    mock_dm = AsyncMock()
+    mock_dm.refresh_discovery = AsyncMock()
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][mock_config_entry.entry_id] = {"device_manager": mock_dm}
 
-    with patch(SERVICE_ASYNC_CALL, new_callable=AsyncMock) as mock_async_call:
-        result = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id,
-            data=None,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        data=None,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={"confirm_refresh": True},
-        )
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"confirm_refresh": True},
+    )
 
-        # Flow shows success step (form with message)
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "success"
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "success"
+    mock_dm.refresh_discovery.assert_awaited_once()
 
-        mock_async_call.assert_called_once_with(
-            DOMAIN, "refresh_discovery", {}, blocking=False
-        )
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={},
+    )
 
-        result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={},
-        )
-
-        assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
