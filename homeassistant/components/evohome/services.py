@@ -107,12 +107,7 @@ def _validate_set_system_mode_params(call: ServiceCall, tcs: ec2.ControlSystem) 
 def setup_service_functions(
     hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
 ) -> None:
-    """Set up the service handlers for the system/zone operating modes.
-
-    Not all Honeywell TCC-compatible systems support all operating modes. In addition,
-    each mode will require any of four distinct service schemas. This has to be
-    enumerated before registering the appropriate handlers.
-    """
+    """Set up the service handlers for Evohome systems."""
 
     @verify_domain_control(DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
@@ -121,7 +116,7 @@ def setup_service_functions(
 
     @verify_domain_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
-        """Set the system mode or reset the system."""
+        """Set the Evohome system mode or reset the system."""
 
         if call.service == EvoService.SET_SYSTEM_MODE:  # no validation for RESET_SYSTEM
             _validate_set_system_mode_params(call, coordinator.tcs)
