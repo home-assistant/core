@@ -46,13 +46,11 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category:
-    status: todo
-    comment: Add EntityCategory.DIAGNOSTIC to temperature and other diagnostic sensors. Merge GrowattRequiredKeysMixin into GrowattSensorEntityDescription using kw_only=True.
+  entity-category: done
   entity-device-class:
     status: todo
     comment: Replace custom precision field with suggested_display_precision to preserve full data granularity.
-  entity-disabled-by-default: todo
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: todo

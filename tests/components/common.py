@@ -176,7 +176,7 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     ]
 
 
-class _StateDescription(TypedDict):
+class StateDescription(TypedDict):
     """Test state with attributes."""
 
     state: str | None
@@ -186,16 +186,16 @@ class _StateDescription(TypedDict):
 class TriggerStateDescription(TypedDict):
     """Test state and expected service call count."""
 
-    included_state: _StateDescription  # State for entities meant to be targeted
-    excluded_state: _StateDescription  # State for entities not meant to be targeted
+    included_state: StateDescription  # State for entities meant to be targeted
+    excluded_state: StateDescription  # State for entities not meant to be targeted
     count: int  # Expected service call count
 
 
 class ConditionStateDescription(TypedDict):
     """Test state and expected condition evaluation."""
 
-    included_state: _StateDescription  # State for entities meant to be targeted
-    excluded_state: _StateDescription  # State for entities not meant to be targeted
+    included_state: StateDescription  # State for entities meant to be targeted
+    excluded_state: StateDescription  # State for entities not meant to be targeted
 
     condition_true: bool  # If the condition is expected to evaluate to true
     condition_true_first_entity: bool  # If the condition is expected to evaluate to true for the first targeted entity
@@ -235,7 +235,7 @@ def _parametrize_condition_states(
                     "attributes": required_filter_attributes,
                 },
                 "excluded_state": {
-                    "state": state,
+                    "state": state if additional_attributes else None,
                     "attributes": {},
                 },
                 "condition_true": condition_true,
@@ -247,7 +247,7 @@ def _parametrize_condition_states(
                 "attributes": state[1] | required_filter_attributes,
             },
             "excluded_state": {
-                "state": state[0],
+                "state": state[0] if additional_attributes else None,
                 "attributes": state[1],
             },
             "condition_true": condition_true,
@@ -791,7 +791,7 @@ async def create_target_condition(
 def set_or_remove_state(
     hass: HomeAssistant,
     entity_id: str,
-    state: TriggerStateDescription,
+    state: StateDescription,
 ) -> None:
     """Set or remove the state of an entity."""
     if state["state"] is None:
@@ -896,15 +896,22 @@ async def assert_condition_behavior_any(
     for state in states:
         included_state = state["included_state"]
         excluded_state = state["excluded_state"]
+
+        # Set excluded entities first to verify that they don't make the
+        # condition evaluate to true
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert condition(hass) is False
+
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
 
+        # Set other included entities to the included state to verify that
+        # they don't change the condition evaluation
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        for excluded_entity_id in excluded_entity_ids:
-            set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
 
