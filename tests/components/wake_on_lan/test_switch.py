@@ -136,6 +136,41 @@ async def test_broadcast_config_ip(
     mock_send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
 
 
+async def test_broadcast_config_interface(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
+    """Test with broadcast interface config."""
+
+    mac = "00:01:02:03:04:05"
+    interface = "192.168.1.5"
+
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": mac,
+                "broadcast_interface": interface,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        blocking=True,
+    )
+
+    mac = dr.format_mac(mac)
+    mock_send_magic_packet.assert_called_with(mac, interface=interface)
+
+
 async def test_broadcast_config_port(
     hass: HomeAssistant, mock_send_magic_packet: AsyncMock
 ) -> None:
