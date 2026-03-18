@@ -10,6 +10,7 @@ import os
 from typing import Any
 
 from aiohasupervisor import SupervisorClient
+from aiohasupervisor.models import SupervisorOptions
 import aiohttp
 from yarl import URL
 
@@ -22,7 +23,6 @@ from homeassistant.components.http import (
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.singleton import singleton
-from homeassistant.loader import bind_hass
 
 from .const import ATTR_MESSAGE, ATTR_RESULT, DATA_COMPONENT, X_HASS_SOURCE
 
@@ -66,73 +66,6 @@ def api_data[**_P](
     return _wrapper
 
 
-@bind_hass
-async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
-    """Update Supervisor diagnostics toggle.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DATA_COMPONENT]
-    return await hassio.update_diagnostics(diagnostics)
-
-
-@bind_hass
-@api_data
-async def async_create_backup(
-    hass: HomeAssistant, payload: dict, partial: bool = False
-) -> dict:
-    """Create a full or partial backup.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DATA_COMPONENT]
-    backup_type = "partial" if partial else "full"
-    command = f"/backups/new/{backup_type}"
-    return await hassio.send_command(command, payload=payload, timeout=None)
-
-
-@api_data
-async def async_get_green_settings(hass: HomeAssistant) -> dict[str, bool]:
-    """Return settings specific to Home Assistant Green."""
-    hassio = hass.data[DATA_COMPONENT]
-    return await hassio.send_command("/os/boards/green", method="get")
-
-
-@api_data
-async def async_set_green_settings(
-    hass: HomeAssistant, settings: dict[str, bool]
-) -> dict:
-    """Set settings specific to Home Assistant Green.
-
-    Returns an empty dict.
-    """
-    hassio = hass.data[DATA_COMPONENT]
-    return await hassio.send_command(
-        "/os/boards/green", method="post", payload=settings
-    )
-
-
-@api_data
-async def async_get_yellow_settings(hass: HomeAssistant) -> dict[str, bool]:
-    """Return settings specific to Home Assistant Yellow."""
-    hassio = hass.data[DATA_COMPONENT]
-    return await hassio.send_command("/os/boards/yellow", method="get")
-
-
-@api_data
-async def async_set_yellow_settings(
-    hass: HomeAssistant, settings: dict[str, bool]
-) -> dict:
-    """Set settings specific to Home Assistant Yellow.
-
-    Returns an empty dict.
-    """
-    hassio = hass.data[DATA_COMPONENT]
-    return await hassio.send_command(
-        "/os/boards/yellow", method="post", payload=settings
-    )
-
-
 class HassIO:
     """Small API wrapper for Hass.io."""
 
@@ -153,70 +86,6 @@ class HassIO:
     def base_url(self) -> URL:
         """Return base url for Supervisor."""
         return self._base_url
-
-    @api_data
-    def get_info(self) -> Coroutine:
-        """Return generic Supervisor information.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/info", method="get")
-
-    @api_data
-    def get_host_info(self) -> Coroutine:
-        """Return data for Host.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/host/info", method="get")
-
-    @api_data
-    def get_os_info(self) -> Coroutine:
-        """Return data for the OS.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/os/info", method="get")
-
-    @api_data
-    def get_core_info(self) -> Coroutine:
-        """Return data for Home Asssistant Core.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/core/info", method="get")
-
-    @api_data
-    def get_supervisor_info(self) -> Coroutine:
-        """Return data for the Supervisor.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/supervisor/info", method="get")
-
-    @api_data
-    def get_network_info(self) -> Coroutine:
-        """Return data for the Host Network.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/network/info", method="get")
-
-    @api_data
-    def get_core_stats(self) -> Coroutine:
-        """Return stats for the core.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/core/stats", method="get")
-
-    @api_data
-    def get_supervisor_stats(self) -> Coroutine:
-        """Return stats for the supervisor.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/supervisor/stats", method="get")
 
     @api_data
     def get_ingress_panels(self) -> Coroutine:
@@ -257,16 +126,6 @@ class HassIO:
             "/supervisor/options", payload={"timezone": timezone, "country": country}
         )
 
-    @_api_bool
-    def update_diagnostics(self, diagnostics: bool) -> Coroutine:
-        """Update Supervisor diagnostics setting.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(
-            "/supervisor/options", payload={"diagnostics": diagnostics}
-        )
-
     async def send_command(
         self,
         command: str,
@@ -275,6 +134,7 @@ class HassIO:
         timeout: int | None = 10,
         return_text: bool = False,
         *,
+        params: dict[str, Any] | None = None,
         source: str = "core.handler",
     ) -> Any:
         """Send API command to Hass.io.
@@ -295,6 +155,7 @@ class HassIO:
             response = await self.websession.request(
                 method,
                 joined_url,
+                params=params,
                 json=payload,
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
@@ -340,4 +201,14 @@ def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
         str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),
         session=hassio.websession,
+    )
+
+
+async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> None:
+    """Update Supervisor diagnostics toggle.
+
+    The caller of the function should handle SupervisorError.
+    """
+    await get_supervisor_client(hass).supervisor.set_options(
+        SupervisorOptions(diagnostics=diagnostics)
     )

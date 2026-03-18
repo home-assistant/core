@@ -7,6 +7,7 @@ import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import dataclass, replace
+import datetime
 import mimetypes
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -181,13 +182,25 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
+def _validate_tool_results(value: Any) -> Any:
+    """Recursively convert non-json-serializable types."""
+    if isinstance(value, (datetime.time, datetime.date)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [_validate_tool_results(item) for item in value]
+    if isinstance(value, dict):
+        return {k: _validate_tool_results(v) for k, v in value.items()}
+    return value
+
+
 def _create_google_tool_response_parts(
     parts: list[conversation.ToolResultContent],
 ) -> list[Part]:
     """Create Google tool response parts."""
     return [
         Part.from_function_response(
-            name=tool_result.tool_name, response=tool_result.tool_result
+            name=tool_result.tool_name,
+            response=_validate_tool_results(tool_result.tool_result),
         )
         for tool_result in parts
     ]
@@ -238,7 +251,7 @@ def _convert_content(
     if content.role != "assistant":
         return Content(
             role=content.role,
-            parts=[Part.from_text(text=content.content if content.content else "")],
+            parts=[Part.from_text(text=content.content or "")],
         )
 
     # Handle the Assistant content with tool calls.
@@ -410,7 +423,7 @@ async def _transform_stream(
 
                 if part.function_call:
                     tool_call = part.function_call
-                    tool_name = tool_call.name if tool_call.name else ""
+                    tool_name = tool_call.name or ""
                     tool_args = _escape_decode(tool_call.args)
                     chunk["tool_calls"] = [
                         llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
@@ -456,6 +469,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
+        self.default_model = default_model
         self._attr_name = subentry.title
         self._genai_client = entry.runtime_data
         self._attr_unique_id = subentry.subentry_id
@@ -471,6 +485,8 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None = None,
+        default_max_tokens: int | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -489,7 +505,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
 
-        model_name = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model_name = options.get(CONF_CHAT_MODEL, self.default_model)
         # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
         supports_system_instruction = (
             "gemma" not in model_name
@@ -587,7 +603,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             )
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 chat_response_generator = await chat.send_message_stream(
                     message=chat_request
@@ -617,14 +633,28 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             if not chat_log.unresponded_tool_results:
                 break
 
-    def create_generate_content_config(self) -> GenerateContentConfig:
+    def create_generate_content_config(
+        self, default_max_tokens: int | None = None
+    ) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
+        model = options.get(CONF_CHAT_MODEL, self.default_model)
+        thinking_config: ThinkingConfig | None = None
+        if model.startswith("models/gemini-2.5") and not model.endswith(
+            ("tts", "image", "image-preview")
+        ):
+            thinking_config = ThinkingConfig(include_thoughts=True)
+
         return GenerateContentConfig(
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
             top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            max_output_tokens=options.get(
+                CONF_MAX_TOKENS,
+                default_max_tokens
+                if default_max_tokens is not None
+                else RECOMMENDED_MAX_TOKENS,
+            ),
             safety_settings=[
                 SafetySetting(
                     category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
@@ -652,7 +682,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                     ),
                 ),
             ],
-            thinking_config=ThinkingConfig(include_thoughts=True),
+            thinking_config=thinking_config,
         )
 
 

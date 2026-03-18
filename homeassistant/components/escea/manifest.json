@@ -7,6 +7,7 @@
   "homekit": {
     "models": ["Escea"]
   },
+  "integration_type": "device",
   "iot_class": "local_push",
   "requirements": ["pescea==1.0.12"]
 }

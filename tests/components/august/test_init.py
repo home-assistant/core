@@ -1,8 +1,8 @@
 """The tests for the august platform."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError, ClientResponseError
 import pytest
 from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError, InvalidAuth
@@ -18,11 +18,18 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+)
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
 
@@ -33,6 +40,8 @@ from .mocks import (
     _mock_inoperative_august_lock_detail,
     _mock_lock_with_offline_key,
     _mock_operative_august_lock_detail,
+    mock_august_config_entry,
+    mock_client_credentials,
 )
 
 from tests.common import MockConfigEntry
@@ -284,3 +293,74 @@ async def test_oauth_migration_on_legacy_entry(hass: HomeAssistant) -> None:
     assert len(flows) == 1
     assert flows[0]["step_id"] == "pick_implementation"
     assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    await mock_client_credentials(hass)
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.components.august.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_oauth_token_request_reauth_error(hass: HomeAssistant) -> None:
+    """Test OAuth token request reauth error starts a reauth flow."""
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=Mock(real_url="https://auth.august.com/access_token"),
+            status=401,
+            domain=DOMAIN,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "pick_implementation"
+    assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_oauth_token_request_transient_error_is_retryable(
+    hass: HomeAssistant,
+) -> None:
+    """Test OAuth token transient request error marks entry for setup retry."""
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestTransientError(
+            request_info=Mock(real_url="https://auth.august.com/access_token"),
+            status=500,
+            domain=DOMAIN,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_oauth_client_error_is_retryable(hass: HomeAssistant) -> None:
+    """Test OAuth transport client errors mark entry for setup retry."""
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientError("connection error"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

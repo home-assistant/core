@@ -12,7 +12,6 @@ from habiticalib import HabiticaGroupsResponse, HabiticaUserResponse
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
-from syrupy.extensions.image import PNGImageSnapshotExtension
 
 from homeassistant.components.habitica.const import ASSETS_URL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -50,12 +49,8 @@ async def test_image_platform(
         "homeassistant.components.habitica.coordinator.BytesIO",
     ) as avatar:
         avatar.side_effect = [
-            BytesIO(
-                b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\xdac\xfc\xcf\xc0\xf0\x1f\x00\x05\x05\x02\x00_\xc8\xf1\xd2\x00\x00\x00\x00IEND\xaeB`\x82"
-            ),
-            BytesIO(
-                b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\xdacd`\xf8\xff\x1f\x00\x03\x07\x02\x000&\xc7a\x00\x00\x00\x00IEND\xaeB`\x82"
-            ),
+            BytesIO(b"\x89PNGTestImage1"),
+            BytesIO(b"\x89PNGTestImage2"),
         ]
 
         config_entry.add_to_hass(hass)
@@ -77,9 +72,7 @@ async def test_image_platform(
         resp = await client.get(state.attributes["entity_picture"])
         assert resp.status == HTTPStatus.OK
 
-        assert (await resp.read()) == snapshot(
-            extension_class=PNGImageSnapshotExtension
-        )
+        assert (await resp.read()) == b"\x89PNGTestImage1"
 
         habitica.get_user.return_value = HabiticaUserResponse.from_json(
             await async_load_fixture(hass, "rogue_fixture.json", DOMAIN)
@@ -95,9 +88,7 @@ async def test_image_platform(
         resp = await client.get(state.attributes["entity_picture"])
         assert resp.status == HTTPStatus.OK
 
-        assert (await resp.read()) == snapshot(
-            extension_class=PNGImageSnapshotExtension
-        )
+        assert (await resp.read()) == b"\x89PNGTestImage2"
 
 
 @pytest.mark.usefixtures("habitica")

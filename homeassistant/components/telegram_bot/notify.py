@@ -2,17 +2,18 @@
 
 from typing import Any
 
-import telegram
-
-from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
+from homeassistant.components.notify import (
+    NotifyEntity,
+    NotifyEntityDescription,
+    NotifyEntityFeature,
+)
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TelegramBotConfigEntry
-from .const import ATTR_TITLE, CONF_CHAT_ID, DOMAIN
+from .const import ATTR_TITLE, CONF_CHAT_ID
+from .entity import TelegramBotEntity
 
 
 async def async_setup_entry(
@@ -29,7 +30,7 @@ async def async_setup_entry(
         )
 
 
-class TelegramBotNotifyEntity(NotifyEntity):
+class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
     """Representation of a telegram bot notification entity."""
 
     _attr_supported_features = NotifyEntityFeature.TITLE
@@ -40,23 +41,13 @@ class TelegramBotNotifyEntity(NotifyEntity):
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize a notification entity."""
-        bot_id = config_entry.runtime_data.bot.id
-        chat_id = subentry.data[CONF_CHAT_ID]
-
-        self._attr_unique_id = f"{bot_id}_{chat_id}"
-        self.name = subentry.title
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Telegram",
-            model=config_entry.data[CONF_PLATFORM].capitalize(),
-            sw_version=telegram.__version__,
-            identifiers={(DOMAIN, f"{bot_id}")},
+        super().__init__(
+            config_entry, NotifyEntityDescription(key=subentry.data[CONF_CHAT_ID])
         )
-        self._target = chat_id
-        self._service = config_entry.runtime_data
+        self.chat_id = subentry.data[CONF_CHAT_ID]
+        self._attr_name = subentry.title
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         kwargs: dict[str, Any] = {ATTR_TITLE: title}
-        await self._service.send_message(message, self._target, self._context, **kwargs)
+        await self.service.send_message(message, self.chat_id, self._context, **kwargs)

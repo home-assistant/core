@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.home_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -29,6 +30,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -68,8 +70,9 @@
 # ---
 # name: test_sensor[sensor.home_benzene-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -89,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Benzene',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -124,8 +128,9 @@
 # ---
 # name: test_sensor[sensor.home_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -145,19 +150,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
     'original_icon': None,
     'original_name': 'Carbon monoxide',
     'platform': 'gios',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co',
+    'translation_key': None,
     'unique_id': '123-co',
     'unit_of_measurement': 'μg/m³',
   })
@@ -166,6 +172,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
+      'device_class': 'carbon_monoxide',
       'friendly_name': 'Home Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
@@ -180,8 +187,9 @@
 # ---
 # name: test_sensor[sensor.home_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -201,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -237,8 +246,9 @@
 # ---
 # name: test_sensor[sensor.home_nitrogen_dioxide_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -265,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -304,8 +315,9 @@
 # ---
 # name: test_sensor[sensor.home_nitrogen_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -325,6 +337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen monoxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -361,8 +374,9 @@
 # ---
 # name: test_sensor[sensor.home_nitrogen_oxides-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -382,6 +396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen oxides',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -417,8 +432,9 @@
 # ---
 # name: test_sensor[sensor.home_ozone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -438,6 +454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -474,8 +491,9 @@
 # ---
 # name: test_sensor[sensor.home_ozone_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -502,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -541,8 +560,9 @@
 # ---
 # name: test_sensor[sensor.home_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -562,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -598,8 +619,9 @@
 # ---
 # name: test_sensor[sensor.home_pm10_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -626,6 +648,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10 index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -665,8 +688,9 @@
 # ---
 # name: test_sensor[sensor.home_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -686,6 +710,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -722,8 +747,9 @@
 # ---
 # name: test_sensor[sensor.home_pm2_5_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -750,6 +776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5 index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -789,8 +816,9 @@
 # ---
 # name: test_sensor[sensor.home_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -810,6 +838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -846,8 +875,9 @@
 # ---
 # name: test_sensor[sensor.home_sulphur_dioxide_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -874,6 +904,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

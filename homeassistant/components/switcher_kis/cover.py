@@ -12,22 +12,24 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 
-API_SET_POSITON = "set_position"
+PARALLEL_UPDATES = 1
+
+API_SET_POSITION = "set_position"
 API_STOP = "stop_shutter"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SwitcherConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher cover from config entry."""
@@ -83,16 +85,16 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_call_api(API_SET_POSITON, 0, self._cover_id)
+        await self._async_call_api(API_SET_POSITION, 0, self._cover_id)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._async_call_api(API_SET_POSITON, 100, self._cover_id)
+        await self._async_call_api(API_SET_POSITION, 100, self._cover_id)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_call_api(
-            API_SET_POSITON, kwargs[ATTR_POSITION], self._cover_id
+            API_SET_POSITION, kwargs[ATTR_POSITION], self._cover_id
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:

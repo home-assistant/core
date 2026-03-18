@@ -11,6 +11,7 @@ import respx
 from homeassistant import config_entries
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
+    CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
@@ -34,7 +35,23 @@ from tests.typing import ClientSessionGenerator
 
 MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (
-    f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server"
+    f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp"
+)
+AUTHORIZATION_SERVER = "https://example-auth-server.com"
+OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT = (
+    f"{AUTHORIZATION_SERVER}/.well-known/oauth-authorization-server"
+)
+SCOPES_SUPPORTED = ["profile", "email", "phone"]
+OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
+    status_code=200,
+    json={
+        "resource": MCP_SERVER_URL,
+        "authorization_servers": [
+            AUTHORIZATION_SERVER,
+        ],
+        "scopes_supported": SCOPES_SUPPORTED,
+        "bearer_methods_supported": ["header"],
+    },
 )
 OAUTH_SERVER_METADATA_RESPONSE = httpx.Response(
     status_code=200,
@@ -42,9 +59,11 @@ OAUTH_SERVER_METADATA_RESPONSE = httpx.Response(
         {
             "authorization_endpoint": OAUTH_AUTHORIZE_URL,
             "token_endpoint": OAUTH_TOKEN_URL,
+            "scopes_supported": ["read", "write"],
         }
     ),
 )
+SCOPES = ["read", "write"]
 CALLBACK_PATH = "/auth/external/callback"
 OAUTH_CALLBACK_URL = f"https://example.com{CALLBACK_PATH}"
 OAUTH_CODE = "abcd"
@@ -53,6 +72,7 @@ OAUTH_TOKEN_PAYLOAD = {
     "access_token": "mock-access-token",
     "type": "Bearer",
     "expires_in": 60,
+    "scope": " ".join(SCOPES),
 }
 
 
@@ -295,6 +315,7 @@ async def perform_oauth_flow(
     result: config_entries.ConfigFlowResult,
     authorize_url: str = OAUTH_AUTHORIZE_URL,
     token_url: str = OAUTH_TOKEN_URL,
+    scopes: list[str] | None = None,
 ) -> config_entries.ConfigFlowResult:
     """Perform the common steps of the OAuth flow.
 
@@ -307,10 +328,13 @@ async def perform_oauth_flow(
             "redirect_uri": OAUTH_CALLBACK_URL,
         },
     )
+    scope_param = ""
+    if scopes:
+        scope_param = "&scope=" + "+".join(scopes)
     assert result["url"] == (
         f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={OAUTH_CALLBACK_URL}"
-        f"&state={state}"
+        f"&state={state}{scope_param}"
     )
 
     client = await hass_client_no_auth()
@@ -327,9 +351,14 @@ async def perform_oauth_flow(
 
 
 @pytest.mark.parametrize(
-    ("oauth_server_metadata_response", "expected_authorize_url", "expected_token_url"),
+    (
+        "oauth_server_metadata_response",
+        "expected_authorize_url",
+        "expected_token_url",
+        "scopes",
+    ),
     [
-        (OAUTH_SERVER_METADATA_RESPONSE, OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL),
+        (OAUTH_SERVER_METADATA_RESPONSE, OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL, SCOPES),
         (
             httpx.Response(
                 status_code=200,
@@ -342,11 +371,13 @@ async def perform_oauth_flow(
             ),
             f"{MCP_SERVER_BASE_URL}/authorize-path",
             f"{MCP_SERVER_BASE_URL}/token-path",
+            None,
         ),
         (
             httpx.Response(status_code=404),
             f"{MCP_SERVER_BASE_URL}/authorize",
             f"{MCP_SERVER_BASE_URL}/token",
+            None,
         ),
     ],
     ids=(
@@ -367,6 +398,7 @@ async def test_authentication_flow(
     oauth_server_metadata_response: httpx.Response,
     expected_authorize_url: str,
     expected_token_url: str,
+    scopes: list[str] | None,
 ) -> None:
     """Test for an OAuth authentication flow for an MCP server."""
 
@@ -405,6 +437,7 @@ async def test_authentication_flow(
         result,
         authorize_url=expected_authorize_url,
         token_url=expected_token_url,
+        scopes=scopes,
     )
 
     # Client now accepts credentials
@@ -423,12 +456,212 @@ async def test_authentication_flow(
         CONF_URL: MCP_SERVER_URL,
         CONF_AUTHORIZATION_URL: expected_authorize_url,
         CONF_TOKEN_URL: expected_token_url,
+        CONF_SCOPE: scopes,
     }
     assert token
     token.pop("expires_at")
     assert token == OAUTH_TOKEN_PAYLOAD
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+@pytest.mark.parametrize(
+    ("authenticate_header", "resource_metadata_url", "expected_scopes"),
+    [
+        (
+            'Bearer error="invalid_token", resource_metadata="https://example.com/custom-discovery"',
+            "https://example.com/custom-discovery",
+            SCOPES_SUPPORTED,
+        ),
+        (
+            'Bearer error="invalid_token", resource_metadata="/custom-discovery"',
+            f"{MCP_SERVER_BASE_URL}/custom-discovery",
+            SCOPES_SUPPORTED,
+        ),
+        (
+            'Bearer error="invalid_token", resource_metadata="https://example.com/custom-discovery" scope="read write"',
+            "https://example.com/custom-discovery",
+            ["read", "write"],
+        ),
+    ],
+    ids=[
+        "absolute_url",
+        "relative_url",
+        "with_scopes",
+    ],
+)
+async def test_authentication_discovery_via_header(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+    authenticate_header: str,
+    resource_metadata_url: str,
+    expected_scopes: list[str],
+) -> None:
+    """Test for an OAuth discovery flow using the WWW-Authenticate header."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
+    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx.Response(
+            401,
+            headers={
+                "WWW-Authenticate": authenticate_header,
+            },
+        ),
+    )
+
+    # Discovery process starts. It hits the custom discovery URL directly.
+    respx.get(resource_metadata_url).mock(
+        return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: MCP_SERVER_URL,
+        },
+    )
+
+    # Should proceed to credentials choice
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "next_step_id": "pick_implementation",
+        },
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        authorize_url=OAUTH_AUTHORIZE_URL,
+        token_url=OAUTH_TOKEN_URL,
+        scopes=expected_scopes,
+    )
+
+    # Client now accepts credentials
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_API_NAME
+    data = result["data"]
+    token = data.pop(CONF_TOKEN)
+    assert data == {
+        "auth_implementation": AUTH_DOMAIN,
+        CONF_URL: MCP_SERVER_URL,
+        CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+        CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        CONF_SCOPE: expected_scopes,
+    }
+    assert token
+    token.pop("expires_at")
+    assert token == OAUTH_TOKEN_PAYLOAD
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+@pytest.mark.parametrize(
+    ("resource_metadata"),
+    [
+        {
+            "authorization_servers": [
+                AUTHORIZATION_SERVER,
+            ],
+            "scopes_supported": SCOPES_SUPPORTED,
+            "bearer_methods_supported": ["header"],
+        },
+        {
+            "resource": "https://different-resource.com",
+            "authorization_servers": [
+                AUTHORIZATION_SERVER,
+            ],
+            "scopes_supported": SCOPES_SUPPORTED,
+            "bearer_methods_supported": ["header"],
+        },
+        {
+            "resource": MCP_SERVER_URL,
+            "scopes_supported": SCOPES_SUPPORTED,
+            "bearer_methods_supported": ["header"],
+        },
+    ],
+    ids=[
+        "missing_resource",
+        "mismatched_resource",
+        "no_authorization_servers",
+    ],
+)
+async def test_invalid_protected_resource_metadata(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+    resource_metadata: dict[str, Any],
+) -> None:
+    """Test for an OAuth discovery flow using the WWW-Authenticate header."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
+    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    resource_metadata_url = "https://example.com/custom-discovery"
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx.Response(
+            401,
+            headers={
+                "WWW-Authenticate": f'Bearer error="invalid_token", resource_metadata="{resource_metadata_url}"',
+            },
+        ),
+    )
+
+    # Discovery process starts. It hits the custom discovery URL directly.
+    respx.get(resource_metadata_url).mock(
+        return_value=httpx.Response(
+            status_code=200,
+            json=resource_metadata,
+        )
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: MCP_SERVER_URL,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "cannot_connect"
 
 
 @pytest.mark.parametrize(
@@ -536,6 +769,7 @@ async def test_authentication_flow_server_failure_abort(
         aioclient_mock,
         hass_client_no_auth,
         result,
+        scopes=SCOPES,
     )
 
     # Client fails with an error
@@ -591,6 +825,7 @@ async def test_authentication_flow_server_missing_tool_capabilities(
         aioclient_mock,
         hass_client_no_auth,
         result,
+        scopes=SCOPES,
     )
 
     # Client can now authenticate
@@ -628,7 +863,9 @@ async def test_reauth_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    result = await perform_oauth_flow(hass, aioclient_mock, hass_client_no_auth, result)
+    result = await perform_oauth_flow(
+        hass, aioclient_mock, hass_client_no_auth, result, scopes=SCOPES
+    )
 
     # Verify we can connect to the server
     response = Mock()
@@ -648,6 +885,7 @@ async def test_reauth_flow(
         CONF_URL: MCP_SERVER_URL,
         CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
         CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        CONF_SCOPE: ["read", "write"],
     }
     assert token
     token.pop("expires_at")

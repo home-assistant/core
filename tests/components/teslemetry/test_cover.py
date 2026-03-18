@@ -223,8 +223,6 @@ async def test_cover_services(
 
 async def test_cover_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -262,15 +260,12 @@ async def test_cover_streaming(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "cover.test_windows",
-        "cover.test_charge_port_door",
-        "cover.test_frunk",
-        "cover.test_trunk",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-closed")
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
+    assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
+    # Frunk and trunk don't get closed state from stream, they show unknown
+    assert hass.states.get("cover.test_frunk").state == "unknown"
+    assert hass.states.get("cover.test_trunk").state == "unknown"
 
     # Send some alternative data with everything open
     mock_add_listener.send(
@@ -298,15 +293,13 @@ async def test_cover_streaming(
     )
     await hass.async_block_till_done()
 
-    # Assert the entities get new values
-    for entity_id in (
-        "cover.test_windows",
-        "cover.test_charge_port_door",
-        "cover.test_frunk",
-        "cover.test_trunk",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-open")
+    # Assert the entities get new values with concrete assertions
+    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    # Charge port door doesn't change with CHARGE_PORT_DOOR_OPEN: False
+    assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
+    # Frunk and trunk still show unknown (DOOR_STATE doesn't contain trunk state info)
+    assert hass.states.get("cover.test_frunk").state == "unknown"
+    assert hass.states.get("cover.test_trunk").state == "unknown"
 
     # Send some alternative data with everything unknown
     mock_add_listener.send(
@@ -334,12 +327,9 @@ async def test_cover_streaming(
     )
     await hass.async_block_till_done()
 
-    # Assert the entities get UNKNOWN values
-    for entity_id in (
-        "cover.test_windows",
-        "cover.test_charge_port_door",
-        "cover.test_frunk",
-        "cover.test_trunk",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-unknown")
+    # Assert the entities get values with concrete assertions
+    # Windows stay open when unknown because of previous state restoration
+    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    assert hass.states.get("cover.test_charge_port_door").state == "unknown"
+    assert hass.states.get("cover.test_frunk").state == "unknown"
+    assert hass.states.get("cover.test_trunk").state == "unknown"

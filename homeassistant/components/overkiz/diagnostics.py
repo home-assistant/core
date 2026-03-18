@@ -61,7 +61,10 @@ async def async_get_device_diagnostics(
         data["execution_history"] = [
             repr(execution)
             for execution in await client.get_execution_history()
-            if any(command.device_url == device_url for command in execution.commands)
+            if any(
+                command.device_url.split("#", 1)[0] == device_url.split("#", 1)[0]
+                for command in execution.commands
+            )
         ]
 
     return data

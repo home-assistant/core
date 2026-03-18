@@ -1,0 +1,72 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {
+        "setName": {
+          "isExecutable": true,
+          "name": "setName",
+          "params": {
+            "name": {
+              "constraints": {
+                "maxLength": 40,
+                "minLength": 1,
+                "regEx": "^[\\p{L}0-9]+( [\\p{L}0-9]+)*$"
+              },
+              "required": true,
+              "type": "string"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################-2/features/device.name/commands/setName"
+        }
+      },
+      "deviceId": "zigbee-################-2",
+      "feature": "device.name",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Zone EG Bad"
+        }
+      },
+      "timestamp": "2025-10-05T14:18:35.990Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################-2/features/device.name"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################-2",
+      "feature": "fht.valve",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "value": "normallyClosed"
+        }
+      },
+      "timestamp": "2025-10-05T14:18:35.990Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################-2/features/fht.valve"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################-2",
+      "feature": "fht.valve.state",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "closed"
+        }
+      },
+      "timestamp": "2025-10-05T14:18:35.990Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################-2/features/fht.valve.state"
+    }
+  ]
+}

@@ -19,8 +19,8 @@ def has_location(state: State) -> bool:
     """
     return (
         isinstance(state, State)
-        and isinstance(state.attributes.get(ATTR_LATITUDE), float)
-        and isinstance(state.attributes.get(ATTR_LONGITUDE), float)
+        and isinstance(state.attributes.get(ATTR_LATITUDE), (float, int))
+        and isinstance(state.attributes.get(ATTR_LONGITUDE), (float, int))
     )
 
 
@@ -36,13 +36,15 @@ def closest(latitude: float, longitude: float, states: Iterable[State]) -> State
 
     return min(
         with_location,
-        key=lambda state: location_util.distance(
-            state.attributes.get(ATTR_LATITUDE),
-            state.attributes.get(ATTR_LONGITUDE),
-            latitude,
-            longitude,
-        )
-        or 0,
+        key=lambda state: (
+            location_util.distance(
+                state.attributes.get(ATTR_LATITUDE),
+                state.attributes.get(ATTR_LONGITUDE),
+                latitude,
+                longitude,
+            )
+            or 0
+        ),
     )
 
 

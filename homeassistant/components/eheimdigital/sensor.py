@@ -6,11 +6,15 @@ from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
+from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.types import FilterErrorCode
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.components.sensor.const import SensorDeviceClass
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfFrequency, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -28,6 +32,27 @@ class EheimDigitalSensorDescription[_DeviceT: EheimDigitalDevice](
     """Class describing EHEIM Digital sensor entities."""
 
     value_fn: Callable[[_DeviceT], float | str | None]
+
+
+FILTER_DESCRIPTIONS: tuple[EheimDigitalSensorDescription[EheimDigitalFilter], ...] = (
+    EheimDigitalSensorDescription[EheimDigitalFilter](
+        key="current_speed",
+        translation_key="current_speed",
+        value_fn=lambda device: device.current_speed,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=1,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
+    EheimDigitalSensorDescription[EheimDigitalFilter](
+        key="service_hours",
+        translation_key="service_hours",
+        value_fn=lambda device: device.service_hours,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
@@ -51,11 +76,7 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
     EheimDigitalSensorDescription[EheimDigitalClassicVario](
         key="error_code",
         translation_key="error_code",
-        value_fn=(
-            lambda device: device.error_code.name.lower()
-            if device.error_code is not None
-            else None
-        ),
+        value_fn=lambda device: device.error_code.name.lower(),
         device_class=SensorDeviceClass.ENUM,
         options=[name.lower() for name in FilterErrorCode._member_names_],
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -77,6 +98,13 @@ async def async_setup_entry(
         """Set up the light entities for one or multiple devices."""
         entities: list[EheimDigitalSensor[Any]] = []
         for device in device_address.values():
+            if isinstance(device, EheimDigitalFilter):
+                entities += [
+                    EheimDigitalSensor[EheimDigitalFilter](
+                        coordinator, device, description
+                    )
+                    for description in FILTER_DESCRIPTIONS
+                ]
             if isinstance(device, EheimDigitalClassicVario):
                 entities += [
                     EheimDigitalSensor[EheimDigitalClassicVario](

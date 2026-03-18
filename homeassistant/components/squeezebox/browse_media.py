@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from pysqueezebox import Player
 
@@ -14,13 +14,15 @@ from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaClass,
-    MediaPlayerEntity,
     MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
 from .const import DOMAIN, UNPLAYABLE_TYPES
+
+if TYPE_CHECKING:
+    from .media_player import SqueezeBoxMediaPlayerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -244,14 +246,13 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseMedia:
 def _get_item_thumbnail(
     item: dict[str, Any],
     player: Player,
-    entity: MediaPlayerEntity,
+    entity: SqueezeBoxMediaPlayerEntity,
     item_type: str | MediaType | None,
     search_type: str,
     internal_request: bool,
     known_apps_radios: set[str],
 ) -> str | None:
     """Construct path to thumbnail image."""
-    item_thumbnail: str | None = None
 
     track_id = item.get("artwork_track_id") or (
         item.get("id")
@@ -262,21 +263,27 @@ def _get_item_thumbnail(
 
     if track_id:
         if internal_request:
-            item_thumbnail = player.generate_image_url_from_track_id(track_id)
-        elif item_type is not None:
-            item_thumbnail = entity.get_browse_image_url(
-                item_type, item["id"], track_id
-            )
+            return cast(str, player.generate_image_url_from_track_id(track_id))
+        if item_type is not None:
+            return entity.get_browse_image_url(item_type, item["id"], track_id)
 
-    elif search_type in ["apps", "radios"]:
-        item_thumbnail = player.generate_image_url(item["icon"])
-    if item_thumbnail is None:
-        item_thumbnail = item.get("image_url")  # will not be proxied by HA
-    return item_thumbnail
+    url = None
+    content_type = item_type or "unknown"
+
+    if search_type in ["apps", "radios"]:
+        url = cast(str, player.generate_image_url(item["icon"]))
+    elif image_url := item.get("image_url"):
+        url = image_url
+
+    if internal_request or not url:
+        return url
+
+    synthetic_id = entity.get_synthetic_id_and_cache_url(url)
+    return entity.get_browse_image_url(content_type, "synthetic", synthetic_id)
 
 
 async def build_item_response(
-    entity: MediaPlayerEntity,
+    entity: SqueezeBoxMediaPlayerEntity,
     player: Player,
     payload: dict[str, str | None],
     browse_limit: int,

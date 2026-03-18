@@ -10,6 +10,7 @@ from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
+from bleak import BleakScanner
 from habluetooth import (
     BaseHaScanner,
     BluetoothScannerDevice,
@@ -38,13 +39,16 @@ def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
-    """Return a HaBleakScannerWrapper.
+def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
+    """Return a HaBleakScannerWrapper cast to BleakScanner.
 
     This is a wrapper around our BleakScanner singleton that allows
     multiple integrations to share the same BleakScanner.
+
+    The wrapper is cast to BleakScanner for type compatibility with
+    libraries expecting a BleakScanner instance.
     """
-    return HaBleakScannerWrapper()
+    return cast(BleakScanner, HaBleakScannerWrapper())
 
 
 @hass_callback
@@ -187,6 +191,20 @@ def async_track_unavailable(
 def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
     """Trigger discovery of devices which have already been seen."""
     _get_manager(hass).async_rediscover_address(address)
+
+
+@hass_callback
+def async_clear_address_from_match_history(hass: HomeAssistant, address: str) -> None:
+    """Clear an address from the integration matcher history.
+
+    This allows future advertisements from this address to trigger discovery
+    even if the advertisement content has changed but the service data UUIDs
+    remain the same.
+
+    Unlike async_rediscover_address, this does not immediately re-trigger
+    discovery with the current advertisement in history.
+    """
+    _get_manager(hass).async_clear_address_from_match_history(address)
 
 
 @hass_callback

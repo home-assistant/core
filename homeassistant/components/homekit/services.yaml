@@ -2,8 +2,12 @@
 
 reload:
 reset_accessory:
-  target:
-    entity: {}
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          multiple: true
 
 unpair:
   fields:

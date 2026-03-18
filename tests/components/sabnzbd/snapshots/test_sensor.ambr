@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.sabnzbd_daily_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -57,8 +59,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_free_disk_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free disk space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -113,8 +117,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_left_to_download-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left to download',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -169,8 +175,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_monthly_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -190,6 +197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -225,8 +233,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_overall_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -246,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overall total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -281,8 +291,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_queue-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -302,6 +313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Queue',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -337,8 +349,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_queue_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -358,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Queue count',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -391,8 +405,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -412,6 +427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -450,8 +466,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -469,6 +486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -498,8 +516,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_total_disk_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -519,6 +538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total disk space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -554,8 +574,9 @@
 # ---
 # name: test_sensor[sensor.sabnzbd_weekly_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -575,6 +596,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

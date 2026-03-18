@@ -343,7 +343,7 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_topic"}
 
     result = await hass.config_entries.subentries.async_configure(
@@ -786,7 +786,7 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
                     CONF_PRIORITY: ["1"],
                     CONF_TAGS: ["owl", "-1"],
                     CONF_TITLE: "",
-                    CONF_MESSAGE: "",
+                    CONF_MESSAGE: "triggered",
                 },
                 subentry_id="subentry_id",
                 subentry_type="topic",
@@ -810,7 +810,6 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
             CONF_PRIORITY: ["5"],
             CONF_TAGS: ["octopus", "+1"],
             CONF_TITLE: "title",
-            CONF_MESSAGE: "triggered",
         },
     )
 
@@ -824,7 +823,7 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
                 CONF_PRIORITY: ["5"],
                 CONF_TAGS: ["octopus", "+1"],
                 CONF_TITLE: "title",
-                CONF_MESSAGE: "triggered",
+                CONF_MESSAGE: None,
             },
             subentry_id="subentry_id",
             subentry_type="topic",

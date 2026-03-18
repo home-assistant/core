@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch[switch.fake_profile_ai_driven_threat_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AI-Driven threat detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_switch[switch.fake_profile_allow_affiliate_tracking_links-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow affiliate & tracking links',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_switch[switch.fake_profile_anonymized_edns_client_subnet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anonymized EDNS client subnet',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_9gag-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block 9GAG',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +201,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_amazon-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Amazon',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +251,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_bereal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block BeReal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,8 +301,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_blizzard-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Blizzard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -337,8 +351,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_bypass_methods-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block bypass methods',
     'options': dict({
     }),
     'original_device_class': None,
@@ -385,8 +401,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_chatgpt-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block ChatGPT',
     'options': dict({
     }),
     'original_device_class': None,
@@ -433,8 +451,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_child_sexual_abuse_material-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block child sexual abuse material',
     'options': dict({
     }),
     'original_device_class': None,
@@ -481,8 +501,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_dailymotion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Dailymotion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -529,8 +551,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_dating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -548,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dating',
     'options': dict({
     }),
     'original_device_class': None,
@@ -577,8 +601,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_discord-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -596,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Discord',
     'options': dict({
     }),
     'original_device_class': None,
@@ -625,8 +651,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_disguised_third_party_trackers-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -644,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block disguised third-party trackers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -673,8 +701,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_disney_plus-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -692,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Disney Plus',
     'options': dict({
     }),
     'original_device_class': None,
@@ -721,8 +751,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_dynamic_dns_hostnames-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -740,6 +771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dynamic DNS hostnames',
     'options': dict({
     }),
     'original_device_class': None,
@@ -769,8 +801,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_ebay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -788,6 +821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block eBay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -817,8 +851,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_facebook-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -836,6 +871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Facebook',
     'options': dict({
     }),
     'original_device_class': None,
@@ -865,8 +901,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_fortnite-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -884,6 +921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Fortnite',
     'options': dict({
     }),
     'original_device_class': None,
@@ -913,8 +951,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_gambling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -932,6 +971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block gambling',
     'options': dict({
     }),
     'original_device_class': None,
@@ -961,8 +1001,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_google_chat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -980,6 +1021,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Google Chat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1009,8 +1051,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_hbo_max-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1028,6 +1071,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block HBO Max',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1057,8 +1101,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_hulu-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1076,6 +1121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Hulu',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1105,8 +1151,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_imgur-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1124,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Imgur',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1153,8 +1201,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_instagram-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1172,6 +1221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Instagram',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1201,8 +1251,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_league_of_legends-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1220,6 +1271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block League of Legends',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1249,8 +1301,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_mastodon-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1268,6 +1321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Mastodon',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1297,8 +1351,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_messenger-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1316,6 +1371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Messenger',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1345,8 +1401,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_minecraft-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1364,6 +1421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Minecraft',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1393,8 +1451,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_netflix-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1412,6 +1471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Netflix',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1441,8 +1501,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_newly_registered_domains-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1460,6 +1521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block newly registered domains',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1489,8 +1551,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_online_gaming-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1508,6 +1571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block online gaming',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1537,8 +1601,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_page-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1556,6 +1621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block page',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1585,8 +1651,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_parked_domains-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1604,6 +1671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block parked domains',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1633,8 +1701,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_pinterest-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1652,6 +1721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Pinterest',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1681,8 +1751,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_piracy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1700,6 +1771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block piracy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1729,8 +1801,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_playstation_network-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1748,6 +1821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block PlayStation Network',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1777,8 +1851,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_porn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1796,6 +1871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block porn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1825,8 +1901,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_prime_video-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1844,6 +1921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Prime Video',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1873,8 +1951,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_reddit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1892,6 +1971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Reddit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1921,8 +2001,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_roblox-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1940,6 +2021,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Roblox',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1969,8 +2051,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_signal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1988,6 +2071,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Signal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2017,8 +2101,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_skype-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2036,6 +2121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Skype',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2065,8 +2151,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_snapchat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2084,6 +2171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Snapchat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2113,8 +2201,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_social_networks-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2132,6 +2221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block social networks',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2161,8 +2251,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_spotify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2180,6 +2271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Spotify',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2209,8 +2301,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_steam-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2228,6 +2321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Steam',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2257,8 +2351,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_telegram-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2276,6 +2371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Telegram',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2305,8 +2401,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_tiktok-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2324,6 +2421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block TikTok',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2353,8 +2451,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_tinder-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2372,6 +2471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tinder',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2401,8 +2501,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_tumblr-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2420,6 +2521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tumblr',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2449,8 +2551,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_twitch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2468,6 +2571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Twitch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2497,8 +2601,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_video_streaming-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2516,6 +2621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block video streaming',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2545,8 +2651,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_vimeo-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2564,6 +2671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Vimeo',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2593,8 +2701,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_vk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2612,6 +2721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block VK',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2641,8 +2751,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_whatsapp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2660,6 +2771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block WhatsApp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2689,8 +2801,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_x_formerly_twitter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2708,6 +2821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block X (formerly Twitter)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2735,10 +2849,11 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-entry]
+# name: test_switch[switch.fake_profile_block_xbox_network-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2748,7 +2863,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2756,11 +2871,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Xbox Network',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Block Xbox Live',
+    'original_name': 'Block Xbox Network',
     'platform': 'nextdns',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2770,13 +2886,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-state]
+# name: test_switch[switch.fake_profile_block_xbox_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Xbox Live',
+      'friendly_name': 'Fake Profile Block Xbox Network',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2785,8 +2901,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_youtube-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2804,6 +2921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block YouTube',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2833,8 +2951,9 @@
 # ---
 # name: test_switch[switch.fake_profile_block_zoom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2852,6 +2971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Zoom',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2881,8 +3001,9 @@
 # ---
 # name: test_switch[switch.fake_profile_bypass_age_verification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2900,6 +3021,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass age verification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2929,8 +3051,9 @@
 # ---
 # name: test_switch[switch.fake_profile_cache_boost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2948,6 +3071,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2977,8 +3101,9 @@
 # ---
 # name: test_switch[switch.fake_profile_cname_flattening-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2996,6 +3121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CNAME flattening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3025,8 +3151,9 @@
 # ---
 # name: test_switch[switch.fake_profile_cryptojacking_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3044,6 +3171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cryptojacking protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3073,8 +3201,9 @@
 # ---
 # name: test_switch[switch.fake_profile_dns_rebinding_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3092,6 +3221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS rebinding protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3121,8 +3251,9 @@
 # ---
 # name: test_switch[switch.fake_profile_domain_generation_algorithms_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3140,6 +3271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Domain generation algorithms protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3169,8 +3301,9 @@
 # ---
 # name: test_switch[switch.fake_profile_force_safesearch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3188,6 +3321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force SafeSearch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3217,8 +3351,9 @@
 # ---
 # name: test_switch[switch.fake_profile_force_youtube_restricted_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3236,6 +3371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force YouTube restricted mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3265,8 +3401,9 @@
 # ---
 # name: test_switch[switch.fake_profile_google_safe_browsing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3284,6 +3421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google safe browsing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3313,8 +3451,9 @@
 # ---
 # name: test_switch[switch.fake_profile_idn_homograph_attacks_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3332,6 +3471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IDN homograph attacks protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3361,8 +3501,9 @@
 # ---
 # name: test_switch[switch.fake_profile_logs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3380,6 +3521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Logs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3409,8 +3551,9 @@
 # ---
 # name: test_switch[switch.fake_profile_threat_intelligence_feeds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3428,6 +3571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Threat intelligence feeds',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3457,8 +3601,9 @@
 # ---
 # name: test_switch[switch.fake_profile_typosquatting_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3476,6 +3621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Typosquatting protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3505,8 +3651,9 @@
 # ---
 # name: test_switch[switch.fake_profile_web3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3524,6 +3671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Web3',
     'options': dict({
     }),
     'original_device_class': None,

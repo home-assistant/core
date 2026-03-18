@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_unsupported": "Discovery flow is not supported by the Hue BLE integration.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Invalid authentication. Ensure the light is [made discoverable to voice assistants]({url_pairing_mode}).",
+      "no_scanners": "No Bluetooth scanners are available to search for the light.",
+      "not_found": "The light was not found.",
+      "not_supported": "The light is not a supported model.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name} ({mac})?\nMake sure the light is [made discoverable to voice assistants]({url_pairing_mode}) or has been [factory reset]({url_factory_reset})."
+      },
+      "user": {
+        "data": {
+          "mac": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "mac": "Select the Hue device you want to set up"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  }
+}

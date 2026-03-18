@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from uiprotect.data import Camera, ProtectAdoptableDeviceModel, StateType
+from uiprotect.data import Camera, ModelType, ProtectAdoptableDeviceModel, StateType
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -23,10 +23,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 _SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
     key="speaker",
@@ -45,8 +47,11 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if isinstance(device, Camera) and (
-            device.has_speaker or device.has_removable_speaker
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if (
+            device.model is ModelType.CAMERA
+            and isinstance(device, Camera)
+            and (device.has_speaker or device.has_removable_speaker)
         ):
             async_add_entities([ProtectMediaPlayer(data, device)])
 
@@ -77,7 +82,13 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
-        self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
+        speaker_settings = updated_device.speaker_settings
+        volume = (
+            speaker_settings.speaker_volume
+            if speaker_settings.speaker_volume is not None
+            else speaker_settings.volume
+        )
+        self._attr_volume_level = float(volume / 100)
 
         if (
             updated_device.talkback_stream is not None
@@ -122,7 +133,10 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
         if media_type != MediaType.MUSIC:
-            raise HomeAssistantError("Only music media type is supported")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="only_music_supported",
+            )
 
         _LOGGER.debug(
             "Playing Media %s for %s Speaker", media_id, self.device.display_name
@@ -131,7 +145,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         try:
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
-            raise HomeAssistantError(err) from err
+            _LOGGER.debug("Error playing audio: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_error",
+            ) from err
 
         # update state after starting player
         self._async_updated_event(self.device)

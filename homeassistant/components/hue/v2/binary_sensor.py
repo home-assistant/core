@@ -145,7 +145,11 @@ class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
         if not self.resource.enabled:
             # Force None (unknown) if the sensor is set to disabled in Hue
             return None
-        return self.resource.motion.value
+        if not (motion_feature := self.resource.motion):
+            return None
+        if motion_feature.motion_report is not None:
+            return motion_feature.motion_report.motion
+        return motion_feature.motion
 
 
 # pylint: disable-next=hass-enforce-class-module
@@ -209,9 +213,9 @@ class HueMotionAwareSensor(HueMotionSensor):
             resource.id
         )
         group_id = self._motion_area_configuration.group.rid
-        self.group = self.bridge.api.groups[group_id]
+        self.hue_group = self.bridge.api.groups[group_id]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
+            identifiers={(DOMAIN, self.hue_group.id)},
         )
 
     async def async_added_to_hass(self) -> None:

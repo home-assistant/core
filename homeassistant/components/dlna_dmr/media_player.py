@@ -260,7 +260,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         try:
             bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_BOOTID]
             bootid: int | None = int(bootid_str, 10)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             bootid = None
 
         if change == ssdp.SsdpChange.UPDATE:

@@ -116,6 +116,7 @@ def mock_thinq_mqtt_client() -> Generator[None]:
     params=[
         "air_conditioner",
         "washer",
+        "dehumidifier",
     ]
 )
 def device_fixture(request: pytest.FixtureRequest) -> Generator[str]:
@@ -148,4 +149,5 @@ def devices(mock_thinq_api: AsyncMock, device_fixture: str) -> Generator[AsyncMo
     mock_thinq_api.async_get_device_energy_profile.return_value = (
         load_json_object_fixture(f"{device_fixture}/energy_profile.json", DOMAIN)
     )
+    mock_thinq_api.async_get_route.return_value = MagicMock()
     return mock_thinq_api

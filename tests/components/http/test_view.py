@@ -3,6 +3,7 @@
 from decimal import Decimal
 from http import HTTPStatus
 import json
+import math
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp.web_exceptions import (
@@ -46,7 +47,7 @@ async def test_invalid_json(caplog: pytest.LogCaptureFixture) -> None:
 
 async def test_nan_serialized_to_null() -> None:
     """Test nan serialized to null JSON."""
-    response = HomeAssistantView.json(float("NaN"))
+    response = HomeAssistantView.json(math.nan)
     assert json.loads(response.body.decode("utf-8")) is None
 
 

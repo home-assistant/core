@@ -40,10 +40,10 @@ async def mock_energyzero(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         "homeassistant.components.energyzero.coordinator.EnergyZero", autospec=True
     ) as energyzero_mock:
         client = energyzero_mock.return_value
-        client.energy_prices.return_value = Electricity.from_dict(
+        client.get_electricity_prices_legacy.return_value = Electricity.from_dict(
             await async_load_json_object_fixture(hass, "today_energy.json", DOMAIN)
         )
-        client.gas_prices.return_value = Gas.from_dict(
+        client.get_gas_prices_legacy.return_value = Gas.from_dict(
             await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
         )
         yield client

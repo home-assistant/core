@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import cast
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError
 from yalexs.const import Brand
 from yalexs.exceptions import YaleApiError
 from yalexs.manager.const import CONF_BRAND
@@ -15,8 +15,18 @@ from yalexs.manager.gateway import Config as YaleXSConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 
 from .const import DOMAIN, PLATFORMS
 from .data import YaleData
@@ -27,22 +37,28 @@ type YaleConfigEntry = ConfigEntry[YaleData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
-    """Set up yale from a config entry."""
+    """Set up Yale from a config entry."""
     session = async_create_yale_clientsession(hass)
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady("OAuth implementation not available") from err
+    oauth_session = OAuth2Session(hass, entry, implementation)
     yale_gateway = YaleGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_yale(hass, entry, yale_gateway)
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to yale api") from err
-    except (YaleApiError, ClientResponseError, CannotConnect) as err:
+    except (
+        YaleApiError,
+        OAuth2TokenRequestError,
+        ClientError,
+        CannotConnect,
+    ) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

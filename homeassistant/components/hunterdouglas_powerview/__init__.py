@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from aiopvapi.resources.model import PowerviewData
+from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
@@ -16,7 +17,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .model import PowerviewConfigEntry, PowerviewEntryData
-from .shade_data import PowerviewShadeData
 from .util import async_connect_hub
 
 PARALLEL_UPDATES = 1

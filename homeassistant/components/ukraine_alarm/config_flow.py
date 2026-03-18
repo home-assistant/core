@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Ukraine Alarm."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize a new UkraineAlarmConfigFlow."""
@@ -112,7 +112,7 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_finish_flow()
 
         regions = {}
-        if self.selected_region:
+        if self.selected_region and step_id != "district":
             regions[self.selected_region["regionId"]] = self.selected_region[
                 "regionName"
             ]

@@ -109,6 +109,40 @@ async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_telegram_count(0)
 
 
+async def test_last_reported(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test KNX binary sensor properly sets last_reported."""
+
+    await knx.setup_integration(
+        {
+            BinarySensorSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: "1/1/1",
+                    CONF_SYNC_STATE: False,
+                },
+            ]
+        }
+    )
+    events = async_capture_events(hass, "state_changed")
+
+    # receive initial telegram
+    await knx.receive_write("1/1/1", True)
+    first_reported = hass.states.get("binary_sensor.test").last_reported
+    assert len(events) == 1
+
+    # receive second telegram with identical payload
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    await knx.receive_write("1/1/1", True)
+
+    assert first_reported != hass.states.get("binary_sensor.test").last_reported
+    assert len(events) == 1, events  # last_reported shall not fire state_changed
+
+
 async def test_binary_sensor_ignore_internal_state(
     hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
@@ -250,8 +284,8 @@ async def test_binary_sensor_reset(
     assert state.state is STATE_OFF
 
 
-async def test_binary_sensor_restore_and_respond(hass: HomeAssistant, knx) -> None:
-    """Test restoring KNX binary sensor state and respond to read."""
+async def test_binary_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test restoring KNX binary sensor state."""
     _ADDRESS = "2/2/2"
     fake_state = State("binary_sensor.test", STATE_ON)
     mock_restore_cache(hass, (fake_state,))
@@ -278,7 +312,9 @@ async def test_binary_sensor_restore_and_respond(hass: HomeAssistant, knx) -> No
     assert state.state is STATE_OFF
 
 
-async def test_binary_sensor_restore_invert(hass: HomeAssistant, knx) -> None:
+async def test_binary_sensor_restore_invert(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test restoring KNX binary sensor state with invert."""
     _ADDRESS = "2/2/2"
     fake_state = State("binary_sensor.test", STATE_ON)

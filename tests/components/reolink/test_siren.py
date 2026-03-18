@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
@@ -39,7 +40,7 @@ async def test_siren(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SIREN}.{TEST_CAM_NAME}_siren"
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == STATE_ON
 
     # test siren turn on
     await hass.services.async_call(

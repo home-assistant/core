@@ -290,9 +290,7 @@ class UpdateEntity(
         Update entities return the brand icon based on the integration
         domain by default.
         """
-        return (
-            f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
-        )
+        return f"/api/brands/integration/{self.platform.platform_name}/icon.png"
 
     @cached_property
     def in_progress(self) -> bool | None:

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.diagnostics import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -45,7 +46,7 @@ async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
         "integration_without_diagnostics.diagnostics",
         Mock(),
     )
-    assert await async_setup_component(hass, "diagnostics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 async def test_websocket(
@@ -197,6 +198,7 @@ async def test_download_diagnostics(
             "codeowners": ["test"],
             "dependencies": [],
             "domain": "fake_integration",
+            "integration_type": "hub",
             "is_built_in": True,
             "overwrites_built_in": False,
             "name": "fake_integration",
@@ -301,6 +303,7 @@ async def test_download_diagnostics(
             "codeowners": [],
             "dependencies": [],
             "domain": "fake_integration",
+            "integration_type": "hub",
             "is_built_in": True,
             "overwrites_built_in": False,
             "name": "fake_integration",

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cloud_all_sensors[binary_sensor.single_channel_receiver_22-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Single Channel Receiver 22',
     'options': dict({
     }),
     'original_device_class': None,

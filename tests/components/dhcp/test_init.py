@@ -45,7 +45,6 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     async_fire_time_changed,
-    import_and_test_deprecated_constant,
     mock_integration,
 )
 
@@ -240,7 +239,7 @@ async def test_dhcp_match_hostname_and_macaddress(hass: HomeAssistant) -> None:
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -269,7 +268,7 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass: HomeAssistant) -
         "discovery_key": DiscoveryKey(domain="dhcp", key="50147903852c", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.1.120",
         hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
         macaddress="50147903852c",
@@ -319,7 +318,7 @@ async def test_registered_devices(
         "discovery_key": DiscoveryKey(domain="dhcp", key="50147903852c", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.1.120",
         hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
         macaddress="50147903852c",
@@ -346,7 +345,7 @@ async def test_dhcp_match_hostname(hass: HomeAssistant) -> None:
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -373,7 +372,7 @@ async def test_dhcp_match_macaddress(hass: HomeAssistant) -> None:
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -403,7 +402,7 @@ async def test_dhcp_multiple_match_only_one_flow(hass: HomeAssistant) -> None:
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -430,7 +429,7 @@ async def test_dhcp_match_macaddress_without_hostname(hass: HomeAssistant) -> No
         "discovery_key": DiscoveryKey(domain="dhcp", key="606bbd59e4b4", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.107.151",
         hostname="",
         macaddress="606bbd59e4b4",
@@ -793,7 +792,7 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -828,7 +827,7 @@ async def test_device_tracker_registered(hass: HomeAssistant) -> None:
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -902,7 +901,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -1100,7 +1099,7 @@ async def test_aiodiscover_finds_new_hosts(hass: HomeAssistant) -> None:
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -1160,7 +1159,7 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="irobot-abc",
         macaddress="b8b7f16db533",
@@ -1170,7 +1169,7 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[1][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[1][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="irobot-abcdef",
         macaddress="b8b7f16db533",
@@ -1226,7 +1225,7 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
         "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
         "source": config_entries.SOURCE_DHCP,
     }
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -1316,7 +1315,7 @@ async def test_dhcp_rediscover(
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == expected_context
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -1405,7 +1404,7 @@ async def test_dhcp_rediscover_no_match(
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_init.mock_calls[0][2]["context"] == expected_context
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+    assert mock_init.mock_calls[0][2]["data"] == DhcpServiceInfo(
         ip="192.168.210.56",
         hostname="connect",
         macaddress="b8b7f16db533",
@@ -1416,30 +1415,3 @@ async def test_dhcp_rediscover_no_match(
         await hass.async_block_till_done()
 
         assert len(mock_init.mock_calls) == 0
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "DhcpServiceInfo",
-            "homeassistant.helpers.service_info.dhcp.DhcpServiceInfo",
-            DhcpServiceInfo,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        dhcp,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2026.2",
-    )

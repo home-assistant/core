@@ -1,0 +1,233 @@
+{
+  "items": [
+    {
+      "deviceId": "3d39866c-7716-5259-44f0-fd7025efd85f",
+      "name": "[dryer] Samsung",
+      "label": "Trockner",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-WM-WD-01011",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "8038d392-c5a9-439a-a2f5-4e7b8dcb46e9",
+      "ownerId": "670b46d1-514a-8c37-5f41-45a57f413e8c",
+      "roomId": "afd177b2-45cb-4208-b7c1-b24b4a08a146",
+      "deviceTypeName": "Samsung OCF Dryer",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "dryerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "logTrigger",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.dryerDryLevel",
+              "version": 1
+            },
+            {
+              "id": "custom.dryerWrinklePrevent",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.jobBeginningStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.supportedOptions",
+              "version": 1
+            },
+            {
+              "id": "samsungce.audioVolumeLevel",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.detergentOrder",
+              "version": 1
+            },
+            {
+              "id": "samsungce.detergentState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerAutoCycleLink",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerCycle",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerCyclePreset",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerDelayEnd",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerDryingTemperature",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerDryingTime",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerFreezePrevent",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerLabelScanCyclePreset",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.welcomeMessage",
+              "version": 1
+            },
+            {
+              "id": "samsungce.clothingExtraCare",
+              "version": 1
+            },
+            {
+              "id": "samsungce.selfCheck",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            },
+            {
+              "id": "sec.smartthingsHub",
+              "version": 1,
+              "ephemeral": true
+            }
+          ],
+          "categories": [
+            {
+              "name": "Dryer",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "hca.main",
+          "label": "hca.main",
+          "capabilities": [
+            {
+              "id": "hca.dryerMode",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-10-04T09:10:39.516Z",
+      "profile": {
+        "id": "ef0b94d4-7113-36ad-beaa-2ab415cbc8f7"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.dryer",
+        "name": "[dryer] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "DA_WM_TP1_21_COMMON|80010141|30010102001911004AA3039F00820000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "DA_WM_TP1_21_COMMON_30250508",
+        "vendorId": "DA-WM-WD-01011",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.240801",
+        "lastSignupTime": "2025-10-04T09:10:39.448894766Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false,
+        "modelCode": "DV90DB8845GHU2"
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

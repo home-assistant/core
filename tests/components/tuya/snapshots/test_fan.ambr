@@ -1,8 +1,61 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[fan.arida_stavern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.arida_stavern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 48>,
+    'translation_key': None,
+    'unique_id': 'tuya.8u5ftxkt52smougesc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.arida_stavern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arida Stavern ',
+      'supported_features': <FanEntityFeature: 48>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.arida_stavern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform_setup_and_discovery[fan.bree-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -24,6 +77,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -42,7 +96,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bree',
-      'preset_mode': 'normal',
+      'preset_mode': None,
       'preset_modes': list([
         'sleep',
       ]),
@@ -58,12 +112,12 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.ceiling_fan_light_v2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -80,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -99,11 +154,10 @@
     'attributes': ReadOnlyDict({
       'direction': 'forward',
       'friendly_name': 'ceiling fan/Light v2',
-      'percentage': 20,
+      'percentage': 21,
       'percentage_step': 1.0,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 53>,
     }),
     'context': <ANY>,
@@ -116,8 +170,9 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.ceiling_fan_with_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -141,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -180,12 +236,12 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.dehumidifer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -202,6 +258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -220,8 +277,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dehumidifer',
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -234,8 +290,9 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.dehumidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -254,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -282,14 +340,71 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[fan.hl400-entry]
+# name: test_platform_setup_and_discovery[fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': 'tuya.ake0bre784zriw0usc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
+      'percentage': 50,
+      'percentage_step': 50.0,
+      'preset_mode': None,
+      'preset_modes': None,
+      'supported_features': <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.hl400-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -306,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -327,8 +443,7 @@
       'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -341,8 +456,9 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.ion1000pro-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -361,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,8 +508,9 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.kalado_air_purifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -416,6 +534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -452,12 +571,12 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.living_room_dehumidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -474,6 +593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -495,8 +615,7 @@
       'percentage': 100,
       'percentage_step': 50.0,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -509,8 +628,9 @@
 # ---
 # name: test_platform_setup_and_discovery[fan.tower_fan_ca_407g_smart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -534,6 +654,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

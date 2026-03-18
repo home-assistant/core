@@ -4,6 +4,7 @@
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ping",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["icmplib"],
   "quality_scale": "internal",

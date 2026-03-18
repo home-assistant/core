@@ -282,6 +282,8 @@ async def websocket_reset_properties(
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
+    for prop in device.configuration.values():
+        prop.new_value = None
     for prop in device.operating_flags:
         device.operating_flags[prop].new_value = None
     for prop in device.properties:

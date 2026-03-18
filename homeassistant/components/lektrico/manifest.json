@@ -9,8 +9,8 @@
   "requirements": ["lektricowifi==0.1"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "lektrico*"
+      "name": "lektrico*",
+      "type": "_http._tcp.local."
     }
   ]
 }

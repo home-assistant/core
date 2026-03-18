@@ -12,9 +12,8 @@ from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry
+from .coordinator import PiHoleConfigEntry, PiHoleUpdateCoordinator
 from .entity import PiHoleEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -148,7 +147,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: PiHoleUpdateCoordinator,
         name: str,
         server_unique_id: str,
         description: SensorEntityDescription,

@@ -112,6 +112,11 @@ def mock_dsm_storage_disks() -> list[SynoStorageDisk]:
     return [SynoStorageDisk(**disk_info) for disk_info in disks_data.values()]
 
 
+def mock_dsm_external_usb_devices_usb0() -> dict[str, SynoCoreExternalUSBDevice]:
+    """Mock SynologyDSM external USB device with no USB."""
+    return {}
+
+
 def mock_dsm_external_usb_devices_usb1() -> dict[str, SynoCoreExternalUSBDevice]:
     """Mock SynologyDSM external USB device with USB Disk 1."""
     return {

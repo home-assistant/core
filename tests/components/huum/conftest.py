@@ -41,7 +41,8 @@ def mock_huum() -> Generator[AsyncMock]:
         huum.sauna_name = 123456
         huum.target_temperature = 80
         huum.light = 1
-        huum.humidity = 5
+        huum.humidity = 0
+        huum.target_humidity = 5
         huum.sauna_config.child_lock = "OFF"
         huum.sauna_config.max_heating_time = 3
         huum.sauna_config.min_heating_time = 0
@@ -73,6 +74,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: "huum@sauna.org",
             CONF_PASSWORD: "ukuuku",
         },
-        unique_id="123456",
         entry_id="AABBCC112233",
     )

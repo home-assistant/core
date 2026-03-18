@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_and_device_data[site_payload0-device_payload0][update.device_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -40,7 +42,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
+      'entity_picture': '/api/brands/integration/unifi/icon.png',
       'friendly_name': 'Device 1',
       'in_progress': False,
       'installed_version': '4.0.42.10433',
@@ -62,8 +64,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-device_payload0][update.device_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -81,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -101,7 +105,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
+      'entity_picture': '/api/brands/integration/unifi/icon.png',
       'friendly_name': 'Device 2',
       'in_progress': False,
       'installed_version': '4.0.42.10433',
@@ -123,8 +127,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload1-device_payload0][update.device_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -142,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -162,7 +168,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
+      'entity_picture': '/api/brands/integration/unifi/icon.png',
       'friendly_name': 'Device 1',
       'in_progress': False,
       'installed_version': '4.0.42.10433',
@@ -184,8 +190,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload1-device_payload0][update.device_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -203,6 +210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -223,7 +231,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
+      'entity_picture': '/api/brands/integration/unifi/icon.png',
       'friendly_name': 'Device 2',
       'in_progress': False,
       'installed_version': '4.0.42.10433',

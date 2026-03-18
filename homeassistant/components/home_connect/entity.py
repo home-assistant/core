@@ -14,7 +14,6 @@ from aiohomeconnect.model.error import (
     TooManyRequestsError,
 )
 
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -23,34 +22,34 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import API_DEFAULT_RETRY_AFTER, DOMAIN
-from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
+from .coordinator import HomeConnectApplianceCoordinator
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
+class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
     """Generic Home Connect entity (base class)."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: EntityDescription,
         context_override: Any | None = None,
     ) -> None:
         """Initialize the entity."""
-        context = (appliance.info.ha_id, EventKey(desc.key))
+        appliance_ha_id = appliance_coordinator.data.info.ha_id
+        context = EventKey(desc.key)
         if context_override is not None:
             context = context_override
-        super().__init__(coordinator, context)
-        self.appliance = appliance
+        super().__init__(appliance_coordinator, context)
+        self.appliance = appliance_coordinator.data
         self.entity_description = desc
-        self._attr_unique_id = f"{appliance.info.ha_id}-{desc.key}"
+        self._attr_unique_id = f"{appliance_ha_id}-{desc.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, appliance.info.ha_id)},
+            identifiers={(DOMAIN, appliance_ha_id)},
         )
         self.update_native_value()
 
@@ -62,10 +61,8 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_native_value()
-        available = self._attr_available = self.appliance.info.connected
         self.async_write_ha_state()
-        state = STATE_UNAVAILABLE if not available else self.state
-        _LOGGER.debug("Updated %s, new state: %s", self.entity_id, state)
+        _LOGGER.debug("Updated %s", self)
 
     @property
     def bsh_key(self) -> str:
@@ -80,7 +77,30 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         as event updates should take precedence over the coordinator
         refresh.
         """
-        return self._attr_available
+        return self.appliance.info.connected and self._attr_available
+
+    async def async_set_option_with_key(
+        self, option_key: OptionKey, value: Any
+    ) -> None:
+        """Set an option for the entity."""
+        try:
+            # We try to set the active program option first,
+            # if it fails we try to set the selected program option
+            with contextlib.suppress(ActiveProgramNotSetError):
+                await self.coordinator.client.set_active_program_option(
+                    self.appliance.info.ha_id, option_key=option_key, value=value
+                )
+                return
+
+            await self.coordinator.client.set_selected_program_option(
+                self.appliance.info.ha_id, option_key=option_key, value=value
+            )
+        except HomeConnectError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_option",
+                translation_placeholders=get_dict_from_home_connect_error(err),
+            ) from err
 
 
 class HomeConnectOptionEntity(HomeConnectEntity):
@@ -98,40 +118,9 @@ class HomeConnectOptionEntity(HomeConnectEntity):
             return event.value
         return None
 
-    async def async_set_option(self, value: str | float | bool) -> None:
+    async def async_set_option(self, value: Any) -> None:
         """Set an option for the entity."""
-        try:
-            # We try to set the active program option first,
-            # if it fails we try to set the selected program option
-            with contextlib.suppress(ActiveProgramNotSetError):
-                await self.coordinator.client.set_active_program_option(
-                    self.appliance.info.ha_id,
-                    option_key=self.bsh_key,
-                    value=value,
-                )
-                _LOGGER.debug(
-                    "Updated %s for the active program, new state: %s",
-                    self.entity_id,
-                    self.state,
-                )
-                return
-
-            await self.coordinator.client.set_selected_program_option(
-                self.appliance.info.ha_id,
-                option_key=self.bsh_key,
-                value=value,
-            )
-            _LOGGER.debug(
-                "Updated %s for the selected program, new state: %s",
-                self.entity_id,
-                self.state,
-            )
-        except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_option",
-                translation_placeholders=get_dict_from_home_connect_error(err),
-            ) from err
+        await super().async_set_option_with_key(self.bsh_key, value)
 
     @property
     def bsh_key(self) -> OptionKey:

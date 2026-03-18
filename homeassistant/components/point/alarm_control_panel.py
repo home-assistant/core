@@ -16,8 +16,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PointConfigEntry
 from .const import DOMAIN, SIGNAL_WEBHOOK
+from .coordinator import PointConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -90,7 +90,7 @@ def async_static_info_updated(
 
         # Create new entity if it doesn't exist
         if not old_info:
-            entity = entity_type(entry_data, platform.domain, info, state_type)
+            entity = entity_type(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -112,7 +112,7 @@ def async_static_info_updated(
                 old_info.device_id,
                 info.device_id,
             )
-            entity = entity_type(entry_data, platform.domain, info, state_type)
+            entity = entity_type(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -162,7 +162,7 @@ def async_static_info_updated(
         entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
 
         # Create new entity with the new device_id
-        add_entities.append(entity_type(entry_data, platform.domain, info, state_type))
+        add_entities.append(entity_type(entry_data, info, state_type))
 
     # Anything still in current_infos is now gone
     if current_infos:
@@ -189,6 +189,7 @@ async def platform_async_setup_entry(
     info_type: type[_InfoT],
     entity_type: type[_EntityT],
     state_type: type[_StateT],
+    info_filter: Callable[[_InfoT], bool] | None = None,
 ) -> None:
     """Set up an esphome platform.
 
@@ -208,10 +209,22 @@ async def platform_async_setup_entry(
         entity_type,
         state_type,
     )
+
+    if info_filter is not None:
+
+        def on_filtered_update(infos: list[EntityInfo]) -> None:
+            on_static_info_update(
+                [info for info in infos if info_filter(cast(_InfoT, info))]
+            )
+
+        info_callback = on_filtered_update
+    else:
+        info_callback = on_static_info_update
+
     entry_data.cleanup_callbacks.append(
         entry_data.async_register_static_info_callback(
             info_type,
-            on_static_info_update,
+            info_callback,
         )
     )
 
@@ -329,7 +342,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
-        domain: str,
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
@@ -343,7 +355,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         self._state_type = state_type
         self._on_static_info_update(entity_info)
 
-        device_name = device_info.name
         # Determine the device connection based on whether this entity belongs to a sub device
         if entity_info.device_id:
             # Entity belongs to a sub device
@@ -352,26 +363,11 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
                     (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")
                 }
             )
-            # Use the pre-computed device_id_to_name mapping for O(1) lookup
-            device_name = entry_data.device_id_to_name.get(
-                entity_info.device_id, device_info.name
-            )
         else:
             # Entity belongs to the main device
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
             )
-
-        if entity_info.name:
-            self.entity_id = f"{domain}.{device_name}_{entity_info.name}"
-        else:
-            # https://github.com/home-assistant/core/issues/132532
-            # If name is not set, ESPHome will use the sanitized friendly name
-            # as the name, however we want to use the original object_id
-            # as the entity_id before it is sanitized since the sanitizer
-            # is not utf-8 aware. In this case, its always going to be
-            # an empty string so we drop the object_id.
-            self.entity_id = f"{domain}.{device_name}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -438,7 +434,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         # the friendly_name will be "{friendly_name} " with a trailing
         # space. ESPHome uses protobuf under the hood, and an empty field
         # gets a default value of "".
-        self._attr_name = static_info.name if static_info.name else None
+        self._attr_name = static_info.name or None
         if entity_category := static_info.entity_category:
             self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
         else:

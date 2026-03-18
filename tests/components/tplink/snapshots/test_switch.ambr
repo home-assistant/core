@@ -36,8 +36,9 @@
 # ---
 # name: test_states[switch.my_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,6 +56,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -84,8 +86,9 @@
 # ---
 # name: test_states[switch.my_device_auto_off_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -103,6 +106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-off enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -132,8 +136,9 @@
 # ---
 # name: test_states[switch.my_device_auto_update_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -151,6 +156,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-update enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -180,8 +186,9 @@
 # ---
 # name: test_states[switch.my_device_baby_cry_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -199,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Baby cry detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -228,8 +236,9 @@
 # ---
 # name: test_states[switch.my_device_carpet_boost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -247,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carpet boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -276,8 +286,9 @@
 # ---
 # name: test_states[switch.my_device_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -295,6 +306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -324,8 +336,9 @@
 # ---
 # name: test_states[switch.my_device_fan_sleep_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -343,6 +356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan sleep mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -372,8 +386,9 @@
 # ---
 # name: test_states[switch.my_device_led-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -391,6 +406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED',
     'options': dict({
     }),
     'original_device_class': None,
@@ -420,8 +436,9 @@
 # ---
 # name: test_states[switch.my_device_motion_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -439,6 +456,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -468,8 +486,9 @@
 # ---
 # name: test_states[switch.my_device_motion_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -487,6 +506,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -516,8 +536,9 @@
 # ---
 # name: test_states[switch.my_device_person_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -535,6 +556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Person detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -564,8 +586,9 @@
 # ---
 # name: test_states[switch.my_device_smooth_transitions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -583,6 +606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth transitions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -612,8 +636,9 @@
 # ---
 # name: test_states[switch.my_device_tamper_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -631,6 +656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper detection',
     'options': dict({
     }),
     'original_device_class': None,

@@ -6,8 +6,6 @@ from freezegun import freeze_time
 import pytest
 from zwave_js_server.event import Event
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.components.zwave_js.const import ATTR_VALUE
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -66,9 +64,12 @@ async def test_basic(
 
     assert state
     assert state.state == dt_util.as_utc(fut).isoformat(timespec="milliseconds")
-    attributes = state.attributes
-    assert attributes[ATTR_EVENT_TYPE] == "Basic event value"
-    assert attributes[ATTR_VALUE] == 255
+    assert state.attributes == {
+        "friendly_name": "honeywell_in_wall_smart_fan_control Event value",
+        "event_type": "Basic event value",
+        "event_types": ["Basic event value"],
+        "value": 255,
+    }
 
 
 async def test_central_scene(
@@ -128,9 +129,20 @@ async def test_central_scene(
 
     assert state
     assert state.state == dt_util.as_utc(fut).isoformat(timespec="milliseconds")
-    attributes = state.attributes
-    assert attributes[ATTR_EVENT_TYPE] == "KeyReleased"
-    assert attributes[ATTR_VALUE] == 1
+    assert state.attributes == {
+        "friendly_name": "Node 51 Scene 002",
+        "event_type": "KeyReleased",
+        "event_types": [
+            "KeyHeldDown",
+            "KeyPressed",
+            "KeyPressed2x",
+            "KeyPressed3x",
+            "KeyPressed4x",
+            "KeyPressed5x",
+            "KeyReleased",
+        ],
+        "value": 1,
+    }
 
     # Try invalid value
     event = Event(
@@ -178,6 +190,17 @@ async def test_central_scene(
 
     assert state
     assert state.state == dt_util.as_utc(fut).isoformat(timespec="milliseconds")
-    attributes = state.attributes
-    assert attributes[ATTR_EVENT_TYPE] == "KeyReleased"
-    assert attributes[ATTR_VALUE] == 1
+    assert state.attributes == {
+        "friendly_name": "Node 51 Scene 002",
+        "event_type": "KeyReleased",
+        "event_types": [
+            "KeyHeldDown",
+            "KeyPressed",
+            "KeyPressed2x",
+            "KeyPressed3x",
+            "KeyPressed4x",
+            "KeyPressed5x",
+            "KeyReleased",
+        ],
+        "value": 1,
+    }

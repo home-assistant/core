@@ -1,99 +1,391 @@
 """Config flow for growatt server integration."""
 
+from collections.abc import Mapping
+import logging
 from typing import Any
 
 import growattServer
+import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
+    ABORT_NO_PLANTS,
+    AUTH_API_TOKEN,
+    AUTH_PASSWORD,
+    CONF_AUTH_TYPE,
     CONF_PLANT_ID,
+    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
+    ERROR_CANNOT_CONNECT,
+    ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
-    SERVER_URLS,
+    SERVER_URLS_NAMES,
+    V1_API_ERROR_NO_PRIVILEGE,
 )
+
+_URL_TO_REGION = {v: k for k, v in SERVER_URLS_NAMES.items()}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow class."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     api: growattServer.GrowattApi
 
     def __init__(self) -> None:
         """Initialise growatt server flow."""
-        self.user_id = None
+        self.user_id: str | None = None
         self.data: dict[str, Any] = {}
-
-    @callback
-    def _async_show_user_form(self, errors=None):
-        """Show the form to the user."""
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_URL, default=DEFAULT_URL): vol.In(SERVER_URLS),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
-        )
+        self.auth_type: str | None = None
+        self.plants: list[dict[str, Any]] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
-        if not user_input:
-            return self._async_show_user_form()
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["password_auth", "token_auth"],
+        )
 
-        # Initialise the library with the username & a random id each time it is started
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+        """Handle reauth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            auth_type = reauth_entry.data.get(CONF_AUTH_TYPE)
+
+            if auth_type == AUTH_PASSWORD:
+                server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
+                api = growattServer.GrowattApi(
+                    add_random_user_id=True,
+                    agent_identifier=user_input[CONF_USERNAME],
+                )
+                api.server_url = server_url
+
+                try:
+                    login_response = await self.hass.async_add_executor_job(
+                        api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    )
+                except requests.exceptions.RequestException as ex:
+                    _LOGGER.debug("Network error during reauth login: %s", ex)
+                    errors["base"] = ERROR_CANNOT_CONNECT
+                except (ValueError, KeyError, TypeError, AttributeError) as ex:
+                    _LOGGER.debug("Invalid response format during reauth login: %s", ex)
+                    errors["base"] = ERROR_CANNOT_CONNECT
+                else:
+                    if not isinstance(login_response, dict):
+                        errors["base"] = ERROR_CANNOT_CONNECT
+                    elif login_response.get("success"):
+                        return self.async_update_reload_and_abort(
+                            reauth_entry,
+                            data_updates={
+                                CONF_USERNAME: user_input[CONF_USERNAME],
+                                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                                CONF_URL: server_url,
+                            },
+                        )
+                    elif login_response.get("msg") == LOGIN_INVALID_AUTH_CODE:
+                        errors["base"] = ERROR_INVALID_AUTH
+                    else:
+                        errors["base"] = ERROR_CANNOT_CONNECT
+
+            elif auth_type == AUTH_API_TOKEN:
+                server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
+                api = growattServer.OpenApiV1(token=user_input[CONF_TOKEN])
+                api.server_url = server_url
+
+                try:
+                    await self.hass.async_add_executor_job(api.plant_list)
+                except requests.exceptions.RequestException as ex:
+                    _LOGGER.debug(
+                        "Network error during reauth token validation: %s", ex
+                    )
+                    errors["base"] = ERROR_CANNOT_CONNECT
+                except growattServer.GrowattV1ApiError as err:
+                    if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                        errors["base"] = ERROR_INVALID_AUTH
+                    else:
+                        _LOGGER.debug(
+                            "Growatt V1 API error during reauth: %s (Code: %s)",
+                            err.error_msg or str(err),
+                            err.error_code,
+                        )
+                        errors["base"] = ERROR_CANNOT_CONNECT
+                except (ValueError, KeyError, TypeError, AttributeError) as ex:
+                    _LOGGER.debug(
+                        "Invalid response format during reauth token validation: %s", ex
+                    )
+                    errors["base"] = ERROR_CANNOT_CONNECT
+                else:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={
+                            CONF_TOKEN: user_input[CONF_TOKEN],
+                            CONF_URL: server_url,
+                        },
+                    )
+
+        # Determine the current region key from the stored config value.
+        # Legacy entries may store the region key directly; newer entries store the URL.
+        stored_url = reauth_entry.data.get(CONF_URL, "")
+        if stored_url in SERVER_URLS_NAMES:
+            current_region = stored_url
+        else:
+            current_region = _URL_TO_REGION.get(stored_url, DEFAULT_URL)
+
+        auth_type = reauth_entry.data.get(CONF_AUTH_TYPE)
+        if auth_type == AUTH_PASSWORD:
+            data_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=reauth_entry.data.get(CONF_USERNAME),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_REGION, default=current_region): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(SERVER_URLS_NAMES.keys()),
+                            translation_key="region",
+                        )
+                    ),
+                }
+            )
+        elif auth_type == AUTH_API_TOKEN:
+            data_schema = vol.Schema(
+                {
+                    vol.Required(CONF_TOKEN): str,
+                    vol.Required(CONF_REGION, default=current_region): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(SERVER_URLS_NAMES.keys()),
+                            translation_key="region",
+                        )
+                    ),
+                }
+            )
+        else:
+            return self.async_abort(reason=ERROR_CANNOT_CONNECT)
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=data_schema,
+            errors=errors,
+        )
+
+    async def async_step_password_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle username/password authentication."""
+        if user_input is None:
+            return self._async_show_password_form()
+
+        self.auth_type = AUTH_PASSWORD
+
+        # Traditional username/password authentication
+        # Convert region name to URL - guaranteed to exist since vol.In validates it
+        server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
+
         self.api = growattServer.GrowattApi(
             add_random_user_id=True, agent_identifier=user_input[CONF_USERNAME]
         )
-        self.api.server_url = user_input[CONF_URL]
-        login_response = await self.hass.async_add_executor_job(
-            self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-        )
+        self.api.server_url = server_url
+
+        try:
+            login_response = await self.hass.async_add_executor_job(
+                self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Network error during Growatt API login: %s", ex)
+            return self._async_show_password_form({"base": ERROR_CANNOT_CONNECT})
+        except (ValueError, KeyError, TypeError, AttributeError) as ex:
+            _LOGGER.error("Invalid response format during login: %s", ex)
+            return self._async_show_password_form({"base": ERROR_CANNOT_CONNECT})
 
         if (
             not login_response["success"]
             and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
         ):
-            return self._async_show_user_form({"base": "invalid_auth"})
-        self.user_id = login_response["user"]["id"]
+            return self._async_show_password_form({"base": ERROR_INVALID_AUTH})
 
+        self.user_id = login_response["user"]["id"]
         self.data = user_input
+        # Store the actual URL, not the region name
+        self.data[CONF_URL] = server_url
+        self.data[CONF_AUTH_TYPE] = self.auth_type
         return await self.async_step_plant()
+
+    async def async_step_token_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle API token authentication."""
+        if user_input is None:
+            return self._async_show_token_form()
+
+        self.auth_type = AUTH_API_TOKEN
+
+        # Using token authentication
+        # Convert region name to URL - guaranteed to exist since vol.In validates it
+        server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
+
+        self.api = growattServer.OpenApiV1(token=user_input[CONF_TOKEN])
+        self.api.server_url = server_url
+
+        # Verify token by fetching plant list
+        try:
+            plant_response = await self.hass.async_add_executor_job(self.api.plant_list)
+            self.plants = plant_response.get("plants", [])
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Network error during Growatt V1 API plant list: %s", ex)
+            return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
+        except growattServer.GrowattV1ApiError as e:
+            _LOGGER.error(
+                "Growatt V1 API error: %s (Code: %s)",
+                e.error_msg or str(e),
+                e.error_code,
+            )
+            if e.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                return self._async_show_token_form({"base": ERROR_INVALID_AUTH})
+            return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
+        except (ValueError, KeyError, TypeError, AttributeError) as ex:
+            _LOGGER.error(
+                "Invalid response format during Growatt V1 API plant list: %s", ex
+            )
+            return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
+        self.data = user_input
+        # Store the actual URL, not the region name
+        self.data[CONF_URL] = server_url
+        self.data[CONF_AUTH_TYPE] = self.auth_type
+        return await self.async_step_plant()
+
+    @callback
+    def _async_show_password_form(
+        self, errors: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the username/password form to the user."""
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(SERVER_URLS_NAMES.keys()),
+                        translation_key="region",
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="password_auth", data_schema=data_schema, errors=errors
+        )
+
+    @callback
+    def _async_show_token_form(
+        self, errors: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the API token form to the user."""
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_TOKEN): str,
+                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(SERVER_URLS_NAMES.keys()),
+                        translation_key="region",
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="token_auth",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
     async def async_step_plant(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle adding a "plant" to Home Assistant."""
-        plant_info = await self.hass.async_add_executor_job(
-            self.api.plant_list, self.user_id
-        )
+        if self.auth_type == AUTH_API_TOKEN:
+            # Using V1 API with token
+            if not self.plants:
+                return self.async_abort(reason=ABORT_NO_PLANTS)
 
-        if not plant_info["data"]:
-            return self.async_abort(reason="no_plants")
+            # Create dictionary of plant_id -> name
+            plant_dict = {
+                str(plant["plant_id"]): plant.get("name", "Unknown Plant")
+                for plant in self.plants
+            }
 
-        plants = {plant["plantId"]: plant["plantName"] for plant in plant_info["data"]}
+            if user_input is None and len(plant_dict) > 1:
+                data_schema = vol.Schema(
+                    {vol.Required(CONF_PLANT_ID): vol.In(plant_dict)}
+                )
+                return self.async_show_form(step_id="plant", data_schema=data_schema)
 
-        if user_input is None and len(plant_info["data"]) > 1:
-            data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
+            if user_input is None:
+                # Single plant => mark it as selected
+                user_input = {CONF_PLANT_ID: list(plant_dict.keys())[0]}
 
-            return self.async_show_form(step_id="plant", data_schema=data_schema)
+            user_input[CONF_NAME] = plant_dict[user_input[CONF_PLANT_ID]]
 
-        if user_input is None:
-            # single plant => mark it as selected
-            user_input = {CONF_PLANT_ID: plant_info["data"][0]["plantId"]}
+        else:
+            # Traditional API
+            try:
+                plant_info = await self.hass.async_add_executor_job(
+                    self.api.plant_list, self.user_id
+                )
+            except requests.exceptions.RequestException as ex:
+                _LOGGER.error("Network error during Growatt API plant list: %s", ex)
+                return self.async_abort(reason=ERROR_CANNOT_CONNECT)
 
-        user_input[CONF_NAME] = plants[user_input[CONF_PLANT_ID]]
+            # Access plant_info["data"] - validate response structure
+            if not isinstance(plant_info, dict) or "data" not in plant_info:
+                _LOGGER.error(
+                    "Invalid response format during plant list: missing 'data' key"
+                )
+                return self.async_abort(reason=ERROR_CANNOT_CONNECT)
+
+            plant_data = plant_info["data"]
+
+            if not plant_data:
+                return self.async_abort(reason=ABORT_NO_PLANTS)
+
+            plants = {plant["plantId"]: plant["plantName"] for plant in plant_data}
+
+            if user_input is None and len(plant_data) > 1:
+                data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
+                return self.async_show_form(step_id="plant", data_schema=data_schema)
+
+            if user_input is None:
+                # single plant => mark it as selected
+                user_input = {CONF_PLANT_ID: plant_data[0]["plantId"]}
+
+            user_input[CONF_NAME] = plants[user_input[CONF_PLANT_ID]]
+
         await self.async_set_unique_id(user_input[CONF_PLANT_ID])
         self._abort_if_unique_id_configured()
         self.data.update(user_input)
