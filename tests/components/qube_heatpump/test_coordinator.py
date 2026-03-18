@@ -88,7 +88,7 @@ async def test_coordinator_reconnects_when_disconnected(
         assert entry.state is ConfigEntryState.LOADED
 
         # Connection should have been attempted since is_connected was False
-        client.connect.assert_called()
+        client.connect.assert_awaited()
 
 
 async def test_coordinator_handles_fetch_error(
