@@ -203,7 +203,7 @@ class ItemAddedTrigger(ItemTriggerBase):
             )
             payload = {
                 ATTR_ENTITY_ID: event.entity_id,
-                "item_ids": list(added_item_ids),
+                "item_ids": sorted(added_item_ids),
             }
             run_action(payload, description="todo item added trigger")
 
@@ -242,7 +242,7 @@ class ItemRemovedTrigger(ItemTriggerBase):
             )
             payload = {
                 ATTR_ENTITY_ID: event.entity_id,
-                "item_ids": list(removed_item_ids),
+                "item_ids": sorted(removed_item_ids),
             }
             run_action(payload, description="todo item removed trigger")
 
@@ -287,7 +287,7 @@ class ItemCompletedTrigger(ItemTriggerBase):
             )
             payload = {
                 ATTR_ENTITY_ID: event.entity_id,
-                "item_ids": list(new_completed_item_ids),
+                "item_ids": sorted(new_completed_item_ids),
             }
             run_action(payload, description="todo item completed trigger")
 
