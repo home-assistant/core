@@ -43,6 +43,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
     AreaConverter,
@@ -687,6 +688,10 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
 
 
 CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {str: str}})
+# Keep track of domains for which a warning about failure to collect custom units has been logged
+WARN_CUSTOM_UNITS_ERROR: HassKey[set[str]] = HassKey(
+    f"{DOMAIN}_warn_custom_units_error"
+)
 
 
 def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str]]:
@@ -705,12 +710,16 @@ def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str
                 hass.loop, custom_equivalent_units, hass
             ).result()
         except Exception as exc:  # noqa: BLE001
-            _LOGGER.warning(
-                "Error calling %s for recorder platform domain %s: %s",
-                INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
-                domain,
-                exc,
-            )
+            if WARN_CUSTOM_UNITS_ERROR not in hass.data:
+                hass.data[WARN_CUSTOM_UNITS_ERROR] = set()
+            if domain not in hass.data[WARN_CUSTOM_UNITS_ERROR]:
+                hass.data[WARN_CUSTOM_UNITS_ERROR].add(domain)
+                _LOGGER.warning(
+                    "Error calling %s for recorder platform domain %s: %s",
+                    INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
+                    domain,
+                    exc,
+                )
             continue
 
         if not platform_custom_equivalent_units:
@@ -722,13 +731,17 @@ def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str
             )
             custom_equivalent_units_per_entity |= validated_data
         except vol.Invalid as inv:
-            _LOGGER.warning(
-                "Error processing result of %s for recorder platform domain %s: %s for object: %s",
-                INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
-                domain,
-                inv,
-                platform_custom_equivalent_units,
-            )
+            if WARN_CUSTOM_UNITS_ERROR not in hass.data:
+                hass.data[WARN_CUSTOM_UNITS_ERROR] = set()
+            if domain not in hass.data[WARN_CUSTOM_UNITS_ERROR]:
+                hass.data[WARN_CUSTOM_UNITS_ERROR].add(domain)
+                _LOGGER.warning(
+                    "Error processing result of %s for recorder platform domain %s: %s for object: %s",
+                    INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
+                    domain,
+                    inv,
+                    platform_custom_equivalent_units,
+                )
 
     return custom_equivalent_units_per_entity
 
