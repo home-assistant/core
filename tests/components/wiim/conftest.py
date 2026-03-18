@@ -135,28 +135,6 @@ def mock_wiim_device() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_upnp_device():
-    """Mock UpnpDevice for zeroconf discovery."""
-    upnp_device = MagicMock()
-    upnp_device.udn = "uuid:test-udn-1234"
-    upnp_device.friendly_name = "Test WiiM Device"
-    upnp_device.model_name = "WiiM Pro"
-    upnp_device.device_type = "urn:schemas-upnp-org:device:MediaRenderer:1"
-    upnp_device.presentation_url = "http://192.168.1.100:8080/web_interface"
-    upnp_device.device_url = "http://192.168.1.100:49152/description.xml"
-    upnp_device.services = {}
-    return upnp_device
-
-
-@pytest.fixture
-def mock_upnp_factory(mock_upnp_device):
-    """Mock UpnpFactory for creating devices."""
-    factory = MagicMock()
-    factory.async_create_device = AsyncMock(return_value=mock_upnp_device)
-    return factory
-
-
-@pytest.fixture
 def mock_wiim_controller(mock_wiim_device: AsyncMock) -> Generator[MagicMock]:
     """Mock a WiimController instance."""
     mock = MagicMock(spec=WiimController)
