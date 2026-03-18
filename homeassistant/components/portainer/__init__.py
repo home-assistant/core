@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_TOKEN],
         session=session,
-        request_timeout=30,
+        request_timeout=60,
         max_retries=API_MAX_RETRIES,
     )
 
