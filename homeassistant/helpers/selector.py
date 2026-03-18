@@ -1508,6 +1508,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
 
     entity_id: str
     hide_states: list[str]
+    attribute: str
     multiple: bool
 
 
