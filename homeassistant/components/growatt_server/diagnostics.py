@@ -22,6 +22,23 @@ TO_REDACT = {
     "device_sn",
 }
 
+# Allowlist of safe telemetry fields from the total coordinator.
+# Monetary fields (plantMoneyText, totalMoneyText, currency) are intentionally
+# excluded to avoid leaking financial data under unpredictable key names.
+_TOTAL_SAFE_KEYS = frozenset(
+    {
+        # Classic API keys
+        "todayEnergy",
+        "totalEnergy",
+        "invTodayPpv",
+        "nominalPower",
+        # V1 API keys (aliases used after normalisation in coordinator)
+        "today_energy",
+        "total_energy",
+        "current_power",
+    }
+)
+
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
@@ -31,7 +48,10 @@ async def async_get_config_entry_diagnostics(
 
     runtime_data = getattr(config_entry, "runtime_data", None)
     if runtime_data is not None:
-        diag["total_coordinator"] = runtime_data.total_coordinator.data
+        total_data = runtime_data.total_coordinator.data or {}
+        diag["total_coordinator"] = {
+            k: v for k, v in total_data.items() if k in _TOTAL_SAFE_KEYS
+        }
         diag["devices"] = [
             {
                 "device_sn": device_sn,
