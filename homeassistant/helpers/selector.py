@@ -170,7 +170,7 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 
 
 class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
-    """Class to legacy entity filters to EntitySelectorConfig.
+    """Class for legacy entity filter support in EntitySelectorConfig.
 
     Provided for backwards compatibility and remains feature frozen.
     """
