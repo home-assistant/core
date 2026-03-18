@@ -588,7 +588,7 @@
       "message": "Device {device_id} is not a Growatt device."
     },
     "invalid_batt_mode": {
-      "message": "{batt_mode} is not a valid battery mode."
+      "message": "{batt_mode} is not a valid battery mode. Allowed values: {allowed_modes}."
     },
     "invalid_charge_power": {
       "message": "charge_power must be between 0 and 100, got {value}."

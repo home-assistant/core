@@ -135,7 +135,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_batt_mode",
-                translation_placeholders={"batt_mode": batt_mode_str},
+                translation_placeholders={
+                    "batt_mode": batt_mode_str,
+                    "allowed_modes": ", ".join(valid_modes),
+                },
             )
         batt_mode: int = valid_modes[batt_mode_str]
 

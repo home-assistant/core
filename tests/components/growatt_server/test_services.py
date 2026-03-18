@@ -230,7 +230,7 @@ async def test_update_time_segment_api_error(
         )
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -244,6 +244,9 @@ async def test_update_time_segment_api_error(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "api_error"
+    assert "error" in excinfo.value.translation_placeholders
 
 
 async def test_no_min_devices_skips_service_registration(
@@ -356,7 +359,7 @@ async def test_update_time_segment_invalid_time_format(
     assert device_entry is not None
 
     # Test with invalid time format
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -370,6 +373,9 @@ async def test_update_time_segment_invalid_time_format(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_time_format"
+    assert excinfo.value.translation_placeholders == {"field_name": "start_time"}
 
 
 @pytest.mark.usefixtures("mock_growatt_v1_api")
@@ -499,7 +505,7 @@ async def test_service_with_invalid_device_id(
     await hass.async_block_till_done()
 
     # Test with invalid device_id (not in device registry)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -513,6 +519,9 @@ async def test_service_with_invalid_device_id(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "device_not_found"
+    assert excinfo.value.translation_placeholders == {"device_id": "invalid_device_id"}
 
 
 @pytest.mark.usefixtures("mock_growatt_v1_api")
