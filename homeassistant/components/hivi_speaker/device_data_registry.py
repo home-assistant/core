@@ -21,7 +21,7 @@ class DeviceDataRegistry:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device data registry."""
         self.hass = hass
-        self._store = Store(hass, 1, "hivi_speaker_device_data")
+        self._store: Store[Any] = Store(hass, 1, "hivi_speaker_device_data")
         self._device_data: dict[str, dict[str, Any]] = {}
         self._listeners: dict[str, list] = {}
 
