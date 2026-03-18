@@ -863,10 +863,10 @@ class HIVIGroupCoordinator:
                         if uuid == slave_speaker_device_id:
                             _LOGGER.debug("find match UUID: %s", uuid)
                             return True
-                    else:
-                        return False
                 except _GROUP_ERRS as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
+                    return False
+                else:
                     return False
             elif op_type == "remove_slave":
                 try:
@@ -890,11 +890,11 @@ class HIVIGroupCoordinator:
                             break
                     if still_exists:
                         return False
-                    else:
-                        return True
                 except _GROUP_ERRS as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
+                else:
+                    return True
             else:
                 _LOGGER.error("Unknown operation type for verify: %s", op_type)
                 return False
@@ -909,20 +909,18 @@ class HIVIGroupCoordinator:
         """Check actual status."""
         try:
             slave_devices = await master_client.state.async_get_slave_devices(timeout=3)
-            if slave_devices is None:
-                return "unknown"
-
-            if slave_speaker_device_id in slave_devices:
-                return "slave"
-            else:
-                return "standalone"
-
         except TimeoutError:
             _LOGGER.debug("Timeout getting slave speaker list")
             return "unknown"
         except _GROUP_ERRS as e:
             _LOGGER.debug("Exception getting slave speaker list: %s", e)
             return "unknown"
+        else:
+            if slave_devices is None:
+                return "unknown"
+            if slave_speaker_device_id in slave_devices:
+                return "slave"
+            return "standalone"
 
     async def _handle_operation_failed(self, operation_id: str, reason: str):
         """Handle operation failure."""
