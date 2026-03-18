@@ -3780,7 +3780,7 @@ async def test_recorder_platform_with_statistics(
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
-    def _mock_custom_equivalent_units(*args: Any) -> dict[str, dict[str, str]]:
+    def _mock_custom_equivalent_units(*args: Any) -> dict[str, dict[str | None, str]]:
         return {}
 
     def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
@@ -3949,7 +3949,9 @@ async def test_recorder_platforms_with_custom_equivalent_units(
         "sensor.test_sensor_1": {"custom_unitA": "unitA"}
     }
 
-    def _mock_custom_equivalent_units_one(*args: Any) -> dict[str, dict[str, str]]:
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
         return custom_equivalent_units_recorder_platform_one
 
     def _mock_update_statistics_issues(*args: Any) -> None:
@@ -3971,10 +3973,12 @@ async def test_recorder_platforms_with_custom_equivalent_units(
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        "sensor.test_sensor_3": {"custom_unitC": "unitC"},
+        "sensor.test_sensor_3": {None: ""},
     }
 
-    def _mock_custom_equivalent_units_two(*args: Any) -> dict[str, dict[str, str]]:
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
         return custom_equivalent_units_recorder_platform_two
 
     recorder_platform_two = Mock(
@@ -4051,7 +4055,9 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
-    def _mock_custom_equivalent_units_one(*args: Any) -> dict[str, dict[str, str]]:
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
         raise Exception("test error")  # noqa: TRY002
 
     recorder_platform_one = Mock(
@@ -4067,10 +4073,12 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        "sensor.test_sensor_3": {"custom_unitC": "unitC"},
+        "sensor.test_sensor_3": {None: ""},
     }
 
-    def _mock_custom_equivalent_units_two(*args: Any) -> dict[str, dict[str, str]]:
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
         return custom_equivalent_units_recorder_platform_two
 
     recorder_platform_two = Mock(
@@ -4140,7 +4148,9 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
-    def _mock_custom_equivalent_units_one(*args: Any) -> dict[str, dict[str, str]]:
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
         return invalid_custom_equivalent_units
 
     recorder_platform_one = Mock(
@@ -4156,10 +4166,12 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        "sensor.test_sensor_3": {"custom_unitC": "unitC"},
+        "sensor.test_sensor_3": {None: ""},
     }
 
-    def _mock_custom_equivalent_units_two(*args: Any) -> dict[str, dict[str, str]]:
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
         return custom_equivalent_units_recorder_platform_two
 
     recorder_platform_two = Mock(

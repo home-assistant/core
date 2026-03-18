@@ -274,7 +274,7 @@ def _get_unit_converter(
 
 
 def _collect_equivalent_units_for_entity(
-    custom_units_for_entity: dict[str, str] | None,
+    custom_units_for_entity: dict[str | None, str] | None,
 ) -> dict[str | None, str]:
     if not custom_units_for_entity:
         return EQUIVALENT_UNITS
@@ -286,7 +286,7 @@ def _normalize_states(
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     fstates: list[tuple[float, State]],
     entity_id: str,
-    custom_units_for_entity: dict[str, str] | None,
+    custom_units_for_entity: dict[str | None, str] | None,
 ) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
     state_unit: str | None = None
@@ -523,7 +523,7 @@ def compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
-    custom_units_for_entities: dict[str, dict[str, str]],
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
     result: list[StatisticResult] = []
@@ -870,7 +870,7 @@ def _update_issues(
     report_issue: Callable[[str, str, dict[str, Any]], None],
     sensor_states: list[State],
     metadatas: dict[str, tuple[int, StatisticMetaData]],
-    custom_units_for_entities: dict[str, dict[str, str]],
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> None:
     """Update repair issues."""
     for state in sensor_states:
@@ -955,7 +955,7 @@ def _update_issues(
 def update_statistics_issues(
     hass: HomeAssistant,
     session: Session,
-    custom_units_for_entities: dict[str, dict[str, str]],
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> None:
     """Validate statistics."""
     instance = get_instance(hass)
@@ -1017,7 +1017,7 @@ def update_statistics_issues(
 
 def validate_statistics(
     hass: HomeAssistant,
-    custom_units_for_entities: dict[str, dict[str, str]],
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> dict[str, list[statistics.ValidationIssue]]:
     """Validate statistics."""
     validation_result = defaultdict(list)

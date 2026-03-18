@@ -687,16 +687,18 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
-CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {str: str}})
+CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {vol.Any(str, None): str}})
 # Keep track of domains for which a warning about failure to collect custom units has been logged
 WARN_CUSTOM_UNITS_ERROR: HassKey[set[str]] = HassKey(
     f"{DOMAIN}_warn_custom_units_error"
 )
 
 
-def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str]]:
+def _get_custom_equivalent_units(
+    hass: HomeAssistant,
+) -> dict[str, dict[str | None, str]]:
     """Check whether any integration supplies custom equivalent units for its entities."""
-    custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
+    custom_equivalent_units_per_entity: dict[str, dict[str | None, str]] = {}
     for domain, platform in hass.data[DATA_RECORDER].recorder_platforms.items():
         custom_equivalent_units = getattr(
             platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
