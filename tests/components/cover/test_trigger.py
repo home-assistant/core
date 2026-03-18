@@ -75,7 +75,7 @@ async def test_cover_triggers_gated_by_labs_flag(
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
                 trigger_from_none=False,
             ),
             *parametrize_trigger_states(
@@ -93,7 +93,7 @@ async def test_cover_triggers_gated_by_labs_flag(
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
                 trigger_from_none=False,
             ),
         )
@@ -149,7 +149,7 @@ async def test_cover_trigger_behavior_any(
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
                 trigger_from_none=False,
             ),
             *parametrize_trigger_states(
@@ -167,7 +167,7 @@ async def test_cover_trigger_behavior_any(
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
                 trigger_from_none=False,
             ),
         )
@@ -223,7 +223,7 @@ async def test_cover_trigger_behavior_first(
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
                 trigger_from_none=False,
             ),
             *parametrize_trigger_states(
@@ -241,7 +241,7 @@ async def test_cover_trigger_behavior_first(
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
                 trigger_from_none=False,
             ),
         )

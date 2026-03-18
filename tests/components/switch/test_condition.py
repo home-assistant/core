@@ -81,11 +81,11 @@ async def test_switch_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the switch state condition with the 'any' behavior."""
-    other_entity_ids = set(target_switches["included"]) - {entity_id}
+    other_entity_ids = set(target_switches["included_entities"]) - {entity_id}
 
     # Set all switches, including the tested switch, to the initial state
-    for eid in target_switches["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_switches["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -97,13 +97,13 @@ async def test_switch_state_condition_behavior_any(
 
     # Set state for lights to ensure that they don't impact the condition
     for state in states:
-        for eid in target_lights["included"]:
-            set_or_remove_state(hass, eid, state["included"])
+        for eid in target_lights["included_entities"]:
+            set_or_remove_state(hass, eid, state["included_state"])
             await hass.async_block_till_done()
             assert condition(hass) is False
 
     for state in states:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
@@ -150,11 +150,11 @@ async def test_switch_state_condition_behavior_all(
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
 
-    other_entity_ids = set(target_switches["included"]) - {entity_id}
+    other_entity_ids = set(target_switches["included_entities"]) - {entity_id}
 
     # Set all switches, including the tested switch, to the initial state
-    for eid in target_switches["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_switches["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -165,7 +165,7 @@ async def test_switch_state_condition_behavior_all(
     )
 
     for state in states:
-        included_state = state["included"]
+        included_state = state["included_state"]
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
