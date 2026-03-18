@@ -18,6 +18,7 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "Wrong account: Please authenticate with {email}."
@@ -61,6 +62,23 @@
       "storage_used_in_drive_trash": {
         "name": "Used storage in Drive Trash"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "authentication_not_valid": {
+      "message": "OAuth session is not valid, reauthentication required"
+    },
+    "failed_to_get_folder": {
+      "message": "Failed to get {folder} folder"
+    },
+    "invalid_response_google_drive_error": {
+      "message": "Invalid response from Google Drive: {error}"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   }
 }
