@@ -66,6 +66,9 @@
       }
     },
     "sensor": {
+      "firmware": {
+        "default": "mdi:chip"
+      },
       "food_dispensed_today": {
         "default": "mdi:counter"
       },
@@ -80,6 +83,12 @@
           "motor_ot_amps": "mdi:flash-alert"
         }
       },
+      "next_filter_replacement": {
+        "default": "mdi:filter-cog"
+      },
+      "scoops_saved_count": {
+        "default": "mdi:counter"
+      },
       "total_cycles": {
         "default": "mdi:counter"
       },
@@ -88,15 +97,6 @@
       },
       "wifi_rssi": {
         "default": "mdi:wifi"
-      },
-      "firmware": {
-        "default": "mdi:chip"
-      },
-      "scoops_saved_count": {
-        "default": "mdi:counter"
-      },
-      "next_filter_replacement": {
-        "default": "mdi:filter-cog"
       }
     },
     "switch": {

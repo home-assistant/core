@@ -117,6 +117,9 @@
       }
     },
     "sensor": {
+      "firmware": {
+        "name": "Firmware"
+      },
       "food_dispensed_today": {
         "name": "Food dispensed today",
         "unit_of_measurement": "cups"
@@ -147,8 +150,18 @@
       "next_feeding": {
         "name": "Next feeding"
       },
+      "next_filter_replacement": {
+        "name": "Next filter replacement"
+      },
       "pet_weight": {
         "name": "Pet weight"
+      },
+      "scoops_saved_count": {
+        "name": "Scoops saved",
+        "unit_of_measurement": "scoops"
+      },
+      "setup_date": {
+        "name": "Setup date"
       },
       "sleep_mode_end_time": {
         "name": "Sleep mode end time"
@@ -199,19 +212,6 @@
       },
       "wifi_rssi": {
         "name": "Wi-Fi signal"
-      },
-      "firmware": {
-        "name": "Firmware"
-      },
-      "setup_date": {
-        "name": "Setup date"
-      },
-      "scoops_saved_count": {
-        "name": "Scoops saved",
-        "unit_of_measurement": "scoops"
-      },
-      "next_filter_replacement": {
-        "name": "Next filter replacement"
       }
     },
     "switch": {
