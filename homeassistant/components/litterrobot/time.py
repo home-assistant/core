@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, time
 from typing import Any, Generic
 
-from pylitterbot import LitterRobot3
+from pylitterbot import LitterRobot3, LitterRobot5
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
@@ -32,6 +32,52 @@ def _as_local_time(start: datetime | None) -> time | None:
     return dt_util.as_local(start).time() if start else None
 
 
+def _get_lr5_today_schedule(robot: LitterRobot5) -> dict[str, Any] | None:
+    """Get today's schedule entry from the LR5 sleep schedules.
+
+    Reads the raw schedule data regardless of whether sleep mode is
+    enabled, so that time entities always show the configured times.
+    """
+    raw = robot._data.get("sleepSchedules")  # noqa: SLF001
+    schedules: list[dict[str, Any]]
+    if isinstance(raw, dict):
+        schedules = list(raw.values())
+    elif isinstance(raw, list):
+        schedules = raw
+    else:
+        return None
+    if not schedules:
+        return None
+    today_dow = dt_util.now().weekday()  # 0=Monday
+    for entry in schedules:
+        if entry.get("dayOfWeek") == today_dow:
+            return entry
+    return schedules[0]
+
+
+def _minutes_to_time(minutes: int | None) -> time | None:
+    """Convert minutes from midnight to a time object."""
+    if minutes is None:
+        return None
+    return time(hour=minutes // 60, minute=minutes % 60)
+
+
+def _lr5_sleep_start(robot: LitterRobot5) -> time | None:
+    """Get the configured sleep start time for today."""
+    schedule = _get_lr5_today_schedule(robot)
+    if schedule is None:
+        return None
+    return _minutes_to_time(schedule.get("sleepTime"))
+
+
+def _lr5_sleep_end(robot: LitterRobot5) -> time | None:
+    """Get the configured wake time for today."""
+    schedule = _get_lr5_today_schedule(robot)
+    if schedule is None:
+        return None
+    return _minutes_to_time(schedule.get("wakeTime"))
+
+
 LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     key="sleep_mode_start_time",
     translation_key="sleep_mode_start_time",
@@ -45,6 +91,29 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     ),
 )
 
+LITTER_ROBOT_5_TIME_ENTITIES: list[RobotTimeEntityDescription[LitterRobot5]] = [
+    RobotTimeEntityDescription[LitterRobot5](
+        key="sleep_mode_start_time",
+        translation_key="sleep_mode_start_time",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=_lr5_sleep_start,
+        set_fn=lambda robot, value: robot.set_sleep_mode(
+            robot.sleep_mode_enabled,
+            sleep_time=value,
+        ),
+    ),
+    RobotTimeEntityDescription[LitterRobot5](
+        key="sleep_mode_end_time",
+        translation_key="sleep_mode_end_time",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=_lr5_sleep_end,
+        set_fn=lambda robot, value: robot.set_sleep_mode(
+            robot.sleep_mode_enabled,
+            wake_time=value.hour * 60 + value.minute,
+        ),
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -53,27 +122,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     coordinator = entry.runtime_data
-    known_robots: set[str] = set()
-
-    def _check_robots() -> None:
-        all_robots = list(coordinator.litter_robots())
-        current_robots = {robot.serial for robot in all_robots}
-        new_robots = current_robots - known_robots
-        if new_robots:
-            known_robots.update(new_robots)
-            async_add_entities(
-                LitterRobotTimeEntity(
-                    robot=robot,
-                    coordinator=coordinator,
-                    description=LITTER_ROBOT_3_SLEEP_START,
-                )
-                for robot in all_robots
-                if robot.serial in new_robots
-                if isinstance(robot, LitterRobot3)
-            )
-
-    _check_robots()
-    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
+    entities: list[LitterRobotTimeEntity] = [
+        LitterRobotTimeEntity(
+            robot=robot,
+            coordinator=coordinator,
+            description=LITTER_ROBOT_3_SLEEP_START,
+        )
+        for robot in coordinator.litter_robots()
+        if isinstance(robot, LitterRobot3)
+    ]
+    entities.extend(
+        LitterRobotTimeEntity(
+            robot=robot,
+            coordinator=coordinator,
+            description=description,
+        )
+        for robot in coordinator.litter_robots()
+        if isinstance(robot, LitterRobot5)
+        for description in LITTER_ROBOT_5_TIME_ENTITIES
+    )
+    async_add_entities(entities)
 
 
 class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):

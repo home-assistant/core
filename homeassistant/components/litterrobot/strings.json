@@ -45,8 +45,20 @@
   },
   "entity": {
     "binary_sensor": {
+      "bonnet_removed": {
+        "name": "Bonnet removed"
+      },
+      "drawer_removed": {
+        "name": "Drawer removed"
+      },
       "hopper_connected": {
         "name": "Hopper connected"
+      },
+      "laser_dirty": {
+        "name": "Laser dirty"
+      },
+      "online": {
+        "name": "Online"
       },
       "power_status": {
         "name": "Power status"
@@ -59,6 +71,9 @@
       }
     },
     "button": {
+      "change_filter": {
+        "name": "Change filter"
+      },
       "give_snack": {
         "name": "Give snack"
       },
@@ -181,6 +196,22 @@
       },
       "waste_drawer": {
         "name": "Waste drawer"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal"
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "setup_date": {
+        "name": "Setup date"
+      },
+      "scoops_saved_count": {
+        "name": "Scoops saved",
+        "unit_of_measurement": "scoops"
+      },
+      "next_filter_replacement": {
+        "name": "Next filter replacement"
       }
     },
     "switch": {
@@ -197,6 +228,9 @@
     "time": {
       "sleep_mode_start_time": {
         "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
+      },
+      "sleep_mode_end_time": {
+        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_end_time::name%]"
       }
     },
     "vacuum": {

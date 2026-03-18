@@ -1,8 +1,20 @@
 {
   "entity": {
     "binary_sensor": {
+      "bonnet_removed": {
+        "default": "mdi:robot-vacuum-alert"
+      },
+      "drawer_removed": {
+        "default": "mdi:robot-vacuum-alert"
+      },
       "hopper_connected": {
         "default": "mdi:filter-check"
+      },
+      "laser_dirty": {
+        "default": "mdi:robot-vacuum-alert"
+      },
+      "online": {
+        "default": "mdi:cloud-check"
       },
       "sleep_mode": {
         "default": "mdi:sleep"
@@ -12,6 +24,9 @@
       }
     },
     "button": {
+      "change_filter": {
+        "default": "mdi:filter-cog"
+      },
       "give_snack": {
         "default": "mdi:candy-outline"
       },
@@ -70,6 +85,18 @@
       },
       "visits_today": {
         "default": "mdi:counter"
+      },
+      "wifi_rssi": {
+        "default": "mdi:wifi"
+      },
+      "firmware": {
+        "default": "mdi:chip"
+      },
+      "scoops_saved_count": {
+        "default": "mdi:counter"
+      },
+      "next_filter_replacement": {
+        "default": "mdi:filter-cog"
       }
     },
     "switch": {

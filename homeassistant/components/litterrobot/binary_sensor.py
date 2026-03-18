@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, LitterRobot5, Robot
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -60,6 +60,41 @@ BINARY_SENSOR_MAP: dict[
             is_on_fn=lambda robot: not robot.is_hopper_removed,
         ),
     ),
+    LitterRobot5: (
+        RobotBinarySensorEntityDescription[LitterRobot5](
+            key="hopper_connected",
+            translation_key="hopper_connected",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            entity_registry_enabled_default=False,
+            is_on_fn=lambda robot: not robot.is_hopper_removed,
+        ),
+        RobotBinarySensorEntityDescription[LitterRobot5](
+            key="drawer_removed",
+            translation_key="drawer_removed",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_fn=lambda robot: robot.is_drawer_removed,
+        ),
+        RobotBinarySensorEntityDescription[LitterRobot5](
+            key="bonnet_removed",
+            translation_key="bonnet_removed",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_fn=lambda robot: robot.is_bonnet_removed,
+        ),
+        RobotBinarySensorEntityDescription[LitterRobot5](
+            key="laser_dirty",
+            translation_key="laser_dirty",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_fn=lambda robot: robot.is_laser_dirty,
+        ),
+        RobotBinarySensorEntityDescription[LitterRobot5](
+            key="online",
+            translation_key="online",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_on_fn=lambda robot: robot.is_online,
+        ),
+    ),
     (FeederRobot, LitterRobot3, LitterRobot4): (
         RobotBinarySensorEntityDescription[FeederRobot | LitterRobot3 | LitterRobot4](
             key="power_status",
@@ -80,27 +115,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot binary sensors using config entry."""
     coordinator = entry.runtime_data
-    known_robots: set[str] = set()
-
-    def _check_robots() -> None:
-        all_robots = coordinator.account.robots
-        current_robots = {robot.serial for robot in all_robots}
-        new_robots = current_robots - known_robots
-        if new_robots:
-            known_robots.update(new_robots)
-            async_add_entities(
-                LitterRobotBinarySensorEntity(
-                    robot=robot, coordinator=coordinator, description=description
-                )
-                for robot in all_robots
-                if robot.serial in new_robots
-                for robot_type, entity_descriptions in BINARY_SENSOR_MAP.items()
-                if isinstance(robot, robot_type)
-                for description in entity_descriptions
-            )
-
-    _check_robots()
-    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
+    async_add_entities(
+        LitterRobotBinarySensorEntity(
+            robot=robot, coordinator=coordinator, description=description
+        )
+        for robot in coordinator.account.robots
+        for robot_type, entity_descriptions in BINARY_SENSOR_MAP.items()
+        if isinstance(robot, robot_type)
+        for description in entity_descriptions
+    )
 
 
 class LitterRobotBinarySensorEntity(

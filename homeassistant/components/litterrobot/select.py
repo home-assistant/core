@@ -6,6 +6,10 @@ from typing import Any, Generic, TypeVar
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Robot
 from pylitterbot.robot.litterrobot4 import BrightnessLevel, NightLightMode
+from pylitterbot.robot.litterrobot5 import (
+    BrightnessLevel as LR5BrightnessLevel,
+    NightLightMode as LR5NightLightMode,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfTime
@@ -13,7 +17,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
-from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+from .entity import (
+    LitterRobotEntity,
+    _WhiskerEntityT,
+    async_update_night_light_settings,
+    whisker_command,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -46,8 +55,8 @@ ROBOT_SELECT_MAP: dict[
             select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
         ),
     ),
-    (LitterRobot4, LitterRobot5): (
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="globe_brightness",
             translation_key="globe_brightness",
             current_fn=(
@@ -64,7 +73,7 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="globe_light",
             translation_key="globe_light",
             current_fn=(
@@ -81,7 +90,7 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="panel_brightness",
             translation_key="brightness_level",
             current_fn=(
@@ -95,6 +104,42 @@ ROBOT_SELECT_MAP: dict[
             select_fn=(
                 lambda robot, opt: robot.set_panel_brightness(
                     BrightnessLevel[opt.upper()]
+                )
+            ),
+        ),
+    ),
+    LitterRobot5: (
+        RobotSelectEntityDescription[LitterRobot5, str](
+            key="night_light_mode",
+            translation_key="globe_light",
+            current_fn=(
+                lambda robot: (
+                    mode.name.lower()
+                    if (mode := robot.night_light_mode) is not None
+                    else None
+                )
+            ),
+            options_fn=lambda _: [mode.name.lower() for mode in LR5NightLightMode],
+            select_fn=(
+                lambda robot, opt: async_update_night_light_settings(
+                    robot, mode=LR5NightLightMode[opt.upper()].value.capitalize()
+                )
+            ),
+        ),
+        RobotSelectEntityDescription[LitterRobot5, str](
+            key="panel_brightness",
+            translation_key="brightness_level",
+            current_fn=(
+                lambda robot: (
+                    bri.name.lower()
+                    if (bri := robot.panel_brightness) is not None
+                    else None
+                )
+            ),
+            options_fn=lambda _: [level.name.lower() for level in LR5BrightnessLevel],
+            select_fn=(
+                lambda robot, opt: robot.set_panel_brightness(
+                    LR5BrightnessLevel[opt.upper()]
                 )
             ),
         ),
@@ -171,3 +216,4 @@ class LitterRobotSelectEntity(
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.robot, option)
+        await self.coordinator.async_request_refresh()
