@@ -46,7 +46,7 @@ rules:
   discovery:
     status: exempt
     comment: |
-      This integration is a cloud service and does not support discovery.
+      The device doesn't expose anything device specific on the network.
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
