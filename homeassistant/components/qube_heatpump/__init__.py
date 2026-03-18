@@ -9,6 +9,7 @@ from python_qube_heatpump import QubeClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import PLATFORMS
 from .coordinator import QubeCoordinator
@@ -30,13 +31,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
     """Set up Qube Heat Pump from a config entry."""
     client = QubeClient(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
-    # Read software version for device info (best-effort, not critical)
+    # Connect and read software version for device info
     sw_version: str | None = None
     try:
-        await client.connect()
+        connected = await client.connect()
+        if not connected:
+            raise ConfigEntryNotReady(
+                f"Unable to connect to Qube heat pump at {entry.data[CONF_HOST]}"
+            )
         sw_version = await client.async_get_software_version()
-    except OSError, TimeoutError:
-        pass  # Version will be None; coordinator retry handles connectivity
+    except (OSError, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Qube heat pump at {entry.data[CONF_HOST]}"
+        ) from err
 
     coordinator = QubeCoordinator(hass, client, entry)
 

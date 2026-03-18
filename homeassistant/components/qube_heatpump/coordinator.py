@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_KEYS = frozenset({"energy_total_electric", "energy_total_thermic"})
-CLAMP_MIN_ZERO_KEYS = frozenset({"flow_rate"})
 
 
 class QubeCoordinator(DataUpdateCoordinator[QubeState]):
@@ -45,7 +44,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
         """Fetch data from the device."""
         try:
             data = await self.client.get_all_data()
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError) as exc:
             raise UpdateFailed(
                 f"Error communicating with Qube heat pump: {exc}"
             ) from exc
@@ -54,7 +53,6 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
             raise UpdateFailed("No data received from Qube heat pump")
 
         self._apply_monotonic_clamping(data)
-        self._apply_min_zero_clamping(data)
         return data
 
     def _apply_monotonic_clamping(self, data: QubeState) -> None:
@@ -69,9 +67,3 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
             else:
                 self._previous_values[key] = current
 
-    def _apply_min_zero_clamping(self, data: QubeState) -> None:
-        """Clamp values that should never be negative."""
-        for key in CLAMP_MIN_ZERO_KEYS:
-            current = getattr(data, key, None)
-            if current is not None and current < 0:
-                setattr(data, key, 0.0)

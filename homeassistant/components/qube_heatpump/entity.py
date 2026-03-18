@@ -25,7 +25,6 @@ class QubeEntity(CoordinatorEntity[QubeCoordinator]):
         assert entry.unique_id is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},
-            name=entry.title,
             manufacturer="Qube",
             model="Heat Pump",
             sw_version=entry.runtime_data.sw_version,
