@@ -47,6 +47,7 @@ from .const import (
     EVENT_SUPPORTED_CHANGED,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
@@ -90,6 +91,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     "issue_system_disk_lifetime",
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -253,9 +255,10 @@ class SupervisorIssues:
     def add_issue(self, issue: Issue) -> None:
         """Add or update an issue in the list. Create or update a repair if necessary."""
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
-            placeholders: dict[str, str] = {}
             if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
-                placeholders |= EXTRA_PLACEHOLDERS[issue.key]
+                placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
+            else:
+                placeholders = {}
 
             if issue.reference:
                 placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
