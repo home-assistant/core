@@ -124,6 +124,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "cover",
     "device_tracker",
     "fan",
+    "garage_door",
     "humidifier",
     "lawn_mower",
     "light",
