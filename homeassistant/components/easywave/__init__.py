@@ -101,11 +101,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:
     """Unload a config entry."""
-    # Shutdown coordinator
+    # Unload platforms first; only shut down the coordinator if this succeeds
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not unload_ok:
+        return False
+
     if hasattr(entry, "runtime_data") and entry.runtime_data:
         await entry.runtime_data.coordinator.async_shutdown()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return True
 
 
 async def async_remove_config_entry_device(

@@ -308,25 +308,28 @@ class RX11Transceiver:
         Checks if module is still in good state. If connection fails,
         marks as disconnected.
         """
-        while not self._health_check_stopping:
-            try:
-                await asyncio.sleep(self.HEALTH_CHECK_INTERVAL)
+        try:
+            while not self._health_check_stopping:
+                try:
+                    await asyncio.sleep(self.HEALTH_CHECK_INTERVAL)
 
-                if not self.is_connected or not self._rxmodule:
-                    continue
+                    if not self.is_connected or not self._rxmodule:
+                        continue
 
-                # Check if RxModule is still healthy
-                if not self._rxmodule.is_connected or not self._rxmodule.state_good:
-                    _LOGGER.warning("RxModule health check failed")
-                    self.is_connected = False
-                    self._notify_disconnect()
+                    # Check if RxModule is still healthy
+                    if not self._rxmodule.is_connected or not self._rxmodule.state_good:
+                        _LOGGER.warning("RxModule health check failed")
+                        self.is_connected = False
+                        self._notify_disconnect()
+                        break
+
+                except asyncio.CancelledError:
                     break
-
-            except asyncio.CancelledError:
-                break
-            except _SERIAL_ERRORS as e:
-                _LOGGER.debug("Error in health check: %s", e)
-                await asyncio.sleep(1.0)
+                except _SERIAL_ERRORS as e:
+                    _LOGGER.debug("Error in health check: %s", e)
+                    await asyncio.sleep(1.0)
+        finally:
+            self._health_check_task = None
 
     async def _handle_rxmodule_disconnect(self) -> None:
         """Handle RxModule disconnect on the Home Assistant event loop."""

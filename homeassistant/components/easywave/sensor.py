@@ -67,6 +67,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_rx11_gateway"
         self._last_status = "disconnected"
+        self._ha_started = False
         self._attr_icon = "mdi:close-thick"
 
         # Get USB device info — always use the canonical lookup table so
@@ -169,30 +170,36 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         new_status = self._connection_status()
         self._update_gateway_device_info()
 
-        if new_status != self._last_status:
-            old_status = self._last_status
-            _LOGGER.info("Gateway status: %s -> %s", old_status, new_status)
-            self._last_status = new_status
+        # Only update the persisted status and fire events once HA is
+        # running.  Coordinator updates can arrive during early startup
+        # before EVENT_HOMEASSISTANT_STARTED fires; ignoring them keeps the
+        # initial None (unknown) → connected/disconnected transition intact.
+        if self._ha_started or self.hass.is_running:
+            if new_status != self._last_status:
+                old_status = self._last_status
+                _LOGGER.info("Gateway status: %s -> %s", old_status, new_status)
+                self._last_status = new_status
 
-            registry = dr.async_get(self.hass)
-            device = registry.async_get_device(
-                identifiers={(DOMAIN, f"{self._entry.entry_id}_gateway")}
-            )
-            device_id = device.id if device is not None else None
+                registry = dr.async_get(self.hass)
+                device = registry.async_get_device(
+                    identifiers={(DOMAIN, f"{self._entry.entry_id}_gateway")}
+                )
+                device_id = device.id if device is not None else None
 
-            event_data = {
-                "device_id": device_id,
-                "old_status": old_status,
-                "new_status": new_status,
-                "entry_id": self._entry.entry_id,
-            }
-            self.hass.bus.async_fire(EVENT_GATEWAY_STATUS_CHANGED, event_data)
-            if new_status == "connected":
-                self.hass.bus.async_fire(EVENT_GATEWAY_CONNECTED, event_data)
-            elif new_status == "disconnected":
-                self.hass.bus.async_fire(EVENT_GATEWAY_DISCONNECTED, event_data)
+                event_data = {
+                    "device_id": device_id,
+                    "old_status": old_status,
+                    "new_status": new_status,
+                    "entry_id": self._entry.entry_id,
+                }
+                self.hass.bus.async_fire(EVENT_GATEWAY_STATUS_CHANGED, event_data)
+                if new_status == "connected":
+                    self.hass.bus.async_fire(EVENT_GATEWAY_CONNECTED, event_data)
+                elif new_status == "disconnected":
+                    self.hass.bus.async_fire(EVENT_GATEWAY_DISCONNECTED, event_data)
 
-        self._current_status = new_status
+            self._current_status = new_status
+
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
@@ -207,6 +214,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         # native_value returns None until this fires (see _current_status).
         @callback
         def _on_ha_started(_event: Any = None) -> None:
+            self._ha_started = True
             self._handle_coordinator_update()
 
         if self.hass.is_running:
