@@ -3865,7 +3865,6 @@ async def test_recorder_platform_without_statistics(
     "supported_methods",
     [
         ("compile_statistics",),
-        ("async_custom_equivalent_units",),
         ("list_statistic_ids",),
         ("update_statistics_issues",),
         ("validate_statistics",),
@@ -3885,9 +3884,6 @@ async def test_recorder_platform_with_partial_statistics_support(
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
-    def _mock_custom_equivalent_units(*args: Any) -> dict:
-        return {}
-
     def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
         return {}
 
@@ -3896,7 +3892,6 @@ async def test_recorder_platform_with_partial_statistics_support(
 
     mock_impl = {
         "compile_statistics": _mock_compile_statistics,
-        "async_custom_equivalent_units": _mock_custom_equivalent_units,
         "list_statistic_ids": _mock_list_statistic_ids,
         "update_statistics_issues": None,
         "validate_statistics": _mock_validate_statistics,
