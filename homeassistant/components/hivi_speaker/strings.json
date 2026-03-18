@@ -8,10 +8,10 @@
   "options": {
     "step": {
       "init": {
-        "description": "Confirm to refresh device discovery?",
         "data": {
           "confirm_refresh": "Confirm to refresh"
-        }
+        },
+        "description": "Confirm to refresh device discovery?"
       },
       "success": {
         "description": "Device discovery has begun. New devices will be added automatically."
