@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
     try:
         static = await bsblan.static_values()
-    except BSBLANError as err:
+    except (BSBLANError, TimeoutError) as err:
         LOGGER.debug(
             "Static values not available for %s: %s",
             entry.data[CONF_HOST],
