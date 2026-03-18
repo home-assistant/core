@@ -611,7 +611,9 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
                 progress_callback=progress_callback,
             )
 
-    assert mock_flasher_cls.mock_calls == [call(device="/dev/ttyUSB0")]
+    assert mock_flasher_cls.call_count == 1
+    mock_flasher_cls.assert_called_once_with(device="/dev/ttyUSB0")
+
     assert progress_callback.mock_calls == [call(0, 100), call(50, 100), call(100, 100)]
     assert after_flash_info == expected_firmware_info
 
