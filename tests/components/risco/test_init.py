@@ -28,3 +28,14 @@ async def test_connection_reset(
 
         await callback(ConnectionResetError())
         reload_mock.assert_awaited_once()
+
+
+async def test_unload_handles_disconnect_error(
+    hass: HomeAssistant, two_zone_local, setup_risco_local
+) -> None:
+    """Test unload succeeds when local disconnect errors out."""
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.disconnect",
+        side_effect=RuntimeError("disconnect failed"),
+    ):
+        assert await hass.config_entries.async_unload(setup_risco_local.entry_id)

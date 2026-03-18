@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import logging
 
-from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
+from pyrisco import (
+    CannotConnectError,
+    OperationError,
+    RiscoCloud,
+    RiscoLocal,
+    UnauthorizedError,
+)
 from pyrisco.common import Partition, System, Zone
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,6 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_COMMUNICATION_DELAY,
     CONF_CONCURRENCY,
     DATA_COORDINATOR,
     DEFAULT_CONCURRENCY,
@@ -70,7 +77,11 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     data = entry.data
     concurrency = entry.options.get(CONF_CONCURRENCY, DEFAULT_CONCURRENCY)
     risco = RiscoLocal(
-        data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], concurrency=concurrency
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data[CONF_PIN],
+        communication_delay=data.get(CONF_COMMUNICATION_DELAY, 0),
+        concurrency=concurrency,
     )
 
     try:
@@ -82,6 +93,10 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         return False
 
     async def _error(error: Exception) -> None:
+        if isinstance(error, OperationError) and str(error) == "Timeout in command: CLOCK":
+            _LOGGER.warning("Risco keep-alive timeout, waiting for reconnection")
+            return
+
         _LOGGER.error("Error in Risco library", exc_info=error)
         if isinstance(error, ConnectionResetError) and not hass.is_stopping:
             _LOGGER.debug("Disconnected from panel. Reloading integration")
@@ -161,7 +176,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         if is_local(entry):
             local_data: LocalData = hass.data[DOMAIN][entry.entry_id]
-            await local_data.system.disconnect()
+            try:
+                await local_data.system.disconnect()
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning("Failed to disconnect from local Risco panel")
 
         hass.data[DOMAIN].pop(entry.entry_id)
 
