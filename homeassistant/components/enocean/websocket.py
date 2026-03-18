@@ -10,8 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.const import CONF_ADDRESS, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_EEP
 from .helpers import get_enocean
 from .types import EnOceanConfigStore
 
@@ -41,9 +43,9 @@ def async_get_enocean_config_store(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "enocean/add",
-        vol.Required("address"): str,
-        vol.Required("eep"): str,
+        vol.Required(CONF_TYPE): "enocean/add",
+        vol.Required(CONF_ADDRESS): str,
+        vol.Required(CONF_EEP): str,
     }
 )
 @websocket_api.async_response
@@ -56,10 +58,10 @@ async def websocket_add(
 ) -> None:
     """Add a device to config store."""
     await enocean_config_store.create_device(
-        msg["address"],
+        msg[CONF_ADDRESS],
         {
-            "address": msg["address"],
-            "eep": msg["eep"],
+            CONF_ADDRESS: msg[CONF_ADDRESS],
+            CONF_EEP: msg[CONF_EEP],
         },
     )
-    connection.send_result(msg["address"])
+    connection.send_result(msg[CONF_ADDRESS])

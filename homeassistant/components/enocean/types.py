@@ -11,10 +11,11 @@ from enocean_async import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import CONF_EEP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,13 +60,13 @@ class EnOceanConfigStore:
             self.data = EnOceanConfigStoreModel(**data)
             _LOGGER.debug(
                 "Loaded EnOcean config data from storage, %s devices found",
-                len(self.data.get("devices", [])),
+                len(self.data.get(CONF_DEVICES, [])),
             )
 
     async def create_device(self, device_address: str, config: dict[str, Any]) -> None:
         """Create a device in the config store."""
-        self.data.get("devices").append(
-            EnOceanDeviceStoreModel(address=device_address, eep=config["eep"])
+        self.data.get(CONF_DEVICES).append(
+            EnOceanDeviceStoreModel(address=device_address, eep=config.get(CONF_EEP))
         )
         await self._store.async_save(self.data)
 

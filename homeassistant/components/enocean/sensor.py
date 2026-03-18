@@ -23,7 +23,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_DEVICE_CLASS,
+    CONF_DEVICES,
     CONF_ID,
     CONF_NAME,
     PERCENTAGE,
@@ -40,6 +42,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import CONF_EEP
 from .entity import EnOceanEntity, NewEnOceanEntity, combine_hex
 from .types import EnOceanConfigEntry
 
@@ -306,13 +309,13 @@ async def async_setup_entry(
 
     entities = [
         NewEnOceanSensor(
-            device_id=device.get("address"),
-            device_type=device.get("eep"),
+            device_id=device.get(CONF_ADDRESS),
+            device_type=device.get(CONF_EEP),
             description=entity_description,
         )
-        for device in store.data.get("devices")
+        for device in store.data.get(CONF_DEVICES)
         for entity_description in SENSORS
-        if entity_description.supported_eep == device.get("eep")
+        if entity_description.supported_eep == device.get(CONF_EEP)
     ]
 
     async_add_entities(entities)
