@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.risco.const import CONF_COMMUNICATION_DELAY, DOMAIN, TYPE_LOCAL
+from homeassistant.components.risco.const import (
+    CONF_COMMUNICATION_DELAY,
+    DOMAIN,
+    TYPE_LOCAL,
+)
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
@@ -63,7 +67,9 @@ async def test_local_setup_uses_stored_communication_delay(
     config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.risco.RiscoLocal", autospec=True) as risco_local,
+        patch(
+            "homeassistant.components.risco.RiscoLocal", autospec=True
+        ) as risco_local,
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",
