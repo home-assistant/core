@@ -26,7 +26,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN, CONF_BROADCAST_INTERFACE
+from .const import (
+    CONF_BROADCAST_INTERFACE,
+    CONF_OFF_ACTION,
+    DEFAULT_NAME,
+    DEFAULT_PING_TIMEOUT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import DEFAULT_NAME, DOMAIN, CONF_BROADCAST_INTERFACE
+from .const import CONF_BROADCAST_INTERFACE, DEFAULT_NAME, DOMAIN
 
 
 async def validate(
