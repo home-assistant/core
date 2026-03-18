@@ -24329,10 +24329,11 @@
     'state': '100.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_none-entry]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_ec_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24344,7 +24345,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_none',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_ec_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24352,39 +24353,41 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'EC current',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'EC current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ec',
+    'translation_key': 'ec_current',
     'unique_id': 'tuya.frmfrbds0jixxyaljbngdec_current',
     'unit_of_measurement': 'us',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_none-state]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_ec_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WiFi smart online 8 in 1 tester None',
+      'friendly_name': 'WiFi smart online 8 in 1 tester EC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'us',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_none',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_ec_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_none_2-entry]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_orp_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24396,7 +24399,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_none_2',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_orp_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24404,39 +24407,41 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP current',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'ORP current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'orp',
+    'translation_key': 'orp_current',
     'unique_id': 'tuya.frmfrbds0jixxyaljbngdorp_current',
     'unit_of_measurement': 'mV',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_none_2-state]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_orp_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WiFi smart online 8 in 1 tester None',
+      'friendly_name': 'WiFi smart online 8 in 1 tester ORP current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'mV',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_none_2',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_orp_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_none_3-entry]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_ph_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24448,7 +24453,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_none_3',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_ph_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24456,29 +24461,30 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH current',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'pH current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pH',
+    'translation_key': 'ph_current',
     'unique_id': 'tuya.frmfrbds0jixxyaljbngdph_current',
     'unit_of_measurement': 'ph',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_none_3-state]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_ph_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WiFi smart online 8 in 1 tester None',
+      'friendly_name': 'WiFi smart online 8 in 1 tester pH current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ph',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_none_3',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_ph_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -24487,8 +24493,9 @@
 # ---
 # name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24508,6 +24515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

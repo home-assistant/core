@@ -661,6 +661,9 @@
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
       },
+      "ec_current": {
+        "name": "EC current"
+      },
       "excretion_time_day": {
         "name": "Excretion duration"
       },
@@ -755,6 +758,12 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "orp_current": {
+        "name": "ORP current"
+      },
+      "ph_current": {
+        "name": "pH current"
       },
       "phase_a_current": {
         "name": "Phase A current"

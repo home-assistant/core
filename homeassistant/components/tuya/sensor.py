@@ -320,7 +320,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.EC_CURRENT,
-            translation_key="ec",
+            translation_key="ec_current",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
@@ -352,12 +352,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ORP_CURRENT,
-            translation_key="orp",
+            translation_key="orp_current",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PH_CURRENT,
-            translation_key="pH",
+            translation_key="ph_current",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
