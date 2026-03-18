@@ -23,10 +23,14 @@
           selector:
             entity:
               filter:
-                domain:
-                  - input_number
-                  - number
-                  - sensor
+                - domain: input_number
+                  unit_of_measurement:
+                    - "°C"
+                    - "°F"
+                - domain: sensor
+                  device_class: temperature
+                - domain: number
+                  device_class: temperature
       translation_key: number_or_entity
 
 .trigger_threshold_type: &trigger_threshold_type

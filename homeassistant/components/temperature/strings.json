@@ -46,8 +46,8 @@
           "name": "Below"
         },
         "unit": {
-          "description": "The unit of temperature for the trigger values. Defaults to the system unit.",
-          "name": "Unit"
+          "description": "All values will be converted to this unit when evaluating the trigger.",
+          "name": "Unit of measurement"
         }
       },
       "name": "Temperature changed"
