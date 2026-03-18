@@ -177,6 +177,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[aqara_g350]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '148dcc52-0ddd-496b-b7ac-3721d0da5fb1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'G350',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'a4367b4d2bbfde94',
+    'sw_version': '4.5.20',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[aux_ac]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

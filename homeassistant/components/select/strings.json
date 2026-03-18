@@ -76,5 +76,11 @@
       "name": "Previous"
     }
   },
-  "title": "Select"
+  "title": "Select",
+  "triggers": {
+    "selection_changed": {
+      "description": "Triggers after the selected option of one or more dropdowns changes.",
+      "name": "Selection changed"
+    }
+  }
 }
