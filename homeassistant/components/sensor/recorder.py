@@ -275,7 +275,7 @@ def _get_unit_converter(
 
 def _collect_equivalent_units_for_entity(
     custom_units_for_entity: dict[str, str] | None,
-) -> dict:
+) -> dict[str, str]:
     if custom_units_for_entity:
         equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
     else:
