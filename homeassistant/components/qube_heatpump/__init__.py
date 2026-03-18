@@ -39,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
         pass  # Version will be None; coordinator retry handles connectivity
 
     coordinator = QubeCoordinator(hass, client, entry)
-    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = QubeData(
         coordinator=coordinator,
@@ -47,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
         sw_version=sw_version,
     )
 
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

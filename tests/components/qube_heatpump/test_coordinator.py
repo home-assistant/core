@@ -10,7 +10,7 @@ from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.qube_heatpump.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import get_entity_id_by_unique_id_suffix
@@ -21,10 +21,10 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_coordinator_fetches_data(
     hass: HomeAssistant, mock_qube_client: MagicMock
 ) -> None:
-    """Test coordinator fetches data from hub."""
+    """Test coordinator fetches data from device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
     )
     entry.add_to_hass(hass)
@@ -49,7 +49,7 @@ async def test_coordinator_reconnects_when_disconnected(
 ) -> None:
     """Test coordinator reconnects when client is disconnected."""
     with patch(
-        "homeassistant.components.qube_heatpump.hub.QubeClient", autospec=True
+        "homeassistant.components.qube_heatpump.QubeClient", autospec=True
     ) as mock_client_cls:
         client = mock_client_cls.return_value
         client.host = "1.2.3.4"
@@ -68,10 +68,11 @@ async def test_coordinator_reconnects_when_disconnected(
         state.temp_supply = 45.0
         state.status_code = 1
         client.get_all_data = AsyncMock(return_value=state)
+        client.async_get_software_version = AsyncMock(return_value="2.15")
 
         entry = MockConfigEntry(
             domain=DOMAIN,
-            data={CONF_HOST: "1.2.3.4"},
+            data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
             title="Qube Heat Pump",
         )
         entry.add_to_hass(hass)
@@ -96,7 +97,7 @@ async def test_coordinator_handles_fetch_error(
     state.status_code = 1
 
     with patch(
-        "homeassistant.components.qube_heatpump.hub.QubeClient", autospec=True
+        "homeassistant.components.qube_heatpump.QubeClient", autospec=True
     ) as mock_client_cls:
         client = mock_client_cls.return_value
         client.host = "1.2.3.4"
@@ -107,10 +108,11 @@ async def test_coordinator_handles_fetch_error(
         client.close = AsyncMock(return_value=None)
         # First call succeeds for setup
         client.get_all_data = AsyncMock(return_value=state)
+        client.async_get_software_version = AsyncMock(return_value="2.15")
 
         entry = MockConfigEntry(
             domain=DOMAIN,
-            data={CONF_HOST: "1.2.3.4"},
+            data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
             title="Qube Heat Pump",
             unique_id=f"{DOMAIN}-1.2.3.4-502",
         )
@@ -153,7 +155,7 @@ async def test_coordinator_handles_no_data(
     state.status_code = 1
 
     with patch(
-        "homeassistant.components.qube_heatpump.hub.QubeClient", autospec=True
+        "homeassistant.components.qube_heatpump.QubeClient", autospec=True
     ) as mock_client_cls:
         client = mock_client_cls.return_value
         client.host = "1.2.3.4"
@@ -164,10 +166,11 @@ async def test_coordinator_handles_no_data(
         client.close = AsyncMock(return_value=None)
         # First call succeeds for setup
         client.get_all_data = AsyncMock(return_value=state)
+        client.async_get_software_version = AsyncMock(return_value="2.15")
 
         entry = MockConfigEntry(
             domain=DOMAIN,
-            data={CONF_HOST: "1.2.3.4"},
+            data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
             title="Qube Heat Pump",
         )
         entry.add_to_hass(hass)
@@ -198,7 +201,7 @@ async def test_coordinator_clamps_negative_flow_rate(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )

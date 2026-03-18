@@ -9,7 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.qube_heatpump.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -24,7 +24,7 @@ async def test_sensor_setup(
     """Test sensors are created during setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -46,7 +46,7 @@ async def test_temperature_sensors(
     """Test temperature sensor values."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -71,7 +71,7 @@ async def test_power_sensors(
     """Test power sensor values."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -96,7 +96,7 @@ async def test_computed_status_sensor(
     """Test computed status sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -122,7 +122,7 @@ async def test_device_info(
     """Test device info is set correctly."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -133,7 +133,7 @@ async def test_device_info(
 
     # Assert DeviceEntry state via device registry
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "1.2.3.4:1")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
 
     assert device is not None
     assert device.manufacturer == "Qube"
@@ -146,7 +146,7 @@ async def test_cop_sensor(
     """Test COP sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -169,7 +169,7 @@ async def test_flow_rate_sensor(
     """Test flow rate sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -196,7 +196,7 @@ async def test_sensor_with_none_status_code(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -216,7 +216,7 @@ async def test_energy_sensors(
     """Test energy sensors exist and have correct values."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -253,7 +253,7 @@ async def test_total_energy_sensor_with_none_data(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
@@ -275,7 +275,7 @@ async def test_sensor_coordinator_refresh_updates_values(
     """Test that coordinator refresh updates sensor values."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
         unique_id=f"{DOMAIN}-1.2.3.4-502",
     )
