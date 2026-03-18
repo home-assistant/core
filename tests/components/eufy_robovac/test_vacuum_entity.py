@@ -7,11 +7,16 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.vacuum import VacuumActivity
-
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.local_api import EufyRoboVacLocalApiError
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.model_mappings import MODEL_MAPPINGS
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.vacuum import EufyRoboVacEntity
+from homeassistant.components.vacuum import VacuumActivity
+from homeassistant.core import HomeAssistant
 
 
 class _FakeApi:
@@ -26,16 +31,18 @@ class _FakeApi:
             "106": "0",
         }
 
-    async def async_send_dps(self, hass, dps: dict[str, Any]) -> dict[str, Any]:
+    async def async_send_dps(
+        self, hass: HomeAssistant | None, dps: dict[str, Any]
+    ) -> dict[str, Any]:
         self.sent.append(dps)
         return {"success": True}
 
-    async def async_get_dps(self, hass) -> dict[str, Any]:
+    async def async_get_dps(self, hass: HomeAssistant | None) -> dict[str, Any]:
         return self.dps
 
 
 @pytest.fixture
-def entity(hass) -> EufyRoboVacEntity:
+def entity(hass: HomeAssistant) -> EufyRoboVacEntity:
     """Create a test entity with fake API."""
     entry = SimpleNamespace(
         data={
@@ -77,7 +84,9 @@ async def test_async_return_to_base_sends_return(entity: EufyRoboVacEntity) -> N
 
 
 @pytest.mark.asyncio
-async def test_async_update_maps_activity_and_battery(entity: EufyRoboVacEntity) -> None:
+async def test_async_update_maps_activity_and_battery(
+    entity: EufyRoboVacEntity,
+) -> None:
     """Update should map standby status and fan speed."""
     await entity.async_update()
 
@@ -100,7 +109,7 @@ async def test_async_update_marks_entity_unavailable_on_error(
 ) -> None:
     """Polling errors should mark the entity unavailable."""
 
-    async def _raise_error(_hass):
+    async def _raise_error(_hass: HomeAssistant | None) -> dict[str, Any]:
         raise EufyRoboVacLocalApiError("boom")
 
     entity._api.async_get_dps = _raise_error

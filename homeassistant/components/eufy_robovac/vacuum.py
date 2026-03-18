@@ -11,24 +11,19 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_MODEL,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    EufyRoboVacConfigEntry,
     CONF_LOCAL_KEY,
     CONF_PROTOCOL_VERSION,
     DEFAULT_PROTOCOL_VERSION,
     DOMAIN,
+    EufyRoboVacConfigEntry,
     RoboVacCommand,
     dps_update_signal,
 )
@@ -266,14 +261,17 @@ class EufyRoboVacEntity(StateVacuumEntity):
 
         await self._async_send_and_refresh(
             {
-                self._dps_code(RoboVacCommand.FAN_SPEED): self._mapping.fan_speed_values[
-                    normalized
-                ],
+                self._dps_code(
+                    RoboVacCommand.FAN_SPEED
+                ): self._mapping.fan_speed_values[normalized],
             }
         )
 
     async def async_send_command(
-        self, command: str, params: list[str] | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send a custom command to the vacuum.
 

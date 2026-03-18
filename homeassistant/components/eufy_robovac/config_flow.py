@@ -7,6 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -16,7 +17,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .cloud_api import (
@@ -65,7 +65,8 @@ def _device_step_data_schema(
             vol.Optional(
                 CONF_PROTOCOL_VERSION,
                 default=user_input.get(
-                    CONF_PROTOCOL_VERSION, device.protocol_version or DEFAULT_PROTOCOL_VERSION
+                    CONF_PROTOCOL_VERSION,
+                    device.protocol_version or DEFAULT_PROTOCOL_VERSION,
                 ),
             ): vol.In(SUPPORTED_PROTOCOL_VERSIONS),
         }
@@ -77,10 +78,6 @@ USER_STEP_DATA_SCHEMA = _user_step_data_schema()
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class NoDevicesFound(HomeAssistantError):
-    """Error to indicate no RoboVacs were found."""
 
 
 async def _async_validate_local_connection(
@@ -120,7 +117,7 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle account login and cloud discovery step."""
         if user_input is None:
             return self.async_show_form(
@@ -146,17 +143,16 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for device in discovered
                 if device.model in MODEL_MAPPINGS
             }
-            if not self._cloud_devices:
-                raise NoDevicesFound
         except EufyRoboVacCloudApiInvalidAuth:
             errors["base"] = "invalid_auth"
-        except NoDevicesFound:
-            errors["base"] = "no_devices"
         except EufyRoboVacCloudApiError:
             errors["base"] = "cannot_connect"
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Unexpected exception discovering Eufy RoboVacs")
             errors["base"] = "unknown"
+
+        if not errors and not self._cloud_devices:
+            errors["base"] = "no_devices"
 
         if errors:
             return self.async_show_form(
@@ -169,7 +165,7 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_device(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle RoboVac selection from cloud-discovered devices."""
         if not self._cloud_devices:
             return self.async_show_form(
@@ -197,7 +193,7 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_device(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle local details and entry creation for selected RoboVac."""
         if self._selected_device_id is None:
             return await self.async_step_select_device()
@@ -234,7 +230,7 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect_local"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception(
                     "Unexpected exception validating local RoboVac connectivity"
                 )

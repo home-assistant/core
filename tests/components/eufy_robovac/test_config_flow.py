@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.cloud_api import (
     CloudDiscoveredRoboVac,
     EufyRoboVacCloudApiError,
     EufyRoboVacCloudApiInvalidAuth,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -32,7 +36,7 @@ DISCOVERED_DEVICE = CloudDiscoveredRoboVac(
 )
 
 
-async def test_cloud_flow_unsupported_models_filtered(hass) -> None:
+async def test_cloud_flow_unsupported_models_filtered(hass: HomeAssistant) -> None:
     """Flow should reject discovery payloads that have no supported models."""
     unsupported = CloudDiscoveredRoboVac(
         device_id="unsupported1",
@@ -65,7 +69,7 @@ async def test_cloud_flow_unsupported_models_filtered(hass) -> None:
     assert result2["errors"] == {"base": "no_devices"}
 
 
-async def test_cloud_flow_success(hass) -> None:
+async def test_cloud_flow_success(hass: HomeAssistant) -> None:
     """Cloud onboarding flow should discover, select and create entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -126,7 +130,9 @@ async def test_cloud_flow_success(hass) -> None:
     assert result4["data"]["protocol_version"] == "3.3"
 
 
-async def test_cloud_flow_recovers_from_missing_selected_device(hass) -> None:
+async def test_cloud_flow_recovers_from_missing_selected_device(
+    hass: HomeAssistant,
+) -> None:
     """Flow should recover if selected device is no longer present in memory."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -145,9 +151,9 @@ async def test_cloud_flow_recovers_from_missing_selected_device(hass) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "select_device"
 
-    flow_handler = hass.config_entries.flow._progress[result2["flow_id"]]  # noqa: SLF001
-    flow_handler._selected_device_id = DISCOVERED_DEVICE.device_id  # noqa: SLF001
-    flow_handler._cloud_devices = {}  # noqa: SLF001
+    flow_handler = hass.config_entries.flow._progress[result2["flow_id"]]
+    flow_handler._selected_device_id = DISCOVERED_DEVICE.device_id
+    flow_handler._cloud_devices = {}
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -158,7 +164,7 @@ async def test_cloud_flow_recovers_from_missing_selected_device(hass) -> None:
     assert result3["errors"] == {"base": "no_devices"}
 
 
-async def test_cloud_flow_invalid_auth(hass) -> None:
+async def test_cloud_flow_invalid_auth(hass: HomeAssistant) -> None:
     """Invalid cloud credentials should return to login with invalid_auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -180,7 +186,7 @@ async def test_cloud_flow_invalid_auth(hass) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_cloud_flow_cannot_connect(hass) -> None:
+async def test_cloud_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Cloud API connectivity failures should return cannot_connect."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -202,7 +208,9 @@ async def test_cloud_flow_cannot_connect(hass) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_cloud_flow_aborts_on_duplicate_unique_id(hass) -> None:
+async def test_cloud_flow_aborts_on_duplicate_unique_id(
+    hass: HomeAssistant,
+) -> None:
     """Flow should abort if selected cloud device is already configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

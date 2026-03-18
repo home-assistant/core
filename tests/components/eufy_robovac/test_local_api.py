@@ -8,10 +8,12 @@ from typing import Any
 
 import pytest
 
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.local_api import (
     EufyRoboVacLocalApi,
     EufyRoboVacLocalApiError,
 )
+from homeassistant.core import HomeAssistant
 
 
 @dataclass
@@ -70,7 +72,7 @@ def fake_tinytuya(monkeypatch: pytest.MonkeyPatch) -> list[_FakeDevice]:
 
 @pytest.mark.asyncio
 async def test_async_send_dps_uses_tinytuya_device(
-    hass,
+    hass: HomeAssistant,
     fake_tinytuya: list[_FakeDevice],
 ) -> None:
     """Sending DPS should create and configure a tinytuya device."""
@@ -97,7 +99,7 @@ async def test_async_send_dps_uses_tinytuya_device(
 
 @pytest.mark.asyncio
 async def test_async_get_dps_returns_dps_payload(
-    hass,
+    hass: HomeAssistant,
     fake_tinytuya: list[_FakeDevice],
 ) -> None:
     """Status reads should return normalized DPS keys."""
@@ -115,7 +117,9 @@ async def test_async_get_dps_returns_dps_payload(
 
 
 @pytest.mark.asyncio
-async def test_async_send_dps_closes_device_on_error(hass, monkeypatch) -> None:
+async def test_async_send_dps_closes_device_on_error(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Send failures should still close the tinytuya device."""
     created: list[_FakeDevice] = []
 
@@ -153,7 +157,9 @@ async def test_async_send_dps_closes_device_on_error(hass, monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_get_dps_closes_device_on_error(hass, monkeypatch) -> None:
+async def test_async_get_dps_closes_device_on_error(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Status failures should still close the tinytuya device."""
     created: list[_FakeDevice] = []
 

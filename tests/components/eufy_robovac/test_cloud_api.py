@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.cloud_api import (
     CloudDiscoveredRoboVac,
     EufyRoboVacCloudApi,

@@ -2617,6 +2617,9 @@ tilt-ble==1.0.1
 # homeassistant.components.tilt_pi
 tilt-pi==0.2.1
 
+# homeassistant.components.eufy_robovac
+tinytuya==1.17.6
+
 # homeassistant.components.todoist
 todoist-api-python==3.1.0
 

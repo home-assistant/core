@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.const import (
     CONF_LOCAL_KEY,
     CONF_PROTOCOL_VERSION,
     DOMAIN,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.local_api import EufyRoboVacLocalApiError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumActivity

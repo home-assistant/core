@@ -2,9 +2,11 @@
 
 import pytest
 
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.const import RoboVacCommand
-from homeassistant.components.eufy_robovac.model_mappings import MODEL_MAPPINGS
 
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.eufy_robovac.model_mappings import MODEL_MAPPINGS
 
 SUPPORTED_MODELS = {
     "T2118",
