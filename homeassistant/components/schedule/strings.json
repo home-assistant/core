@@ -7,7 +7,7 @@
   },
   "conditions": {
     "is_off": {
-      "description": "Tests if one or more schedules are off.",
+      "description": "Tests if one or more schedule blocks are currently not active.",
       "fields": {
         "behavior": {
           "description": "[%key:component::schedule::common::condition_behavior_description%]",
@@ -17,7 +17,7 @@
       "name": "Schedule is off"
     },
     "is_on": {
-      "description": "Tests if one or more schedules are on.",
+      "description": "Tests if one or more schedule blocks are currently active.",
       "fields": {
         "behavior": {
           "description": "[%key:component::schedule::common::condition_behavior_description%]",
