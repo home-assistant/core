@@ -104,6 +104,50 @@ async def test_manual_flow_no_mac(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_find_receiver_model")
+async def test_manual_flow_with_ssdp_discovery(hass: HomeAssistant) -> None:
+    """Test manual flow enriches entry from matching SSDP discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    mock_discovery = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://192.168.1.100/desc.xml",
+        ssdp_headers={"_host": "192.168.1.100"},
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+            ATTR_UPNP_MANUFACTURER: "Lyngdorf",
+            ATTR_UPNP_MODEL_NAME: "MP-60",
+            ATTR_UPNP_SERIAL: "ABC123",
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lyngdorf.config_flow.getmac.get_mac_address",
+            return_value=None,
+        ),
+        patch.object(
+            ssdp,
+            "async_get_discovery_info_by_st",
+            new=AsyncMock(return_value=[mock_discovery]),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.100"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry = result["result"]
+    assert config_entry.unique_id == "abc123"
+    assert config_entry.data[CONF_SERIAL_NUMBER] == "abc123"
+    assert config_entry.title == "Living Room"
+
+
+@pytest.mark.usefixtures("mock_find_receiver_model")
 async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
     """Test manual flow when device is already configured."""
     existing_entry = MockConfigEntry(

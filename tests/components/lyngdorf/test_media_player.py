@@ -400,3 +400,113 @@ async def test_volume_clamps(
     )
 
     assert mock_receiver.volume == 18.0
+
+
+async def test_main_zone_state_properties(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test main zone state properties are reported correctly."""
+    callbacks = [
+        call.args[0]
+        for call in mock_receiver.register_notification_callback.call_args_list
+    ]
+
+    # Set up playing state with audio and video
+    mock_receiver.power_on = True
+    mock_receiver.audio_information = "Stereo"
+    mock_receiver.video_information = "No video"
+    mock_receiver.volume = -40.0
+    mock_receiver.mute_enabled = False
+    mock_receiver.source = "HDMI"
+    mock_receiver.sound_mode = "Movie"
+    mock_receiver.available_sources = ["HDMI", "Optical"]
+    mock_receiver.available_sound_modes = ["Movie", "Stereo"]
+    for cb in callbacks:
+        cb()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.mock_lyngdorf_main_zone")
+    assert state is not None
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes["media_content_type"] == MediaType.MUSIC
+    assert state.attributes["media_title"] == "audio: Stereo"
+    assert state.attributes["volume_level"] == pytest.approx(0.408, abs=0.01)
+    assert state.attributes["is_volume_muted"] is False
+    assert state.attributes["source"] == "HDMI"
+    assert state.attributes["sound_mode"] == "Movie"
+    assert state.attributes["source_list"] == ["HDMI", "Optical"]
+    assert state.attributes["sound_mode_list"] == ["Movie", "Stereo"]
+
+    # Test ON state without media playing
+    mock_receiver.audio_information = "No audio"
+    mock_receiver.video_information = "No video"
+    for cb in callbacks:
+        cb()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.mock_lyngdorf_main_zone")
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
+    assert state.attributes.get("media_title") is None
+    assert state.attributes.get("media_content_type") is None
+
+    # Test OFF state returns no media info
+    mock_receiver.power_on = False
+    for cb in callbacks:
+        cb()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.mock_lyngdorf_main_zone")
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+    assert state.attributes.get("media_title") is None
+    assert state.attributes.get("media_content_type") is None
+
+
+async def test_zone_b_state_properties(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test zone B state properties are reported correctly."""
+    callbacks = [
+        call.args[0]
+        for call in mock_receiver.register_notification_callback.call_args_list
+    ]
+
+    mock_receiver.zone_b_power_on = True
+    mock_receiver.zone_b_volume = -30.0
+    mock_receiver.zone_b_mute_enabled = True
+    mock_receiver.zone_b_source = "Optical"
+    mock_receiver.zone_b_available_sources = ["HDMI", "Optical"]
+    for cb in callbacks:
+        cb()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.mock_lyngdorf_zone_b")
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
+    assert state.attributes["volume_level"] == pytest.approx(0.510, abs=0.01)
+    assert state.attributes["is_volume_muted"] is True
+    assert state.attributes["source"] == "Optical"
+    assert state.attributes["source_list"] == ["HDMI", "Optical"]
+
+
+async def test_zone_b_select_source(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test selecting source for zone B."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            ATTR_ENTITY_ID: "media_player.mock_lyngdorf_zone_b",
+            "source": "Optical",
+        },
+        blocking=True,
+    )
+    assert mock_receiver.zone_b_source == "Optical"
