@@ -21,6 +21,8 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
+from .const import TEST_INSTALLS
+
 
 @pytest.mark.parametrize("install", ["default"])
 async def test_refresh_system(
@@ -41,15 +43,15 @@ async def test_refresh_system(
         mock_fcn.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize("install", TEST_INSTALLS)  # not all TCSs support AutoWithReset
 async def test_reset_system(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
     """Test Evohome's reset_system service (for a temperature control system)."""
 
-    # EvoService.RESET_SYSTEM (if SZ_AUTO_WITH_RESET in modes)
-    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
+    # EvoService.RESET_SYSTEM
+    with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.RESET_SYSTEM,
@@ -57,7 +59,7 @@ async def test_reset_system(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)
+        mock_fcn.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -137,6 +139,27 @@ async def test_clear_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
+async def test_clear_zone_override_legacy(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test Evohome's clear_zone_override service with the legacy entity_id."""
+
+    # EvoZoneMode.FOLLOW_SCHEDULE
+    with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.CLEAR_ZONE_OVERRIDE,
+            {
+                ATTR_ENTITY_ID: zone_id,
+            },
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
 async def test_set_zone_override(
     hass: HomeAssistant,
     zone_id: str,
@@ -179,6 +202,48 @@ async def test_set_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_legacy(
+    hass: HomeAssistant,
+    zone_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_zone_override service with the legacy entity_id."""
+
+    freezer.move_to("2024-07-10T12:00:00+00:00")
+
+    # EvoZoneMode.PERMANENT_OVERRIDE
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                ATTR_ENTITY_ID: zone_id,
+                ATTR_SETPOINT: 19.5,
+            },
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(19.5, until=None)
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                ATTR_ENTITY_ID: zone_id,
+                ATTR_SETPOINT: 19.5,
+                ATTR_DURATION: {"minutes": 135},
+            },
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(
+            19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
+        )
+
+
+@pytest.mark.parametrize("install", ["default"])
 @pytest.mark.parametrize(
     ("service", "service_data"),
     [
@@ -194,7 +259,7 @@ async def test_zone_services_with_ctl_id(
 ) -> None:
     """Test calling zone-only services with a non-zone entity_id fail."""
 
-    with pytest.raises(ServiceValidationError) as excinfo:
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -203,4 +268,5 @@ async def test_zone_services_with_ctl_id(
             blocking=True,
         )
 
-    assert excinfo.value.translation_key == "zone_only_service"
+    assert exc_info.value.translation_key == "zone_only_service"
+    assert exc_info.value.translation_placeholders == {"service": service}
