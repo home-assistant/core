@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import collections.abc
 import logging
 from collections.abc import Callable
-from typing import Any, Mapping
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +32,7 @@ class HIVISlaveControlSwitchHub:
         """Initialize the switch hub."""
         self.hass = hass
         self.entry = entry
-        self.switches: dict[str, "HIVISlaveControlSwitch"] = {}
+        self.switches: dict[str, HIVISlaveControlSwitch] = {}
 
     def get_switch(self, unique_id: str):
         """Return a switch entity by its unique ID."""
@@ -209,7 +210,8 @@ class HIVISlaveControlSwitch(SwitchEntity):
             event.data.get("action") == "remove"
             and event.data.get("device_id") == self._slave_ha_device_id
         ):
-            self._hub.switches.pop(self._attr_unique_id, None)
+            if self._attr_unique_id is not None:
+                self._hub.switches.pop(self._attr_unique_id, None)
             await self.async_remove()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -420,7 +422,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> collections.abc.Mapping[str, Any] | None:
         """Extra state attributes."""
         master_device = self.get_master_device()
         return {
