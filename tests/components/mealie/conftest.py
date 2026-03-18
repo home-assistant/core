@@ -88,7 +88,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Mealie",
-        data={CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
+        data={CONF_HOST: "https://demo.mealie.io", CONF_API_TOKEN: "token"},
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
     )
