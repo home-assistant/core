@@ -85,6 +85,19 @@
       },
       "title": "Installed app is deprecated"
     },
+    "issue_addon_deprecated_arch_addon": {
+      "fix_flow": {
+        "abort": {
+          "apply_suggestion_fail": "Could not uninstall the app. Check the Supervisor logs for more details."
+        },
+        "step": {
+          "addon_execute_remove": {
+            "description": "App {addon} only supports architectures and/or machines which are no longer supported by Home Assistant. It will stop working in a future release.\n\nSelecting **Submit** will uninstall this deprecated app. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+          }
+        }
+      },
+      "title": "Installed app is built for unsupported architectures and/or machines"
+    },
     "issue_addon_detached_addon_missing": {
       "description": "Repository for app {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [app's documentation]({addon_url}) for installation instructions and add the repository to the store.",
       "title": "Missing repository for an installed app"
