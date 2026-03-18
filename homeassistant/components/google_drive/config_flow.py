@@ -8,7 +8,11 @@ from typing import Any, cast
 
 from google_drive_api.exceptions import GoogleDriveApiError
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow, instance_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -43,6 +47,12 @@ class OAuth2FlowHandler(
             "access_type": "offline",
             "prompt": "consent",
         }
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        return await self.async_step_user(user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -81,13 +91,16 @@ class OAuth2FlowHandler(
 
         await self.async_set_unique_id(email_address)
 
-        if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            if self.source == SOURCE_REAUTH:
+                entry = self._get_reauth_entry()
+            else:
+                entry = self._get_reconfigure_entry()
             self._abort_if_unique_id_mismatch(
                 reason="wrong_account",
-                description_placeholders={"email": cast(str, reauth_entry.unique_id)},
+                description_placeholders={"email": cast(str, entry.unique_id)},
             )
-            return self.async_update_reload_and_abort(reauth_entry, data=data)
+            return self.async_update_reload_and_abort(entry, data=data)
 
         self._abort_if_unique_id_configured()
 
