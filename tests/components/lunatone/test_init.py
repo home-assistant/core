@@ -141,7 +141,6 @@ async def test_config_entry_migration_successful(
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the Lunatone config entry migration to be successful."""
     config_entry = MockConfigEntry(
@@ -176,7 +175,6 @@ async def test_config_entry_migration_failed(
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the Lunatone config entry migration to fail."""
     await setup_integration(hass, mock_config_entry)
