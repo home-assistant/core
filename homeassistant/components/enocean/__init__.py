@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import DOMAIN, PLATFORMS, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 from .types import EnOceanConfigEntry, EnOceanConfigEntryData, EnOceanConfigStore
 
 CONFIG_SCHEMA = vol.Schema(
@@ -65,6 +65,9 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 

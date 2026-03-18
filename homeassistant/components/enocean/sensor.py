@@ -5,7 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
+from enocean_async import (
+    EEP as EnOceanEquipmentProfile,
+    EEP_SPECIFICATIONS,
+    EURID as EnOceanUniqueRadioID,
+    EEPHandler,
+    EEPMessage,
+    ERP1Telegram,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,10 +34,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .entity import EnOceanEntity, combine_hex
+from .entity import EnOceanEntity, NewEnOceanEntity, combine_hex
+from .types import EnOceanConfigEntry
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -182,7 +193,9 @@ class EnOceanPowerSensor(EnOceanSensor):
         if telegram.rorg != 0xA5:
             return
 
-        if (eep := EEP_SPECIFICATIONS.get(EEP(0xA5, 0x12, 0x01))) is None:
+        if (
+            eep := EEP_SPECIFICATIONS.get(EnOceanEquipmentProfile(0xA5, 0x12, 0x01))
+        ) is None:
             return
         msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
@@ -280,3 +293,77 @@ class EnOceanWindowHandle(EnOceanSensor):
             self._attr_native_value = "tilt"
 
         self.schedule_update_ha_state()
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: EnOceanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Create the EnOcean sensor entities."""
+
+    store = config_entry.runtime_data.config_store
+
+    entities = [
+        NewEnOceanSensor(
+            device_id=device.get("address"),
+            device_type=device.get("eep"),
+            description=entity_description,
+        )
+        for device in store.data.get("devices")
+        for entity_description in SENSORS
+        if entity_description.supported_eep == device.get("eep")
+    ]
+
+    async_add_entities(entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class NewEnOceanSensorEntityDescription(SensorEntityDescription):
+    """Describes EnOcean sensor entity."""
+
+    supported_eep: set[EnOceanEquipmentProfile]
+
+
+class NewEnOceanSensor(NewEnOceanEntity):
+    """Representation of an EnOcean sensor device such as a power meter."""
+
+    def __init__(
+        self,
+        device_id: EnOceanUniqueRadioID,
+        device_type: EnOceanEquipmentProfile,
+        description: NewEnOceanSensorEntityDescription,
+    ) -> None:
+        """Initialize the EnOcean sensor device."""
+        super().__init__(device_id, device_type, description)
+        self.entity_description = description
+
+
+SENSORS: tuple[NewEnOceanSensorEntityDescription, ...] = (
+    NewEnOceanSensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        supported_eep={
+            EnOceanEquipmentProfile(0xA5, 0x02, 0x01),
+            EnOceanEquipmentProfile(0xA5, 0x10, 0x01),
+            EnOceanEquipmentProfile(0xA5, 0x04, 0x01),
+            EnOceanEquipmentProfile(0xA5, 0x04, 0x02),
+            EnOceanEquipmentProfile(0xA5, 0x10, 0x10),
+            EnOceanEquipmentProfile(0xA5, 0x10, 0x12),
+        },
+    ),
+    NewEnOceanSensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        supported_eep={
+            EnOceanEquipmentProfile(0xA5, 0x04, 0x01),
+            EnOceanEquipmentProfile(0xA5, 0x04, 0x02),
+            EnOceanEquipmentProfile(0xA5, 0x10, 0x10),
+            EnOceanEquipmentProfile(0xA5, 0x10, 0x12),
+        },
+    ),
+)

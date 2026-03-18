@@ -1,12 +1,20 @@
 """Representation of an EnOcean device."""
 
-from enocean_async import EURID, Address, BaseAddress, ERP1Telegram, SenderAddress
+from enocean_async import (
+    EEP as EnOceanEquipmentProfile,
+    EURID as EnOceanUniqueRadioID,
+    Address,
+    BaseAddress,
+    ERP1Telegram,
+    SenderAddress,
+)
 from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import LOGGER, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import DOMAIN, LOGGER, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 
 def combine_hex(dev_id: list[int]) -> int:
@@ -30,7 +38,7 @@ class EnOceanEntity(Entity):
         try:
             address = Address.from_bytelist(dev_id)
             if address.is_eurid():
-                self.address = EURID.from_number(address.to_number())
+                self.address = EnOceanUniqueRadioID.from_number(address.to_number())
             elif address.is_base_address():
                 self.address = BaseAddress.from_number(address.to_number())
         except ValueError:
@@ -66,3 +74,27 @@ class EnOceanEntity(Entity):
             LOGGER.warning(
                 "Failed to send command: invalid data or optional bytes: %s", err
             )
+
+
+class NewEnOceanEntity(EnOceanEntity):
+    """Parent class for all entities associated with the EnOcean component."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        device_id: EnOceanUniqueRadioID,
+        device_type: EnOceanEquipmentProfile,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(device_id.to_bytelist())
+        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            connections={(DOMAIN, device_id)},
+            model=device_type,
+            # via_device=(DOMAIN, gateway_id),
+            default_manufacturer="EnOcean",
+            default_name="EnOcean Device",
+        )

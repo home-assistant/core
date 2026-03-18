@@ -4,7 +4,11 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, TypedDict
 
-from enocean_async import Gateway
+from enocean_async import (
+    EEP as EnOceanEquipmentProfile,
+    EURID as EnOceanUniqueRadioID,
+    Gateway,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -15,22 +19,24 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-type EnOceanPlatformStoreModel = dict[
-    str, dict[str, Any]
-]  # device_address: configuration
+class EnOceanDeviceStoreModel(TypedDict):
+    """Represent an EnOcean device in the config store."""
+
+    address: EnOceanUniqueRadioID
+    eep: EnOceanEquipmentProfile
 
 
 class EnOceanConfigStoreModel(TypedDict):
     """Represent EnOcean configuration store data."""
 
-    entities: EnOceanPlatformStoreModel
+    devices: list[EnOceanDeviceStoreModel]
 
 
 class EnOceanConfigStore:
     """Manage EnOcean config store data."""
 
-    STORAGE_VERSION: Final = 1
     STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
+    STORAGE_VERSION: Final = 1
 
     def __init__(
         self,
@@ -44,7 +50,7 @@ class EnOceanConfigStore:
             hass, self.STORAGE_VERSION, self.STORAGE_KEY
         )
         self.data = EnOceanConfigStoreModel(  # initialize with default structure
-            entities={},
+            devices=[],
         )
 
     async def load_data(self) -> None:
@@ -53,12 +59,14 @@ class EnOceanConfigStore:
             self.data = EnOceanConfigStoreModel(**data)
             _LOGGER.debug(
                 "Loaded EnOcean config data from storage, %s devices found",
-                len(self.data["entities"]),
+                len(self.data.get("devices", [])),
             )
 
     async def create_device(self, device_address: str, config: dict[str, Any]) -> None:
         """Create a device in the config store."""
-        self.data["entities"][device_address] = config
+        self.data.get("devices").append(
+            EnOceanDeviceStoreModel(address=device_address, eep=config["eep"])
+        )
         await self._store.async_save(self.data)
 
 
