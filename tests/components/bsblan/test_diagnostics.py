@@ -47,4 +47,7 @@ async def test_diagnostics_without_static_values(
         hass, hass_client, mock_config_entry
     )
 
+    assert "info" in diagnostics_data
+    assert "device" in diagnostics_data
+    assert "fast_coordinator_data" in diagnostics_data
     assert diagnostics_data["static"] is None
