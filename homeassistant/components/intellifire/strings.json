@@ -166,8 +166,8 @@
           "read_mode": "Read data from"
         },
         "data_description": {
-          "control_mode": "Whether to send fireplace commands via the local or cloud API",
-          "read_mode": "Whether to read fireplace state via the local or cloud API"
+          "control_mode": "Whether to send fireplace commands via the `Local` or `Cloud` API",
+          "read_mode": "Whether to read fireplace state via the `Local` or `Cloud` API"
         },
         "description": "Some users find that their fireplace hardware prioritizes `Cloud` communication and may experience timeouts with `Local` control. If you encounter connectivity issues, try switching to `Cloud` for the affected endpoint.",
         "title": "Endpoint selection"
