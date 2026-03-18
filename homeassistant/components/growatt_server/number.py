@@ -130,6 +130,7 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
             identifiers={(DOMAIN, coordinator.device_id)},
             manufacturer="Growatt",
             name=coordinator.device_id,
+            serial_number=coordinator.device_id,
         )
 
     @property

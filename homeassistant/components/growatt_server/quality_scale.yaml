@@ -32,9 +32,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices:
-    status: todo
-    comment: Add serial_number field to DeviceInfo in sensor, number, and switch platforms using device_id/serial_id.
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo

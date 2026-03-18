@@ -105,6 +105,7 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
             identifiers={(DOMAIN, serial_id)},
             manufacturer="Growatt",
             name=name,
+            serial_number=serial_id,
         )
 
     @property
