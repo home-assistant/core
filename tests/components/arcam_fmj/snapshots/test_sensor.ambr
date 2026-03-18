@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_audio_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -142,8 +143,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_audio_format-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -245,8 +247,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_audio_sample_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -302,8 +305,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_video_aspect_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -363,8 +367,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_video_colorspace-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -428,8 +433,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_video_horizontal_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -484,8 +490,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_video_refresh_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -541,8 +548,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_incoming_video_vertical_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -597,8 +605,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_audio_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -738,8 +747,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_audio_format-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -841,8 +851,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_audio_sample_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -898,8 +909,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_aspect_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -959,8 +971,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_colorspace-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1024,8 +1037,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_horizontal_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1080,8 +1094,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_refresh_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1137,8 +1152,9 @@
 # ---
 # name: test_setup[sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_vertical_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

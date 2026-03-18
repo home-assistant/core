@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

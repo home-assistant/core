@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climates[aqara_thermostat_w500][climate.floor_heating_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -66,8 +67,9 @@
 # ---
 # name: test_climates[eberle_ute3000][climate.connected_thermostat_ute_3000-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -131,8 +133,9 @@
 # ---
 # name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -196,8 +199,9 @@
 # ---
 # name: test_climates[eve_thermo_v5][climate.eve_thermo_20ecd1701-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -261,8 +265,9 @@
 # ---
 # name: test_climates[longan_link_thermostat][climate.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -332,8 +337,9 @@
 # ---
 # name: test_climates[mock_air_purifier][climate.mock_air_purifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -397,8 +403,9 @@
 # ---
 # name: test_climates[mock_room_airconditioner][climate.room_airconditioner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -470,8 +477,9 @@
 # ---
 # name: test_climates[mock_thermostat][climate.mock_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -542,8 +550,9 @@
 # ---
 # name: test_climates[resideo_x2s_thermostat][climate.x2s_smart_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -611,8 +620,9 @@
 # ---
 # name: test_climates[tado_smart_radiator_thermostat_x][climate.smart_radiator_thermostat_x-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
