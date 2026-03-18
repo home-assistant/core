@@ -7,14 +7,14 @@
       "reset": {
         "default": "mdi:restart"
       },
+      "shutdown": {
+        "default": "mdi:power"
+      },
       "start": {
         "default": "mdi:play"
       },
       "stop": {
         "default": "mdi:stop"
-      },
-      "shutdown": {
-        "default": "mdi:power"
       }
     },
     "sensor": {
