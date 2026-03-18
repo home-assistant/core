@@ -55,7 +55,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
-        self._discovered_addresses: list[str] = []
+        self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
     async def _try_connect(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Verify connection to the device with the provided PIN and read initial data."""
@@ -77,17 +77,16 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
                     await cometblue_device.get_battery_async()
                 except TimeoutError:
                     # This likely means PIN was incorrect on Linux and ESPHome backends
-                    LOGGER.exception(
-                        "Failed to read battery level, likely due to incorrect PIN"
+                    LOGGER.debug(
+                        "Failed to read battery level, likely due to incorrect PIN",
+                        exc_info=True,
                     )
                     return {"base": "invalid_pin"}
         except TimeoutError:
-            LOGGER.exception("Connection to device timed out")
+            LOGGER.debug("Connection to device timed out", exc_info=True)
             return {"base": "timeout_connect"}
-        except Exception:
-            # need to use broad exception as different exceptions are raised
-            # based on the underlying OS and backend
-            LOGGER.exception("Failed to connect to device")
+        except Exception:  # noqa: BLE001
+            LOGGER.debug("Failed to connect to device", exc_info=True)
             return {"base": "cannot_connect"}
         return {}
 
@@ -147,45 +146,32 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the step to pick discovered device."""
 
-        discovered_devices = [
-            d
-            for d in async_discovered_service_info(self.hass, connectable=True)
-            if SERVICE in d.service_uuids
-        ]
+        current_addresses = self._async_current_ids()
+        self._discovered_devices = {
+            discovery_info.address: discovery_info
+            for discovery_info in async_discovered_service_info(
+                self.hass, connectable=True
+            )
+            if SERVICE in discovery_info.service_uuids
+            and discovery_info.address not in current_addresses
+        }
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
 
             await self.async_set_unique_id(format_mac(address))
             self._abort_if_unique_id_configured()
-
-            self._discovery_info = next(
-                (d for d in discovered_devices if d.address == address), None
-            )
+            self._discovery_info = self._discovered_devices.get(address)
             return await self.async_step_bluetooth_confirm()
-
-        current_addresses = self._async_current_ids()
-        for discovery_info in discovered_devices:
-            address = discovery_info.address
-            if (
-                address not in current_addresses
-                and address not in self._discovered_addresses
-            ):
-                self._discovered_addresses.append(address)
-
-        addresses = {
-            address
-            for address in self._discovered_addresses
-            if address not in current_addresses
-        }
-
         # Check if there is at least one device
-        if not addresses:
+        if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(addresses)}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_ADDRESS): vol.In(list(self._discovered_devices))}
+            ),
         )
 
     async def async_step_user(
