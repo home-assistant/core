@@ -31,6 +31,7 @@ _EUFY_HEADERS = {
     "timezone": "Europe/London",
     "category": "Home",
     "token": "",
+    "id": "",
     "uid": "",
     "openudid": "sdk_gphone64_arm64",
     "clientType": "2",
@@ -335,6 +336,7 @@ class EufyRoboVacCloudApi:
         headers = _EUFY_HEADERS.copy()
         headers["token"] = access_token
         headers["id"] = user_id
+        headers["uid"] = user_id
         try:
             response = requests.get(
                 f"{base_url}{endpoint}", headers=headers, timeout=10

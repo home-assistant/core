@@ -147,10 +147,6 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except EufyRoboVacCloudApiError:
             errors["base"] = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception discovering Eufy RoboVacs")
-            errors["base"] = "unknown"
-
         if not errors and not self._cloud_devices:
             errors["base"] = "no_devices"
 
@@ -230,12 +226,6 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect_local"
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected exception validating local RoboVac connectivity"
-                )
-                errors["base"] = "unknown"
-
         if errors:
             return self.async_show_form(
                 step_id="device",
