@@ -263,9 +263,8 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
         # Non-coordinators: visible but unavailable.
         if not is_coord:
-            if self._is_coord or self._attr_available or self._value is not None:
+            if self._is_coord or self._value is not None:
                 self._is_coord = False
-                self._attr_available = False
                 self._value = None
                 self.async_write_ha_state()
             return
@@ -275,10 +274,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             self._get_group_or_player_volume_safe
         )
 
-        # If the SoCo read failed, keep availability but don't force a value.
         self._is_coord = True
-        if self._attr_available is not True:
-            self._attr_available = True
 
         if vol is not None and self._value != vol:
             self._value = vol

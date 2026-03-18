@@ -302,7 +302,9 @@ async def test_group_volume_set_value_soco_exception_on_group_read(
     _force_grouped(soco)
     await _setup_numbers_only(async_setup_sonos)
 
-    type(soco).group = PropertyMock(side_effect=SoCoException("group read error"))
+    group_mock = PropertyMock(side_effect=SoCoException("group read error"))
+    type(soco).group = group_mock
+    initial_volume = soco.volume
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -310,3 +312,9 @@ async def test_group_volume_set_value_soco_exception_on_group_read(
         {ATTR_ENTITY_ID: GROUP_VOLUME_ENTITY_ID, "value": 50},
         blocking=True,
     )
+
+    # Player volume must not have been modified.
+    assert soco.volume == initial_volume
+    # The group property must only have been accessed as a getter (raising each time),
+    # never as a setter — confirming no write to group.volume was attempted.
+    assert not any(args for args, _ in group_mock.call_args_list)
