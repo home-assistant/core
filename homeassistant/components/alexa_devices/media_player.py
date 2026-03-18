@@ -93,6 +93,8 @@ async def async_setup_entry(
 class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     """Representation of an Alexa device media player."""
 
+    entity_description: AmazonDevicesMediaPlayerEntityDescription
+
     _attr_has_entity_name = True
     _attr_name = None  # Uses the device name
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
@@ -107,6 +109,16 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         """Initialize."""
         self._prev_volume: int = 30  # TBD
         super().__init__(coordinator, serial_num, description)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.entity_description.is_available_fn(
+                self.device, self.entity_description.key
+            )
+            and super().available
+        )
 
     @property
     def media_state(self) -> AmazonMediaState | None:
@@ -228,7 +240,9 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type — tells HA what kind of media is playing."""
-        return MediaType.MUSIC
+        if self.state in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+            return MediaType.MUSIC
+        return None
 
     async def async_play_media(
         self,
