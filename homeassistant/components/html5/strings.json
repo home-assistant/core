@@ -20,6 +20,17 @@
       }
     }
   },
+  "exceptions": {
+    "channel_expired": {
+      "message": "Notification channel for {target} has expired"
+    },
+    "connection_error": {
+      "message": "Sending notification to {target} failed due to a connection error"
+    },
+    "request_error": {
+      "message": "Sending notification to {target} failed due to a request error"
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue": {
       "description": "Configuring HTML5 push notification using YAML has been deprecated. An automatic import of your existing configuration was attempted, but it failed.\n\nPlease remove the HTML5 push notification YAML configuration from your configuration.yaml file and reconfigure HTML5 push notification again manually.",

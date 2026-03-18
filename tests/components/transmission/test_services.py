@@ -37,7 +37,7 @@ async def test_service_config_entry_not_loaded_state(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ServiceValidationError, match="service_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_TORRENT,
@@ -47,6 +47,7 @@ async def test_service_config_entry_not_loaded_state(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_not_found"
 
 
 async def test_service_integration_not_found(

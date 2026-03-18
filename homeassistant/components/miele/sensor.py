@@ -704,7 +704,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
 
 POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]] = (
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_1_level",
             translation_key="twin_dos_1_level",
@@ -714,7 +717,10 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
         ),
     ),
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_2_level",
             translation_key="twin_dos_2_level",
@@ -750,6 +756,36 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
             translation_key="rinse_aid_level",
             value_fn=lambda value: value.rinse_aid_filling_level,
             native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="descaling_counter",
+            translation_key="descaling_counter",
+            value_fn=lambda value: value.descaling_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="degreasing_counter",
+            translation_key="degreasing_counter",
+            value_fn=lambda value: value.degreasing_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="milk_cleaning_counter",
+            translation_key="milk_cleaning_counter",
+            value_fn=lambda value: value.milk_cleaning_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),

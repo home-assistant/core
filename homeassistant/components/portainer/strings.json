@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The Portainer instance ID does not match the previously configured instance. This can occur if the device was reset or reconfigured outside of Home Assistant."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -147,6 +148,18 @@
       "operating_system_version": {
         "name": "Operating system version"
       },
+      "stack_containers_count": {
+        "name": "Containers",
+        "unit_of_measurement": "containers"
+      },
+      "stack_type": {
+        "name": "Type",
+        "state": {
+          "compose": "Compose",
+          "kubernetes": "Kubernetes",
+          "swarm": "Swarm"
+        }
+      },
       "volume_disk_usage_total_size": {
         "name": "Volume disk usage total size"
       }
@@ -154,6 +167,9 @@
     "switch": {
       "container": {
         "name": "Container"
+      },
+      "stack": {
+        "name": "Stack"
       }
     }
   },

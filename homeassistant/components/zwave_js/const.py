@@ -25,7 +25,6 @@ CONF_ADDON_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
 CONF_ADDON_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
 CONF_ADDON_SOCKET = "socket"
-CONF_INSTALLER_MODE = "installer_mode"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_KEEP_OLD_DEVICES = "keep_old_devices"
 CONF_NETWORK_KEY = "network_key"
@@ -43,6 +42,8 @@ DOMAIN = "zwave_js"
 
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
+EVENT_VALUE_ADDED = "value added"
+EVENT_VALUE_REMOVED = "value removed"
 EVENT_VALUE_UPDATED = "value updated"
 
 LOGGER = logging.getLogger(__package__)
@@ -205,3 +206,7 @@ COVER_TILT_PROPERTY_KEYS: set[str | int | None] = {
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE,
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE_NO_POSITION,
 }
+
+# notification
+NOTIFICATION_ACCESS_CONTROL_PROPERTY = "Access Control"
+OPENING_STATE_PROPERTY_KEY = "Opening state"

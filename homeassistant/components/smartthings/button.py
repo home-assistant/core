@@ -23,6 +23,7 @@ class SmartThingsButtonDescription(ButtonEntityDescription):
     """Class describing SmartThings button entities."""
 
     command: Command
+    components: list[str] | None = None
     argument: int | str | list[Any] | dict[str, Any] | None = None
     requires_remote_control_status: bool = False
     requires_dishwasher_machine_state: set[str] | None = None
@@ -45,6 +46,13 @@ CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = 
         translation_key="reset_hood_filter",
         command=Command.RESET_HOOD_FILTER,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    Capability.CUSTOM_HEPA_FILTER: SmartThingsButtonDescription(
+        key=Capability.CUSTOM_HEPA_FILTER,
+        translation_key="reset_hepa_filter",
+        command=Command.RESET_HEPA_FILTER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        components=[MAIN, "station"],
     ),
 }
 
@@ -101,14 +109,12 @@ async def async_setup_entry(
     entities: list[SmartThingsEntity] = []
     entities.extend(
         SmartThingsButtonEntity(
-            entry_data.client,
-            device,
-            CAPABILITIES_TO_BUTTONS[capability],
-            Capability(capability),
+            entry_data.client, device, description, Capability(capability), component
         )
+        for capability, description in CAPABILITIES_TO_BUTTONS.items()
         for device in entry_data.devices.values()
-        for capability in device.status[MAIN]
-        if capability in CAPABILITIES_TO_BUTTONS
+        for component in description.components or [MAIN]
+        if component in device.status and capability in device.status[component]
     )
     entities.extend(
         SmartThingsButtonEntity(
@@ -148,6 +154,7 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         device: FullDevice,
         entity_description: SmartThingsButtonDescription,
         capability: Capability,
+        component: str = MAIN,
     ) -> None:
         """Initialize the instance."""
         capabilities = set()
@@ -158,7 +165,7 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         super().__init__(client, device, capabilities)
         self.entity_description = entity_description
         self.button_capability = capability
-        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{entity_description.key}_{entity_description.command}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.command}"
 
     async def async_press(self) -> None:
         """Press the button."""

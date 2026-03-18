@@ -8,15 +8,18 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
-        'device_cluster_members': list([
-          'echo_test_serial_number',
-        ]),
+        'device_cluster_members': dict({
+          'echo_test_serial_number': 'echo_test_device_id',
+        }),
         'device_family': 'mine',
         'device_owner_customer_id': 'amazon_ower_id',
         'device_type': 'echo',
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
+        'hardware_version': '1.0',
         'household_device': False,
+        'manufacturer': 'Test manufacturer',
+        'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({
             'label': 'Morning Alarm',
@@ -60,7 +63,7 @@
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
       }),
-      'tell_joke',
+      'Alexa.Joke.Play',
     ),
     dict({
     }),
@@ -75,15 +78,18 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
-        'device_cluster_members': list([
-          'echo_test_serial_number',
-        ]),
+        'device_cluster_members': dict({
+          'echo_test_serial_number': 'echo_test_device_id',
+        }),
         'device_family': 'mine',
         'device_owner_customer_id': 'amazon_ower_id',
         'device_type': 'echo',
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
+        'hardware_version': '1.0',
         'household_device': False,
+        'manufacturer': 'Test manufacturer',
+        'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({
             'label': 'Morning Alarm',
@@ -142,15 +148,18 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
-        'device_cluster_members': list([
-          'echo_test_serial_number',
-        ]),
+        'device_cluster_members': dict({
+          'echo_test_serial_number': 'echo_test_device_id',
+        }),
         'device_family': 'mine',
         'device_owner_customer_id': 'amazon_ower_id',
         'device_type': 'echo',
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
+        'hardware_version': '1.0',
         'household_device': False,
+        'manufacturer': 'Test manufacturer',
+        'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({
             'label': 'Morning Alarm',

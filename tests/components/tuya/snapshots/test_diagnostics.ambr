@@ -101,15 +101,15 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm Arm delay',
+              'friendly_name': 'Multifunction alarm Alarm delay',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
               'unit_of_measurement': 's',
             }),
-            'entity_id': 'number.multifunction_alarm_arm_delay',
-            'state': '15.0',
+            'entity_id': 'number.multifunction_alarm_alarm_delay',
+            'state': '20.0',
           }),
           'unit_of_measurement': 's',
         }),
@@ -124,15 +124,15 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm Alarm delay',
+              'friendly_name': 'Multifunction alarm Arm delay',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
               'unit_of_measurement': 's',
             }),
-            'entity_id': 'number.multifunction_alarm_alarm_delay',
-            'state': '20.0',
+            'entity_id': 'number.multifunction_alarm_arm_delay',
+            'state': '15.0',
           }),
           'unit_of_measurement': 's',
         }),
@@ -502,7 +502,7 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Framboisiers Power on behavior',
+              'friendly_name': 'Framboisiers Power-on behavior',
               'options': list([
                 '0',
                 '1',
