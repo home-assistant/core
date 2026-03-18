@@ -37,8 +37,6 @@ class CometBlueCoordinatorData:
 class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorData]):
     """Class to manage fetching data."""
 
-    failed_update_count: int = 0
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -94,9 +92,9 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
 
         retry_count = 0
 
-        while retry_count < MAX_RETRIES and not data.temperatures and not data.holiday:
-            async with self.device:
-                try:
+        while retry_count < MAX_RETRIES and not data.temperatures:
+            try:
+                async with self.device:
                     # temperatures are required and must trigger a retry if not available
                     if not data.temperatures:
                         data.temperatures = await self.device.get_temperature_async()
@@ -111,26 +109,24 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                             type(ex).__name__,
                             ex,
                         )
-                except (InvalidByteValueError, TimeoutError, BleakError) as ex:
-                    retry_count += 1
-                    if retry_count >= MAX_RETRIES:
-                        self.failed_update_count += 1
-                        raise UpdateFailed(
-                            f"Error retrieving data: {ex}", retry_after=30
-                        ) from ex
-                    LOGGER.info(
-                        "Retry updating %s after error: %s (%s)",
-                        self.name,
-                        type(ex).__name__,
-                        ex,
-                    )
-                    await asyncio.sleep(COMMAND_RETRY_INTERVAL)
-                except Exception as ex:
+            except (InvalidByteValueError, TimeoutError, BleakError) as ex:
+                retry_count += 1
+                if retry_count >= MAX_RETRIES:
                     raise UpdateFailed(
-                        f"({type(ex).__name__}) {ex}", retry_after=30
+                        f"Error retrieving data: {ex}", retry_after=30
                     ) from ex
+                LOGGER.info(
+                    "Retry updating %s after error: %s (%s)",
+                    self.name,
+                    type(ex).__name__,
+                    ex,
+                )
+                await asyncio.sleep(COMMAND_RETRY_INTERVAL)
+            except Exception as ex:
+                raise UpdateFailed(
+                    f"({type(ex).__name__}) {ex}", retry_after=30
+                ) from ex
 
         # If one value was not retrieved correctly, keep the old value
         LOGGER.debug("Received data for %s: %s", self.name, data)
-        self.failed_update_count = 0
         return data

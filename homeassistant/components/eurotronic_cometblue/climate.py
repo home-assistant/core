@@ -137,6 +137,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
                     # manual temperature always needs to be set, otherwise TRV will turn OFF
                     "manualTemp": kwargs.get(ATTR_TEMPERATURE)
                     or self.target_temperature,
+                    # other temperatures can be left unchanged by setting them to None
                     "targetTempLow": kwargs.get(ATTR_TARGET_TEMP_LOW),
                     "targetTempHigh": kwargs.get(ATTR_TARGET_TEMP_HIGH),
                 }
