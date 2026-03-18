@@ -4,7 +4,7 @@ from enocean_async import Gateway
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 from .types import EnOceanConfigEntry, EnOceanConfigEntryData, EnOceanConfigStore
 
 CONFIG_SCHEMA = vol.Schema(
@@ -58,15 +58,20 @@ async def async_setup_entry(
         gateway.stop()
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
+    store = EnOceanConfigStore(hass, config_entry)
+    await store.load_data()
+
     config_entry.runtime_data = EnOceanConfigEntryData(
-        gateway=gateway, config_store=EnOceanConfigStore(hass, config_entry)
+        gateway=gateway, config_store=store
     )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, [Platform.SENSOR]
+    )
 
     return True
 
