@@ -1,841 +1,439 @@
-"""Device manager for the HiVi Speaker integration."""
+"""Discovery scheduler for the HiVi Speaker integration."""
 
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+import contextlib
+from datetime import datetime, timedelta
+from ipaddress import ip_address
 import logging
-from typing import Any
+import socket
+import time
+from urllib.parse import urlparse
 
-from hivico import HivicoClient
+import aiohttp
+from defusedxml import ElementTree as ET
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
-from .const import (
-    DEVICE_OFFLINE_THRESHOLD,
-    DISCOVERY_BASE_INTERVAL,
-    DOMAIN,
-    SIGNAL_DEVICE_DISCOVERED,
-    SIGNAL_DEVICE_STATUS_UPDATED,
-)
-from .device import ConnectionStatus, HIVIDevice, SlaveDeviceInfo, SyncGroupStatus
-from .device_data_registry import DeviceDataRegistry
-from .discovery_scheduler import HIVIDiscoveryScheduler
-from .group_coordinator import HIVIGroupCoordinator
+from .const import SIGNAL_DEVICE_DISCOVERED
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_TOTAL_TIMEOUT = 5.0  # seconds
+SOCKET_TIMEOUT = 1.0  # seconds
+SEND_REPEAT = 3
+MCAST_ADDR = ("239.255.255.250", 1900)
 
-class HIVIDeviceManager:
-    """Device manager, responsible for device discovery, status updates, and entity creation."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-        """Initialize the device manager."""
-        from .switch import HIVISlaveControlSwitchHub
+class HIVIDiscoveryScheduler:
+    """Intelligent discovery scheduler."""
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry,
+        device_manager,
+        base_interval: int = 300,
+    ) -> None:
+        """Initialize the discovery scheduler."""
         self.hass = hass
         self.config_entry = config_entry
-        self.device_data_registry = DeviceDataRegistry(hass=hass)
-        self.hivi_slave_control_switch_hub = HIVISlaveControlSwitchHub(
-            hass=hass, entry=config_entry
-        )
+        self.device_manager = device_manager
+        self.base_interval = base_interval
 
-        self.discovery_scheduler = HIVIDiscoveryScheduler(
-            hass=hass,
-            config_entry=config_entry,
-            device_manager=self,
-            base_interval=DISCOVERY_BASE_INTERVAL,
-        )
-        self.group_coordinator = HIVIGroupCoordinator(
-            hass=hass, device_manager=self, discovery_scheduler=self.discovery_scheduler
-        )
+        self.current_interval = base_interval
+        self.min_interval = 120
+        self.max_interval = 600
 
-        self._add_entities_callbacks: dict[str, AddEntitiesCallback] = {}
+        self._discovery_task: asyncio.Task | None = None
+        self._discovery_running = False
+        self._next_discovery: datetime | None = None
 
-        self._unsub_discovery = None
-        self._discovery_queue: asyncio.Queue[Any] = asyncio.Queue()
-        self._handle_discovery_worker = hass.async_create_task(
-            self._handle_discovery_loop()
-        )
+        self._operation_delays: dict[str, datetime] = {}
+        self._immediate_discovery_requested = False
+        self._discovery_lock = asyncio.Lock()
+        self._discovery_unsub = None
 
-    def set_add_entities_callback(self, platform: str, callback: AddEntitiesCallback):
-        """Set callback for adding entities."""
-        self._add_entities_callbacks[platform] = callback
+    async def async_start(self):
+        """Start scheduler."""
 
-    async def async_setup(self):
-        """Initialize setup."""
-        await self.device_data_registry.async_load()
+        _LOGGER.debug("Starting HIVI device discovery scheduler")
 
-        self._unsub_discovery = async_dispatcher_connect(
-            self.hass, SIGNAL_DEVICE_DISCOVERED, self._discovery_enqueue
-        )
+        if self._discovery_running:
+            return
 
-        await self.discovery_scheduler.async_start()
-        await self.group_coordinator.async_start()
+        self._discovery_running = True
+        self._next_discovery = datetime.now()
+        await self._reschedule()
 
-    async def _discovery_enqueue(self, discovered_devices: dict):
-        await self._discovery_queue.put(discovered_devices)
+    async def async_stop(self):
+        """Stop scheduler."""
+        _LOGGER.debug("Stopping HIVI device discovery scheduler")
+        self._discovery_running = False
+        if self._discovery_unsub:
+            self._discovery_unsub()
+            self._discovery_unsub = None
 
-    async def _handle_discovery_loop(self):
-        while True:
-            discovered_devices = await self._discovery_queue.get()
+    async def _reschedule(self):
+        """Reschedule discovery task (safe version)."""
+        if not self._discovery_running or not self._next_discovery:
+            _LOGGER.warning(
+                "_reschedule not running or no next_discovery, stopping scheduling"
+            )
+            return
+
+        if self._discovery_unsub:
             try:
-                await self._handle_discovered_devices(discovered_devices)
+                _LOGGER.debug("_reschedule: canceling existing timer")
+                self._discovery_unsub()
             except Exception:
-                _LOGGER.exception("Error handling discovered devices")
+                _LOGGER.exception("Error canceling existing timer")
             finally:
-                self._discovery_queue.task_done()
+                self._discovery_unsub = None
 
-    async def _handle_discovered_devices(self, discovered_devices: list[dict]):
-        """Handle discovered devices."""
-        _LOGGER.debug("discovered devices: %s", discovered_devices)
+        now = datetime.now()
+        delay = (self._next_discovery - now).total_seconds()
 
-        await self._save_discovered_devices(discovered_devices)
-        await self._update_all_device_statuses()
-        await self._add_or_remove_switches()
-        await self._update_device_entity_states()
-        await self._device_offline_process()
+        if delay <= 0:
+            _LOGGER.debug("_reschedule: scheduling discovery immediately")
+            try:
+                self.hass.async_create_task(self._run_discovery())
+            except Exception:
+                _LOGGER.exception("Error scheduling _run_discovery immediately")
+            return
 
-    async def _save_discovered_devices(self, discovered_devices: list[dict]):
-        """Incrementally save discovered devices."""
-        idx = 0
-        for device_info in discovered_devices:
-            speaker_device_id = device_info.get("UDN")
-            idx += 1
-            _LOGGER.debug(
-                "process discovered device #%d: UDN=%s", idx, speaker_device_id
-            )
-            if not speaker_device_id:
-                _LOGGER.debug("device_info has no UDN so no speaker_device_id")
-                continue
+        if delay < 0.1:
+            _LOGGER.debug("_reschedule: clamping delay %s to 0.1s", delay)
+            delay = 0.1
 
-            device_dict = (
-                self.device_data_registry.get_device_dict_by_speaker_device_id(
-                    speaker_device_id
-                )
-            )
-            if device_dict:
-                _LOGGER.debug(
-                    "already exist, will update: speaker_device_id = %s",
-                    speaker_device_id,
-                )
-                device_obj = HIVIDevice(**device_dict)
-                if device_obj:
-                    ha_device_id = device_obj.ha_device_id
-                    device_obj.ip_addr = device_info.get("ip_addr", device_obj.ip_addr)
-                    device_obj.mac_address = device_info.get(
-                        "mac_address", device_obj.mac_address
-                    )
-                    device_obj.hostname = device_info.get(
-                        "hostname", device_obj.hostname
-                    )
-                    device_obj.friendly_name = device_info.get(
-                        "friendly_name", device_obj.friendly_name
-                    )
-                    device_obj.model = device_info.get("model_name", device_obj.model)
-                    device_obj.manufacturer = device_info.get(
-                        "manufacturer", device_obj.manufacturer
-                    )
-                    device_dict_new = device_obj.model_dump(mode="json")
-                    self.device_data_registry.set_device_dict_by_ha_device_id(
-                        ha_device_id, device_dict_new
-                    )
-                else:
-                    _LOGGER.warning("Device dict conversion result is None")
-            else:
-                _LOGGER.debug(
-                    "not yet exist, will add：speaker_device_id = %s", speaker_device_id
-                )
-                device_obj = self._create_device_obj_from_discovered_device_info(
-                    device_info
-                )
-                ha_device_id = await self.async_register_device(device_obj)
-                if ha_device_id:
-                    device_obj.ha_device_id = ha_device_id
-                    device_dict = device_obj.model_dump(mode="json")
-                    device_dict.pop("psk", None)
-                    self.device_data_registry.set_device_dict_by_ha_device_id(
-                        ha_device_id, device_dict
-                    )
-                else:
-                    _LOGGER.warning("HA device ID is None after registering to HA")
+        _LOGGER.debug("_reschedule next discovery in %s seconds", delay)
 
-    async def _update_all_device_statuses(self):
-        """Update status information of all devices."""
-        slave_device_uuid_set = set()
-        can_fetch_status_devices = set()
-        can_not_fetch_status_devices = set()
-
-        ha_device_list = await self._get_devices_for_device()
-
-        device_status_tasks = []
-        device_info_list = []
-
-        for ha_device in ha_device_list:
-            ha_device_id = ha_device.id
-            device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device_id=ha_device_id, default=None
-            )
-            if device_dict is None:
-                _LOGGER.warning(
-                    "Cannot get device dict from HA device ID, skip updating device statuses: ha_device_id = %s",
-                    ha_device_id,
-                )
-                continue
-
-            device_obj = HIVIDevice(**device_dict)
-
-            device_info_list.append(
-                {
-                    "ha_device": ha_device,
-                    "ha_device_id": ha_device_id,
-                    "device_obj": device_obj,
-                    "device_dict": device_dict,
-                }
+        def _callback(_now):
+            """Run discovery; callback may run off event loop, schedule on loop."""
+            self.hass.loop.call_soon_threadsafe(
+                lambda: self.hass.async_create_task(self._run_discovery())
             )
 
-            device_status_tasks.append(self._fetch_device_status(device_obj))
-
-        device_statuses = await asyncio.gather(
-            *device_status_tasks, return_exceptions=True
-        )
-
-        for device_info, device_status_or_exc in zip(
-            device_info_list, device_statuses, strict=False
-        ):
-            ha_device_id = device_info["ha_device_id"]
-            device_obj = device_info["device_obj"]
-
-            if isinstance(device_status_or_exc, Exception):
-                _LOGGER.error(
-                    "Failed to get device status: %s error: %s",
-                    device_obj.friendly_name,
-                    str(device_status_or_exc),
-                )
-                device_status = None
-            else:
-                device_status = device_status_or_exc
-
-            if device_status:
-                device_obj.last_seen = datetime.now(tz=UTC)
-                device_obj.connection_status = ConnectionStatus.ONLINE
-                device_obj.wifi_channel = device_status.get("WifiChannel")
-                device_obj.ssid = device_status.get("ssid")
-                device_obj.auth_mode = device_status.get("auth")
-                device_obj.encryption_mode = device_status.get("encry")
-                device_obj.psk = device_status.get("psk")
-                device_obj.uuid = device_status.get("uuid")
-                device_obj.hardware = device_status.get("hardware", "")
-
-                group = device_status.get("group", 0)
-                if group == 1:
-                    device_obj.sync_group_status = SyncGroupStatus.SLAVE
-                else:
-                    try:
-                        slave_device_result = await self._fetch_slave_device(device_obj)
-                    except Exception as e:
-                        _LOGGER.error(
-                            "Failed to get slave device list for %s, error: %s",
-                            device_obj.friendly_name,
-                            str(e),
-                        )
-                        slave_device_result = None
-
-                    slave_device_obj_list = []
-                    if slave_device_result:
-                        slave_device_num = slave_device_result.get("slaves", 0)
-                        slave_device_dict_list = slave_device_result.get(
-                            "slave_list", []
-                        )
-                        for slave_device_dict in slave_device_dict_list:
-                            slave_device_dict["friendly_name"] = slave_device_dict.pop(
-                                "name", ""
-                            )
-                            slave_device_dict["ip_addr"] = slave_device_dict.pop(
-                                "ip", ""
-                            )
-                            slave_device_obj = SlaveDeviceInfo(**slave_device_dict)
-                            slave_device_obj_list.append(slave_device_obj)
-
-                        device_obj.slave_device_num = slave_device_num
-                        device_obj.slave_device_list = slave_device_obj_list
-                        if slave_device_num > 0:
-                            device_obj.sync_group_status = SyncGroupStatus.MASTER
-                            slave_device_uuid_set.update(
-                                sd.uuid for sd in slave_device_obj_list
-                            )
-                        else:
-                            device_obj.sync_group_status = SyncGroupStatus.STANDALONE
-                    else:
-                        device_obj.sync_group_status = SyncGroupStatus.STANDALONE
-
-                device_dict_new = device_obj.model_dump(mode="json")
-                self.device_data_registry.set_device_dict_by_ha_device_id(
-                    ha_device_id,
-                    device_dict_new,
-                )
-                can_fetch_status_devices.add(ha_device_id)
-            else:
-                can_not_fetch_status_devices.add(ha_device_id)
-
-        for ha_device in ha_device_list:
-            ha_device_id = ha_device.id
-            target_unique_id = None
-            for domain, unique_id in ha_device.identifiers:
-                if domain == DOMAIN:
-                    target_unique_id = unique_id
-                    break
-            if target_unique_id is None:
-                continue
-
-            if target_unique_id in slave_device_uuid_set:
-                _LOGGER.debug(
-                    "device %s (%s) is recognized as a slave device, will delete its device and entities",
-                    ha_device.name,
-                    target_unique_id,
-                )
-                await self.async_remove_device_with_entities(ha_device_id)
-
-    async def async_remove_entities_for_device(self, ha_device_id):
-        """Remove all entities belonging to a device without removing the device itself."""
         try:
-            ent_reg = er.async_get(self.hass)
-            device_entities = ent_reg.entities.get_entries_for_device_id(ha_device_id)
-            if not device_entities:
-                _LOGGER.debug("Device %s has no entities to remove", ha_device_id)
-                return
-            entity_ids = [e.entity_id for e in device_entities]
-            for entity_id in entity_ids:
-                ent_reg.async_remove(entity_id)
-            _LOGGER.debug(
-                "Removed entities for device %s: %s", ha_device_id, entity_ids
+            self._discovery_unsub = async_call_later(self.hass, delay, _callback)
+        except Exception:
+            _LOGGER.exception("Failed to register delayed callback, backing off 60s")
+            self._next_discovery = datetime.now() + timedelta(seconds=60)
+            try:
+                self._discovery_unsub = async_call_later(
+                    self.hass,
+                    60,
+                    lambda _now: self.hass.loop.call_soon_threadsafe(
+                        lambda: self.hass.async_create_task(self._run_discovery())
+                    ),
                 )
-        except Exception:
-            _LOGGER.exception("Error removing entities for device %s", ha_device_id)
+            except Exception:
+                _LOGGER.exception("Failed to register backoff callback")
+                self._discovery_unsub = None
 
-    async def async_remove_device_with_entities(self, ha_device_id):
-        """Safely delete device and all its entities."""
+    async def _run_discovery(self):
+        """Run discovery."""
         try:
-            await self.async_remove_entities_for_device(ha_device_id)
-            dev_reg = dr.async_get(self.hass)
-            dev_reg.async_remove_device(ha_device_id)
-            _LOGGER.debug("Deleted device: %s", ha_device_id)
-        except Exception:
-            _LOGGER.exception("Error when deleting device")
+            _LOGGER.debug("Performing discovery")
+            await self._perform_discovery()
 
-    async def _fetch_device_status(self, device_obj: HIVIDevice):
-        """Get device status through HTTP interface."""
-        ip_addr = device_obj.ip_addr
-        async with HivicoClient(timeout=5, debug=False) as client:
-            device_status = await client.get_device_status(ip_addr)
-            if device_status:
-                if isinstance(device_status, dict) and "psk" in device_status:
-                    redacted = {**device_status, "psk": "***"}
-                    _LOGGER.debug("device status: %s", redacted)
-                else:
-                    _LOGGER.debug("device status: %s", device_status)
-        return device_status
+            # update next discovery time
+            self._next_discovery = datetime.now() + timedelta(
+                seconds=self.current_interval
+            )
 
-    async def _fetch_slave_device(self, device_obj: HIVIDevice):
-        """Get device status through HTTP interface."""
-        ip_addr = device_obj.ip_addr
-        async with HivicoClient(timeout=5, debug=False) as client:
-            return await client.get_slave_devices(ip_addr)
+            # adjust interval
+            await self._adjust_interval()
 
-    @staticmethod
-    def _master_slave_list_contains_uuid(
-        device_obj: HIVIDevice, slave_speaker_device_id: str
-    ) -> bool:
-        """Return True if master's slave_device_list includes the given speaker UUID."""
-        for slave_device in device_obj.slave_device_list:
-            if slave_device.uuid == slave_speaker_device_id:
-                return True
+        except Exception as e:
+            _LOGGER.error("Discovery failed: %s", e)
+            self._next_discovery = datetime.now() + timedelta(seconds=60)
+        finally:
+            await self._reschedule()
+
+    async def schedule_immediate_discovery(self, force: bool = False):
+        """Immediate discovery."""
+        if force:
+            _LOGGER.info("Forcing immediate discovery")
+            self.hass.async_create_task(self._run_discovery())
+        else:
+            _LOGGER.debug("Requesting immediate discovery")
+            immediate = datetime.now() + timedelta(milliseconds=100)
+            if not self._next_discovery or immediate < self._next_discovery:
+                self._next_discovery = immediate
+                await self._reschedule()
+
+    async def postpone_discovery(self, delay_seconds: int = 300):
+        """Postpone discovery."""
+
+        _LOGGER.debug("postpone_discovery")
+
+        new_time = datetime.now() + timedelta(seconds=delay_seconds)
+
+        if not self._next_discovery or new_time > self._next_discovery:
+            self._next_discovery = new_time
+            _LOGGER.debug("Discovery postponed to: %s", self._next_discovery)
+            await self._reschedule()
+            return True
         return False
 
-    async def _add_or_remove_switches(self):
-        """Create or delete switch entities for controlling other speakers for each device."""
-        from .switch import HIVISlaveControlSwitch
-
-        ha_device_list = await self._get_devices_for_device()
-
-        for ha_device in ha_device_list:
-            existing_entiy_entry_list = await self._get_entities_for_device(
-                ha_device.id
-            )
-
-            device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device.id, default=None
-            )
-            if device_dict is None:
-                _LOGGER.warning(
-                    "Cannot get device dict from HA device ID, skip updating device statuses: ha_device_id = %s",
-                    ha_device.id,
-                )
-                continue
-
-            device_obj = HIVIDevice(**device_dict)
-            slave_speaker_device_id_to_entity_entry_dict = {}
-            should_remove_entity_id_set = set()
-            for entity_entry in existing_entiy_entry_list:
-                _LOGGER.debug(
-                    "check %s 's entity: %s",
-                    device_obj.friendly_name,
-                    entity_entry.entity_id,
-                )
-                if entity_entry.entity_id.startswith(
-                    "switch."
-                ) and entity_entry.unique_id.startswith(
-                    f"{device_obj.speaker_device_id}_slave_"
-                ):
-                    slave_speaker_device_id = entity_entry.unique_id.split("_slave_")[
-                        -1
-                    ]
-                    slave_speaker_device_id_to_entity_entry_dict[
-                        slave_speaker_device_id
-                    ] = entity_entry
-                    device_dict_slave = (
-                        self.device_data_registry.get_device_dict_by_speaker_device_id(
-                            slave_speaker_device_id, default=None
-                        )
-                    )
-                    if device_dict_slave is None:
-                        _LOGGER.debug(
-                            "device %s's slave speaker %s device data does not exist, but need to determine if it is a slave device",
-                            device_obj.friendly_name,
-                            slave_speaker_device_id,
-                        )
-                        if self._master_slave_list_contains_uuid(
-                            device_obj, slave_speaker_device_id
-                        ):
-                            _LOGGER.debug(
-                                "device %s's slave speaker list contains uuid: %s, keep its switch entity",
-                                device_obj.friendly_name,
-                                slave_speaker_device_id,
-                            )
-                        else:
-                            _LOGGER.debug(
-                                "remove %s 's invalid slave device: %s",
-                                device_obj.friendly_name,
-                                entity_entry.entity_id,
-                            )
-                            should_remove_entity_id_set.add(entity_entry.entity_id)
-
-            keys = slave_speaker_device_id_to_entity_entry_dict.keys()
-            _LOGGER.debug(
-                "slave_speaker_device_id_to_entity_entry_dict.keys() = %s", keys
-            )
-
-            entity_registry = er.async_get(self.hass)
-            for entity_id in should_remove_entity_id_set:
-                entity_registry.async_remove(entity_id)
-
-            available_slave_dict_list = (
-                self.device_data_registry.get_available_slave_device_dict_list(
-                    device_obj.speaker_device_id
-                )
-            )
-            _LOGGER.debug(
-                "device %s can control slave speaker count: %d",
-                device_obj.friendly_name,
-                len(available_slave_dict_list),
-            )
-            switches = []
-            for slave_candidate_dict in available_slave_dict_list:
-                slave_candidate_obj = HIVIDevice(**slave_candidate_dict)
-                _LOGGER.debug(
-                    "prepare to create %s 's slave device %s 's switch",
-                    device_obj.friendly_name,
-                    slave_candidate_obj.friendly_name,
-                )
-                hardware_1 = device_obj.hardware.lower() if device_obj.hardware else ""
-                hardware_2 = (
-                    slave_candidate_obj.hardware.lower()
-                    if slave_candidate_obj.hardware
-                    else ""
-                )
-                if hardware_1 and hardware_2:
-                    if hardware_1.startswith("swan"):
-                        _LOGGER.debug("master is swan type")
-                        if hardware_2.startswith("swan"):
-                            _LOGGER.debug("slave is also swan type, compatible")
-                        else:
-                            _LOGGER.debug(
-                                "device %s (hardware: %s) does not support controlling %s (hardware: %s), skip creating switch",
-                                device_obj.friendly_name,
-                                hardware_1,
-                                slave_candidate_obj.friendly_name,
-                                hardware_2,
-                            )
-                            continue
-                    elif hardware_1 == hardware_2:
-                        _LOGGER.debug("not swan but same hardware type, compatible")
-                    else:
-                        _LOGGER.debug(
-                            "device %s (hardware: %s) does not support controlling %s (hardware: %s), skip creating switch",
-                            device_obj.friendly_name,
-                            hardware_1,
-                            slave_candidate_obj.friendly_name,
-                            hardware_2,
-                        )
-                        continue
-                need_to_add_switch_flg = False
-                slave_speaker_device_id = slave_candidate_obj.speaker_device_id
-                if (
-                    slave_speaker_device_id
-                    in slave_speaker_device_id_to_entity_entry_dict
-                ):
-                    entity_entry = slave_speaker_device_id_to_entity_entry_dict[
-                        slave_speaker_device_id
-                    ]
-                    entity_id = entity_entry.entity_id
-                    state_obj = self.hass.states.get(entity_id)
-                    if not state_obj:
-                        _LOGGER.debug(
-                            "entity %s has no state (may not be initialized)", entity_id
-                        )
-                        need_to_add_switch_flg = True
-                    elif state_obj.state == "unavailable":
-                        _LOGGER.debug("entity %s state is unavailable", entity_id)
-                        need_to_add_switch_flg = True
-                    else:
-                        _LOGGER.debug("entity %s state is available", entity_id)
-                        need_to_add_switch_flg = False
-                else:
-                    need_to_add_switch_flg = True
-
-                if need_to_add_switch_flg:
-                    switch = HIVISlaveControlSwitch(
-                        hass=self.hass,
-                        hub=self.hivi_slave_control_switch_hub,
-                        master_speaker_device_id=device_obj.speaker_device_id,
-                        slave_speaker_device_id=slave_candidate_obj.speaker_device_id,
-                        device_manager=self,
-                        create_type="from_standalone_device",
-                    )
-                    _LOGGER.debug(
-                        "create switch entity: %s controls %s",
-                        device_obj.friendly_name,
-                        slave_candidate_obj.friendly_name,
-                    )
-                    switches.append(switch)
-            slave_device_list = device_obj.slave_device_list
-            for slave_device in slave_device_list:
-                slave_uuid = slave_device.uuid
-                unique_id = f"{device_obj.speaker_device_id}_slave_{slave_uuid}"
-                need_to_add_switch_flg = False
-                existing_entiy_entry_list = await self._get_entities_for_device(
-                    ha_device.id
-                )
-                for entity_entry in existing_entiy_entry_list:
-                    if entity_entry.unique_id == unique_id:
-                        _LOGGER.debug(
-                            "device %s already has a switch to control slave device %s, judge status",
-                            device_obj.friendly_name,
-                            slave_device.friendly_name,
-                        )
-                        entity_id = entity_entry.entity_id
-                        state_obj = self.hass.states.get(entity_id)
-                        if not state_obj:
-                            _LOGGER.debug(
-                                "entity %s has no state (may not be initialized)",
-                                entity_id,
-                            )
-                            need_to_add_switch_flg = True
-                        elif state_obj.state == "unavailable":
-                            _LOGGER.debug("entity %s state is unavailable", entity_id)
-                            need_to_add_switch_flg = True
-                        else:
-                            _LOGGER.debug(
-                                "entity %s state is available, no need to add again",
-                                entity_id,
-                            )
-                            need_to_add_switch_flg = False
-                        break
-                else:
-                    _LOGGER.debug(
-                        "through slave device list to create switch for master speaker %s to control slave speaker %s",
-                        device_obj.friendly_name,
-                        slave_device.friendly_name,
-                    )
-                    need_to_add_switch_flg = True
-
-                if need_to_add_switch_flg:
-                    switch = HIVISlaveControlSwitch(
-                        hass=self.hass,
-                        hub=self.hivi_slave_control_switch_hub,
-                        master_speaker_device_id=device_obj.speaker_device_id,
-                        slave_speaker_device_id=slave_device.uuid,
-                        device_manager=self,
-                        create_type="from_slave_device",
-                    )
-                    _LOGGER.debug(
-                        "through slave device list to create switch for master speaker %s to control slave speaker %s",
-                        device_obj.friendly_name,
-                        slave_device.friendly_name,
-                    )
-                    switches.append(switch)
-            if switches:
-                switch_cb = self._add_entities_callbacks.get("switch")
-                if switch_cb:
-                    switch_cb(switches, update_before_add=False)
-                else:
-                    _LOGGER.debug(
-                        "no registered 'switch' add callback, skip adding switch entities"
-                    )
-
-    async def _get_devices_for_device(self):
-        """Get all devices under integration."""
-        device_registry = dr.async_get(self.hass)
-        return [
-            device
-            for device in device_registry.devices.values()
-            for identifier in device.identifiers
-            if identifier[0] == DOMAIN
-        ]
-
-    async def _get_entities_for_device(self, ha_device_id):
-        """Get all entities under device."""
-        entity_registry = er.async_get(self.hass)
-        return [
-            entity_entry
-            for entity_entry in entity_registry.entities.values()
-            if entity_entry.device_id == ha_device_id
-        ]
-
-    async def _update_device_entity_states(self):
-        """Update device all entity states."""
-
-        ha_device_list = await self._get_devices_for_device()
-
-        for ha_device in ha_device_list:
-            existing_entiy_entry_list = await self._get_entities_for_device(
-                ha_device.id
-            )
-
-            device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device.id, default=None
-            )
-            if device_dict is None:
-                _LOGGER.warning(
-                    "Cannot get device data by HA device ID, skip switch processing: ha_device_id = %s",
-                    ha_device.id,
-                )
-                continue
-
-            device_obj = HIVIDevice(**device_dict)
-
-            for entity_entry in existing_entiy_entry_list:
-                if entity_entry.entity_id.startswith(
-                    "switch."
-                ) and entity_entry.unique_id.startswith(
-                    f"{device_obj.speaker_device_id}_slave_"
-                ):
-                    slave_device_uuid_list = [
-                        sd.uuid for sd in device_obj.slave_device_list
-                    ]
-                    switch = self.hivi_slave_control_switch_hub.get_switch(
-                        entity_entry.unique_id
-                    )
-                    if switch:
-                        slave_speaker_device_id = entity_entry.unique_id.split(
-                            "_slave_"
-                        )[-1]
-
-                        if slave_speaker_device_id in slave_device_uuid_list:
-                            switch.on_off_switch(True)
-                        else:
-                            switch.on_off_switch(False)
-                    else:
-                        _LOGGER.debug(
-                            "can not find switch entity entity_entry.unique_id = %s",
-                            entity_entry.unique_id,
-                        )
-
-    async def _device_offline_process(self):
-        """Handle offline devices."""
-
-        ha_device_list = await self._get_devices_for_device()
-
-        for ha_device in ha_device_list:
-            device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device.id, default=None
-            )
-            if device_dict is None:
-                _LOGGER.warning(
-                    "Cannot get device data by HA device ID, skip switch processing: ha_device_id = %s",
-                    ha_device.id,
-                )
-                continue
-
-            device_obj = HIVIDevice(**device_dict)
-            last_seen = device_obj.last_seen
-            if last_seen.tzinfo is None:
-                last_seen = last_seen.replace(tzinfo=UTC)
-            time_since_last_seen = (datetime.now(tz=UTC) - last_seen).total_seconds()
-            _LOGGER.debug(
-                "device %s time_since_last_seen: %.2f seconds",
-                device_obj.friendly_name,
-                time_since_last_seen,
-            )
-
-            if time_since_last_seen > DEVICE_OFFLINE_THRESHOLD:
-                _LOGGER.info(
-                    "Device %s has been offline for more than %.2f seconds, setting all its entity states to unavailable",
-                    device_obj.friendly_name,
-                    DEVICE_OFFLINE_THRESHOLD,
-                )
-                device_obj.connection_status = ConnectionStatus.OFFLINE
-                device_dict_new = device_obj.model_dump(mode="json")
-                self.device_data_registry.set_device_dict_by_ha_device_id(
-                    ha_device.id,
-                    device_dict_new,
-                )
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_DEVICE_STATUS_UPDATED,
-                    device_obj.speaker_device_id,
-                )
-
-    async def async_manual_discovery(self):
-        """Manually trigger device discovery."""
-        await self.discovery_scheduler.schedule_immediate_discovery(force=False)
-
-    async def async_cleanup(self):
-        """Clean up resources."""
-        _LOGGER.debug("cleanup device manager resources")
-        await self.discovery_scheduler.async_stop()
-        await self.group_coordinator.async_stop()
-        if self._unsub_discovery:
-            self._unsub_discovery()
-
-        if self._handle_discovery_worker:
-            self._handle_discovery_worker.cancel()
-            try:
-                await self._handle_discovery_worker
-            except asyncio.CancelledError:
-                _LOGGER.debug("cancelled discovery worker")
-            finally:
-                self._handle_discovery_worker = None
-
-        await self.device_data_registry.async_shutdown()
-
-    async def refresh_discovery(self):
-        """Refresh device discovery."""
-        _LOGGER.debug("refresh_discovery")
-        await self.discovery_scheduler.schedule_immediate_discovery(force=False)
-
-    async def postpone_discovery(self):
-        """Postpone device discovery."""
-        _LOGGER.debug("postpone_discovery")
-        await self.discovery_scheduler.postpone_discovery(DISCOVERY_BASE_INTERVAL)
-
-    async def async_register_device(self, device_obj: HIVIDevice) -> str:
-        """Register device in Home Assistant."""
-        device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, device_obj.speaker_device_id)},
-            name=device_obj.friendly_name,
-            manufacturer=device_obj.manufacturer,
-            model=device_obj.model,
-            suggested_area=self._suggest_area_from_name(device_obj.friendly_name),
-            sw_version=device_obj.private_protocol_version,
-            configuration_url="http://www.hivi.com",
-        )
-
-        _LOGGER.debug(
-            "register device to ha complete: %s (ID: %s)",
-            device_obj.friendly_name,
-            device_entry.id,
-        )
-
-        return device_entry.id
-
-    def _suggest_area_from_name(self, name: str) -> str | None:
-        """Infer area from device name."""
-        name_lower = name.lower()
-        if "living" in name_lower or "living room" in name_lower:
-            return "living room"
-        if "bedroom" in name_lower or "bed room" in name_lower:
-            return "bed room"
-        if "kitchen" in name_lower:
-            return "kitchen"
-        if "bathroom" in name_lower:
-            return "bathroom"
-        return None
-
-    def _create_device_obj_from_discovered_device_info(self, device_info):
-        """Create device from private protocol information."""
-        return HIVIDevice(
-            speaker_device_id=device_info.get("UDN"),
-            unique_id=device_info.get("UDN"),
-            friendly_name=device_info.get("friendly_name", "SWAN HiVi"),
-            model=device_info.get("model_name", "Unknown"),
-            manufacturer=device_info.get("manufacturer", "SWAN HiVi"),
-            ha_device_id="",
-            ip_addr=device_info.get("ip_addr", ""),
-            mac_address=device_info.get("mac_address", ""),
-            hostname=device_info.get("hostname", ""),
-            supports_dlna=True,
-            supports_private_protocol=True,
-            sync_group_status=SyncGroupStatus.STANDALONE,
-            connection_status=ConnectionStatus.ONLINE,
-            last_seen=datetime.now(tz=UTC),
-            master_speaker_device_id="",
-            slave_device_num=0,
-            slave_device_list=[],
-            dlna_udn="",
-            dlna_location="",
-            private_protocol_version="",
-            private_port=9527,
-            entity_id="",
-            config_entry_id="",
-            wifi_channel="0",
-            ssid="",
-            auth_mode="",
-            encryption_mode="",
-            psk="",
-            uuid="",
-        )
-
-    async def remove_control_entities_by_speaker_device_id(
-        self, speaker_device_id: str
-    ):
-        """Delete control entities associated with specified speaker device ID."""
-        hass = self.hass
+    async def _perform_discovery(self):
+        """Perform device discovery."""
+        start_time = datetime.now()
 
         try:
-            ent_reg = er.async_get(hass)
-            entities_to_remove = [
-                entity_entry.entity_id
-                for entity_entry in ent_reg.entities.values()
-                if entity_entry.unique_id.endswith(f"_slave_{speaker_device_id}")
-            ]
+            discovered_devices = await self._discover_all_devices()
 
-            if not entities_to_remove:
-                _LOGGER.debug(
-                    "can not find control entities associated with speaker device ID %s, skip deletion",
-                    speaker_device_id,
-                )
-                return
-
-            for entity_id in entities_to_remove:
-                ent_reg.async_remove(entity_id)
-                _LOGGER.debug(
-                    "removed control entities associated with speaker device ID %s: %s",
-                    speaker_device_id,
-                    entity_id,
+            if discovered_devices:
+                async_dispatcher_send(
+                    self.hass, SIGNAL_DEVICE_DISCOVERED, discovered_devices
                 )
 
+        except Exception as e:
+            _LOGGER.error("Device discovery failed: %s", e)
+
+        duration = (datetime.now() - start_time).total_seconds()
+        _LOGGER.debug("Device discovery completed, took %.2f seconds", duration)
+
+    async def _discover_all_devices(self) -> list[dict]:
+        """Discover all devices."""
+
+        results = await self._discover_private_devices()
+
+        flat_results = []
+        for r in results:
+            if isinstance(r, list):
+                flat_results.extend(r)
+            else:
+                flat_results.append(r)
+
+        discovered = []
+        for result in flat_results:
+            if not isinstance(result, dict):
+                continue
+            udn = result.get("UDN")
+            if udn:
+                discovered.append(result)
+
+        return discovered
+
+    async def _discover_private_devices(self) -> list[dict]:
+        """Put blocking scans in executor, then parse responses concurrently."""
+        discovered_devices: list[dict] = []
+        seen_keys = set()
+        lock = asyncio.Lock()
+
+        try:
+            raw_responses: list[
+                tuple[str, tuple[str, int]]
+            ] = await self.hass.async_add_executor_job(_scan_speaker_sync)
+        except Exception:
+            _LOGGER.exception("Private protocol scan (thread) failed")
+            return discovered_devices
+
+        if not raw_responses:
+            return discovered_devices
+
+        sem = asyncio.Semaphore(8)
+
+        session = async_get_clientsession(self.hass)
+
+        async def _parse_one(response_text: str, addr: tuple[str, int]):
+            async with sem:
+                try:
+                    dlna_info = await parse_ssdp_response(response_text, addr)
+                    location = dlna_info.get("location", "")
+                    device_info = await parse_local_url(session, location)
+                    if not device_info:
+                        return
+                    device_key = device_info.get("UDN")
+
+                    if not device_key:
+                        return
+
+                    async with lock:
+                        if device_key in seen_keys:
+                            return
+
+                        seen_keys.add(device_key)
+                        device_info["key"] = device_key
+                        device_info["ip_addr"] = addr[0]
+                        discovered_devices.append(device_info)
+
+                except Exception:
+                    _LOGGER.exception("Failed to parse single SSDP response")
+
+        tasks = [
+            asyncio.create_task(_parse_one(text, addr)) for text, addr in raw_responses
+        ]
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+        return discovered_devices
+
+    async def _adjust_interval(self):
+        """Dynamically adjust discovery interval."""
+
+        online_count = 0
+        offline_count = 0
+
+        try:
+            online_count, offline_count = (
+                self.device_manager.device_data_registry.get_connection_status_counts()
+            )
         except Exception:
             _LOGGER.exception(
-                "Error when deleting control entities associated with speaker device ID %s",
-                speaker_device_id,
+                "Error in calculating online/offline device count during discovery interval adjustment"
             )
+
+        _LOGGER.debug("Current online device count: %d", online_count)
+        _LOGGER.debug("Current offline device count: %d", offline_count)
+
+        total_count = online_count + offline_count
+        if total_count > 0:
+            offline_ratio = offline_count / total_count
+
+            if offline_ratio > 0.8:  # 80% above offline
+                self.current_interval = min(
+                    self.current_interval * 1.3, self.max_interval
+                )
+            elif offline_ratio > 0.5:  # 50% above offline
+                self.current_interval = min(
+                    self.current_interval * 1.1, self.max_interval
+                )
+            elif offline_ratio == 0:  # no devices offline (all online)
+                self.current_interval = max(
+                    self.current_interval * 0.9, self.min_interval
+                )
+            else:  # Few offline, maintain or fine-tune
+                self.current_interval = max(
+                    self.current_interval * 0.95, self.min_interval
+                )
+
+                _LOGGER.debug(
+                    "Discovery interval adjusted to %d seconds", self.current_interval
+                )
+
+
+def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
+    """Perform synchronous SSDP M-SEARCH to discover devices."""
+    discovered_raw = []
+    sock = None
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+        sock.settimeout(SOCKET_TIMEOUT)
+
+        msearch_message = (
+            b"M-SEARCH * HTTP/1.1\r\n"
+            b"HOST: 239.255.255.250:1900\r\n"
+            b'MAN: "ssdp:discover"\r\n'
+            b"MX: 3\r\n"
+            b"ST: ssdp:wiimudevice\r\n"
+            b"USER-AGENT: iOS UPnP/1.1\r\n"
+            b"\r\n"
+        )
+
+        for _ in range(SEND_REPEAT):
+            try:
+                sock.sendto(msearch_message, MCAST_ADDR)
+            except Exception:
+                break
+
+        start = time.time()
+        while time.time() - start < SCAN_TOTAL_TIMEOUT:
+            try:
+                data, addr = sock.recvfrom(4096)
+                text = data.decode("utf-8", errors="ignore")
+                discovered_raw.append((text, addr))
+            except TimeoutError:
+                continue
+            except Exception:
+                break
+
+    finally:
+        if sock is not None:
+            with contextlib.suppress(Exception):
+                sock.close()
+
+    return discovered_raw
+
+
+def _is_safe_location_url(url: str) -> bool:
+    """Validate that a LOCATION URL is http(s) and points to a private/local IP."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    try:
+        host = parsed.hostname or ""
+        addr = ip_address(host)
+        return addr.is_private or addr.is_link_local
+    except ValueError:
+        return False
+
+
+async def parse_local_url(session: aiohttp.ClientSession, url: str):
+    """Fetch and parse a UPnP device description XML."""
+    try:
+        if not _is_safe_location_url(url):
+            _LOGGER.debug("Rejecting non-local SSDP LOCATION URL: %s", url)
+            return None
+        timeout = aiohttp.ClientTimeout(total=5)
+        async with session.get(url, timeout=timeout) as response:
+            response.raise_for_status()
+            xml_content = await response.text()
+
+            root = ET.fromstring(xml_content)
+
+            ns = {
+                "device": "urn:schemas-upnp-org:device-1-0",
+                "dlna": "urn:schemas-dlna-org:device-1-0",
+            }
+
+            device = root.find(".//device:device", ns)
+            if device is not None:
+                return {
+                    "manufacturer": device.findtext("device:manufacturer", "", ns),
+                    "friendly_name": device.findtext("device:friendlyName", "", ns),
+                    "model_name": device.findtext("device:modelName", "", ns),
+                    "UDN": device.findtext("device:UDN", "", ns),
+                }
+            return None
+    except Exception as e:
+        _LOGGER.debug("Error parsing DLNA description: %s", e)
+        return None
+
+
+async def parse_ssdp_response(response_text, addr):
+    """Parse an SSDP response into a device info dictionary."""
+    device_info = {"ip": addr[0], "port": addr[1], "raw_response": response_text}
+
+    lines = response_text.split("\r\n")
+
+    if lines and lines[0].upper().startswith("HTTP/"):
+        device_info["connection_status"] = lines[0]
+
+    for line in lines[1:]:
+        if ":" in line:
+            try:
+                key, value = line.split(":", 1)
+                key = key.strip().lower()
+                value = value.strip()
+                if key in {
+                    "server",
+                    "location",
+                    "st",
+                    "usn",
+                    "cache-control",
+                    "ext",
+                    "date",
+                }:
+                    device_info[key] = value
+            except Exception:
+                continue
+    return device_info
