@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypeVar, cast
 
-from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -82,9 +81,3 @@ class NestEntity(CoordinatorEntity[NestCoordinator], Generic[DeviceT]):
             device_info["hw_version"] = hw_version
 
         return device_info
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.coordinator.data.get(self._device.serial_number):
-            super()._handle_coordinator_update()
