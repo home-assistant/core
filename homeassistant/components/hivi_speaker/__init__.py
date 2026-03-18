@@ -143,8 +143,8 @@ async def async_remove_config_entry_device(
                 "Requested device manager to delete control entities for speaker device ID %s",
                 speaker_device_id,
             )
-
-        return True
+        else:
+            return True
 
     except Exception:
         _LOGGER.exception(
