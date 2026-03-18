@@ -53,6 +53,8 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
+# pyrisco exposes timeout context as message text for this case.
+CLOCK_TIMEOUT_ERROR_FRAGMENT = "Timeout in command: CLOCK"
 
 
 def is_local(entry: ConfigEntry) -> bool:
@@ -95,7 +97,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     async def _error(error: Exception) -> None:
         if isinstance(error, OperationError):
             message = str(error)
-            if "Timeout in command: CLOCK" in message:
+            if CLOCK_TIMEOUT_ERROR_FRAGMENT in message:
                 _LOGGER.warning("Risco keep-alive timeout, waiting for reconnection")
                 return
 
