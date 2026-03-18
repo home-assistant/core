@@ -29,7 +29,8 @@ from .device import ConnectionStatus, HIVIDevice, SlaveDeviceInfo, SyncGroupStat
 from .device_data_registry import DeviceDataRegistry
 from .discovery_scheduler import HIVIDiscoveryScheduler
 from .group_coordinator import HIVIGroupCoordinator
-from .switch import HIVISlaveControlSwitchHub, HIVISlaveControlSwitch
+from .switch import HIVISlaveControlSwitch
+from .switch_hub import HIVISlaveControlSwitchHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -240,7 +241,7 @@ class HIVIDeviceManager:
                 else:
                     try:
                         slave_device_result = await self._fetch_slave_device(device_obj)
-                    except Exception as e:
+                    except (OSError, TimeoutError, ValueError, TypeError, RuntimeError) as e:
                         _LOGGER.error(
                             "Failed to get slave device list for %s, error: %s",
                             device_obj.friendly_name,
