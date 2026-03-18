@@ -103,7 +103,9 @@ class ItemChangeListener(TargetEntityChangeTracker):
             )
             self._unsubscribe_listeners.append(unsub)
 
-    def unsubscribe(self) -> None:
+    @override
+    @callback
+    def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()
         if self._pending_listener_task:
