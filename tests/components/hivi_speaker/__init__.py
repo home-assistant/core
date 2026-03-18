@@ -1,1 +1,1 @@
-# HiVi Speaker integration tests.
+"""Tests for the HiVi Speaker integration."""
