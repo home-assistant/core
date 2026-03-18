@@ -170,6 +170,8 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_TOKEN] == "new-api-token"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+    assert mock_config_entry.data[CONF_VERIFY_SSL] is False
 
 
 @pytest.mark.parametrize(
