@@ -13,7 +13,6 @@ from homeassistant.helpers.storage import Store
 from .const import DOMAIN
 from .device import HIVIDevice
 from .device_manager import HIVIDeviceManager
-from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id]["device_manager"] = device_manager
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    await async_setup_services(hass)
 
     return True
 
