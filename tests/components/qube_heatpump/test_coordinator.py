@@ -196,5 +196,3 @@ async def test_coordinator_handles_no_data(
 
         # Entry should still be loaded
         assert entry.state is ConfigEntryState.LOADED
-
-

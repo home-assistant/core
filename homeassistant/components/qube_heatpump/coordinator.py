@@ -66,4 +66,3 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
                 setattr(data, key, previous)
             else:
                 self._previous_values[key] = current
-
