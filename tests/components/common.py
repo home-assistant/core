@@ -49,8 +49,8 @@ async def target_entities(hass: HomeAssistant, domain: str) -> dict[str, list[st
     """Create multiple entities associated with different targets.
 
     Returns a dict with the following keys:
-    - included: List of entity_ids meant to be targeted.
-    - excluded: List of entity_ids not meant to be targeted.
+    - included_entities: List of entity_ids meant to be targeted.
+    - excluded_entities: List of entity_ids not meant to be targeted.
     """
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -186,16 +186,16 @@ class _StateDescription(TypedDict):
 class TriggerStateDescription(TypedDict):
     """Test state and expected service call count."""
 
-    included: _StateDescription  # State for entities meant to be targeted
-    excluded: _StateDescription  # State for entities not meant to be targeted
+    included_state: _StateDescription  # State for entities meant to be targeted
+    excluded_state: _StateDescription  # State for entities not meant to be targeted
     count: int  # Expected service call count
 
 
 class ConditionStateDescription(TypedDict):
     """Test state and expected condition evaluation."""
 
-    included: _StateDescription  # State for entities meant to be targeted
-    excluded: _StateDescription  # State for entities not meant to be targeted
+    included_state: _StateDescription  # State for entities meant to be targeted
+    excluded_state: _StateDescription  # State for entities not meant to be targeted
 
     condition_true: bool  # If the condition is expected to evaluate to true
     condition_true_first_entity: bool  # If the condition is expected to evaluate to true for the first targeted entity
