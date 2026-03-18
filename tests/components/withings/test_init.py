@@ -386,6 +386,60 @@ async def test_setup_no_webhook(
         mock_async_generate_url.assert_called_once()
 
     assert expected_message in caplog.text
+    assert caplog.text.count(expected_message) == 1
+
+
+@pytest.mark.parametrize(
+    ("url", "expected_message"),
+    [
+        ("http://example.com", "HTTPS is required"),
+        ("https://example.com:444", "port 443 is required"),
+    ],
+)
+async def test_setup_no_webhook_logged_once(
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+    withings: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    url: str,
+    expected_message: str,
+) -> None:
+    """Test webhook warning is only logged once on repeated retries."""
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value=url,
+        ),
+        patch(
+            "homeassistant.components.withings.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook",
+        ),
+        patch("homeassistant.components.withings.webhook_generate_url"),
+    ):
+        await setup_integration(hass, webhook_config_entry)
+        await prepare_webhook_setup(hass, freezer)
+        await hass.async_block_till_done()
+
+        assert caplog.text.count(expected_message) == 1
+
+        # Simulate cloud disconnect then reconnect, triggering register_webhook again
+        async_mock_cloud_connection_status(hass, False)
+        await hass.async_block_till_done()
+
+        async_mock_cloud_connection_status(hass, True)
+        await hass.async_block_till_done()
+
+        # Warning should still only be logged once
+        assert caplog.text.count(expected_message) == 1
 
 
 async def test_cloud_disconnect(

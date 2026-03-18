@@ -214,6 +214,7 @@ class WithingsWebhookManager:
     """Manager that manages the Withings webhooks."""
 
     _webhooks_registered = False
+    _webhook_url_invalid = False
     _register_lock = asyncio.Lock()
 
     def __init__(self, hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
@@ -260,16 +261,20 @@ class WithingsWebhookManager:
                 )
             url = URL(webhook_url)
             if url.scheme != "https":
-                LOGGER.warning(
-                    "Webhook not registered - HTTPS is required. "
-                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
-                )
+                if not self._webhook_url_invalid:
+                    LOGGER.warning(
+                        "Webhook not registered - HTTPS is required. "
+                        "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
+                    )
+                    self._webhook_url_invalid = True
                 return
             if url.port != 443:
-                LOGGER.warning(
-                    "Webhook not registered - port 443 is required. "
-                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
-                )
+                if not self._webhook_url_invalid:
+                    LOGGER.warning(
+                        "Webhook not registered - port 443 is required. "
+                        "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
+                    )
+                    self._webhook_url_invalid = True
                 return
 
             webhook_name = "Withings"
