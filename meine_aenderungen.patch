@@ -1,0 +1,19 @@
+diff --git a/homeassistant/components/proxmoxve/button.py b/homeassistant/components/proxmoxve/button.py
+index 648d489c625..ebcadf8fffd 100644
+--- a/homeassistant/components/proxmoxve/button.py
++++ b/homeassistant/components/proxmoxve/button.py
+@@ -125,6 +125,14 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
+         ),
+         entity_category=EntityCategory.CONFIG,
+     ),
++    ProxmoxVMButtonEntityDescription(
++        key="shutdown",
++        translation_key="shutdown",
++        press_action=lambda coordinator, node, vmid: (
++            coordinator.proxmox.nodes(node).qemu(vmid).status.shutdown.post()
++        ),
++        entity_category=EntityCategory.CONFIG,
++    ),
+ )
+ 
+ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (

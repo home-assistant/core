@@ -125,6 +125,14 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    ProxmoxVMButtonEntityDescription(
+        key="shutdown",
+        translation_key="shutdown",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node).qemu(vmid).status.shutdown.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
