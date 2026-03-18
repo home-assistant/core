@@ -36,7 +36,7 @@ async def test_sensor(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test states of the sensor."""
-    state = hass.states.get("sensor.wf_test_gwid_12345_totalunitpower")
+    state = hass.states.get("sensor.test_abc_type_total_power")
     assert state
     assert state.state == "1500"
 
@@ -45,7 +45,7 @@ async def test_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wf_test_gwid_12345_totalunitpower")
+    state = hass.states.get("sensor.test_abc_type_total_power")
     assert state
     assert state.state == "2000"
 
@@ -65,7 +65,7 @@ async def test_availability(
     side_effect: Exception,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
-    entity_id = "sensor.wf_test_gwid_12345_totalunitpower"
+    entity_id = "sensor.test_abc_type_total_power"
 
     state = hass.states.get(entity_id)
     assert state
