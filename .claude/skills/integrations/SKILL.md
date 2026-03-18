@@ -620,12 +620,14 @@ rules:
 
 ### Config Flow Testing
 - **100% Coverage Required**: All config flow paths must be tested
+- **Patch Boundaries**: Only patch library or client methods when testing config flows. Do not patch methods defined in `config_flow.py`; exercise the flow logic end-to-end.
 - **Test Scenarios**:
   - All flow initiation methods (user, discovery, import)
   - Successful configuration paths
   - Error recovery scenarios
   - Prevention of duplicate entries
   - Flow completion after errors
+  - Reauthentication/reconfigure flows
 
 ### Testing
 - **Integration-specific tests** (recommended):
