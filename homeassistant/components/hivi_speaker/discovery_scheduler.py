@@ -23,6 +23,15 @@ from .const import SIGNAL_DEVICE_DISCOVERED
 
 _LOGGER = logging.getLogger(__name__)
 
+_CLIENT_ERRORS = (
+    OSError,
+    TimeoutError,
+    ValueError,
+    TypeError,
+    RuntimeError,
+    ConnectionError,
+)
+
 SCAN_TOTAL_TIMEOUT = 5.0  # seconds
 SOCKET_TIMEOUT = 1.0  # seconds
 SEND_REPEAT = 3
@@ -90,7 +99,7 @@ class HIVIDiscoveryScheduler:
             try:
                 _LOGGER.debug("_reschedule: canceling existing timer")
                 self._discovery_unsub()
-            except Exception:
+            except _CLIENT_ERRORS:
                 _LOGGER.exception("Error canceling existing timer")
             finally:
                 self._discovery_unsub = None
@@ -102,7 +111,7 @@ class HIVIDiscoveryScheduler:
             _LOGGER.debug("_reschedule: scheduling discovery immediately")
             try:
                 self.hass.async_create_task(self._run_discovery())
-            except Exception:
+            except _CLIENT_ERRORS:
                 _LOGGER.exception("Error scheduling _run_discovery immediately")
             return
 
@@ -120,7 +129,7 @@ class HIVIDiscoveryScheduler:
 
         try:
             self._discovery_unsub = async_call_later(self.hass, delay, _callback)
-        except Exception:
+        except _CLIENT_ERRORS:
             _LOGGER.exception("Failed to register delayed callback, backing off 60s")
             self._next_discovery = datetime.now() + timedelta(seconds=60)
             try:
@@ -131,7 +140,7 @@ class HIVIDiscoveryScheduler:
                         lambda: self.hass.async_create_task(self._run_discovery())
                     ),
                 )
-            except Exception:
+            except _CLIENT_ERRORS:
                 _LOGGER.exception("Failed to register backoff callback")
                 self._discovery_unsub = None
 
@@ -149,7 +158,7 @@ class HIVIDiscoveryScheduler:
             # adjust interval
             await self._adjust_interval()
 
-        except Exception as e:
+        except _CLIENT_ERRORS as e:
             _LOGGER.error("Discovery failed: %s", e)
             self._next_discovery = datetime.now() + timedelta(seconds=60)
         finally:
@@ -193,7 +202,7 @@ class HIVIDiscoveryScheduler:
                     self.hass, SIGNAL_DEVICE_DISCOVERED, discovered_devices
                 )
 
-        except Exception as e:
+        except _CLIENT_ERRORS as e:
             _LOGGER.error("Device discovery failed: %s", e)
 
         duration = (datetime.now() - start_time).total_seconds()
@@ -231,7 +240,7 @@ class HIVIDiscoveryScheduler:
             raw_responses: list[
                 tuple[str, tuple[str, int]]
             ] = await self.hass.async_add_executor_job(_scan_speaker_sync)
-        except Exception:
+        except _CLIENT_ERRORS:
             _LOGGER.exception("Private protocol scan (thread) failed")
             return discovered_devices
 
@@ -264,7 +273,7 @@ class HIVIDiscoveryScheduler:
                         device_info["ip_addr"] = addr[0]
                         discovered_devices.append(device_info)
 
-                except Exception:
+                except _CLIENT_ERRORS:
                     _LOGGER.exception("Failed to parse single SSDP response")
 
         tasks = [
@@ -285,7 +294,7 @@ class HIVIDiscoveryScheduler:
             online_count, offline_count = (
                 self.device_manager.device_data_registry.get_connection_status_counts()
             )
-        except Exception:
+        except _CLIENT_ERRORS:
             _LOGGER.exception(
                 "Error in calculating online/offline device count during discovery interval adjustment"
             )
@@ -342,7 +351,7 @@ def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
         for _ in range(SEND_REPEAT):
             try:
                 sock.sendto(msearch_message, MCAST_ADDR)
-            except Exception:
+            except OSError:
                 break
 
         start = time.time()
@@ -353,12 +362,12 @@ def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
                 discovered_raw.append((text, addr))
             except TimeoutError:
                 continue
-            except Exception:
+            except OSError:
                 break
 
     finally:
         if sock is not None:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(OSError):
                 sock.close()
 
     return discovered_raw
@@ -372,9 +381,10 @@ def _is_safe_location_url(url: str) -> bool:
     try:
         host = parsed.hostname or ""
         addr = ip_address(host)
-        return addr.is_private or addr.is_link_local
     except ValueError:
         return False
+    else:
+        return addr.is_private or addr.is_link_local
 
 
 async def parse_local_url(session: aiohttp.ClientSession, url: str):
@@ -404,7 +414,7 @@ async def parse_local_url(session: aiohttp.ClientSession, url: str):
                     "UDN": device.findtext("device:UDN", "", ns),
                 }
             return None
-    except Exception as e:
+    except (aiohttp.ClientError, OSError, TimeoutError, ValueError, ET.ParseError) as e:
         _LOGGER.debug("Error parsing DLNA description: %s", e)
         return None
 
@@ -434,6 +444,6 @@ async def parse_ssdp_response(response_text, addr):
                     "date",
                 }:
                     device_info[key] = value
-            except Exception:
+            except ValueError:
                 continue
     return device_info
