@@ -81,6 +81,12 @@ async def test_config_entry_auth_failed_triggers_reauth(
     ("method", "exception", "expected_state", "assert_static_fallback"),
     [
         (
+            "initialize",
+            BSBLANError("General error"),
+            ConfigEntryState.SETUP_ERROR,
+            False,
+        ),
+        (
             "device",
             BSBLANConnectionError("Connection failed"),
             ConfigEntryState.SETUP_RETRY,
@@ -100,7 +106,7 @@ async def test_config_entry_auth_failed_triggers_reauth(
         ),
     ],
 )
-async def test_config_entry_static_data_errors(
+async def test_config_entry_setup_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
@@ -109,7 +115,7 @@ async def test_config_entry_static_data_errors(
     expected_state: ConfigEntryState,
     assert_static_fallback: bool,
 ) -> None:
-    """Test various errors during static data fetching trigger appropriate config entry states."""
+    """Test setup errors trigger appropriate config entry states."""
     # Mock the specified method to raise the exception
     getattr(mock_bsblan, method).side_effect = exception
 
@@ -120,21 +126,6 @@ async def test_config_entry_static_data_errors(
     assert mock_config_entry.state is expected_state
     if assert_static_fallback:
         assert mock_config_entry.runtime_data.static is None
-
-
-async def test_config_entry_general_setup_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_bsblan: MagicMock,
-) -> None:
-    """Test a general BSBLAN setup error results in setup failure."""
-    mock_bsblan.initialize.side_effect = BSBLANError("General error")
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_coordinator_dhw_config_update_error(
