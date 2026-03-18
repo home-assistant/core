@@ -1021,6 +1021,9 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "remote_control_status": {
+      "message": "Can only be changed when remote control is enabled"
     }
   },
   "issues": {

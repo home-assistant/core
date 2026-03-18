@@ -14,7 +14,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import DOMAIN, MAIN
 from .entity import SmartThingsEntity
 
 
@@ -192,7 +192,7 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
             == "false"
         ):
             raise ServiceValidationError(
-                "Can only be updated when remote control is enabled"
+                translation_domain=DOMAIN, translation_key="remote_control_status"
             )
         if (
             self.entity_description.requires_dishwasher_machine_state

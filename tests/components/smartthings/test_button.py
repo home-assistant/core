@@ -120,7 +120,7 @@ async def test_turn_on_without_remote_control(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when remote control is enabled",
+        match="Can only be changed when remote control is enabled",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
