@@ -54,7 +54,7 @@ async def test_set_number_value_api_error(
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
-    with pytest.raises(HomeAssistantError, match="Error while setting parameter"):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

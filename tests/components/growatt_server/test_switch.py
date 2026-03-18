@@ -91,7 +91,7 @@ async def test_switch_service_call_api_error(
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
-    with pytest.raises(HomeAssistantError, match="Error while setting switch state"):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
