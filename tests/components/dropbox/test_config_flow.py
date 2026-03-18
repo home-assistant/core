@@ -91,12 +91,12 @@ async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    config_entry,
+    mock_config_entry,
     mock_dropbox_client,
 ) -> None:
     """Test aborting when the account is already configured."""
 
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -158,7 +158,7 @@ async def test_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    config_entry,
+    mock_config_entry,
     mock_dropbox_client,
     mock_setup_entry: AsyncMock,
     new_account_info: SimpleNamespace,
@@ -168,11 +168,11 @@ async def test_reauth_flow(
 ) -> None:
     """Test reauthentication flow outcomes."""
 
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     mock_dropbox_client.get_account_info.return_value = new_account_info
 
-    result = await config_entry.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -207,4 +207,4 @@ async def test_reauth_flow(
     assert result["reason"] == expected_reason
     assert mock_setup_entry.await_count == expected_setup_calls
 
-    assert config_entry.data["token"]["access_token"] == expected_access_token
+    assert mock_config_entry.data["token"]["access_token"] == expected_access_token

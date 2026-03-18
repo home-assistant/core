@@ -46,7 +46,7 @@ def account_info() -> SimpleNamespace:
 
 
 @pytest.fixture
-def config_entry() -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Return a default Dropbox config entry."""
 
     return MockConfigEntry(

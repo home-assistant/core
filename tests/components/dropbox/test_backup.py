@@ -94,14 +94,14 @@ def _setup_list_folder_with_backup(
 @pytest.fixture(autouse=True)
 async def setup_integration(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_dropbox_client,
 ) -> None:
     """Set up the Dropbox and Backup integrations for testing."""
 
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     mock_dropbox_client.reset_mock()
 
@@ -109,7 +109,7 @@ async def setup_integration(
 async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test listing available backup agents."""
 
@@ -126,7 +126,7 @@ async def test_agents_info(
         ]
     }
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
@@ -205,7 +205,7 @@ async def test_agents_list_backups_reauth(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_dropbox_client: Mock,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauthentication is triggered on auth error."""
 
@@ -229,7 +229,7 @@ async def test_agents_list_backups_reauth(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == SOURCE_REAUTH
-    assert flow["context"]["entry_id"] == config_entry.entry_id
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize(
