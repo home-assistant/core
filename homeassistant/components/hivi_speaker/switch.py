@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
+from typing import Any, Mapping
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,8 +14,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import EntityCategory  # type: ignore[attr-defined]
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, SIGNAL_DEVICE_STATUS_UPDATED
 from .device import ConnectionStatus, HIVIDevice
@@ -29,7 +31,7 @@ class HIVISlaveControlSwitchHub:
         """Initialize the switch hub."""
         self.hass = hass
         self.entry = entry
-        self.switches = {}
+        self.switches: dict[str, "HIVISlaveControlSwitch"] = {}
 
     def get_switch(self, unique_id: str):
         """Return a switch entity by its unique ID."""
@@ -43,7 +45,7 @@ class HIVISlaveControlSwitchHub:
 class HIVISlaveControlSwitch(SwitchEntity):
     """Control whether other speakers are set as slave speakers of the current speaker."""
 
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         hass: HomeAssistant,
         hub: HIVISlaveControlSwitchHub,
@@ -72,8 +74,8 @@ class HIVISlaveControlSwitch(SwitchEntity):
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_is_on = False
 
-        self._unsub_status = None
-        self._unsub_device_registry = None
+        self._unsub_status: Callable[[], None] | None = None
+        self._unsub_device_registry: Callable[[], None] | None = None
         self._hub.add_switch(self)
 
         # Cache slave ha_device_id to avoid race with DeviceDataRegistry event handler.
@@ -241,7 +243,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
                 "Switch %s state set to: %s", self._attr_name, "ON" if is_on else "OFF"
             )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch - set master-slave relationship."""
         master_device = self.get_master_device()
         if master_device is None:
@@ -342,7 +344,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
             operation_callback,
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch - remove the follower relationship."""
         master_device = self.get_master_device()
         if master_device is None:
@@ -418,7 +420,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Extra state attributes."""
         master_device = self.get_master_device()
         return {
@@ -432,7 +434,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities."""
     device_manager = hass.data[DOMAIN][config_entry.entry_id]["device_manager"]
