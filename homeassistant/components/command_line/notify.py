@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import shlex
 import subprocess
 from typing import Any
 
@@ -49,12 +50,11 @@ class CommandLineNotificationService(BaseNotificationService):
 
         LOGGER.debug("Running with message: %s", message)
 
-        with subprocess.Popen(  # noqa: S602 # shell by design
-            command,
+        with subprocess.Popen(
+            shlex.split(command),
             universal_newlines=True,
             stdin=subprocess.PIPE,
             close_fds=False,  # required for posix_spawn
-            shell=True,
         ) as proc:
             try:
                 proc.communicate(input=message, timeout=self._timeout)
