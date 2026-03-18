@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, NamedTuple
 
 from pytouchline_extended import PyTouchline
@@ -26,8 +25,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class PresetMode(NamedTuple):
