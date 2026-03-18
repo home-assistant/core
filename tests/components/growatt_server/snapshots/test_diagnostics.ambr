@@ -124,5 +124,20 @@
       'unique_id': '**REDACTED**',
       'version': 1,
     }),
+    'devices': list([
+      dict({
+        'data': dict({
+          'deviceSn': '**REDACTED**',
+          'status': 1,
+        }),
+        'device_sn': '**REDACTED**',
+        'device_type': 'inverter',
+      }),
+    ]),
+    'total_coordinator': dict({
+      'invTodayPpv': 2500,
+      'todayEnergy': 12.5,
+      'totalEnergy': 1250.0,
+    }),
   })
 # ---

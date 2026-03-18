@@ -44,21 +44,22 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    diag: dict[str, Any] = {"config_entry": config_entry.as_dict()}
-
-    runtime_data = getattr(config_entry, "runtime_data", None)
-    if runtime_data is not None:
-        total_data = runtime_data.total_coordinator.data or {}
-        diag["total_coordinator"] = {
-            k: v for k, v in total_data.items() if k in _TOTAL_SAFE_KEYS
-        }
-        diag["devices"] = [
-            {
-                "device_sn": device_sn,
-                "device_type": coordinator.device_type,
-                "data": coordinator.data,
-            }
-            for device_sn, coordinator in runtime_data.devices.items()
-        ]
-
-    return async_redact_data(diag, TO_REDACT)
+    runtime_data = config_entry.runtime_data
+    total_data = runtime_data.total_coordinator.data or {}
+    return async_redact_data(
+        {
+            "config_entry": config_entry.as_dict(),
+            "total_coordinator": {
+                k: v for k, v in total_data.items() if k in _TOTAL_SAFE_KEYS
+            },
+            "devices": [
+                {
+                    "device_sn": device_sn,
+                    "device_type": coordinator.device_type,
+                    "data": coordinator.data,
+                }
+                for device_sn, coordinator in runtime_data.devices.items()
+            ],
+        },
+        TO_REDACT,
+    )

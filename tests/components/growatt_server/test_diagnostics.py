@@ -39,6 +39,10 @@ async def test_diagnostics_classic_api(
     mock_config_entry_classic: MockConfigEntry,
 ) -> None:
     """Test diagnostics for Classic API (password auth) config entry."""
+    # Override device list to use inverter (classic API does not support min/V1 devices)
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "INV123456", "deviceType": "inverter"}
+    ]
     await setup_integration(hass, mock_config_entry_classic)
 
     result = await get_diagnostics_for_config_entry(
