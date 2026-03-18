@@ -63,12 +63,47 @@
     "volume": 75
   },
   "sleepSchedules": [
-    {"dayOfWeek": 0, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
-    {"dayOfWeek": 1, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
-    {"dayOfWeek": 2, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
-    {"dayOfWeek": 3, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
-    {"dayOfWeek": 4, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
-    {"dayOfWeek": 5, "isEnabled": false, "sleepTime": 1380, "wakeTime": 480},
-    {"dayOfWeek": 6, "isEnabled": false, "sleepTime": 1380, "wakeTime": 480}
+    {
+      "dayOfWeek": 0,
+      "isEnabled": true,
+      "sleepTime": 1320,
+      "wakeTime": 420
+    },
+    {
+      "dayOfWeek": 1,
+      "isEnabled": true,
+      "sleepTime": 1320,
+      "wakeTime": 420
+    },
+    {
+      "dayOfWeek": 2,
+      "isEnabled": true,
+      "sleepTime": 1320,
+      "wakeTime": 420
+    },
+    {
+      "dayOfWeek": 3,
+      "isEnabled": true,
+      "sleepTime": 1320,
+      "wakeTime": 420
+    },
+    {
+      "dayOfWeek": 4,
+      "isEnabled": true,
+      "sleepTime": 1320,
+      "wakeTime": 420
+    },
+    {
+      "dayOfWeek": 5,
+      "isEnabled": false,
+      "sleepTime": 1380,
+      "wakeTime": 480
+    },
+    {
+      "dayOfWeek": 6,
+      "isEnabled": false,
+      "sleepTime": 1380,
+      "wakeTime": 480
+    }
   ]
 }
