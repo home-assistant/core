@@ -13,10 +13,10 @@ from tests.components.common import (
     arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
+    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     parametrize_target_entities,
     parametrize_trigger_states,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -59,14 +59,14 @@ async def test_window_triggers_gated_by_labs_flag(
             trigger="window.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger="window.closed",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
     ],
@@ -118,7 +118,7 @@ async def test_window_trigger_binary_sensor_behavior_any(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -136,7 +136,7 @@ async def test_window_trigger_binary_sensor_behavior_any(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
     ],
@@ -178,14 +178,14 @@ async def test_window_trigger_cover_behavior_any(
             trigger="window.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger="window.closed",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
     ],
@@ -227,14 +227,14 @@ async def test_window_trigger_binary_sensor_behavior_first(
             trigger="window.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger="window.closed",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
     ],
@@ -251,37 +251,17 @@ async def test_window_trigger_binary_sensor_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test window trigger fires when the last binary_sensor changes state."""
-    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
-    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
-
-    for eid in target_binary_sensors["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-    for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
-
-    for state in states[1:]:
-        excluded_state = state["excluded"]
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, excluded_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        for excluded_entity_id in excluded_entity_ids:
-            set_or_remove_state(hass, excluded_entity_id, excluded_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_binary_sensors,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -306,7 +286,7 @@ async def test_window_trigger_binary_sensor_behavior_last(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -324,7 +304,7 @@ async def test_window_trigger_binary_sensor_behavior_last(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
     ],
@@ -376,7 +356,7 @@ async def test_window_trigger_cover_behavior_first(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -394,7 +374,7 @@ async def test_window_trigger_cover_behavior_first(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "window"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: "window"},
             trigger_from_none=False,
         ),
     ],
@@ -411,37 +391,17 @@ async def test_window_trigger_cover_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test window trigger fires when the last cover changes state."""
-    other_entity_ids = set(target_covers["included"]) - {entity_id}
-    excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
-
-    for eid in target_covers["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-    for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
-
-    for state in states[1:]:
-        excluded_state = state["excluded"]
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, excluded_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        for excluded_entity_id in excluded_entity_ids:
-            set_or_remove_state(hass, excluded_entity_id, excluded_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_covers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")

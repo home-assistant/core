@@ -20,13 +20,13 @@ from tests.components.common import (
     arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
+    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -176,29 +176,17 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last sensor changes state."""
-    other_entity_ids = set(target_sensors["included"]) - {entity_id}
-
-    for eid in target_sensors["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_sensors,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
-
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
 
 
 # --- Climate domain tests (value in current_humidity attribute) ---
@@ -314,29 +302,17 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last climate changes state."""
-    other_entity_ids = set(target_climates["included"]) - {entity_id}
-
-    for eid in target_climates["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_climates,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
-
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
 
 
 # --- Humidifier domain tests (value in current_humidity attribute) ---
@@ -452,29 +428,17 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last humidifier changes state."""
-    other_entity_ids = set(target_humidifiers["included"]) - {entity_id}
-
-    for eid in target_humidifiers["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_humidifiers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
-
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
 
 
 # --- Weather domain tests (value in humidity attribute) ---
@@ -590,29 +554,17 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last weather changes state."""
-    other_entity_ids = set(target_weathers["included"]) - {entity_id}
-
-    for eid in target_weathers["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_weathers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
-
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
 
 
 # --- Device class exclusion test ---
