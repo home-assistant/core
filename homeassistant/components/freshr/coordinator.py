@@ -77,7 +77,6 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[dict[str, DeviceSummary]]):
             if stale_ids:
                 device_registry = dr.async_get(self.hass)
                 for device_id in stale_ids:
-                    self.config_entry.runtime_data.readings.pop(device_id, None)
                     if device := device_registry.async_get_device(
                         identifiers={(DOMAIN, device_id)}
                     ):

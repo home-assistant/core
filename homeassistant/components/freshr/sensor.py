@@ -117,24 +117,17 @@ async def async_setup_entry(
 
     @callback
     def _check_devices() -> None:
-        if not coordinator.data:
-            return
-        new_ids = set(coordinator.data) - known_devices
+        current = set(coordinator.data)
+        removed_ids = known_devices - current
+        if removed_ids:
+            known_devices.difference_update(removed_ids)
+        new_ids = current - known_devices
         if not new_ids:
             return
         known_devices.update(new_ids)
         entities: list[FreshrSensor] = []
         for device_id in new_ids:
             device = coordinator.data[device_id]
-            if device_id not in config_entry.runtime_data.readings:
-                readings_coordinator = FreshrReadingsCoordinator(
-                    hass, config_entry, device, coordinator.client
-                )
-                config_entry.runtime_data.readings[device_id] = readings_coordinator
-                hass.async_create_task(
-                    readings_coordinator.async_refresh(),
-                    name=f"freshr_readings_refresh_{device_id}",
-                )
             descriptions = SENSOR_TYPES.get(
                 device.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
             )
