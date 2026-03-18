@@ -384,6 +384,10 @@ class IntegrationSensor(RestoreSensor):
 
         If a device class value has been set in the config, try to use that instead.
         """
+        # If we don't have a unit of measurement, then we can't have a device class.
+        if unit_of_measurement is None:
+            return None
+
         # Use the user supplied device class if one was supplied, and it supports
         # the current unit and state class
         if (device_class := self._configured_device_class) is not None:
@@ -395,6 +399,7 @@ class IntegrationSensor(RestoreSensor):
                 and (allowed_units is None or unit_of_measurement in allowed_units)
             ):
                 return device_class
+            # Otherwise log incompatible user device class
             _LOGGER.warning(
                 "Specified device class '%s' is not compatible with inferred unit or state class of this sensor",
                 device_class,

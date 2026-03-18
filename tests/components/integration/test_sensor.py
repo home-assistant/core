@@ -807,18 +807,26 @@ async def test_device_class_user(
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 100, source_config)
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
+    )
     await hass.async_block_till_done()
 
-    now = dt_util.utcnow() + timedelta(hours=1)
-    with freeze_time(now):
-        hass.states.async_set(
-            entity_id,
-            100,
-            source_config,
-            force_update=True,
-        )
-        await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert "device_class" not in state.attributes
+
+    hass.states.async_set(entity_id, 300, source_config, force_update=True)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.integration")
     assert state is not None
