@@ -1,6 +1,7 @@
 {
   "domain": "search",
   "name": "Search",
+  "after_dependencies": ["lovelace"],
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/search",
