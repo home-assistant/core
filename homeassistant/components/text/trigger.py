@@ -1,4 +1,4 @@
-"""Provides triggers for texts."""
+"""Provides triggers for text and input_text entities."""
 
 from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -14,7 +14,7 @@ from .const import DOMAIN
 
 
 class TextChangedTrigger(EntityTriggerBase):
-    """Trigger for text entity when its content changes."""
+    """Trigger for text and input_text entities when their content changes."""
 
     _domain_specs = {DOMAIN: DomainSpec(), INPUT_TEXT_DOMAIN: DomainSpec()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
@@ -36,5 +36,5 @@ TRIGGERS: dict[str, type[Trigger]] = {
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-    """Return the triggers for texts."""
+    """Return the triggers for text and input_text entities."""
     return TRIGGERS

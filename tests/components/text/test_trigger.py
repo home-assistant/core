@@ -148,7 +148,7 @@ async def test_input_text_state_trigger_behavior(
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the input_text state trigger fires when any input_text state changes."""
+    """Test that the `text.changed` trigger fires when any input_text entity's state changes."""
     other_entity_ids = set(target_input_texts["included"]) - {entity_id}
 
     # Set all input_texts, including the tested input_text, to the initial state
