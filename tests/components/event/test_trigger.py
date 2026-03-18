@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
@@ -23,7 +23,7 @@ from tests.components import (
 @pytest.fixture
 async def target_events(hass: HomeAssistant) -> list[str]:
     """Create multiple event entities associated with different targets."""
-    return (await target_entities(hass, "event"))["included"]
+    return await target_entities(hass, "event")
 
 
 @pytest.mark.parametrize("trigger_key", ["event.received"])
@@ -53,16 +53,16 @@ async def test_event_triggers_gated_by_labs_flag(
             "event.received",
             {"event_type": ["button_press"]},
             [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included_state": {"state": None, "attributes": {}}, "count": 0},
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
@@ -75,16 +75,16 @@ async def test_event_triggers_gated_by_labs_flag(
             "event.received",
             {"event_type": ["button_press"]},
             [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included_state": {"state": None, "attributes": {}}, "count": 0},
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "other_event"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
@@ -98,28 +98,28 @@ async def test_event_triggers_gated_by_labs_flag(
             {"event_type": ["button_press", "button_long_press"]},
             [
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_long_press"},
                     },
                     "count": 1,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "other_event"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:03.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
@@ -133,21 +133,21 @@ async def test_event_triggers_gated_by_labs_flag(
             {"event_type": ["button_press"]},
             [
                 {
-                    "included": {
+                    "included_state": {
                         "state": STATE_UNAVAILABLE,
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
@@ -155,31 +155,38 @@ async def test_event_triggers_gated_by_labs_flag(
                 },
             ],
         ),
-        # From unknown - first valid state after unknown is not triggered
+        # From unknown - first valid state after unknown is triggered
         (
             "event.received",
             {"event_type": ["button_press"]},
             [
                 {
-                    "included": {
+                    "included_state": {
                         "state": STATE_UNKNOWN,
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
-                    "count": 0,
+                    "count": 1,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 1,
+                },
+                {
+                    "included_state": {
+                        "state": STATE_UNKNOWN,
+                        "attributes": {},
+                    },
+                    "count": 0,
                 },
             ],
         ),
@@ -189,21 +196,21 @@ async def test_event_triggers_gated_by_labs_flag(
             {"event_type": ["button_press"]},
             [
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 1,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
@@ -217,28 +224,28 @@ async def test_event_triggers_gated_by_labs_flag(
             {"event_type": ["button_press"]},
             [
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": STATE_UNAVAILABLE,
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
                         "attributes": {ATTR_EVENT_TYPE: "button_press"},
                     },
@@ -248,7 +255,7 @@ async def test_event_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_event_state_trigger_behavior_any(
+async def test_event_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_events: list[str],
@@ -259,18 +266,18 @@ async def test_event_state_trigger_behavior_any(
     trigger_options: dict,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the event trigger fires when an event entity receives a matching event."""
-    other_entity_ids = set(target_events) - {entity_id}
+    """Test that the event trigger fires targeted event entity state changes."""
+    other_entity_ids = set(target_events["included_entities"]) - {entity_id}
 
     # Set all events to the initial state
-    for eid in target_events:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_events["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
