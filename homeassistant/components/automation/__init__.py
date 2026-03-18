@@ -126,6 +126,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "door",
     "fan",
     "garage_door",
+    "gate",
     "humidifier",
     "lawn_mower",
     "light",
