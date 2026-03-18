@@ -254,6 +254,14 @@
           "walls_first": "Walls first"
         }
       },
+      "robot_cleaner_sound_mode": {
+        "name": "Sound mode",
+        "state": {
+          "mute": "Mute",
+          "tone": "Tone",
+          "voice": "Voice"
+        }
+      },
       "robot_cleaner_water_spray_level": {
         "name": "Water level",
         "state": {

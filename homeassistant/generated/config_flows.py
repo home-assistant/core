@@ -400,6 +400,7 @@ FLOWS = {
         "local_ip",
         "local_todo",
         "locative",
+        "lojack",
         "london_underground",
         "lookin",
         "loqed",
