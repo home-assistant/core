@@ -1,7 +1,111 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted covers.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted covers to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "awning_is_closed": {
+      "description": "Tests if one or more awnings are closed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Awning is closed"
+    },
+    "awning_is_open": {
+      "description": "Tests if one or more awnings are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Awning is open"
+    },
+    "blind_is_closed": {
+      "description": "Tests if one or more blinds are closed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Blind is closed"
+    },
+    "blind_is_open": {
+      "description": "Tests if one or more blinds are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Blind is open"
+    },
+    "curtain_is_closed": {
+      "description": "Tests if one or more curtains are closed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Curtain is closed"
+    },
+    "curtain_is_open": {
+      "description": "Tests if one or more curtains are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Curtain is open"
+    },
+    "shade_is_closed": {
+      "description": "Tests if one or more shades are closed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Shade is closed"
+    },
+    "shade_is_open": {
+      "description": "Tests if one or more shades are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Shade is open"
+    },
+    "shutter_is_closed": {
+      "description": "Tests if one or more shutters are closed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Shutter is closed"
+    },
+    "shutter_is_open": {
+      "description": "Tests if one or more shutters are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::cover::common::condition_behavior_description%]",
+          "name": "[%key:component::cover::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Shutter is open"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -87,6 +191,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

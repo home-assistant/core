@@ -165,3 +165,19 @@ VICTRON_VEBUS_SENSORS = {
     "inverter_charger_battery_temperature": "32",
     "inverter_charger_state_of_charge": "unknown",
 }
+
+# AC charger
+
+VICTRON_AC_CHARGER_SERVICE_INFO = BluetoothServiceInfo(
+    name="Smart Charger",
+    address="01:02:03:04:05:12",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("100030a308f926c1b5170a0d2280335bf12d5ed083")
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_AC_CHARGER_TOKEN = "c129cf8f75c3fe5a1655b481e205fb7d"
