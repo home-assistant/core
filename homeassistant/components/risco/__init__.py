@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import CancelledError
 import logging
 
 from pyrisco import (
@@ -192,6 +193,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             local_data: LocalData = hass.data[DOMAIN][entry.entry_id]
             try:
                 await local_data.system.disconnect()
+            except CancelledError:
+                raise
             except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "Failed to disconnect from local Risco panel", exc_info=True
