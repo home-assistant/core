@@ -1,4 +1,4 @@
-"""Tests for the todo item_added trigger."""
+"""Tests for the todo triggers."""
 
 from typing import Any
 
@@ -136,7 +136,7 @@ def _assert_service_calls(
 
 
 async def _setup_automation(hass: HomeAssistant, target: dict[str, Any]) -> None:
-    """Set up an automation with the todo.item_added trigger."""
+    """Set up an automation with the todo trigger."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
