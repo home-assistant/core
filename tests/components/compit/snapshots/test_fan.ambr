@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_fan_entities_snapshot[fan.nano_color_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,
