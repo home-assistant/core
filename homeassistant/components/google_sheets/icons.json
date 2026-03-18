@@ -1,0 +1,7 @@
+{
+  "services": {
+    "append_sheet": {
+      "service": "mdi:google-spreadsheet"
+    }
+  }
+}

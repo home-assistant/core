@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "add_tracking": {
+      "name": "Add tracking",
+      "description": "Adds a new tracking number to Aftership.",
+      "fields": {
+        "tracking_number": {
+          "name": "Tracking number",
+          "description": "Tracking number for the new tracking."
+        },
+        "title": {
+          "name": "Title",
+          "description": "A custom title for the new tracking."
+        },
+        "slug": {
+          "name": "Slug",
+          "description": "Slug (carrier) of the new tracking."
+        }
+      }
+    },
+    "remove_tracking": {
+      "name": "Remove tracking",
+      "description": "Removes a tracking number from Aftership.",
+      "fields": {
+        "tracking_number": {
+          "name": "[%key:component::aftership::services::add_tracking::fields::tracking_number::name%]",
+          "description": "Tracking number of the tracking to remove."
+        },
+        "slug": {
+          "name": "[%key:component::aftership::services::add_tracking::fields::slug::name%]",
+          "description": "Slug (carrier) of the tracking to remove."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The {integration_title} YAML configuration import failed",
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Code to handle a Livisi Binary Sensor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,23 +8,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LIVISI_STATE_CHANGE, LOGGER, WDS_DEVICE_TYPE
-from .coordinator import LivisiDataUpdateCoordinator
+from .const import LIVISI_STATE_CHANGE, LOGGER, WDS_DEVICE_TYPE
+from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
 from .entity import LivisiEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LivisiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary_sensor device."""
-    coordinator: LivisiDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     known_devices = set()
 
     @callback
@@ -52,7 +52,7 @@ class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
         capability_name: str,
@@ -85,7 +85,7 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
     ) -> None:

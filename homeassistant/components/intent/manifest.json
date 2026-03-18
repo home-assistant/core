@@ -1,7 +1,7 @@
 {
   "domain": "intent",
   "name": "Intent",
-  "codeowners": ["@home-assistant/core", "@synesthesiam"],
+  "codeowners": ["@home-assistant/core", "@synesthesiam", "@arturpragacz"],
   "config_flow": false,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/intent",

@@ -1,4 +1,5 @@
 """UptimeRobot binary_sensor platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -6,28 +7,28 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import UptimeRobotDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: UptimeRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UptimeRobot binary_sensors."""
-    coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         UptimeRobotBinarySensor(
             coordinator,
             BinarySensorEntityDescription(
                 key=str(monitor.id),
-                name=monitor.friendly_name,
                 device_class=BinarySensorDeviceClass.CONNECTIVITY,
             ),
             monitor=monitor,
@@ -42,4 +43,4 @@ class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return self.monitor_available
+        return bool(self.monitor.status == 2)

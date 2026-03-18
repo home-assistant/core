@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_lock_operator_autorelock
+  ReadOnlyDict({
+    'autorelock': True,
+    'friendly_name': 'online_with_doorsense Name Operator',
+    'keypad': False,
+    'manual': False,
+    'method': 'autorelock',
+    'remote': False,
+    'tag': False,
+  })
+# ---
+# name: test_lock_operator_keypad
+  ReadOnlyDict({
+    'autorelock': False,
+    'friendly_name': 'online_with_doorsense Name Operator',
+    'keypad': True,
+    'manual': False,
+    'method': 'keypad',
+    'remote': False,
+    'tag': False,
+  })
+# ---
+# name: test_lock_operator_manual
+  ReadOnlyDict({
+    'autorelock': False,
+    'friendly_name': 'online_with_doorsense Name Operator',
+    'keypad': False,
+    'manual': True,
+    'method': 'manual',
+    'remote': False,
+    'tag': False,
+  })
+# ---
+# name: test_lock_operator_remote
+  ReadOnlyDict({
+    'autorelock': False,
+    'friendly_name': 'online_with_doorsense Name Operator',
+    'keypad': False,
+    'manual': False,
+    'method': 'remote',
+    'remote': True,
+    'tag': False,
+  })
+# ---
+# name: test_restored_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'autorelock': False,
+      'entity_picture': 'image.png',
+      'friendly_name': 'online_with_doorsense Name Operator',
+      'keypad': False,
+      'manual': False,
+      'method': 'tag',
+      'remote': False,
+      'tag': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.online_with_doorsense_name_operator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Tag Unlock',
+  })
+# ---
+# name: test_unlock_operator_manual
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'autorelock': False,
+      'friendly_name': 'online_with_doorsense Name Operator',
+      'keypad': False,
+      'manual': True,
+      'method': 'manual',
+      'remote': False,
+      'tag': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.online_with_doorsense_name_operator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Your favorite elven princess',
+  })
+# ---
+# name: test_unlock_operator_tag
+  ReadOnlyDict({
+    'autorelock': False,
+    'friendly_name': 'online_with_doorsense Name Operator',
+    'keypad': False,
+    'manual': False,
+    'method': 'tag',
+    'remote': False,
+    'tag': True,
+  })
+# ---

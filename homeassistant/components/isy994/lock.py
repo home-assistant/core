@@ -1,4 +1,5 @@
 """Support for ISY locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,18 +7,16 @@ from typing import Any
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
-from .const import DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .models import IsyConfigEntry
 from .services import (
     SERVICE_DELETE_USER_CODE_SCHEMA,
     SERVICE_DELETE_ZWAVE_LOCK_USER_CODE,
@@ -46,17 +45,22 @@ def async_setup_lock_services(hass: HomeAssistant) -> None:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IsyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY lock platform."""
-    isy_data = hass.data[DOMAIN][entry.entry_id]
-    devices: dict[str, DeviceInfo] = isy_data.devices
-    entities: list[ISYLockEntity | ISYLockProgramEntity] = []
-    for node in isy_data.nodes[Platform.LOCK]:
-        entities.append(ISYLockEntity(node, devices.get(node.primary_node)))
+    isy_data = entry.runtime_data
+    devices = isy_data.devices
+    entities: list[ISYLockEntity | ISYLockProgramEntity] = [
+        ISYLockEntity(node, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.LOCK]
+    ]
 
-    for name, status, actions in isy_data.programs[Platform.LOCK]:
-        entities.append(ISYLockProgramEntity(name, status, actions))
+    entities.extend(
+        ISYLockProgramEntity(name, status, actions)
+        for name, status, actions in isy_data.programs[Platform.LOCK]
+    )
 
     async_add_entities(entities)
     async_setup_lock_services(hass)

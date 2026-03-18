@@ -1,5 +1,7 @@
 """Constants for Zodiac."""
+
 DOMAIN = "zodiac"
+DEFAULT_NAME = "Zodiac"
 
 # Signs
 SIGN_ARIES = "aries"

@@ -1,4 +1,5 @@
 """Support for ReCollect Waste sensors."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -12,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
@@ -28,17 +29,19 @@ SENSOR_TYPE_NEXT_PICKUP = "next_pickup"
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_CURRENT_PICKUP,
-        name="Current pickup",
+        translation_key=SENSOR_TYPE_CURRENT_PICKUP,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_NEXT_PICKUP,
-        name="Next pickup",
+        translation_key=SENSOR_TYPE_NEXT_PICKUP,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
     coordinator: DataUpdateCoordinator[list[PickupEvent]] = hass.data[DOMAIN][
@@ -88,7 +91,9 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
             self._attr_native_value = None
         else:
             self._attr_extra_state_attributes[ATTR_AREA_NAME] = event.area_name
-            self._attr_extra_state_attributes[
-                ATTR_PICKUP_TYPES
-            ] = async_get_pickup_type_names(self._entry, event.pickup_types)
+            self._attr_extra_state_attributes[ATTR_PICKUP_TYPES] = (
+                async_get_pickup_type_names(self._entry, event.pickup_types)
+            )
             self._attr_native_value = event.date
+
+        super()._handle_coordinator_update()

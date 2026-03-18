@@ -1,4 +1,5 @@
 """Switch support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -6,7 +7,7 @@ from typing import Any, cast
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import SkybellEntity
@@ -14,21 +15,23 @@ from .entity import SkybellEntity
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="do_not_disturb",
-        name="Do not disturb",
+        translation_key="do_not_disturb",
     ),
     SwitchEntityDescription(
         key="do_not_ring",
-        name="Do not ring",
+        translation_key="do_not_ring",
     ),
     SwitchEntityDescription(
         key="motion_sensor",
-        name="Motion sensor",
+        translation_key="motion_sensor",
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SkyBell switch."""
     async_add_entities(

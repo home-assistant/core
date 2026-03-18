@@ -1,4 +1,5 @@
 """Support for the QNAP QSW buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -15,23 +16,18 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, QSW_COORD_DATA, QSW_REBOOT
 from .coordinator import QswDataCoordinator
 from .entity import QswDataEntity
 
 
-@dataclass
-class QswButtonDescriptionMixin:
-    """Mixin to describe a Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class QswButtonDescription(ButtonEntityDescription):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[QnapQswApi], Awaitable[bool]]
-
-
-@dataclass
-class QswButtonDescription(ButtonEntityDescription, QswButtonDescriptionMixin):
-    """Class to describe a Button entity."""
 
 
 BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
@@ -39,14 +35,15 @@ BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         key=QSW_REBOOT,
-        name="Reboot",
         press_action=lambda qsw: qsw.reboot(),
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW buttons from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
@@ -58,6 +55,8 @@ async def async_setup_entry(
 class QswButton(QswDataEntity, ButtonEntity):
     """Define a QNAP QSW button."""
 
+    _attr_has_entity_name = True
+
     entity_description: QswButtonDescription
 
     def __init__(
@@ -68,7 +67,6 @@ class QswButton(QswDataEntity, ButtonEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self.entity_description = description
 

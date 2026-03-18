@@ -27,7 +27,8 @@
         },
         "characteristics": {
           "capabilities": ["INSIDE_TEMPERATURE_MEASUREMENT", "IDENTIFY"]
-        }
+        },
+        "childLockEnabled": false
       }
     ],
     "dateCreated": "2019-11-28T15:58:48.968Z",
@@ -178,5 +179,45 @@
     "deviceTypes": ["WR02"],
     "reportAvailable": false,
     "type": "AIR_CONDITIONING"
+  },
+  {
+    "id": 6,
+    "name": "Air Conditioning with fanlevel",
+    "type": "AIR_CONDITIONING",
+    "dateCreated": "2022-07-13T18: 06: 58.183Z",
+    "deviceTypes": ["WR02"],
+    "devices": [
+      {
+        "deviceType": "WR02",
+        "serialNo": "WR5",
+        "shortSerialNo": "WR5",
+        "currentFwVersion": "118.7",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2024-06-28T21: 04: 23.463Z"
+        },
+        "characteristics": {
+          "capabilities": ["INSIDE_TEMPERATURE_MEASUREMENT", "IDENTIFY"]
+        },
+        "accessPointWiFi": {
+          "ssid": "tado8480"
+        },
+        "commandTableUploadState": "FINISHED",
+        "duties": ["ZONE_UI", "ZONE_DRIVER", "ZONE_LEADER"]
+      }
+    ],
+    "reportAvailable": false,
+    "showScheduleSetup": false,
+    "supportsDazzle": true,
+    "dazzleEnabled": true,
+    "dazzleMode": {
+      "supported": true,
+      "enabled": true
+    },
+    "openWindowDetection": {
+      "supported": true,
+      "enabled": true,
+      "timeoutInSeconds": 900
+    }
   }
 ]

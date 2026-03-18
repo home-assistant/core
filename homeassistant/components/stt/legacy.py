@@ -1,16 +1,21 @@
 """Handle legacy speech-to-text platforms."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Coroutine
-from dataclasses import dataclass
 import logging
 from typing import Any
 
+from homeassistant.config import config_per_platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.helpers import discovery
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import (
+    SetupPhases,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 
 from .const import (
     DATA_PROVIDERS,
@@ -20,8 +25,8 @@ from .const import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    SpeechResultState,
 )
+from .models import SpeechMetadata, SpeechResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_default_provider(hass: HomeAssistant) -> str | None:
     """Return the domain of the default provider."""
-    if "cloud" in hass.data[DATA_PROVIDERS]:
-        return "cloud"
-
-    return next(iter(hass.data[DATA_PROVIDERS]), None)
+    providers = hass.data[DATA_PROVIDERS]
+    return next(iter(providers), None)
 
 
 @callback
@@ -40,11 +43,12 @@ def async_get_provider(
     hass: HomeAssistant, domain: str | None = None
 ) -> Provider | None:
     """Return provider."""
+    providers = hass.data[DATA_PROVIDERS]
     if domain:
-        return hass.data[DATA_PROVIDERS].get(domain)
+        return providers.get(domain)
 
     provider = async_default_provider(hass)
-    return hass.data[DATA_PROVIDERS][provider] if provider is not None else None
+    return providers[provider] if provider is not None else None
 
 
 @callback
@@ -54,7 +58,11 @@ def async_setup_legacy(
     """Set up legacy speech-to-text providers."""
     providers = hass.data[DATA_PROVIDERS] = {}
 
-    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
+    async def async_setup_platform(
+        p_type: str,
+        p_config: ConfigType | None = None,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Set up an STT platform."""
         if p_config is None:
             p_config = {}
@@ -65,18 +73,28 @@ def async_setup_legacy(
             return
 
         try:
-            provider = await platform.async_get_engine(hass, p_config, discovery_info)
+            with async_start_setup(
+                hass,
+                integration=p_type,
+                group=str(id(p_config)),
+                phase=SetupPhases.PLATFORM_SETUP,
+            ):
+                provider = await platform.async_get_engine(
+                    hass, p_config, discovery_info
+                )
 
-            provider.name = p_type
-            provider.hass = hass
+                provider.name = p_type
+                provider.hass = hass
 
-            providers[provider.name] = provider
-        except Exception:  # pylint: disable=broad-except
+                providers[provider.name] = provider
+        except Exception:
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 
     # Add discovery support
-    async def async_platform_discovered(platform, info):
+    async def async_platform_discovered(
+        platform: str, info: DiscoveryInfoType | None
+    ) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
@@ -85,33 +103,8 @@ def async_setup_legacy(
     return [
         async_setup_platform(p_type, p_config)
         for p_type, p_config in config_per_platform(config, DOMAIN)
+        if p_type
     ]
-
-
-@dataclass
-class SpeechMetadata:
-    """Metadata of audio stream."""
-
-    language: str
-    format: AudioFormats
-    codec: AudioCodecs
-    bit_rate: AudioBitRates
-    sample_rate: AudioSampleRates
-    channel: AudioChannels
-
-    def __post_init__(self) -> None:
-        """Finish initializing the metadata."""
-        self.bit_rate = AudioBitRates(int(self.bit_rate))
-        self.sample_rate = AudioSampleRates(int(self.sample_rate))
-        self.channel = AudioChannels(int(self.channel))
-
-
-@dataclass
-class SpeechResult:
-    """Result of audio Speech."""
-
-    text: str | None
-    result: SpeechResultState
 
 
 class Provider(ABC):

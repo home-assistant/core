@@ -1,4 +1,5 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
+
 from __future__ import annotations
 
 import logging
@@ -19,11 +20,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import FrontierSiliconConfigEntry
 from .browse_media import browse_node, browse_top_level
 from .const import DOMAIN, MEDIA_CONTENT_ID_PRESET
 
@@ -32,20 +33,31 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FrontierSiliconConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Frontier Silicon entity."""
 
-    afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
+    afsapi = config_entry.runtime_data
 
-    async_add_entities([AFSAPIDevice(config_entry.title, afsapi)], True)
+    async_add_entities(
+        [
+            AFSAPIDevice(
+                config_entry.entry_id,
+                config_entry.title,
+                afsapi,
+            )
+        ],
+        True,
+    )
 
 
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
     _attr_media_content_type: str = MediaType.CHANNEL
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -65,16 +77,15 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
+    def __init__(self, unique_id: str, name: str | None, afsapi: AFSAPI) -> None:
         """Initialize the Frontier Silicon API device."""
         self.fs_device = afsapi
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
+            identifiers={(DOMAIN, unique_id)},
             name=name,
         )
-        self._attr_name = name
-
+        self._attr_unique_id = unique_id
         self._max_volume: int | None = None
 
         self.__modes_by_label: dict[str, str] | None = None
@@ -107,18 +118,17 @@ class AFSAPIDevice(MediaPlayerEntity):
                 return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Reconnected to %s",
                 self.name or afsapi.webfsapi_endpoint,
             )
 
             self._attr_available = True
-        if not self._attr_name:
-            self._attr_name = await afsapi.get_friendly_name()
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                mode.label: mode.key for mode in await afsapi.get_modes()
+                (mode.label if mode.label else mode.id): mode.key
+                for mode in await afsapi.get_modes()
             }
             self._attr_source_list = list(self.__modes_by_label)
 
@@ -234,7 +244,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) + 1
-        await self.fs_device.set_volume(min(volume, self._max_volume))
+        await self.fs_device.set_volume(min(volume, self._max_volume or 1))
 
     async def async_volume_down(self) -> None:
         """Send volume down command."""
@@ -298,10 +308,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             # Keys of presets are 0-based, while the list shown on the device starts from 1
             preset = int(keys[0]) - 1
 
-            result = await self.fs_device.select_preset(preset)
+            await self.fs_device.select_preset(preset)
         else:
-            result = await self.fs_device.nav_select_item_via_path(keys)
+            await self.fs_device.nav_select_item_via_path(keys)
 
         await self.async_update()
         self._attr_media_content_id = media_id
-        return result

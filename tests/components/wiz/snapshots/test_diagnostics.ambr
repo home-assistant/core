@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'homeId': '**REDACTED**',
+      'mocked': 'mocked',
+      'roomId': '**REDACTED**',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '1.1.1.1',
+      }),
+      'title': 'Mock Title',
+    }),
+  })
+# ---

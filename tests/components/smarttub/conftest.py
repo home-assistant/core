@@ -1,5 +1,6 @@
 """Common fixtures for smarttub tests."""
 
+from typing import Any
 from unittest.mock import create_autospec, patch
 
 import pytest
@@ -7,19 +8,20 @@ import smarttub
 
 from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def config_data():
+def config_data() -> dict[str, Any]:
     """Provide configuration data for tests."""
     return {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
 
 
 @pytest.fixture
-def config_entry(config_data):
+def config_entry(config_data: dict[str, Any]) -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -29,7 +31,7 @@ def config_entry(config_data):
 
 
 @pytest.fixture
-async def setup_component(hass):
+async def setup_component(hass: HomeAssistant) -> None:
     """Set up the component."""
     assert await async_setup_component(hass, DOMAIN, {}) is True
 
@@ -79,6 +81,16 @@ def mock_spa(spa_state):
 
     spa_state.lights = [mock_light_off, mock_light_on]
 
+    mock_cover_sensor = create_autospec(smarttub.SpaSensor, instance=True)
+    mock_cover_sensor.spa = mock_spa
+    mock_cover_sensor.address = "address1"
+    mock_cover_sensor.name = "{cover-sensor-1}"
+    mock_cover_sensor.type = "ibs0x"
+    mock_cover_sensor.subType = "magnet"
+    mock_cover_sensor.magnet = True  # closed
+
+    spa_state.sensors = [mock_cover_sensor]
+
     mock_filter_reminder = create_autospec(smarttub.SpaReminder, instance=True)
     mock_filter_reminder.id = "FILTER01"
     mock_filter_reminder.name = "MyFilter"
@@ -125,6 +137,7 @@ def mock_spa_state():
             "cleanupCycle": "INACTIVE",
             "lights": [],
             "pumps": [],
+            "sensors": [],
         },
     )
 
@@ -162,7 +175,7 @@ def mock_api(account, spa):
 
 
 @pytest.fixture
-async def setup_entry(hass, config_entry):
+async def setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Initialize the config entry."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

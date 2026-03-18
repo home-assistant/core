@@ -1,0 +1,10 @@
+{
+  "_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "macAddress": "BB:BB:BB:BB:BB:BB",
+  "info": {
+    "name": "Station B"
+  },
+  "lastData": {
+    "tempf": 82.9
+  }
+}

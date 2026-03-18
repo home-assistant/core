@@ -1,4 +1,5 @@
 """Constants for the emulated_roku component."""
+
 DOMAIN = "emulated_roku"
 
 CONF_SERVERS = "servers"

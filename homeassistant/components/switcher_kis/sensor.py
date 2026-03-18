@@ -1,75 +1,92 @@
 """Switcher integration Sensor platform."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
-from aioswitcher.device import DeviceCategory
+from aioswitcher.device import (
+    DeviceCategory,
+    SwitcherBase,
+    SwitcherPowerBase,
+    SwitcherThermostatBase,
+    SwitcherTimedBase,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
+from homeassistant.const import UnitOfElectricCurrent, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
+from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
 
-@dataclass
-class AttributeDescription:
-    """Class to describe a sensor."""
+@dataclass(frozen=True, kw_only=True)
+class SwitcherSensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Switcher sensor entity."""
 
-    name: str
-    icon: str | None = None
-    unit: str | None = None
-    device_class: SensorDeviceClass | None = None
-    state_class: SensorStateClass | None = None
-    default_enabled: bool = True
+    value_fn: Callable[[SwitcherBase], StateType]
 
 
-POWER_SENSORS = {
-    "power_consumption": AttributeDescription(
-        name="Power Consumption",
-        unit=UnitOfPower.WATT,
+POWER_SENSORS: list[SwitcherSensorEntityDescription] = [
+    SwitcherSensorEntityDescription(
+        key="power_consumption",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: cast(SwitcherPowerBase, data).power_consumption,
     ),
-    "electric_current": AttributeDescription(
-        name="Electric Current",
-        unit=UnitOfElectricCurrent.AMPERE,
+    SwitcherSensorEntityDescription(
+        key="electric_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: cast(SwitcherPowerBase, data).electric_current,
     ),
-}
-
-TIME_SENSORS = {
-    "remaining_time": AttributeDescription(
-        name="Remaining Time",
-        icon="mdi:av-timer",
+]
+TIME_SENSORS: list[SwitcherSensorEntityDescription] = [
+    SwitcherSensorEntityDescription(
+        key="remaining_time",
+        translation_key="remaining_time",
+        value_fn=lambda data: cast(SwitcherTimedBase, data).remaining_time,
     ),
-    "auto_off_set": AttributeDescription(
-        name="Auto Shutdown",
-        icon="mdi:progress-clock",
-        default_enabled=False,
+    SwitcherSensorEntityDescription(
+        key="auto_off_set",
+        translation_key="auto_shutdown",
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: cast(SwitcherTimedBase, data).auto_shutdown,
     ),
-}
+]
+TEMPERATURE_SENSORS: list[SwitcherSensorEntityDescription] = [
+    SwitcherSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: cast(SwitcherThermostatBase, data).temperature,
+    ),
+]
 
 POWER_PLUG_SENSORS = POWER_SENSORS
-WATER_HEATER_SENSORS = {**POWER_SENSORS, **TIME_SENSORS}
+WATER_HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
+THERMOSTAT_SENSORS = TEMPERATURE_SENSORS
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher sensor from config entry."""
 
@@ -78,13 +95,18 @@ async def async_setup_entry(
         """Add sensors from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
             async_add_entities(
-                SwitcherSensorEntity(coordinator, attribute, info)
-                for attribute, info in POWER_PLUG_SENSORS.items()
+                SwitcherSensorEntity(coordinator, description)
+                for description in POWER_PLUG_SENSORS
             )
         elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
             async_add_entities(
-                SwitcherSensorEntity(coordinator, attribute, info)
-                for attribute, info in WATER_HEATER_SENSORS.items()
+                SwitcherSensorEntity(coordinator, description)
+                for description in WATER_HEATER_SENSORS
+            )
+        elif coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+            async_add_entities(
+                SwitcherSensorEntity(coordinator, description)
+                for description in THERMOSTAT_SENSORS
             )
 
     config_entry.async_on_unload(
@@ -92,36 +114,23 @@ async def async_setup_entry(
     )
 
 
-class SwitcherSensorEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], SensorEntity
-):
+class SwitcherSensorEntity(SwitcherEntity, SensorEntity):
     """Representation of a Switcher sensor entity."""
 
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        attribute: str,
-        description: AttributeDescription,
+        description: SwitcherSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self.attribute = attribute
-
-        # Entity class attributes
-        self._attr_name = f"{coordinator.name} {description.name}"
-        self._attr_icon = description.icon
-        self._attr_native_unit_of_measurement = description.unit
-        self._attr_device_class = description.device_class
-        self._attr_entity_registry_enabled_default = description.default_enabled
+        self.entity_description: SwitcherSensorEntityDescription = description
 
         self._attr_unique_id = (
-            f"{coordinator.device_id}-{coordinator.mac_address}-{attribute}"
+            f"{coordinator.device_id}-{coordinator.mac_address}-{description.key}"
         )
-        self._attr_device_info = {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
-        }
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return getattr(self.coordinator.data, self.attribute)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self.coordinator.data)

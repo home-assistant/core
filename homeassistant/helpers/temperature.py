@@ -1,4 +1,5 @@
 """Temperature helpers for Home Assistant."""
+
 from __future__ import annotations
 
 from numbers import Number
@@ -24,17 +25,14 @@ def display_temp(
         raise TypeError(f"Temperature is not a number: {temperature}")
 
     if temperature_unit != ha_unit:
-        temperature = TemperatureConverter.convert(
-            temperature, temperature_unit, ha_unit
+        temperature = TemperatureConverter.converter_factory(temperature_unit, ha_unit)(
+            temperature
         )
 
     # Round in the units appropriate
     if precision == PRECISION_HALVES:
-        temperature = round(temperature * 2) / 2.0
-    elif precision == PRECISION_TENTHS:
-        temperature = round(temperature, 1)
+        return round(temperature * 2) / 2.0
+    if precision == PRECISION_TENTHS:
+        return round(temperature, 1)
     # Integer as a fall back (PRECISION_WHOLE)
-    else:
-        temperature = round(temperature)
-
-    return temperature
+    return round(temperature)

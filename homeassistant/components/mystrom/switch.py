@@ -1,80 +1,52 @@
 """Support for myStrom switches/plugs."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from pymystrom.exceptions import MyStromConnectionError
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
+from .models import MyStromConfigEntry
 
 DEFAULT_NAME = "myStrom Switch"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MyStromConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
-    device = hass.data[DOMAIN][entry.entry_id].device
+    device = entry.runtime_data.device
     async_add_entities([MyStromSwitch(device, entry.title)])
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the myStrom switch/plug integration."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, plug, name):
         """Initialize the myStrom switch/plug."""
         self.plug = plug
-        self._attr_name = name
         self._attr_unique_id = self.plug.mac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.plug.mac)},
             name=name,
             manufacturer=MANUFACTURER,
             sw_version=self.plug.firmware,
+            connections={("mac", format_mac(self.plug.mac))},
+            configuration_url=self.plug.uri,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

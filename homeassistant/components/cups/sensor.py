@@ -1,4 +1,5 @@
 """Details about printers which are connected to CUPS."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,13 +9,19 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import CONF_PRINTERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +39,6 @@ ATTR_PRINTER_STATE_REASON = "printer_state_reason"
 ATTR_PRINTER_TYPE = "printer_type"
 ATTR_PRINTER_URI_SUPPORTED = "printer_uri_supported"
 
-CONF_PRINTERS = "printers"
 CONF_IS_CUPS_SERVER = "is_cups_server"
 
 DEFAULT_HOST = "127.0.0.1"
@@ -46,7 +52,7 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 PRINTER_STATES = {3: "idle", 4: "printing", 5: "stopped"}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PRINTERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_IS_CUPS_SERVER, default=DEFAULT_IS_CUPS_SERVER): cv.boolean,
@@ -68,12 +74,27 @@ def setup_platform(
     printers: list[str] = config[CONF_PRINTERS]
     is_cups: bool = config[CONF_IS_CUPS_SERVER]
 
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "CUPS",
+        },
+    )
+
     if is_cups:
         data = CupsData(host, port, None)
         data.update()
         if data.available is False:
             _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
-            raise PlatformNotReady()
+            raise PlatformNotReady
         assert data.printers is not None
 
         dev: list[SensorEntity] = []
@@ -84,8 +105,10 @@ def setup_platform(
             dev.append(CupsSensor(data, printer))
 
             if "marker-names" in data.attributes[printer]:
-                for marker in data.attributes[printer]["marker-names"]:
-                    dev.append(MarkerSensor(data, printer, marker, True))
+                dev.extend(
+                    MarkerSensor(data, printer, marker, True)
+                    for marker in data.attributes[printer]["marker-names"]
+                )
 
         add_entities(dev, True)
         return
@@ -94,7 +117,7 @@ def setup_platform(
     data.update()
     if data.available is False:
         _LOGGER.error("Unable to connect to IPP printer: %s:%s", host, port)
-        raise PlatformNotReady()
+        raise PlatformNotReady
 
     dev = []
     for printer in printers:

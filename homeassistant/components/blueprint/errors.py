@@ -1,4 +1,5 @@
 """Blueprint errors."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -46,7 +47,7 @@ class InvalidBlueprint(BlueprintWithNameException):
         domain: str | None,
         blueprint_name: str | None,
         blueprint_data: Any,
-        msg_or_exc: vol.Invalid,
+        msg_or_exc: str | vol.Invalid,
     ) -> None:
         """Initialize an invalid blueprint error."""
         if isinstance(msg_or_exc, vol.Invalid):

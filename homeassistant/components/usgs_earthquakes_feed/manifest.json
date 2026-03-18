@@ -6,5 +6,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aio_geojson_usgs_earthquakes"],
-  "requirements": ["aio-geojson-usgs-earthquakes==0.2"]
+  "quality_scale": "legacy",
+  "requirements": ["aio-geojson-usgs-earthquakes==0.3"]
 }

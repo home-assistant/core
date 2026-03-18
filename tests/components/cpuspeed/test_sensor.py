@@ -13,7 +13,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -25,13 +24,13 @@ from tests.common import MockConfigEntry
 
 async def test_sensor(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_cpuinfo: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the CPU Speed sensor."""
     await async_setup_component(hass, "homeassistant", {})
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("sensor.cpu_speed")
     assert entry
@@ -42,7 +41,6 @@ async def test_sensor(
     assert state
     assert state.state == "3.2"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "CPU Speed"
-    assert state.attributes.get(ATTR_ICON) == "mdi:pulse"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.FREQUENCY
 
     assert state.attributes.get(ATTR_ARCH) == "aargh"

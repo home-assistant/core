@@ -1,10 +1,10 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
+
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
@@ -16,22 +16,18 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 DOMAIN = "input_button"
 
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_ICON): cv.icon,
 }
@@ -61,9 +57,9 @@ class InputButtonStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
-    async def _process_create_data(self, data: dict) -> vol.Schema:
+    async def _process_create_data(self, data: dict) -> dict[str, str]:
         """Validate the config is valid."""
-        return self.CREATE_UPDATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -79,10 +75,6 @@ class InputButtonStorageCollection(collection.DictStorageCollection):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input button."""
     component = EntityComponent[InputButton](_LOGGER, DOMAIN, hass)
-
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     id_manager = collection.IDManager()
 
@@ -130,13 +122,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
-    component.async_register_entity_service(SERVICE_PRESS, {}, "_async_press_action")
+    component.async_register_entity_service(SERVICE_PRESS, None, "_async_press_action")
 
     return True
 
 
+# pylint: disable-next=hass-enforce-class-module
 class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
+
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -179,10 +174,9 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     async def async_press(self) -> None:
         """Press the button.
 
-        Left emtpty intentionally.
+        Left empty intentionally.
         The input button itself doesn't trigger anything.
         """
-        return None
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""

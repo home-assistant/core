@@ -1,11 +1,11 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "{name} {manufacturer} {model}",
     "step": {
       "user": {
         "description": "Choose a device to set up",
         "data": {
-          "address": "Device"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
@@ -18,12 +18,12 @@
         }
       },
       "single_adapter": {
-        "description": "Do you want to set up the Bluetooth adapter {name}?"
+        "description": "Do you want to set up the Bluetooth adapter {name} {manufacturer} {model}?"
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "no_adapters": "No unconfigured Bluetooth adapters found. There are {ignored_adapters} ignored adapters."
+      "no_adapters": "No unconfigured Bluetooth adapters found."
     }
   },
   "options": {
@@ -33,6 +33,24 @@
           "passive": "Passive scanning"
         }
       }
+    },
+    "abort": {
+      "remote_adapters_not_supported": "Bluetooth configuration for remote adapters is not supported.",
+      "local_adapters_no_passive_support": "Local Bluetooth adapters that do not support passive scanning cannot be configured."
+    }
+  },
+  "issues": {
+    "bluetooth_adapter_missing_permissions": {
+      "title": "Bluetooth adapter requires additional permissions",
+      "description": "The Bluetooth adapter **{adapter}** ({model}) is operating in degraded mode because your container needs additional permissions to fully access Bluetooth hardware.\n\nPlease follow the instructions in our documentation to add the required permissions:\n[Bluetooth permissions for Docker]({docs_url})\n\nAfter adding these permissions, restart your Home Assistant container for the changes to take effect."
+    },
+    "bluetooth_adapter_passive_mode_usb": {
+      "title": "Bluetooth USB adapter requires manual power cycle",
+      "description": "The Bluetooth adapter **{adapter}** ({model}) is stuck in passive scanning mode despite requesting active scanning mode. **Automatic recovery was attempted but failed.** This is likely a kernel, firmware, or operating system issue, and the adapter requires a manual power cycle to recover.\n\nIn passive mode, the adapter can only receive advertisements but cannot request additional data from devices, which will affect device discovery and functionality.\n\n**Manual intervention required:**\n1. **Unplug the USB adapter**\n2. Wait 5 seconds\n3. **Plug it back in**\n4. Wait for Home Assistant to detect the adapter\n\nIf the issue persists after power cycling:\n- Try a different USB port\n- Check for kernel/firmware updates\n- Consider using a different Bluetooth adapter"
+    },
+    "bluetooth_adapter_passive_mode_uart": {
+      "title": "Bluetooth adapter requires system power cycle",
+      "description": "The Bluetooth adapter **{adapter}** ({model}) is stuck in passive scanning mode despite requesting active scanning mode. **Automatic recovery was attempted but failed.** This is likely a kernel, firmware, or operating system issue, and the system requires a complete power cycle to recover the adapter.\n\nIn passive mode, the adapter can only receive advertisements but cannot request additional data from devices, which will affect device discovery and functionality.\n\n**Manual intervention required:**\n1. **Shut down the system completely** (not just a reboot)\n2. **Remove power** (unplug or turn off at the switch)\n3. Wait 10 seconds\n4. Restore power and boot the system\n\nIf the issue persists after power cycling:\n- Check for kernel/firmware updates\n- The onboard Bluetooth adapter may have hardware issues"
     }
   }
 }

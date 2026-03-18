@@ -1,11 +1,12 @@
 """Tests for the Abode light device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
@@ -27,10 +28,11 @@ from .common import setup_platform
 DEVICE_ID = "light.living_room_lamp"
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LIGHT_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry.unique_id == "741385f4388b2637df4c6b398fe50581"
@@ -43,8 +45,8 @@ async def test_attributes(hass: HomeAssistant) -> None:
     state = hass.states.get(DEVICE_ID)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 204
-    assert state.attributes.get(ATTR_RGB_COLOR) == (0, 63, 255)
-    assert state.attributes.get(ATTR_COLOR_TEMP) is None
+    assert state.attributes.get(ATTR_RGB_COLOR) == (0, 64, 255)
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
     assert state.attributes.get(ATTR_DEVICE_ID) == "ZB:db5b1a"
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")

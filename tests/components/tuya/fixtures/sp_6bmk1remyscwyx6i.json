@@ -1,0 +1,229 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Mirilla puerta",
+  "category": "sp",
+  "product_id": "6bmk1remyscwyx6i",
+  "product_name": "Smart DoorBell \uff08WiFi\uff09",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2024-03-05T12:13:24+00:00",
+  "create_time": "2024-03-05T12:13:24+00:00",
+  "update_time": "2025-09-06T07:21:05+00:00",
+  "function": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "nightvision_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["ir_mode", "color_mode"]
+      }
+    },
+    "wireless_lowpower": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 10,
+        "max": 50,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "wireless_awake": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pir_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2", "3"]
+      }
+    },
+    "basic_device_volume": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 1,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "humanoid_filter": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_anti_flicker": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "ipc_work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    }
+  },
+  "status_range": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_storge": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "sd_status": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 5,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "movement_detect_pic": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "sd_format_state": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -20000,
+        "max": 20000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "nightvision_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["ir_mode", "color_mode"]
+      }
+    },
+    "wireless_electricity": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 100,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "wireless_powermode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    },
+    "wireless_lowpower": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 10,
+        "max": 50,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "wireless_awake": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pir_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2", "3"]
+      }
+    },
+    "doorbell_pic": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "basic_device_volume": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 1,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "humanoid_filter": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_message": {
+      "type": "String",
+      "value": {}
+    },
+    "basic_anti_flicker": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "ipc_work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    }
+  },
+  "status": {
+    "basic_flip": false,
+    "basic_osd": true,
+    "sd_storge": "31147664|31043136|104528",
+    "sd_status": 1,
+    "sd_format": true,
+    "movement_detect_pic": "**REDACTED**",
+    "sd_format_state": 0,
+    "nightvision_mode": "color_mode",
+    "wireless_electricity": 100,
+    "wireless_powermode": 1,
+    "wireless_lowpower": 10,
+    "wireless_awake": false,
+    "pir_switch": 3,
+    "doorbell_pic": "",
+    "basic_device_volume": 51,
+    "humanoid_filter": false,
+    "alarm_message": "**REDACTED**",
+    "basic_anti_flicker": 0,
+    "ipc_work_mode": 0
+  },
+  "set_up": true,
+  "support_local": false
+}

@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_migration
+  ConfigEntrySnapshot({
+    'data': dict({
+      'host': 'example',
+      'port': 80,
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'p1_monitor',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+    ]),
+    'title': 'Mock Title',
+    'unique_id': 'unique_thingy',
+    'version': 2,
+  })
+# ---
+# name: test_port_migration
+  ConfigEntrySnapshot({
+    'data': dict({
+      'host': 'example',
+      'port': 80,
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'p1_monitor',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+    ]),
+    'title': 'Mock Title',
+    'unique_id': 'unique_thingy',
+    'version': 2,
+  })
+# ---

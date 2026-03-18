@@ -1,4 +1,5 @@
 """Helper script to update currency list from the official source."""
+
 from pathlib import Path
 
 from bs4 import BeautifulSoup

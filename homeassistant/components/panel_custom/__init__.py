@@ -1,4 +1,5 @@
 """Register a custom front end panel."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -92,6 +93,8 @@ async def async_register_panel(
     config: ConfigType | None = None,
     # If your panel should only be shown to admin users
     require_admin: bool = False,
+    # If your panel is used to configure an integration, needs the domain of the integration
+    config_panel_domain: str | None = None,
 ) -> None:
     """Register a new custom panel."""
     if js_url is None and module_url is None:
@@ -127,6 +130,7 @@ async def async_register_panel(
         frontend_url_path=frontend_url_path,
         config=config,
         require_admin=require_admin,
+        config_panel_domain=config_panel_domain,
     )
 
 

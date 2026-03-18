@@ -1,0 +1,1069 @@
+[
+  {
+    "id": 0,
+    "name": "West Berlin",
+    "output": 0,
+    "type": "manager",
+    "mode": "off",
+    "schedule": { "timer": {}, "footprint": {} }
+  },
+  {
+    "id": 1,
+    "name": "Lounge",
+    "output": 0,
+    "type": "radiator",
+    "mode": "off",
+    "temperature": 20,
+    "setpoint": 4,
+    "override": { "duration": 0, "setpoint": 20 },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 68400, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 68400, "setpoint": 20 },
+              { "end": 81000, "start": 75600, "setpoint": 18 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 68400, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 68400, "setpoint": 20 },
+              { "end": 81000, "start": 75600, "setpoint": 18 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 68400, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 68400, "setpoint": 20 },
+              { "end": 81000, "start": 75600, "setpoint": 18 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 68400, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 68400, "setpoint": 20 },
+              { "end": 81000, "start": 75600, "setpoint": 18 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 68400, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 68400, "setpoint": 20 },
+              { "end": 81000, "start": 75600, "setpoint": 18 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 68400, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 68400, "setpoint": 20 },
+              { "end": 81000, "start": 75600, "setpoint": 18 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 68400, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 68400, "setpoint": 20 },
+              { "end": 81000, "start": 75600, "setpoint": 18 }
+            ]
+          }
+        }
+      },
+      "footprint": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 17,
+            "heatingPeriods": [
+              { "end": 61200, "start": 0, "setpoint": 4 },
+              { "end": 86400, "start": 80100, "setpoint": 4 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 17,
+            "heatingPeriods": [
+              { "end": 61200, "start": 0, "setpoint": 4 },
+              { "end": 86400, "start": 80100, "setpoint": 4 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 17,
+            "heatingPeriods": [
+              { "end": 61200, "start": 0, "setpoint": 4 },
+              { "end": 86400, "start": 80100, "setpoint": 4 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 17,
+            "heatingPeriods": [
+              { "end": 61200, "start": 0, "setpoint": 4 },
+              { "end": 86400, "start": 80100, "setpoint": 4 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 17,
+            "heatingPeriods": [
+              { "end": 61200, "start": 0, "setpoint": 4 },
+              { "end": 86400, "start": 80100, "setpoint": 4 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 17,
+            "heatingPeriods": [
+              { "end": 61200, "start": 0, "setpoint": 4 },
+              { "end": 86400, "start": 80100, "setpoint": 4 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 17,
+            "heatingPeriods": [
+              { "end": 61200, "start": 0, "setpoint": 4 },
+              { "end": 86400, "start": 80100, "setpoint": 4 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 2,
+    "name": "Hall",
+    "output": 0,
+    "type": "radiator",
+    "mode": "off",
+    "temperature": 21,
+    "setpoint": 4,
+    "occupied": "False",
+    "override": { "duration": 0, "setpoint": 20 },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 73800, "start": 68400, "setpoint": 18.5 }
+            ]
+          }
+        }
+      },
+      "footprint": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 37800, "start": 32400, "setpoint": 20 },
+              { "end": 75600, "start": 56700, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 43500, "start": 31800, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 34200, "start": 27300, "setpoint": 20 },
+              { "end": 75600, "start": 60900, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 48300, "start": 28800, "setpoint": 20 },
+              { "end": 75600, "start": 75300, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 42000, "start": 28500, "setpoint": 20 },
+              { "end": 70800, "start": 53700, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 64500, "start": 28500, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 63900, "start": 53100, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 3,
+    "name": "Kitchen",
+    "output": 0,
+    "type": "radiator",
+    "mode": "off",
+    "temperature": 21.5,
+    "setpoint": 4,
+    "occupied": "False",
+    "override": { "duration": 0, "setpoint": 20 },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 70200, "start": 61200, "setpoint": 18.5 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 61200, "start": 29700, "setpoint": 6 },
+              { "end": 73800, "start": 68400, "setpoint": 18.5 }
+            ]
+          }
+        }
+      },
+      "footprint": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 38100, "start": 29100, "setpoint": 20 },
+              { "end": 75600, "start": 56700, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 51600, "start": 32400, "setpoint": 20 },
+              { "end": 74400, "start": 60600, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 33300, "start": 27300, "setpoint": 20 },
+              { "end": 75600, "start": 58800, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 48600, "start": 28800, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 71400, "start": 56400, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 74400, "start": 40800, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 63300, "start": 29700, "setpoint": 20 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 5,
+    "name": "Ensuite",
+    "output": 0,
+    "type": "radiator",
+    "mode": "off",
+    "temperature": 21,
+    "setpoint": 4,
+    "occupied": "False",
+    "override": { "duration": 0, "setpoint": 28 },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 16 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 16 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 16 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 16 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 16 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 16 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 16 }
+            ]
+          }
+        }
+      },
+      "footprint": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 12,
+            "heatingPeriods": [
+              { "end": 28800, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 81000, "setpoint": 16 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 12,
+            "heatingPeriods": [
+              { "end": 28800, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 81000, "setpoint": 16 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 12,
+            "heatingPeriods": [
+              { "end": 28800, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 81000, "setpoint": 16 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 12,
+            "heatingPeriods": [
+              { "end": 28800, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 81000, "setpoint": 16 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 12,
+            "heatingPeriods": [
+              { "end": 28800, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 81000, "setpoint": 16 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 12,
+            "heatingPeriods": [
+              { "end": 28800, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 81000, "setpoint": 16 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 12,
+            "heatingPeriods": [
+              { "end": 28800, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 81000, "setpoint": 16 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 7,
+    "name": "Guest room",
+    "output": 0,
+    "type": "radiator",
+    "mode": "off",
+    "temperature": 21,
+    "setpoint": 4,
+    "occupied": "True",
+    "override": { "duration": 0, "setpoint": 20 },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          }
+        }
+      },
+      "footprint": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 27,
+    "name": "Bedroom Socket",
+    "output": 1,
+    "type": "on / off",
+    "mode": "timer",
+    "setpoint": "True",
+    "override": { "duration": 0, "setpoint": "True" },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "monday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "tuesday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "wednesday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "thursday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "friday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "saturday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          }
+        }
+      },
+      "footprint": {}
+    }
+  },
+  {
+    "id": 28,
+    "name": "Kitchen Socket",
+    "output": 1,
+    "type": "on / off",
+    "mode": "timer",
+    "setpoint": "True",
+    "override": { "duration": 0, "setpoint": "True" },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [
+              { "end": 82800, "start": 27000, "setpoint": "True" }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [
+              { "end": 82800, "start": 27000, "setpoint": "True" }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [
+              { "end": 82800, "start": 27000, "setpoint": "True" }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [
+              { "end": 82800, "start": 27000, "setpoint": "True" }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [
+              { "end": 82800, "start": 27000, "setpoint": "True" }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [
+              { "end": 82800, "start": 27000, "setpoint": "True" }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [
+              { "end": 82800, "start": 27000, "setpoint": "True" }
+            ]
+          }
+        }
+      },
+      "footprint": {}
+    }
+  },
+  {
+    "id": 29,
+    "name": "Bedroom",
+    "output": 0,
+    "type": "radiator",
+    "mode": "off",
+    "temperature": 21.5,
+    "setpoint": 4,
+    "override": { "duration": 0, "setpoint": 23.5 },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 73800, "setpoint": 18.5 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 19.5 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          }
+        }
+      },
+      "footprint": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 30,
+    "name": "Study",
+    "output": 0,
+    "type": "radiator",
+    "mode": "off",
+    "temperature": 22,
+    "setpoint": 4,
+    "occupied": "False",
+    "override": { "duration": 0, "setpoint": 28 },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 75600, "start": 29700, "setpoint": 6 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14.5,
+            "heatingPeriods": [
+              { "end": 29700, "start": 27000, "setpoint": 18 },
+              { "end": 73800, "start": 29700, "setpoint": 6 },
+              { "end": 75600, "start": 73800, "setpoint": 14 },
+              { "end": 81000, "start": 75600, "setpoint": 18.5 }
+            ]
+          }
+        }
+      },
+      "footprint": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "monday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "tuesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "wednesday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "thursday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "friday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          },
+          "saturday": {
+            "defaultSetpoint": 14,
+            "heatingPeriods": [
+              { "end": 23400, "start": 0, "setpoint": 16 },
+              { "end": 86400, "start": 75600, "setpoint": 16 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": 32,
+    "name": "Study Socket",
+    "output": 0,
+    "type": "on / off",
+    "mode": "off",
+    "setpoint": "False",
+    "override": { "duration": 0, "setpoint": "True" },
+    "schedule": {
+      "timer": {
+        "weekly": {
+          "sunday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "monday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "tuesday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "wednesday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "thursday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "friday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          },
+          "saturday": {
+            "defaultSetpoint": "False",
+            "heatingPeriods": [{ "end": 86400, "start": 0, "setpoint": "True" }]
+          }
+        }
+      },
+      "footprint": {}
+    }
+  }
+]

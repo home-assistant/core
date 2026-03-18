@@ -1,10 +1,10 @@
 """BleBox devices setup tests."""
+
 import logging
 
 import blebox_uniapi
 import pytest
 
-from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -56,10 +56,10 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.data[DOMAIN]
+    assert hasattr(entry, "runtime_data")
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data.get(DOMAIN)
+    assert not hasattr(entry, "runtime_data")
 
     assert entry.state is ConfigEntryState.NOT_LOADED

@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "customers_out": {
+        "default": "mdi:power-plug-off"
+      },
+      "percent_customers_out": {
+        "default": "mdi:power-plug-off"
+      },
+      "outage_count": {
+        "default": "mdi:power-plug-off"
+      },
+      "customers_served": {
+        "default": "mdi:power-plug-off"
+      },
+      "map_alert": {
+        "default": "mdi:alert"
+      }
+    }
+  }
+}

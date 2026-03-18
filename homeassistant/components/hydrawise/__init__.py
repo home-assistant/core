@@ -1,62 +1,60 @@
 """Support for Hydrawise cloud."""
 
+from pydrawise import auth, hybrid
 
-from hydrawiser.core import Hydrawiser
-from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
-
-from homeassistant.components import persistent_notification
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import DOMAIN, LOGGER, NOTIFICATION_ID, NOTIFICATION_TITLE, SCAN_INTERVAL
-from .coordinator import HydrawiseDataUpdateCoordinator
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+from .const import APP_ID
+from .coordinator import (
+    HydrawiseConfigEntry,
+    HydrawiseMainDataUpdateCoordinator,
+    HydrawiseUpdateCoordinators,
+    HydrawiseWaterUseDataUpdateCoordinator,
 )
 
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Hunter Hydrawise component."""
-    conf = config[DOMAIN]
-    access_token = conf[CONF_ACCESS_TOKEN]
-    scan_interval = conf.get(CONF_SCAN_INTERVAL)
+_REQUIRED_AUTH_KEYS = (CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY)
 
-    try:
-        hydrawise = await hass.async_add_executor_job(Hydrawiser, access_token)
-    except (ConnectTimeout, HTTPError) as ex:
-        LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
-        _show_failure_notification(hass, str(ex))
-        return False
 
-    if not hydrawise.current_controller:
-        LOGGER.error("Failed to fetch Hydrawise data")
-        _show_failure_notification(hass, "Failed to fetch Hydrawise data.")
-        return False
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: HydrawiseConfigEntry
+) -> bool:
+    """Set up Hydrawise from a config entry."""
+    if any(k not in config_entry.data for k in _REQUIRED_AUTH_KEYS):
+        # If we are missing any required authentication keys, trigger a reauth flow.
+        raise ConfigEntryAuthFailed
 
-    hass.data[DOMAIN] = HydrawiseDataUpdateCoordinator(hass, hydrawise, scan_interval)
+    hydrawise = hybrid.HybridClient(
+        auth.HybridAuth(
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            config_entry.data[CONF_API_KEY],
+        ),
+        app_id=APP_ID,
+    )
 
-    # NOTE: We don't need to call async_config_entry_first_refresh() because
-    # data is fetched when the Hydrawiser object is instantiated.
-
+    main_coordinator = HydrawiseMainDataUpdateCoordinator(hass, config_entry, hydrawise)
+    await main_coordinator.async_config_entry_first_refresh()
+    water_use_coordinator = HydrawiseWaterUseDataUpdateCoordinator(
+        hass, config_entry, hydrawise, main_coordinator
+    )
+    await water_use_coordinator.async_config_entry_first_refresh()
+    config_entry.runtime_data = HydrawiseUpdateCoordinators(
+        main=main_coordinator,
+        water_use=water_use_coordinator,
+    )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
-def _show_failure_notification(hass: HomeAssistant, error: str) -> None:
-    persistent_notification.create(
-        hass,
-        f"Error: {error}<br />You will need to restart hass after fixing.",
-        title=NOTIFICATION_TITLE,
-        notification_id=NOTIFICATION_ID,
-    )
+async def async_unload_entry(hass: HomeAssistant, entry: HydrawiseConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,4 +1,5 @@
 """Support for interfacing with WS66i 6 zone home audio controller."""
+
 from pyws66i import WS66i, ZoneStatus
 
 from homeassistant.components.media_player import (
@@ -8,8 +9,8 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MAX_VOL
@@ -22,7 +23,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WS66i 6-zone amplifier platform from a config entry."""
     ws66i_data: Ws66iData = hass.data[DOMAIN][config_entry.entry_id]
@@ -46,6 +47,14 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(
         self,
@@ -64,18 +73,10 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._zone_id_idx: int = data_idx
         self._status: ZoneStatus = coordinator.data[data_idx]
         self._attr_source_list = ws66i_data.sources.name_list
-        self._attr_unique_id = f"{entry_id}_{self._zone_id}"
-        self._attr_supported_features = (
-            MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_STEP
-            | MediaPlayerEntityFeature.TURN_ON
-            | MediaPlayerEntityFeature.TURN_OFF
-            | MediaPlayerEntityFeature.SELECT_SOURCE
-        )
+        self._attr_unique_id = f"{entry_id}_{zone_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.unique_id))},
-            name=f"Zone {self._zone_id}",
+            name=f"Zone {zone_id}",
             manufacturer="Soundavo",
             model="WS66i 6-Zone Amplifier",
         )

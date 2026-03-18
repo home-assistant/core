@@ -1,4 +1,5 @@
 """Errors for the Wyoming integration."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

@@ -1,10 +1,12 @@
 """Constants for the schedule integration."""
+
 import logging
 from typing import Final
 
 DOMAIN: Final = "schedule"
 LOGGER = logging.getLogger(__package__)
 
+CONF_DATA: Final = "data"
 CONF_FRIDAY: Final = "friday"
 CONF_FROM: Final = "from"
 CONF_MONDAY: Final = "monday"
@@ -35,3 +37,5 @@ WEEKDAY_TO_CONF: Final = {
     5: CONF_SATURDAY,
     6: CONF_SUNDAY,
 }
+
+SERVICE_GET: Final = "get_schedule"

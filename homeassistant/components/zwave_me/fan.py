@@ -1,4 +1,5 @@
 """Representation of a fan."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,10 +8,10 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.FAN
 
@@ -18,7 +19,7 @@ DEVICE_NAME = ZWaveMePlatform.FAN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fan platform."""
 
@@ -43,7 +44,11 @@ async def async_setup_entry(
 class ZWaveMeFan(ZWaveMeEntity, FanEntity):
     """Representation of a ZWaveMe Fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     @property
     def percentage(self) -> int:

@@ -21,6 +21,40 @@
     {
       "local_name": "tps",
       "connectable": false
+    },
+    {
+      "local_name": "ITH-11-B",
+      "connectable": false
+    },
+    {
+      "local_name": "ITH-13-B",
+      "connectable": false
+    },
+    {
+      "local_name": "ITH-21-B",
+      "connectable": false
+    },
+    {
+      "local_name": "IBS-P02B",
+      "connectable": false
+    },
+    {
+      "local_name": "Ink@IAM-T1",
+      "connectable": true
+    },
+    {
+      "local_name": "Ink@IAM-T2",
+      "connectable": true
+    },
+    {
+      "manufacturer_id": 12628,
+      "manufacturer_data_start": [65, 67, 45],
+      "connectable": true
+    },
+    {
+      "manufacturer_id": 12884,
+      "manufacturer_data_start": [0, 98, 0],
+      "connectable": false
     }
   ],
   "codeowners": ["@bdraco"],
@@ -28,5 +62,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "iot_class": "local_push",
-  "requirements": ["inkbird-ble==0.5.6"]
+  "requirements": ["inkbird-ble==1.1.0"]
 }

@@ -1,0 +1,70 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "T\u00e9l\u00e9commande lumi\u00e8res ZigBee",
+  "category": "ykq",
+  "product_id": "bngwdjsr",
+  "product_name": "Remote controller",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-19T11:36:45+00:00",
+  "create_time": "2025-07-19T11:36:45+00:00",
+  "update_time": "2025-07-19T11:36:45+00:00",
+  "function": {
+    "switch_controller": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode_controller": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour"]
+      }
+    },
+    "bright_controller": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_controller": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "scene_controller": {
+      "type": "Enum",
+      "value": {
+        "range": ["scene_1", "scene_2", "scene_3", "scene_4"]
+      }
+    }
+  },
+  "status": {
+    "battery_percentage": 100,
+    "scene_controller": "scene_1"
+  },
+  "set_up": false,
+  "support_local": true
+}

@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,26 +15,19 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsentityDescriptionMixin:
-    """Mixin values for Rituals entities."""
+@dataclass(frozen=True, kw_only=True)
+class RitualsBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Rituals binary sensor entities."""
 
     is_on_fn: Callable[[Diffuser], bool]
     has_fn: Callable[[Diffuser], bool]
-
-
-@dataclass
-class RitualsBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RitualsentityDescriptionMixin
-):
-    """Class describing Rituals binary sensor entities."""
 
 
 ENTITY_DESCRIPTIONS = (
@@ -50,7 +44,7 @@ ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser binary sensors."""
     coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][

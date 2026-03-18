@@ -1,4 +1,5 @@
 """Support for IHC lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID, DOMAIN, IHC_CONTROLLER
-from .ihcdevice import IHCDevice
+from .entity import IHCEntity
 from .util import async_pulse, async_set_bool, async_set_int
 
 
@@ -49,7 +50,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class IhcLight(IHCDevice, LightEntity):
+class IhcLight(IHCEntity, LightEntity):
     """Representation of a IHC light.
 
     For dimmable lights, the associated IHC resource should be a light
@@ -96,29 +97,26 @@ class IhcLight(IHCDevice, LightEntity):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-        else:
-            if (brightness := self._brightness) == 0:
-                brightness = 255
+        elif (brightness := self._brightness) == 0:
+            brightness = 255
 
         if self._dimmable:
             await async_set_int(
                 self.hass, self.ihc_controller, self.ihc_id, int(brightness * 100 / 255)
             )
+        elif self._ihc_on_id:
+            await async_pulse(self.hass, self.ihc_controller, self._ihc_on_id)
         else:
-            if self._ihc_on_id:
-                await async_pulse(self.hass, self.ihc_controller, self._ihc_on_id)
-            else:
-                await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
+            await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._dimmable:
             await async_set_int(self.hass, self.ihc_controller, self.ihc_id, 0)
+        elif self._ihc_off_id:
+            await async_pulse(self.hass, self.ihc_controller, self._ihc_off_id)
         else:
-            if self._ihc_off_id:
-                await async_pulse(self.hass, self.ihc_controller, self._ihc_off_id)
-            else:
-                await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
+            await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC notifications."""

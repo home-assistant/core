@@ -1,49 +1,68 @@
 """Support for a ScreenLogic 'circuit' switch."""
-import logging
 
-from screenlogicpy.const import (
-    CODE,
-    DATA as SL_DATA,
-    GENERIC_CIRCUIT_NAMES,
-    INTERFACE_GROUP,
-)
+from dataclasses import dataclass
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+from screenlogicpy.const.data import ATTR, DEVICE
+from screenlogicpy.const.msg import CODE
+from screenlogicpy.device_const.circuit import GENERIC_CIRCUIT_NAMES, INTERFACE
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ScreenlogicDataUpdateCoordinator
-from .const import DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
-from .entity import ScreenLogicCircuitEntity
+from .const import LIGHT_CIRCUIT_FUNCTIONS
+from .entity import (
+    ScreenLogicCircuitEntity,
+    ScreenLogicPushEntityDescription,
+    ScreenLogicSwitchingEntity,
+)
+from .types import ScreenLogicConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
+
+@dataclass(frozen=True, kw_only=True)
+class ScreenLogicCircuitSwitchDescription(
+    SwitchEntityDescription, ScreenLogicPushEntityDescription
+):
+    """Describes a ScreenLogic switch entity."""
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ScreenLogicConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-    circuits = coordinator.gateway_data[SL_DATA.KEY_CIRCUITS]
-    async_add_entities(
-        [
-            ScreenLogicSwitch(
+    entities: list[ScreenLogicSwitchingEntity] = []
+    coordinator = config_entry.runtime_data
+    gateway = coordinator.gateway
+    for circuit_index, circuit_data in gateway.get_data(DEVICE.CIRCUIT).items():
+        if (
+            not circuit_data
+            or ((circuit_function := circuit_data.get(ATTR.FUNCTION)) is None)
+            or circuit_function in LIGHT_CIRCUIT_FUNCTIONS
+        ):
+            continue
+        circuit_name = circuit_data[ATTR.NAME]
+        circuit_interface = INTERFACE(circuit_data[ATTR.INTERFACE])
+        entities.append(
+            ScreenLogicCircuitSwitch(
                 coordinator,
-                circuit_num,
-                CODE.STATUS_CHANGED,
-                circuit["name"] not in GENERIC_CIRCUIT_NAMES
-                and circuit["interface"] != INTERFACE_GROUP.DONT_SHOW,
+                ScreenLogicCircuitSwitchDescription(
+                    subscription_code=CODE.STATUS_CHANGED,
+                    data_root=(DEVICE.CIRCUIT,),
+                    key=circuit_index,
+                    entity_registry_enabled_default=(
+                        circuit_name not in GENERIC_CIRCUIT_NAMES
+                        and circuit_interface != INTERFACE.DONT_SHOW
+                    ),
+                ),
             )
-            for circuit_num, circuit in circuits.items()
-            if circuit["function"] not in LIGHT_CIRCUIT_FUNCTIONS
-        ]
-    )
+        )
+
+    async_add_entities(entities)
 
 
-class ScreenLogicSwitch(ScreenLogicCircuitEntity, SwitchEntity):
+class ScreenLogicCircuitSwitch(ScreenLogicCircuitEntity, SwitchEntity):
     """Class to represent a ScreenLogic Switch."""
+
+    entity_description: ScreenLogicCircuitSwitchDescription

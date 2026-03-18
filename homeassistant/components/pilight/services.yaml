@@ -1,10 +1,6 @@
 send:
-  name: Send
-  description: Send RF code to Pilight device
   fields:
     protocol:
-      name: Protocol
-      description: "Protocol that Pilight recognizes. See https://manual.pilight.org/protocols/index.html for supported protocols and additional parameters that each protocol supports"
       required: true
       example: "lirc"
       selector:

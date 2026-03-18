@@ -1,9 +1,9 @@
 """Platform for shared base classes for sensors."""
+
 from __future__ import annotations
 
-from typing import TypeVar
-
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -13,17 +13,12 @@ from .coordinator import (
     FlumeNotificationDataUpdateCoordinator,
 )
 
-_FlumeCoordinatorT = TypeVar(
-    "_FlumeCoordinatorT",
-    bound=(
-        FlumeDeviceDataUpdateCoordinator
-        | FlumeDeviceConnectionUpdateCoordinator
-        | FlumeNotificationDataUpdateCoordinator
-    ),
-)
 
-
-class FlumeEntity(CoordinatorEntity[_FlumeCoordinatorT]):
+class FlumeEntity[
+    _FlumeCoordinatorT: FlumeDeviceDataUpdateCoordinator
+    | FlumeDeviceConnectionUpdateCoordinator
+    | FlumeNotificationDataUpdateCoordinator
+](CoordinatorEntity[_FlumeCoordinatorT]):
     """Base entity class."""
 
     _attr_attribution = "Data provided by Flume API"
@@ -57,7 +52,7 @@ class FlumeEntity(CoordinatorEntity[_FlumeCoordinatorT]):
             configuration_url="https://portal.flumewater.com",
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Request an update when added."""
         await super().async_added_to_hass()
         # We do not ask for an update with async_add_entities()

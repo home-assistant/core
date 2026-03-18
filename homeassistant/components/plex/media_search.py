@@ -1,4 +1,5 @@
 """Helper methods to search for Plex media."""
+
 from __future__ import annotations
 
 import logging

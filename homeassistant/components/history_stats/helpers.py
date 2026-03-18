@@ -1,4 +1,5 @@
 """Helpers to make instant statistics about your history."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,7 +9,7 @@ import math
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ def async_calculate_period(
     duration: datetime.timedelta | None,
     start_template: Template | None,
     end_template: Template | None,
+    log_errors: bool = True,
 ) -> tuple[datetime.datetime, datetime.datetime]:
     """Parse the templates and return the period."""
     bounds: dict[str, datetime.datetime | None] = {
@@ -36,13 +38,17 @@ def async_calculate_period(
         if template is None:
             continue
         try:
-            rendered = template.async_render()
+            rendered = template.async_render(
+                log_fn=None if log_errors else lambda *args, **kwargs: None
+            )
         except (TemplateError, TypeError) as ex:
-            if ex.args and not ex.args[0].startswith(
-                "UndefinedError: 'None' has no attribute"
+            if (
+                log_errors
+                and ex.args
+                and not ex.args[0].startswith("UndefinedError: 'None' has no attribute")
             ):
                 _LOGGER.error("Error parsing template for field %s", bound, exc_info=ex)
-            raise
+            raise type(ex)(f"Error parsing template for field {bound}: {ex}") from ex
         if isinstance(rendered, str):
             bounds[bound] = dt_util.parse_datetime(rendered)
         if bounds[bound] is not None:

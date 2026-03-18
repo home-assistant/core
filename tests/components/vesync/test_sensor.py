@@ -1,15 +1,16 @@
 """Tests for the sensor module."""
+
 import pytest
-import requests_mock
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ALL_DEVICE_NAMES, mock_devices_response
+from .common import ALL_DEVICE_NAMES, ENTITY_HUMIDIFIER_HUMIDITY, mock_devices_response
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
@@ -19,13 +20,13 @@ async def test_sensor_state(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    requests_mock: requests_mock.Mocker,
+    aioclient_mock: AiohttpClientMocker,
     device_name: str,
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
     # Configure the API devices call for device_name
-    mock_devices_response(requests_mock, device_name)
+    mock_devices_response(aioclient_mock, device_name)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -48,3 +49,11 @@ async def test_sensor_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+async def test_humidity(
+    hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
+) -> None:
+    """Test the state of humidity sensor entity."""
+
+    assert hass.states.get(ENTITY_HUMIDIFIER_HUMIDITY).state == "35"

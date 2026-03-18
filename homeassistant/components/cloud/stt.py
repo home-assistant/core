@@ -1,4 +1,5 @@
 """Support for the cloud for speech to text service."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
@@ -13,39 +14,44 @@ from homeassistant.components.stt import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    Provider,
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
+    SpeechToTextEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.setup import async_when_setup
 
+from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
-from .const import DOMAIN
+from .const import DATA_CLOUD, DATA_PLATFORMS_SETUP, STT_ENTITY_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_engine(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> CloudProvider:
-    """Set up Cloud speech component."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
-
-    cloud_provider = CloudProvider(cloud)
-    if discovery_info is not None:
-        discovery_info["platform_loaded"].set()
-    return cloud_provider
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Home Assistant Cloud speech platform via config entry."""
+    stt_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
+    stt_platform_loaded.set()
+    cloud = hass.data[DATA_CLOUD]
+    async_add_entities([CloudProviderEntity(cloud)])
 
 
-class CloudProvider(Provider):
-    """NabuCasa speech API provider."""
+class CloudProviderEntity(SpeechToTextEntity):
+    """Home Assistant Cloud speech API provider."""
+
+    _attr_name = "Home Assistant Cloud"
+    _attr_unique_id = STT_ENTITY_UNIQUE_ID
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
-        """Home Assistant NabuCasa Speech to text."""
+        """Initialize cloud Speech to text entity."""
         self.cloud = cloud
 
     @property
@@ -77,6 +83,21 @@ class CloudProvider(Provider):
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is about to be added to hass."""
+
+        async def pipeline_setup(hass: HomeAssistant, _comp: str) -> None:
+            """When assist_pipeline is set up."""
+            assert self.platform.config_entry
+            self.platform.config_entry.async_create_task(
+                hass,
+                async_migrate_cloud_pipeline_engine(
+                    self.hass, platform=Platform.STT, engine_id=self.entity_id
+                ),
+            )
+
+        async_when_setup(self.hass, "assist_pipeline", pipeline_setup)
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]

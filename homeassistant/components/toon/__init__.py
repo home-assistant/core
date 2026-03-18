@@ -1,4 +1,5 @@
 """Support for Toon van Eneco devices."""
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -88,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
-    coordinator = ToonDataUpdateCoordinator(hass, entry=entry, session=session)
+    coordinator = ToonDataUpdateCoordinator(hass, entry, session)
     await coordinator.toon.activate_agreement(
         agreement_id=entry.data[CONF_AGREEMENT_ID]
     )
@@ -118,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # If Home Assistant is already in a running state, register the webhook
     # immediately, else trigger it after Home Assistant has finished starting.
-    if hass.state == CoreState.running:
+    if hass.state is CoreState.running:
         await coordinator.register_webhook()
     else:
         hass.bus.async_listen_once(

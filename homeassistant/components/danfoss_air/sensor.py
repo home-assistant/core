@@ -1,4 +1,5 @@
 """Support for the for Danfoss Air HRV sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DANFOSS_AIR_DOMAIN
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the available Danfoss Air sensors etc."""
-    data = hass.data[DANFOSS_AIR_DOMAIN]
+    data = hass.data[DOMAIN]
 
     sensors = [
         [
@@ -96,14 +97,13 @@ def setup_platform(
         ],
     ]
 
-    dev = []
-
-    for sensor in sensors:
-        dev.append(
+    add_entities(
+        (
             DanfossAir(data, sensor[0], sensor[1], sensor[2], sensor[3], sensor[4])
-        )
-
-    add_entities(dev, True)
+            for sensor in sensors
+        ),
+        True,
+    )
 
 
 class DanfossAir(SensorEntity):

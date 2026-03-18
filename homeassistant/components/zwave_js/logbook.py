@@ -1,4 +1,5 @@
 """Describe Z-Wave JS logbook events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,7 +9,7 @@ from zwave_js_server.const import CommandClass
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_COMMAND_CLASS,

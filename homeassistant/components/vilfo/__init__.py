@@ -1,4 +1,5 @@
 """The Vilfo Router integration."""
+
 from datetime import timedelta
 import logging
 
@@ -104,5 +105,5 @@ class VilfoRouterData:
             return
 
         if self.available and self._unavailable_logged:
-            _LOGGER.info("Vilfo Router %s is available again", self.host)
+            _LOGGER.warning("Vilfo Router %s is available again", self.host)
             self._unavailable_logged = False

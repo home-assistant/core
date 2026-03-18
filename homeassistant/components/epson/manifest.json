@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/epson",
   "iot_class": "local_polling",
   "loggers": ["epson_projector"],
-  "requirements": ["epson-projector==0.5.0"]
+  "requirements": ["epson-projector==0.5.1"]
 }

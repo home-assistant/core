@@ -1,4 +1,5 @@
 """Support for the Airzone Cloud diagnostics."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,6 +8,7 @@ from typing import Any
 from aioairzone_cloud.const import (
     API_CITY,
     API_GROUP_ID,
+    API_GROUPS,
     API_LOCATION_ID,
     API_OLD_ID,
     API_PIN,
@@ -19,17 +21,14 @@ from aioairzone_cloud.const import (
     RAW_WEBSERVERS,
 )
 
-from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneCloudConfigEntry
 
 TO_REDACT_API = [
     API_CITY,
-    API_GROUP_ID,
     API_LOCATION_ID,
     API_OLD_ID,
     API_PIN,
@@ -58,11 +57,17 @@ def gather_ids(api_data: dict[str, Any]) -> dict[str, Any]:
             ids[dev_id] = f"device{dev_idx}"
             dev_idx += 1
 
+    group_idx = 1
     inst_idx = 1
-    for inst_id in api_data[RAW_INSTALLATIONS]:
+    for inst_id, inst_data in api_data[RAW_INSTALLATIONS].items():
         if inst_id not in ids:
             ids[inst_id] = f"installation{inst_idx}"
             inst_idx += 1
+        for group in inst_data[API_GROUPS]:
+            group_id = group[API_GROUP_ID]
+            if group_id not in ids:
+                ids[group_id] = f"group{group_idx}"
+                group_idx += 1
 
     ws_idx = 1
     for ws_id in api_data[RAW_WEBSERVERS]:
@@ -130,10 +135,10 @@ def redact_all(
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: AirzoneCloudConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     raw_data = coordinator.airzone.raw_data()
     ids = gather_ids(raw_data)
 

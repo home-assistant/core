@@ -1,27 +1,19 @@
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.11
+FROM mcr.microsoft.com/vscode/devcontainers/base:debian
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Uninstall pre-installed formatting and linting tools
-# They would conflict with our pinned versions
 RUN \
-    pipx uninstall black \
-    && pipx uninstall pydocstyle \
-    && pipx uninstall pycodestyle \
-    && pipx uninstall mypy \
-    && pipx uninstall pylint
-
-RUN \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && apt-get update \
+    apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # Additional library needed by some tests and accordingly by VScode Tests Discovery
         bluez \
+        ffmpeg \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \
         libavdevice-dev \
         libavutil-dev \
+        libgammu-dev \
         libswscale-dev \
         libswresample-dev \
         libavfilter-dev \
@@ -31,24 +23,38 @@ RUN \
         libxml2 \
         git \
         cmake \
+        autoconf \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Add go2rtc binary
+COPY --from=ghcr.io/alexxit/go2rtc:latest /usr/local/bin/go2rtc /bin/go2rtc
+
 WORKDIR /usr/src
 
-# Setup hass-release
-RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
-    && pip3 install -e hass-release/
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-WORKDIR /workspaces
+RUN uv python install 3.13.2
+
+USER vscode
+ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
+RUN uv venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+WORKDIR /tmp
+
+# Setup hass-release
+RUN git clone --depth 1 https://github.com/home-assistant/hass-release ~/hass-release \
+    && uv pip install -e ~/hass-release/
 
 # Install Python dependencies from requirements
 COPY requirements.txt ./
 COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
-RUN pip3 install -r requirements.txt
+RUN uv pip install -r requirements.txt
 COPY requirements_test.txt requirements_test_pre_commit.txt ./
-RUN pip3 install -r requirements_test.txt
-RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
+RUN uv pip install -r requirements_test.txt
+
+WORKDIR /workspaces
 
 # Set the default shell to bash instead of sh
-ENV SHELL /bin/bash
+ENV SHELL=/bin/bash

@@ -1,14 +1,10 @@
 """Tests for the Jellyfin sensor platform."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -17,20 +13,18 @@ from tests.common import MockConfigEntry
 
 async def test_watching(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_jellyfin: MagicMock,
 ) -> None:
     """Test the Jellyfin watching sensor."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("sensor.jellyfin_server")
+    state = hass.states.get("sensor.jellyfin_server_active_clients")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "JELLYFIN-SERVER"
-    assert state.attributes.get(ATTR_ICON) == "mdi:television-play"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "JELLYFIN-SERVER Active clients"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Watching"
     assert state.state == "3"
 
     entry = entity_registry.async_get(state.entity_id)

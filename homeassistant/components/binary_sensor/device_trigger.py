@@ -1,4 +1,5 @@
 """Provides device triggers for binary sensors."""
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -112,8 +113,8 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_NO_LIGHT},
     ],
     BinarySensorDeviceClass.LOCK: [
-        {CONF_TYPE: CONF_LOCKED},
         {CONF_TYPE: CONF_NOT_LOCKED},
+        {CONF_TYPE: CONF_LOCKED},
     ],
     BinarySensorDeviceClass.MOISTURE: [
         {CONF_TYPE: CONF_MOIST},

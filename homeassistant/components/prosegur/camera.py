@@ -1,4 +1,5 @@
 """Support for Prosegur cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -10,9 +11,9 @@ from pyprosegur.installation import Camera as InstallationCamera, Installation
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
@@ -23,14 +24,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Prosegur camera platform."""
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_REQUEST_IMAGE,
-        {},
+        None,
         "async_request_image",
     )
 
@@ -50,6 +53,8 @@ async def async_setup_entry(
 class ProsegurCamera(Camera):
     """Representation of a Smart Prosegur Camera."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, installation: Installation, camera: InstallationCamera, auth: Auth
     ) -> None:
@@ -59,14 +64,14 @@ class ProsegurCamera(Camera):
         self._installation = installation
         self._camera = camera
         self._auth = auth
+        self._attr_unique_id = f"{installation.contract} {camera.id}"
         self._attr_name = camera.description
-        self._attr_unique_id = f"{self._installation.contract} {camera.id}"
 
         self._attr_device_info = DeviceInfo(
-            name=self._camera.description,
+            name=f"Contract {installation.contract}",
             manufacturer="Prosegur",
-            model="smart camera",
-            identifiers={(DOMAIN, self._installation.contract)},
+            model="smart",
+            identifiers={(DOMAIN, installation.contract)},
             configuration_url="https://smart.prosegur.com",
         )
 

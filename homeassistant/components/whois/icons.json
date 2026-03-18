@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "admin": {
+        "default": "mdi:account-star"
+      },
+      "days_until_expiration": {
+        "default": "mdi:calendar-clock"
+      },
+      "owner": {
+        "default": "mdi:account"
+      },
+      "registrant": {
+        "default": "mdi:account-edit"
+      },
+      "registrar": {
+        "default": "mdi:store"
+      },
+      "reseller": {
+        "default": "mdi:store"
+      },
+      "status": {
+        "default": "mdi:check-circle"
+      }
+    }
+  }
+}

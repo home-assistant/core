@@ -1,12 +1,8 @@
 # Describes the format for available recorder services
 
 purge:
-  name: Purge
-  description: Start purge task - to clean up old data from your database.
   fields:
     keep_days:
-      name: Days to keep
-      description: Number of history days to keep in database after purge.
       selector:
         number:
           min: 0
@@ -14,46 +10,35 @@ purge:
           unit_of_measurement: days
 
     repack:
-      name: Repack
-      description: Attempt to save disk space by rewriting the entire database file.
       default: false
       selector:
         boolean:
 
     apply_filter:
-      name: Apply filter
-      description: Apply entity_id and event_type filter in addition to time based purge.
       default: false
       selector:
         boolean:
 
 purge_entities:
-  name: Purge Entities
-  description: Start purge task to remove specific entities from your database.
-  target:
-    entity: {}
   fields:
+    entity_id:
+      required: false
+      selector:
+        entity:
+          multiple: true
     domains:
-      name: Domains to remove
-      description: List the domains that need to be removed from the recorder database.
       example: "sun"
       required: false
-      default: []
       selector:
         object:
 
     entity_globs:
-      name: Entity Globs to remove
-      description: List the glob patterns to select entities for removal from the recorder database.
       example: "domain*.object_id*"
       required: false
-      default: []
       selector:
         object:
 
     keep_days:
-      name: Days to keep
-      description: Number of history days to keep in database of matching rows. The default of 0 days will remove all matching rows.
       default: 0
       selector:
         number:
@@ -62,9 +47,64 @@ purge_entities:
           unit_of_measurement: days
 
 disable:
-  name: Disable
-  description: Stop the recording of events and state changes
-
 enable:
-  name: Enable
-  description: Start the recording of events and state changes
+
+get_statistics:
+  fields:
+    start_time:
+      required: true
+      example: "2025-01-01 00:00:00"
+      selector:
+        datetime:
+
+    end_time:
+      required: false
+      example: "2025-01-02 00:00:00"
+      selector:
+        datetime:
+
+    statistic_ids:
+      required: true
+      example:
+        - sensor.energy_consumption
+        - sensor.temperature
+      selector:
+        statistic:
+          multiple: true
+
+    period:
+      required: true
+      example: "hour"
+      selector:
+        select:
+          options:
+            - "5minute"
+            - "hour"
+            - "day"
+            - "week"
+            - "month"
+
+    types:
+      required: true
+      example:
+        - "mean"
+        - "sum"
+      selector:
+        select:
+          options:
+            - "change"
+            - "last_reset"
+            - "max"
+            - "mean"
+            - "min"
+            - "state"
+            - "sum"
+          multiple: true
+
+    units:
+      required: false
+      example:
+        energy: "kWh"
+        temperature: "°C"
+      selector:
+        object:

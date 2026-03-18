@@ -1,10 +1,10 @@
 """The tests for the Vultr sensor platform."""
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import vultr as base_vultr
-from homeassistant.components.vultr import CONF_SUBSCRIPTION
-import homeassistant.components.vultr.sensor as vultr
+from homeassistant.components.vultr import CONF_SUBSCRIPTION, sensor as vultr
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,

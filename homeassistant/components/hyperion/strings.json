@@ -5,6 +5,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Hyperion server."
         }
       },
       "auth": {
@@ -15,7 +18,7 @@
         }
       },
       "create_token": {
-        "description": "Choose **Submit** below to request a new authentication token. You will be redirected to the Hyperion UI to approve the request. Please verify the shown id is \"{auth_id}\"",
+        "description": "Choose **Submit** below to request a new authentication token. You will be redirected to the Hyperion UI to approve the request. Please verify the shown ID is \"{auth_id}\"",
         "title": "Automatically create new authentication token"
       },
       "create_token_external": {
@@ -37,7 +40,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "auth_new_token_not_granted_error": "Newly created token was not approved on Hyperion UI",
       "auth_new_token_not_work_error": "Failed to authenticate using newly created token",
-      "no_id": "The Hyperion Ambilight instance did not report its id",
+      "no_id": "The Hyperion Ambilight instance did not report its ID",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
@@ -48,6 +51,45 @@
           "priority": "Hyperion priority to use for colors and effects",
           "effect_show_list": "Hyperion effects to show"
         }
+      }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "all": {
+        "name": "Component all"
+      },
+      "smoothing": {
+        "name": "Component smoothing"
+      },
+      "blackbar_detection": {
+        "name": "Component blackbar detection"
+      },
+      "forwarder": {
+        "name": "Component forwarder"
+      },
+      "boblight_server": {
+        "name": "Component boblight server"
+      },
+      "platform_capture": {
+        "name": "Component platform capture"
+      },
+      "led_device": {
+        "name": "Component LED device"
+      },
+      "usb_capture": {
+        "name": "Component USB capture"
+      },
+      "audio_capture": {
+        "name": "Component Audio capture"
+      }
+    },
+    "sensor": {
+      "visible_priority": {
+        "name": "Visible priority"
       }
     }
   }

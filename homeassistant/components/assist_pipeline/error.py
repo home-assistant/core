@@ -18,8 +18,35 @@ class PipelineNotFound(PipelineError):
     """Unspecified pipeline picked."""
 
 
+class WakeWordDetectionError(PipelineError):
+    """Error in wake-word-detection portion of pipeline."""
+
+
+class WakeWordDetectionAborted(WakeWordDetectionError):
+    """Wake-word-detection was aborted."""
+
+    def __init__(self) -> None:
+        """Set error message."""
+        super().__init__("wake_word_detection_aborted", "")
+
+
+class WakeWordTimeoutError(WakeWordDetectionError):
+    """Timeout when wake word was not detected."""
+
+
 class SpeechToTextError(PipelineError):
     """Error in speech-to-text portion of pipeline."""
+
+
+class DuplicateWakeUpDetectedError(WakeWordDetectionError):
+    """Error when multiple voice assistants wake up at the same time (same wake word)."""
+
+    def __init__(self, wake_up_phrase: str) -> None:
+        """Set error message."""
+        super().__init__(
+            "duplicate_wake_up_detected",
+            f"Duplicate wake-up detected for {wake_up_phrase}",
+        )
 
 
 class IntentRecognitionError(PipelineError):

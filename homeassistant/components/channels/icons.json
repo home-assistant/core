@@ -1,0 +1,13 @@
+{
+  "services": {
+    "seek_forward": {
+      "service": "mdi:skip-forward"
+    },
+    "seek_backward": {
+      "service": "mdi:skip-backward"
+    },
+    "seek_by": {
+      "service": "mdi:timer-check-outline"
+    }
+  }
+}

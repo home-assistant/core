@@ -1,48 +1,39 @@
 """Diagnostics support for WLED."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import WLEDDataUpdateCoordinator
+from . import WLEDConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: WLEDConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     data: dict[str, Any] = {
-        "info": async_redact_data(coordinator.data.info.__dict__, "wifi"),
-        "state": coordinator.data.state.__dict__,
+        "info": async_redact_data(coordinator.data.info.to_dict(), "wifi"),
+        "state": coordinator.data.state.to_dict(),
         "effects": {
-            effect.effect_id: effect.name for effect in coordinator.data.effects
+            effect.effect_id: effect.name
+            for effect in coordinator.data.effects.values()
         },
         "palettes": {
-            palette.palette_id: palette.name for palette in coordinator.data.palettes
+            palette.palette_id: palette.name
+            for palette in coordinator.data.palettes.values()
         },
         "playlists": {
-            playlist.playlist_id: {
-                "name": playlist.name,
-                "repeat": playlist.repeat,
-                "shuffle": playlist.shuffle,
-                "end": playlist.end.preset_id if playlist.end else None,
-            }
-            for playlist in coordinator.data.playlists
+            playlist.playlist_id: playlist.name
+            for playlist in coordinator.data.playlists.values()
         },
         "presets": {
-            preset.preset_id: {
-                "name": preset.name,
-                "quick_label": preset.quick_label,
-                "on": preset.on,
-                "transition": preset.transition,
-            }
-            for preset in coordinator.data.presets
+            preset.preset_id: preset.name
+            for preset in coordinator.data.presets.values()
         },
     }
     return data

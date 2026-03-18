@@ -1,5 +1,8 @@
 """Test the Insteon All-Link Database APIs."""
+
+import asyncio
 import json
+from typing import Any
 from unittest.mock import patch
 
 from pyinsteon import pub
@@ -22,16 +25,18 @@ from homeassistant.core import HomeAssistant
 from .mock_devices import MockDevices
 
 from tests.common import load_fixture
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
-@pytest.fixture(name="aldb_data", scope="session")
+@pytest.fixture(name="aldb_data", scope="module")
 def aldb_data_fixture():
     """Load the controller state fixture data."""
     return json.loads(load_fixture("insteon/aldb_data.json"))
 
 
-async def _setup(hass, hass_ws_client, aldb_data):
+async def _setup(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data: dict[str, Any]
+) -> tuple[MockHAClientWebSocket, MockDevices]:
     """Set up tests."""
     ws_client = await hass_ws_client(hass)
     devices = MockDevices()
@@ -302,7 +307,7 @@ async def test_bad_address(
     record = _aldb_dict(0)
 
     ws_id = 0
-    for call in ["get", "write", "load", "reset", "add_default_links", "notify"]:
+    for call in ("get", "write", "load", "reset", "add_default_links", "notify"):
         ws_id += 1
         await ws_client.send_json(
             {
@@ -315,7 +320,7 @@ async def test_bad_address(
         assert not msg["success"]
         assert msg["error"]["message"] == INSTEON_DEVICE_NOT_FOUND
 
-    for call in ["change", "create"]:
+    for call in ("change", "create"):
         ws_id += 1
         await ws_client.send_json(
             {
@@ -328,3 +333,38 @@ async def test_bad_address(
         msg = await ws_client.receive_json()
         assert not msg["success"]
         assert msg["error"]["message"] == INSTEON_DEVICE_NOT_FOUND
+
+
+async def test_notify_on_aldb_loading(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
+) -> None:
+    """Test tracking changes to ALDB status across all devices."""
+    ws_client, devices = await _setup(hass, hass_ws_client, aldb_data)
+
+    with patch.object(insteon.api.aldb, "devices", devices):
+        await ws_client.send_json_auto_id({TYPE: "insteon/aldb/notify_all"})
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+
+        await asyncio.sleep(0.1)
+        msg = await ws_client.receive_json()
+        assert msg["event"]["type"] == "status"
+        assert not msg["event"]["is_loading"]
+
+        device = devices["333333"]
+        device.aldb._update_status(ALDBStatus.LOADING)
+        await asyncio.sleep(0.1)
+        msg = await ws_client.receive_json()
+        assert msg["event"]["type"] == "status"
+        assert msg["event"]["is_loading"]
+
+        device.aldb._update_status(ALDBStatus.LOADED)
+        await asyncio.sleep(0.1)
+        msg = await ws_client.receive_json()
+        assert msg["event"]["type"] == "status"
+        assert not msg["event"]["is_loading"]
+
+        await ws_client.client.session.close()
+
+        # Allow lingering tasks to complete
+        await asyncio.sleep(0.1)

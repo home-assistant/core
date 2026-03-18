@@ -1,4 +1,5 @@
 """Trace support for script."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -25,8 +26,8 @@ class ScriptTrace(ActionTrace):
 def trace_script(
     hass: HomeAssistant,
     item_id: str,
-    config: dict[str, Any],
-    blueprint_inputs: dict[str, Any],
+    config: dict[str, Any] | None,
+    blueprint_inputs: dict[str, Any] | None,
     context: Context,
     trace_config: dict[str, Any],
 ) -> Iterator[ScriptTrace]:
@@ -39,7 +40,7 @@ def trace_script(
     except Exception as ex:
         if item_id:
             trace.set_error(ex)
-        raise ex
+        raise
     finally:
         if item_id:
             trace.finished()

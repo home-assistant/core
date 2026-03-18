@@ -1,0 +1,195 @@
+{
+  "Dishwasher": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightEnabled",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightBrightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightColor",
+          "value": "BSH.Common.EnumType.AmbientLightColor.Color43",
+          "type": "BSH.Common.EnumType.AmbientLightColor"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightCustomColor",
+          "value": "#4a88f8",
+          "type": "String"
+        },
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Off"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "Hood": {
+    "data": {
+      "settings": [
+        {
+          "key": "Cooking.Common.Setting.Lighting",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Cooking.Common.Setting.LightingBrightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "Cooking.Hood.Setting.ColorTemperaturePercent",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "Cooking.Hood.Setting.ColorTemperature",
+          "value": "Cooking.Hood.EnumType.ColorTemperature.warmToNeutral",
+          "type": "BSH.Common.EnumType.ColorTemperature",
+          "constraints": {
+            "allowedvalues": [
+              "Cooking.Hood.EnumType.ColorTemperature.warm",
+              "Cooking.Hood.EnumType.ColorTemperature.neutral",
+              "Cooking.Hood.EnumType.ColorTemperature.cold"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightEnabled",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightBrightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightColor",
+          "value": "BSH.Common.EnumType.AmbientLightColor.Color43",
+          "type": "BSH.Common.EnumType.AmbientLightColor"
+        },
+        {
+          "key": "BSH.Common.Setting.AmbientLightCustomColor",
+          "value": "#4a88f8",
+          "type": "String"
+        }
+      ]
+    }
+  },
+  "Oven": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState"
+        },
+        {
+          "key": "BSH.Common.Setting.AlarmClock",
+          "value": 0,
+          "type": "Integer"
+        }
+      ]
+    }
+  },
+  "Washer": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState"
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "LaundryCare.Washer.Setting.IDos2BaseLevel",
+          "value": 0,
+          "type": "Integer"
+        }
+      ]
+    }
+  },
+  "FridgeFreezer": {
+    "data": {
+      "settings": [
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Dispenser.Enabled",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100,
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator",
+          "value": 8,
+          "unit": "°C",
+          "type": "Double"
+        }
+      ]
+    }
+  }
+}

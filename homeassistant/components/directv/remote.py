@@ -1,4 +1,5 @@
 """Support for the DIRECTV remote."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -9,11 +10,10 @@ from typing import Any
 from directv import DIRECTV, DIRECTVError
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import DirecTVConfigEntry
 from .entity import DIRECTVEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,23 +23,23 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: DirecTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load DirecTV remote based on a config entry."""
-    dtv = hass.data[DOMAIN][entry.entry_id]
-    entities = []
+    dtv = entry.runtime_data
 
-    for location in dtv.device.locations:
-        entities.append(
+    async_add_entities(
+        (
             DIRECTVRemote(
                 dtv=dtv,
                 name=str.title(location.name),
                 address=location.address,
             )
-        )
-
-    async_add_entities(entities, True)
+            for location in dtv.device.locations
+        ),
+        True,
+    )
 
 
 class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
@@ -49,11 +49,11 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
         """Initialize DirecTV remote."""
         super().__init__(
             dtv=dtv,
+            name=name,
             address=address,
         )
 
         self._attr_unique_id = self._device_id
-        self._attr_name = name
         self._attr_available = False
         self._attr_is_on = True
 

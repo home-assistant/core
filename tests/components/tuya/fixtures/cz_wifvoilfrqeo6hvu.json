@@ -1,0 +1,98 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Licht drucker",
+  "category": "cz",
+  "product_id": "wifvoilfrqeo6hvu",
+  "product_name": "Smart Socket",
+  "online": false,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-03-15T13:48:41+00:00",
+  "create_time": "2025-03-15T13:48:41+00:00",
+  "update_time": "2025-03-15T13:48:41+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "\u79d2",
+        "max": 86400,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "\u79d2",
+        "max": 86400,
+        "step": 1
+      }
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "\u5ea6",
+        "max": 500000,
+        "step": 100
+      }
+    },
+    "cur_current": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "mA",
+        "max": 30000,
+        "step": 1
+      }
+    },
+    "cur_power": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "W",
+        "max": 50000,
+        "step": 1
+      }
+    },
+    "cur_voltage": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "unit": "V",
+        "scale": 0,
+        "max": 2500,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_1": true,
+    "countdown_1": 0,
+    "add_ele": 10,
+    "cur_current": 0,
+    "cur_power": 0,
+    "cur_voltage": 2346
+  },
+  "set_up": true,
+  "support_local": true
+}

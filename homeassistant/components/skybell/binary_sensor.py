@@ -1,4 +1,5 @@
 """Binary sensor support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from aioskybell.helpers import const as CONST
@@ -10,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
@@ -19,19 +20,20 @@ from .entity import SkybellEntity
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="button",
-        name="Button",
+        translation_key="button",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     BinarySensorEntityDescription(
         key="motion",
-        name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Skybell binary sensor."""
     async_add_entities(

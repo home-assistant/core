@@ -1,4 +1,5 @@
 """Migrate things."""
+
 import json
 import pathlib
 from pprint import pprint
@@ -6,6 +7,7 @@ import re
 
 from .const import CORE_PROJECT_ID, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
 from .lokalise import get_api
+from .util import load_json_from_path
 
 FRONTEND_REPO = pathlib.Path("../frontend/")
 
@@ -27,7 +29,7 @@ def rename_keys(project_id, to_migrate):
     from_key_data = lokalise.keys_list({"filter_keys": ",".join(to_migrate)})
     if len(from_key_data) != len(to_migrate):
         print(
-            f"Lookin up keys in Lokalise returns {len(from_key_data)} results, expected {len(to_migrate)}"
+            f"Looking up keys in Lokalise returns {len(from_key_data)} results, expected {len(to_migrate)}"
         )
         return
 
@@ -70,7 +72,7 @@ def list_keys_helper(lokalise, keys, params={}, *, validate=True):
             continue
 
         print(
-            f"Lookin up keys in Lokalise returns {len(from_key_data)} results, expected {len(keys)}"
+            f"Looking up keys in Lokalise returns {len(from_key_data)} results, expected {len(keys)}"
         )
         searched = set(filter_keys)
         returned = set(create_lookup(from_key_data))
@@ -164,7 +166,7 @@ def find_and_rename_keys():
         if not strings_file.is_file():
             continue
 
-        strings = json.loads(strings_file.read_text())
+        strings = load_json_from_path(strings_file)
 
         if "title" in strings.get("config", {}):
             from_key = f"component::{integration.name}::config::title"
@@ -194,12 +196,12 @@ def interactive_update():
         if not strings_file.is_file():
             continue
 
-        strings = json.loads(strings_file.read_text())
+        strings = load_json_from_path(strings_file)
 
         if "title" not in strings:
             continue
 
-        manifest = json.loads((integration / "manifest.json").read_text())
+        manifest = load_json_from_path(integration / "manifest.json")
 
         print("Processing", manifest["name"])
         print("Translation title", strings["title"])
@@ -247,9 +249,8 @@ def find_frontend_states():
     Source key -> target key
     Add key to integrations strings.json
     """
-    frontend_states = json.loads(
-        (FRONTEND_REPO / "src/translations/en.json").read_text()
-    )["state"]
+    path = FRONTEND_REPO / "src/translations/en.json"
+    frontend_states = load_json_from_path(path)["state"]
 
     # domain => state object
     to_write = {}
@@ -268,9 +269,9 @@ def find_frontend_states():
             for device_class, dev_class_states in domain_to_write.items():
                 to_device_class = "_" if device_class == "default" else device_class
                 for key in dev_class_states:
-                    to_migrate[
-                        f"{from_key_base}::{device_class}::{key}"
-                    ] = f"{to_key_base}::{to_device_class}::{key}"
+                    to_migrate[f"{from_key_base}::{device_class}::{key}"] = (
+                        f"{to_key_base}::{to_device_class}::{key}"
+                    )
 
             # Rewrite "default" device class to _
             if "default" in domain_to_write:
@@ -307,7 +308,7 @@ def find_frontend_states():
     for domain, state in to_write.items():
         strings = INTEGRATIONS_DIR / domain / "strings.json"
         if strings.is_file():
-            content = json.loads(strings.read_text())
+            content = load_json_from_path(strings)
         else:
             content = {}
 
@@ -326,7 +327,7 @@ def find_frontend_states():
 def apply_data_references(to_migrate):
     """Apply references."""
     for strings_file in INTEGRATIONS_DIR.glob("*/strings.json"):
-        strings = json.loads(strings_file.read_text())
+        strings = load_json_from_path(strings_file)
         steps = strings.get("config", {}).get("step")
 
         if not steps:

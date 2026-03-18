@@ -1,4 +1,5 @@
 """Provide tests for mysensors device tracker platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,7 +7,12 @@ from collections.abc import Callable
 from mysensors.sensor import Sensor
 
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SourceType
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_NOT_HOME
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    STATE_NOT_HOME,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -32,6 +38,7 @@ async def test_gps_sensor(
     assert state.attributes[ATTR_SOURCE_TYPE] == SourceType.GPS
     assert state.attributes[ATTR_LATITUDE] == float(latitude)
     assert state.attributes[ATTR_LONGITUDE] == float(longitude)
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     latitude = "40.782"
     longitude = "-73.965"

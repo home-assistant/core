@@ -1,0 +1,623 @@
+{
+  "page": 1,
+  "per_page": 50,
+  "total": 14,
+  "total_pages": 1,
+  "items": [
+    {
+      "date": "2024-01-22",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "c5f00a93-71a2-4e48-900f-d9ad0bb9de93",
+      "id": 230,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "c5f00a93-71a2-4e48-900f-d9ad0bb9de93",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Zoete aardappel curry traybake",
+        "slug": "zoete-aardappel-curry-traybake",
+        "image": "AiIo",
+        "recipeYield": "2 servings",
+        "totalTime": "40 Minutes",
+        "prepTime": null,
+        "cookTime": null,
+        "performTime": null,
+        "description": "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        "recipeCategory": [],
+        "tags": [],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/",
+        "dateAdded": "2024-01-22",
+        "dateUpdated": "2024-01-22T00:27:46.324512",
+        "createdAt": "2024-01-22T00:27:46.327546",
+        "updateAt": "2024-01-22T00:27:46.327548",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "breakfast",
+      "title": "",
+      "text": "",
+      "recipeId": "5b055066-d57d-4fd0-8dfd-a2c2f07b36f1",
+      "id": 229,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "5b055066-d57d-4fd0-8dfd-a2c2f07b36f1",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Roast Chicken",
+        "slug": "roast-chicken",
+        "image": "JeQ2",
+        "recipeYield": "6 servings",
+        "totalTime": "1 Hour 35 Minutes",
+        "prepTime": "15 Minutes",
+        "cookTime": null,
+        "performTime": "1 Hour 20 Minutes",
+        "description": "The BEST Roast Chicken recipe is simple, budget friendly, and gives you a tender, mouth-watering chicken full of flavor! Served with roasted vegetables, this recipe is simple enough for any cook!",
+        "recipeCategory": [],
+        "tags": [],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://tastesbetterfromscratch.com/roast-chicken/",
+        "dateAdded": "2024-01-21",
+        "dateUpdated": "2024-01-21T15:29:25.664540",
+        "createdAt": "2024-01-21T15:29:25.667450",
+        "updateAt": "2024-01-21T15:29:25.667452",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "lunch",
+      "title": "",
+      "text": "",
+      "recipeId": "e360a0cc-18b0-4a84-a91b-8aa59e2451c9",
+      "id": 226,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "e360a0cc-18b0-4a84-a91b-8aa59e2451c9",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Receta de pollo al curry en 10 minutos (con vídeo incluido)",
+        "slug": "receta-de-pollo-al-curry-en-10-minutos-con-video-incluido",
+        "image": "INQz",
+        "recipeYield": "2 servings",
+        "totalTime": "10 Minutes",
+        "prepTime": "3 Minutes",
+        "cookTime": null,
+        "performTime": "7 Minutes",
+        "description": "Te explicamos paso a paso, de manera sencilla, la elaboración de la receta de pollo al curry con leche de coco en 10 minutos. Ingredientes, tiempo de...",
+        "recipeCategory": [],
+        "tags": [],
+        "tools": [
+          {
+            "id": "1170e609-20d3-45b8-b0c7-3a4cfa614e88",
+            "name": "Backofen",
+            "slug": "backofen",
+            "onHand": false
+          },
+          {
+            "id": "9ab522ad-c3be-4dad-8b4f-d9d53817f4d0",
+            "name": "Magimix blender",
+            "slug": "magimix-blender",
+            "onHand": false
+          },
+          {
+            "id": "b4ca27dc-9bf6-48be-ad10-3e7056cb24bc",
+            "name": "Alluminio",
+            "slug": "alluminio",
+            "onHand": false
+          }
+        ],
+        "rating": null,
+        "orgURL": "https://www.directoalpaladar.com/recetas-de-carnes-y-aves/receta-de-pollo-al-curry-en-10-minutos",
+        "dateAdded": "2024-01-21",
+        "dateUpdated": "2024-01-21T12:56:31.483701",
+        "createdAt": "2024-01-21T12:45:28.589669",
+        "updateAt": "2024-01-21T12:56:31.487406",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "lunch",
+      "title": "",
+      "text": "",
+      "recipeId": "9c7b8aee-c93c-4b1b-ab48-2625d444743a",
+      "id": 224,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "9c7b8aee-c93c-4b1b-ab48-2625d444743a",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Boeuf bourguignon : la vraie recette (2)",
+        "slug": "boeuf-bourguignon-la-vraie-recette-2",
+        "image": "nj5M",
+        "recipeYield": "4 servings",
+        "totalTime": "5 Hours",
+        "prepTime": "1 Hour",
+        "cookTime": null,
+        "performTime": "4 Hours",
+        "description": "bourguignon, oignon, carotte, bouquet garni, vin rouge, beurre, sel, poivre",
+        "recipeCategory": [],
+        "tags": [
+          {
+            "id": "01c2f4ac-54ce-49bc-9bd7-8a49f353a3a4",
+            "name": "Poivre",
+            "slug": "poivre"
+          },
+          {
+            "id": "90a26cea-a8a1-41a1-9e8c-e94e3c40f7a7",
+            "name": "Sel",
+            "slug": "sel"
+          },
+          {
+            "id": "d7b01a4b-5206-4bd2-b9c4-d13b95ca0edb",
+            "name": "Beurre",
+            "slug": "beurre"
+          },
+          {
+            "id": "304faaf8-13ec-4537-91f3-9f39a3585545",
+            "name": "Facile",
+            "slug": "facile"
+          },
+          {
+            "id": "6508fb05-fb60-4bed-90c4-584bd6d74cb5",
+            "name": "Daube",
+            "slug": "daube"
+          },
+          {
+            "id": "18ff59b6-b599-456a-896b-4b76448b08ca",
+            "name": "Bourguignon",
+            "slug": "bourguignon"
+          },
+          {
+            "id": "685a0d90-8de4-494e-8eb8-68e7f5d5ffbe",
+            "name": "Vin Rouge",
+            "slug": "vin-rouge"
+          },
+          {
+            "id": "5dedc8b5-30f5-4d6e-875f-34deefd01883",
+            "name": "Oignon",
+            "slug": "oignon"
+          },
+          {
+            "id": "065b79e0-6276-4ebb-9428-7018b40c55bb",
+            "name": "Bouquet Garni",
+            "slug": "bouquet-garni"
+          },
+          {
+            "id": "d858b1d9-2ca1-46d4-acc2-3d03f991f03f",
+            "name": "Moyen",
+            "slug": "moyen"
+          },
+          {
+            "id": "bded0bd8-8d41-4ec5-ad73-e0107fb60908",
+            "name": "Boeuf Bourguignon : La Vraie Recette",
+            "slug": "boeuf-bourguignon-la-vraie-recette"
+          },
+          {
+            "id": "7f99b04f-914a-408b-a057-511ca1125734",
+            "name": "Carotte",
+            "slug": "carotte"
+          }
+        ],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://www.marmiton.org/recettes/recette_boeuf-bourguignon_18889.aspx",
+        "dateAdded": "2024-01-21",
+        "dateUpdated": "2024-01-21T08:45:28.780361",
+        "createdAt": "2024-01-21T08:45:28.782322",
+        "updateAt": "2024-01-21T08:45:28.782324",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "f79f7e9d-4b58-4930-a586-2b127f16ee34",
+      "id": 222,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "f79f7e9d-4b58-4930-a586-2b127f16ee34",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο (1)",
+        "slug": "eukole-makaronada-me-kephtedakia-ston-phourno-1",
+        "image": "En9o",
+        "recipeYield": "6 servings",
+        "totalTime": null,
+        "prepTime": "15 Minutes",
+        "cookTime": null,
+        "performTime": "50 Minutes",
+        "description": "Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο από τον Άκη Πετρετζίκη. Φτιάξτε την πιο εύκολη μακαρονάδα με κεφτεδάκια σε μόνο ένα σκεύος.",
+        "recipeCategory": [],
+        "tags": [],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://akispetretzikis.com/recipe/7959/efkolh-makaronada-me-keftedakia-ston-fourno",
+        "dateAdded": "2024-01-21",
+        "dateUpdated": "2024-01-21T09:08:58.056854",
+        "createdAt": "2024-01-21T09:08:58.059401",
+        "updateAt": "2024-01-21T09:08:58.059403",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "47595e4c-52bc-441d-b273-3edf4258806d",
+      "id": 221,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "47595e4c-52bc-441d-b273-3edf4258806d",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Greek Turkey Meatballs with Lemon Orzo & Creamy Feta Yogurt Sauce",
+        "slug": "greek-turkey-meatballs-with-lemon-orzo-creamy-feta-yogurt-sauce",
+        "image": "Kn62",
+        "recipeYield": "4 servings",
+        "totalTime": "1 Hour",
+        "prepTime": "40 Minutes",
+        "cookTime": null,
+        "performTime": "20 Minutes",
+        "description": "Delicious Greek turkey meatballs with lemon orzo, tender veggies, and a creamy feta yogurt sauce. These healthy baked Greek turkey meatballs are filled with tons of wonderful herbs and make the perfect protein-packed weeknight meal!",
+        "recipeCategory": [],
+        "tags": [],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://www.ambitiouskitchen.com/greek-turkey-meatballs/",
+        "dateAdded": "2024-01-04",
+        "dateUpdated": "2024-01-04T11:51:00.843570",
+        "createdAt": "2024-01-04T11:51:00.847033",
+        "updateAt": "2024-01-04T11:51:00.847035",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "side",
+      "title": "",
+      "text": "",
+      "recipeId": "9d553779-607e-471b-acf3-84e6be27b159",
+      "id": 220,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "9d553779-607e-471b-acf3-84e6be27b159",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Einfacher Nudelauflauf mit Brokkoli",
+        "slug": "einfacher-nudelauflauf-mit-brokkoli",
+        "image": "nOPT",
+        "recipeYield": "4 servings",
+        "totalTime": "35 Minutes",
+        "prepTime": "15 Minutes",
+        "cookTime": null,
+        "performTime": "20 Minutes",
+        "description": "Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!",
+        "recipeCategory": [],
+        "tags": [
+          {
+            "id": "78318c97-75c7-4d06-95b6-51ef8f4a0257",
+            "name": "< 4 Hours",
+            "slug": "4-hours"
+          }
+        ],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://kochkarussell.com/einfacher-nudelauflauf-brokkoli/",
+        "dateAdded": "2024-01-21",
+        "dateUpdated": "2024-01-21T03:04:25.718367",
+        "createdAt": "2024-01-21T02:13:11.323363",
+        "updateAt": "2024-01-21T03:04:25.721489",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "92635fd0-f2dc-4e78-a6e4-ecd556ad361f",
+      "id": 219,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "92635fd0-f2dc-4e78-a6e4-ecd556ad361f",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Pampered Chef Double Chocolate Mocha Trifle",
+        "slug": "pampered-chef-double-chocolate-mocha-trifle",
+        "image": "ibL6",
+        "recipeYield": "12 servings",
+        "totalTime": "1 Hour 15 Minutes",
+        "prepTime": "15 Minutes",
+        "cookTime": null,
+        "performTime": "1 Hour",
+        "description": "This is a modified Pampered Chef recipe. You can use a trifle bowl or large glass punch/salad bowl to show it off. It is really easy to make and I never have any leftovers. Cook time includes chill time.",
+        "recipeCategory": [],
+        "tags": [
+          {
+            "id": "0248c21d-c85a-47b2-aaf6-fb6caf1b7726",
+            "name": "Weeknight",
+            "slug": "weeknight"
+          },
+          {
+            "id": "78318c97-75c7-4d06-95b6-51ef8f4a0257",
+            "name": "< 4 Hours",
+            "slug": "4-hours"
+          }
+        ],
+        "tools": [],
+        "rating": 3,
+        "orgURL": "https://www.food.com/recipe/pampered-chef-double-chocolate-mocha-trifle-74963",
+        "dateAdded": "2024-01-06",
+        "dateUpdated": "2024-01-06T08:11:21.427447",
+        "createdAt": "2024-01-06T06:29:24.966994",
+        "updateAt": "2024-01-06T08:11:21.430079",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-22",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "8bdd3656-5e7e-45d3-a3c4-557390846a22",
+      "id": 217,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "8bdd3656-5e7e-45d3-a3c4-557390846a22",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Cheeseburger Sliders (Easy, 30-min Recipe)",
+        "slug": "cheeseburger-sliders-easy-30-min-recipe",
+        "image": "beGq",
+        "recipeYield": "24 servings",
+        "totalTime": "30 Minutes",
+        "prepTime": "8 Minutes",
+        "cookTime": null,
+        "performTime": "22 Minutes",
+        "description": "Cheeseburger Sliders are juicy, cheesy and beefy - everything we love about classic burgers! These sliders are quick and easy plus they are make-ahead and reheat really well.",
+        "recipeCategory": [],
+        "tags": [
+          {
+            "id": "7a4ca427-642f-4428-8dc7-557ea9c8d1b4",
+            "name": "Cheeseburger Sliders",
+            "slug": "cheeseburger-sliders"
+          },
+          {
+            "id": "941558d2-50d5-4c9d-8890-a0258f18d493",
+            "name": "Sliders",
+            "slug": "sliders"
+          }
+        ],
+        "tools": [],
+        "rating": 5,
+        "orgURL": "https://natashaskitchen.com/cheeseburger-sliders/",
+        "dateAdded": "2024-01-21",
+        "dateUpdated": "2024-01-21T07:43:24.261010",
+        "createdAt": "2024-01-21T06:49:35.466777",
+        "updateAt": "2024-01-21T06:49:35.466778",
+        "lastMade": "2024-01-22T04:59:59"
+      }
+    },
+    {
+      "date": "2024-01-22",
+      "entryType": "lunch",
+      "title": "",
+      "text": "",
+      "recipeId": "48f39d27-4b8e-4c14-bf36-4e1e6497e75e",
+      "id": 216,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "48f39d27-4b8e-4c14-bf36-4e1e6497e75e",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "All-American Beef Stew Recipe",
+        "slug": "all-american-beef-stew-recipe",
+        "image": "356X",
+        "recipeYield": "6 servings",
+        "totalTime": "3 Hours 15 Minutes",
+        "prepTime": "5 Minutes",
+        "cookTime": null,
+        "performTime": "3 Hours 10 Minutes",
+        "description": "This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.",
+        "recipeCategory": [],
+        "tags": [
+          {
+            "id": "78318c97-75c7-4d06-95b6-51ef8f4a0257",
+            "name": "< 4 Hours",
+            "slug": "4-hours"
+          }
+        ],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://www.seriouseats.com/all-american-beef-stew-recipe",
+        "dateAdded": "2024-01-20",
+        "dateUpdated": "2024-01-21T03:04:45.606075",
+        "createdAt": "2024-01-20T20:41:29.266390",
+        "updateAt": "2024-01-21T03:04:45.609563",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "48f39d27-4b8e-4c14-bf36-4e1e6497e75e",
+      "id": 212,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "48f39d27-4b8e-4c14-bf36-4e1e6497e75e",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "All-American Beef Stew Recipe",
+        "slug": "all-american-beef-stew-recipe",
+        "image": "356X",
+        "recipeYield": "6 servings",
+        "totalTime": "3 Hours 15 Minutes",
+        "prepTime": "5 Minutes",
+        "cookTime": null,
+        "performTime": "3 Hours 10 Minutes",
+        "description": "This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.",
+        "recipeCategory": [],
+        "tags": [
+          {
+            "id": "78318c97-75c7-4d06-95b6-51ef8f4a0257",
+            "name": "< 4 Hours",
+            "slug": "4-hours"
+          }
+        ],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://www.seriouseats.com/all-american-beef-stew-recipe",
+        "dateAdded": "2024-01-20",
+        "dateUpdated": "2024-01-21T03:04:45.606075",
+        "createdAt": "2024-01-20T20:41:29.266390",
+        "updateAt": "2024-01-21T03:04:45.609563",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-22",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "9d553779-607e-471b-acf3-84e6be27b159",
+      "id": 211,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "9d553779-607e-471b-acf3-84e6be27b159",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Einfacher Nudelauflauf mit Brokkoli",
+        "slug": "einfacher-nudelauflauf-mit-brokkoli",
+        "image": "nOPT",
+        "recipeYield": "4 servings",
+        "totalTime": "35 Minutes",
+        "prepTime": "15 Minutes",
+        "cookTime": null,
+        "performTime": "20 Minutes",
+        "description": "Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!",
+        "recipeCategory": [],
+        "tags": [
+          {
+            "id": "78318c97-75c7-4d06-95b6-51ef8f4a0257",
+            "name": "< 4 Hours",
+            "slug": "4-hours"
+          }
+        ],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://kochkarussell.com/einfacher-nudelauflauf-brokkoli/",
+        "dateAdded": "2024-01-21",
+        "dateUpdated": "2024-01-21T03:04:25.718367",
+        "createdAt": "2024-01-21T02:13:11.323363",
+        "updateAt": "2024-01-21T03:04:25.721489",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-23",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "25b814f2-d9bf-4df0-b40d-d2f2457b4317",
+      "id": 196,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "25b814f2-d9bf-4df0-b40d-d2f2457b4317",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Miso Udon Noodles with Spinach and Tofu",
+        "slug": "miso-udon-noodles-with-spinach-and-tofu",
+        "image": "5G1v",
+        "recipeYield": "2 servings",
+        "totalTime": "25 Minutes",
+        "prepTime": "10 Minutes",
+        "cookTime": null,
+        "performTime": "15 Minutes",
+        "description": "Simple to prepare and ready in 25 minutes, this vegetarian miso noodle recipe can be eaten on its own or served as a side.",
+        "recipeCategory": [],
+        "tags": [],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://www.allrecipes.com/recipe/284039/miso-udon-noodles-with-spinach-and-tofu/",
+        "dateAdded": "2024-01-05",
+        "dateUpdated": "2024-01-05T16:35:00.264511",
+        "createdAt": "2024-01-05T16:00:45.090493",
+        "updateAt": "2024-01-05T16:35:00.267508",
+        "lastMade": null
+      }
+    },
+    {
+      "date": "2024-01-22",
+      "entryType": "dinner",
+      "title": "",
+      "text": "",
+      "recipeId": "55c88810-4cf1-4d86-ae50-63b15fd173fb",
+      "id": 195,
+      "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+      "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+      "recipe": {
+        "id": "55c88810-4cf1-4d86-ae50-63b15fd173fb",
+        "userId": "1ce8b5fe-04e8-4b80-aab1-d92c94685c6d",
+        "groupId": "0bf60b2e-ca89-42a9-94d4-8f67ca72b157",
+        "name": "Mousse de saumon",
+        "slug": "mousse-de-saumon",
+        "image": "rrNL",
+        "recipeYield": "12 servings",
+        "totalTime": "17 Minutes",
+        "prepTime": "15 Minutes",
+        "cookTime": null,
+        "performTime": "2 Minutes",
+        "description": "Avis aux nostalgiques des années 1980, la mousse de saumon est de retour dans une présentation adaptée au goût du jour. On utilise une technique sans faille : un saumon frais cuit au micro-ondes et mélangé au robot avec du fromage à la crème et de la crème sure. On obtient ainsi une texture onctueuse à tartiner, qui n’a rien à envier aux préparations gélatineuses d’antan !",
+        "recipeCategory": [],
+        "tags": [],
+        "tools": [],
+        "rating": null,
+        "orgURL": "https://www.ricardocuisine.com/recettes/8919-mousse-de-saumon",
+        "dateAdded": "2024-01-02",
+        "dateUpdated": "2024-01-02T06:35:05.206948",
+        "createdAt": "2024-01-02T06:33:15.329794",
+        "updateAt": "2024-01-02T06:35:05.209189",
+        "lastMade": "2024-01-02T22:59:59"
+      }
+    },
+    {
+      "date": "2024-01-21",
+      "entryType": "dinner",
+      "title": "Aquavite",
+      "text": "Dineren met de boys",
+      "recipeId": null,
+      "id": 1,
+      "groupId": "3931df86-0679-4579-8c63-4bedc9ca9a85",
+      "userId": "6caa6e4d-521f-4ef4-9ed7-388bdd63f47d",
+      "recipe": null
+    }
+  ],
+  "next": null,
+  "previous": null
+}

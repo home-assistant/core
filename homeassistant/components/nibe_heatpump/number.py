@@ -1,25 +1,28 @@
 """The Nibe Heat Pump numbers."""
+
 from __future__ import annotations
 
 from nibe.coil import Coil, CoilData
 
-from homeassistant.components.number import ENTITY_ID_FORMAT, NumberEntity
+from homeassistant.components.number import ENTITY_ID_FORMAT, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilCoordinator
+from .entity import CoilEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         Number(coordinator, coil)
@@ -42,7 +45,7 @@ class Number(CoilEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
+    def __init__(self, coordinator: CoilCoordinator, coil: Coil) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
         if coil.min is None or coil.max is None:
@@ -50,13 +53,15 @@ class Number(CoilEntity, NumberEntity):
                 self._attr_native_min_value,
                 self._attr_native_max_value,
             ) = _get_numeric_limits(coil.size)
+            self._attr_native_min_value /= coil.factor
+            self._attr_native_max_value /= coil.factor
         else:
             self._attr_native_min_value = float(coil.min)
             self._attr_native_max_value = float(coil.max)
 
         self._attr_native_step = 1 / coil.factor
         self._attr_native_unit_of_measurement = coil.unit
-        self._attr_native_value = None
+        self._attr_mode = NumberMode.BOX
 
     def _async_read_coil(self, data: CoilData) -> None:
         if data.value is None:
@@ -64,7 +69,7 @@ class Number(CoilEntity, NumberEntity):
             return
 
         try:
-            self._attr_native_value = float(data.value)
+            self._attr_native_value = float(data.value)  # type: ignore[arg-type]
         except ValueError:
             self._attr_native_value = None
 

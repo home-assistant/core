@@ -1,18 +1,18 @@
 """Support for Freedompro binary_sensor."""
+
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 
 DEVICE_CLASS_MAP = {
     "smokeSensor": BinarySensorDeviceClass.SMOKE,
@@ -32,10 +32,12 @@ SUPPORTED_SENSORS = {"smokeSensor", "occupancySensor", "motionSensor", "contactS
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreedomproConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro binary_sensor."""
-    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         Device(device, coordinator)
         for device in coordinator.data
@@ -44,7 +46,7 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], BinarySensorEntity):
-    """Representation of an Freedompro binary_sensor."""
+    """Representation of a Freedompro binary_sensor."""
 
     _attr_has_entity_name = True
     _attr_name = None

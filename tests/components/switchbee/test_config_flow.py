@@ -1,4 +1,5 @@
 """Test the SwitchBee Smart Home config flow."""
+
 import json
 from unittest.mock import patch
 
@@ -13,14 +14,16 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_FAILED_TO_LOGIN_MSG, MOCK_INVALID_TOKEN_MGS
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 @pytest.mark.parametrize("test_cucode_in_coordinator_data", [False, True])
 async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> None:
     """Test we get the form."""
 
-    coordinator_data = json.loads(load_fixture("switchbee.json", "switchbee"))
+    coordinator_data = json.loads(
+        await async_load_fixture(hass, "switchbee.json", DOMAIN)
+    )
 
     if test_cucode_in_coordinator_data:
         coordinator_data["data"]["cuCode"] = "300F123456"
@@ -28,19 +31,22 @@ async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "switchbee.api.polling.CentralUnitPolling.get_configuration",
-        return_value=coordinator_data,
-    ), patch(
-        "homeassistant.components.switchbee.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling._login", return_value=None
+    with (
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.get_configuration",
+            return_value=coordinator_data,
+        ),
+        patch(
+            "homeassistant.components.switchbee.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
+        ),
+        patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -52,7 +58,7 @@ async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> Non
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -80,7 +86,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -104,7 +110,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -127,14 +133,16 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert form_result["type"] == FlowResultType.FORM
+    assert form_result["type"] is FlowResultType.FORM
     assert form_result["errors"] == {"base": "unknown"}
 
 
 async def test_form_entry_exists(hass: HomeAssistant) -> None:
     """Test we handle an already existing entry."""
 
-    coordinator_data = json.loads(load_fixture("switchbee.json", "switchbee"))
+    coordinator_data = json.loads(
+        await async_load_fixture(hass, "switchbee.json", DOMAIN)
+    )
     MockConfigEntry(
         unique_id="a8:21:08:e7:67:b6",
         domain=DOMAIN,
@@ -150,16 +158,19 @@ async def test_form_entry_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "switchbee.api.polling.CentralUnitPolling._login", return_value=None
-    ), patch(
-        "homeassistant.components.switchbee.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling.get_configuration",
-        return_value=coordinator_data,
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
+    with (
+        patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None),
+        patch(
+            "homeassistant.components.switchbee.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.get_configuration",
+            return_value=coordinator_data,
+        ),
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
+        ),
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -170,5 +181,5 @@ async def test_form_entry_exists(hass: HomeAssistant) -> None:
             },
         )
 
-    assert form_result["type"] == FlowResultType.ABORT
+    assert form_result["type"] is FlowResultType.ABORT
     assert form_result["reason"] == "already_configured"

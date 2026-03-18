@@ -1,15 +1,17 @@
 """Config flow for UPB PIM integration."""
+
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
-import async_timeout
 import upb_lib
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_FILE_PATH, CONF_HOST, CONF_PROTOCOL
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -38,14 +40,17 @@ async def _validate_input(data):
     url = _make_url_from_data(data)
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file_path})
+    upb.add_handler("connected", _connected_callback)
+    await upb.load_upstart_file()
+    await upb.async_connect()
+
     if not upb.config_ok:
         _LOGGER.error("Missing or invalid UPB file: %s", file_path)
         raise InvalidUpbFile
 
-    upb.connect(_connected_callback)
-
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(VALIDATE_TIMEOUT):
-        await connected_event.wait()
+    with suppress(TimeoutError):
+        async with asyncio.timeout(VALIDATE_TIMEOUT):
+            await connected_event.wait()
 
     upb.disconnect()
 
@@ -70,16 +75,15 @@ def _make_url_from_data(data):
     return f"{protocol}{address}"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UPB PIM."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
-    def __init__(self) -> None:
-        """Initialize the UPB config flow."""
-        self.importing = False
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -91,16 +95,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidUpbFile:
                 errors["base"] = "invalid_upb_file"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                await self.async_set_unique_id(network_id)
+                await self.async_set_unique_id(str(network_id))
                 self._abort_if_unique_id_configured()
-
-                if self.importing:
-                    return self.async_create_entry(title=info["title"], data=user_input)
 
                 return self.async_create_entry(
                     title=info["title"],
@@ -114,11 +115,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        self.importing = True
-        return await self.async_step_user(user_input)
-
     def _url_already_configured(self, url):
         """See if we already have a UPB PIM matching user input configured."""
         existing_hosts = {
@@ -128,9 +124,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return urlparse(url).hostname in existing_hosts
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidUpbFile(exceptions.HomeAssistantError):
+class InvalidUpbFile(HomeAssistantError):
     """Error to indicate there is invalid or missing UPB config file."""

@@ -1,61 +1,80 @@
 """Binary Sensor platform for Garages Amsterdam."""
+
 from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from odp_amsterdam import Garage
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import (
+    GaragesAmsterdamConfigEntry,
+    GaragesAmsterdamDataUpdateCoordinator,
 )
+from .entity import GaragesAmsterdamEntity
 
-from . import get_coordinator
-from .const import ATTRIBUTION
 
-BINARY_SENSORS = {
-    "state",
-}
+@dataclass(frozen=True, kw_only=True)
+class GaragesAmsterdamBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Garages Amsterdam binary sensor entity."""
+
+    is_on: Callable[[Garage], bool]
+
+
+BINARY_SENSORS: tuple[GaragesAmsterdamBinarySensorEntityDescription, ...] = (
+    GaragesAmsterdamBinarySensorEntityDescription(
+        key="state",
+        translation_key="state",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        is_on=lambda garage: garage.state != "ok",
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: GaragesAmsterdamConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = await get_coordinator(hass)
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GaragesamsterdamBinarySensor(
-            coordinator, config_entry.data["garage_name"], info_type
+        GaragesAmsterdamBinarySensor(
+            coordinator=coordinator,
+            garage_name=entry.data["garage_name"],
+            description=description,
         )
-        for info_type in BINARY_SENSORS
+        for description in BINARY_SENSORS
     )
 
 
-class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class GaragesAmsterdamBinarySensor(GaragesAmsterdamEntity, BinarySensorEntity):
     """Binary Sensor representing garages amsterdam data."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    entity_description: GaragesAmsterdamBinarySensorEntityDescription
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, garage_name: str, info_type: str
+        self,
+        *,
+        coordinator: GaragesAmsterdamDataUpdateCoordinator,
+        garage_name: str,
+        description: GaragesAmsterdamBinarySensorEntityDescription,
     ) -> None:
         """Initialize garages amsterdam binary sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{garage_name}-{info_type}"
-        self._garage_name = garage_name
-        self._info_type = info_type
-        self._attr_name = garage_name
+        super().__init__(coordinator, garage_name)
+        self.entity_description = description
+        self._attr_unique_id = f"{garage_name}-{description.key}"
 
     @property
     def is_on(self) -> bool:
         """If the binary sensor is currently on or off."""
-        return (
-            getattr(self.coordinator.data[self._garage_name], self._info_type) != "ok"
-        )
+        return self.entity_description.is_on(self.coordinator.data[self._garage_name])

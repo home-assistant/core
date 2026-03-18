@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "light": {},
+      "binary_sensor": {
+        "knx_es_01JJP1XDQRXB0W6YYGXW6Y1X10": {
+          "entity": {
+            "name": "test",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_sensor": {
+              "state": "3/2/21",
+              "passive": []
+            },
+            "sync_state": true
+          }
+        }
+      }
+    }
+  }
+}

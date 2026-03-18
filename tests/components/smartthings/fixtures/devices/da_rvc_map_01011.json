@@ -1,0 +1,353 @@
+{
+  "items": [
+    {
+      "deviceId": "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
+      "name": "[robot vacuum] Samsung",
+      "label": "Robot vacuum",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-RVC-MAP-01011",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "d31d0982-9bf9-4f0c-afd4-ad3d78842541",
+      "ownerId": "85532262-6537-54d9-179a-333db98dbcc0",
+      "roomId": "572f5713-53a9-4fb8-85fd-60515e44f1ed",
+      "deviceTypeName": "Samsung OCF Robot Vacuum",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "audioNotification",
+              "version": 1
+            },
+            {
+              "id": "audioTrackAddressing",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "imageCapture",
+              "version": 1
+            },
+            {
+              "id": "logTrigger",
+              "version": 1
+            },
+            {
+              "id": "mediaPlayback",
+              "version": 1
+            },
+            {
+              "id": "mediaPlaybackRepeat",
+              "version": 1
+            },
+            {
+              "id": "mediaTrackControl",
+              "version": 1
+            },
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "robotCleanerCleaningMode",
+              "version": 1
+            },
+            {
+              "id": "robotCleanerMovement",
+              "version": 1
+            },
+            {
+              "id": "robotCleanerTurboMode",
+              "version": 1
+            },
+            {
+              "id": "soundDetection",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "videoCapture",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledComponents",
+              "version": 1
+            },
+            {
+              "id": "custom.doNotDisturbMode",
+              "version": 1
+            },
+            {
+              "id": "custom.hepaFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.audioVolumeLevel",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.microphoneSettings",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.musicPlaylist",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerDrivingMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerCleaningMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerCleaningType",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerMapAreaInfo",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerMapCleaningInfo",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerPatrol",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerPetCleaningSchedule",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerPetMonitor",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerPetMonitorReport",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerReservation",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerMotorFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerAvpRegistration",
+              "version": 1
+            },
+            {
+              "id": "samsungce.soundDetectionSensitivity",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerWaterSprayLevel",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerWelcome",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerAudioClip",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerMonitoringAutomation",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerMapMetadata",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerMapList",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerSystemSoundMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.energyPlanner",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerFeatureVisibility",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerGuidedPatrol",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerSafetyPatrol",
+              "version": 1
+            },
+            {
+              "id": "sec.calmConnectionCare",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RobotCleaner",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "station",
+          "label": "station",
+          "capabilities": [
+            {
+              "id": "custom.hepaFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerDustBag",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "refill-drainage-kit",
+          "label": "refill-drainage-kit",
+          "capabilities": [
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "samsungce.drainFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.connectionState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.activationState",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-06-20T14:12:56.260Z",
+      "profile": {
+        "id": "5d345d41-a497-3fc7-84fe-eaaee50f0509"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.robotcleaner",
+        "name": "[robot vacuum] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "JETBOT_COMBO_9X00_24K|50029141|80010b0002d8411f0100000000000000",
+        "platformVersion": "1.0",
+        "platformOS": "Tizen",
+        "hwVersion": "",
+        "firmwareVersion": "20250123.105306",
+        "vendorId": "DA-RVC-MAP-01011",
+        "vendorResourceClientServerVersion": "4.0.38",
+        "lastSignupTime": "2025-06-20T14:12:56.202953160Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false,
+        "modelCode": "NONE"
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

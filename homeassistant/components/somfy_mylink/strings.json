@@ -8,6 +8,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "system_id": "System ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Somfy MyLink hub."
         }
       }
     },
@@ -26,13 +29,13 @@
     },
     "step": {
       "init": {
-        "title": "Configure MyLink Options",
+        "title": "Configure MyLink options",
         "data": {
           "target_id": "Configure options for a cover."
         }
       },
       "target_config": {
-        "title": "Configure MyLink Cover",
+        "title": "Configure MyLink cover",
         "description": "Configure options for `{target_name}`",
         "data": {
           "reverse": "Cover is reversed"

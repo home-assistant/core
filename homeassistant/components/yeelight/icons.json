@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "light": {
+      "nightlight": {
+        "default": "mdi:weather-night"
+      }
+    }
+  },
+  "services": {
+    "set_mode": {
+      "service": "mdi:cog"
+    },
+    "set_color_scene": {
+      "service": "mdi:palette"
+    },
+    "set_hsv_scene": {
+      "service": "mdi:palette"
+    },
+    "set_color_temp_scene": {
+      "service": "mdi:palette"
+    },
+    "set_color_flow_scene": {
+      "service": "mdi:palette"
+    },
+    "set_auto_delay_off_scene": {
+      "service": "mdi:timer"
+    },
+    "start_flow": {
+      "service": "mdi:play"
+    },
+    "set_music_mode": {
+      "service": "mdi:music"
+    }
+  }
+}

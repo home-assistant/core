@@ -1,4 +1,5 @@
 """Tests for the LaMetric number platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
@@ -17,7 +18,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -41,9 +41,8 @@ async def test_brightness(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Brightness"
-    assert state.attributes.get(ATTR_ICON) == "mdi:brightness-6"
     assert state.attributes.get(ATTR_MAX) == 100
-    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MIN) == 2
     assert state.attributes.get(ATTR_STEP) == 1
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "100"
@@ -56,13 +55,17 @@ async def test_brightness(
 
     device = device_registry.async_get(entry.device_id)
     assert device
-    assert device.configuration_url is None
-    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+    assert device.configuration_url == "https://127.0.0.1/"
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
+    }
     assert device.entry_type is None
     assert device.hw_version is None
     assert device.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device.manufacturer == "LaMetric Inc."
     assert device.name == "Frenck's LaMetric"
+    assert device.serial_number == "SA110405124500W00BS9"
     assert device.sw_version == "2.2.2"
 
     await hass.services.async_call(
@@ -91,7 +94,6 @@ async def test_volume(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Volume"
-    assert state.attributes.get(ATTR_ICON) == "mdi:volume-high"
     assert state.attributes.get(ATTR_MAX) == 100
     assert state.attributes.get(ATTR_MIN) == 0
     assert state.attributes.get(ATTR_STEP) == 1
@@ -105,8 +107,11 @@ async def test_volume(
 
     device = device_registry.async_get(entry.device_id)
     assert device
-    assert device.configuration_url is None
-    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+    assert device.configuration_url == "https://127.0.0.1/"
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
+    }
     assert device.entry_type is None
     assert device.hw_version is None
     assert device.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
@@ -152,7 +157,6 @@ async def test_number_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
@@ -182,8 +186,20 @@ async def test_number_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["computer_powered"])
+async def test_computer_powered_devices(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test Brightness is properly limited for computer powered devices."""
+    state = hass.states.get("number.time_brightness")
+    assert state
+    assert state.state == "75"
+    assert state.attributes[ATTR_MIN] == 2
+    assert state.attributes[ATTR_MAX] == 76

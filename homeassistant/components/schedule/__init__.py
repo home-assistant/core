@@ -1,4 +1,5 @@
 """Support for schedules in Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,7 +18,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
     CollectionEntity,
     DictStorageCollection,
@@ -27,24 +35,22 @@ from homeassistant.helpers.collection import (
     YamlCollection,
     sync_entity_lifecycle,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
+    CONF_DATA,
     CONF_FROM,
     CONF_TO,
     DOMAIN,
     LOGGER,
+    SERVICE_GET,
     WEEKDAY_TO_CONF,
 )
 
@@ -57,7 +63,7 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
 
     Ensure they have no overlap and the end time is greater than the start time.
     """
-    # Emtpty schedule is valid
+    # Empty schedule is valid
     if not schedule:
         return schedule
 
@@ -74,7 +80,7 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
             )
 
         # Check if the from time of the event is after the to time of the previous event
-        if previous_to is not None and previous_to > time_range[CONF_FROM]:  # type: ignore[unreachable]
+        if previous_to is not None and previous_to > time_range[CONF_FROM]:
             raise vol.Invalid("Overlapping times found in schedule")
 
         previous_to = time_range[CONF_TO]
@@ -106,14 +112,18 @@ def serialize_to_time(value: Any) -> Any:
     return vol.Coerce(str)(value)
 
 
-BASE_SCHEMA = {
+BASE_SCHEMA: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_ICON): cv.icon,
 }
 
-TIME_RANGE_SCHEMA = {
+# Extra data that the user can set on each time range
+CUSTOM_DATA_SCHEMA = vol.Schema({str: vol.Any(bool, str, int, float)})
+
+TIME_RANGE_SCHEMA: VolDictType = {
     vol.Required(CONF_FROM): cv.time,
     vol.Required(CONF_TO): deserialize_to_time,
+    vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
 }
 
 # Serialize time in validated config
@@ -121,22 +131,22 @@ STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_FROM): vol.Coerce(str),
         vol.Required(CONF_TO): serialize_to_time,
+        vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
     }
 )
 
-SCHEDULE_SCHEMA = {
+SCHEDULE_SCHEMA: VolDictType = {
     vol.Optional(day, default=[]): vol.All(
         cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
     )
     for day in CONF_ALL_DAYS
 }
-STORAGE_SCHEDULE_SCHEMA = {
+STORAGE_SCHEDULE_SCHEMA: VolDictType = {
     vol.Optional(day, default=[]): vol.All(
         cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule, [STORAGE_TIME_RANGE_SCHEMA]
     )
     for day in CONF_ALL_DAYS
 }
-
 
 # Validate YAML config
 CONFIG_SCHEMA = vol.Schema(
@@ -154,12 +164,8 @@ ENTITY_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up an input select."""
+    """Set up a schedule."""
     component = EntityComponent[Schedule](LOGGER, DOMAIN, hass)
-
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     id_manager = IDManager()
 
@@ -206,6 +212,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         reload_service_handler,
     )
 
+    component.async_register_entity_service(
+        SERVICE_GET,
+        {},
+        async_get_schedule_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+    await component.async_setup(config)
+
     return True
 
 
@@ -228,7 +242,7 @@ class ScheduleStorageCollection(DictStorageCollection):
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         self.SCHEMA(update_data)
-        return item | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
     async def _async_load_data(self) -> SerializedStorageCollection | None:
         """Load the data."""
@@ -239,6 +253,10 @@ class ScheduleStorageCollection(DictStorageCollection):
 
 class Schedule(CollectionEntity):
     """Schedule entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+    )
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -255,11 +273,16 @@ class Schedule(CollectionEntity):
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
 
+        # Exclude any custom attributes that may be present on time ranges from recording.
+        self._unrecorded_attributes = self.all_custom_data_keys()
+        self._Entity__combined_unrecorded_attributes = (
+            self._entity_component_unrecorded_attributes | self._unrecorded_attributes
+        )
+
     @classmethod
     def from_storage(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from storage."""
-        schedule = cls(config, editable=True)
-        return schedule
+        return cls(config, editable=True)
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> Schedule:
@@ -288,6 +311,10 @@ class Schedule(CollectionEntity):
         self.async_on_remove(self._clean_up_listener)
         self._update()
 
+    def get_schedule(self) -> ConfigType:
+        """Return the schedule."""
+        return {d: self._config[d] for d in WEEKDAY_TO_CONF.values()}
+
     @callback
     def _update(self, _: datetime | None = None) -> None:
         """Update the states of the schedule."""
@@ -303,9 +330,11 @@ class Schedule(CollectionEntity):
             # Note that any time in the day is treated as smaller than time.max.
             if now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max:
                 self._attr_state = STATE_ON
+                current_data = time_range.get(CONF_DATA)
                 break
         else:
             self._attr_state = STATE_OFF
+            current_data = None
 
         # Find next event in the schedule, loop over each day (starting with
         # the current day) until the next event has been found.
@@ -347,6 +376,11 @@ class Schedule(CollectionEntity):
         self._attr_extra_state_attributes = {
             ATTR_NEXT_EVENT: next_event,
         }
+
+        if current_data:
+            # Add each key/value pair in the data to the entity's state attributes
+            self._attr_extra_state_attributes.update(current_data)
+
         self.async_write_ha_state()
 
         if next_event:
@@ -355,3 +389,30 @@ class Schedule(CollectionEntity):
                 self._update,
                 next_event,
             )
+
+    def all_custom_data_keys(self) -> frozenset[str]:
+        """Return the set of all currently used custom data attribute keys."""
+        data_keys = set()
+
+        for weekday in WEEKDAY_TO_CONF.values():
+            if not (weekday_config := self._config.get(weekday)):
+                continue  # this weekday is not configured
+
+            for time_range in weekday_config:
+                time_range_custom_data = time_range.get(CONF_DATA)
+
+                if not time_range_custom_data or not isinstance(
+                    time_range_custom_data, dict
+                ):
+                    continue  # this time range has no custom data, or it is not a dict
+
+                data_keys.update(time_range_custom_data.keys())
+
+        return frozenset(data_keys)
+
+
+async def async_get_schedule_service(
+    schedule: Schedule, service_call: ServiceCall
+) -> ServiceResponse:
+    """Return the schedule configuration."""
+    return schedule.get_schedule()

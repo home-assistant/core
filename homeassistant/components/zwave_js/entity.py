@@ -1,29 +1,49 @@
 """Generic Z-Wave Entity Class."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
-from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
+from zwave_js_server.model.value import (
+    SetValueResult,
+    Value as ZwaveValue,
+    get_value_id_str,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DOMAIN, LOGGER
-from .discovery import ZwaveDiscoveryInfo
+from .const import DOMAIN, EVENT_VALUE_UPDATED, LOGGER
+from .discovery_data_template import BaseDiscoverySchemaDataTemplate
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
+from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo
 
-EVENT_VALUE_UPDATED = "value updated"
 EVENT_VALUE_REMOVED = "value removed"
-EVENT_DEAD = "dead"
-EVENT_ALIVE = "alive"
+
+
+@dataclass(kw_only=True)
+class NewZwaveDiscoveryInfo(PlatformZwaveDiscoveryInfo):
+    """Info discovered from (primary) ZWave Value to create entity.
+
+    This is the new discovery info that will replace ZwaveDiscoveryInfo.
+    """
+
+    entity_class: type[ZWaveBaseEntity]
+    # the entity description to use
+    entity_description: EntityDescription
+    # helper data to use in platform setup
+    platform_data: Any = None
+    # data template to use in platform logic
+    platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
 
 
 class ZWaveBaseEntity(Entity):
@@ -33,7 +53,10 @@ class ZWaveBaseEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
@@ -50,12 +73,14 @@ class ZWaveBaseEntity(Entity):
         # Entity class attributes
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
-        if self.info.entity_registry_enabled_default is False:
-            self._attr_entity_registry_enabled_default = False
-        if self.info.entity_category is not None:
-            self._attr_entity_category = self.info.entity_category
-        if self.info.assumed_state:
-            self._attr_assumed_state = True
+        if isinstance(info, NewZwaveDiscoveryInfo):
+            self.entity_description = info.entity_description
+        else:
+            if (enabled_default := info.entity_registry_enabled_default) is False:
+                self._attr_entity_registry_enabled_default = enabled_default
+            if (entity_category := info.entity_category) is not None:
+                self._attr_entity_category = entity_category
+        self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(driver, self.info.node)},
@@ -70,9 +95,9 @@ class ZWaveBaseEntity(Entity):
 
     async def _async_poll_value(self, value_or_id: str | ZwaveValue) -> None:
         """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task and we don't want to raise the exception in that separate task
-        # because it is confusing to the user.
+        # We log an error instead of raising an exception because this service call
+        # occurs in a separate task and we don't want to raise the exception in that
+        # separate task because it is confusing to the user.
         try:
             await self.info.node.async_poll_value(value_or_id)
         except BaseZwaveJSServerError as err:
@@ -136,11 +161,6 @@ class ZWaveBaseEntity(Entity):
             )
         )
 
-        for status_event in (EVENT_ALIVE, EVENT_DEAD):
-            self.async_on_remove(
-                self.info.node.on(status_event, self._node_status_alive_or_dead)
-            )
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -157,6 +177,7 @@ class ZWaveBaseEntity(Entity):
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
+        primary_value = self.info.primary_value
         name = ""
         if (
             hasattr(self, "entity_description")
@@ -174,9 +195,9 @@ class ZWaveBaseEntity(Entity):
             value_name = alternate_value_name
         elif include_value_name:
             value_name = (
-                self.info.primary_value.metadata.label
-                or self.info.primary_value.property_key_name
-                or self.info.primary_value.property_name
+                primary_value.metadata.label
+                or primary_value.property_key_name
+                or primary_value.property_name
                 or ""
             )
 
@@ -184,31 +205,28 @@ class ZWaveBaseEntity(Entity):
         # Only include non empty additional info
         if additional_info := [item for item in (additional_info or []) if item]:
             name = f"{name} {' '.join(additional_info)}"
-        # append endpoint if > 1
-        if (
-            self.info.primary_value.endpoint is not None
-            and self.info.primary_value.endpoint > 1
-        ):
-            name += f" ({self.info.primary_value.endpoint})"
 
-        return name
+        # Only append endpoint to name if there are equivalent values on a lower
+        # endpoint
+        if primary_value.endpoint is not None and any(
+            get_value_id_str(
+                self.info.node,
+                primary_value.command_class,
+                primary_value.property_,
+                endpoint=endpoint_idx,
+                property_key=primary_value.property_key,
+            )
+            in self.info.node.values
+            for endpoint_idx in range(primary_value.endpoint)
+        ):
+            name += f" ({primary_value.endpoint})"
+
+        return name.strip()
 
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return (
-            self.driver.client.connected
-            and bool(self.info.node.ready)
-            and self.info.node.status != NodeStatus.DEAD
-        )
-
-    @callback
-    def _node_status_alive_or_dead(self, event_data: dict) -> None:
-        """Call when node status changes to alive or dead.
-
-        Should not be overridden by subclasses.
-        """
-        self.async_write_ha_state()
+        return self.driver.client.connected and bool(self.info.node.ready)
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
@@ -312,12 +330,13 @@ class ZWaveBaseEntity(Entity):
         new_value: Any,
         options: dict | None = None,
         wait_for_result: bool | None = None,
-    ) -> bool | None:
+    ) -> SetValueResult | None:
         """Set value on node."""
         try:
             return await self.info.node.async_set_value(
                 value, new_value, options=options, wait_for_result=wait_for_result
             )
         except BaseZwaveJSServerError as err:
-            LOGGER.error("Unable to set value %s: %s", value.value_id, err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Unable to set value {value.value_id}: {err}"
+            ) from err

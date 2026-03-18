@@ -1,4 +1,5 @@
 """The tests for the person component."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -13,7 +14,9 @@ from homeassistant.components.person import (
     DOMAIN,
 )
 from homeassistant.const import (
+    ATTR_EDITABLE,
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
@@ -99,7 +102,7 @@ async def test_valid_invalid_user_ids(
 
 async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test set up person with one device tracker."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -111,14 +114,19 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
+    expected_attributes = {
+        ATTR_DEVICE_TRACKERS: [DEVICE_TRACKER],
+        ATTR_EDITABLE: False,
+        ATTR_FRIENDLY_NAME: "tracked person",
+        ATTR_ID: "1234",
+        ATTR_USER_ID: user_id,
+    }
+
     state = hass.states.get("person.tracked_person")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
-    assert state.attributes.get(ATTR_SOURCE) is None
-    assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes == expected_attributes
 
+    # Test home without coordinates
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
@@ -130,13 +138,41 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
 
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
-    assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
-    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
-    assert state.attributes.get(ATTR_USER_ID) == user_id
-    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
+    assert state.attributes == expected_attributes | {
+        ATTR_LATITUDE: 32.87336,
+        ATTR_LONGITUDE: -117.22743,
+        ATTR_SOURCE: DEVICE_TRACKER,
+    }
 
+    # Test home with coordinates
+    hass.states.async_set(
+        DEVICE_TRACKER,
+        "home",
+        {ATTR_LATITUDE: 10.123456, ATTR_LONGITUDE: 11.123456, ATTR_GPS_ACCURACY: 10},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == "home"
+    assert state.attributes == expected_attributes | {
+        ATTR_GPS_ACCURACY: 10,
+        ATTR_LATITUDE: 10.123456,
+        ATTR_LONGITUDE: 11.123456,
+        ATTR_SOURCE: DEVICE_TRACKER,
+    }
+
+    # Test not_home without coordinates
+    hass.states.async_set(
+        DEVICE_TRACKER,
+        "not_home",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == "not_home"
+    assert state.attributes == expected_attributes | {ATTR_SOURCE: DEVICE_TRACKER}
+
+    # Test not_home with coordinates
     hass.states.async_set(
         DEVICE_TRACKER,
         "not_home",
@@ -146,20 +182,19 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
 
     state = hass.states.get("person.tracked_person")
     assert state.state == "not_home"
-    assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) == 10.123456
-    assert state.attributes.get(ATTR_LONGITUDE) == 11.123456
-    assert state.attributes.get(ATTR_GPS_ACCURACY) == 10
-    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
-    assert state.attributes.get(ATTR_USER_ID) == user_id
-    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
+    assert state.attributes == expected_attributes | {
+        ATTR_GPS_ACCURACY: 10,
+        ATTR_LATITUDE: 10.123456,
+        ATTR_LONGITUDE: 11.123456,
+        ATTR_SOURCE: DEVICE_TRACKER,
+    }
 
 
 async def test_setup_two_trackers(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test set up person with two device trackers."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -187,8 +222,8 @@ async def test_setup_two_trackers(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_LATITUDE) == 32.87336
+    assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
@@ -243,11 +278,86 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
 
 
+async def test_setup_router_ble_trackers(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test router and BLE trackers."""
+    # BLE trackers are considered stationary trackers; however unlike a router based tracker
+    # whose states are home and not_home, a BLE tracker may have the value of any zone that the
+    # beacon is configured for.
+    hass.set_state(CoreState.not_running)
+    user_id = hass_admin_user.id
+    config = {
+        DOMAIN: {
+            "id": "1234",
+            "name": "tracked person",
+            "user_id": user_id,
+            "device_trackers": [DEVICE_TRACKER, DEVICE_TRACKER_2],
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_ID) == "1234"
+    assert state.attributes.get(ATTR_LATITUDE) is None
+    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_SOURCE) is None
+    assert state.attributes.get(ATTR_USER_ID) == user_id
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        DEVICE_TRACKER, "not_home", {ATTR_SOURCE_TYPE: SourceType.ROUTER}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == "not_home"
+    assert state.attributes.get(ATTR_ID) == "1234"
+    assert state.attributes.get(ATTR_LATITUDE) is None
+    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_GPS_ACCURACY) is None
+    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
+    assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
+
+    # Set the BLE tracker to the "office" zone.
+    hass.states.async_set(
+        DEVICE_TRACKER_2,
+        "office",
+        {
+            ATTR_LATITUDE: 12.123456,
+            ATTR_LONGITUDE: 13.123456,
+            ATTR_GPS_ACCURACY: 12,
+            ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The person should be in the office.
+    state = hass.states.get("person.tracked_person")
+    assert state.state == "office"
+    assert state.attributes.get(ATTR_ID) == "1234"
+    assert state.attributes.get(ATTR_LATITUDE) == 12.123456
+    assert state.attributes.get(ATTR_LONGITUDE) == 13.123456
+    assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
+    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
+    assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
+
+
 async def test_ignore_unavailable_states(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test set up person with two device trackers, one unavailable."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -302,7 +412,7 @@ async def test_restore_home_state(
     }
     state = State("person.tracked_person", "home", attrs)
     mock_restore_cache(hass, (state,))
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     mock_component(hass, "recorder")
     config = {
         DOMAIN: {
@@ -348,8 +458,8 @@ async def test_create_person_during_run(hass: HomeAssistant) -> None:
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
-    await hass.components.person.async_create_person(
-        "tracked person", device_trackers=[DEVICE_TRACKER]
+    await person.async_create_person(
+        hass, "tracked person", device_trackers=[DEVICE_TRACKER]
     )
     await hass.async_block_till_done()
 
@@ -377,8 +487,8 @@ async def test_load_person_storage(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_LATITUDE) == 32.87336
+    assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == hass_admin_user.id
 
@@ -570,7 +680,10 @@ async def test_ws_update_require_admin(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test deleting via WS."""
     manager = hass.data[DOMAIN][1]
@@ -588,8 +701,7 @@ async def test_ws_delete(
 
     assert resp["success"]
     assert len(hass.states.async_entity_ids("person")) == 0
-    ent_reg = er.async_get(hass)
-    assert not ent_reg.async_is_registered("person.tracked_person")
+    assert not entity_registry.async_is_registered("person.tracked_person")
 
 
 async def test_ws_delete_require_admin(
@@ -684,11 +796,12 @@ async def test_update_person_when_user_removed(
     assert storage_collection.data[person["id"]]["user_id"] is None
 
 
-async def test_removing_device_tracker(hass: HomeAssistant, storage_setup) -> None:
+async def test_removing_device_tracker(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, storage_setup
+) -> None:
     """Test we automatically remove removed device trackers."""
     storage_collection = hass.data[DOMAIN][1]
-    reg = er.async_get(hass)
-    entry = reg.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "device_tracker", "mobile_app", "bla", suggested_object_id="pixel"
     )
 
@@ -696,7 +809,7 @@ async def test_removing_device_tracker(hass: HomeAssistant, storage_setup) -> No
         {"name": "Hello", "device_trackers": [entry.entity_id]}
     )
 
-    reg.async_remove(entry.entity_id)
+    entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
 
     assert storage_collection.data[person["id"]]["device_trackers"] == []
@@ -738,7 +851,7 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
         },
     )
 
-    assert len(hass.states.async_entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 3  # Person1, Person2, zone.home
 
     state_1 = hass.states.get("person.person_1")
     state_2 = hass.states.get("person.person_2")
@@ -768,7 +881,7 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 3  # Person1, Person2, zone.home
 
     state_1 = hass.states.get("person.person_1")
     state_2 = hass.states.get("person.person_2")

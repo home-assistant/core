@@ -1,0 +1,117 @@
+{
+  "config": {
+    "flow_title": "Ubiquiti airOS device",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the airOS device",
+          "username": "Administrator username for the airOS device, normally 'ubnt'",
+          "password": "Password configured through the UISP app or web interface"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "key_data_missing": "Expected data not returned from the device, check the documentation for supported devices",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "port_forwarding": {
+        "name": "Port forwarding"
+      },
+      "dhcp_client": {
+        "name": "DHCP client"
+      },
+      "dhcp_server": {
+        "name": "DHCP server"
+      },
+      "dhcp6_server": {
+        "name": "DHCPv6 server"
+      },
+      "pppoe": {
+        "name": "PPPoE link"
+      }
+    },
+    "sensor": {
+      "host_cpuload": {
+        "name": "CPU load"
+      },
+      "host_netrole": {
+        "name": "Network role",
+        "state": {
+          "bridge": "Bridge",
+          "router": "Router"
+        }
+      },
+      "wireless_frequency": {
+        "name": "Wireless frequency"
+      },
+      "wireless_essid": {
+        "name": "Wireless SSID"
+      },
+      "wireless_antenna_gain": {
+        "name": "Antenna gain"
+      },
+      "wireless_throughput_tx": {
+        "name": "Throughput transmit (actual)"
+      },
+      "wireless_throughput_rx": {
+        "name": "Throughput receive (actual)"
+      },
+      "wireless_polling_dl_capacity": {
+        "name": "Download capacity"
+      },
+      "wireless_polling_ul_capacity": {
+        "name": "Upload capacity"
+      },
+      "wireless_remote_hostname": {
+        "name": "Remote hostname"
+      },
+      "host_uptime": {
+        "name": "Uptime"
+      },
+      "wireless_distance": {
+        "name": "Wireless distance"
+      },
+      "wireless_role": {
+        "name": "Wireless role",
+        "state": {
+          "access_point": "Access point",
+          "station": "Station"
+        }
+      },
+      "wireless_mode": {
+        "name": "Wireless mode",
+        "state": {
+          "point_to_point": "Point-to-point",
+          "point_to_multipoint": "Point-to-multipoint"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "key_data_missing": {
+      "message": "Key data not returned from device"
+    },
+    "error_data_missing": {
+      "message": "Data incomplete or missing"
+    }
+  }
+}

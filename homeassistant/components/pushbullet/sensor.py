@@ -1,14 +1,14 @@
 """Pushbullet platform for sensor component."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import PushBulletNotificationProvider
 from .const import DATA_UPDATED, DOMAIN
@@ -16,50 +16,50 @@ from .const import DATA_UPDATED, DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="application_name",
-        name="Application name",
+        translation_key="application_name",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="body",
-        name="Body",
+        translation_key="body",
     ),
     SensorEntityDescription(
         key="notification_id",
-        name="Notification ID",
+        translation_key="notification_id",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="notification_tag",
-        name="Notification tag",
+        translation_key="notification_tag",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="package_name",
-        name="Package name",
+        translation_key="package_name",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="receiver_email",
-        name="Receiver email",
+        translation_key="receiver_email",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sender_email",
-        name="Sender email",
+        translation_key="sender_email",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="source_device_iden",
-        name="Sender device ID",
+        translation_key="source_device_identifier",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="title",
-        name="Title",
+        translation_key="title",
     ),
     SensorEntityDescription(
         key="type",
-        name="Type",
+        translation_key="type",
         entity_registry_enabled_default=False,
     ),
 )
@@ -68,7 +68,9 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pushbullet sensors from config entry."""
 
@@ -114,7 +116,12 @@ class PushBulletNotificationSensor(SensorEntity):
         attributes into self._state_attributes.
         """
         try:
-            self._attr_native_value = self.pb_provider.data[self.entity_description.key]
+            value = self.pb_provider.data[self.entity_description.key]
+            # Truncate state value to MAX_LENGTH_STATE_STATE while preserving full content in attributes
+            if isinstance(value, str) and len(value) > MAX_LENGTH_STATE_STATE:
+                self._attr_native_value = value[: MAX_LENGTH_STATE_STATE - 3] + "..."
+            else:
+                self._attr_native_value = value
             self._attr_extra_state_attributes = self.pb_provider.data
         except (KeyError, TypeError):
             pass

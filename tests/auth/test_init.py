@@ -1,5 +1,7 @@
 """Tests for the Home Assistant auth module."""
+
 from datetime import timedelta
+import time
 from typing import Any
 from unittest.mock import patch
 
@@ -25,6 +27,7 @@ from tests.common import (
     CLIENT_ID,
     MockUser,
     async_capture_events,
+    async_fire_time_changed,
     ensure_auth_manager_loaded,
     flush_store,
 )
@@ -342,6 +345,7 @@ async def test_saving_loading(
     await flush_store(manager._store._store)
 
     store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
     users = await store2.async_get_users()
     assert len(users) == 1
     assert users[0].permissions == user.permissions
@@ -369,17 +373,21 @@ async def test_cannot_retrieve_expired_access_token(hass: HomeAssistant) -> None
     assert refresh_token.client_id == CLIENT_ID
 
     access_token = manager.async_create_access_token(refresh_token)
-    assert await manager.async_validate_access_token(access_token) is refresh_token
+    assert manager.async_validate_access_token(access_token) is refresh_token
 
+    # We patch time directly here because we want the access token to be created with
+    # an expired time, but we do not want to freeze time so that jwt will compare it
+    # to the patched time. If we freeze time for the test it will be frozen for jwt
+    # as well and the token will not be expired.
     with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow()
-        - auth_const.ACCESS_TOKEN_EXPIRATION
-        - timedelta(seconds=11),
+        "homeassistant.auth.time.time",
+        return_value=time.time()
+        - auth_const.ACCESS_TOKEN_EXPIRATION.total_seconds()
+        - 11,
     ):
         access_token = manager.async_create_access_token(refresh_token)
 
-    assert await manager.async_validate_access_token(access_token) is None
+    assert manager.async_validate_access_token(access_token) is None
 
 
 async def test_generating_system_user(hass: HomeAssistant) -> None:
@@ -400,6 +408,8 @@ async def test_generating_system_user(hass: HomeAssistant) -> None:
     assert not user.local_only
     assert token is not None
     assert token.client_id is None
+    assert token.token_type == auth.models.TOKEN_TYPE_SYSTEM
+    assert token.expire_at is None
 
     await hass.async_block_till_done()
     assert len(events) == 1
@@ -415,6 +425,8 @@ async def test_generating_system_user(hass: HomeAssistant) -> None:
     assert user.local_only
     assert token is not None
     assert token.client_id is None
+    assert token.token_type == auth.models.TOKEN_TYPE_SYSTEM
+    assert token.expire_at is None
 
     await hass.async_block_till_done()
     assert len(events) == 2
@@ -468,6 +480,8 @@ async def test_refresh_token_with_specific_access_token_expiration(
     assert token is not None
     assert token.client_id == CLIENT_ID
     assert token.access_token_expiration == timedelta(days=100)
+    assert token.token_type == auth.models.TOKEN_TYPE_NORMAL
+    assert token.expire_at is not None
 
 
 async def test_refresh_token_type(hass: HomeAssistant) -> None:
@@ -509,6 +523,7 @@ async def test_refresh_token_type_long_lived_access_token(hass: HomeAssistant) -
     assert token.client_name == "GPS LOGGER"
     assert token.client_icon == "mdi:home"
     assert token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    assert token.expire_at is None
 
 
 async def test_refresh_token_provider_validation(mock_hass) -> None:
@@ -541,10 +556,13 @@ async def test_refresh_token_provider_validation(mock_hass) -> None:
 
     assert manager.async_create_access_token(refresh_token, ip) is not None
 
-    with patch(
-        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
-        side_effect=InvalidAuthError("Invalid access"),
-    ) as call, pytest.raises(InvalidAuthError):
+    with (
+        patch(
+            "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
+            side_effect=InvalidAuthError("Invalid access"),
+        ) as call,
+        pytest.raises(InvalidAuthError),
+    ):
         manager.async_create_access_token(refresh_token, ip)
 
     call.assert_called_with(refresh_token, ip)
@@ -559,17 +577,81 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
         await manager.async_deactivate_user(owner)
 
 
-async def test_remove_refresh_token(mock_hass) -> None:
+async def test_remove_refresh_token(hass: HomeAssistant) -> None:
     """Test that we can remove a refresh token."""
-    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    manager = await auth.auth_manager_from_config(hass, [], [])
     user = MockUser().add_to_auth_manager(manager)
     refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
     access_token = manager.async_create_access_token(refresh_token)
 
-    await manager.async_remove_refresh_token(refresh_token)
+    manager.async_remove_refresh_token(refresh_token)
 
-    assert await manager.async_get_refresh_token(refresh_token.id) is None
-    assert await manager.async_validate_access_token(access_token) is None
+    assert manager.async_get_refresh_token(refresh_token.id) is None
+    assert manager.async_validate_access_token(access_token) is None
+
+
+async def test_remove_expired_refresh_token(hass: HomeAssistant) -> None:
+    """Test that expired refresh tokens are deleted."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        refresh_token1 = await manager.async_create_refresh_token(user, CLIENT_ID)
+        assert (
+            refresh_token1.expire_at
+            == now.timestamp() + timedelta(days=90).total_seconds()
+        )
+
+    with freeze_time(now + timedelta(days=30)):
+        async_fire_time_changed(hass, now + timedelta(days=30))
+        refresh_token2 = await manager.async_create_refresh_token(user, CLIENT_ID)
+        assert (
+            refresh_token2.expire_at
+            == now.timestamp() + timedelta(days=120).total_seconds()
+        )
+
+    with freeze_time(now + timedelta(days=89, hours=23)):
+        async_fire_time_changed(hass, now + timedelta(days=89, hours=23))
+        await hass.async_block_till_done()
+        assert manager.async_get_refresh_token(refresh_token1.id)
+        assert manager.async_get_refresh_token(refresh_token2.id)
+
+    with freeze_time(now + timedelta(days=90, seconds=5)):
+        async_fire_time_changed(hass, now + timedelta(days=90, seconds=5))
+        await hass.async_block_till_done()
+        assert manager.async_get_refresh_token(refresh_token1.id) is None
+        assert manager.async_get_refresh_token(refresh_token2.id)
+
+    with freeze_time(now + timedelta(days=120, seconds=5)):
+        async_fire_time_changed(hass, now + timedelta(days=120, seconds=5))
+        await hass.async_block_till_done()
+        assert manager.async_get_refresh_token(refresh_token1.id) is None
+        assert manager.async_get_refresh_token(refresh_token2.id) is None
+
+
+async def test_update_expire_at_refresh_token(hass: HomeAssistant) -> None:
+    """Test that expire at is updated when refresh token is used."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+        assert (
+            refresh_token.expire_at
+            == now.timestamp() + timedelta(days=90).total_seconds()
+        )
+
+    with freeze_time(now + timedelta(days=30)):
+        async_fire_time_changed(hass, now + timedelta(days=30))
+        await hass.async_block_till_done()
+        assert manager.async_create_access_token(refresh_token)
+        await hass.async_block_till_done()
+        assert (
+            refresh_token.expire_at
+            == now.timestamp()
+            + timedelta(days=30).total_seconds()
+            + timedelta(days=90).total_seconds()
+        )
 
 
 async def test_register_revoke_token_callback(mock_hass) -> None:
@@ -585,7 +667,7 @@ async def test_register_revoke_token_callback(mock_hass) -> None:
         called = True
 
     manager.async_register_revoke_token_callback(refresh_token.id, cb)
-    await manager.async_remove_refresh_token(refresh_token)
+    manager.async_remove_refresh_token(refresh_token)
     assert called
 
 
@@ -604,7 +686,7 @@ async def test_unregister_revoke_token_callback(mock_hass) -> None:
     unregister = manager.async_register_revoke_token_callback(refresh_token.id, cb)
     unregister()
 
-    await manager.async_remove_refresh_token(refresh_token)
+    manager.async_remove_refresh_token(refresh_token)
     assert not called
 
 
@@ -658,7 +740,7 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass) -> None:
     access_token = manager.async_create_access_token(refresh_token)
     jwt_key = refresh_token.jwt_key
 
-    rt = await manager.async_validate_access_token(access_token)
+    rt = manager.async_validate_access_token(access_token)
     assert rt.id == refresh_token.id
 
     with pytest.raises(ValueError):
@@ -669,9 +751,9 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass) -> None:
             access_token_expiration=timedelta(days=3000),
         )
 
-    await manager.async_remove_refresh_token(refresh_token)
+    manager.async_remove_refresh_token(refresh_token)
     assert refresh_token.id not in user.refresh_tokens
-    rt = await manager.async_validate_access_token(access_token)
+    rt = manager.async_validate_access_token(access_token)
     assert rt is None, "Previous issued access token has been invoked"
 
     refresh_token_2 = await manager.async_create_refresh_token(
@@ -688,7 +770,7 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass) -> None:
     assert access_token != access_token_2
     assert jwt_key != jwt_key_2
 
-    rt = await manager.async_validate_access_token(access_token_2)
+    rt = manager.async_validate_access_token(access_token_2)
     jwt_payload = jwt.decode(access_token_2, rt.jwt_key, algorithms=["HS256"])
     assert jwt_payload["iss"] == refresh_token_2.id
     assert (
@@ -889,10 +971,7 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() + MFA_SESSION_EXPIRATION,
-    ):
+    with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
         step = await manager.login_flow.async_configure(
             step["flow_id"], {"pin": "test-pin"}
         )
@@ -1027,9 +1106,10 @@ async def test_async_remove_user_fail_if_remove_credential_fails(
     """Test removing a user."""
     await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
 
-    with patch.object(
-        hass.auth, "async_remove_credentials", side_effect=ValueError
-    ), pytest.raises(ValueError):
+    with (
+        patch.object(hass.auth, "async_remove_credentials", side_effect=ValueError),
+        pytest.raises(ValueError),
+    ):
         await hass.auth.async_remove_user(hass_admin_user)
 
 
@@ -1141,7 +1221,7 @@ async def test_access_token_with_invalid_signature(mock_hass) -> None:
     assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
     access_token = manager.async_create_access_token(refresh_token)
 
-    rt = await manager.async_validate_access_token(access_token)
+    rt = manager.async_validate_access_token(access_token)
     assert rt.id == refresh_token.id
 
     # Now we corrupt the signature
@@ -1151,7 +1231,7 @@ async def test_access_token_with_invalid_signature(mock_hass) -> None:
 
     assert access_token != invalid_token
 
-    result = await manager.async_validate_access_token(invalid_token)
+    result = manager.async_validate_access_token(invalid_token)
     assert result is None
 
 
@@ -1168,7 +1248,7 @@ async def test_access_token_with_null_signature(mock_hass) -> None:
     assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
     access_token = manager.async_create_access_token(refresh_token)
 
-    rt = await manager.async_validate_access_token(access_token)
+    rt = manager.async_validate_access_token(access_token)
     assert rt.id == refresh_token.id
 
     # Now we make the signature all nulls
@@ -1178,7 +1258,7 @@ async def test_access_token_with_null_signature(mock_hass) -> None:
 
     assert access_token != invalid_token
 
-    result = await manager.async_validate_access_token(invalid_token)
+    result = manager.async_validate_access_token(invalid_token)
     assert result is None
 
 
@@ -1195,7 +1275,7 @@ async def test_access_token_with_empty_signature(mock_hass) -> None:
     assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
     access_token = manager.async_create_access_token(refresh_token)
 
-    rt = await manager.async_validate_access_token(access_token)
+    rt = manager.async_validate_access_token(access_token)
     assert rt.id == refresh_token.id
 
     # Now we make the signature all nulls
@@ -1204,7 +1284,7 @@ async def test_access_token_with_empty_signature(mock_hass) -> None:
 
     assert access_token != invalid_token
 
-    result = await manager.async_validate_access_token(invalid_token)
+    result = manager.async_validate_access_token(invalid_token)
     assert result is None
 
 
@@ -1222,17 +1302,17 @@ async def test_access_token_with_empty_key(mock_hass) -> None:
 
     access_token = manager.async_create_access_token(refresh_token)
 
-    await manager.async_remove_refresh_token(refresh_token)
+    manager.async_remove_refresh_token(refresh_token)
     # Now remove the token from the keyring
     # so we will get an empty key
 
-    assert await manager.async_validate_access_token(access_token) is None
+    assert manager.async_validate_access_token(access_token) is None
 
 
 async def test_reject_access_token_with_impossible_large_size(mock_hass) -> None:
     """Test rejecting access tokens with impossible sizes."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
-    assert await manager.async_validate_access_token("a" * 10000) is None
+    assert manager.async_validate_access_token("a" * 10000) is None
 
 
 async def test_reject_token_with_invalid_json_payload(mock_hass) -> None:
@@ -1242,7 +1322,7 @@ async def test_reject_token_with_invalid_json_payload(mock_hass) -> None:
         b"invalid", b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
-    assert await manager.async_validate_access_token(token_with_invalid_json) is None
+    assert manager.async_validate_access_token(token_with_invalid_json) is None
 
 
 async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
@@ -1252,7 +1332,7 @@ async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
         b'["invalid"]', b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
-    assert await manager.async_validate_access_token(token_not_a_dict_json) is None
+    assert manager.async_validate_access_token(token_not_a_dict_json) is None
 
 
 async def test_access_token_that_expires_soon(mock_hass) -> None:
@@ -1269,11 +1349,11 @@ async def test_access_token_that_expires_soon(mock_hass) -> None:
     assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
     access_token = manager.async_create_access_token(refresh_token)
 
-    rt = await manager.async_validate_access_token(access_token)
+    rt = manager.async_validate_access_token(access_token)
     assert rt.id == refresh_token.id
 
     with freeze_time(now + timedelta(minutes=1)):
-        assert await manager.async_validate_access_token(access_token) is None
+        assert manager.async_validate_access_token(access_token) is None
 
 
 async def test_access_token_from_the_future(mock_hass) -> None:
@@ -1293,8 +1373,8 @@ async def test_access_token_from_the_future(mock_hass) -> None:
         )
         access_token = manager.async_create_access_token(refresh_token)
 
-    assert await manager.async_validate_access_token(access_token) is None
+    assert manager.async_validate_access_token(access_token) is None
 
     with freeze_time(now + timedelta(days=365)):
-        rt = await manager.async_validate_access_token(access_token)
+        rt = manager.async_validate_access_token(access_token)
         assert rt.id == refresh_token.id

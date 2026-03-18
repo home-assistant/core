@@ -1,0 +1,34 @@
+{
+  "services": {
+    "restart": {
+      "name": "[%key:common::action::restart%]",
+      "description": "Sends a restart command to an FFmpeg-based sensor.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will restart. Platform dependent."
+        }
+      }
+    },
+    "start": {
+      "name": "[%key:common::action::start%]",
+      "description": "Sends a start command to an FFmpeg-based sensor.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will start. Platform dependent."
+        }
+      }
+    },
+    "stop": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Sends a stop command to an FFmpeg-based sensor.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will stop. Platform dependent."
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Fixtures for Roku integration tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
@@ -10,7 +11,7 @@ from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 def app_icon_url(*args, **kwargs):
@@ -31,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.roku.async_setup_entry", return_value=True):
         yield
@@ -39,6 +40,7 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 @pytest.fixture
 async def mock_device(
+    hass: HomeAssistant,
     request: pytest.FixtureRequest,
 ) -> RokuDevice:
     """Return the mocked roku device."""
@@ -46,13 +48,11 @@ async def mock_device(
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    return RokuDevice(json.loads(load_fixture(fixture)))
+    return RokuDevice(json.loads(await async_load_fixture(hass, fixture)))
 
 
 @pytest.fixture
-def mock_roku_config_flow(
-    mock_device: RokuDevice,
-) -> Generator[None, MagicMock, None]:
+def mock_roku_config_flow(mock_device: RokuDevice) -> Generator[MagicMock]:
     """Return a mocked Roku client."""
 
     with patch(
@@ -65,9 +65,7 @@ def mock_roku_config_flow(
 
 
 @pytest.fixture
-def mock_roku(
-    request: pytest.FixtureRequest, mock_device: RokuDevice
-) -> Generator[None, MagicMock, None]:
+def mock_roku(mock_device: RokuDevice) -> Generator[MagicMock]:
     """Return a mocked Roku client."""
 
     with patch(
@@ -81,10 +79,16 @@ def mock_roku(
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_roku: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: RokuDevice,
+    mock_roku: MagicMock,
 ) -> MockConfigEntry:
     """Set up the Roku integration for testing."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=mock_device.info.serial_number
+    )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

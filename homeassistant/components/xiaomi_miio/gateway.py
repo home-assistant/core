@@ -1,4 +1,5 @@
 """Code to handle a Xiaomi Gateway."""
+
 import logging
 
 from construct.core import ChecksumError
@@ -7,16 +8,11 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 from .const import (
-    ATTR_AVAILABLE,
     CONF_CLOUD_COUNTRY,
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
-    DOMAIN,
     AuthException,
     SetupException,
 )
@@ -91,7 +87,7 @@ class ConnectXiaomiGateway:
             try:
                 self._gateway_device.discover_devices()
             except DeviceException as error:
-                _LOGGER.info(
+                _LOGGER.error(
                     (
                         "DeviceException during getting subdevices of xiaomi gateway"
                         " with host %s, trying cloud to obtain subdevices: %s"
@@ -132,46 +128,3 @@ class ConnectXiaomiGateway:
                     "DeviceException during setup of xiaomi gateway with host"
                     f" {self._host}"
                 ) from error
-
-
-class XiaomiGatewayDevice(CoordinatorEntity, Entity):
-    """Representation of a base Xiaomi Gateway Device."""
-
-    def __init__(self, coordinator, sub_device, entry):
-        """Initialize the Xiaomi Gateway Device."""
-        super().__init__(coordinator)
-        self._sub_device = sub_device
-        self._entry = entry
-        self._unique_id = sub_device.sid
-        self._name = f"{sub_device.name} ({sub_device.sid})"
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info of the gateway."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._sub_device.sid)},
-            via_device=(DOMAIN, self._entry.unique_id),
-            manufacturer="Xiaomi",
-            name=self._sub_device.name,
-            model=self._sub_device.model,
-            sw_version=self._sub_device.firmware_version,
-            hw_version=self._sub_device.zigbee_model,
-        )
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        if self.coordinator.data is None:
-            return False
-
-        return self.coordinator.data[ATTR_AVAILABLE]

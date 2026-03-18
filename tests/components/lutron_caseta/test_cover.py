@@ -1,19 +1,303 @@
 """Tests for the Lutron Caseta integration."""
 
+from typing import Any
+from unittest.mock import AsyncMock
 
+import pytest
+
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MockBridge, async_setup_integration
 
 
-async def test_cover_unique_id(hass: HomeAssistant) -> None:
-    """Test a light unique id."""
+@pytest.fixture
+async def mock_bridge_with_cover_mocks(hass: HomeAssistant) -> MockBridge:
+    """Set up mock bridge with all cover methods mocked for testing."""
+    instance = MockBridge()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    # Patch all cover methods on the instance with AsyncMocks
+    instance.set_value = AsyncMock()
+    instance.raise_cover = AsyncMock()
+    instance.lower_cover = AsyncMock()
+    instance.stop_cover = AsyncMock()
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    return instance
+
+
+async def test_cover_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a cover unique ID."""
     await async_setup_integration(hass, MockBridge)
 
     cover_entity_id = "cover.basement_bedroom_left_shade"
 
-    entity_registry = er.async_get(hass)
-
     # Assert that Caseta covers will have the bridge serial hash and the zone id as the uniqueID
     assert entity_registry.async_get(cover_entity_id).unique_id == "000004d2_802"
+
+
+async def test_cover_open_close_using_set_value(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test that open/close commands use set_value to avoid stuttering."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Test opening the cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should use set_value(100) instead of raise_cover
+    mock_instance.set_value.assert_called_with("802", 100)
+    mock_instance.raise_cover.assert_not_called()
+
+    mock_instance.set_value.reset_mock()
+    mock_instance.lower_cover.reset_mock()
+
+    # Test closing the cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should use set_value(0) instead of lower_cover
+    mock_instance.set_value.assert_called_with("802", 0)
+    mock_instance.lower_cover.assert_not_called()
+
+
+async def test_cover_stop_with_direction_tracking(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test that stop command sends appropriate directional command first."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Simulate shade moving up (opening)
+    mock_instance.devices["802"]["current_state"] = 30
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    mock_instance.devices["802"]["current_state"] = 60
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Now stop while opening
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should send raise_cover before stop_cover when opening
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+    mock_instance.lower_cover.assert_not_called()
+
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.lower_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
+
+    # Simulate shade moving down (closing)
+    mock_instance.devices["802"]["current_state"] = 40
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    mock_instance.devices["802"]["current_state"] = 20
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Now stop while closing
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should send lower_cover before stop_cover when closing
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+    mock_instance.raise_cover.assert_not_called()
+
+
+async def test_cover_stop_at_endpoints(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test stop command behavior when shade is at fully open or closed."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Test stop at fully open (100) - should infer it was opening
+    mock_instance.devices["802"]["current_state"] = 100
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # At fully open, should send raise_cover before stop
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.lower_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
+
+    # Test stop at fully closed (0) - should infer it was closing
+    mock_instance.devices["802"]["current_state"] = 0
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # At fully closed, should send lower_cover before stop
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+
+
+async def test_cover_position_heuristic_fallback(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test stop command uses position heuristic when movement direction is unknown."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Test stop at position < 50 with no movement
+    # Update the device data directly in the bridge's devices dict
+    mock_instance.devices["802"]["current_state"] = 30
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Position < 50, should send lower_cover
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.lower_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
+
+    # Test stop at position >= 50 with no movement
+    mock_instance.devices["802"]["current_state"] = 70
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Position >= 50, should send raise_cover
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+
+
+async def test_cover_stopped_movement_detection(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test that movement direction is set to STOPPED when position doesn't change."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Set initial position
+    mock_instance.devices["802"]["current_state"] = 50
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Send same position again - should detect as stopped
+    mock_instance.devices["802"]["current_state"] = 50
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Now stop command should use position heuristic (>= 50)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Position >= 50 with STOPPED direction, should send raise_cover
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+
+
+async def test_cover_startup_with_shade_in_motion(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test stop command when HA starts with shade already in motion."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Shade starts at position 50 (simulating HA startup with shade in motion)
+    # First stop without seeing movement should use position heuristic
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should have used position heuristic since we haven't seen movement yet
+    # Initial position is 100 from MockBridge, so >= 50, should send raise_cover
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
+
+    # Now simulate shade moving down (shade was actually in motion)
+    mock_instance.devices["802"]["current_state"] = 45
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Now we've detected downward movement
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should now correctly send lower_cover since we detected downward movement
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")

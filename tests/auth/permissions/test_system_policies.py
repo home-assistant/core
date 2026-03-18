@@ -1,4 +1,5 @@
 """Test system policies."""
+
 from homeassistant.auth.permissions import (
     POLICY_SCHEMA,
     PolicyPermissions,

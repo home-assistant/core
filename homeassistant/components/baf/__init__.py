@@ -1,19 +1,22 @@
 """The Big Ass Fans integration."""
+
 from __future__ import annotations
 
-import asyncio
+from asyncio import timeout
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
-import async_timeout
+from aiobafi6.exceptions import DeviceUUIDMismatchError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, QUERY_INTERVAL, RUN_TIMEOUT
-from .models import BAFData
+from .const import QUERY_INTERVAL, RUN_TIMEOUT
+
+type BAFConfigEntry = ConfigEntry[Device]
+
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -26,7 +29,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
     """Set up Big Ass Fans from a config entry."""
     ip_address = entry.data[CONF_IP_ADDRESS]
 
@@ -35,22 +38,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     run_future = device.async_run()
 
     try:
-        async with async_timeout.timeout(RUN_TIMEOUT):
+        async with timeout(RUN_TIMEOUT):
             await device.async_wait_available()
-    except asyncio.TimeoutError as ex:
+    except DeviceUUIDMismatchError as ex:
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {ip_address}; expected {entry.unique_id}, found {device.dns_sd_uuid}"
+        ) from ex
+    except TimeoutError as ex:
         run_future.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BAFData(device, run_future)
+    @callback
+    def _async_cancel_run() -> None:
+        run_future.cancel()
+
+    entry.runtime_data = device
+    entry.async_on_unload(_async_cancel_run)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: BAFData = hass.data[DOMAIN].pop(entry.entry_id)
-        data.run_future.cancel()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

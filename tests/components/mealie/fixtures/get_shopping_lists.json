@@ -1,0 +1,838 @@
+{
+  "page": 1,
+  "per_page": 50,
+  "total": 3,
+  "total_pages": 1,
+  "items": [
+    {
+      "name": "Supermarket",
+      "extras": {},
+      "createdAt": "2024-06-17T11:01:54.267314",
+      "updateAt": "2024-06-22T10:22:13.555389",
+      "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+      "userId": "90b03954-00e1-46de-9520-f0305022b84f",
+      "id": "27edbaab-2ec6-441f-8490-0283ea77585f",
+      "recipeReferences": [],
+      "labelSettings": [
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "0f63545a-606a-47ea-a784-452d45de6158",
+          "position": 0,
+          "id": "ad5f48b0-5b26-4c2d-a2aa-79b0beae1e42",
+          "label": {
+            "name": "Alcohol",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "0f63545a-606a-47ea-a784-452d45de6158"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "0c2d6111-9837-4319-acb5-490a32979993",
+          "position": 1,
+          "id": "c9b8289a-6693-4bec-9841-d7d08c3b240b",
+          "label": {
+            "name": "Baked Goods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "0c2d6111-9837-4319-acb5-490a32979993"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "3922802c-8e8c-47d4-9c68-e60b0a1338b6",
+          "position": 2,
+          "id": "9be06f8a-6c23-476b-a8cc-334884bcdd40",
+          "label": {
+            "name": "Beverages",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "3922802c-8e8c-47d4-9c68-e60b0a1338b6"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "4111bfff-d834-4e8c-88ed-5eff761e06db",
+          "position": 3,
+          "id": "47bc36ae-1ee4-40be-ad68-ad8662c26cae",
+          "label": {
+            "name": "Canned Goods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "4111bfff-d834-4e8c-88ed-5eff761e06db"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "24fa2836-25e8-44af-b497-ad0d428a7f78",
+          "position": 4,
+          "id": "ad41f42c-08c3-49ef-8b96-dc1740ec95b6",
+          "label": {
+            "name": "Condiments",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "24fa2836-25e8-44af-b497-ad0d428a7f78"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "20a735de-c75b-4fdb-abaf-b8d71ef192f8",
+          "position": 5,
+          "id": "5514842f-8c05-4003-a42d-7a5a70d80148",
+          "label": {
+            "name": "Confectionary",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "20a735de-c75b-4fdb-abaf-b8d71ef192f8"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "71178428-70aa-4491-b5b4-b8d93e7b04cf",
+          "position": 6,
+          "id": "0465a139-6571-4599-836b-a562afc95536",
+          "label": {
+            "name": "Dairy Products",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "71178428-70aa-4491-b5b4-b8d93e7b04cf"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "c58ed864-b5bf-4aac-88a1-007833c706c7",
+          "position": 7,
+          "id": "8d85fe1b-ec4d-49d0-aecc-15f9dbc66fd0",
+          "label": {
+            "name": "Frozen Foods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "c58ed864-b5bf-4aac-88a1-007833c706c7"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "f398f1a4-ce53-42df-95d4-8a3403bb6a38",
+          "position": 8,
+          "id": "b6980720-bd88-4703-a115-50c0b915f607",
+          "label": {
+            "name": "Fruits",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "f398f1a4-ce53-42df-95d4-8a3403bb6a38"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "fd936065-3d53-4844-99df-9332f1bf0c8a",
+          "position": 9,
+          "id": "5d69d13c-5d7f-45af-9ecc-045ca914f7ca",
+          "label": {
+            "name": "Grains",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "fd936065-3d53-4844-99df-9332f1bf0c8a"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "db7b685a-4aeb-4ebd-9b64-0c14827d9eaf",
+          "position": 10,
+          "id": "a5e65ce7-3588-412b-a118-2fe1a2ca0104",
+          "label": {
+            "name": "Health Foods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "db7b685a-4aeb-4ebd-9b64-0c14827d9eaf"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "28bbdab4-7eab-4fb2-b0e1-b0f2c10e489b",
+          "position": 11,
+          "id": "9890d86a-98e9-4599-8daf-82d341ef1e8d",
+          "label": {
+            "name": "Household",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "28bbdab4-7eab-4fb2-b0e1-b0f2c10e489b"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "cf136576-1929-4fc9-a3da-34c49ff58920",
+          "position": 12,
+          "id": "18fc0f39-3e45-412f-afa7-7eb779f7bfdf",
+          "label": {
+            "name": "Meat",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "cf136576-1929-4fc9-a3da-34c49ff58920"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "5b7d69d0-4d9f-48f9-96f1-8cb843227baa",
+          "position": 13,
+          "id": "4cd55de7-7c2e-4078-8c61-87d40b33ebda",
+          "label": {
+            "name": "Meat Products",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "5b7d69d0-4d9f-48f9-96f1-8cb843227baa"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "2a035661-fd5d-462c-8eb0-6b78af982e0c",
+          "position": 14,
+          "id": "21c55b4a-c1b1-44c0-962e-040bbfa5e148",
+          "label": {
+            "name": "Other",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "2a035661-fd5d-462c-8eb0-6b78af982e0c"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "af147838-d114-4a92-bd0f-08f05f59bbe5",
+          "position": 15,
+          "id": "b295a6be-1437-4415-92bb-4eee21d3195d",
+          "label": {
+            "name": "Produce",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "af147838-d114-4a92-bd0f-08f05f59bbe5"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "cf7672b8-036a-45a4-8323-6a167d2731be",
+          "position": 16,
+          "id": "d3ae533f-c1a8-4f08-8a0f-a88914b2c84b",
+          "label": {
+            "name": "Regular",
+            "color": "#2E7D32FF",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "cf7672b8-036a-45a4-8323-6a167d2731be"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "bbcfaf8b-02e6-4c3d-98a6-6863b36bef18",
+          "position": 17,
+          "id": "572dbf60-4308-499e-ad7c-d806462ee501",
+          "label": {
+            "name": "Seafood",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "bbcfaf8b-02e6-4c3d-98a6-6863b36bef18"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "1c59a263-227a-4f43-a450-d53ca1485b36",
+          "position": 18,
+          "id": "5321b4d8-3aba-4a64-95b2-03ac533dda32",
+          "label": {
+            "name": "Snacks",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "1c59a263-227a-4f43-a450-d53ca1485b36"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "189099a9-0033-4783-804a-ec6805e7d557",
+          "position": 19,
+          "id": "98aebebf-27fe-4834-b3d3-0e45201a182f",
+          "label": {
+            "name": "Spices",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "189099a9-0033-4783-804a-ec6805e7d557"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "c28efdde-5993-4044-b824-f111f3a118ef",
+          "position": 20,
+          "id": "3e3aa706-3008-4280-b332-a7d2c31cf683",
+          "label": {
+            "name": "Sweets",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "c28efdde-5993-4044-b824-f111f3a118ef"
+          }
+        },
+        {
+          "shoppingListId": "27edbaab-2ec6-441f-8490-0283ea77585f",
+          "labelId": "3f151d15-27f9-41c7-9dfc-2ae1024b1c7c",
+          "position": 21,
+          "id": "48f109ca-c57a-4828-98ab-a2db1e6514c6",
+          "label": {
+            "name": "Vegetables",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "3f151d15-27f9-41c7-9dfc-2ae1024b1c7c"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Special groceries",
+      "extras": {},
+      "createdAt": "2024-06-07T07:17:05.479808",
+      "updateAt": "2024-06-12T08:44:58.831239",
+      "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+      "userId": "90b03954-00e1-46de-9520-f0305022b84f",
+      "id": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+      "recipeReferences": [],
+      "labelSettings": [
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "0f63545a-606a-47ea-a784-452d45de6158",
+          "position": 0,
+          "id": "1a5dc45b-e6ae-4db2-bd2f-fa3c07efedeb",
+          "label": {
+            "name": "Alcohol",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "0f63545a-606a-47ea-a784-452d45de6158"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "0c2d6111-9837-4319-acb5-490a32979993",
+          "position": 1,
+          "id": "d1594c9d-f1b6-4160-a4eb-0686499a40ea",
+          "label": {
+            "name": "Baked Goods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "0c2d6111-9837-4319-acb5-490a32979993"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "3922802c-8e8c-47d4-9c68-e60b0a1338b6",
+          "position": 2,
+          "id": "077106d0-5c85-493c-ae6b-dea06002c824",
+          "label": {
+            "name": "Beverages",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "3922802c-8e8c-47d4-9c68-e60b0a1338b6"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "4111bfff-d834-4e8c-88ed-5eff761e06db",
+          "position": 3,
+          "id": "bf66b7e8-3758-4f9e-9e13-c7b9ff564889",
+          "label": {
+            "name": "Canned Goods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "4111bfff-d834-4e8c-88ed-5eff761e06db"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "24fa2836-25e8-44af-b497-ad0d428a7f78",
+          "position": 4,
+          "id": "bb34f741-10b4-490a-a512-67bbd374427c",
+          "label": {
+            "name": "Condiments",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "24fa2836-25e8-44af-b497-ad0d428a7f78"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "20a735de-c75b-4fdb-abaf-b8d71ef192f8",
+          "position": 5,
+          "id": "d88b23a5-e397-4cf2-b527-d8982ecf89e0",
+          "label": {
+            "name": "Confectionary",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "20a735de-c75b-4fdb-abaf-b8d71ef192f8"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "71178428-70aa-4491-b5b4-b8d93e7b04cf",
+          "position": 6,
+          "id": "82d44804-5bef-4cc3-9d1f-0d8e879783c0",
+          "label": {
+            "name": "Dairy Products",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "71178428-70aa-4491-b5b4-b8d93e7b04cf"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "c58ed864-b5bf-4aac-88a1-007833c706c7",
+          "position": 7,
+          "id": "0ae70dde-7403-408f-a6c6-c19b8c0f6a4d",
+          "label": {
+            "name": "Frozen Foods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "c58ed864-b5bf-4aac-88a1-007833c706c7"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "f398f1a4-ce53-42df-95d4-8a3403bb6a38",
+          "position": 8,
+          "id": "7667a581-8d63-4785-a013-8e164994dfc4",
+          "label": {
+            "name": "Fruits",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "f398f1a4-ce53-42df-95d4-8a3403bb6a38"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "fd936065-3d53-4844-99df-9332f1bf0c8a",
+          "position": 9,
+          "id": "749c8cbd-c4e5-4879-bce1-40c3b62ada71",
+          "label": {
+            "name": "Grains",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "fd936065-3d53-4844-99df-9332f1bf0c8a"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "db7b685a-4aeb-4ebd-9b64-0c14827d9eaf",
+          "position": 10,
+          "id": "e7979797-7679-47be-b14f-5fdcfe1c987d",
+          "label": {
+            "name": "Health Foods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "db7b685a-4aeb-4ebd-9b64-0c14827d9eaf"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "28bbdab4-7eab-4fb2-b0e1-b0f2c10e489b",
+          "position": 11,
+          "id": "1a9b6d19-d8b5-41a0-8e75-548c36fc0b1b",
+          "label": {
+            "name": "Household",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "28bbdab4-7eab-4fb2-b0e1-b0f2c10e489b"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "cf136576-1929-4fc9-a3da-34c49ff58920",
+          "position": 12,
+          "id": "0df24ff7-1767-46a1-9841-97f816079580",
+          "label": {
+            "name": "Meat",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "cf136576-1929-4fc9-a3da-34c49ff58920"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "5b7d69d0-4d9f-48f9-96f1-8cb843227baa",
+          "position": 13,
+          "id": "761b5985-9f49-450b-a33c-5b85366501da",
+          "label": {
+            "name": "Meat Products",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "5b7d69d0-4d9f-48f9-96f1-8cb843227baa"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "2a035661-fd5d-462c-8eb0-6b78af982e0c",
+          "position": 14,
+          "id": "cd993b6c-2c06-40b3-8fe2-8f9613d29b8e",
+          "label": {
+            "name": "Other",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "2a035661-fd5d-462c-8eb0-6b78af982e0c"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "af147838-d114-4a92-bd0f-08f05f59bbe5",
+          "position": 15,
+          "id": "9c9f8e0d-a9e8-4503-ad98-ee7039ec6eec",
+          "label": {
+            "name": "Produce",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "af147838-d114-4a92-bd0f-08f05f59bbe5"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "cf7672b8-036a-45a4-8323-6a167d2731be",
+          "position": 16,
+          "id": "f2a1fa92-1ee3-47b5-9d5f-1ac21e0d6bf3",
+          "label": {
+            "name": "Regular",
+            "color": "#2E7D32FF",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "cf7672b8-036a-45a4-8323-6a167d2731be"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "bbcfaf8b-02e6-4c3d-98a6-6863b36bef18",
+          "position": 17,
+          "id": "bf2eb5db-bf88-44bc-a83f-7c69c38fc03f",
+          "label": {
+            "name": "Seafood",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "bbcfaf8b-02e6-4c3d-98a6-6863b36bef18"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "1c59a263-227a-4f43-a450-d53ca1485b36",
+          "position": 18,
+          "id": "14f5ca34-fcec-4847-8ee7-71b29488dc5b",
+          "label": {
+            "name": "Snacks",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "1c59a263-227a-4f43-a450-d53ca1485b36"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "189099a9-0033-4783-804a-ec6805e7d557",
+          "position": 19,
+          "id": "197f3d41-27a6-4782-a78d-60ea582108c8",
+          "label": {
+            "name": "Spices",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "189099a9-0033-4783-804a-ec6805e7d557"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "c28efdde-5993-4044-b824-f111f3a118ef",
+          "position": 20,
+          "id": "b5021331-2004-4570-a2bb-c6f364787bcc",
+          "label": {
+            "name": "Sweets",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "c28efdde-5993-4044-b824-f111f3a118ef"
+          }
+        },
+        {
+          "shoppingListId": "f8438635-8211-4be8-80d0-0aa42e37a5f2",
+          "labelId": "3f151d15-27f9-41c7-9dfc-2ae1024b1c7c",
+          "position": 21,
+          "id": "98e9ecff-d650-4717-96fe-d7744258bf43",
+          "label": {
+            "name": "Vegetables",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "3f151d15-27f9-41c7-9dfc-2ae1024b1c7c"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Freezer",
+      "extras": {},
+      "createdAt": "2024-06-05T09:49:00.404632",
+      "updateAt": "2024-06-23T08:21:51.764793",
+      "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+      "userId": "90b03954-00e1-46de-9520-f0305022b84f",
+      "id": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+      "recipeReferences": [],
+      "labelSettings": [
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "0f63545a-606a-47ea-a784-452d45de6158",
+          "position": 0,
+          "id": "666b5b98-dcf6-4121-a5a6-2782f06f5f7e",
+          "label": {
+            "name": "Alcohol",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "0f63545a-606a-47ea-a784-452d45de6158"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "0c2d6111-9837-4319-acb5-490a32979993",
+          "position": 1,
+          "id": "6d25fc7e-33d2-459c-ba14-7e0aaf30a522",
+          "label": {
+            "name": "Baked Goods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "0c2d6111-9837-4319-acb5-490a32979993"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "3922802c-8e8c-47d4-9c68-e60b0a1338b6",
+          "position": 2,
+          "id": "56402a4e-c94e-4480-9f68-87370dbda209",
+          "label": {
+            "name": "Beverages",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "3922802c-8e8c-47d4-9c68-e60b0a1338b6"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "4111bfff-d834-4e8c-88ed-5eff761e06db",
+          "position": 3,
+          "id": "743e9e2b-a13a-4d80-b203-431d1c23f691",
+          "label": {
+            "name": "Canned Goods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "4111bfff-d834-4e8c-88ed-5eff761e06db"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "24fa2836-25e8-44af-b497-ad0d428a7f78",
+          "position": 4,
+          "id": "93b46c6e-0542-4adf-ad9d-8942b47dd9e3",
+          "label": {
+            "name": "Condiments",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "24fa2836-25e8-44af-b497-ad0d428a7f78"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "20a735de-c75b-4fdb-abaf-b8d71ef192f8",
+          "position": 5,
+          "id": "8c6f20ff-a5e3-4c64-a1ff-aa07bbdd455a",
+          "label": {
+            "name": "Confectionary",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "20a735de-c75b-4fdb-abaf-b8d71ef192f8"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "71178428-70aa-4491-b5b4-b8d93e7b04cf",
+          "position": 6,
+          "id": "02995d80-108f-4949-bd58-d04d670b388d",
+          "label": {
+            "name": "Dairy Products",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "71178428-70aa-4491-b5b4-b8d93e7b04cf"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "c58ed864-b5bf-4aac-88a1-007833c706c7",
+          "position": 7,
+          "id": "b20c178c-e719-4159-b199-91a6dd25dcd3",
+          "label": {
+            "name": "Frozen Foods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "c58ed864-b5bf-4aac-88a1-007833c706c7"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "f398f1a4-ce53-42df-95d4-8a3403bb6a38",
+          "position": 8,
+          "id": "5ff12e47-9b84-46d2-aabf-da4165a68f65",
+          "label": {
+            "name": "Fruits",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "f398f1a4-ce53-42df-95d4-8a3403bb6a38"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "fd936065-3d53-4844-99df-9332f1bf0c8a",
+          "position": 9,
+          "id": "e0ec7da9-c0b8-4d78-a5b8-591c99d87370",
+          "label": {
+            "name": "Grains",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "fd936065-3d53-4844-99df-9332f1bf0c8a"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "db7b685a-4aeb-4ebd-9b64-0c14827d9eaf",
+          "position": 10,
+          "id": "3dc2d2e7-274e-40ec-8ba1-09ce1820b29b",
+          "label": {
+            "name": "Health Foods",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "db7b685a-4aeb-4ebd-9b64-0c14827d9eaf"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "28bbdab4-7eab-4fb2-b0e1-b0f2c10e489b",
+          "position": 11,
+          "id": "e30fa937-4bb1-4ff9-b163-2da67e2749ca",
+          "label": {
+            "name": "Household",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "28bbdab4-7eab-4fb2-b0e1-b0f2c10e489b"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "cf136576-1929-4fc9-a3da-34c49ff58920",
+          "position": 12,
+          "id": "ecd715af-fafe-4d32-a376-538e476bf215",
+          "label": {
+            "name": "Meat",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "cf136576-1929-4fc9-a3da-34c49ff58920"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "5b7d69d0-4d9f-48f9-96f1-8cb843227baa",
+          "position": 13,
+          "id": "5ded867c-473f-456d-b0a0-83cae279df71",
+          "label": {
+            "name": "Meat Products",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "5b7d69d0-4d9f-48f9-96f1-8cb843227baa"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "2a035661-fd5d-462c-8eb0-6b78af982e0c",
+          "position": 14,
+          "id": "eb88d477-cd50-4b84-a1bb-5adc077d38e5",
+          "label": {
+            "name": "Other",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "2a035661-fd5d-462c-8eb0-6b78af982e0c"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "af147838-d114-4a92-bd0f-08f05f59bbe5",
+          "position": 15,
+          "id": "ab7e96e3-f8d5-4e4e-91ee-b966bd980cf0",
+          "label": {
+            "name": "Produce",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "af147838-d114-4a92-bd0f-08f05f59bbe5"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "cf7672b8-036a-45a4-8323-6a167d2731be",
+          "position": 16,
+          "id": "3fcf5e5a-f8e2-4174-be79-2496a1cb505a",
+          "label": {
+            "name": "Regular",
+            "color": "#2E7D32FF",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "cf7672b8-036a-45a4-8323-6a167d2731be"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "bbcfaf8b-02e6-4c3d-98a6-6863b36bef18",
+          "position": 17,
+          "id": "e768c9e7-c568-44d1-a263-081d93fd1298",
+          "label": {
+            "name": "Seafood",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "bbcfaf8b-02e6-4c3d-98a6-6863b36bef18"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "1c59a263-227a-4f43-a450-d53ca1485b36",
+          "position": 18,
+          "id": "f8a78147-c6d1-4a86-b159-5f178ae72089",
+          "label": {
+            "name": "Snacks",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "1c59a263-227a-4f43-a450-d53ca1485b36"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "189099a9-0033-4783-804a-ec6805e7d557",
+          "position": 19,
+          "id": "23253f2f-bc71-4ecf-837c-d1697738b505",
+          "label": {
+            "name": "Spices",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "189099a9-0033-4783-804a-ec6805e7d557"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "c28efdde-5993-4044-b824-f111f3a118ef",
+          "position": 20,
+          "id": "706d656b-3755-46f7-8c12-c9196730baf2",
+          "label": {
+            "name": "Sweets",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "c28efdde-5993-4044-b824-f111f3a118ef"
+          }
+        },
+        {
+          "shoppingListId": "e9d78ff2-4b23-4b77-a3a8-464827100b46",
+          "labelId": "3f151d15-27f9-41c7-9dfc-2ae1024b1c7c",
+          "position": 21,
+          "id": "d9d60d8d-f2de-4636-864f-d7262e24ead3",
+          "label": {
+            "name": "Vegetables",
+            "color": "#E0E0E0",
+            "groupId": "9ed7c880-3e85-4955-9318-1443d6e080fe",
+            "id": "3f151d15-27f9-41c7-9dfc-2ae1024b1c7c"
+          }
+        }
+      ]
+    }
+  ],
+  "next": null,
+  "previous": null
+}

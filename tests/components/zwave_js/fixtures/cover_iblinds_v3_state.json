@@ -1,5 +1,5 @@
 {
-  "nodeId": 12,
+  "nodeId": 131,
   "index": 0,
   "installerIcon": 6656,
   "userIcon": 6656,
@@ -7,12 +7,13 @@
   "ready": true,
   "isListening": false,
   "isRouting": true,
-  "isSecure": true,
+  "isSecure": false,
   "manufacturerId": 647,
   "productId": 114,
   "productType": 4,
   "firmwareVersion": "3.12.1",
   "zwavePlusVersion": 2,
+  "name": "Blind West Bed 1",
   "deviceConfig": {
     "filename": "/data/db/devices/0x0287/iblindsv3.json",
     "isEmbedded": true,
@@ -38,321 +39,61 @@
     "associations": {},
     "paramInformation": {
       "_map": {}
+    },
+    "compat": {
+      "removeCCs": {}
     }
   },
   "label": "iblinds V3",
   "interviewAttempts": 1,
-  "endpoints": [
-    {
-      "nodeId": 12,
-      "index": 0,
-      "installerIcon": 6656,
-      "userIcon": 6656,
-      "deviceClass": {
-        "basic": {
-          "key": 4,
-          "label": "Routing Slave"
-        },
-        "generic": {
-          "key": 17,
-          "label": "Multilevel Switch"
-        },
-        "specific": {
-          "key": 7,
-          "label": "Motor Control Class C"
-        },
-        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
-        "mandatoryControlledCCs": []
-      },
-      "commandClasses": [
-        {
-          "id": 38,
-          "name": "Multilevel Switch",
-          "version": 4,
-          "isSecure": true
-        },
-        {
-          "id": 37,
-          "name": "Binary Switch",
-          "version": 2,
-          "isSecure": true
-        },
-        {
-          "id": 114,
-          "name": "Manufacturer Specific",
-          "version": 2,
-          "isSecure": true
-        },
-        {
-          "id": 134,
-          "name": "Version",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 94,
-          "name": "Z-Wave Plus Info",
-          "version": 2,
-          "isSecure": false
-        },
-        {
-          "id": 133,
-          "name": "Association",
-          "version": 2,
-          "isSecure": true
-        },
-        {
-          "id": 89,
-          "name": "Association Group Information",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 85,
-          "name": "Transport Service",
-          "version": 2,
-          "isSecure": false
-        },
-        {
-          "id": 90,
-          "name": "Device Reset Locally",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 115,
-          "name": "Powerlevel",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 159,
-          "name": "Security 2",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 108,
-          "name": "Supervision",
-          "version": 1,
-          "isSecure": false
-        },
-        {
-          "id": 122,
-          "name": "Firmware Update Meta Data",
-          "version": 5,
-          "isSecure": true
-        },
-        {
-          "id": 128,
-          "name": "Battery",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 112,
-          "name": "Configuration",
-          "version": 4,
-          "isSecure": true
-        },
-        {
-          "id": 135,
-          "name": "Indicator",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 142,
-          "name": "Multi Channel Association",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 106,
-          "name": "Window Covering",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 152,
-          "name": "Security",
-          "version": 1,
-          "isSecure": true
-        }
-      ]
+  "isFrequentListening": "1000ms",
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 7,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 7,
+      "label": "Motor Control Class C"
+    },
+    "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0287:0x0004:0x0072:3.12.1",
+  "statistics": {
+    "commandsTX": 95,
+    "commandsRX": 110,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0,
+    "rtt": 1295.6,
+    "lastSeen": "2023-11-02T18:41:40.552Z",
+    "rssi": -69,
+    "lwr": {
+      "protocolDataRate": 2,
+      "repeaters": [],
+      "rssi": -71,
+      "repeaterRSSI": []
     }
-  ],
+  },
+  "highestSecurityClass": -1,
+  "isControllerNode": false,
+  "keepAwake": false,
+  "lastSeen": "2023-11-02T18:41:40.552Z",
   "values": [
-    {
-      "endpoint": 0,
-      "commandClass": 37,
-      "commandClassName": "Binary Switch",
-      "property": "currentValue",
-      "propertyName": "currentValue",
-      "ccVersion": 2,
-      "metadata": {
-        "type": "boolean",
-        "readable": true,
-        "writeable": false,
-        "label": "Current value",
-        "stateful": true,
-        "secret": false
-      },
-      "value": false
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 37,
-      "commandClassName": "Binary Switch",
-      "property": "targetValue",
-      "propertyName": "targetValue",
-      "ccVersion": 2,
-      "metadata": {
-        "type": "boolean",
-        "readable": true,
-        "writeable": true,
-        "label": "Target value",
-        "valueChangeOptions": ["transitionDuration"],
-        "stateful": true,
-        "secret": false
-      },
-      "value": false
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 37,
-      "commandClassName": "Binary Switch",
-      "property": "duration",
-      "propertyName": "duration",
-      "ccVersion": 2,
-      "metadata": {
-        "type": "duration",
-        "readable": true,
-        "writeable": false,
-        "label": "Remaining duration",
-        "stateful": true,
-        "secret": false
-      },
-      "value": {
-        "value": 0,
-        "unit": "seconds"
-      }
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 38,
-      "commandClassName": "Multilevel Switch",
-      "property": "targetValue",
-      "propertyName": "targetValue",
-      "ccVersion": 4,
-      "metadata": {
-        "type": "number",
-        "readable": true,
-        "writeable": true,
-        "label": "Target value",
-        "valueChangeOptions": ["transitionDuration"],
-        "min": 0,
-        "max": 99,
-        "stateful": true,
-        "secret": false
-      },
-      "value": 0
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 38,
-      "commandClassName": "Multilevel Switch",
-      "property": "duration",
-      "propertyName": "duration",
-      "ccVersion": 4,
-      "metadata": {
-        "type": "duration",
-        "readable": true,
-        "writeable": false,
-        "label": "Remaining duration",
-        "stateful": true,
-        "secret": false
-      },
-      "value": {
-        "value": 0,
-        "unit": "seconds"
-      }
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 38,
-      "commandClassName": "Multilevel Switch",
-      "property": "currentValue",
-      "propertyName": "currentValue",
-      "ccVersion": 4,
-      "metadata": {
-        "type": "number",
-        "readable": true,
-        "writeable": false,
-        "label": "Current value",
-        "min": 0,
-        "max": 99,
-        "stateful": true,
-        "secret": false
-      },
-      "value": 0
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 38,
-      "commandClassName": "Multilevel Switch",
-      "property": "Up",
-      "propertyName": "Up",
-      "ccVersion": 4,
-      "metadata": {
-        "type": "boolean",
-        "readable": false,
-        "writeable": true,
-        "label": "Perform a level change (Up)",
-        "ccSpecific": {
-          "switchType": 2
-        },
-        "valueChangeOptions": ["transitionDuration"],
-        "stateful": true,
-        "secret": false
-      }
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 38,
-      "commandClassName": "Multilevel Switch",
-      "property": "Down",
-      "propertyName": "Down",
-      "ccVersion": 4,
-      "metadata": {
-        "type": "boolean",
-        "readable": false,
-        "writeable": true,
-        "label": "Perform a level change (Down)",
-        "ccSpecific": {
-          "switchType": 2
-        },
-        "valueChangeOptions": ["transitionDuration"],
-        "stateful": true,
-        "secret": false
-      }
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 38,
-      "commandClassName": "Multilevel Switch",
-      "property": "restorePrevious",
-      "propertyName": "restorePrevious",
-      "ccVersion": 4,
-      "metadata": {
-        "type": "boolean",
-        "readable": false,
-        "writeable": true,
-        "label": "Restore previous value",
-        "stateful": true,
-        "secret": false
-      }
-    },
     {
       "endpoint": 0,
       "commandClass": 106,
@@ -361,7 +102,7 @@
       "propertyKey": 23,
       "propertyName": "currentValue",
       "propertyKeyName": "Horizontal Slats Angle",
-      "ccVersion": 0,
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -373,9 +114,9 @@
         "min": 0,
         "max": 99,
         "states": {
-          "0": "Closed (up)",
+          "0": "Closed (up inside)",
           "50": "Open",
-          "99": "Closed (down)"
+          "99": "Closed (down inside)"
         },
         "stateful": true,
         "secret": false
@@ -390,7 +131,7 @@
       "propertyKey": 23,
       "propertyName": "targetValue",
       "propertyKeyName": "Horizontal Slats Angle",
-      "ccVersion": 0,
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -403,14 +144,14 @@
         "min": 0,
         "max": 99,
         "states": {
-          "0": "Closed (up)",
+          "0": "Closed (up inside)",
           "50": "Open",
-          "99": "Closed (down)"
+          "99": "Closed (down inside)"
         },
         "stateful": true,
         "secret": false
       },
-      "value": 99
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -420,7 +161,7 @@
       "propertyKey": 23,
       "propertyName": "duration",
       "propertyKeyName": "Horizontal Slats Angle",
-      "ccVersion": 0,
+      "ccVersion": 1,
       "metadata": {
         "type": "duration",
         "readable": true,
@@ -441,44 +182,24 @@
       "endpoint": 0,
       "commandClass": 106,
       "commandClassName": "Window Covering",
-      "property": "open",
+      "property": "levelChangeUp",
       "propertyKey": 23,
-      "propertyName": "open",
+      "propertyName": "levelChangeUp",
       "propertyKeyName": "Horizontal Slats Angle",
-      "ccVersion": 0,
+      "ccVersion": 1,
       "metadata": {
         "type": "boolean",
         "readable": false,
         "writeable": true,
-        "label": "Open - Horizontal Slats Angle",
+        "label": "Change tilt (down inside) - Horizontal Slats Angle",
         "ccSpecific": {
           "parameter": 23
         },
         "valueChangeOptions": ["transitionDuration"],
-        "stateful": true,
-        "secret": false
-      },
-      "nodeId": 12,
-      "value": true
-    },
-    {
-      "endpoint": 0,
-      "commandClass": 106,
-      "commandClassName": "Window Covering",
-      "property": "close0",
-      "propertyKey": 23,
-      "propertyName": "close0",
-      "propertyKeyName": "Horizontal Slats Angle",
-      "ccVersion": 0,
-      "metadata": {
-        "type": "boolean",
-        "readable": false,
-        "writeable": true,
-        "label": "Close Up - Horizontal Slats Angle",
-        "ccSpecific": {
-          "parameter": 23
+        "states": {
+          "true": "Start",
+          "false": "Stop"
         },
-        "valueChangeOptions": ["transitionDuration"],
         "stateful": true,
         "secret": false
       }
@@ -487,25 +208,27 @@
       "endpoint": 0,
       "commandClass": 106,
       "commandClassName": "Window Covering",
-      "property": "close99",
+      "property": "levelChangeDown",
       "propertyKey": 23,
-      "propertyName": "close99",
+      "propertyName": "levelChangeDown",
       "propertyKeyName": "Horizontal Slats Angle",
-      "ccVersion": 0,
+      "ccVersion": 1,
       "metadata": {
         "type": "boolean",
         "readable": false,
         "writeable": true,
-        "label": "Close Down - Horizontal Slats Angle",
+        "label": "Change tilt (up inside) - Horizontal Slats Angle",
         "ccSpecific": {
           "parameter": 23
         },
         "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
         "stateful": true,
         "secret": false
-      },
-      "nodeId": 12,
-      "value": true
+      }
     },
     {
       "endpoint": 0,
@@ -604,7 +327,7 @@
         "allowManualEntry": true,
         "isFromConfig": true
       },
-      "value": 50
+      "value": 45
     },
     {
       "endpoint": 0,
@@ -655,6 +378,32 @@
         "isFromConfig": true
       },
       "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 11,
+      "propertyName": "MC",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "MC",
+        "label": "MC",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "noBulkSupport": true,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -721,7 +470,9 @@
         "format": 0,
         "allowManualEntry": true,
         "isFromConfig": true
-      }
+      },
+      "nodeId": 131,
+      "value": 99
     },
     {
       "endpoint": 0,
@@ -1169,7 +920,9 @@
         "max": 255,
         "stateful": true,
         "secret": false
-      }
+      },
+      "nodeId": 131,
+      "value": 47
     },
     {
       "endpoint": 0,
@@ -1183,54 +936,209 @@
         "readable": false,
         "writeable": true,
         "label": "Identify",
+        "states": {
+          "true": "Identify"
+        },
         "stateful": true,
         "secret": false
       }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "timeout",
+      "propertyName": "timeout",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": true,
+        "label": "Timeout",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "commandClassName": "Multilevel Switch",
+      "commandClass": 38,
+      "property": "targetValue",
+      "endpoint": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "propertyName": "targetValue",
+      "nodeId": 131,
+      "value": 45
+    },
+    {
+      "commandClassName": "Multilevel Switch",
+      "commandClass": 38,
+      "property": "duration",
+      "endpoint": 0,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration",
+        "stateful": true,
+        "secret": false
+      },
+      "propertyName": "duration",
+      "nodeId": 131,
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "commandClassName": "Multilevel Switch",
+      "commandClass": 38,
+      "property": "currentValue",
+      "endpoint": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "propertyName": "currentValue",
+      "nodeId": 131,
+      "value": 45
     }
   ],
-  "isFrequentListening": "1000ms",
-  "maxDataRate": 100000,
-  "supportedDataRates": [40000, 100000],
-  "protocolVersion": 3,
-  "supportsBeaming": true,
-  "supportsSecurity": false,
-  "nodeType": 1,
-  "zwavePlusNodeType": 0,
-  "zwavePlusRoleType": 7,
-  "deviceClass": {
-    "basic": {
-      "key": 4,
-      "label": "Routing Slave"
-    },
-    "generic": {
-      "key": 17,
-      "label": "Multilevel Switch"
-    },
-    "specific": {
-      "key": 7,
-      "label": "Motor Control Class C"
-    },
-    "mandatorySupportedCCs": [32, 38, 37, 114, 134],
-    "mandatoryControlledCCs": []
-  },
-  "interviewStage": "Complete",
-  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0287:0x0004:0x0072:3.12.1",
-  "statistics": {
-    "commandsTX": 109,
-    "commandsRX": 101,
-    "commandsDroppedRX": 2,
-    "commandsDroppedTX": 0,
-    "timeoutResponse": 8,
-    "rtt": 1217.2,
-    "rssi": -43,
-    "lwr": {
-      "protocolDataRate": 2,
-      "repeaters": [],
-      "rssi": -45,
-      "repeaterRSSI": []
+  "endpoints": [
+    {
+      "nodeId": 131,
+      "index": 0,
+      "installerIcon": 6656,
+      "userIcon": 6656,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 7,
+          "label": "Motor Control Class C"
+        },
+        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 5,
+          "isSecure": false
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 106,
+          "name": "Window Covering",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
     }
-  },
-  "highestSecurityClass": 1,
-  "isControllerNode": false,
-  "keepAwake": false
+  ]
 }

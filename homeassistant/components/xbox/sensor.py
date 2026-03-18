@@ -1,4 +1,5 @@
 """Xbox friends binary sensors."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -7,11 +8,11 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import XboxUpdateCoordinator
-from .base_sensor import XboxBaseSensorEntity
 from .const import DOMAIN
+from .coordinator import XboxUpdateCoordinator
+from .entity import XboxBaseEntity
 
 SENSOR_ATTRIBUTES = ["status", "gamer_score", "account_tier", "gold_tenure"]
 
@@ -19,7 +20,7 @@ SENSOR_ATTRIBUTES = ["status", "gamer_score", "account_tier", "gold_tenure"]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
     coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
@@ -33,7 +34,7 @@ async def async_setup_entry(
     update_friends()
 
 
-class XboxSensorEntity(XboxBaseSensorEntity, SensorEntity):
+class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     """Representation of a Xbox presence state."""
 
     @property

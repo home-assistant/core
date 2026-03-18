@@ -1,0 +1,335 @@
+# serializer version: 1
+# name: test_diagnostics_for_config_entry
+  dict({
+    'application_state': dict({
+      'broadcast_counters': dict({
+      }),
+      'counters': dict({
+        'ezsp_counters': dict({
+          'counter_1': dict({
+            '__type': "<class 'zigpy.state.Counter'>",
+            'repr': "Counter(name='counter_1', _raw_value=1, reset_count=0, _last_reset_value=0)",
+          }),
+          'counter_2': dict({
+            '__type': "<class 'zigpy.state.Counter'>",
+            'repr': "Counter(name='counter_2', _raw_value=1, reset_count=0, _last_reset_value=0)",
+          }),
+          'counter_3': dict({
+            '__type': "<class 'zigpy.state.Counter'>",
+            'repr': "Counter(name='counter_3', _raw_value=1, reset_count=0, _last_reset_value=0)",
+          }),
+        }),
+      }),
+      'device_counters': dict({
+      }),
+      'group_counters': dict({
+      }),
+      'network_info': dict({
+        'channel': 15,
+        'channel_mask': 0,
+        'children': list([
+        ]),
+        'extended_pan_id': '**REDACTED**',
+        'key_table': list([
+        ]),
+        'metadata': dict({
+        }),
+        'network_key': '**REDACTED**',
+        'nwk_addresses': dict({
+          '11:22:33:44:55:66:77:88': 4660,
+        }),
+        'nwk_manager_id': 0,
+        'nwk_update_id': 0,
+        'pan_id': 4660,
+        'security_level': 0,
+        'source': None,
+        'stack_specific': dict({
+        }),
+        'tc_link_key': dict({
+          'key': list([
+            90,
+            105,
+            103,
+            66,
+            101,
+            101,
+            65,
+            108,
+            108,
+            105,
+            97,
+            110,
+            99,
+            101,
+            48,
+            57,
+          ]),
+          'partner_ieee': '**REDACTED**',
+          'rx_counter': 0,
+          'seq': 0,
+          'tx_counter': 0,
+        }),
+      }),
+      'node_info': dict({
+        'ieee': '**REDACTED**',
+        'logical_type': 2,
+        'manufacturer': 'Coordinator Manufacturer',
+        'model': 'Coordinator Model',
+        'nwk': 0,
+        'version': '7.1.4.0 build 389',
+      }),
+    }),
+    'config': dict({
+      'device_config': dict({
+      }),
+      'enable_quirks': False,
+    }),
+    'config_entry': dict({
+      'data': dict({
+        'device': dict({
+          'baudrate': 115200,
+          'flow_control': 'hardware',
+          'path': '/dev/ttyUSB0',
+        }),
+        'radio_type': 'ezsp',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'zha',
+      'minor_version': 1,
+      'options': dict({
+        'custom_configuration': dict({
+          'zha_alarm_options': dict({
+            'alarm_arm_requires_code': False,
+            'alarm_failed_tries': 2,
+            'alarm_master_code': '**REDACTED**',
+          }),
+          'zha_options': dict({
+            'enhanced_light_transition': True,
+            'group_members_assume_state': False,
+          }),
+        }),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 4,
+    }),
+    'devices': list([
+      dict({
+        'logical_type': 'Coordinator',
+        'manufacturer': 'Coordinator Manufacturer',
+        'model': 'Coordinator Model',
+      }),
+      dict({
+        'logical_type': 'EndDevice',
+        'manufacturer': 'FakeManufacturer',
+        'model': 'FakeModel',
+      }),
+    ]),
+    'energy_scan': dict({
+      '11': 4.313725490196078,
+      '12': 4.705882352941177,
+      '13': 5.098039215686274,
+      '14': 5.490196078431373,
+      '15': 5.882352941176471,
+      '16': 6.2745098039215685,
+      '17': 6.666666666666667,
+      '18': 7.0588235294117645,
+      '19': 7.450980392156863,
+      '20': 7.8431372549019605,
+      '21': 8.235294117647058,
+      '22': 8.627450980392156,
+      '23': 9.019607843137255,
+      '24': 9.411764705882353,
+      '25': 9.803921568627452,
+      '26': 10.196078431372548,
+    }),
+  })
+# ---
+# name: test_diagnostics_for_device
+  dict({
+    'active_coordinator': False,
+    'available': True,
+    'device_type': 'EndDevice',
+    'endpoints': dict({
+      '1': dict({
+        'device_type': dict({
+          'id': 1025,
+          'name': 'IAS_ANCILLARY_CONTROL',
+        }),
+        'in_clusters': list([
+          dict({
+            'attributes': list([
+              dict({
+                'id': '0x0010',
+                'name': 'cie_addr',
+                'value': list([
+                  50,
+                  79,
+                  50,
+                  2,
+                  0,
+                  141,
+                  21,
+                  0,
+                ]),
+                'zcl_type': 'EUI64',
+              }),
+              dict({
+                'id': '0x0012',
+                'name': 'num_zone_sensitivity_levels_supported',
+                'unsupported': True,
+                'zcl_type': 'uint8',
+              }),
+            ]),
+            'cluster_id': '0x0500',
+            'endpoint_attribute': 'ias_zone',
+          }),
+          dict({
+            'attributes': list([
+            ]),
+            'cluster_id': '0x0501',
+            'endpoint_attribute': 'ias_ace',
+          }),
+        ]),
+        'out_clusters': list([
+        ]),
+        'profile_id': 260,
+      }),
+    }),
+    'friendly_manufacturer': 'FakeManufacturer',
+    'friendly_model': 'FakeModel',
+    'ieee': '**REDACTED**',
+    'lqi': None,
+    'manufacturer': 'FakeManufacturer',
+    'manufacturer_code': 4098,
+    'model': 'FakeModel',
+    'name': 'FakeManufacturer FakeModel',
+    'neighbors': list([
+    ]),
+    'node_descriptor': dict({
+      'aps_flags': 0,
+      'complex_descriptor_available': False,
+      'descriptor_capability_field': 0,
+      'frequency_band': 8,
+      'logical_type': 'EndDevice',
+      'mac_capability_flags': 140,
+      'manufacturer_code': 4098,
+      'maximum_buffer_size': 82,
+      'maximum_incoming_transfer_size': 82,
+      'maximum_outgoing_transfer_size': 82,
+      'reserved': 0,
+      'server_mask': 0,
+      'user_descriptor_available': False,
+    }),
+    'nwk': '0xB79C',
+    'power_source': 'Mains',
+    'quirk_applied': False,
+    'quirk_class': 'zigpy.device.Device',
+    'quirk_id': None,
+    'routes': list([
+    ]),
+    'rssi': None,
+    'version': 1,
+    'zha_lib_entities': dict({
+      'alarm_control_panel': list([
+        dict({
+          'info_object': dict({
+            'available': True,
+            'class_name': 'AlarmControlPanel',
+            'cluster_handlers': list([
+              dict({
+                'class_name': 'IasAceClusterHandler',
+                'cluster': dict({
+                  'id': 1281,
+                  'name': 'IAS Ancillary Control Equipment',
+                  'type': 'server',
+                }),
+                'endpoint_id': 1,
+                'generic_id': 'cluster_handler_0x0501',
+                'id': '1:0x0501',
+                'status': 'INITIALIZED',
+                'unique_id': '**REDACTED**',
+                'value_attribute': None,
+              }),
+            ]),
+            'code_arm_required': False,
+            'code_format': 'number',
+            'device_class': None,
+            'device_ieee': '**REDACTED**',
+            'enabled': True,
+            'endpoint_id': 1,
+            'entity_category': None,
+            'entity_registry_enabled_default': True,
+            'fallback_name': None,
+            'group_id': None,
+            'migrate_unique_ids': list([
+            ]),
+            'platform': 'alarm_control_panel',
+            'primary': False,
+            'state_class': None,
+            'supported_features': 15,
+            'translation_key': 'alarm_control_panel',
+            'unique_id': '**REDACTED**',
+          }),
+          'state': dict({
+            'available': True,
+            'class_name': 'AlarmControlPanel',
+            'state': 'disarmed',
+          }),
+        }),
+      ]),
+      'binary_sensor': list([
+        dict({
+          'info_object': dict({
+            'attribute_name': 'zone_status',
+            'available': True,
+            'class_name': 'IASZone',
+            'cluster_handlers': list([
+              dict({
+                'class_name': 'IASZoneClusterHandler',
+                'cluster': dict({
+                  'id': 1280,
+                  'name': 'IAS Zone',
+                  'type': 'server',
+                }),
+                'endpoint_id': 1,
+                'generic_id': 'cluster_handler_0x0500',
+                'id': '1:0x0500',
+                'status': 'INITIALIZED',
+                'unique_id': '**REDACTED**',
+                'value_attribute': None,
+              }),
+            ]),
+            'device_class': None,
+            'device_ieee': '**REDACTED**',
+            'enabled': True,
+            'endpoint_id': 1,
+            'entity_category': None,
+            'entity_registry_enabled_default': True,
+            'fallback_name': None,
+            'group_id': None,
+            'migrate_unique_ids': list([
+            ]),
+            'platform': 'binary_sensor',
+            'primary': True,
+            'state_class': None,
+            'translation_key': 'ias_zone',
+            'unique_id': '**REDACTED**',
+          }),
+          'state': dict({
+            'available': True,
+            'class_name': 'IASZone',
+            'state': False,
+          }),
+        }),
+      ]),
+    }),
+  })
+# ---

@@ -1,6 +1,9 @@
 """Test KNX init."""
+
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from xknx.io import (
     DEFAULT_MCAST_GRP,
@@ -10,8 +13,10 @@ from xknx.io import (
     SecureConfig,
 )
 
-from homeassistant import config_entries
-from homeassistant.components.knx.config_flow import DEFAULT_ROUTING_IA
+from homeassistant.components.knx.config_flow import (
+    DEFAULT_ENTRY_DATA,
+    DEFAULT_ROUTING_IA,
+)
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
@@ -36,15 +41,17 @@ from homeassistant.components.knx.const import (
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
-    DOMAIN as KNX_DOMAIN,
+    DOMAIN,
     KNXConfigEntryData,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -215,17 +222,15 @@ async def test_init_connection_handling(
 
     config_entry = MockConfigEntry(
         title="KNX",
-        domain=KNX_DOMAIN,
+        domain=DOMAIN,
         data=config_entry_data,
     )
     knx.mock_config_entry = config_entry
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
-    assert hass.data.get(KNX_DOMAIN) is not None
+    assert hass.data.get(DOMAIN) is not None
 
-    original_connection_config = (
-        hass.data[KNX_DOMAIN].connection_config().__dict__.copy()
-    )
+    original_connection_config = hass.data[DOMAIN].connection_config().__dict__.copy()
     del original_connection_config["secure_config"]
 
     connection_config_dict = connection_config.__dict__.copy()
@@ -235,19 +240,19 @@ async def test_init_connection_handling(
 
     if connection_config.secure_config is not None:
         assert (
-            hass.data[KNX_DOMAIN].connection_config().secure_config.knxkeys_password
+            hass.data[DOMAIN].connection_config().secure_config.knxkeys_password
             == connection_config.secure_config.knxkeys_password
         )
         assert (
-            hass.data[KNX_DOMAIN].connection_config().secure_config.user_password
+            hass.data[DOMAIN].connection_config().secure_config.user_password
             == connection_config.secure_config.user_password
         )
         assert (
-            hass.data[KNX_DOMAIN].connection_config().secure_config.user_id
+            hass.data[DOMAIN].connection_config().secure_config.user_id
             == connection_config.secure_config.user_id
         )
         assert (
-            hass.data[KNX_DOMAIN]
+            hass.data[DOMAIN]
             .connection_config()
             .secure_config.device_authentication_password
             == connection_config.secure_config.device_authentication_password
@@ -255,10 +260,79 @@ async def test_init_connection_handling(
         if connection_config.secure_config.knxkeys_file_path is not None:
             assert (
                 connection_config.secure_config.knxkeys_file_path
-                in hass.data[KNX_DOMAIN]
-                .connection_config()
-                .secure_config.knxkeys_file_path
+                in hass.data[DOMAIN].connection_config().secure_config.knxkeys_file_path
             )
+
+
+async def _init_switch_and_wait_for_first_state_updater_run(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    freezer: FrozenDateTimeFactory,
+    config_entry_data: KNXConfigEntryData,
+) -> None:
+    """Return a config entry with default data."""
+    config_entry = MockConfigEntry(title="KNX", domain=DOMAIN, data=config_entry_data)
+    knx.mock_config_entry = config_entry
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.SWITCH,
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "respond_to_read": True,
+            "sync_state": True,  # True uses xknx default state updater
+            "invert": False,
+        },
+    )
+    # created entity sends read-request to KNX bus on connection
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+
+    freezer.tick(timedelta(minutes=59))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+    freezer.tick(timedelta(minutes=1))  # 60 minutes passed
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+
+async def test_default_state_updater_enabled(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test default state updater is applied to xknx device instances."""
+    config_entry = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+        connection_type=CONF_KNX_AUTOMATIC,  # missing in default data
+        state_updater=True,
+    )
+    await _init_switch_and_wait_for_first_state_updater_run(
+        hass, knx, create_ui_entity, freezer, config_entry
+    )
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+
+
+async def test_default_state_updater_disabled(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test default state updater is applied to xknx device instances."""
+    config_entry = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+        connection_type=CONF_KNX_AUTOMATIC,  # missing in default data
+        state_updater=False,
+    )
+    await _init_switch_and_wait_for_first_state_updater_run(
+        hass, knx, create_ui_entity, freezer, config_entry
+    )
+    await knx.assert_no_telegram()
 
 
 async def test_async_remove_entry(
@@ -268,21 +342,21 @@ async def test_async_remove_entry(
     """Test async_setup_entry (for coverage)."""
     config_entry = MockConfigEntry(
         title="KNX",
-        domain=KNX_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
         },
     )
     knx.mock_config_entry = config_entry
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
-    with patch("pathlib.Path.unlink") as unlink_mock, patch(
-        "pathlib.Path.rmdir"
-    ) as rmdir_mock:
+    with (
+        patch("pathlib.Path.unlink") as unlink_mock,
+        patch("pathlib.Path.rmdir") as rmdir_mock,
+    ):
         assert await hass.config_entries.async_remove(config_entry.entry_id)
-        unlink_mock.assert_called_once()
+        assert unlink_mock.call_count == 4
         rmdir_mock.assert_called_once()
-    await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

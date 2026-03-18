@@ -1,11 +1,14 @@
 """Test init of NextDNS integration."""
+
 from unittest.mock import patch
 
-from nextdns import ApiError
+from nextdns import ApiError, InvalidApiKeyError
+import pytest
+from tenacity import RetryError
 
-from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE
+from homeassistant.components.nextdns.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -13,9 +16,11 @@ from . import init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
+async def test_async_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test a successful setup entry."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.fake_profile_dns_queries_blocked_ratio")
     assert state is not None
@@ -23,33 +28,59 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     assert state.state == "20.0"
 
 
-async def test_config_not_ready(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "exc", [ApiError("API Error"), RetryError("Retry Error"), TimeoutError]
+)
+async def test_config_not_ready(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, exc: Exception
+) -> None:
     """Test for setup failure if the connection to the service fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Fake Profile",
-        unique_id="xyz12",
-        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
-    )
+    with patch(
+        "homeassistant.components.nextdns.NextDns.get_profiles",
+        side_effect=exc,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful unload of entry."""
+    await init_integration(hass, mock_config_entry)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
+
+
+async def test_config_auth_failed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test for setup failure if the auth fails."""
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.nextdns.NextDns.get_profiles",
-        side_effect=ApiError("API Error"),
+        side_effect=InvalidApiKeyError,
     ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
-    """Test successful unload of entry."""
-    entry = await init_integration(hass)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.LOADED
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id

@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,27 +15,19 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsEntityDescriptionMixin:
-    """Mixin values for Rituals entities."""
-
-    value_fn: Callable[[Diffuser], int | str]
-
-
-@dataclass
-class RitualsSensorEntityDescription(
-    SensorEntityDescription, RitualsEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RitualsSensorEntityDescription(SensorEntityDescription):
     """Class describing Rituals sensor entities."""
 
     has_fn: Callable[[Diffuser], bool] = lambda _: True
+    value_fn: Callable[[Diffuser], int | str]
 
 
 ENTITY_DESCRIPTIONS = (
@@ -48,19 +41,16 @@ ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="fill",
         translation_key="fill",
-        icon="mdi:beaker",
         value_fn=lambda diffuser: diffuser.fill,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
         translation_key="perfume",
-        icon="mdi:tag",
         value_fn=lambda diffuser: diffuser.perfume,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",
         translation_key="wifi_percentage",
-        icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda diffuser: diffuser.wifi_percentage,
     ),
@@ -70,7 +60,7 @@ ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser sensors."""
     coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][

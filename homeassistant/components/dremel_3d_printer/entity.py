@@ -2,7 +2,8 @@
 
 from dremel3dpy import Dremel3DPrinter
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -29,6 +30,7 @@ class Dremel3DPrinterEntity(CoordinatorEntity[Dremel3DPrinterDataUpdateCoordinat
         """Return device information about this Dremel printer."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._api.get_serial_number())},
+            serial_number=self._api.get_serial_number(),
             manufacturer=self._api.get_manufacturer(),
             model=self._api.get_model(),
             name=self._api.get_title(),

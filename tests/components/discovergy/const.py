@@ -1,31 +1,61 @@
 """Constants for Discovergy integration tests."""
+
 import datetime
 
-from pydiscovergy.models import Meter, Reading
+from pydiscovergy.models import Location, Meter, Reading
 
 GET_METERS = [
     Meter(
-        meterId="f8d610b7a8cc4e73939fa33b990ded54",
-        serialNumber="abc123",
-        fullSerialNumber="abc123",
-        type="TST",
-        measurementType="ELECTRICITY",
-        loadProfileType="SLP",
-        location={
-            "city": "Testhause",
-            "street": "Teststraße",
-            "streetNumber": "1",
-            "country": "Germany",
+        meter_id="f8d610b7a8cc4e73939fa33b990ded54",
+        serial_number="abc123",
+        full_serial_number="abc123",
+        meter_type="TST",
+        measurement_type="ELECTRICITY",
+        load_profile_type="SLP",
+        location=Location(
+            zip=12345,
+            city="Testhause",
+            street="Teststraße",
+            street_number="1",
+            country="Germany",
+        ),
+        additional={
+            "manufacturer_id": "TST",
+            "printed_full_serial_number": "abc123",
+            "administration_number": "12345",
+            "scaling_factor": 1,
+            "current_scaling_factor": 1,
+            "voltage_scaling_factor": 1,
+            "internal_meters": 1,
+            "first_measurement_time": 1517569090926,
+            "last_measurement_time": 1678430543742,
         },
-        manufacturerId="TST",
-        printedFullSerialNumber="abc123",
-        administrationNumber="12345",
-        scalingFactor=1,
-        currentScalingFactor=1,
-        voltageScalingFactor=1,
-        internalMeters=1,
-        firstMeasurementTime=1517569090926,
-        lastMeasurementTime=1678430543742,
+    ),
+    Meter(
+        meter_id="d81a652fe0824f9a9d336016587d3b9d",
+        serial_number="def456",
+        full_serial_number="def456",
+        meter_type="PIP",
+        measurement_type="GAS",
+        load_profile_type="SLP",
+        location=Location(
+            zip=12345,
+            city="Testhause",
+            street="Teststraße",
+            street_number="1",
+            country="Germany",
+        ),
+        additional={
+            "manufacturer_id": "TST",
+            "printed_full_serial_number": "def456",
+            "administration_number": "12345",
+            "scaling_factor": 1,
+            "current_scaling_factor": 1,
+            "voltage_scaling_factor": 1,
+            "internal_meters": 1,
+            "first_measurement_time": 1517569090926,
+            "last_measurement_time": 1678430543742,
+        },
     ),
 ]
 
@@ -38,7 +68,7 @@ LAST_READING = Reading(
         "energyOut": 55048723044000.0,
         "energyOut1": 0.0,
         "energyOut2": 0.0,
-        "power": 531750.0,
+        "power": 0.0,
         "power1": 142680.0,
         "power2": 138010.0,
         "power3": 251060.0,
@@ -46,4 +76,9 @@ LAST_READING = Reading(
         "voltage2": 239700.0,
         "voltage3": 239000.0,
     },
+)
+
+LAST_READING_GAS = Reading(
+    time=datetime.datetime(2023, 3, 10, 7, 32, 6, 702000),
+    values={"actualityDuration": 52000.0, "storageNumber": 0.0, "volume": 21064800.0},
 )

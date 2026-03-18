@@ -1,4 +1,5 @@
 """The tests for RFXCOM RFXtrx device actions."""
+
 from __future__ import annotations
 
 from typing import Any, NamedTuple
@@ -7,7 +8,7 @@ import pytest
 from pytest_unordered import unordered
 import RFXtrx
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -16,10 +17,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 class DeviceTestData(NamedTuple):
@@ -49,7 +47,7 @@ async def test_device_test_data(rfxtrx, device: DeviceTestData) -> None:
     }
 
 
-async def setup_entry(hass, devices):
+async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -69,24 +67,29 @@ def _get_expected_actions(data):
 @pytest.mark.parametrize(
     ("device", "expected"),
     [
-        [
+        (
             DEVICE_LIGHTING_1,
             list(_get_expected_actions(RFXtrx.lowlevel.Lighting1.COMMANDS)),
-        ],
-        [
+        ),
+        (
             DEVICE_BLINDS_1,
             list(_get_expected_actions(RFXtrx.lowlevel.RollerTrol.COMMANDS)),
-        ],
-        [DEVICE_TEMPHUM_1, []],
+        ),
+        (DEVICE_TEMPHUM_1, []),
     ],
 )
 async def test_get_actions(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, device, expected
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device: DeviceTestData,
+    expected,
 ) -> None:
     """Test we get the expected actions from a rfxtrx."""
     await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=device.device_identifiers
+    )
     assert device_entry
 
     # Add alternate identifiers, to make sure we can handle future formats
@@ -94,7 +97,9 @@ async def test_get_actions(
     device_registry.async_update_device(
         device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
     )
-    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=device.device_identifiers
+    )
     assert device_entry
 
     actions = await async_get_device_automations(
@@ -113,28 +118,28 @@ async def test_get_actions(
 @pytest.mark.parametrize(
     ("device", "config", "expected"),
     [
-        [
+        (
             DEVICE_LIGHTING_1,
             {"type": "send_command", "subtype": "On"},
             "0710000045050100",
-        ],
-        [
+        ),
+        (
             DEVICE_LIGHTING_1,
             {"type": "send_command", "subtype": "Off"},
             "0710000045050000",
-        ],
-        [
+        ),
+        (
             DEVICE_BLINDS_1,
             {"type": "send_command", "subtype": "Stop"},
             "09190000009ba8010200",
-        ],
+        ),
     ],
 )
 async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     rfxtrx: RFXtrx.Connect,
-    device,
+    device: DeviceTestData,
     config,
     expected,
 ) -> None:
@@ -142,7 +147,9 @@ async def test_action(
 
     await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=device.device_identifiers
+    )
     assert device_entry
 
     assert await async_setup_component(
@@ -181,8 +188,8 @@ async def test_invalid_action(
 
     await setup_entry(hass, {device.code: {}})
 
-    device_identifers: Any = device.device_identifiers
-    device_entry = device_registry.async_get_device(device_identifers, set())
+    device_identifiers: Any = device.device_identifiers
+    device_entry = device_registry.async_get_device(identifiers=device_identifiers)
     assert device_entry
 
     assert await async_setup_component(

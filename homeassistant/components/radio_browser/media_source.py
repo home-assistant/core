@@ -1,21 +1,24 @@
 """Expose Radio Browser as a media source."""
+
 from __future__ import annotations
 
 import mimetypes
 
+import pycountry
 from radios import FilterBy, Order, RadioBrowser, Station
 
-from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_player import MediaClass, MediaType
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.location import vincenty
 
+from . import RadioBrowserConfigEntry
 from .const import DOMAIN
 
 CODEC_TO_MIMETYPE = {
@@ -28,7 +31,7 @@ CODEC_TO_MIMETYPE = {
 
 async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
     """Set up Radio Browser media source."""
-    # Radio browser support only a single config entry
+    # Radio browser supports only a single config entry
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     return RadioMediaSource(hass, entry)
@@ -39,23 +42,20 @@ class RadioMediaSource(MediaSource):
 
     name = "Radio Browser"
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize CameraMediaSource."""
+    def __init__(self, hass: HomeAssistant, entry: RadioBrowserConfigEntry) -> None:
+        """Initialize RadioMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
         self.entry = entry
 
     @property
-    def radios(self) -> RadioBrowser | None:
+    def radios(self) -> RadioBrowser:
         """Return the radio browser."""
-        return self.hass.data.get(DOMAIN)
+        return self.entry.runtime_data
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
         radios = self.radios
-
-        if radios is None:
-            raise Unresolvable("Radio Browser not initialized")
 
         station = await radios.station(uuid=item.identifier)
         if not station:
@@ -67,7 +67,7 @@ class RadioMediaSource(MediaSource):
         # Register "click" with Radio Browser
         await radios.station_click(uuid=station.uuid)
 
-        return PlayMedia(station.url, mime_type)
+        return PlayMedia(station.url_resolved, mime_type)
 
     async def async_browse_media(
         self,
@@ -75,9 +75,6 @@ class RadioMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         radios = self.radios
-
-        if radios is None:
-            raise BrowseError("Radio Browser not initialized")
 
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -92,6 +89,7 @@ class RadioMediaSource(MediaSource):
                 *await self._async_build_popular(radios, item),
                 *await self._async_build_by_tag(radios, item),
                 *await self._async_build_by_language(radios, item),
+                *await self._async_build_local(radios, item),
                 *await self._async_build_by_country(radios, item),
             ],
         )
@@ -138,7 +136,7 @@ class RadioMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Handle browsing radio stations by country."""
         category, _, country_code = (item.identifier or "").partition("/")
-        if country_code:
+        if category == "country" and country_code:
             stations = await radios.stations(
                 filter_by=FilterBy.COUNTRY_CODE_EXACT,
                 filter_term=country_code,
@@ -150,6 +148,8 @@ class RadioMediaSource(MediaSource):
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
+            # Trigger the lazy loading of the country database to happen inside the executor
+            await self.hass.async_add_executor_job(lambda: len(pycountry.countries))
             countries = await radios.countries(order=Order.NAME)
             return [
                 BrowseMediaSource(
@@ -187,7 +187,7 @@ class RadioMediaSource(MediaSource):
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"language/{language.code}",
+                    identifier=f"language/{language.name.lower()}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaType.MUSIC,
                     title=language.name,
@@ -288,6 +288,66 @@ class RadioMediaSource(MediaSource):
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaType.MUSIC,
                     title="By Category",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
+
+        return []
+
+    def _filter_local_stations(
+        self, stations: list[Station], latitude: float, longitude: float
+    ) -> list[Station]:
+        return [
+            station
+            for station in stations
+            if station.latitude is not None
+            and station.longitude is not None
+            and (
+                (
+                    dist := vincenty(
+                        (latitude, longitude),
+                        (station.latitude, station.longitude),
+                        False,
+                    )
+                )
+                is not None
+            )
+            and dist < 100
+        ]
+
+    async def _async_build_local(
+        self, radios: RadioBrowser, item: MediaSourceItem
+    ) -> list[BrowseMediaSource]:
+        """Handle browsing local radio stations."""
+
+        if item.identifier == "local":
+            country = self.hass.config.country
+            stations = await radios.stations(
+                filter_by=FilterBy.COUNTRY_CODE_EXACT,
+                filter_term=country,
+                hide_broken=True,
+                order=Order.NAME,
+                reverse=False,
+            )
+
+            local_stations = await self.hass.async_add_executor_job(
+                self._filter_local_stations,
+                stations,
+                self.hass.config.latitude,
+                self.hass.config.longitude,
+            )
+
+            return self._async_build_stations(radios, local_stations)
+
+        if not item.identifier:
+            return [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier="local",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
+                    title="Local stations",
                     can_play=False,
                     can_expand=True,
                 )

@@ -1,7 +1,10 @@
 """Support for the QNAP QSW sensors."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
+from datetime import datetime
 from typing import Final
 
 from aioqsw.const import (
@@ -24,7 +27,7 @@ from aioqsw.const import (
     QSD_TEMP_MAX,
     QSD_TX_OCTETS,
     QSD_TX_SPEED,
-    QSD_UPTIME,
+    QSD_UPTIME_TIMESTAMP,
 )
 
 from homeassistant.components.sensor import (
@@ -39,78 +42,74 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_MAX, DOMAIN, QSW_COORD_DATA, RPM
 from .coordinator import QswDataCoordinator
 from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
     """A class that describes QNAP QSW sensor entities."""
 
     attributes: dict[str, list[str]] | None = None
     qsw_type: QswEntityType | None = None
     sep_key: str = "_"
+    value_fn: Callable[[str], datetime | StateType] = lambda value: value
 
 
 SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     QswSensorEntityDescription(
-        icon="mdi:fan-speed-1",
+        translation_key="fan_1_speed",
         key=QSD_SYSTEM_SENSOR,
-        name="Fan 1 Speed",
         native_unit_of_measurement=RPM,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_FAN1_SPEED,
     ),
     QswSensorEntityDescription(
-        icon="mdi:fan-speed-2",
+        translation_key="fan_2_speed",
         key=QSD_SYSTEM_SENSOR,
-        name="Fan 2 Speed",
         native_unit_of_measurement=RPM,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_FAN2_SPEED,
     ),
     QswSensorEntityDescription(
+        translation_key="ports",
         attributes={
             ATTR_MAX: [QSD_SYSTEM_BOARD, QSD_PORT_NUM],
         },
         entity_registry_enabled_default=False,
-        icon="mdi:ethernet",
         key=QSD_PORTS_STATUS,
-        name="Ports",
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_LINK,
     ),
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
+        translation_key="rx",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download-network",
         key=QSD_PORTS_STATISTICS,
-        name="RX",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         subkey=QSD_RX_OCTETS,
     ),
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
-        icon="mdi:close-network",
+        translation_key="rx_errors",
         key=QSD_PORTS_STATISTICS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="RX Errors",
         state_class=SensorStateClass.TOTAL_INCREASING,
         subkey=QSD_RX_ERRORS,
     ),
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
+        translation_key="rx_speed",
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download-network",
         key=QSD_PORTS_STATISTICS,
-        name="RX Speed",
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_RX_SPEED,
@@ -121,39 +120,35 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         },
         device_class=SensorDeviceClass.TEMPERATURE,
         key=QSD_SYSTEM_SENSOR,
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TEMP,
     ),
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
+        translation_key="tx",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload-network",
         key=QSD_PORTS_STATISTICS,
-        name="TX",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         subkey=QSD_TX_OCTETS,
     ),
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
+        translation_key="tx_speed",
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload-network",
         key=QSD_PORTS_STATISTICS,
-        name="TX Speed",
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TX_SPEED,
     ),
     QswSensorEntityDescription(
-        icon="mdi:timer-outline",
+        translation_key="uptime_timestamp",
         key=QSD_SYSTEM_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Uptime",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        subkey=QSD_UPTIME,
+        subkey=QSD_UPTIME_TIMESTAMP,
+        value_fn=dt_util.parse_datetime,
     ),
 )
 
@@ -291,19 +286,21 @@ PORT_SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW sensors from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
 
-    entities: list[QswSensor] = []
-
-    for description in SENSOR_TYPES:
+    entities: list[QswSensor] = [
+        QswSensor(coordinator, description, entry)
+        for description in SENSOR_TYPES
         if (
             description.key in coordinator.data
             and description.subkey in coordinator.data[description.key]
-        ):
-            entities.append(QswSensor(coordinator, description, entry))
+        )
+    ]
 
     for description in LACP_PORT_SENSOR_TYPES:
         if (
@@ -363,7 +360,10 @@ class QswSensor(QswSensorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
 
-        self._attr_name = f"{self.product} {description.name}"
+        if description.name == UNDEFINED:
+            self._attr_has_entity_name = True
+        else:
+            self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = (
             f"{entry.unique_id}_{description.key}"
             f"{description.sep_key}{description.subkey}"
@@ -379,5 +379,5 @@ class QswSensor(QswSensorEntity, SensorEntity):
             self.entity_description.subkey,
             self.entity_description.qsw_type,
         )
-        self._attr_native_value = value
+        self._attr_native_value = self.entity_description.value_fn(value)
         super()._async_update_attrs()

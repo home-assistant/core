@@ -1,0 +1,66 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Smarty device"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarm": {
+        "name": "Alarm"
+      },
+      "warning": {
+        "name": "Warning"
+      },
+      "boost_state": {
+        "name": "Boost state"
+      }
+    },
+    "button": {
+      "reset_filters_timer": {
+        "name": "Reset filters timer"
+      }
+    },
+    "sensor": {
+      "supply_air_temperature": {
+        "name": "Supply air temperature"
+      },
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
+      "extract_fan_speed": {
+        "name": "Extract fan speed"
+      },
+      "filter_days_left": {
+        "name": "Filter days left"
+      }
+    },
+    "switch": {
+      "boost": {
+        "name": "Boost"
+      }
+    }
+  }
+}

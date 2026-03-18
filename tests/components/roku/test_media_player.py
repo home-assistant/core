@@ -1,7 +1,9 @@
 """Tests for the Roku Media Player platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 
@@ -30,12 +32,12 @@ from homeassistant.components.roku.const import (
     ATTR_FORMAT,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
+    DEFAULT_PLAY_MEDIA_APP_ID,
     DOMAIN,
     SERVICE_SEARCH,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
-from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -50,14 +52,19 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     STATE_IDLE,
+    STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -68,11 +75,13 @@ MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 
 
-async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test setup with basic config."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get(MAIN_ENTITY_ID)
     entry = entity_registry.async_get(MAIN_ENTITY_ID)
 
@@ -95,7 +104,7 @@ async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> 
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "7.5.0"
     assert device_entry.hw_version == "4200X"
-    assert device_entry.suggested_area is None
+    assert device_entry.area_id is None
 
 
 @pytest.mark.parametrize("mock_device", ["roku/roku3-idle.json"], indirect=True)
@@ -107,19 +116,19 @@ async def test_idle_setup(
     """Test setup with idle device."""
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
-    assert state.state == STATE_STANDBY
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_setup(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
     """Test Roku TV setup."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get(TV_ENTITY_ID)
     entry = entity_registry.async_get(TV_ENTITY_ID)
 
@@ -142,7 +151,9 @@ async def test_tv_setup(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "9.2.0"
     assert device_entry.hw_version == "7820X"
-    assert device_entry.suggested_area == "Living room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Living room").id
+    )
 
 
 @pytest.mark.parametrize(
@@ -153,6 +164,7 @@ async def test_availability(
     hass: HomeAssistant,
     mock_roku: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     error: RokuError,
 ) -> None:
     """Test entity availability."""
@@ -160,23 +172,22 @@ async def test_availability(
     future = now + timedelta(minutes=1)
 
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        mock_roku.update.side_effect = error
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
+    freezer.move_to(future)
+    mock_roku.update.side_effect = error
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
 
     future += timedelta(minutes=1)
-
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        mock_roku.update.side_effect = None
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
+    freezer.move_to(future)
+    mock_roku.update.side_effect = None
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
 
 
 async def test_supported_features(
@@ -188,7 +199,8 @@ async def test_supported_features(
     # Features supported for Rokus
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -199,7 +211,6 @@ async def test_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 
@@ -213,7 +224,8 @@ async def test_tv_supported_features(
     state = hass.states.get(TV_ENTITY_ID)
     assert state
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -224,7 +236,6 @@ async def test_tv_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 
@@ -492,7 +503,7 @@ async def test_services_play_media(
         blocking=True,
     )
 
-    assert mock_roku.play_on_roku.call_count == 0
+    assert mock_roku.launch.call_count == 0
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -506,7 +517,7 @@ async def test_services_play_media(
         blocking=True,
     )
 
-    assert mock_roku.play_on_roku.call_count == 0
+    assert mock_roku.launch.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -543,9 +554,10 @@ async def test_services_play_media_audio(
         },
         blocking=True,
     )
-    mock_roku.play_on_roku.assert_called_once_with(
-        content_id,
+    mock_roku.launch.assert_called_once_with(
+        DEFAULT_PLAY_MEDIA_APP_ID,
         {
+            "u": content_id,
             "t": "a",
             "songName": resolved_name,
             "songFormat": resolved_format,
@@ -588,9 +600,11 @@ async def test_services_play_media_video(
         },
         blocking=True,
     )
-    mock_roku.play_on_roku.assert_called_once_with(
-        content_id,
+    mock_roku.launch.assert_called_once_with(
+        DEFAULT_PLAY_MEDIA_APP_ID,
         {
+            "u": content_id,
+            "t": "v",
             "videoName": resolved_name,
             "videoFormat": resolved_format,
         },
@@ -614,10 +628,12 @@ async def test_services_camera_play_stream(
         blocking=True,
     )
 
-    assert mock_roku.play_on_roku.call_count == 1
-    mock_roku.play_on_roku.assert_called_with(
-        "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+    assert mock_roku.launch.call_count == 1
+    mock_roku.launch.assert_called_with(
+        DEFAULT_PLAY_MEDIA_APP_ID,
         {
+            "u": "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+            "t": "v",
             "videoName": "Camera Stream",
             "videoFormat": "hls",
         },
@@ -650,14 +666,21 @@ async def test_services_play_media_local_source(
         blocking=True,
     )
 
-    assert mock_roku.play_on_roku.call_count == 1
-    assert mock_roku.play_on_roku.call_args
-    call_args = mock_roku.play_on_roku.call_args.args
-    assert "/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
-    assert call_args[1] == {
-        "videoFormat": "mp4",
-        "videoName": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
-    }
+    assert mock_roku.launch.call_count == 1
+    assert mock_roku.launch.call_args
+    call_args = mock_roku.launch.call_args.args
+    assert call_args[0] == DEFAULT_PLAY_MEDIA_APP_ID
+    assert "u" in call_args[1]
+    assert "/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[1]["u"]
+    assert "t" in call_args[1]
+    assert call_args[1]["t"] == "v"
+    assert "videoFormat" in call_args[1]
+    assert call_args[1]["videoFormat"] == "mp4"
+    assert "videoName" in call_args[1]
+    assert (
+        call_args[1]["videoName"]
+        == "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+    )
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)

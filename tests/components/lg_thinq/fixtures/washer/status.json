@@ -1,0 +1,22 @@
+{
+  "cycle": {
+    "cycleCount": 10
+  },
+  "location": {
+    "locationName": "MAIN"
+  },
+  "remoteControlEnable": {
+    "remoteControlEnabled": false
+  },
+  "runState": {
+    "currentState": "POWER_OFF"
+  },
+  "timer": {
+    "relativeHourToStart": 0,
+    "relativeMinuteToStart": 0,
+    "remainHour": 0,
+    "remainMinute": 45,
+    "totalHour": 0,
+    "totalMinute": 50
+  }
+}

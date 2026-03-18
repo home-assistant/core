@@ -1,4 +1,5 @@
 """Siren support for switch entities."""
+
 from __future__ import annotations
 
 from homeassistant.components.siren import (
@@ -10,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import BaseToggleEntity
 
@@ -18,7 +19,7 @@ from .entity import BaseToggleEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Siren Switch config entry."""
     registry = er.async_get(hass)

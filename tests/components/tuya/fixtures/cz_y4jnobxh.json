@@ -1,0 +1,33 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "AuVeLiCo",
+  "category": "cz",
+  "product_id": "y4jnobxh",
+  "product_name": "\u3010\u901a\u7528\u63a5\u5165\u30111\u8def\u63d2\u5ea7",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-19T09:30:43+00:00",
+  "create_time": "2025-07-19T09:30:43+00:00",
+  "update_time": "2025-07-19T09:30:43+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": false
+  },
+  "set_up": true,
+  "support_local": true
+}

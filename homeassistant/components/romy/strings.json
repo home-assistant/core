@@ -1,0 +1,82 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "password": {
+        "title": "Password required",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "(8 characters, see QR code under the dustbin)."
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add ROMY Vacuum Cleaner {name} to Home Assistant?"
+      }
+    }
+  },
+  "entity": {
+    "vacuum": {
+      "romy": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "default": "Default",
+              "auto": "[%key:common::state::auto%]",
+              "normal": "[%key:common::state::normal%]",
+              "high": "[%key:common::state::high%]",
+              "intensive": "Intensive",
+              "silent": "Silent",
+              "super_silent": "Super silent"
+            }
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "dustbin_present": {
+        "name": "Dustbin present"
+      },
+      "docked": {
+        "name": "Robot docked"
+      },
+      "water_tank_present": {
+        "name": "Watertank present"
+      },
+      "water_tank_empty": {
+        "name": "Watertank empty"
+      }
+    },
+    "sensor": {
+      "dustbin_sensor": {
+        "name": "Dustbin dirt level"
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      },
+      "total_number_of_cleaning_runs": {
+        "name": "Total cleaning runs"
+      },
+      "total_area_cleaned": {
+        "name": "Total cleaned area"
+      },
+      "total_distance_driven": {
+        "name": "Total distance driven"
+      }
+    }
+  }
+}

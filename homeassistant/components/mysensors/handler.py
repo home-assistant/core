@@ -1,9 +1,11 @@
 """Handle MySensors messages."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 
 from mysensors import Message
+from mysensors.const import SYSTEM_CHILD_ID
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -11,8 +13,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
 from .const import CHILD_CALLBACK, NODE_CALLBACK, DevId, GatewayId
-from .device import get_mysensors_devices
-from .helpers import discover_mysensors_platform, validate_set_msg
+from .entity import get_mysensors_devices
+from .helpers import (
+    discover_mysensors_node,
+    discover_mysensors_platform,
+    validate_set_msg,
+)
 
 HANDLERS: decorator.Registry[
     str, Callable[[HomeAssistant, GatewayId, Message], None]
@@ -69,6 +75,16 @@ def handle_sketch_version(
 ) -> None:
     """Handle an internal sketch version message."""
     _handle_node_update(hass, gateway_id, msg)
+
+
+@HANDLERS.register("presentation")
+@callback
+def handle_presentation(
+    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
+) -> None:
+    """Handle an internal presentation message."""
+    if msg.child_id == SYSTEM_CHILD_ID:
+        discover_mysensors_node(hass, gateway_id, msg.node_id)
 
 
 @callback

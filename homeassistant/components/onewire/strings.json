@@ -1,75 +1,66 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up OWServer from {host}?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::onewire::config::step::user::data_description::host%]",
+          "port": "[%key:component::onewire::config::step::user::data_description::port%]"
+        },
+        "description": "Update OWServer configuration for {name}"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "title": "Set server details"
+        "data_description": {
+          "host": "The hostname or IP address of your OWServer instance.",
+          "port": "The port of your OWServer instance (default is 4304)."
+        },
+        "title": "Set OWServer instance details"
       }
     }
   },
   "entity": {
     "binary_sensor": {
-      "sensed_a": {
-        "name": "Sensed A"
+      "sensed": {
+        "name": "Sensed"
       },
-      "sensed_b": {
-        "name": "Sensed B"
+      "sensed_id": {
+        "name": "Sensed {id}"
       },
-      "sensed_0": {
-        "name": "Sensed 0"
-      },
-      "sensed_1": {
-        "name": "Sensed 1"
-      },
-      "sensed_2": {
-        "name": "Sensed 2"
-      },
-      "sensed_3": {
-        "name": "Sensed 3"
-      },
-      "sensed_4": {
-        "name": "Sensed 4"
-      },
-      "sensed_5": {
-        "name": "Sensed 5"
-      },
-      "sensed_6": {
-        "name": "Sensed 6"
-      },
-      "sensed_7": {
-        "name": "Sensed 7"
-      },
-      "hub_short_0": {
-        "name": "Hub short on branch 0"
-      },
-      "hub_short_1": {
-        "name": "Hub short on branch 1"
-      },
-      "hub_short_2": {
-        "name": "Hub short on branch 2"
-      },
-      "hub_short_3": {
-        "name": "Hub short on branch 3"
+      "hub_short_id": {
+        "name": "Hub short on branch {id}"
+      }
+    },
+    "select": {
+      "tempres": {
+        "name": "Temperature resolution",
+        "state": {
+          "9": "9 bits (0.5°C, fastest, up to 93.75ms)",
+          "10": "10 bits (0.25°C, up to 187.5ms)",
+          "11": "11 bits (0.125°C, up to 375ms)",
+          "12": "12 bits (0.0625°C, slowest, up to 750ms)"
+        }
       }
     },
     "sensor": {
-      "counter_a": {
-        "name": "Counter A"
-      },
-      "counter_b": {
-        "name": "Counter B"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      "counter_id": {
+        "name": "Counter {id}"
       },
       "humidity_hih3600": {
         "name": "HIH3600 humidity"
@@ -86,32 +77,17 @@
       "humidity_raw": {
         "name": "Raw humidity"
       },
-      "illuminance": {
-        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      "latest_voltage_id": {
+        "name": "Latest voltage {id}"
       },
-      "moisture_1": {
-        "name": "Moisture 1"
-      },
-      "moisture_2": {
-        "name": "Moisture 2"
-      },
-      "moisture_3": {
-        "name": "Moisture 3"
-      },
-      "moisture_4": {
-        "name": "Moisture 4"
-      },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      "moisture_id": {
+        "name": "Moisture {id}"
       },
       "thermocouple_temperature_k": {
         "name": "Thermocouple K temperature"
       },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      "voltage_id": {
+        "name": "Voltage {id}"
       },
       "voltage_vad": {
         "name": "VAD voltage"
@@ -125,125 +101,38 @@
       "voltage_vis_gradient": {
         "name": "VIS voltage gradient"
       },
-      "wetness_0": {
-        "name": "Wetness 0"
-      },
-      "wetness_1": {
-        "name": "Wetness 1"
-      },
-      "wetness_2": {
-        "name": "Wetness 2"
-      },
-      "wetness_3": {
-        "name": "Wetness 3"
+      "wetness_id": {
+        "name": "Wetness {id}"
       }
     },
     "switch": {
-      "hub_branch_0": {
-        "name": "Hub branch 0"
-      },
-      "hub_branch_1": {
-        "name": "Hub branch 1"
-      },
-      "hub_branch_2": {
-        "name": "Hub branch 2"
-      },
-      "hub_branch_3": {
-        "name": "Hub branch 3"
+      "hub_branch_id": {
+        "name": "Hub branch {id}"
       },
       "iad": {
         "name": "Current A/D control"
       },
-      "latch_0": {
-        "name": "Latch 0"
+      "latch_id": {
+        "name": "Latch {id}"
       },
-      "latch_1": {
-        "name": "Latch 1"
+      "leaf_sensor_id": {
+        "name": "Leaf sensor {id}"
       },
-      "latch_2": {
-        "name": "Latch 2"
-      },
-      "latch_3": {
-        "name": "Latch 3"
-      },
-      "latch_4": {
-        "name": "Latch 4"
-      },
-      "latch_5": {
-        "name": "Latch 5"
-      },
-      "latch_6": {
-        "name": "Latch 6"
-      },
-      "latch_7": {
-        "name": "Latch 7"
-      },
-      "latch_a": {
-        "name": "Latch A"
-      },
-      "latch_b": {
-        "name": "Latch B"
-      },
-      "leaf_sensor_0": {
-        "name": "Leaf sensor 0"
-      },
-      "leaf_sensor_1": {
-        "name": "Leaf sensor 1"
-      },
-      "leaf_sensor_2": {
-        "name": "Leaf sensor 2"
-      },
-      "leaf_sensor_3": {
-        "name": "Leaf sensor 3"
-      },
-      "moisture_sensor_0": {
-        "name": "Moisture sensor 0"
-      },
-      "moisture_sensor_1": {
-        "name": "Moisture sensor 1"
-      },
-      "moisture_sensor_2": {
-        "name": "Moisture sensor 2"
-      },
-      "moisture_sensor_3": {
-        "name": "Moisture sensor 3"
+      "moisture_sensor_id": {
+        "name": "Moisture sensor {id}"
       },
       "pio": {
         "name": "Programmed input-output"
       },
-      "pio_0": {
-        "name": "Programmed input-output 0"
-      },
-      "pio_1": {
-        "name": "Programmed input-output 1"
-      },
-      "pio_2": {
-        "name": "Programmed input-output 2"
-      },
-      "pio_3": {
-        "name": "Programmed input-output 3"
-      },
-      "pio_4": {
-        "name": "Programmed input-output 4"
-      },
-      "pio_5": {
-        "name": "Programmed input-output 5"
-      },
-      "pio_6": {
-        "name": "Programmed input-output 6"
-      },
-      "pio_7": {
-        "name": "Programmed input-output 7"
-      },
-      "pio_a": {
-        "name": "Programmed input-output A"
-      },
-      "pio_b": {
-        "name": "Programmed input-output B"
+      "pio_id": {
+        "name": "Programmed input-output {id}"
       }
     }
   },
   "options": {
+    "abort": {
+      "no_configurable_devices": "No configurable devices found"
+    },
     "error": {
       "device_not_selected": "Select devices to configure"
     },
@@ -251,17 +140,17 @@
       "device_selection": {
         "data": {
           "clear_device_options": "Clear all device configurations",
-          "device_selection": "Select devices to configure"
+          "device_selection": "[%key:component::onewire::options::error::device_not_selected%]"
         },
         "description": "Select what configuration steps to process",
-        "title": "OneWire Device Options"
+        "title": "1-Wire device options"
       },
       "configure_device": {
         "data": {
-          "precision": "Sensor Precision"
+          "precision": "Sensor precision"
         },
         "description": "Select sensor precision for {sensor_id}",
-        "title": "OneWire Sensor Precision"
+        "title": "1-Wire sensor precision"
       }
     }
   }

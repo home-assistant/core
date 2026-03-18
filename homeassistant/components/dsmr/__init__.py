@@ -1,18 +1,33 @@
 """The dsmr component."""
+
 from __future__ import annotations
 
-from asyncio import CancelledError
+from asyncio import CancelledError, Task
 from contextlib import suppress
+from dataclasses import dataclass
 from typing import Any
+
+from dsmr_parser.objects import Telegram
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_DSMR_VERSION, DATA_TASK, DOMAIN, PLATFORMS
+from .const import CONF_DSMR_VERSION, PLATFORMS
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class DsmrState:
+    """State of integration."""
+
+    task: Task | None = None
+    telegram: Telegram | None = None
+
+
+type DsmrConfigEntry = ConfigEntry[DsmrState]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> bool:
     """Set up DSMR from a config entry."""
 
     @callback
@@ -24,32 +39,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrate_entity_entry)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
+    entry.runtime_data = DsmrState()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> bool:
     """Unload a config entry."""
-    task = hass.data[DOMAIN][entry.entry_id][DATA_TASK]
 
     # Cancel the reconnect task
-    task.cancel()
-    with suppress(CancelledError):
-        await task
+    if task := entry.runtime_data.task:
+        task.cancel()
+        with suppress(CancelledError):
+            await task
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(hass: HomeAssistant, entry: DsmrConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 

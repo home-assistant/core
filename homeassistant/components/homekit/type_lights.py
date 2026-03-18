@@ -1,7 +1,10 @@
 """Class to hold all light accessories."""
+
 from __future__ import annotations
 
+from datetime import datetime
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
@@ -17,7 +20,7 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     brightness_supported,
     color_supported,
@@ -29,7 +32,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
@@ -49,6 +52,7 @@ from .const import (
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
 )
+from .util import get_min_max
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,15 +72,22 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a new Light accessory object."""
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
-
+        self._reload_on_change_attrs.extend(
+            (
+                ATTR_SUPPORTED_COLOR_MODES,
+                ATTR_MAX_COLOR_TEMP_KELVIN,
+                ATTR_MIN_COLOR_TEMP_KELVIN,
+            )
+        )
         self.chars = []
-        self._event_timer = None
-        self._pending_events = {}
+        self._event_timer: CALLBACK_TYPE | None = None
+        self._pending_events: dict[str, Any] = {}
 
         state = self.hass.states.get(self.entity_id)
+        assert state
         attributes = state.attributes
         self.color_modes = color_modes = (
             attributes.get(ATTR_SUPPORTED_COLOR_MODES) or []
@@ -110,12 +121,14 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            self.min_mireds = color_temperature_kelvin_to_mired(
+            min_mireds = color_temperature_kelvin_to_mired(
                 attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
             )
-            self.max_mireds = color_temperature_kelvin_to_mired(
+            max_mireds = color_temperature_kelvin_to_mired(
                 attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
             )
+            # Ensure min is less than max
+            self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
             if not self.color_temp_supported and not self.rgbww_supported:
                 self.max_mireds = self.min_mireds
             self.char_color_temp = serv_light.configure_char(
@@ -134,7 +147,7 @@ class Light(HomeAccessory):
         self.async_update_state(state)
         serv_light.setter_callback = self._set_chars
 
-    def _set_chars(self, char_values):
+    def _set_chars(self, char_values: dict[str, Any]) -> None:
         _LOGGER.debug("Light _set_chars: %s", char_values)
         # Newest change always wins
         if CHAR_COLOR_TEMPERATURE in self._pending_events and (
@@ -153,16 +166,17 @@ class Light(HomeAccessory):
         )
 
     @callback
-    def _async_send_events(self, *_):
+    def _async_send_events(self, _now: datetime) -> None:
         """Process all changes at once."""
         _LOGGER.debug("Coalesced _set_chars: %s", self._pending_events)
         char_values = self._pending_events
         self._pending_events = {}
         events = []
         service = SERVICE_TURN_ON
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        has_on = CHAR_ON in char_values
 
-        if CHAR_ON in char_values:
+        if has_on:
             if not char_values[CHAR_ON]:
                 service = SERVICE_TURN_OFF
             events.append(f"Set state to {char_values[CHAR_ON]}")
@@ -170,7 +184,10 @@ class Light(HomeAccessory):
         brightness_pct = None
         if CHAR_BRIGHTNESS in char_values:
             if char_values[CHAR_BRIGHTNESS] == 0:
-                events[-1] = "Set state to 0"
+                if has_on:
+                    events[-1] = "Set state to 0"
+                else:
+                    events.append("Set state to 0")
                 service = SERVICE_TURN_OFF
             else:
                 brightness_pct = char_values[CHAR_BRIGHTNESS]
@@ -178,7 +195,10 @@ class Light(HomeAccessory):
 
         if service == SERVICE_TURN_OFF:
             self.async_call_service(
-                DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}, ", ".join(events)
+                LIGHT_DOMAIN,
+                service,
+                {ATTR_ENTITY_ID: self.entity_id},
+                ", ".join(events),
             )
             return
 
@@ -222,10 +242,10 @@ class Light(HomeAccessory):
         _LOGGER.debug(
             "Calling light service with params: %s -> %s", char_values, params
         )
-        self.async_call_service(DOMAIN, service, params, ", ".join(events))
+        self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update light after state change."""
         # Handle State
         state = new_state.state
@@ -265,8 +285,15 @@ class Light(HomeAccessory):
                 hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
+            elif (
+                (hue_sat := attributes.get(ATTR_HS_COLOR))
+                and isinstance(hue_sat, (list, tuple))
+                and len(hue_sat) == 2
+            ):
+                hue, saturation = hue_sat
             else:
-                hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
+                hue = None
+                saturation = None
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 self.char_hue.set_value(round(hue, 0))
                 self.char_saturation.set_value(round(saturation, 0))

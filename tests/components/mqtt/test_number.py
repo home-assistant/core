@@ -1,4 +1,5 @@
 """The tests for mqtt number component."""
+
 import json
 from typing import Any
 from unittest.mock import patch
@@ -25,12 +26,14 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_UNIT_OF_MEASUREMENT,
-    Platform,
+    UnitOfElectricPotential,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .test_common import (
+from .common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -46,13 +49,16 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_icon_and_entity_picture,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_entity_name,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -65,13 +71,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {number.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def number_platform_only():
-    """Only setup the number platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.NUMBER]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -158,6 +157,157 @@ async def test_run_number_setup(
     assert state.state == "unknown"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit_of_measurement
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": "test/state_number",
+                    "command_topic": "test/cmd_number",
+                    "name": "Test Number",
+                    "min": 15,
+                    "max": 28,
+                    "device_class": "temperature",
+                    "unit_of_measurement": UnitOfTemperature.CELSIUS.value,
+                }
+            }
+        }
+    ],
+)
+async def test_native_value_validation(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test state validation and native value conversion."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "test/state_number", "23.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 15
+    assert state.attributes.get(ATTR_MAX) == 28
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.CELSIUS.value
+    )
+    assert state.state == "23.5"
+
+    # Test out of range validation
+    async_fire_mqtt_message(hass, "test/state_number", "29.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 15
+    assert state.attributes.get(ATTR_MAX) == 28
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.CELSIUS.value
+    )
+    assert state.state == "23.5"
+    assert (
+        "Invalid value for number.test_number: 29.5 (range 15.0 - 28.0)" in caplog.text
+    )
+    caplog.clear()
+
+    # Check if validation still works when changing unit system
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test/state_number", "24.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 59.0
+    assert state.attributes.get(ATTR_MAX) == 82.4
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.FAHRENHEIT.value
+    )
+    assert state.state == "76.1"
+
+    # Test out of range validation again
+    async_fire_mqtt_message(hass, "test/state_number", "29.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 59.0
+    assert state.attributes.get(ATTR_MAX) == 82.4
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.FAHRENHEIT.value
+    )
+    assert state.state == "76.1"
+    assert (
+        "Invalid value for number.test_number: 29.5 (range 15.0 - 28.0)" in caplog.text
+    )
+    caplog.clear()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 68},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("test/cmd_number", "20", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test-topic-cmd",
+                    "state_topic": "test-topic",
+                    "unit_of_measurement": "\u00b5V",
+                }
+            }
+        }
+    ],
+)
+async def test_equivalent_unit_of_measurement(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device_class with equivalent unit of measurement."""
+    assert await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+    state = hass.states.get("number.test")
+    assert state is not None
+    assert state.state == "100"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+    caplog.clear()
+
+    discovery_payload = {
+        "name": "bla",
+        "command_topic": "test-topic2-cmd",
+        "state_topic": "test-topic2",
+        "unit_of_measurement": "\u00b5V",
+    }
+    # Now discover an invalid sensor
+    async_fire_mqtt_message(
+        hass, "homeassistant/number/bla/config", json.dumps(discovery_payload)
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic2", "21")
+    await hass.async_block_till_done()
+    state = hass.states.get("number.bla")
+    assert state is not None
+    assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
 
 
 @pytest.mark.parametrize(
@@ -561,11 +711,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        number.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, number.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -576,26 +722,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        number.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, number.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        number.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, number.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -630,21 +766,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_number(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered number."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][number.DOMAIN])
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, number.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, number.DOMAIN, data)
 
 
 async def test_discovery_update_number(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered number."""
     config1 = {
@@ -659,14 +789,12 @@ async def test_discovery_update_number(
     }
 
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, number.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, number.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_number(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered number."""
     data1 = (
@@ -676,20 +804,13 @@ async def test_discovery_update_unchanged_number(
         "homeassistant.components.mqtt.number.MqttNumber.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            number.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, number.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -697,9 +818,7 @@ async def test_discovery_broken(
         '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic"}'
     )
 
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, number.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, number.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -773,32 +892,57 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "min_number", "max_number", "step"),
     [
-        {
-            mqtt.DOMAIN: {
-                number.DOMAIN: {
-                    "state_topic": "test/state_number",
-                    "command_topic": "test/cmd_number",
-                    "name": "Test Number",
-                    "min": 5,
-                    "max": 110,
-                    "step": 20,
+        (
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": "test/state_number",
+                        "command_topic": "test/cmd_number",
+                        "name": "Test Number",
+                        "min": 5,
+                        "max": 110,
+                        "step": 20,
+                    }
                 }
-            }
-        }
+            },
+            5,
+            110,
+            20,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": "test/state_number",
+                        "command_topic": "test/cmd_number",
+                        "name": "Test Number",
+                        "min": 100,
+                        "max": 100,
+                    }
+                }
+            },
+            100,
+            100,
+            1,
+        ),
     ],
 )
 async def test_min_max_step_attributes(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    min_number: float,
+    max_number: float,
+    step: float,
 ) -> None:
     """Test min/max/step attributes."""
     await mqtt_mock_entry()
 
     state = hass.states.get("number.test_number")
-    assert state.attributes.get(ATTR_MIN) == 5
-    assert state.attributes.get(ATTR_MAX) == 110
-    assert state.attributes.get(ATTR_STEP) == 20
+    assert state.attributes.get(ATTR_MIN) == min_number
+    assert state.attributes.get(ATTR_MAX) == max_number
+    assert state.attributes.get(ATTR_STEP) == step
 
 
 @pytest.mark.parametrize(
@@ -818,14 +962,12 @@ async def test_min_max_step_attributes(
     ],
 )
 async def test_invalid_min_max_attributes(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid min/max attributes."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
+    assert await mqtt_mock_entry()
+    assert f"{CONF_MAX} must be >= {CONF_MIN}" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -899,7 +1041,7 @@ async def test_default_mode(
 async def test_mode(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    mode,
+    mode: str,
 ) -> None:
     """Test mode."""
     await mqtt_mock_entry()
@@ -945,11 +1087,9 @@ async def test_invalid_mode(
     valid: bool,
 ) -> None:
     """Test invalid mode."""
-    if valid:
-        await mqtt_mock_entry()
-        return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    await mqtt_mock_entry()
+    state = hass.states.get("number.test_number")
+    assert (state is not None) == valid
 
 
 @pytest.mark.parametrize(
@@ -1060,8 +1200,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = number.DOMAIN
@@ -1097,7 +1236,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1108,12 +1251,106 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = number.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    ("expected_friendly_name", "device_class"),
+    [("test", None), ("Humidity", "humidity"), ("Temperature", "temperature")],
+)
+async def test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_friendly_name: str | None,
+    device_class: str | None,
+) -> None:
+    """Test the entity name setup."""
+    domain = number.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_name(
+        hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
+    )
+
+
+async def test_entity_icon_and_entity_picture(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the entity icon or picture setup."""
+    domain = number.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_icon_and_entity_picture(
+        hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            number.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "state_topic": "test-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", "10", "20.7"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            number.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
     )

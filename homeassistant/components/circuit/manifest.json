@@ -1,9 +1,0 @@
-{
-  "domain": "circuit",
-  "name": "Unify Circuit",
-  "codeowners": ["@braam"],
-  "documentation": "https://www.home-assistant.io/integrations/circuit",
-  "iot_class": "cloud_push",
-  "loggers": ["circuit_webhook"],
-  "requirements": ["circuit-webhook==1.0.1"]
-}

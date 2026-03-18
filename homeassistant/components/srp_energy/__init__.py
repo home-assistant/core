@@ -1,4 +1,5 @@
 """The SRP Energy integration."""
+
 from srpenergy.client import SrpEnergyClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -6,6 +7,7 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, LOGGER
+from .coordinator import SRPEnergyDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -24,8 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api_password,
     )
 
+    coordinator = SRPEnergyDataUpdateCoordinator(hass, entry, api_instance)
+
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = api_instance
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

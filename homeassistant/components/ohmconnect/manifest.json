@@ -4,5 +4,6 @@
   "codeowners": ["@robbiet480"],
   "documentation": "https://www.home-assistant.io/integrations/ohmconnect",
   "iot_class": "cloud_polling",
+  "quality_scale": "legacy",
   "requirements": ["defusedxml==0.7.1"]
 }

@@ -1,9 +1,9 @@
 """The keenetic_ndms2 component."""
+
 from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -18,16 +18,14 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    ROUTER,
-    UNDO_UPDATE_LISTENER,
 )
-from .router import KeeneticRouter
+from .router import KeeneticConfigEntry, KeeneticRouter
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KeeneticConfigEntry) -> bool:
     """Set up the component."""
     hass.data.setdefault(DOMAIN, {})
     async_add_defaults(hass, entry)
@@ -35,31 +33,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     router = KeeneticRouter(hass, entry)
     await router.async_setup()
 
-    undo_listener = entry.add_update_listener(update_listener)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        ROUTER: router,
-        UNDO_UPDATE_LISTENER: undo_listener,
-    }
+    entry.runtime_data = router
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: KeeneticConfigEntry
+) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
 
-    router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
-
+    router = config_entry.runtime_data
     await router.async_teardown()
-
-    hass.data[DOMAIN].pop(config_entry.entry_id)
 
     new_tracked_interfaces: set[str] = set(config_entry.options[CONF_INTERFACES])
 
@@ -75,11 +65,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             for mac, device in router.last_devices.items()
             if device.interface in new_tracked_interfaces
         }
-        for entity_entry in list(ent_reg.entities.values()):
-            if (
-                entity_entry.config_entry_id == config_entry.entry_id
-                and entity_entry.domain == Platform.DEVICE_TRACKER
-            ):
+        for entity_entry in ent_reg.entities.get_entries_for_config_entry_id(
+            config_entry.entry_id
+        ):
+            if entity_entry.domain == Platform.DEVICE_TRACKER:
                 mac = entity_entry.unique_id.partition("_")[0]
                 if mac not in keep_devices:
                     _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
@@ -96,12 +85,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
-def async_add_defaults(hass: HomeAssistant, entry: ConfigEntry):
+def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry):
     """Populate default options."""
     host: str = entry.data[CONF_HOST]
     imported_options: dict = hass.data[DOMAIN].get(f"imported_options_{host}", {})

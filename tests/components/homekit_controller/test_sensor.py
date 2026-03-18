@@ -1,12 +1,13 @@
 """Basic checks for HomeKit sensor."""
-from unittest.mock import patch
 
-from aiohomekit.model import Transport
+from collections.abc import Callable
+
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
-from aiohomekit.testing import FakePairing
+import pytest
 
 from homeassistant.components.homekit_controller.sensor import (
     thread_node_capability_to_str,
@@ -21,7 +22,7 @@ from .common import TEST_DEVICE_SERVICE_INFO, Helper, setup_test_component
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-def create_temperature_sensor_service(accessory):
+def create_temperature_sensor_service(accessory: Accessory) -> None:
     """Define temperature characteristics."""
     service = accessory.add_service(ServicesTypes.TEMPERATURE_SENSOR)
 
@@ -29,7 +30,7 @@ def create_temperature_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_humidity_sensor_service(accessory):
+def create_humidity_sensor_service(accessory: Accessory) -> None:
     """Define humidity characteristics."""
     service = accessory.add_service(ServicesTypes.HUMIDITY_SENSOR)
 
@@ -37,7 +38,7 @@ def create_humidity_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_light_level_sensor_service(accessory):
+def create_light_level_sensor_service(accessory: Accessory) -> None:
     """Define light level characteristics."""
     service = accessory.add_service(ServicesTypes.LIGHT_SENSOR)
 
@@ -45,7 +46,7 @@ def create_light_level_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_carbon_dioxide_level_sensor_service(accessory):
+def create_carbon_dioxide_level_sensor_service(accessory: Accessory) -> None:
     """Define carbon dioxide level characteristics."""
     service = accessory.add_service(ServicesTypes.CARBON_DIOXIDE_SENSOR)
 
@@ -53,7 +54,7 @@ def create_carbon_dioxide_level_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_battery_level_sensor(accessory):
+def create_battery_level_sensor(accessory: Accessory) -> Service:
     """Define battery level characteristics."""
     service = accessory.add_service(ServicesTypes.BATTERY_SERVICE)
 
@@ -69,10 +70,12 @@ def create_battery_level_sensor(accessory):
     return service
 
 
-async def test_temperature_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
+async def test_temperature_sensor_read_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test reading the state of a HomeKit temperature sensor accessory."""
     helper = await setup_test_component(
-        hass, create_temperature_sensor_service, suffix="temperature"
+        hass, get_next_aid(), create_temperature_sensor_service, suffix="temperature"
     )
 
     state = await helper.async_update(
@@ -95,10 +98,12 @@ async def test_temperature_sensor_read_state(hass: HomeAssistant, utcnow) -> Non
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-async def test_temperature_sensor_not_added_twice(hass: HomeAssistant, utcnow) -> None:
+async def test_temperature_sensor_not_added_twice(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """A standalone temperature sensor should not get a characteristic AND a service entity."""
     helper = await setup_test_component(
-        hass, create_temperature_sensor_service, suffix="temperature"
+        hass, get_next_aid(), create_temperature_sensor_service, suffix="temperature"
     )
 
     created_sensors = set()
@@ -109,10 +114,12 @@ async def test_temperature_sensor_not_added_twice(hass: HomeAssistant, utcnow) -
     assert created_sensors == {helper.entity_id}
 
 
-async def test_humidity_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
+async def test_humidity_sensor_read_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test reading the state of a HomeKit humidity sensor accessory."""
     helper = await setup_test_component(
-        hass, create_humidity_sensor_service, suffix="humidity"
+        hass, get_next_aid(), create_humidity_sensor_service, suffix="humidity"
     )
 
     state = await helper.async_update(
@@ -134,10 +141,12 @@ async def test_humidity_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
 
 
-async def test_light_level_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
+async def test_light_level_sensor_read_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test reading the state of a HomeKit temperature sensor accessory."""
     helper = await setup_test_component(
-        hass, create_light_level_sensor_service, suffix="light_level"
+        hass, get_next_aid(), create_light_level_sensor_service, suffix="light_level"
     )
 
     state = await helper.async_update(
@@ -160,11 +169,14 @@ async def test_light_level_sensor_read_state(hass: HomeAssistant, utcnow) -> Non
 
 
 async def test_carbon_dioxide_level_sensor_read_state(
-    hass: HomeAssistant, utcnow
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
     """Test reading the state of a HomeKit carbon dioxide sensor accessory."""
     helper = await setup_test_component(
-        hass, create_carbon_dioxide_level_sensor_service, suffix="carbon_dioxide"
+        hass,
+        get_next_aid(),
+        create_carbon_dioxide_level_sensor_service,
+        suffix="carbon_dioxide",
     )
 
     state = await helper.async_update(
@@ -184,10 +196,12 @@ async def test_carbon_dioxide_level_sensor_read_state(
     assert state.state == "20"
 
 
-async def test_battery_level_sensor(hass: HomeAssistant, utcnow) -> None:
+async def test_battery_level_sensor(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test reading the state of a HomeKit battery level sensor."""
     helper = await setup_test_component(
-        hass, create_battery_level_sensor, suffix="battery"
+        hass, get_next_aid(), create_battery_level_sensor, suffix="battery"
     )
 
     state = await helper.async_update(
@@ -211,10 +225,12 @@ async def test_battery_level_sensor(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
 
 
-async def test_battery_charging(hass: HomeAssistant, utcnow) -> None:
+async def test_battery_charging(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test reading the state of a HomeKit battery's charging state."""
     helper = await setup_test_component(
-        hass, create_battery_level_sensor, suffix="battery"
+        hass, get_next_aid(), create_battery_level_sensor, suffix="battery"
     )
 
     state = await helper.async_update(
@@ -235,10 +251,12 @@ async def test_battery_charging(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["icon"] == "mdi:battery-charging-20"
 
 
-async def test_battery_low(hass: HomeAssistant, utcnow) -> None:
+async def test_battery_low(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test reading the state of a HomeKit battery's low state."""
     helper = await setup_test_component(
-        hass, create_battery_level_sensor, suffix="battery"
+        hass, get_next_aid(), create_battery_level_sensor, suffix="battery"
     )
 
     state = await helper.async_update(
@@ -260,7 +278,7 @@ async def test_battery_low(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["icon"] == "mdi:battery-alert"
 
 
-def create_switch_with_sensor(accessory):
+def create_switch_with_sensor(accessory: Accessory) -> Service:
     """Define battery level characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
@@ -277,9 +295,11 @@ def create_switch_with_sensor(accessory):
     return service
 
 
-async def test_switch_with_sensor(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_with_sensor(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
-    helper = await setup_test_component(hass, create_switch_with_sensor)
+    helper = await setup_test_component(hass, get_next_aid(), create_switch_with_sensor)
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
@@ -307,14 +327,15 @@ async def test_switch_with_sensor(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "50"
 
 
-async def test_sensor_unavailable(hass: HomeAssistant, utcnow) -> None:
+async def test_sensor_unavailable(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test a sensor becoming unavailable."""
-    helper = await setup_test_component(hass, create_switch_with_sensor)
+    helper = await setup_test_component(hass, get_next_aid(), create_switch_with_sensor)
 
-    # Find the energy sensor and mark it as offline
     outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    on_char = outlet[CharacteristicsTypes.ON]
     realtime_energy = outlet[CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY]
-    realtime_energy.status = HapStatusCode.UNABLE_TO_COMMUNICATE
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
@@ -325,9 +346,31 @@ async def test_sensor_unavailable(hass: HomeAssistant, utcnow) -> None:
         helper.config_entry,
     )
 
+    # Find the outlet on char and mark it as offline
+    await helper.async_set_aid_iid_status(
+        [
+            (
+                helper.accessory.aid,
+                on_char.iid,
+                HapStatusCode.UNABLE_TO_COMMUNICATE.value,
+            )
+        ]
+    )
+
     # Outlet has non-responsive characteristics so should be unavailable
     state = await helper.poll_and_get_state()
     assert state.state == "unavailable"
+
+    # Find the energy sensor and mark it as offline
+    await helper.async_set_aid_iid_status(
+        [
+            (
+                energy_helper.accessory.aid,
+                realtime_energy.iid,
+                HapStatusCode.UNABLE_TO_COMMUNICATE.value,
+            )
+        ]
+    )
 
     # Energy sensor has non-responsive characteristics so should be unavailable
     state = await energy_helper.poll_and_get_state()
@@ -361,39 +404,42 @@ def test_thread_status_to_str() -> None:
     assert thread_status_to_str(ThreadStatus.DISABLED) == "disabled"
 
 
+@pytest.mark.usefixtures(
+    "enable_bluetooth",
+    "entity_registry_enabled_by_default",
+    "fake_ble_discovery",
+    "fake_ble_pairing",
+)
 async def test_rssi_sensor(
-    hass: HomeAssistant,
-    utcnow,
-    entity_registry_enabled_by_default: None,
-    enable_bluetooth: None,
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
     """Test an rssi sensor."""
     inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
 
-    class FakeBLEPairing(FakePairing):
-        """Fake BLE pairing."""
-
-        @property
-        def transport(self):
-            return Transport.BLE
-
-    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
-        # Any accessory will do for this test, but we need at least
-        # one or the rssi sensor will not be created
-        await setup_test_component(
-            hass, create_battery_level_sensor, suffix="battery", connection="BLE"
-        )
-        assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"
+    # Any accessory will do for this test, but we need at least
+    # one or the rssi sensor will not be created
+    await setup_test_component(
+        hass,
+        get_next_aid(),
+        create_battery_level_sensor,
+        suffix="battery",
+        connection="BLE",
+    )
+    assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"
 
 
+@pytest.mark.usefixtures(
+    "enable_bluetooth",
+    "entity_registry_enabled_by_default",
+    "fake_ble_discovery",
+    "fake_ble_pairing",
+)
 async def test_migrate_rssi_sensor_unique_id(
     hass: HomeAssistant,
-    utcnow,
-    entity_registry_enabled_by_default: None,
-    enable_bluetooth: None,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test an rssi sensor unique id migration."""
-    entity_registry = er.async_get(hass)
     rssi_sensor = entity_registry.async_get_or_create(
         "sensor",
         "homekit_controller",
@@ -403,20 +449,16 @@ async def test_migrate_rssi_sensor_unique_id(
 
     inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
 
-    class FakeBLEPairing(FakePairing):
-        """Fake BLE pairing."""
-
-        @property
-        def transport(self):
-            return Transport.BLE
-
-    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
-        # Any accessory will do for this test, but we need at least
-        # one or the rssi sensor will not be created
-        await setup_test_component(
-            hass, create_battery_level_sensor, suffix="battery", connection="BLE"
-        )
-        assert hass.states.get("sensor.renamed_rssi").state == "-56"
+    # Any accessory will do for this test, but we need at least
+    # one or the rssi sensor will not be created
+    await setup_test_component(
+        hass,
+        get_next_aid(),
+        create_battery_level_sensor,
+        suffix="battery",
+        connection="BLE",
+    )
+    assert hass.states.get("sensor.renamed_rssi").state == "-56"
 
     assert (
         entity_registry.async_get(rssi_sensor.entity_id).unique_id

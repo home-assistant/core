@@ -20,12 +20,12 @@
       "firmware_version": "1.1.2",
       "device_key": "0x0000000000000000",
       "encryption_key": true,
-      "installed_at": "2019-06-28T22:12:51.209Z",
-      "calibrated_at": "2023-03-07T19:51:56.838Z",
-      "last_reported_at": "2023-04-19T18:09:40.479Z",
+      "installed_at": "2019-06-17T03:30:27.766Z",
+      "calibrated_at": "2024-01-19T00:38:15.372Z",
+      "last_reported_at": "2024-01-21T00:00:46.705Z",
       "missing_at": null,
-      "updated_at": "2023-03-28T13:33:33.801Z",
-      "created_at": "2019-06-28T22:12:20.256Z",
+      "updated_at": "2024-01-19T00:38:16.856Z",
+      "created_at": "2019-06-17T03:29:45.506Z",
       "signal_strength": 4,
       "firmware": {
         "status": "valid"

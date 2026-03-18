@@ -2,7 +2,8 @@
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 DOMAIN = "upb"
 
@@ -29,7 +30,7 @@ UPB_BRIGHTNESS_RATE_SCHEMA = vol.All(
     ),
 )
 
-UPB_BLINK_RATE_SCHEMA = {
+UPB_BLINK_RATE_SCHEMA: VolDictType = {
     vol.Required(ATTR_BLINK_RATE, default=0.5): vol.All(
         vol.Coerce(float), vol.Range(min=0, max=4.25)
     )

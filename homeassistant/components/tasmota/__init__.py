@@ -1,4 +1,5 @@
 """The Tasmota integration."""
+
 from __future__ import annotations
 
 import logging
@@ -15,7 +16,7 @@ from hatasmota.models import TasmotaDeviceConfig
 from hatasmota.mqtt import TasmotaMQTTClient
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.subscription import (
+from homeassistant.components.mqtt import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
@@ -23,11 +24,7 @@ from homeassistant.components.mqtt.subscription import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceRegistry,
-    async_entries_for_config_entry,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
 
 from . import device_automation, discovery
 from .const import (
@@ -104,7 +101,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # detach device triggers
     device_registry = dr.async_get(hass)
-    devices = async_entries_for_config_entry(device_registry, entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for device in devices:
         await device_automation.async_remove_automations(hass, device.id)
 
@@ -119,7 +116,9 @@ async def _remove_device(
     device_registry: DeviceRegistry,
 ) -> None:
     """Remove a discovered Tasmota device."""
-    device = device_registry.async_get_device(set(), {(CONNECTION_NETWORK_MAC, mac)})
+    device = device_registry.async_get_device(
+        connections={(CONNECTION_NETWORK_MAC, mac)}
+    )
 
     if device is None or config_entry.entry_id not in device.config_entries:
         return

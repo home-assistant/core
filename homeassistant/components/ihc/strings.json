@@ -1,0 +1,72 @@
+{
+  "services": {
+    "set_runtime_value_bool": {
+      "name": "Set runtime value boolean",
+      "description": "Sets a boolean runtime value on the IHC controller.",
+      "fields": {
+        "controller_id": {
+          "name": "Controller ID",
+          "description": "If you have multiple controllers, this is the index of your controller, starting with 0."
+        },
+        "ihc_id": {
+          "name": "IHC ID",
+          "description": "The integer IHC resource ID."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The boolean value to set."
+        }
+      }
+    },
+    "set_runtime_value_int": {
+      "name": "Set runtime value integer",
+      "description": "Sets an integer runtime value on the IHC controller.",
+      "fields": {
+        "controller_id": {
+          "name": "[%key:component::ihc::services::set_runtime_value_bool::fields::controller_id::name%]",
+          "description": "[%key:component::ihc::services::set_runtime_value_bool::fields::controller_id::description%]"
+        },
+        "ihc_id": {
+          "name": "[%key:component::ihc::services::set_runtime_value_bool::fields::ihc_id::name%]",
+          "description": "[%key:component::ihc::services::set_runtime_value_bool::fields::ihc_id::description%]"
+        },
+        "value": {
+          "name": "Value",
+          "description": "The integer value to set."
+        }
+      }
+    },
+    "set_runtime_value_float": {
+      "name": "Set runtime value float",
+      "description": "Sets a float runtime value on the IHC controller.",
+      "fields": {
+        "controller_id": {
+          "name": "[%key:component::ihc::services::set_runtime_value_bool::fields::controller_id::name%]",
+          "description": "[%key:component::ihc::services::set_runtime_value_bool::fields::controller_id::description%]"
+        },
+        "ihc_id": {
+          "name": "[%key:component::ihc::services::set_runtime_value_bool::fields::ihc_id::name%]",
+          "description": "[%key:component::ihc::services::set_runtime_value_bool::fields::ihc_id::description%]"
+        },
+        "value": {
+          "name": "Value",
+          "description": "The float value to set."
+        }
+      }
+    },
+    "pulse": {
+      "name": "Pulse",
+      "description": "Pulses an input on the IHC controller.",
+      "fields": {
+        "controller_id": {
+          "name": "[%key:component::ihc::services::set_runtime_value_bool::fields::controller_id::name%]",
+          "description": "[%key:component::ihc::services::set_runtime_value_bool::fields::controller_id::description%]"
+        },
+        "ihc_id": {
+          "name": "[%key:component::ihc::services::set_runtime_value_bool::fields::ihc_id::name%]",
+          "description": "[%key:component::ihc::services::set_runtime_value_bool::fields::ihc_id::description%]"
+        }
+      }
+    }
+  }
+}

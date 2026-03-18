@@ -1,4 +1,5 @@
 """Support for GoodWe inverter via UDP."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,10 +17,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -27,19 +26,20 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
-from .coordinator import GoodweUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import GoodweConfigEntry, GoodweUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,16 +75,16 @@ _ICONS: dict[SensorKind, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[
-        [GoodweUpdateCoordinator, str], Any
-    ] = lambda coordinator, sensor: coordinator.sensor_value(sensor)
-    available: Callable[
-        [GoodweUpdateCoordinator], bool
-    ] = lambda coordinator: coordinator.last_update_success
+    value: Callable[[GoodweUpdateCoordinator, str], Any] = (
+        lambda coordinator, sensor: coordinator.sensor_value(sensor)
+    )
+    available: Callable[[GoodweUpdateCoordinator], bool] = (
+        lambda coordinator: coordinator.last_update_success
+    )
 
 
 _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
@@ -125,7 +125,7 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         key="var",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         entity_registry_enabled_default=False,
     ),
     "C": GoodweSensorEntityDescription(
@@ -164,14 +164,14 @@ TEXT_SENSOR = GoodweSensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: GoodweConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GoodWe inverter from a config entry."""
     entities: list[InverterSensor] = []
-    inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
+    inverter = config_entry.runtime_data.inverter
+    coordinator = config_entry.runtime_data.coordinator
+    device_info = config_entry.runtime_data.device_info
 
     # Individual inverter sensors entities
     entities.extend(

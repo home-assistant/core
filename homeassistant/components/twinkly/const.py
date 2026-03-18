@@ -2,11 +2,6 @@
 
 DOMAIN = "twinkly"
 
-# Keys of the config entry
-CONF_ID = "id"
-CONF_HOST = "host"
-CONF_NAME = "name"
-
 # Strongly named HA attributes keys
 ATTR_HOST = "host"
 ATTR_VERSION = "version"
@@ -19,9 +14,6 @@ DEV_LED_PROFILE = "led_profile"
 
 DEV_PROFILE_RGB = "RGB"
 DEV_PROFILE_RGBW = "RGBW"
-
-DATA_CLIENT = "client"
-DATA_DEVICE_INFO = "device_info"
 
 # Minimum version required to support effects
 MIN_EFFECT_VERSION = "2.7.1"

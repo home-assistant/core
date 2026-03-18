@@ -1,0 +1,171 @@
+# serializer version: 1
+# name: test_detailed_forecast_service[hourly]
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'short_description': 'A short forecast.',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_detailed_forecast_service[twice_daily]
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'detailed_description': 'A detailed forecast.',
+          'is_daytime': False,
+          'short_description': 'A short forecast.',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_detailed_forecast_service_no_data[hourly]
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_detailed_forecast_service_no_data[twice_daily]
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts]
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'dew_point': -15.6,
+          'humidity': 75,
+          'is_daytime': False,
+          'precipitation_probability': 89,
+          'temperature': -12.2,
+          'wind_bearing': 180,
+          'wind_speed': 16.09,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts].1
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'dew_point': -15.6,
+          'humidity': 75,
+          'precipitation_probability': 89,
+          'temperature': -12.2,
+          'wind_bearing': 180,
+          'wind_speed': 16.09,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts].2
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'dew_point': -15.6,
+          'humidity': 75,
+          'is_daytime': False,
+          'precipitation_probability': 89,
+          'temperature': -12.2,
+          'wind_bearing': 180,
+          'wind_speed': 16.09,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts].3
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'dew_point': -15.6,
+          'humidity': 75,
+          'precipitation_probability': 89,
+          'temperature': -12.2,
+          'wind_bearing': 180,
+          'wind_speed': 16.09,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts].4
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'dew_point': -15.6,
+          'humidity': 75,
+          'precipitation_probability': 89,
+          'temperature': -12.2,
+          'wind_bearing': 180,
+          'wind_speed': 16.09,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts].5
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_subscription[hourly-weather.abc]
+  list([
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2019-08-12T20:00:00-04:00',
+      'dew_point': -15.6,
+      'humidity': 75,
+      'precipitation_probability': 89,
+      'temperature': -12.2,
+      'wind_bearing': 180,
+      'wind_speed': 16.09,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[hourly-weather.abc].1
+  list([
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2019-08-12T20:00:00-04:00',
+      'dew_point': -15.6,
+      'humidity': 75,
+      'precipitation_probability': 89,
+      'temperature': -12.2,
+      'wind_bearing': 180,
+      'wind_speed': 16.09,
+    }),
+  ])
+# ---

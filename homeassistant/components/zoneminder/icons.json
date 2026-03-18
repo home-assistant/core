@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_run_state": {
+      "service": "mdi:cog"
+    }
+  }
+}

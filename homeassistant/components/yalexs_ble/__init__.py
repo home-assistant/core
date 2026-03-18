@@ -1,7 +1,6 @@
 """The Yale Access Bluetooth integration."""
-from __future__ import annotations
 
-import asyncio
+from __future__ import annotations
 
 from yalexs_ble import (
     AuthError,
@@ -10,30 +9,38 @@ from yalexs_ble import (
     LockState,
     PushLock,
     YaleXSBLEError,
+    close_stale_connections_by_address,
     local_name_is_unique,
 )
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .config_cache import async_get_validated_config
 from .const import (
     CONF_ALWAYS_CONNECTED,
     CONF_KEY,
     CONF_LOCAL_NAME,
     CONF_SLOT,
     DEVICE_TIMEOUT,
-    DOMAIN,
 )
 from .models import YaleXSBLEData
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
+type YALEXSBLEConfigEntry = ConfigEntry[YaleXSBLEData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SENSOR,
+]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
     """Set up Yale Access Bluetooth from a config entry."""
     local_name = entry.data[CONF_LOCAL_NAME]
     address = entry.data[CONF_ADDRESS]
@@ -46,6 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
+
+    # Ensure any lingering connections are closed since the device may not be
+    # advertising when its connected to another client which will prevent us
+    # from setting the device and setup will fail.
+    await close_stale_connections_by_address(address)
 
     @callback
     def _async_update_ble(
@@ -69,6 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # We may already have the advertisement, so check for it.
     if service_info := async_find_existing_service_info(hass, local_name, address):
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
+    elif hass.state is CoreState.starting:
+        # If we are starting and the advertisement is not found, do not delay
+        # the setup. We will wait for the advertisement to be found and then
+        # discovery will trigger setup retry.
+        raise ConfigEntryNotReady("{local_name} ({address}) not advertising yet")
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
@@ -80,17 +97,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
-    except AuthError as ex:
-        raise ConfigEntryAuthFailed(str(ex)) from ex
-    except (YaleXSBLEError, asyncio.TimeoutError) as ex:
-        raise ConfigEntryNotReady(
-            f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
-        ) from ex
+        await _async_wait_for_first_update(push_lock, local_name)
+    except ConfigEntryAuthFailed:
+        # If key has rotated, try to fetch it from the cache
+        # and update
+        if (validated_config := async_get_validated_config(hass, address)) and (
+            validated_config.key != entry.data[CONF_KEY]
+            or validated_config.slot != entry.data[CONF_SLOT]
+        ):
+            assert shutdown_callback is not None
+            shutdown_callback()
+            push_lock.set_lock_key(validated_config.key, validated_config.slot)
+            shutdown_callback = await push_lock.start()
+            await _async_wait_for_first_update(push_lock, local_name)
+            # If we can use the cached key and slot, update the entry.
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_KEY: validated_config.key,
+                    CONF_SLOT: validated_config.slot,
+                },
+            )
+        else:
+            raise
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
-        entry.title, push_lock, always_connected
-    )
+    entry.runtime_data = YaleXSBLEData(entry.title, push_lock, always_connected)
 
     @callback
     def _async_device_unavailable(
@@ -115,25 +147,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(push_lock.register_callback(_async_state_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
     )
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.title or data.always_connected != entry.options.get(
-        CONF_ALWAYS_CONNECTED
-    ):
-        await hass.config_entries.async_reload(entry.entry_id)
+async def _async_wait_for_first_update(push_lock: PushLock, local_name: str) -> None:
+    """Wait for the first update from the push lock."""
+    try:
+        await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
+    except AuthError as ex:
+        raise ConfigEntryAuthFailed(str(ex)) from ex
+    except (YaleXSBLEError, TimeoutError) as ex:
+        raise ConfigEntryNotReady(
+            f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
+        ) from ex
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

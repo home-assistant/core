@@ -1,0 +1,105 @@
+{
+  "ssdp_usn": "uuid:09896802-00a0-1000-adfd-84a4668d8423::urn:schemas-upnp-org:service:RenderingControl:1",
+  "ssdp_st": "urn:schemas-upnp-org:service:RenderingControl:1",
+  "upnp": {
+    "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+    "X_compatibleId": "MS_DigitalMediaDeviceClass_DMR_V001",
+    "X_deviceCategory": "Display.TV.LCD Multimedia.DMR",
+    "X_DLNADOC": "DMR-1.50",
+    "friendlyName": "[TV]Samsung LED55",
+    "manufacturer": "Samsung Electronics",
+    "manufacturerURL": "http://www.samsung.com/sec",
+    "modelDescription": "Samsung TV DMR",
+    "modelName": "UE55H6400",
+    "modelNumber": "AllShare1.0",
+    "modelURL": "http://www.samsung.com/sec",
+    "serialNumber": "20110517DMR",
+    "UDN": "uuid:09896802-00a0-1000-adfd-84a4668d8423",
+    "deviceID": "ZPCNHA5IWYRV6",
+    "iconList": {
+      "icon": [
+        {
+          "mimetype": "image/jpeg",
+          "width": "48",
+          "height": "48",
+          "depth": "24",
+          "url": "/dmr/icon_SML.jpg"
+        },
+        {
+          "mimetype": "image/jpeg",
+          "width": "120",
+          "height": "120",
+          "depth": "24",
+          "url": "/dmr/icon_LRG.jpg"
+        },
+        {
+          "mimetype": "image/png",
+          "width": "48",
+          "height": "48",
+          "depth": "24",
+          "url": "/dmr/icon_SML.png"
+        },
+        {
+          "mimetype": "image/png",
+          "width": "120",
+          "height": "120",
+          "depth": "24",
+          "url": "/dmr/icon_LRG.png"
+        }
+      ]
+    },
+    "serviceList": {
+      "service": [
+        {
+          "serviceType": "urn:schemas-upnp-org:service:RenderingControl:1",
+          "serviceId": "urn:upnp-org:serviceId:RenderingControl",
+          "controlURL": "/smp_17_",
+          "eventSubURL": "/smp_18_",
+          "SCPDURL": "/smp_16_"
+        },
+        {
+          "serviceType": "urn:schemas-upnp-org:service:ConnectionManager:1",
+          "serviceId": "urn:upnp-org:serviceId:ConnectionManager",
+          "controlURL": "/smp_20_",
+          "eventSubURL": "/smp_21_",
+          "SCPDURL": "/smp_19_"
+        },
+        {
+          "serviceType": "urn:schemas-upnp-org:service:AVTransport:1",
+          "serviceId": "urn:upnp-org:serviceId:AVTransport",
+          "controlURL": "/smp_23_",
+          "eventSubURL": "/smp_24_",
+          "SCPDURL": "/smp_22_"
+        }
+      ]
+    },
+    "ProductCap": "Y2014,WebURIPlayable,SeekTRACK_NR,NavigateInPause",
+    "X_hardwareId": "VEN_0105&DEV_VD0001"
+  },
+  "ssdp_location": "http://10.10.12.34:7676/smp_15_",
+  "ssdp_nt": null,
+  "ssdp_udn": "uuid:09896802-00a0-1000-adfd-84a4668d8423",
+  "ssdp_ext": "",
+  "ssdp_server": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0",
+  "ssdp_headers": {
+    "CACHE-CONTROL": "max-age:1800",
+    "Date": "Thu, 01 Jan 1970 00:06:48 GMT",
+    "EXT": "",
+    "LOCATION": "http://10.10.12.34:7676/smp_15_",
+    "SERVER": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0",
+    "ST": "urn:schemas-upnp-org:service:RenderingControl:1",
+    "USN": "uuid:09896802-00a0-1000-adfd-84a4668d8423::urn:schemas-upnp-org:service:RenderingControl:1",
+    "Content-Length": "0",
+    "_host": "10.10.12.34",
+    "_udn": "uuid:09896802-00a0-1000-adfd-84a4668d8423",
+    "_location_original": "http://10.10.12.34:7676/smp_15_",
+    "location": "http://10.10.12.34:7676/smp_15_",
+    "_timestamp": "2025-04-30T07:30:24.146243",
+    "_remote_addr": ["10.10.12.34", 52226],
+    "_port": 52226,
+    "_local_addr": ["0.0.0.0", 0],
+    "_source": "search"
+  },
+  "ssdp_all_locations": ["http://10.10.12.34:7676/smp_15_"],
+  "x_homeassistant_matching_domains": ["samsungtv"]
+}

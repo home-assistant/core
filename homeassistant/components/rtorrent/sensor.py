@@ -1,13 +1,15 @@
 """Support for monitoring the rtorrent BitTorrent client API."""
+
 from __future__ import annotations
 
 import logging
+from typing import cast
 import xmlrpc.client
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -21,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -83,7 +85,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.url,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -125,6 +127,9 @@ def format_speed(speed):
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
+type RTorrentData = tuple[float, float, list, list, list, list, list]
+
+
 class RTorrentSensor(SensorEntity):
     """Representation of an rtorrent sensor."""
 
@@ -134,12 +139,12 @@ class RTorrentSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self.client = rtorrent_client
-        self.data = None
+        self.data: RTorrentData | None = None
 
         self._attr_name = f"{client_name} {description.name}"
         self._attr_available = False
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from rtorrent and updates the state."""
         multicall = xmlrpc.client.MultiCall(self.client)
         multicall.throttle.global_up.rate()
@@ -151,7 +156,7 @@ class RTorrentSensor(SensorEntity):
         multicall.d.multicall2("", "leeching", "d.down.rate=")
 
         try:
-            self.data = multicall()
+            self.data = cast(RTorrentData, multicall())
             self._attr_available = True
         except (xmlrpc.client.ProtocolError, OSError) as ex:
             _LOGGER.error("Connection to rtorrent failed (%s)", ex)
@@ -163,14 +168,16 @@ class RTorrentSensor(SensorEntity):
         all_torrents = self.data[2]
         stopped_torrents = self.data[3]
         complete_torrents = self.data[4]
+        up_torrents = self.data[5]
+        down_torrents = self.data[6]
 
         uploading_torrents = 0
-        for up_torrent in self.data[5]:
+        for up_torrent in up_torrents:
             if up_torrent[0]:
                 uploading_torrents += 1
 
         downloading_torrents = 0
-        for down_torrent in self.data[6]:
+        for down_torrent in down_torrents:
             if down_torrent[0]:
                 downloading_torrents += 1
 

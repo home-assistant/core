@@ -1,13 +1,14 @@
 """Tests for the WLED switch platform."""
-import json
+
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wled.const import SCAN_INTERVAL
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -19,9 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, async_load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -132,6 +132,7 @@ async def test_switch_state(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_switch_dynamically_handle_segments(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
@@ -142,11 +143,12 @@ async def test_switch_dynamically_handle_segments(
 
     # Test adding a segment dynamically...
     return_value = mock_wled.update.return_value
-    mock_wled.update.return_value = WLEDDevice(
-        json.loads(load_fixture("wled/rgb.json"))
+    mock_wled.update.return_value = WLEDDevice.from_dict(
+        await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
@@ -156,7 +158,8 @@ async def test_switch_dynamically_handle_segments(
 
     # Test remove segment again...
     mock_wled.update.return_value = return_value
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))

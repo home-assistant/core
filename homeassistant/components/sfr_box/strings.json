@@ -26,6 +26,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
+        "data_description": {
+          "host": "The hostname, IP address, or full URL of your SFR device. e.g.: '192.168.1.1' or 'https://sfrbox.example.com'"
+        },
         "description": "Setting the credentials is optional, but enables additional functionality."
       }
     }
@@ -40,11 +43,6 @@
       },
       "wan_status": {
         "name": "WAN status"
-      }
-    },
-    "button": {
-      "reboot": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
       }
     },
     "sensor": {
@@ -66,11 +64,11 @@
       "dsl_line_status": {
         "name": "DSL line status",
         "state": {
-          "no_defect": "No Defect",
-          "of_frame": "Of Frame",
-          "loss_of_signal": "Loss Of Signal",
-          "loss_of_power": "Loss Of Power",
-          "loss_of_signal_quality": "Loss Of Signal Quality",
+          "no_defect": "No defect",
+          "loss_of_frame": "Loss of frame",
+          "loss_of_signal": "Loss of signal",
+          "loss_of_power": "Loss of power",
+          "loss_of_signal_quality": "Loss of signal quality",
           "unknown": "Unknown"
         }
       },
@@ -89,7 +87,7 @@
       "dsl_training": {
         "name": "DSL training",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "g_994_training": "G.994 Training",
           "g_992_started": "G.992 Started",
           "g_922_channel_analysis": "G.922 Channel Analysis",
@@ -109,12 +107,6 @@
           "gprs": "GPRS",
           "unknown": "Unknown"
         }
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "wan_mode": {
         "name": "WAN mode",

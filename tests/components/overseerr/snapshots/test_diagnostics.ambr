@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_diagnostics_polling_instance
+  dict({
+    'coordinator_data': dict({
+      'approved': 11,
+      'available': 8,
+      'declined': 0,
+      'movie': 9,
+      'pending': 0,
+      'processing': 3,
+      'total': 11,
+      'tv': 2,
+    }),
+    'has_cloudhooks': False,
+  })
+# ---
+# name: test_diagnostics_webhook_instance
+  dict({
+    'coordinator_data': dict({
+      'approved': 11,
+      'available': 8,
+      'declined': 0,
+      'movie': 9,
+      'pending': 0,
+      'processing': 3,
+      'total': 11,
+      'tv': 2,
+    }),
+    'has_cloudhooks': True,
+  })
+# ---

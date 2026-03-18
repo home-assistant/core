@@ -1,23 +1,30 @@
 """Tests for the Fronius sensor platform."""
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
-    FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import enable_all_entities, mock_responses, setup_fronius_integration
+from . import mock_responses, setup_fronius_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_inverter(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test Fronius Symo inverter entities."""
 
@@ -27,30 +34,22 @@ async def test_symo_inverter(
 
     # Init at night
     mock_responses(aioclient_mock, night=True)
-    config_entry = await setup_fronius_integration(hass)
+    await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 20
-    await enable_all_entities(
-        hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
-    )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 52
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     assert_state("sensor.symo_20_dc_current", 0)
     assert_state("sensor.symo_20_energy_day", 10828)
     assert_state("sensor.symo_20_total_energy", 44186900)
     assert_state("sensor.symo_20_energy_year", 25507686)
     assert_state("sensor.symo_20_dc_voltage", 16)
+    assert_state("sensor.symo_20_status_message", "startup")
 
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + FroniusInverterUpdateCoordinator.default_interval
-    )
+    freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 56
-    await enable_all_entities(
-        hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
-    )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 65
     # 4 additional AC entities
     assert_state("sensor.symo_20_dc_current", 2.19)
     assert_state("sensor.symo_20_energy_day", 1113)
@@ -61,12 +60,12 @@ async def test_symo_inverter(
     assert_state("sensor.symo_20_frequency", 49.94)
     assert_state("sensor.symo_20_ac_power", 1190)
     assert_state("sensor.symo_20_ac_voltage", 227.90)
+    assert_state("sensor.symo_20_status_message", "running")
 
     # Third test at nighttime - additional AC entities default to 0
     mock_responses(aioclient_mock, night=True)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + FroniusInverterUpdateCoordinator.default_interval
-    )
+    freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert_state("sensor.symo_20_ac_current", 0)
     assert_state("sensor.symo_20_frequency", 0)
@@ -86,15 +85,18 @@ async def test_symo_logger(
 
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 24
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 26
     # states are rounded to 4 decimals
     assert_state("sensor.solarnet_grid_export_tariff", 0.078)
     assert_state("sensor.solarnet_co2_factor", 0.53)
     assert_state("sensor.solarnet_grid_import_tariff", 0.15)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_meter(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Fronius Symo meter entities."""
 
@@ -104,13 +106,9 @@ async def test_symo_meter(
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock)
-    config_entry = await setup_fronius_integration(hass)
+    await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 24
-    await enable_all_entities(
-        hass, config_entry.entry_id, FroniusMeterUpdateCoordinator.default_interval
-    )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 65
     # states are rounded to 4 decimals
     assert_state("sensor.smart_meter_63a_current_phase_1", 7.755)
     assert_state("sensor.smart_meter_63a_current_phase_2", 6.68)
@@ -144,13 +142,60 @@ async def test_symo_meter(
     assert_state("sensor.smart_meter_63a_voltage_phase_1_2", 395.9)
     assert_state("sensor.smart_meter_63a_voltage_phase_2_3", 398)
     assert_state("sensor.smart_meter_63a_voltage_phase_3_1", 398)
+    assert_state("sensor.smart_meter_63a_meter_location", 0)
+    assert_state("sensor.smart_meter_63a_meter_location_description", "feed_in")
 
 
+@pytest.mark.parametrize(
+    ("location_code", "expected_code", "expected_description"),
+    [
+        (-1, -1, "unknown"),
+        (3, 3, "external_generator"),
+        (4, 4, "external_battery"),
+        (7, 7, "unknown"),
+        (256, 256, "subload"),
+        (511, 511, "subload"),
+        (512, 512, "unknown"),
+    ],
+)
+async def test_symo_meter_forged(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    location_code: int | None,
+    expected_code: int | str,
+    expected_description: str,
+) -> None:
+    """Tests for meter location codes we have no fixture for."""
+
+    def assert_state(entity_id, expected_state):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == str(expected_state)
+
+    mock_responses(
+        aioclient_mock,
+        fixture_set="symo",
+        override_data={
+            "symo/GetMeterRealtimeData.json": [
+                (["Body", "Data", "0", "Meter_Location_Current"], location_code),
+            ],
+        },
+    )
+    await setup_fronius_integration(hass)
+    assert_state("sensor.smart_meter_63a_meter_location", expected_code)
+    assert_state(
+        "sensor.smart_meter_63a_meter_location_description", expected_description
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_power_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Fronius Symo power flow entities."""
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
 
     def assert_state(entity_id, expected_state):
         state = hass.states.get(entity_id)
@@ -158,45 +203,46 @@ async def test_symo_power_flow(
 
     # First test at night
     mock_responses(aioclient_mock, night=True)
-    config_entry = await setup_fronius_integration(hass)
+    await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 20
-    await enable_all_entities(
-        hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
-    )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 52
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # states are rounded to 4 decimals
     assert_state("sensor.solarnet_energy_day", 10828)
     assert_state("sensor.solarnet_total_energy", 44186900)
     assert_state("sensor.solarnet_energy_year", 25507686)
     assert_state("sensor.solarnet_power_grid", 975.31)
+    assert_state("sensor.solarnet_power_grid_import", 975.31)
+    assert_state("sensor.solarnet_power_grid_export", 0)
     assert_state("sensor.solarnet_power_load", -975.31)
+    assert_state("sensor.solarnet_power_load_consumed", 975.31)
     assert_state("sensor.solarnet_relative_autonomy", 0)
 
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + FroniusPowerFlowUpdateCoordinator.default_interval
-    )
+    freezer.tick(FroniusPowerFlowUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     # 54 because power_flow `rel_SelfConsumption` and `P_PV` is not `null` anymore
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 54
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 61
     assert_state("sensor.solarnet_energy_day", 1101.7001)
     assert_state("sensor.solarnet_total_energy", 44188000)
     assert_state("sensor.solarnet_energy_year", 25508788)
     assert_state("sensor.solarnet_power_grid", 1703.74)
+    assert_state("sensor.solarnet_power_grid_import", 1703.74)
+    assert_state("sensor.solarnet_power_grid_export", 0)
     assert_state("sensor.solarnet_power_load", -2814.74)
+    assert_state("sensor.solarnet_power_load_generated", 0)
+    assert_state("sensor.solarnet_power_load_consumed", 2814.74)
     assert_state("sensor.solarnet_power_photovoltaics", 1111)
     assert_state("sensor.solarnet_relative_autonomy", 39.4708)
     assert_state("sensor.solarnet_relative_self_consumption", 100)
 
     # Third test at nighttime - default values are used
     mock_responses(aioclient_mock, night=True)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + FroniusPowerFlowUpdateCoordinator.default_interval
-    )
+    freezer.tick(FroniusPowerFlowUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 54
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 61
     assert_state("sensor.solarnet_energy_day", 10828)
     assert_state("sensor.solarnet_total_energy", 44186900)
     assert_state("sensor.solarnet_energy_year", 25507686)
@@ -207,7 +253,14 @@ async def test_symo_power_flow(
     assert_state("sensor.solarnet_relative_self_consumption", 0)
 
 
-async def test_gen24(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_gen24(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test Fronius Gen24 inverter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -218,70 +271,35 @@ async def test_gen24(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     mock_responses(aioclient_mock, fixture_set="gen24")
     config_entry = await setup_fronius_integration(hass, is_logger=False)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 22
-    await enable_all_entities(
-        hass, config_entry.entry_id, FroniusMeterUpdateCoordinator.default_interval
-    )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 52
-    # inverter 1
-    assert_state("sensor.inverter_name_ac_current", 0.1589)
-    assert_state("sensor.inverter_name_dc_current_2", 0.0754)
-    assert_state("sensor.inverter_name_status_code", 7)
-    assert_state("sensor.inverter_name_dc_current", 0.0783)
-    assert_state("sensor.inverter_name_dc_voltage_2", 403.4312)
-    assert_state("sensor.inverter_name_ac_power", 37.3204)
-    assert_state("sensor.inverter_name_error_code", 0)
-    assert_state("sensor.inverter_name_dc_voltage", 411.3811)
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
     assert_state("sensor.inverter_name_total_energy", 1530193.42)
-    assert_state("sensor.inverter_name_inverter_state", "Running")
-    assert_state("sensor.inverter_name_ac_voltage", 234.9168)
-    assert_state("sensor.inverter_name_frequency", 49.9917)
-    # meter
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_produced", 3863340.0)
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_consumed", 2013105.0)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power", 653.1)
-    assert_state("sensor.smart_meter_ts_65a_3_frequency_phase_average", 49.9)
-    assert_state("sensor.smart_meter_ts_65a_3_meter_location", 0.0)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor", 0.828)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_energy_consumed", 88221.0)
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_minus", 3863340.0)
-    assert_state("sensor.smart_meter_ts_65a_3_current_phase_2", 2.33)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_1", 235.9)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_1_2", 408.7)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power_phase_2", 294.9)
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_plus", 2013105.0)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_2", 236.1)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_energy_produced", 1989125.0)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_3", 236.9)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_1", 0.441)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_2_3", 409.6)
-    assert_state("sensor.smart_meter_ts_65a_3_current_phase_3", 1.825)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_3", 0.832)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power_phase_1", 243.3)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_3_1", 409.4)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power_phase_2", 323.4)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power_phase_3", 301.2)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power_phase_1", 106.8)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_2", 0.934)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power_phase_3", 251.3)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power_phase_1", -218.6)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power_phase_2", -132.8)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power_phase_3", -166.0)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power", 868.0)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power", -517.4)
-    assert_state("sensor.smart_meter_ts_65a_3_current_phase_1", 1.145)
-    # power_flow
-    assert_state("sensor.solarnet_power_grid", 658.4)
-    assert_state("sensor.solarnet_relative_self_consumption", 100.0)
-    assert_state("sensor.solarnet_power_photovoltaics", 62.9481)
-    assert_state("sensor.solarnet_power_load", -695.6827)
-    assert_state("sensor.solarnet_meter_mode", "meter")
-    assert_state("sensor.solarnet_relative_autonomy", 5.3592)
-    assert_state("sensor.solarnet_total_energy", 1530193.42)
+    # Gen24 devices may report 0 for total energy while doing firmware updates.
+    # This should yield "unknown" state instead of 0.
+    mock_responses(
+        aioclient_mock,
+        fixture_set="gen24",
+        override_data={
+            "gen24/GetInverterRealtimeData_Device_1.json": [
+                (["Body", "Data", "TOTAL_ENERGY", "Value"], 0),
+            ],
+        },
+    )
+    freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert_state("sensor.inverter_name_total_energy", "unknown")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_gen24_storage(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test Fronius Gen24 inverter with BYD battery and Ohmpilot entities."""
 
@@ -295,84 +313,10 @@ async def test_gen24_storage(
         hass, is_logger=False, unique_id="12345678"
     )
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 34
-    await enable_all_entities(
-        hass, config_entry.entry_id, FroniusMeterUpdateCoordinator.default_interval
-    )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 64
-    # inverter 1
-    assert_state("sensor.gen24_storage_dc_current", 0.3952)
-    assert_state("sensor.gen24_storage_dc_voltage_2", 318.8103)
-    assert_state("sensor.gen24_storage_dc_current_2", 0.3564)
-    assert_state("sensor.gen24_storage_ac_current", 1.1087)
-    assert_state("sensor.gen24_storage_ac_power", 250.9093)
-    assert_state("sensor.gen24_storage_error_code", 0)
-    assert_state("sensor.gen24_storage_status_code", 7)
-    assert_state("sensor.gen24_storage_total_energy", 7512794.0117)
-    assert_state("sensor.gen24_storage_inverter_state", "Running")
-    assert_state("sensor.gen24_storage_dc_voltage", 419.1009)
-    assert_state("sensor.gen24_storage_ac_voltage", 227.354)
-    assert_state("sensor.gen24_storage_frequency", 49.9816)
-    # meter
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_produced", 1705128.0)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power", 487.7)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor", 0.698)
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_consumed", 1247204.0)
-    assert_state("sensor.smart_meter_ts_65a_3_frequency_phase_average", 49.9)
-    assert_state("sensor.smart_meter_ts_65a_3_meter_location", 0.0)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power", -501.5)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_energy_produced", 3266105.0)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power_phase_3", 19.6)
-    assert_state("sensor.smart_meter_ts_65a_3_current_phase_3", 0.645)
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_minus", 1705128.0)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power_phase_2", 383.9)
-    assert_state("sensor.smart_meter_ts_65a_3_current_phase_1", 1.701)
-    assert_state("sensor.smart_meter_ts_65a_3_current_phase_2", 1.832)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power_phase_1", 319.5)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_1", 229.4)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power_phase_2", 150.0)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_3_1", 394.3)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_2", 225.6)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_energy_consumed", 5482.0)
-    assert_state("sensor.smart_meter_ts_65a_3_real_energy_plus", 1247204.0)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_1", 0.995)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_3", 0.163)
-    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_2", 0.389)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power_phase_1", -31.3)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power_phase_3", -116.7)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_1_2", 396.0)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_2_3", 393.0)
-    assert_state("sensor.smart_meter_ts_65a_3_reactive_power_phase_2", -353.4)
-    assert_state("sensor.smart_meter_ts_65a_3_real_power_phase_1", 317.9)
-    assert_state("sensor.smart_meter_ts_65a_3_voltage_phase_3", 228.3)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power", 821.9)
-    assert_state("sensor.smart_meter_ts_65a_3_apparent_power_phase_3", 118.4)
-    # ohmpilot
-    assert_state("sensor.ohmpilot_energy_consumed", 1233295.0)
-    assert_state("sensor.ohmpilot_power", 0.0)
-    assert_state("sensor.ohmpilot_temperature", 38.9)
-    assert_state("sensor.ohmpilot_state_code", 0.0)
-    assert_state("sensor.ohmpilot_state_message", "Up and running")
-    # power_flow
-    assert_state("sensor.solarnet_power_grid", 2274.9)
-    assert_state("sensor.solarnet_power_battery", 0.1591)
-    assert_state("sensor.solarnet_power_load", -2459.3092)
-    assert_state("sensor.solarnet_relative_self_consumption", 100.0)
-    assert_state("sensor.solarnet_power_photovoltaics", 216.4328)
-    assert_state("sensor.solarnet_relative_autonomy", 7.4984)
-    assert_state("sensor.solarnet_meter_mode", "bidirectional")
-    assert_state("sensor.solarnet_total_energy", 7512664.4042)
-    # storage
-    assert_state("sensor.byd_battery_box_premium_hv_dc_current", 0.0)
-    assert_state("sensor.byd_battery_box_premium_hv_state_of_charge", 4.6)
-    assert_state("sensor.byd_battery_box_premium_hv_maximum_capacity", 16588)
-    assert_state("sensor.byd_battery_box_premium_hv_temperature", 21.5)
-    assert_state("sensor.byd_battery_box_premium_hv_designed_capacity", 16588)
-    assert_state("sensor.byd_battery_box_premium_hv_dc_voltage", 0.0)
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 73
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices
-    device_registry = dr.async_get(hass)
-
     solar_net = device_registry.async_get_device(
         identifiers={(DOMAIN, "solar_net_12345678")}
     )
@@ -404,8 +348,14 @@ async def test_gen24_storage(
     assert storage.name == "BYD Battery-Box Premium HV"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_primo_s0(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test Fronius Primo dual inverter with S0 meter entities."""
 
@@ -417,60 +367,10 @@ async def test_primo_s0(
     mock_responses(aioclient_mock, fixture_set="primo_s0", inverter_ids=[1, 2])
     config_entry = await setup_fronius_integration(hass, is_logger=True)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 29
-    await enable_all_entities(
-        hass, config_entry.entry_id, FroniusMeterUpdateCoordinator.default_interval
-    )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 40
-    # logger
-    assert_state("sensor.solarnet_grid_export_tariff", 1)
-    assert_state("sensor.solarnet_co2_factor", 0.53)
-    assert_state("sensor.solarnet_grid_import_tariff", 1)
-    # inverter 1
-    assert_state("sensor.primo_5_0_1_total_energy", 17114940)
-    assert_state("sensor.primo_5_0_1_energy_day", 22504)
-    assert_state("sensor.primo_5_0_1_dc_voltage", 452.3)
-    assert_state("sensor.primo_5_0_1_ac_power", 862)
-    assert_state("sensor.primo_5_0_1_error_code", 0)
-    assert_state("sensor.primo_5_0_1_dc_current", 4.23)
-    assert_state("sensor.primo_5_0_1_status_code", 7)
-    assert_state("sensor.primo_5_0_1_energy_year", 7532755.5)
-    assert_state("sensor.primo_5_0_1_ac_current", 3.85)
-    assert_state("sensor.primo_5_0_1_ac_voltage", 223.9)
-    assert_state("sensor.primo_5_0_1_frequency", 60)
-    assert_state("sensor.primo_5_0_1_led_color", 2)
-    assert_state("sensor.primo_5_0_1_led_state", 0)
-    # inverter 2
-    assert_state("sensor.primo_3_0_1_total_energy", 5796010)
-    assert_state("sensor.primo_3_0_1_energy_day", 14237)
-    assert_state("sensor.primo_3_0_1_dc_voltage", 329.5)
-    assert_state("sensor.primo_3_0_1_ac_power", 296)
-    assert_state("sensor.primo_3_0_1_error_code", 0)
-    assert_state("sensor.primo_3_0_1_dc_current", 0.97)
-    assert_state("sensor.primo_3_0_1_status_code", 7)
-    assert_state("sensor.primo_3_0_1_energy_year", 3596193.25)
-    assert_state("sensor.primo_3_0_1_ac_current", 1.32)
-    assert_state("sensor.primo_3_0_1_ac_voltage", 223.6)
-    assert_state("sensor.primo_3_0_1_frequency", 60.01)
-    assert_state("sensor.primo_3_0_1_led_color", 2)
-    assert_state("sensor.primo_3_0_1_led_state", 0)
-    # meter
-    assert_state("sensor.s0_meter_at_inverter_1_meter_location", 1)
-    assert_state("sensor.s0_meter_at_inverter_1_real_power", -2216.7487)
-    # power_flow
-    assert_state("sensor.solarnet_power_load", -2218.9349)
-    assert_state("sensor.solarnet_meter_mode", "vague-meter")
-    assert_state("sensor.solarnet_power_photovoltaics", 1834)
-    assert_state("sensor.solarnet_power_grid", 384.9349)
-    assert_state("sensor.solarnet_relative_self_consumption", 100)
-    assert_state("sensor.solarnet_relative_autonomy", 82.6523)
-    assert_state("sensor.solarnet_total_energy", 22910919.5)
-    assert_state("sensor.solarnet_energy_day", 36724)
-    assert_state("sensor.solarnet_energy_year", 11128933.25)
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 49
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices
-    device_registry = dr.async_get(hass)
-
     solar_net = device_registry.async_get_device(
         identifiers={(DOMAIN, "solar_net_123.4567890")}
     )

@@ -1,88 +1,111 @@
 """Tests for glances sensors."""
-import pytest
+
+from datetime import timedelta
+from unittest.mock import AsyncMock
+
+from freezegun.api import FrozenDateTimeFactory
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.glances.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import HA_SENSOR_DATA, MOCK_USER_INPUT
+from . import HA_SENSOR_DATA, MOCK_REFERENCE_DATE, MOCK_USER_INPUT
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensor_states(hass: HomeAssistant) -> None:
+async def test_sensor_states(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test sensor states are correctly collected from library."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    freezer.move_to(MOCK_REFERENCE_DATE)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
     entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-
-    if state := hass.states.get("sensor.0_0_0_0_ssl_disk_use"):
-        assert state.state == HA_SENSOR_DATA["fs"]["/ssl"]["disk_use"]
-    if state := hass.states.get("sensor.0_0_0_0_cpu_thermal_1"):
-        assert state.state == HA_SENSOR_DATA["sensors"]["cpu_thermal 1"]
-    if state := hass.states.get("sensor.0_0_0_0_err_temp"):
-        assert state.state == HA_SENSOR_DATA["sensors"]["err_temp"]
-    if state := hass.states.get("sensor.0_0_0_0_na_temp"):
-        assert state.state == HA_SENSOR_DATA["sensors"]["na_temp"]
-    if state := hass.states.get("sensor.0_0_0_0_memory_use_percent"):
-        assert state.state == HA_SENSOR_DATA["mem"]["memory_use_percent"]
-    if state := hass.states.get("sensor.0_0_0_0_docker_active"):
-        assert state.state == HA_SENSOR_DATA["docker"]["docker_active"]
-    if state := hass.states.get("sensor.0_0_0_0_docker_cpu_use"):
-        assert state.state == HA_SENSOR_DATA["docker"]["docker_cpu_use"]
-    if state := hass.states.get("sensor.0_0_0_0_docker_memory_use"):
-        assert state.state == HA_SENSOR_DATA["docker"]["docker_memory_use"]
-    if state := hass.states.get("sensor.0_0_0_0_md3_available"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md3"]["available"]
-    if state := hass.states.get("sensor.0_0_0_0_md3_used"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md3"]["used"]
-    if state := hass.states.get("sensor.0_0_0_0_md1_available"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md1"]["available"]
-    if state := hass.states.get("sensor.0_0_0_0_md1_used"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md1"]["used"]
-
-
-@pytest.mark.parametrize(
-    ("object_id", "old_unique_id", "new_unique_id"),
-    [
-        (
-            "glances_ssl_used_percent",
-            "0.0.0.0-Glances /ssl used percent",
-            "/ssl-disk_use_percent",
-        ),
-        (
-            "glances_cpu_thermal_1_temperature",
-            "0.0.0.0-Glances cpu_thermal 1 Temperature",
-            "cpu_thermal 1-temperature_core",
-        ),
-    ],
-)
-async def test_migrate_unique_id(
-    hass: HomeAssistant, object_id: str, old_unique_id: str, new_unique_id: str
-) -> None:
-    """Test unique id migration."""
-    old_config_data = {**MOCK_USER_INPUT, "name": "Glances"}
-    entry = MockConfigEntry(domain=DOMAIN, data=old_config_data)
-    entry.add_to_hass(hass)
-
-    ent_reg = er.async_get(hass)
-
-    entity: er.RegistryEntry = ent_reg.async_get_or_create(
-        suggested_object_id=object_id,
-        disabled_by=None,
-        domain=SENSOR_DOMAIN,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=entry,
-    )
-    assert entity.unique_id == old_unique_id
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_migrated = ent_reg.async_get(entity.entity_id)
-    assert entity_migrated
-    assert entity_migrated.unique_id == f"{entry.entry_id}-{new_unique_id}"
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
+
+
+async def test_uptime_variation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_api: AsyncMock
+) -> None:
+    """Test uptime small variation update."""
+
+    # Init with reference time
+    freezer.move_to(MOCK_REFERENCE_DATE)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    uptime_state = hass.states.get("sensor.0_0_0_0_uptime").state
+
+    # Time change should not change uptime (absolute date)
+    freezer.tick(delta=timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    uptime_state2 = hass.states.get("sensor.0_0_0_0_uptime").state
+    assert uptime_state2 == uptime_state
+
+    mock_data = HA_SENSOR_DATA.copy()
+    mock_data["uptime"] = "1:25:20"
+    mock_api.return_value.get_ha_sensor_data = AsyncMock(return_value=mock_data)
+
+    # Server has been restarted so therefore we should have a new state
+    freezer.move_to(MOCK_REFERENCE_DATE + timedelta(days=2))
+    freezer.tick(delta=timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.0_0_0_0_uptime").state == "2024-02-15T12:49:52+00:00"
+
+
+async def test_sensor_removed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_api: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor removed server side."""
+
+    # Init with reference time
+    freezer.move_to(MOCK_REFERENCE_DATE)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.0_0_0_0_ssl_disk_used").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.0_0_0_0_memory_use").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.0_0_0_0_uptime").state != STATE_UNAVAILABLE
+
+    # Remove some sensors from Glances API data
+    mock_data = HA_SENSOR_DATA.copy()
+    mock_data.pop("fs")
+    mock_data.pop("mem")
+    mock_data.pop("uptime")
+    mock_api.return_value.get_ha_sensor_data = AsyncMock(return_value=mock_data)
+
+    # Server stops providing some sensors, so state should switch to Unavailable
+    freezer.move_to(MOCK_REFERENCE_DATE + timedelta(minutes=2))
+    freezer.tick(delta=timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.0_0_0_0_ssl_disk_used").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.0_0_0_0_memory_use").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.0_0_0_0_uptime").state == STATE_UNAVAILABLE

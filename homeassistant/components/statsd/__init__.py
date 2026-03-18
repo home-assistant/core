@@ -1,4 +1,5 @@
 """Support for sending data to StatsD."""
+
 import logging
 
 import statsd
@@ -6,8 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import state as state_helper
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,12 +79,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # Send attribute values
             for key, value in states.items():
                 if isinstance(value, (float, int)):
-                    stat = "{}.{}".format(state.entity_id, key.replace(" ", "_"))
+                    stat = f"{state.entity_id}.{key.replace(' ', '_')}"
                     statsd_client.gauge(stat, value, sample_rate)
 
-        else:
-            if isinstance(_state, (float, int)):
-                statsd_client.gauge(state.entity_id, _state, sample_rate)
+        elif isinstance(_state, (float, int)):
+            statsd_client.gauge(state.entity_id, _state, sample_rate)
 
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)

@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "invalid_notification_icon": {
+      "message": "Invalid icon data provided. Got {type}"
+    },
+    "invalid_notification_image": {
+      "message": "Invalid image data provided. Got {type}"
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -6,6 +14,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your TV."
         }
       }
     },

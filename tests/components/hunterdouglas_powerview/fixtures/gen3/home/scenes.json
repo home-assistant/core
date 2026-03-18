@@ -1,0 +1,182 @@
+[
+  {
+    "id": 218,
+    "name": "Q2xvc2UgTG91bmdlIFJvb20=",
+    "ptName": "Close Lounge Room",
+    "networkNumber": 45057,
+    "color": "4",
+    "icon": "183",
+    "roomIds": [291],
+    "shadeIds": [110, 51]
+  },
+  {
+    "id": 220,
+    "name": "Q2xvc2UgQmVkIDQ=",
+    "ptName": "Close Bed 4",
+    "networkNumber": 45058,
+    "color": "4",
+    "icon": "185",
+    "roomIds": [277],
+    "shadeIds": [173]
+  },
+  {
+    "id": 237,
+    "name": "Q2xvc2UgQmVkIDI=",
+    "ptName": "Close Bed 2",
+    "networkNumber": 45057,
+    "color": "5",
+    "icon": "183",
+    "roomIds": [277],
+    "shadeIds": [236]
+  },
+  {
+    "id": 239,
+    "name": "Q2xvc2UgTWFzdGVyIEJlZA==",
+    "ptName": "Close Master Bed",
+    "networkNumber": 45058,
+    "color": "5",
+    "icon": "185",
+    "roomIds": [298],
+    "shadeIds": [118, 13]
+  },
+  {
+    "id": 253,
+    "name": "Q2xvc2UgRmFtaWx5",
+    "ptName": "Close Family",
+    "networkNumber": 45057,
+    "color": "11",
+    "icon": "183",
+    "roomIds": [217],
+    "shadeIds": [413, 22, 6539]
+  },
+  {
+    "id": 255,
+    "name": "T3BlbiBCZWQgNA==",
+    "ptName": "Open Bed 4",
+    "networkNumber": 45058,
+    "color": "11",
+    "icon": "185",
+    "roomIds": [277],
+    "shadeIds": [173]
+  },
+  {
+    "id": 278,
+    "name": "T3BlbiBNYXN0ZXIgQmVk",
+    "ptName": "Open Master Bed",
+    "networkNumber": 45057,
+    "color": "12",
+    "icon": "183",
+    "roomIds": [298],
+    "shadeIds": [118, 13]
+  },
+  {
+    "id": 280,
+    "name": "T3BlbiBCZWQgMw==",
+    "ptName": "Open Bed 3",
+    "networkNumber": 45058,
+    "color": "12",
+    "icon": "185",
+    "roomIds": [252],
+    "shadeIds": [46]
+  },
+  {
+    "id": 292,
+    "name": "T3BlbiBGYW1pbHk=",
+    "ptName": "Open Family",
+    "networkNumber": 45057,
+    "color": "7",
+    "icon": "183",
+    "roomIds": [217],
+    "shadeIds": [413, 22, 6539]
+  },
+  {
+    "id": 294,
+    "name": "Q2xvc2UgU3R1ZHk=",
+    "ptName": "Close Study",
+    "networkNumber": 45058,
+    "color": "7",
+    "icon": "185",
+    "roomIds": [327],
+    "shadeIds": [192]
+  },
+  {
+    "id": 299,
+    "name": "T3BlbiBBbGw=",
+    "ptName": "Open All",
+    "networkNumber": 45057,
+    "color": "1",
+    "icon": "183",
+    "roomIds": [217, 236, 252, 277, 291, 298, 311, 327, 216],
+    "shadeIds": [10, 13, 22, 46, 51, 110, 118, 173, 180, 192, 413, 6539]
+  },
+  {
+    "id": 301,
+    "name": "Q2xvc2UgQWxs",
+    "ptName": "Close All",
+    "networkNumber": 45058,
+    "color": "1",
+    "icon": "185",
+    "roomIds": [217, 236, 252, 277, 291, 298, 311, 327, 216],
+    "shadeIds": [10, 13, 22, 46, 51, 110, 118, 173, 180, 192, 413, 6539]
+  },
+  {
+    "id": 312,
+    "name": "T3BlbiBLaXRjaGVu",
+    "ptName": "Open Kitchen",
+    "networkNumber": 45057,
+    "color": "6",
+    "icon": "183",
+    "roomIds": [311],
+    "shadeIds": [180]
+  },
+  {
+    "id": 314,
+    "name": "T3BlbiBMb3VuZ2UgUm9vbQ==",
+    "ptName": "Open Lounge Room",
+    "networkNumber": 45058,
+    "color": "6",
+    "icon": "185",
+    "roomIds": [291],
+    "shadeIds": [110, 51]
+  },
+  {
+    "id": 328,
+    "name": "T3BlbiBCZWQgMg==",
+    "ptName": "Open Bed 2",
+    "networkNumber": 45057,
+    "color": "9",
+    "icon": "183",
+    "roomIds": [236],
+    "shadeIds": [236]
+  },
+  {
+    "id": 330,
+    "name": "Q2xvc2UgQmVkIDM=",
+    "ptName": "Close Bed 3",
+    "networkNumber": 45058,
+    "color": "9",
+    "icon": "185",
+    "roomIds": [252],
+    "shadeIds": [46]
+  },
+  {
+    "id": 344,
+    "name": "Q2xvc2UgS2l0Y2hlbg==",
+    "ptName": "Close Kitchen",
+    "networkNumber": 45057,
+    "color": "10",
+    "icon": "183",
+    "roomIds": [311],
+    "shadeIds": [180]
+  },
+  {
+    "id": 346,
+    "name": "T3BlbiBTdHVkeQ==",
+    "ptName": "Open Study",
+    "networkNumber": 45058,
+    "color": "10",
+    "icon": "185",
+    "roomIds": [327],
+    "shadeIds": [192]
+  }
+]

@@ -1,7 +1,10 @@
 """iCloud component constants."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "icloud"
+
+ATTRIBUTION = "Data provided by Apple iCloud"
 
 CONF_WITH_FAMILY = "with_family"
 CONF_MAX_INTERVAL = "max_interval"
@@ -83,3 +86,17 @@ DEVICE_STATUS_CODES = {
     "203": "pending",
     "204": "unregistered",
 }
+
+
+# entity / service attributes
+ATTR_ACCOUNT = "account"
+ATTR_ACCOUNT_FETCH_INTERVAL = "account_fetch_interval"
+ATTR_BATTERY = "battery"
+ATTR_BATTERY_STATUS = "battery_status"
+ATTR_DEVICE_NAME = "device_name"
+ATTR_DEVICE_STATUS = "device_status"
+ATTR_LOW_POWER_MODE = "low_power_mode"
+ATTR_LOST_DEVICE_MESSAGE = "message"
+ATTR_LOST_DEVICE_NUMBER = "number"
+ATTR_LOST_DEVICE_SOUND = "sound"
+ATTR_OWNER_NAME = "owner_fullname"

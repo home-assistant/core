@@ -1,7 +1,8 @@
 """Tests for the LIVISI Smart Home integration."""
+
 from unittest.mock import patch
 
-from homeassistant.components.livisi.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 VALID_CONFIG = {
     CONF_HOST: "1.1.1.1",

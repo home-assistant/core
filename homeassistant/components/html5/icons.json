@@ -1,0 +1,7 @@
+{
+  "services": {
+    "dismiss": {
+      "service": "mdi:bell-off"
+    }
+  }
+}

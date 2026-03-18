@@ -1,24 +1,17 @@
 set_watering_time:
-  description: Set watering time
   target:
   fields:
     watering_time:
-      description: Duration for this irrigation to be turned on
       example: 30
 set_pause_time:
-  description: Set pause time
   target:
   fields:
     pause_time:
-      description: Duration for this irrigation to be paused
       example: 24
 set_trigger:
-  description: Set trigger
   target:
   fields:
     trigger_index:
-      description: Index of Trigger from 1 to 4
       example: "1"
     trigger:
-      description: Configuration of trigger
       example: "'12707001'"

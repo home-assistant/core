@@ -1,6 +1,8 @@
 """Tests for color_extractor component service calls."""
+
 import base64
 import io
+from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 import aiohttp
@@ -23,9 +25,9 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 LIGHT_ENTITY = "light.kitchen_lights"
@@ -63,7 +65,7 @@ def _close_enough(actual_rgb, testing_rgb):
 
 
 @pytest.fixture(autouse=True)
-async def setup_light(hass):
+async def setup_light(hass: HomeAssistant):
     """Configure our light component to work against for testing."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo"}}
@@ -76,7 +78,7 @@ async def setup_light(hass):
     # Validate starting values
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 180
-    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 63, 111)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 64, 112)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -92,15 +94,8 @@ async def setup_light(hass):
     assert state.state == STATE_OFF
 
 
-async def test_missing_url_and_path(hass: HomeAssistant) -> None:
+async def test_missing_url_and_path(hass: HomeAssistant, setup_integration) -> None:
     """Test that nothing happens when url and path are missing."""
-    # Load our color_extractor component
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {},
-    )
-    await hass.async_block_till_done()
 
     # Validate pre service call
     state = hass.states.get(LIGHT_ENTITY)
@@ -116,7 +111,6 @@ async def test_missing_url_and_path(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
         )
-        await hass.async_block_till_done()
 
     # check light is still off, unchanged due to bad parameters on service call
     state = hass.states.get(LIGHT_ENTITY)
@@ -124,15 +118,7 @@ async def test_missing_url_and_path(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
-async def _async_load_color_extractor_url(hass, service_data):
-    # Load our color_extractor component
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {},
-    )
-    await hass.async_block_till_done()
-
+async def _async_execute_service(hass: HomeAssistant, service_data: dict[str, Any]):
     # Validate pre service call
     state = hass.states.get(LIGHT_ENTITY)
     assert state
@@ -145,7 +131,7 @@ async def _async_load_color_extractor_url(hass, service_data):
 
 
 async def test_url_success(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_integration
 ) -> None:
     """Test that a successful image GET translate to light RGB."""
     service_data = {
@@ -158,13 +144,15 @@ async def test_url_success(
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(
         url=service_data[ATTR_URL],
-        content=base64.b64decode(load_fixture("color_extractor_url.txt")),
+        content=base64.b64decode(
+            await async_load_fixture(hass, "color_extractor_url.txt", DOMAIN)
+        ),
     )
 
     # Allow access to this URL using the proper mechanism
     hass.config.allowlist_external_urls.add("http://example.com/images/")
 
-    await _async_load_color_extractor_url(hass, service_data)
+    await _async_execute_service(hass, service_data)
 
     state = hass.states.get(LIGHT_ENTITY)
     assert state
@@ -180,7 +168,7 @@ async def test_url_success(
 
 
 async def test_url_not_allowed(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_integration
 ) -> None:
     """Test that a not allowed external URL fails to turn light on."""
     service_data = {
@@ -188,7 +176,7 @@ async def test_url_not_allowed(
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
-    await _async_load_color_extractor_url(hass, service_data)
+    await _async_execute_service(hass, service_data)
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -197,7 +185,7 @@ async def test_url_not_allowed(
 
 
 async def test_url_exception(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_integration
 ) -> None:
     """Test that a HTTPError fails to turn light on."""
     service_data = {
@@ -211,7 +199,7 @@ async def test_url_exception(
     # Mock the HTTP Response with an HTTPError
     aioclient_mock.get(url=service_data[ATTR_URL], exc=aiohttp.ClientError)
 
-    await _async_load_color_extractor_url(hass, service_data)
+    await _async_execute_service(hass, service_data)
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -220,7 +208,7 @@ async def test_url_exception(
 
 
 async def test_url_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_integration
 ) -> None:
     """Test that a HTTP Error (non 200) doesn't turn light on."""
     service_data = {
@@ -234,7 +222,7 @@ async def test_url_error(
     # Mock the HTTP Response with a 400 Bad Request error
     aioclient_mock.get(url=service_data[ATTR_URL], status=400)
 
-    await _async_load_color_extractor_url(hass, service_data)
+    await _async_execute_service(hass, service_data)
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -244,14 +232,16 @@ async def test_url_error(
 
 @patch(
     "builtins.open",
-    mock_open(read_data=base64.b64decode(load_fixture("color_extractor_file.txt"))),
+    mock_open(
+        read_data=base64.b64decode(load_fixture("color_extractor_file.txt", DOMAIN))
+    ),
     create=True,
 )
 def _get_file_mock(file_path):
     """Convert file to BytesIO for testing due to PIL UnidentifiedImageError."""
     _file = None
 
-    with open(file_path) as file_handler:
+    with open(file_path, encoding="utf8") as file_handler:
         _file = io.BytesIO(file_handler.read())
 
     _file.name = "color_extractor.jpg"
@@ -262,7 +252,7 @@ def _get_file_mock(file_path):
 
 @patch("os.path.isfile", Mock(return_value=True))
 @patch("os.access", Mock(return_value=True))
-async def test_file(hass: HomeAssistant) -> None:
+async def test_file(hass: HomeAssistant, setup_integration) -> None:
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
         ATTR_PATH: "/opt/image.png",
@@ -273,9 +263,6 @@ async def test_file(hass: HomeAssistant) -> None:
 
     # Add our /opt/ path to the allowed list of paths
     hass.config.allowlist_external_dirs.add("/opt/")
-
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
     # Verify pre service check
     state = hass.states.get(LIGHT_ENTITY)
@@ -303,7 +290,7 @@ async def test_file(hass: HomeAssistant) -> None:
 
 @patch("os.path.isfile", Mock(return_value=True))
 @patch("os.access", Mock(return_value=True))
-async def test_file_denied_dir(hass: HomeAssistant) -> None:
+async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
     """Test that the file only service fails to read an image in a dir not explicitly allowed."""
     service_data = {
         ATTR_PATH: "/path/to/a/dir/not/allowed/image.png",
@@ -311,9 +298,6 @@ async def test_file_denied_dir(hass: HomeAssistant) -> None:
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
     }
-
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
     # Verify pre service check
     state = hass.states.get(LIGHT_ENTITY)

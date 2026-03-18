@@ -1,96 +1,134 @@
 """Test init of APCUPSd integration."""
-from collections import OrderedDict
-from unittest.mock import patch
+
+import asyncio
+from unittest.mock import AsyncMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.apcupsd import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.components.apcupsd.const import DOMAIN
+from homeassistant.components.apcupsd.coordinator import UPDATE_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.util import slugify, utcnow
 
-from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
+from . import MOCK_MINIMAL_STATUS, MOCK_STATUS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.mark.parametrize("status", (MOCK_STATUS, MOCK_MINIMAL_STATUS))
-async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> None:
+@pytest.mark.parametrize("mock_config_entry", ["mocked-config-entry-id"], indirect=True)
+@pytest.mark.parametrize(
+    "mock_request_status",
+    [
+        # Contains "SERIALNO" and "UPSNAME" fields.
+        # We should create devices for the entities and prefix their IDs with "MyUPS".
+        MOCK_STATUS,
+        # Contains "SERIALNO" but no "UPSNAME" field.
+        # We should create devices for the entities and prefix their IDs with default "APC UPS".
+        MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
+        # Does not contain either "SERIALNO" field or "UPSNAME" field.
+        # Our integration should work fine without it by falling back to config entry ID as unique
+        # ID and "APC UPS" as the default name.
+        MOCK_MINIMAL_STATUS,
+        # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
+        MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
+    ],
+    indirect=True,
+)
+async def test_async_setup_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+    mock_request_status: AsyncMock,
+) -> None:
     """Test a successful setup entry."""
-    # Minimal status does not contain "SERIALNO" field, which is used to determine the
-    # unique ID of this integration. But, the integration should work fine without it.
-    await async_init_integration(hass, status=status)
+    status = mock_request_status.return_value
+    entry = init_integration
 
-    # Verify successful setup by querying the status sensor.
-    state = hass.states.get("binary_sensor.ups_online_status")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "on"
+    identifiers = {(DOMAIN, entry.unique_id or entry.entry_id)}
+    device_entry = device_registry.async_get_device(identifiers=identifiers)
+    name = f"device_{device_entry.name}_{status.get('SERIALNO', '<no serial>')}"
+    assert device_entry == snapshot(name=name)
 
-
-async def test_multiple_integrations(hass: HomeAssistant) -> None:
-    """Test successful setup for multiple entries."""
-    # Load two integrations from two mock hosts.
-    status1 = MOCK_STATUS | {"LOADPCT": "15.0 Percent", "SERIALNO": "XXXXX1"}
-    status2 = MOCK_STATUS | {"LOADPCT": "16.0 Percent", "SERIALNO": "XXXXX2"}
-    entries = (
-        await async_init_integration(hass, host="test1", status=status1),
-        await async_init_integration(hass, host="test2", status=status2),
-    )
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
-
-    state1 = hass.states.get("sensor.ups_load")
-    state2 = hass.states.get("sensor.ups_load_2")
-    assert state1 is not None and state2 is not None
-    assert state1.state != state2.state
+    platforms = async_get_platforms(hass, DOMAIN)
+    assert len(platforms) > 0
+    assert all(len(p.entities) > 0 for p in platforms)
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [OSError(), asyncio.IncompleteReadError(partial=b"", expected=0)],
+)
+async def test_connection_error(
+    hass: HomeAssistant,
+    error: Exception,
+    mock_config_entry: MockConfigEntry,
+    mock_request_status: AsyncMock,
+) -> None:
     """Test connection error during integration setup."""
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        title="APCUPSd",
-        data=CONF_DATA,
-        source=SOURCE_USER,
-    )
+    mock_config_entry.add_to_hass(hass)
+    mock_request_status.side_effect = error
 
-    entry.add_to_hass(hass)
-
-    with patch("apcaccess.status.parse", side_effect=OSError()), patch(
-        "apcaccess.status.get"
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_remove(hass: HomeAssistant) -> None:
-    """Test successful unload of entry."""
-    # Load two integrations from two mock hosts.
-    entries = (
-        await async_init_integration(hass, host="test1", status=MOCK_STATUS),
-        await async_init_integration(hass, host="test2", status=MOCK_MINIMAL_STATUS),
-    )
+async def test_unload_remove_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test successful unload and removal of an entry."""
+    entry = init_integration
+    assert entry.state is ConfigEntryState.LOADED
 
-    # Assert they are loaded.
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
-
-    # Unload the first entry.
-    assert await hass.config_entries.async_unload(entries[0].entry_id)
+    # Unload the entry.
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert entries[1].state is ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
-    # Unload the second entry.
-    assert await hass.config_entries.async_unload(entries[1].entry_id)
-    await hass.async_block_till_done()
-    assert all(entry.state is ConfigEntryState.NOT_LOADED for entry in entries)
-
-    # Remove both entries.
-    for entry in entries:
-        await hass.config_entries.async_remove(entry.entry_id)
+    # Remove the entry.
+    await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_request_status: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Ensure that we mark the entity's availability properly when network is down / back up."""
+    device_slug = slugify(mock_request_status.return_value["UPSNAME"])
+    state = hass.states.get(f"sensor.{device_slug}_load")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert pytest.approx(float(state.state)) == 14.0
+
+    # Mock a network error and then trigger an auto-polling event.
+    mock_request_status.side_effect = OSError()
+    future = utcnow() + UPDATE_INTERVAL
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    # Sensors should be marked as unavailable.
+    state = hass.states.get(f"sensor.{device_slug}_load")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # Reset the API to return a new status and update.
+    mock_request_status.side_effect = None
+    mock_request_status.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+    future = future + UPDATE_INTERVAL
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    # Sensors should be online now with the new value.
+    state = hass.states.get(f"sensor.{device_slug}_load")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert pytest.approx(float(state.state)) == 15.0

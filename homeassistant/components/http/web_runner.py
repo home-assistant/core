@@ -1,4 +1,5 @@
 """HomeAssistant specific aiohttp Site."""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,15 +22,14 @@ class HomeAssistantTCPSite(web.BaseSite):
     is merged.
     """
 
-    __slots__ = ("_host", "_port", "_reuse_address", "_reuse_port", "_hosturl")
+    __slots__ = ("_host", "_hosturl", "_port", "_reuse_address", "_reuse_port")
 
     def __init__(
         self,
         runner: web.BaseRunner,
-        host: None | str | list[str],
+        host: str | list[str] | None,
         port: int,
         *,
-        shutdown_timeout: float = 10.0,
         ssl_context: SSLContext | None = None,
         backlog: int = 128,
         reuse_address: bool | None = None,
@@ -38,7 +38,6 @@ class HomeAssistantTCPSite(web.BaseSite):
         """Initialize HomeAssistantTCPSite."""
         super().__init__(
             runner,
-            shutdown_timeout=shutdown_timeout,
             ssl_context=ssl_context,
             backlog=backlog,
         )

@@ -1,4 +1,5 @@
 """Blebox binary_sensor entities test."""
+
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
@@ -28,7 +29,9 @@ def airsensor_fixture() -> tuple[AsyncMock, str]:
     return feature, "binary_sensor.windrainsensor_0_rain"
 
 
-async def test_init(rainsensor: AsyncMock, hass: HomeAssistant) -> None:
+async def test_init(
+    rainsensor: AsyncMock, device_registry: dr.DeviceRegistry, hass: HomeAssistant
+) -> None:
     """Test binary_sensor initialisation."""
     _, entity_id = rainsensor
     entry = await async_setup_entity(hass, entity_id)
@@ -40,7 +43,6 @@ async def test_init(rainsensor: AsyncMock, hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOISTURE
     assert state.state == STATE_ON
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My rain sensor"

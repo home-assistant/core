@@ -2,45 +2,38 @@
 
 from __future__ import annotations
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.ruuvitag_ble.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from .fixtures import CONFIGURED_NAME, CONFIGURED_PREFIX, RUUVITAG_SERVICE_INFO
+from .fixtures import RUUVI_V5_SERVICE_INFO, RUUVI_V6_SERVICE_INFO
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(enable_bluetooth: None, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "service_info", [RUUVI_V5_SERVICE_INFO, RUUVI_V6_SERVICE_INFO], ids=("v5", "v6")
+)
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    service_info: BluetoothServiceInfo,
+) -> None:
     """Test the RuuviTag BLE sensors."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=RUUVITAG_SERVICE_INFO.address)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=service_info.address)
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 0
-    inject_bluetooth_service_info(
-        hass,
-        RUUVITAG_SERVICE_INFO,
-    )
+    inject_bluetooth_service_info(hass, service_info)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) >= 4
-
-    for sensor, value, unit, state_class in [
-        ("temperature", "7.2", "°C", "measurement"),
-        ("humidity", "61.84", "%", "measurement"),
-        ("pressure", "1013.54", "hPa", "measurement"),
-        ("voltage", "2395", "mV", "measurement"),
-    ]:
-        state = hass.states.get(f"sensor.{CONFIGURED_PREFIX}_{sensor}")
-        assert state is not None
-        assert state.state == value
-        name_lower = state.attributes[ATTR_FRIENDLY_NAME].lower()
-        assert name_lower == f"{CONFIGURED_NAME} {sensor}".lower()
-        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
-        assert state.attributes[ATTR_STATE_CLASS] == state_class
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

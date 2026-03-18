@@ -2,17 +2,18 @@
 
 Receives data from advertisements but can also poll.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from bleak import BleakError
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.util.dt import monotonic_time_coarse
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_coordinator import PassiveBluetoothDataUpdateCoordinator
@@ -20,12 +21,8 @@ from .passive_update_coordinator import PassiveBluetoothDataUpdateCoordinator
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
 
-_T = TypeVar("_T")
 
-
-class ActiveBluetoothDataUpdateCoordinator(
-    PassiveBluetoothDataUpdateCoordinator, Generic[_T]
-):
+class ActiveBluetoothDataUpdateCoordinator[_T](PassiveBluetoothDataUpdateCoordinator):
     """A coordinator that receives passive data from advertisements but can also poll.
 
     Unlike the passive processor coordinator, this coordinator does call a parser
@@ -98,6 +95,7 @@ class ActiveBluetoothDataUpdateCoordinator(
                 cooldown=POLL_DEFAULT_COOLDOWN,
                 immediate=POLL_DEFAULT_IMMEDIATE,
                 function=self._async_poll,
+                background=True,
             )
         else:
             poll_debouncer.function = self._async_poll
@@ -110,7 +108,7 @@ class ActiveBluetoothDataUpdateCoordinator(
             return False
         poll_age: float | None = None
         if self._last_poll:
-            poll_age = monotonic_time_coarse() - self._last_poll
+            poll_age = service_info.time - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
     async def _async_poll_data(
@@ -134,7 +132,7 @@ class ActiveBluetoothDataUpdateCoordinator(
                 )
                 self.last_poll_successful = False
             return
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False
@@ -168,7 +166,7 @@ class ActiveBluetoothDataUpdateCoordinator(
         # We use bluetooth events to trigger the poll so that we scan as soon as
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
-            self.hass.async_create_task(self._debounced_poll.async_call())
+            self._debounced_poll.async_schedule_call()
 
     @callback
     def _async_stop(self) -> None:

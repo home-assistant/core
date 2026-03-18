@@ -1,4 +1,5 @@
 """Errors for the cert_expiry integration."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

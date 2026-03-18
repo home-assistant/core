@@ -1,4 +1,5 @@
 """Test Local Media Source."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, call
 
@@ -73,18 +74,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 
 
-async def test_async_browse_media_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful browse media."""
 
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -102,6 +104,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         "media_content_id": "media-source://motioneye",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -114,6 +117,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -130,6 +134,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         "media_content_id": "media-source://motioneye/74565ad414754616000674c87bdc876c",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -143,6 +148,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -162,6 +168,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -175,6 +182,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "video",
             },
@@ -188,6 +196,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "image",
             },
@@ -210,6 +219,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [
@@ -223,6 +233,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -245,6 +256,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [
@@ -259,6 +271,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": True,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -273,6 +286,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": True,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -287,6 +301,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": True,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -295,13 +310,14 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_images_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful browse media of images."""
 
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -324,6 +340,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "image",
         "thumbnail": None,
         "children": [
@@ -338,6 +355,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://image",
                 "children_media_class": None,
             }
@@ -346,14 +364,15 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful resolve media."""
 
     client = create_mock_motioneye_client()
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -380,14 +399,15 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
     assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/foo.jpg")
 
 
-async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_failure(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test failed resolve media calls."""
 
     client = create_mock_motioneye_client()
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -482,6 +502,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [],

@@ -1,13 +1,20 @@
 """Test that validation works."""
+
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
+from homeassistant.components.energy.data import EnergyManager
+from homeassistant.components.recorder import Recorder
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
+
+ENERGY_UNITS_STRING = ", ".join(tuple(UnitOfEnergy))
+
+ENERGY_PRICE_UNITS_STRING = ", ".join(f"EUR/{unit}" for unit in tuple(UnitOfEnergy))
 
 
 @pytest.fixture
@@ -45,7 +52,9 @@ def mock_get_metadata():
 
 
 @pytest.fixture(autouse=True)
-async def mock_energy_manager(recorder_mock, hass):
+async def mock_energy_manager(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> EnergyManager:
     """Set up energy."""
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
@@ -64,6 +73,7 @@ async def test_validation_empty_config(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("state_class", "energy_unit", "extra"),
     [
+        ("total_increasing", UnitOfEnergy.MILLIWATT_HOUR, {}),
         ("total_increasing", UnitOfEnergy.KILO_WATT_HOUR, {}),
         ("total_increasing", UnitOfEnergy.MEGA_WATT_HOUR, {}),
         ("total_increasing", UnitOfEnergy.WATT_HOUR, {}),
@@ -71,6 +81,7 @@ async def test_validation_empty_config(hass: HomeAssistant) -> None:
         ("total", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
         ("measurement", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
         ("total_increasing", UnitOfEnergy.GIGA_JOULE, {}),
+        ("total_increasing", UnitOfEnergy.CALORIE, {}),
     ],
 )
 async def test_validation(
@@ -230,9 +241,7 @@ async def test_validation_device_consumption_entity_unexpected_unit(
                 {
                     "type": "entity_unexpected_unit_energy",
                     "affected_entities": {("sensor.unexpected_unit", "beers")},
-                    "translation_placeholders": {
-                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
-                    },
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
                 }
             ]
         ],
@@ -320,9 +329,7 @@ async def test_validation_solar(
                 {
                     "type": "entity_unexpected_unit_energy",
                     "affected_entities": {("sensor.solar_production", "beers")},
-                    "translation_placeholders": {
-                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
-                    },
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
                 }
             ]
         ],
@@ -373,9 +380,7 @@ async def test_validation_battery(
                         ("sensor.battery_import", "beers"),
                         ("sensor.battery_export", "beers"),
                     },
-                    "translation_placeholders": {
-                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
-                    },
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
                 },
             ]
         ],
@@ -444,9 +449,7 @@ async def test_validation_grid(
                         ("sensor.grid_consumption_1", "beers"),
                         ("sensor.grid_production_1", "beers"),
                     },
-                    "translation_placeholders": {
-                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
-                    },
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
                 },
                 {
                     "type": "statistics_not_defined",
@@ -533,9 +536,7 @@ async def test_validation_grid_external_cost_compensation(
                         ("sensor.grid_consumption_1", "beers"),
                         ("sensor.grid_production_1", "beers"),
                     },
-                    "translation_placeholders": {
-                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
-                    },
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
                 },
                 {
                     "type": "statistics_not_defined",
@@ -689,7 +690,7 @@ async def test_validation_grid_auto_cost_entity_errors(
 
 @pytest.mark.parametrize(
     ("state", "unit", "expected"),
-    (
+    [
         (
             "123,123.12",
             "$/kWh",
@@ -705,12 +706,10 @@ async def test_validation_grid_auto_cost_entity_errors(
             {
                 "type": "entity_unexpected_unit_energy_price",
                 "affected_entities": {("sensor.grid_price_1", "$/Ws")},
-                "translation_placeholders": {
-                    "price_units": "EUR/GJ, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh"
-                },
+                "translation_placeholders": {"price_units": ENERGY_PRICE_UNITS_STRING},
             },
         ),
-    ),
+    ],
 )
 async def test_validation_grid_price_errors(
     hass: HomeAssistant, mock_energy_manager, mock_get_metadata, state, unit, expected
@@ -850,8 +849,8 @@ async def test_validation_gas(
                     "type": "entity_unexpected_unit_gas",
                     "affected_entities": {("sensor.gas_consumption_1", "beers")},
                     "translation_placeholders": {
-                        "energy_units": "GJ, kWh, MJ, MWh, Wh",
-                        "gas_units": "CCF, ft³, m³",
+                        "energy_units": ENERGY_UNITS_STRING,
+                        "gas_units": "CCF, ft³, m³, L, MCF",
                     },
                 },
                 {
@@ -880,7 +879,7 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
                     "translation_placeholders": {
                         "price_units": (
-                            "EUR/GJ, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³"
+                            f"{ENERGY_PRICE_UNITS_STRING}, EUR/CCF, EUR/ft³, EUR/m³, EUR/L, EUR/MCF"
                         )
                     },
                 },
@@ -1061,7 +1060,9 @@ async def test_validation_water(
                 {
                     "type": "entity_unexpected_unit_water",
                     "affected_entities": {("sensor.water_consumption_1", "beers")},
-                    "translation_placeholders": {"water_units": "CCF, ft³, m³, gal, L"},
+                    "translation_placeholders": {
+                        "water_units": "CCF, ft³, m³, gal, L, MCF"
+                    },
                 },
                 {
                     "type": "recorder_untracked",
@@ -1088,7 +1089,7 @@ async def test_validation_water(
                     "type": "entity_unexpected_unit_water_price",
                     "affected_entities": {("sensor.water_price_2", "EUR/invalid")},
                     "translation_placeholders": {
-                        "price_units": "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L"
+                        "price_units": "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L, EUR/MCF"
                     },
                 },
             ],

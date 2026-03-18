@@ -1,0 +1,220 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'BC_abilities': dict({
+      '0': dict({
+        'aitype': 34615,
+        'chnID': 0,
+      }),
+      'Host': dict({
+        'pushAlarm': 7,
+      }),
+    }),
+    'Baichuan only': False,
+    'Baichuan port': 5678,
+    'Chimes': dict({
+      '12345678': dict({
+        'channel': 0,
+        'event_types': list([
+          'md',
+          'people',
+          'visitor',
+        ]),
+        'name': 'Test chime',
+        'online': True,
+      }),
+    }),
+    'HTTP(S) port': 1234,
+    'HTTPS': True,
+    'IPC cams': dict({
+      '0': dict({
+        'WiFi signal': -45,
+        'encoding main': 'h264',
+        'firmware version': 'v1.1.0.0.0.0000',
+        'hardware version': 'IPC_00001',
+        'model': 'RLC-123',
+      }),
+    }),
+    'ONVIF enabled': True,
+    'RTMP enabled': True,
+    'RTSP enabled': True,
+    'WiFi connection': True,
+    'WiFi signal': -45,
+    'abilities': dict({
+      'abilityChn': list([
+        dict({
+          'aiTrack': dict({
+            'permit': 0,
+            'ver': 0,
+          }),
+        }),
+      ]),
+    }),
+    'api versions': dict({
+      'GetEvents': 1,
+    }),
+    'capabilities': dict({
+      '0': list([
+        'motion_detection',
+      ]),
+      'Host': list([
+        'RTSP',
+      ]),
+    }),
+    'channels': list([
+      0,
+    ]),
+    'cmd list': dict({
+      '208': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '296': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '299': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '594': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '609': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'DingDongOpt': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      'GetAiAlarm': dict({
+        '0': 5,
+        'null': 5,
+      }),
+      'GetAiCfg': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      'GetAudioAlarm': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetAudioCfg': dict({
+        '0': 4,
+        'null': 4,
+      }),
+      'GetAutoFocus': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetAutoReply': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      'GetBatteryInfo': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetBuzzerAlarmV20': dict({
+        '0': 1,
+        'null': 2,
+      }),
+      'GetChannelstatus': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetDeviceAudioCfg': dict({
+        '0': 2,
+        'null': 4,
+      }),
+      'GetDingDongCfg': dict({
+        '0': 3,
+        'null': 3,
+      }),
+      'GetEmail': dict({
+        '0': 1,
+        'null': 2,
+      }),
+      'GetEnc': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetFtp': dict({
+        '0': 1,
+        'null': 2,
+      }),
+      'GetIrLights': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetIsp': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetManualRec': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetMask': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetMdAlarm': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetPirInfo': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'GetPowerLed': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      'GetPtzCurPos': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      'GetPtzGuard': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      'GetPush': dict({
+        '0': 1,
+        'null': 2,
+      }),
+      'GetRec': dict({
+        '0': 1,
+        'null': 2,
+      }),
+      'GetScene': dict({
+        'null': 1,
+      }),
+      'GetStateLight': dict({
+        'null': 1,
+      }),
+      'GetWhiteLed': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      'GetZoomFocus': dict({
+        '0': 2,
+        'null': 2,
+      }),
+    }),
+    'event connection': 'Fast polling',
+    'firmware ch list': list([
+      0,
+      None,
+    ]),
+    'firmware version': 'v1.0.0.0.0.0000',
+    'hardware version': 'IPC_00000',
+    'model': 'RLN8-410',
+    'stream channels': list([
+      0,
+    ]),
+    'stream protocol': 'rtsp',
+  })
+# ---

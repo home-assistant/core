@@ -1,4 +1,5 @@
 """Support for EDL21 Smart Meters."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -24,12 +25,12 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -51,27 +52,32 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="1-0:0.0.0*255",
         translation_key="ownership_id",
-        icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
     # E=9: Electrity ID
     SensorEntityDescription(
         key="1-0:0.0.9*255",
         translation_key="electricity_id",
-        icon="mdi:flash",
     ),
     # D=2: Program entries
     SensorEntityDescription(
         key="1-0:0.2.0*0",
         translation_key="configuration_program_version_number",
-        icon="mdi:flash",
     ),
     SensorEntityDescription(
         key="1-0:0.2.0*1",
         translation_key="firmware_version_number",
-        icon="mdi:flash",
     ),
     # C=1: Active power +
+    # D=7: Current value
+    # E=0: Total
+    SensorEntityDescription(
+        key="1-0:1.7.0*255",
+        translation_key="positive_active_instantaneous_power",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    # C=1: Active energy +
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
@@ -100,7 +106,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="1-0:1.17.0*255",
         translation_key="last_signed_positive_active_energy_total",
     ),
-    # C=2: Active power -
+    # C=2: Active energy -
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
@@ -129,7 +135,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="1-0:14.7.0*255",
         translation_key="supply_frequency",
-        icon="mdi:sine-wave",
     ),
     # C=15: Active power absolute
     # D=7: Instantaneous value
@@ -240,38 +245,31 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="1-0:81.7.1*255",
         translation_key="u_l2_u_l1_phase_angle",
-        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
         key="1-0:81.7.2*255",
         translation_key="u_l3_u_l1_phase_angle",
-        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
         key="1-0:81.7.4*255",
         translation_key="u_l1_i_l1_phase_angle",
-        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
         key="1-0:81.7.15*255",
         translation_key="u_l2_i_l2_phase_angle",
-        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
         key="1-0:81.7.26*255",
         translation_key="u_l3_i_l3_phase_angle",
-        icon="mdi:sine-wave",
     ),
     # C=96: Electricity-related service entries
     SensorEntityDescription(
         key="1-0:96.1.0*255",
         translation_key="metering_point_id_1",
-        icon="mdi:flash",
     ),
     SensorEntityDescription(
         key="1-0:96.5.0*255",
         translation_key="internal_operating_status",
-        icon="mdi:flash",
     ),
 )
 
@@ -291,11 +289,11 @@ SENSOR_UNIT_MAPPING = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
-    hass.data[DOMAIN] = EDL21(hass, config_entry.data, async_add_entities)
-    await hass.data[DOMAIN].connect()
+    api = EDL21(hass, config_entry.data, async_add_entities)
+    await api.connect()
 
 
 class EDL21:
@@ -319,7 +317,7 @@ class EDL21:
         self,
         hass: HomeAssistant,
         config: Mapping[str, Any],
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()

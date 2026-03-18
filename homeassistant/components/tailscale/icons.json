@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "client_supports_hair_pinning": {
+        "default": "mdi:wan"
+      },
+      "client_supports_ipv6": {
+        "default": "mdi:wan"
+      },
+      "client_supports_pcp": {
+        "default": "mdi:wan"
+      },
+      "client_supports_pmp": {
+        "default": "mdi:wan"
+      },
+      "client_supports_udp": {
+        "default": "mdi:wan"
+      },
+      "client_supports_upnp": {
+        "default": "mdi:wan"
+      }
+    },
+    "sensor": {
+      "ip": {
+        "default": "mdi:ip-network"
+      }
+    }
+  }
+}

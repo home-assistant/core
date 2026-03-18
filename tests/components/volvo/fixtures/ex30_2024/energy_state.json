@@ -1,0 +1,56 @@
+{
+  "batteryChargeLevel": {
+    "status": "OK",
+    "value": 90.0,
+    "unit": "percentage",
+    "updatedAt": "2025-08-07T14:30:32Z"
+  },
+  "electricRange": {
+    "status": "OK",
+    "value": 327,
+    "unit": "km",
+    "updatedAt": "2025-08-07T14:30:32Z"
+  },
+  "chargerConnectionStatus": {
+    "status": "OK",
+    "value": "CONNECTED",
+    "updatedAt": "2025-08-07T14:30:32Z"
+  },
+  "chargingStatus": {
+    "status": "OK",
+    "value": "DONE",
+    "updatedAt": "2025-08-07T14:30:32Z"
+  },
+  "chargingType": {
+    "status": "OK",
+    "value": "AC",
+    "updatedAt": "2025-08-07T14:30:32Z"
+  },
+  "chargerPowerStatus": {
+    "status": "OK",
+    "value": "FAULT",
+    "updatedAt": "2025-08-07T14:30:32Z"
+  },
+  "estimatedChargingTimeToTargetBatteryChargeLevel": {
+    "status": "OK",
+    "value": 2,
+    "unit": "minutes",
+    "updatedAt": "2025-08-07T14:30:32Z"
+  },
+  "chargingCurrentLimit": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "targetBatteryChargeLevel": {
+    "status": "OK",
+    "value": 90,
+    "unit": "percentage",
+    "updatedAt": "2025-08-07T14:49:50Z"
+  },
+  "chargingPower": {
+    "status": "ERROR",
+    "code": "PROPERTY_NOT_FOUND",
+    "message": "No valid value could be found for the requested property"
+  }
+}

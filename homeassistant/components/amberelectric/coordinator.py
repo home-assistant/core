@@ -1,21 +1,25 @@
 """Amber Electric Coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from typing import Any
 
-from amberelectric import ApiException
-from amberelectric.api import amber_api
-from amberelectric.model.actual_interval import ActualInterval
-from amberelectric.model.channel import ChannelType
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.forecast_interval import ForecastInterval
-from amberelectric.model.interval import Descriptor
+import amberelectric
+from amberelectric.models.actual_interval import ActualInterval
+from amberelectric.models.channel import ChannelType
+from amberelectric.models.current_interval import CurrentInterval
+from amberelectric.models.forecast_interval import ForecastInterval
+from amberelectric.rest import ApiException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import LOGGER, REQUEST_TIMEOUT
+from .helpers import normalize_descriptor
+
+type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
 
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
@@ -37,45 +41,31 @@ def is_controlled_load(
     interval: ActualInterval | CurrentInterval | ForecastInterval,
 ) -> bool:
     """Return true if the supplied interval is on the controlled load channel."""
-    return interval.channel_type == ChannelType.CONTROLLED_LOAD
+    return interval.channel_type == ChannelType.CONTROLLEDLOAD
 
 
 def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is on the feed in channel."""
-    return interval.channel_type == ChannelType.FEED_IN
-
-
-def normalize_descriptor(descriptor: Descriptor) -> str | None:
-    """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
-    if descriptor is None:
-        return None
-    if descriptor.value == "spike":
-        return "spike"
-    if descriptor.value == "high":
-        return "high"
-    if descriptor.value == "neutral":
-        return "neutral"
-    if descriptor.value == "low":
-        return "low"
-    if descriptor.value == "veryLow":
-        return "very_low"
-    if descriptor.value == "extremelyLow":
-        return "extremely_low"
-    if descriptor.value == "negative":
-        return "negative"
-    return None
+    return interval.channel_type == ChannelType.FEEDIN
 
 
 class AmberUpdateCoordinator(DataUpdateCoordinator):
     """AmberUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
 
+    config_entry: AmberConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, api: amber_api.AmberApi, site_id: str
+        self,
+        hass: HomeAssistant,
+        config_entry: AmberConfigEntry,
+        api: amberelectric.AmberApi,
+        site_id: str,
     ) -> None:
         """Initialise the data service."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="amberelectric",
             update_interval=timedelta(minutes=1),
         )
@@ -92,12 +82,17 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             "grid": {},
         }
         try:
-            data = self._api.get_current_price(self.site_id, next=48)
+            data = self._api.get_current_prices(
+                self.site_id,
+                next=288,
+                _request_timeout=REQUEST_TIMEOUT,
+            )
+            intervals = [interval.actual_instance for interval in data]
         except ApiException as api_exception:
             raise UpdateFailed("Missing price data, skipping update") from api_exception
 
-        current = [interval for interval in data if is_current(interval)]
-        forecasts = [interval for interval in data if is_forecast(interval)]
+        current = [interval for interval in intervals if is_current(interval)]
+        forecasts = [interval for interval in intervals if is_forecast(interval)]
         general = [interval for interval in current if is_general(interval)]
 
         if len(general) == 0:
@@ -110,6 +105,9 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         ]
         result["grid"]["renewables"] = round(general[0].renewables)
         result["grid"]["price_spike"] = general[0].spike_status.value
+        tariff_information = general[0].tariff_information
+        if tariff_information:
+            result["grid"]["demand_window"] = tariff_information.demand_window
 
         controlled_load = [
             interval for interval in current if is_controlled_load(interval)
@@ -133,7 +131,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
                 interval for interval in forecasts if is_feed_in(interval)
             ]
 
-        LOGGER.debug("Fetched new Amber data: %s", data)
+        LOGGER.debug("Fetched new Amber data: %s", intervals)
         return result
 
     async def _async_update_data(self) -> dict[str, Any]:

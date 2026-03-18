@@ -1,5 +1,6 @@
 """Utils for NextBus integration module."""
-from typing import Any
+
+from typing import Any, NamedTuple
 
 
 def listify(maybe_list: Any) -> list[Any]:
@@ -17,9 +18,16 @@ def listify(maybe_list: Any) -> list[Any]:
     return [maybe_list]
 
 
-def maybe_first(maybe_list: list[Any]) -> Any:
+def maybe_first(maybe_list: list[Any] | None) -> Any:
     """Return the first item out of a list or returns back the input."""
     if isinstance(maybe_list, list) and maybe_list:
         return maybe_list[0]
 
     return maybe_list
+
+
+class RouteStop(NamedTuple):
+    """NamedTuple for a route and stop combination."""
+
+    route_id: str
+    stop_id: str

@@ -1,4 +1,5 @@
 """Update entities for Netgear devices."""
+
 from __future__ import annotations
 
 import logging
@@ -11,17 +12,20 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR_FIRMWARE, KEY_ROUTER
-from .router import NetgearRouter, NetgearRouterCoordinatorEntity
+from .entity import NetgearRouterCoordinatorEntity
+from .router import NetgearRouter
 
 LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
@@ -44,8 +48,7 @@ class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
-        self._name = f"{router.device_name} Update"
-        self._unique_id = f"{router.serial_number}-update"
+        self._attr_unique_id = f"{router.serial_number}-update"
 
     @property
     def installed_version(self) -> str | None:

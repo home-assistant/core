@@ -1,0 +1,10 @@
+{
+  "domain": "tilt_pi",
+  "name": "Tilt Pi",
+  "codeowners": ["@michaelheyman"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tilt_pi",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["tilt-pi==0.2.1"]
+}

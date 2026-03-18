@@ -1,4 +1,5 @@
 """nVent RAYCHEM SENZ climate platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,8 +15,8 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SENZDataUpdateCoordinator
@@ -25,7 +26,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SENZ climate entities from a config entry."""
     coordinator: SENZDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -43,6 +44,8 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_max_temp = 35
     _attr_min_temp = 5
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -52,7 +55,6 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
         """Init SENZ climate."""
         super().__init__(coordinator)
         self._thermostat = thermostat
-        self._attr_name = thermostat.name
         self._attr_unique_id = thermostat.serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, thermostat.serial_number)},

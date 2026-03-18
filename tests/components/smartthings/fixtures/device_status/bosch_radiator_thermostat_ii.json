@@ -1,0 +1,89 @@
+{
+  "components": {
+    "main": {
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 23.9,
+          "unit": "C",
+          "timestamp": "2025-03-07T19:55:13.328Z"
+        }
+      },
+      "thermostatHeatingSetpoint": {
+        "heatingSetpoint": {
+          "value": 22.0,
+          "unit": "C",
+          "timestamp": "2025-03-05T03:05:26.510Z"
+        },
+        "heatingSetpointRange": {
+          "value": {
+            "minimum": 5.0,
+            "maximum": 40.0,
+            "step": 0.1
+          },
+          "unit": "C",
+          "timestamp": "2025-03-05T03:05:26.510Z"
+        }
+      },
+      "refresh": {},
+      "thermostatMode": {
+        "thermostatMode": {
+          "value": "heat",
+          "data": {
+            "supportedThermostatModes": ["off", "heat"]
+          },
+          "timestamp": "2025-03-05T03:05:26.489Z"
+        },
+        "supportedThermostatModes": {
+          "value": ["off", "heat"],
+          "timestamp": "2025-03-05T03:05:26.509Z"
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 94,
+          "unit": "%",
+          "timestamp": "2025-03-07T20:47:27.362Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "2.00.09 (20009)",
+          "timestamp": "2024-11-29T19:55:02.005Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2024-11-29T19:55:02.009Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2024-11-29T19:55:02.004Z"
+        },
+        "currentVersion": {
+          "value": "2.00.09 (20009)",
+          "timestamp": "2024-11-29T19:55:02.037Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      }
+    }
+  }
+}

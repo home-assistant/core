@@ -7,6 +7,9 @@
         "description": "Select a Roomba or Braava.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Roomba or Braava."
         }
       },
       "manual": {
@@ -14,11 +17,14 @@
         "description": "No Roomba or Braava have been discovered on your network.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Roomba or Braava."
         }
       },
       "link": {
         "title": "Retrieve Password",
-        "description": "Make sure that the iRobot app is not running on any device. Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds."
+        "description": "Make sure that the iRobot app is not running on any device. Press and hold the Home button (or both Home and Spot buttons) on {name} until the device generates a sound (about two seconds), then submit within 30 seconds."
       },
       "link_manual": {
         "title": "Enter Password",
@@ -45,6 +51,45 @@
           "continuous": "Continuous",
           "delay": "Delay"
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "bin_full": {
+        "name": "Bin full"
+      }
+    },
+    "sensor": {
+      "battery_cycles": {
+        "name": "Battery cycles"
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      },
+      "average_mission_time": {
+        "name": "Average mission time"
+      },
+      "total_missions": {
+        "name": "Total missions"
+      },
+      "successful_missions": {
+        "name": "Successful missions"
+      },
+      "canceled_missions": {
+        "name": "Canceled missions"
+      },
+      "failed_missions": {
+        "name": "Failed missions"
+      },
+      "scrubs_count": {
+        "name": "Scrubs"
+      },
+      "total_cleaned_area": {
+        "name": "Total cleaned area"
+      },
+      "last_mission": {
+        "name": "Last mission start time"
       }
     }
   }

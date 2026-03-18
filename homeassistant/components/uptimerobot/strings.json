@@ -2,16 +2,28 @@
   "config": {
     "step": {
       "user": {
-        "description": "You need to supply the 'main' API key from UptimeRobot",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The 'main' API key for your UptimeRobot account"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "You need to supply a new 'main' API key from UptimeRobot",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptimerobot::config::step::user::data_description::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptimerobot::config::step::user::data_description::api_key%]"
         }
       }
     },
@@ -26,6 +38,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -35,11 +48,16 @@
         "state": {
           "down": "Down",
           "not_checked_yet": "Not checked yet",
-          "pause": "Pause",
+          "pause": "[%key:common::action::pause%]",
           "seems_down": "Seems down",
           "up": "Up"
         }
       }
+    }
+  },
+  "exceptions": {
+    "api_exception": {
+      "message": "Could not turn on/off monitoring: {error}"
     }
   }
 }

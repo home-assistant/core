@@ -1,0 +1,42 @@
+{
+  "batteryChargeLevel": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "electricRange": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "chargerConnectionStatus": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "chargingStatus": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "chargingType": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "chargerPowerStatus": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "estimatedChargingTimeToTargetBatteryChargeLevel": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "chargingCurrentLimit": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "targetBatteryChargeLevel": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  },
+  "chargingPower": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED"
+  }
+}

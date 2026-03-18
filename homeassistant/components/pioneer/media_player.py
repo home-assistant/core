@@ -1,21 +1,22 @@
 """Support for Pioneer Network Receivers."""
+
 from __future__ import annotations
 
 import logging
-import telnetlib
 from typing import Final
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -32,7 +33,7 @@ DEFAULT_SOURCES: dict[str, str] = {}
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -58,7 +59,7 @@ def setup_platform(
         config[CONF_SOURCES],
     )
 
-    if pioneer.update():
+    if pioneer.update_device():
         add_entities([pioneer])
 
 
@@ -121,7 +122,11 @@ class PioneerDevice(MediaPlayerEntity):
         except telnetlib.socket.timeout:
             _LOGGER.debug("Pioneer %s command %s timed out", self._name, command)
 
-    def update(self):
+    def update(self) -> None:
+        """Update the entity."""
+        self.update_device()
+
+    def update_device(self) -> bool:
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)

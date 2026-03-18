@@ -1,157 +1,423 @@
 """The Google Generative AI Conversation integration."""
+
 from __future__ import annotations
 
 from functools import partial
-import logging
-from typing import Literal
+from pathlib import Path
+from types import MappingProxyType
 
-from google.api_core.exceptions import ClientError
-import google.generativeai as palm
-from google.generativeai.types.discuss_types import ChatResponse
+from google.genai import Client
+from google.genai.errors import APIError, ClientError
+from requests.exceptions import Timeout
+import voluptuous as vol
 
-from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, MATCH_ALL
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
-from homeassistant.helpers import intent, template
-from homeassistant.util import ulid
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CHAT_MODEL,
     CONF_PROMPT,
-    CONF_TEMPERATURE,
-    CONF_TOP_K,
-    CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
+    DEFAULT_AI_TASK_NAME,
+    DEFAULT_STT_NAME,
+    DEFAULT_TITLE,
+    DEFAULT_TTS_NAME,
+    DOMAIN,
+    LOGGER,
+    RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_STT_OPTIONS,
+    RECOMMENDED_TTS_OPTIONS,
+    TIMEOUT_MILLIS,
+)
+from .entity import async_prepare_files_for_prompt
+
+SERVICE_GENERATE_CONTENT = "generate_content"
+CONF_IMAGE_FILENAME = "image_filename"
+CONF_FILENAMES = "filenames"
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+PLATFORMS = (
+    Platform.AI_TASK,
+    Platform.CONVERSATION,
+    Platform.STT,
+    Platform.TTS,
 )
 
-_LOGGER = logging.getLogger(__name__)
+type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Google Generative AI Conversation."""
+
+    await async_migrate_integration(hass)
+
+    async def generate_content(call: ServiceCall) -> ServiceResponse:
+        """Generate content from text and optionally images."""
+        LOGGER.warning(
+            "Action '%s.%s' is deprecated and will be removed in the 2026.4.0 release. "
+            "Please use the 'ai_task.generate_data' action instead",
+            DOMAIN,
+            SERVICE_GENERATE_CONTENT,
+        )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_generate_content",
+            breaks_in_ha_version="2026.4.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_generate_content",
+        )
+
+        prompt_parts = [call.data[CONF_PROMPT]]
+
+        config_entry: GoogleGenerativeAIConfigEntry = (
+            hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        )
+
+        client = config_entry.runtime_data
+
+        files = call.data[CONF_FILENAMES]
+
+        if files:
+            for filename in files:
+                if not hass.config.is_allowed_path(filename):
+                    raise HomeAssistantError(
+                        f"Cannot read `{filename}`, no access to path; "
+                        "`allowlist_external_dirs` may need to be adjusted in "
+                        "`configuration.yaml`"
+                    )
+
+            prompt_parts.extend(
+                await async_prepare_files_for_prompt(
+                    hass, client, [(Path(filename), None) for filename in files]
+                )
+            )
+
+        try:
+            response = await client.aio.models.generate_content(
+                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
+            )
+        except (
+            APIError,
+            ValueError,
+        ) as err:
+            raise HomeAssistantError(f"Error generating content: {err}") from err
+
+        if response.prompt_feedback:
+            raise HomeAssistantError(
+                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
+            )
+
+        if (
+            not response.candidates
+            or not response.candidates[0].content
+            or not response.candidates[0].content.parts
+        ):
+            raise HomeAssistantError("Unknown error generating content")
+
+        return {"text": response.text}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GENERATE_CONTENT,
+        generate_content,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_PROMPT): cv.string,
+                vol.Optional(CONF_FILENAMES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
     """Set up Google Generative AI Conversation from a config entry."""
-    palm.configure(api_key=entry.data[CONF_API_KEY])
 
     try:
-        await hass.async_add_executor_job(
-            partial(
-                palm.get_model, entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-            )
+        client = await hass.async_add_executor_job(
+            partial(Client, api_key=entry.data[CONF_API_KEY])
         )
-    except ClientError as err:
-        if err.reason == "API_KEY_INVALID":
-            _LOGGER.error("Invalid API key: %s", err)
-            return False
-        raise ConfigEntryNotReady(err) from err
+        await client.aio.models.get(
+            model=RECOMMENDED_CHAT_MODEL,
+            config={"http_options": {"timeout": TIMEOUT_MILLIS}},
+        )
+    except (APIError, Timeout) as err:
+        if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
+            raise ConfigEntryAuthFailed(err.message) from err
+        if isinstance(err, Timeout):
+            raise ConfigEntryNotReady(err) from err
+        raise ConfigEntryError(err) from err
+    else:
+        entry.runtime_data = client
 
-    conversation.async_set_agent(hass, entry, GoogleGenerativeAIAgent(hass, entry))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
     """Unload GoogleGenerativeAI."""
-    palm.configure(api_key=None)
-    conversation.async_unset_agent(hass, entry)
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
+
     return True
 
 
-class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
-    """Google Generative AI conversation agent."""
+async def async_update_options(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the agent."""
-        self.hass = hass
-        self.entry = entry
-        self.history: dict[str, list[dict]] = {}
 
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return {
-            "name": "Powered by Google Generative AI",
-            "url": "https://developers.generativeai.google/",
-        }
+async def async_migrate_integration(hass: HomeAssistant) -> None:
+    """Migrate integration entry structure."""
 
-    @property
-    def supported_languages(self) -> list[str] | Literal["*"]:
-        """Return a list of supported languages."""
-        return MATCH_ALL
+    # Make sure we get enabled config entries first
+    entries = sorted(
+        hass.config_entries.async_entries(DOMAIN),
+        key=lambda e: e.disabled_by is not None,
+    )
+    if not any(entry.version == 1 for entry in entries):
+        return
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
-        """Process a sentence."""
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        model = self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        top_k = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
+    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
-        if user_input.conversation_id in self.history:
-            conversation_id = user_input.conversation_id
-            messages = self.history[conversation_id]
+    for entry in entries:
+        use_existing = False
+        subentry = ConfigSubentry(
+            data=entry.options,
+            subentry_type="conversation",
+            title=entry.title,
+            unique_id=None,
+        )
+        if entry.data[CONF_API_KEY] not in api_keys_entries:
+            use_existing = True
+            all_disabled = all(
+                e.disabled_by is not None
+                for e in entries
+                if e.data[CONF_API_KEY] == entry.data[CONF_API_KEY]
+            )
+            api_keys_entries[entry.data[CONF_API_KEY]] = (entry, all_disabled)
+
+        parent_entry, all_disabled = api_keys_entries[entry.data[CONF_API_KEY]]
+
+        hass.config_entries.async_add_subentry(parent_entry, subentry)
+        if use_existing:
+            hass.config_entries.async_add_subentry(
+                parent_entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_TTS_OPTIONS),
+                    subentry_type="tts",
+                    title=DEFAULT_TTS_NAME,
+                    unique_id=None,
+                ),
+            )
+        conversation_entity_id = entity_registry.async_get_entity_id(
+            "conversation",
+            DOMAIN,
+            entry.entry_id,
+        )
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, entry.entry_id)}
+        )
+
+        if conversation_entity_id is not None:
+            conversation_entity_entry = entity_registry.entities[conversation_entity_id]
+            entity_disabled_by = conversation_entity_entry.disabled_by
+            if (
+                entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+                and not all_disabled
+            ):
+                # Device and entity registries will set the disabled_by flag to None
+                # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+                # config entry, but we want to set it to DEVICE or USER instead,
+                entity_disabled_by = (
+                    er.RegistryEntryDisabler.DEVICE
+                    if device
+                    else er.RegistryEntryDisabler.USER
+                )
+            entity_registry.async_update_entity(
+                conversation_entity_id,
+                config_entry_id=parent_entry.entry_id,
+                config_subentry_id=subentry.subentry_id,
+                disabled_by=entity_disabled_by,
+                new_unique_id=subentry.subentry_id,
+            )
+
+        if device is not None:
+            # Device and entity registries will set the disabled_by flag to None
+            # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+            # config entry, but we want to set it to USER instead,
+            device_disabled_by = device.disabled_by
+            if (
+                device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+                and not all_disabled
+            ):
+                device_disabled_by = dr.DeviceEntryDisabler.USER
+            device_registry.async_update_device(
+                device.id,
+                disabled_by=device_disabled_by,
+                new_identifiers={(DOMAIN, subentry.subentry_id)},
+                add_config_subentry_id=subentry.subentry_id,
+                add_config_entry_id=parent_entry.entry_id,
+            )
+            if parent_entry.entry_id != entry.entry_id:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                )
+            else:
+                device_registry.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    remove_config_subentry_id=None,
+                )
+
+        if not use_existing:
+            await hass.config_entries.async_remove(entry.entry_id)
         else:
-            conversation_id = ulid.ulid()
-            messages = []
-
-        try:
-            prompt = self._async_generate_prompt(raw_prompt)
-        except TemplateError as err:
-            _LOGGER.error("Error rendering prompt: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem with my template: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
+            _add_ai_task_and_stt_subentries(hass, entry)
+            hass.config_entries.async_update_entry(
+                entry,
+                title=DEFAULT_TITLE,
+                options={},
+                version=2,
+                minor_version=4,
             )
 
-        messages.append({"author": "0", "content": user_input.text})
 
-        _LOGGER.debug("Prompt for %s: %s", model, messages)
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
+    """Migrate entry."""
+    LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
-        try:
-            chat_response: ChatResponse = await palm.chat_async(
-                model=model,
-                context=prompt,
-                messages=messages,
-                temperature=temperature,
-                top_p=top_p,
-                top_k=top_k,
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 2 and entry.minor_version == 1:
+        # Add TTS subentry which was missing in 2025.7.0b0
+        if not any(
+            subentry.subentry_type == "tts" for subentry in entry.subentries.values()
+        ):
+            hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_TTS_OPTIONS),
+                    subentry_type="tts",
+                    title=DEFAULT_TTS_NAME,
+                    unique_id=None,
+                ),
             )
-        except ClientError as err:
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to Google Generative AI: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
+
+        # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id,
+                remove_config_entry_id=entry.entry_id,
+                remove_config_subentry_id=None,
             )
 
-        _LOGGER.debug("Response %s", chat_response)
-        # For some queries the response is empty. In that case don't update history to avoid
-        # "google.generativeai.types.discuss_types.AuthorError: Authors are not strictly alternating"
-        if chat_response.last:
-            self.history[conversation_id] = chat_response.messages
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(chat_response.last)
-        return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+    if entry.version == 2 and entry.minor_version == 2:
+        _add_ai_task_and_stt_subentries(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=3)
+
+    if entry.version == 2 and entry.minor_version == 3:
+        # Fix migration where the disabled_by flag was not set correctly.
+        # We can currently only correct this for enabled config entries,
+        # because migration does not run for disabled config entries. This
+        # is asserted in tests, and if that behavior is changed, we should
+        # correct also disabled config entries.
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
         )
+        if entry.disabled_by is None:
+            # If the config entry is not disabled, we need to set the disabled_by
+            # flag on devices to USER, and on entities to DEVICE, if they are set
+            # to CONFIG_ENTRY.
+            for device in devices:
+                if device.disabled_by is not dr.DeviceEntryDisabler.CONFIG_ENTRY:
+                    continue
+                device_registry.async_update_device(
+                    device.id,
+                    disabled_by=dr.DeviceEntryDisabler.USER,
+                )
+            for entity in entity_entries:
+                if entity.disabled_by is not er.RegistryEntryDisabler.CONFIG_ENTRY:
+                    continue
+                entity_registry.async_update_entity(
+                    entity.entity_id,
+                    disabled_by=er.RegistryEntryDisabler.DEVICE,
+                )
+        hass.config_entries.async_update_entry(entry, minor_version=4)
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
-        """Generate a prompt for the user."""
-        return template.Template(raw_prompt, self.hass).async_render(
-            {
-                "ha_name": self.hass.config.location_name,
-            },
-            parse_result=False,
-        )
+    LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True
+
+
+def _add_ai_task_and_stt_subentries(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> None:
+    """Add AI Task and STT subentries to the config entry."""
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
+            subentry_type="ai_task_data",
+            title=DEFAULT_AI_TASK_NAME,
+            unique_id=None,
+        ),
+    )
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_STT_OPTIONS),
+            subentry_type="stt",
+            title=DEFAULT_STT_NAME,
+            unique_id=None,
+        ),
+    )

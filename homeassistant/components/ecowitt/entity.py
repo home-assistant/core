@@ -1,11 +1,13 @@
 """The Ecowitt Weather Station Entity."""
+
 from __future__ import annotations
 
 import time
 
 from aioecowitt import EcoWittSensor
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -25,15 +27,15 @@ class EcowittEntity(Entity):
             identifiers={
                 (DOMAIN, sensor.station.key),
             },
-            name=sensor.station.station,
+            name=sensor.station.model,
             model=sensor.station.model,
             sw_version=sensor.station.version,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Install listener for updates later."""
 
-        def _update_state():
+        def _update_state() -> None:
             """Update the state on callback."""
             self.async_write_ha_state()
 

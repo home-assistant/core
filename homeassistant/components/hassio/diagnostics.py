@@ -1,4 +1,5 @@
 """Diagnostics support for Supervisor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,7 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import ADDONS_COORDINATOR, HassioDataUpdateCoordinator
+from .const import ADDONS_COORDINATOR
+from .coordinator import HassioDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(

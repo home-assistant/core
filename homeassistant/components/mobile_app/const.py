@@ -1,4 +1,5 @@
 """Constants for mobile_app."""
+
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
@@ -24,7 +25,6 @@ ATTR_APP_DATA = "app_data"
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
 ATTR_APP_VERSION = "app_version"
-ATTR_CONFIG_ENTRY_ID = "entry_id"
 ATTR_DEVICE_NAME = "device_name"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"

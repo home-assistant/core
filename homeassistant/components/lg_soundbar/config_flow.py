@@ -1,14 +1,13 @@
 """Config flow to configure the LG Soundbar integration."""
+
 import logging
 from queue import Empty, Full, Queue
-import socket
 
 import temescal
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -60,7 +59,7 @@ def test_connect(host, port):
         details["uuid"] = uuid_q.get(timeout=QUEUE_TIMEOUT)
     except Empty:
         pass
-    except socket.timeout as err:
+    except TimeoutError as err:
         raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
     except OSError as err:
         raise ConnectionError(f"Cannot resolve hostname: {host}") from err
@@ -68,12 +67,12 @@ def test_connect(host, port):
     return details
 
 
-class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
     """LG Soundbar config flow."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_form()

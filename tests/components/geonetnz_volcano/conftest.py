@@ -1,4 +1,5 @@
 """Configuration for GeoNet NZ Volcano tests."""
+
 import pytest
 
 from homeassistant.components.geonetnz_volcano import DOMAIN

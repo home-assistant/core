@@ -1,4 +1,5 @@
 """Config flow to configure the WLED integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,14 +7,19 @@ from typing import Any
 import voluptuous as vol
 from wled import WLED, Device, WLEDConnectionError
 
-from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.components import onboarding
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT, DOMAIN
+from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -25,13 +31,15 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> WLEDOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> WLEDOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return WLEDOptionsFlowHandler(config_entry)
+        return WLEDOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -41,9 +49,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if device.info.leds.cct:
-                    return self.async_abort(reason="cct_unsupported")
-                await self.async_set_unique_id(device.info.mac_address)
+                await self.async_set_unique_id(
+                    device.info.mac_address, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
@@ -53,8 +61,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                     },
                 )
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id="user",
@@ -63,8 +69,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         # Abort quick if the mac address is provided by discovery info
         if mac := discovery_info.properties.get(CONF_MAC):
@@ -79,9 +85,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        if self.discovered_device.info.leds.cct:
-            return self.async_abort(reason="cct_unsupported")
-
         await self.async_set_unique_id(self.discovered_device.info.mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
@@ -95,7 +98,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(
@@ -117,16 +120,12 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await wled.update()
 
 
-class WLEDOptionsFlowHandler(OptionsFlow):
+class WLEDOptionsFlowHandler(OptionsFlowWithReload):
     """Handle WLED options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize WLED options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage WLED options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -136,9 +135,9 @@ class WLEDOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_KEEP_MASTER_LIGHT,
+                        CONF_KEEP_MAIN_LIGHT,
                         default=self.config_entry.options.get(
-                            CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
+                            CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
                         ),
                     ): bool,
                 }

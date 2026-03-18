@@ -2,7 +2,7 @@
 
 import uuid
 
-import homeassistant.util.uuid as uuid_util
+from homeassistant.util import uuid as uuid_util
 
 
 async def test_uuid_util_random_uuid_hex() -> None:

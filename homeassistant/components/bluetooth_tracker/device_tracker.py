@@ -1,13 +1,13 @@
 """Tracking for bluetooth devices."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from typing import Final
 
-import bluetooth  # pylint: disable=import-error
+import bluetooth
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DEFAULT_TRACK_NEW,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     SourceType,
 )
@@ -27,7 +27,7 @@ from homeassistant.components.device_tracker.legacy import (
 )
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -41,7 +41,7 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TRACK_NEW): cv.boolean,
         vol.Optional(CONF_REQUEST_RSSI): cv.boolean,
@@ -152,7 +152,7 @@ async def async_setup_scanner(
     async def perform_bluetooth_update() -> None:
         """Discover Bluetooth devices and update status."""
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
-        tasks: list[Awaitable[None]] = []
+        tasks: list[asyncio.Task[None]] = []
 
         try:
             if track_new:

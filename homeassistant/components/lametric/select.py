@@ -1,4 +1,5 @@
 """Support for LaMetric selects."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -8,37 +9,27 @@ from typing import Any
 from demetriek import BrightnessMode, Device, LaMetricDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LaMetricDataUpdateCoordinator
+from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
 
-@dataclass
-class LaMetricEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(frozen=True, kw_only=True)
+class LaMetricSelectEntityDescription(SelectEntityDescription):
+    """Class describing LaMetric select entities."""
 
     current_fn: Callable[[Device], str]
     select_fn: Callable[[LaMetricDevice, str], Awaitable[Any]]
-
-
-@dataclass
-class LaMetricSelectEntityDescription(
-    SelectEntityDescription, LaMetricEntityDescriptionMixin
-):
-    """Class describing LaMetric select entities."""
 
 
 SELECTS = [
     LaMetricSelectEntityDescription(
         key="brightness_mode",
         translation_key="brightness_mode",
-        icon="mdi:brightness-auto",
         entity_category=EntityCategory.CONFIG,
         options=["auto", "manual"],
         current_fn=lambda device: device.display.brightness_mode.value,
@@ -49,11 +40,11 @@ SELECTS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LaMetricConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric select based on a config entry."""
-    coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         LaMetricSelectEntity(
             coordinator=coordinator,

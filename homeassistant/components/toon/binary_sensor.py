@@ -1,4 +1,5 @@
 """Support for Toon binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,11 +11,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
-from .models import (
+from .entity import (
     ToonBoilerDeviceEntity,
     ToonBoilerModuleDeviceEntity,
     ToonDisplayDeviceEntity,
@@ -24,7 +25,9 @@ from .models import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Toon binary sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -91,14 +94,14 @@ class ToonBoilerModuleBinarySensor(ToonBinarySensor, ToonBoilerModuleDeviceEntit
     """Defines a Boiler module binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonBinarySensorRequiredKeysMixin(ToonRequiredKeysMixin):
     """Mixin for binary sensor required keys."""
 
     cls: type[ToonBinarySensor]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonBinarySensorEntityDescription(
     BinarySensorEntityDescription, ToonBinarySensorRequiredKeysMixin
 ):

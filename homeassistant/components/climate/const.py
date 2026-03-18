@@ -1,8 +1,6 @@
 """Provides the constants needed for component."""
 
-from enum import IntFlag
-
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
 
 
 class HVACMode(StrEnum):
@@ -27,19 +25,10 @@ class HVACMode(StrEnum):
     # Device is in Dry/Humidity mode
     DRY = "dry"
 
-    # Only the fan is on, not fan and another mode like cool
+    # Only the fan is on, not fan and another mode like cool
     FAN_ONLY = "fan_only"
 
 
-# These HVAC_MODE_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the HVACMode enum instead.
-HVAC_MODE_OFF = "off"
-HVAC_MODE_HEAT = "heat"
-HVAC_MODE_COOL = "cool"
-HVAC_MODE_HEAT_COOL = "heat_cool"
-HVAC_MODE_AUTO = "auto"
-HVAC_MODE_DRY = "dry"
-HVAC_MODE_FAN_ONLY = "fan_only"
 HVAC_MODES = [cls.value for cls in HVACMode]
 
 # No preset is active
@@ -86,11 +75,16 @@ SWING_BOTH = "both"
 SWING_VERTICAL = "vertical"
 SWING_HORIZONTAL = "horizontal"
 
+# Possible horizontal swing state
+SWING_HORIZONTAL_ON = "on"
+SWING_HORIZONTAL_OFF = "off"
+
 
 class HVACAction(StrEnum):
     """HVAC action for climate devices."""
 
     COOLING = "cooling"
+    DEFROSTING = "defrosting"
     DRYING = "drying"
     FAN = "fan"
     HEATING = "heating"
@@ -99,18 +93,9 @@ class HVACAction(StrEnum):
     PREHEATING = "preheating"
 
 
-# These CURRENT_HVAC_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the HVACAction enum instead.
-CURRENT_HVAC_OFF = "off"
-CURRENT_HVAC_HEAT = "heating"
-CURRENT_HVAC_COOL = "cooling"
-CURRENT_HVAC_DRY = "drying"
-CURRENT_HVAC_IDLE = "idle"
-CURRENT_HVAC_FAN = "fan"
 CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]
 
 
-ATTR_AUX_HEAT = "aux_heat"
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_FAN_MODES = "fan_modes"
@@ -127,6 +112,8 @@ ATTR_HVAC_MODES = "hvac_modes"
 ATTR_HVAC_MODE = "hvac_mode"
 ATTR_SWING_MODES = "swing_modes"
 ATTR_SWING_MODE = "swing_mode"
+ATTR_SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
+ATTR_SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_TARGET_TEMP_STEP = "target_temp_step"
@@ -138,12 +125,14 @@ DEFAULT_MAX_HUMIDITY = 99
 
 DOMAIN = "climate"
 
-SERVICE_SET_AUX_HEAT = "set_aux_heat"
+INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
+
 SERVICE_SET_FAN_MODE = "set_fan_mode"
 SERVICE_SET_PRESET_MODE = "set_preset_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 SERVICE_SET_HVAC_MODE = "set_hvac_mode"
 SERVICE_SET_SWING_MODE = "set_swing_mode"
+SERVICE_SET_SWING_HORIZONTAL_MODE = "set_swing_horizontal_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
@@ -156,15 +145,6 @@ class ClimateEntityFeature(IntFlag):
     FAN_MODE = 8
     PRESET_MODE = 16
     SWING_MODE = 32
-    AUX_HEAT = 64
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the ClimateEntityFeature enum instead.
-SUPPORT_TARGET_TEMPERATURE = 1
-SUPPORT_TARGET_TEMPERATURE_RANGE = 2
-SUPPORT_TARGET_HUMIDITY = 4
-SUPPORT_FAN_MODE = 8
-SUPPORT_PRESET_MODE = 16
-SUPPORT_SWING_MODE = 32
-SUPPORT_AUX_HEAT = 64
+    TURN_OFF = 128
+    TURN_ON = 256
+    SWING_HORIZONTAL_MODE = 512

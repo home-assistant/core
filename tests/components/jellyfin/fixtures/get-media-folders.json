@@ -302,8 +302,6 @@
       "Album": "string",
       "CollectionType": "tvshows",
       "DisplayOrder": "string",
-      "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
-      "AlbumPrimaryImageTag": "string",
       "SeriesPrimaryImageTag": "string",
       "AlbumArtist": "string",
       "AlbumArtists": [

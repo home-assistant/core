@@ -1,43 +1,48 @@
-"""Fixtures for the Aladdin Connect integration tests."""
-from unittest import mock
-from unittest.mock import AsyncMock
+"""Fixtures for aladdin_connect tests."""
 
 import pytest
 
-DEVICE_CONFIG_OPEN = {
-    "device_id": 533255,
-    "door_number": 1,
-    "name": "home",
-    "status": "open",
-    "link_status": "Connected",
-    "serial": "12345",
-    "model": "02",
-}
+from homeassistant.components.aladdin_connect import DOMAIN
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
+
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="mock_aladdinconnect_api")
-def fixture_mock_aladdinconnect_api():
-    """Set up aladdin connect API fixture."""
-    with mock.patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient"
-    ) as mock_opener:
-        mock_opener.login = AsyncMock(return_value=True)
-        mock_opener.close = AsyncMock(return_value=True)
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
 
-        mock_opener.async_get_door_status = AsyncMock(return_value="open")
-        mock_opener.get_door_status.return_value = "open"
-        mock_opener.async_get_door_link_status = AsyncMock(return_value="connected")
-        mock_opener.get_door_link_status.return_value = "connected"
-        mock_opener.async_get_battery_status = AsyncMock(return_value="99")
-        mock_opener.get_battery_status.return_value = "99"
-        mock_opener.async_get_rssi_status = AsyncMock(return_value="-55")
-        mock_opener.get_rssi_status.return_value = "-55"
-        mock_opener.async_get_ble_strength = AsyncMock(return_value="-45")
-        mock_opener.get_ble_strength.return_value = "-45"
-        mock_opener.get_doors = AsyncMock(return_value=[DEVICE_CONFIG_OPEN])
 
-        mock_opener.register_callback = mock.Mock(return_value=True)
-        mock_opener.open_door = AsyncMock(return_value=True)
-        mock_opener.close_door = AsyncMock(return_value=True)
-
-    return mock_opener
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Define a mock config entry fixture."""
+    return MockConfigEntry(
+        version=1,
+        minor_version=1,
+        domain=DOMAIN,
+        title="Aladdin Connect",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "old-token",
+                "refresh_token": "old-refresh-token",
+                "expires_in": 3600,
+                "expires_at": 1234567890,
+            },
+        },
+        source="user",
+        unique_id=USER_ID,
+    )

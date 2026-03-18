@@ -1,11 +1,27 @@
 {
   "domain": "home_connect",
   "name": "Home Connect",
-  "codeowners": ["@DavidMStraub"],
+  "codeowners": ["@DavidMStraub", "@Diegorro98", "@MartinHjelmare"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "repairs"],
+  "dhcp": [
+    {
+      "hostname": "balay-*",
+      "macaddress": "C8D778*"
+    },
+    {
+      "hostname": "(balay|bosch|neff|siemens)-*",
+      "macaddress": "68A40E*"
+    },
+    {
+      "hostname": "(bosch|neff|siemens)-*",
+      "macaddress": "38B4D3*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/home_connect",
   "iot_class": "cloud_push",
-  "loggers": ["homeconnect"],
-  "requirements": ["homeconnect==0.7.2"]
+  "loggers": ["aiohomeconnect"],
+  "quality_scale": "platinum",
+  "requirements": ["aiohomeconnect==0.19.0"],
+  "zeroconf": ["_homeconnect._tcp.local."]
 }

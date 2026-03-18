@@ -1,8 +1,11 @@
 """Config flow for growatt server integration."""
+
+from typing import Any
+
 import growattServer
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -15,16 +18,17 @@ from .const import (
 )
 
 
-class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow class."""
 
     VERSION = 1
 
-    def __init__(self):
+    api: growattServer.GrowattApi
+
+    def __init__(self) -> None:
         """Initialise growatt server flow."""
-        self.api = None
         self.user_id = None
-        self.data = {}
+        self.data: dict[str, Any] = {}
 
     @callback
     def _async_show_user_form(self, errors=None):
@@ -41,7 +45,9 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self._async_show_user_form()
@@ -65,7 +71,9 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = user_input
         return await self.async_step_plant()
 
-    async def async_step_plant(self, user_input=None):
+    async def async_step_plant(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle adding a "plant" to Home Assistant."""
         plant_info = await self.hass.async_add_executor_job(
             self.api.plant_list, self.user_id
@@ -81,7 +89,8 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(step_id="plant", data_schema=data_schema)
 
-        if user_input is None and len(plant_info["data"]) == 1:
+        if user_input is None:
+            # single plant => mark it as selected
             user_input = {CONF_PLANT_ID: plant_info["data"][0]["plantId"]}
 
         user_input[CONF_NAME] = plants[user_input[CONF_PLANT_ID]]

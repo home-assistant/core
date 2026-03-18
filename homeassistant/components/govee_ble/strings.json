@@ -1,11 +1,11 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
@@ -16,6 +16,89 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "event": {
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "[%key:component::event::entity_component::motion::name%]"
+            }
+          }
+        }
+      },
+      "vibration": {
+        "name": "Vibration",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "vibration": "Vibration"
+            }
+          }
+        }
+      },
+      "button_0": {
+        "name": "Button 1",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press"
+            }
+          }
+        }
+      },
+      "button_1": {
+        "name": "Button 2",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "[%key:component::govee_ble::entity::event::button_0::state_attributes::event_type::state::press%]"
+            }
+          }
+        }
+      },
+      "button_2": {
+        "name": "Button 3",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "[%key:component::govee_ble::entity::event::button_0::state_attributes::event_type::state::press%]"
+            }
+          }
+        }
+      },
+      "button_3": {
+        "name": "Button 4",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "[%key:component::govee_ble::entity::event::button_0::state_attributes::event_type::state::press%]"
+            }
+          }
+        }
+      },
+      "button_4": {
+        "name": "Button 5",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "[%key:component::govee_ble::entity::event::button_0::state_attributes::event_type::state::press%]"
+            }
+          }
+        }
+      },
+      "button_5": {
+        "name": "Button 6",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "[%key:component::govee_ble::entity::event::button_0::state_attributes::event_type::state::press%]"
+            }
+          }
+        }
+      }
     }
   }
 }

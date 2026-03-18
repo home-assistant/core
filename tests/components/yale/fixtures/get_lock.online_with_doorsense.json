@@ -1,0 +1,52 @@
+{
+  "Bridge": {
+    "_id": "bridgeid",
+    "deviceModel": "august-connect",
+    "firmwareVersion": "2.2.1",
+    "hyperBridge": true,
+    "mfgBridgeID": "C5WY200WSH",
+    "operative": true,
+    "status": {
+      "current": "online",
+      "lastOffline": "2000-00-00T00:00:00.447Z",
+      "lastOnline": "2000-00-00T00:00:00.447Z",
+      "updated": "2000-00-00T00:00:00.447Z"
+    }
+  },
+  "pubsubChannel": "pubsub",
+  "Calibrated": false,
+  "Created": "2000-00-00T00:00:00.447Z",
+  "HouseID": "mockhouseid1",
+  "HouseName": "Test",
+  "LockID": "online_with_doorsense",
+  "LockName": "Online door with doorsense",
+  "LockStatus": {
+    "dateTime": "2017-12-10T04:48:30.272Z",
+    "doorState": "open",
+    "isLockStatusChanged": false,
+    "status": "locked",
+    "valid": true
+  },
+  "SerialNumber": "XY",
+  "Type": 1001,
+  "Updated": "2000-00-00T00:00:00.447Z",
+  "battery": 0.922,
+  "currentFirmwareVersion": "undefined-4.3.0-1.8.14",
+  "homeKitEnabled": true,
+  "hostLockInfo": {
+    "manufacturer": "yale",
+    "productID": 1536,
+    "productTypeID": 32770,
+    "serialNumber": "ABC"
+  },
+  "isGalileo": false,
+  "macAddress": "12:22",
+  "pins": {
+    "created": [],
+    "loaded": []
+  },
+  "skuNumber": "AUG-MD01",
+  "supportsEntryCodes": true,
+  "timeZone": "Pacific/Hawaii",
+  "zWaveEnabled": false
+}

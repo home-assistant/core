@@ -1,12 +1,17 @@
 """Test different accessory types: Triggers (Programmable Switches)."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.homekit.const import CHAR_PROGRAMMABLE_SWITCH_EVENT
+from homeassistant.components.homekit.const import (
+    CHAR_CONFIGURED_NAME,
+    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+    SERV_STATELESS_PROGRAMMABLE_SWITCH,
+)
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_get_device_automations
@@ -15,9 +20,7 @@ from tests.common import MockConfigEntry, async_get_device_automations
 async def test_programmable_switch_button_fires_on_trigger(
     hass: HomeAssistant,
     hk_driver,
-    events,
     demo_cleanup,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that DeviceTriggerAccessory fires the programmable switch event on trigger."""
@@ -48,12 +51,17 @@ async def test_programmable_switch_button_fires_on_trigger(
         device_id=device_id,
         device_triggers=device_triggers,
     )
-    await acc.run()
+    acc.run()
+    await acc.async_attach()
     await hass.async_block_till_done()
 
     assert acc.entity_id is None
     assert acc.device_id is device_id
     assert acc.available is True
+
+    switch_service = acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)
+    configured_name_char = switch_service.get_characteristic(CHAR_CONFIGURED_NAME)
+    assert configured_name_char.value == "ceiling lights Changed States"
 
     hk_driver.publish.reset_mock()
     hass.states.async_set("light.ceiling_lights", STATE_ON)
@@ -71,3 +79,4 @@ async def test_programmable_switch_button_fires_on_trigger(
         char = acc.get_characteristic(call.args[0]["aid"], call.args[0]["iid"])
         assert char.display_name == CHAR_PROGRAMMABLE_SWITCH_EVENT
     await acc.stop()
+    await hass.async_block_till_done()

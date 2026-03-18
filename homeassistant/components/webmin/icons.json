@@ -1,0 +1,60 @@
+{
+  "entity": {
+    "sensor": {
+      "load_1m": {
+        "default": "mdi:chip"
+      },
+      "load_5m": {
+        "default": "mdi:chip"
+      },
+      "load_15m": {
+        "default": "mdi:chip"
+      },
+      "mem_total": {
+        "default": "mdi:memory"
+      },
+      "mem_free": {
+        "default": "mdi:memory"
+      },
+      "swap_total": {
+        "default": "mdi:memory"
+      },
+      "swap_free": {
+        "default": "mdi:memory"
+      },
+      "disk_total": {
+        "default": "mdi:harddisk"
+      },
+      "disk_used": {
+        "default": "mdi:harddisk"
+      },
+      "disk_free": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_total": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_used": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_free": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_itotal": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_iused": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_ifree": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_used_percent": {
+        "default": "mdi:harddisk"
+      },
+      "disk_fs_iused_percent": {
+        "default": "mdi:harddisk"
+      }
+    }
+  }
+}

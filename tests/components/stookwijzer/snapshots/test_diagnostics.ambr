@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_get_diagnostics
+  dict({
+    'advice': 'code_yellow',
+    'air_quality_index': 2,
+    'forecast': list([
+      dict({
+        'advice': 'code_yellow',
+        'datetime': '2025-02-12T17:00:00+01:00',
+        'final': True,
+      }),
+      dict({
+        'advice': 'code_yellow',
+        'datetime': '2025-02-12T23:00:00+01:00',
+        'final': True,
+      }),
+      dict({
+        'advice': 'code_orange',
+        'datetime': '2025-02-13T05:00:00+01:00',
+        'final': False,
+      }),
+      dict({
+        'advice': 'code_orange',
+        'datetime': '2025-02-13T11:00:00+01:00',
+        'final': False,
+      }),
+    ]),
+    'windspeed_ms': 2.5,
+  })
+# ---

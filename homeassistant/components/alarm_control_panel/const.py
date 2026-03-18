@@ -1,8 +1,7 @@
 """Provides the constants needed for component."""
-from enum import IntFlag
-from typing import Final
 
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
+from typing import Final
 
 DOMAIN: Final = "alarm_control_panel"
 
@@ -10,17 +9,26 @@ ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
 
 
+class AlarmControlPanelState(StrEnum):
+    """Alarm control panel entity states."""
+
+    DISARMED = "disarmed"
+    ARMED_HOME = "armed_home"
+    ARMED_AWAY = "armed_away"
+    ARMED_NIGHT = "armed_night"
+    ARMED_VACATION = "armed_vacation"
+    ARMED_CUSTOM_BYPASS = "armed_custom_bypass"
+    PENDING = "pending"
+    ARMING = "arming"
+    DISARMING = "disarming"
+    TRIGGERED = "triggered"
+
+
 class CodeFormat(StrEnum):
     """Code formats for the Alarm Control Panel."""
 
     TEXT = "text"
     NUMBER = "number"
-
-
-# These constants are deprecated as of Home Assistant 2022.5
-# Please use the CodeFormat enum instead.
-FORMAT_TEXT: Final = "text"
-FORMAT_NUMBER: Final = "number"
 
 
 class AlarmControlPanelEntityFeature(IntFlag):
@@ -33,15 +41,6 @@ class AlarmControlPanelEntityFeature(IntFlag):
     ARM_CUSTOM_BYPASS = 16
     ARM_VACATION = 32
 
-
-# These constants are deprecated as of Home Assistant 2022.5
-# Please use the AlarmControlPanelEntityFeature enum instead.
-SUPPORT_ALARM_ARM_HOME: Final = 1
-SUPPORT_ALARM_ARM_AWAY: Final = 2
-SUPPORT_ALARM_ARM_NIGHT: Final = 4
-SUPPORT_ALARM_TRIGGER: Final = 8
-SUPPORT_ALARM_ARM_CUSTOM_BYPASS: Final = 16
-SUPPORT_ALARM_ARM_VACATION: Final = 32
 
 CONDITION_TRIGGERED: Final = "is_triggered"
 CONDITION_DISARMED: Final = "is_disarmed"

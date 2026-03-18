@@ -1,8 +1,10 @@
 """Support for Meteoclimatic sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,15 +16,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
+from .coordinator import MeteoclimaticUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -30,6 +29,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temp_max",
@@ -48,6 +48,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity_max",
@@ -66,6 +67,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Pressure",
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure_max",
@@ -84,6 +86,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Wind Speed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="wind_max",
@@ -96,6 +99,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
         icon="mdi:weather-windy",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     SensorEntityDescription(
         key="rain",
@@ -107,10 +112,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteoclimatic sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: MeteoclimaticUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [MeteoclimaticSensor(coordinator, description) for description in SENSOR_TYPES],
@@ -118,13 +125,17 @@ async def async_setup_entry(
     )
 
 
-class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
+class MeteoclimaticSensor(
+    CoordinatorEntity[MeteoclimaticUpdateCoordinator], SensorEntity
+):
     """Representation of a Meteoclimatic sensor."""
 
     _attr_attribution = ATTRIBUTION
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, description: SensorEntityDescription
+        self,
+        coordinator: MeteoclimaticUpdateCoordinator,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the Meteoclimatic sensor."""
         super().__init__(coordinator)

@@ -1,4 +1,5 @@
 """Constants for the syncthing integration."""
+
 from datetime import timedelta
 
 DOMAIN = "syncthing"
@@ -20,14 +21,3 @@ EVENTS = {
     "StateChanged": STATE_CHANGED_RECEIVED,
     "FolderPaused": FOLDER_PAUSED_RECEIVED,
 }
-
-
-FOLDER_SENSOR_ICONS = {
-    "paused": "mdi:folder-clock",
-    "scanning": "mdi:folder-search",
-    "syncing": "mdi:folder-sync",
-    "idle": "mdi:folder",
-}
-
-FOLDER_SENSOR_ALERT_ICON = "mdi:folder-alert"
-FOLDER_SENSOR_DEFAULT_ICON = "mdi:folder"

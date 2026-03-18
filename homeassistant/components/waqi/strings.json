@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "method": "How do you want to select a measuring station?"
+        }
+      },
+      "map": {
+        "description": "Select a location to get the closest measuring station.",
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]"
+        }
+      },
+      "station_number": {
+        "data": {
+          "station_number": "Measuring station number"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "selector": {
+    "method": {
+      "options": {
+        "map": "Select nearest from point on the map",
+        "station_number": "Enter a station number"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "ozone": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "sulphur_dioxide": {
+        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+      },
+      "pm10": {
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "neph": {
+        "name": "Visibility using nephelometry"
+      },
+      "dominant_pollutant": {
+        "name": "Dominant pollutant",
+        "state": {
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "neph": "Nephelometry",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]"
+        }
+      }
+    }
+  }
+}

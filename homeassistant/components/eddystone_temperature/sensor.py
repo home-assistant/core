@@ -3,16 +3,16 @@
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
 """
+
 from __future__ import annotations
 
 import logging
 
-# pylint: disable=import-error
 from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -23,17 +23,18 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import CONF_BEACONS, CONF_INSTANCE, CONF_NAMESPACE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BEACONS = "beacons"
 CONF_BT_DEVICE_ID = "bt_device_id"
-CONF_INSTANCE = "instance"
-CONF_NAMESPACE = "namespace"
+
 
 BEACON_SCHEMA = vol.Schema(
     {
@@ -43,7 +44,7 @@ BEACON_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_BT_DEVICE_ID, default=0): cv.positive_int,
         vol.Required(CONF_BEACONS): vol.Schema({cv.string: BEACON_SCHEMA}),
@@ -58,6 +59,21 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Validate configuration, create devices and start monitoring thread."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Eddystone",
+        },
+    )
+
     bt_device_id: int = config[CONF_BT_DEVICE_ID]
 
     beacons: dict[str, dict[str, str]] = config[CONF_BEACONS]
@@ -79,12 +95,12 @@ def setup_platform(
 
         def monitor_stop(event: Event) -> None:
             """Stop the monitor thread."""
-            _LOGGER.info("Stopping scanner for Eddystone beacons")
+            _LOGGER.debug("Stopping scanner for Eddystone beacons")
             mon.stop()
 
         def monitor_start(event: Event) -> None:
             """Start the monitor thread."""
-            _LOGGER.info("Starting scanner for Eddystone beacons")
+            _LOGGER.debug("Starting scanner for Eddystone beacons")
             mon.start()
 
         add_entities(devices)

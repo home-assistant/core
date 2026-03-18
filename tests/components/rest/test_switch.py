@@ -1,5 +1,5 @@
 """The tests for the REST switch platform."""
-import asyncio
+
 from http import HTTPStatus
 
 import httpx
@@ -37,11 +37,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template_entity import CONF_PICTURE
+from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -53,6 +54,22 @@ RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
 
 
+@pytest.fixture(
+    params=(
+        HTTPStatus.OK,
+        HTTPStatus.CREATED,
+        HTTPStatus.ACCEPTED,
+        HTTPStatus.NON_AUTHORITATIVE_INFORMATION,
+        HTTPStatus.NO_CONTENT,
+        HTTPStatus.RESET_CONTENT,
+        HTTPStatus.PARTIAL_CONTENT,
+    )
+)
+def http_success_code(request: pytest.FixtureRequest) -> HTTPStatus:
+    """Fixture providing different successful HTTP response code."""
+    return request.param
+
+
 async def test_setup_missing_config(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -61,7 +78,10 @@ async def test_setup_missing_config(
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert_setup_component(0, SWITCH_DOMAIN)
-    assert "Invalid config for [switch.rest]: required key not provided" in caplog.text
+    assert (
+        "Invalid config for 'switch' from integration 'rest': required key 'resource' "
+        "not provided" in caplog.text
+    )
 
 
 async def test_setup_missing_schema(
@@ -72,7 +92,10 @@ async def test_setup_missing_schema(
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert_setup_component(0, SWITCH_DOMAIN)
-    assert "Invalid config for [switch.rest]: invalid url" in caplog.text
+    assert (
+        "Invalid config for 'switch' from integration 'rest': invalid url"
+        in caplog.text
+    )
 
 
 @respx.mock
@@ -81,7 +104,7 @@ async def test_setup_failed_connect(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection error occurs."""
-    respx.get(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.get(RESOURCE).mock(side_effect=httpx.ConnectError(""))
     config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
@@ -95,7 +118,7 @@ async def test_setup_timeout(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection timeout occurs."""
-    respx.get(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.get(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
@@ -111,7 +134,7 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
     with assert_setup_component(1, SWITCH_DOMAIN):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
 
 
 @respx.mock
@@ -129,7 +152,7 @@ async def test_setup_query_params(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert route.call_count == 1
+    assert route.call_count == 2
 
 
 @respx.mock
@@ -148,7 +171,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
@@ -170,7 +193,7 @@ async def test_setup_with_state_resource(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
@@ -195,7 +218,7 @@ async def test_setup_with_templated_headers_params(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
     assert last_request.headers.get("Accept") == CONTENT_TYPE_JSON
@@ -256,11 +279,14 @@ async def test_is_on_before_update(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_turn_on_success(hass: HomeAssistant) -> None:
+async def test_turn_on_success(
+    hass: HomeAssistant,
+    http_success_code: HTTPStatus,
+) -> None:
     """Test turn_on."""
     await _async_setup_test_switch(hass)
 
-    route = respx.post(RESOURCE) % HTTPStatus.OK
+    route = respx.post(RESOURCE) % http_success_code
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -301,7 +327,7 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
     """Test turn_on when timeout occurs."""
     await _async_setup_test_switch(hass)
 
-    respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
+    respx.post(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -314,11 +340,14 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_turn_off_success(hass: HomeAssistant) -> None:
+async def test_turn_off_success(
+    hass: HomeAssistant,
+    http_success_code: HTTPStatus,
+) -> None:
     """Test turn_off."""
     await _async_setup_test_switch(hass)
 
-    route = respx.post(RESOURCE) % HTTPStatus.OK
+    route = respx.post(RESOURCE) % http_success_code
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -361,7 +390,7 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
     """Test turn_off when timeout occurs."""
     await _async_setup_test_switch(hass)
 
-    respx.post(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.post(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -414,7 +443,7 @@ async def test_update_timeout(hass: HomeAssistant) -> None:
     """Test update when timeout occurs."""
     await _async_setup_test_switch(hass)
 
-    respx.get(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.get(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
@@ -422,7 +451,9 @@ async def test_update_timeout(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_entity_config(hass: HomeAssistant) -> None:
+async def test_entity_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test entity configuration."""
 
     respx.get(RESOURCE) % HTTPStatus.OK
@@ -443,7 +474,6 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get("switch.rest_switch").unique_id == "very_unique"
 
     state = hass.states.get("switch.rest_switch")
@@ -453,3 +483,122 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         ATTR_FRIENDLY_NAME: "REST Switch",
         ATTR_ICON: "mdi:one_two_three",
     }
+
+
+@respx.mock
+async def test_availability(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity configuration."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={"beer": 1},
+    )
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                # REST configuration
+                CONF_PLATFORM: DOMAIN,
+                CONF_METHOD: "POST",
+                CONF_RESOURCE: "http://localhost",
+                # Entity configuration
+                CONF_NAME: "{{'REST' + ' ' + 'Switch'}}",
+                "is_on_template": "{{ value_json.beer == 1 }}",
+                "availability": "{{ value_json.beer is defined }}",
+                CONF_ICON: "mdi:{{ value_json.beer }}",
+                CONF_PICTURE: "{{ value_json.beer }}.png",
+            },
+        },
+    )
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.rest_switch")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["icon"] == "mdi:1"
+    assert state.attributes["entity_picture"] == "1.png"
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={"x": 1},
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["switch.rest_switch"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.rest_switch")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "icon" not in state.attributes
+    assert "entity_picture" not in state.attributes
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={"beer": 0},
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["switch.rest_switch"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.rest_switch")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes["icon"] == "mdi:0"
+    assert state.attributes["entity_picture"] == "0.png"
+
+
+@respx.mock
+async def test_availability_blocks_is_on_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks is_on_template from rendering."""
+    error = "Error parsing value for switch.block_template: 'x' is undefined"
+    respx.get(RESOURCE).respond(status_code=HTTPStatus.OK, content="51")
+    config = {
+        SWITCH_DOMAIN: {
+            # REST configuration
+            CONF_PLATFORM: DOMAIN,
+            CONF_METHOD: "POST",
+            CONF_RESOURCE: "http://localhost",
+            # Entity configuration
+            CONF_NAME: "block_template",
+            "is_on_template": "{{ x - 1 }}",
+            "availability": "{{ value == '50' }}",
+        },
+    }
+
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
+    await hass.async_block_till_done()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    assert error not in caplog.text
+
+    state = hass.states.get("switch.block_template")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    respx.clear()
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, content="50")
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["switch.block_template"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert error in caplog.text

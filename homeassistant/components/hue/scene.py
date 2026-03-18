@@ -1,4 +1,5 @@
 """Support for scene platform for Hue scenes (V2 only)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,16 +12,14 @@ from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartScene
 import voluptuous as vol
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
-from .bridge import HueBridge
+from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
@@ -33,11 +32,11 @@ ATTR_BRIGHTNESS = "brightness"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:
@@ -87,6 +86,8 @@ async def async_setup_entry(
 class HueSceneEntityBase(HueBaseEntity, SceneEntity):
     """Base Representation of a Scene entity from Hue Scenes."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         bridge: HueBridge,
@@ -98,6 +99,11 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         self.resource = resource
         self.controller = controller
         self.group = self.controller.get_group(self.resource.id)
+        # we create a virtual service/device for Hue zones/rooms
+        # so we have a parent for grouped lights and scenes
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.group.id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -113,24 +119,8 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
 
     @property
     def name(self) -> str:
-        """Return default entity name."""
-        return f"{self.group.metadata.name} {self.resource.metadata.name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device (service) info."""
-        # we create a virtual service/device for Hue scenes
-        # so we have a parent for grouped lights and scenes
-        group_type = self.group.type.value.title()
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
-            entry_type=DeviceEntryType.SERVICE,
-            name=self.group.metadata.name,
-            manufacturer=self.bridge.api.config.bridge_device.product_data.manufacturer_name,
-            model=self.group.type.value.title(),
-            suggested_area=self.group.metadata.name if group_type == "Room" else None,
-            via_device=(DOMAIN, self.bridge.api.config.bridge_device.id),
-        )
+        """Return name of the scene."""
+        return self.resource.metadata.name
 
 
 class HueSceneEntity(HueSceneEntityBase):
@@ -139,10 +129,15 @@ class HueSceneEntity(HueSceneEntityBase):
     @property
     def is_dynamic(self) -> bool:
         """Return if this scene has a dynamic color palette."""
-        if self.resource.palette.color and len(self.resource.palette.color) > 1:
+        if (
+            self.resource.palette
+            and self.resource.palette.color
+            and len(self.resource.palette.color) > 1
+        ):
             return True
         if (
-            self.resource.palette.color_temperature
+            self.resource.palette
+            and self.resource.palette.color_temperature
             and len(self.resource.palette.color_temperature) > 1
         ):
             return True
@@ -186,6 +181,9 @@ class HueSceneEntity(HueSceneEntityBase):
                 if action.action.dimming:
                     brightness = action.action.dimming.brightness
                     break
+        if brightness is not None:
+            # Hue uses a range of [0, 100] to control brightness.
+            brightness = round((brightness / 100) * 255)
         return {
             "group_name": self.group.metadata.name,
             "group_type": self.group.type.value,

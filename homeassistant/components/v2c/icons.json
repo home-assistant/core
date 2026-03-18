@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "sensor": {
+      "charge_power": {
+        "default": "mdi:ev-station"
+      },
+      "charge_energy": {
+        "default": "mdi:ev-station"
+      },
+      "charge_time": {
+        "default": "mdi:timer"
+      },
+      "house_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "fv_power": {
+        "default": "mdi:solar-power-variant"
+      },
+      "meter_error": {
+        "default": "mdi:alert"
+      },
+      "battery_power": {
+        "default": "mdi:home-battery"
+      },
+      "ssid": {
+        "default": "mdi:wifi"
+      },
+      "ip_address": {
+        "default": "mdi:ip"
+      },
+      "signal_status": {
+        "default": "mdi:signal"
+      }
+    },
+    "switch": {
+      "paused": {
+        "default": "mdi:pause"
+      },
+      "locked": {
+        "default": "mdi:lock"
+      },
+      "timer": {
+        "default": "mdi:timer"
+      },
+      "dynamic": {
+        "default": "mdi:gauge"
+      },
+      "pause_dynamic": {
+        "default": "mdi:pause"
+      }
+    }
+  }
+}

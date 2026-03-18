@@ -1,5 +1,9 @@
 """Test setting up sensors."""
+
 from datetime import timedelta
+from unittest.mock import MagicMock
+
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -15,14 +19,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from . import INPUT_SENSOR, OUTPUT_SENSOR
 
 from tests.common import async_fire_time_changed
 
 
-async def test_sensor_type_input(hass: HomeAssistant, mock_iotawatt) -> None:
+async def test_sensor_type_input(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt: MagicMock
+) -> None:
     """Test input sensors work."""
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
@@ -31,7 +36,8 @@ async def test_sensor_type_input(hass: HomeAssistant, mock_iotawatt) -> None:
 
     # Discover this sensor during a regular update.
     mock_iotawatt.getSensors.return_value["sensors"]["my_sensor_key"] = INPUT_SENSOR
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 1
@@ -47,17 +53,20 @@ async def test_sensor_type_input(hass: HomeAssistant, mock_iotawatt) -> None:
     assert state.attributes["type"] == "Input"
 
     mock_iotawatt.getSensors.return_value["sensors"].pop("my_sensor_key")
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.my_sensor") is None
 
 
-async def test_sensor_type_output(hass: HomeAssistant, mock_iotawatt) -> None:
+async def test_sensor_type_output(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt: MagicMock
+) -> None:
     """Tests the sensor type of Output."""
-    mock_iotawatt.getSensors.return_value["sensors"][
-        "my_watthour_sensor_key"
-    ] = OUTPUT_SENSOR
+    mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = (
+        OUTPUT_SENSOR
+    )
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
 
@@ -73,7 +82,8 @@ async def test_sensor_type_output(hass: HomeAssistant, mock_iotawatt) -> None:
     assert state.attributes["type"] == "Output"
 
     mock_iotawatt.getSensors.return_value["sensors"].pop("my_watthour_sensor_key")
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.my_watthour_sensor") is None

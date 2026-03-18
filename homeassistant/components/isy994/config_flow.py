@@ -1,24 +1,36 @@
 """Config flow for Universal Devices ISY/IoX integration."""
+
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 from aiohttp import CookieJar
-import async_timeout
 from pyisy import ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.configuration import Configuration
 from pyisy.connection import Connection
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.components import dhcp, ssdp
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import (
     CONF_IGNORE_STRING,
@@ -41,6 +53,7 @@ from .const import (
     SCHEME_HTTPS,
     UDN_UUID_PREFIX,
 )
+from .models import IsyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,9 +71,7 @@ def _data_schema(schema_input: dict[str, str]) -> vol.Schema:
     )
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -97,7 +108,7 @@ async def validate_input(
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             isy_conf_xml = await isy_conn.test_connection()
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
@@ -118,7 +129,7 @@ async def validate_input(
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Universal Devices ISY/IoX."""
 
     VERSION = 1
@@ -126,19 +137,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the ISY/IoX config flow."""
         self.discovered_conf: dict[str, str] = {}
-        self._existing_entry: config_entries.ConfigEntry | None = None
+        self._existing_entry: IsyConfigEntry | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: IsyConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         info: dict[str, str] = {}
@@ -151,7 +162,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -175,7 +186,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(isy_mac)
         if not existing_entry:
             return
-        if existing_entry.source == config_entries.SOURCE_IGNORE:
+        if existing_entry.source == SOURCE_IGNORE:
             raise AbortFlow("already_configured")
         parsed_url = urlparse(existing_entry.data[CONF_HOST])
         if parsed_url.hostname != ip_address:
@@ -202,10 +213,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         raise AbortFlow("already_configured")
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
-        if friendly_name.startswith("polisy") or friendly_name.startswith("eisy"):
+        if friendly_name.startswith(("polisy", "eisy")):
             url = f"http://{discovery_info.ip}:8080"
         else:
             url = f"http://{discovery_info.ip}"
@@ -223,13 +236,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX Device."""
-        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
         url = discovery_info.ssdp_location
         assert isinstance(url, str)
         parsed_url = urlparse(url)
-        mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        mac = discovery_info.upnp[ATTR_UPNP_UDN]
         mac = mac.removeprefix(UDN_UUID_PREFIX)
         url = url.removesuffix(ISY_URL_POSTFIX)
 
@@ -250,14 +265,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth."""
         self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth input."""
         errors = {}
         assert self._existing_entry is not None
@@ -276,10 +293,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             else:
-                cfg_entries = self.hass.config_entries
-                cfg_entries.async_update_entry(existing_entry, data=new_data)
-                await cfg_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    self._existing_entry, data=new_data
+                )
 
         self.context["title_placeholders"] = {
             CONF_NAME: existing_entry.title,
@@ -300,16 +316,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for ISY/IoX."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -338,13 +350,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=options_schema)
 
 
-class InvalidHost(exceptions.HomeAssistantError):
+class InvalidHost(HomeAssistantError):
     """Error to indicate the host value is invalid."""
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

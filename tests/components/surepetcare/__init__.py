@@ -1,6 +1,4 @@
 """Tests for Sure Petcare integration."""
-from homeassistant.components.surepetcare.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 HOUSEHOLD_ID = 987654321
 HUB_ID = 123456789
@@ -10,7 +8,11 @@ MOCK_HUB = {
     "product_id": 1,
     "household_id": HOUSEHOLD_ID,
     "name": "Hub",
-    "status": {"online": True, "led_mode": 0, "pairing_mode": 0},
+    "status": {
+        "led_mode": 0,
+        "pairing_mode": 0,
+        "online": True,
+    },
 }
 
 MOCK_FEEDER = {
@@ -24,6 +26,7 @@ MOCK_FEEDER = {
         "locking": {"mode": 0},
         "learn_mode": 0,
         "signal": {"device_rssi": 60, "hub_rssi": 65},
+        "online": True,
     },
 }
 
@@ -81,14 +84,4 @@ MOCK_PET = {
 MOCK_API_DATA = {
     "devices": [MOCK_HUB, MOCK_CAT_FLAP, MOCK_PET_FLAP, MOCK_FEEDER, MOCK_FELAQUA],
     "pets": [MOCK_PET],
-}
-
-MOCK_CONFIG = {
-    DOMAIN: {
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-        "feeders": [12345],
-        "flaps": [13579, 13576],
-        "pets": [24680],
-    },
 }

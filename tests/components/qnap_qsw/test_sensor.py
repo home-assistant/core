@@ -1,17 +1,25 @@
 """The sensor tests for the QNAP QSW platform."""
 
-from homeassistant.components.qnap_qsw.const import ATTR_MAX
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+
+from homeassistant.components.qnap_qsw.const import ATTR_MAX, DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .util import async_init_integration
+from .util import async_init_integration, init_config_entry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_qnap_qsw_create_sensors(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test creation of sensors."""
 
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2024-07-25 12:00:00+00:00")
     await async_init_integration(hass)
 
     state = hass.states.get("sensor.qsw_m408_4c_fan_1_speed")
@@ -43,8 +51,8 @@ async def test_qnap_qsw_create_sensors(
     state = hass.states.get("sensor.qsw_m408_4c_tx_speed")
     assert state.state == "0"
 
-    state = hass.states.get("sensor.qsw_m408_4c_uptime")
-    assert state.state == "91"
+    state = hass.states.get("sensor.qsw_m408_4c_uptime_timestamp")
+    assert state.state == "2024-07-25T11:58:29+00:00"
 
     # LACP Ports
     state = hass.states.get("sensor.qsw_m408_4c_lacp_port_1_link_speed")
@@ -371,3 +379,27 @@ async def test_qnap_qsw_create_sensors(
 
     state = hass.states.get("sensor.qsw_m408_4c_port_12_tx_speed")
     assert state.state == "0"
+
+
+async def test_cleanup_deprecated_uptime_seconds(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cleanup of the Uptime seconds sensor entity."""
+    original_id = "sensor.qsw_m408_4c_uptime_seconds"
+    domain = Platform.SENSOR
+
+    config_entry = init_config_entry(hass)
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=original_id,
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+
+    await async_init_integration(hass, config_entry=config_entry)

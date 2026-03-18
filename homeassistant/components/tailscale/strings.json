@@ -2,14 +2,14 @@
   "config": {
     "step": {
       "user": {
-        "description": "This integration monitors your Tailscale network, it **DOES NOT** make your Home Assistant accessible via Tailscale VPN. \n\nTo authenticate with Tailscale you'll need to create an API key at {authkeys_url}.\n\nA Tailnet is the name of your Tailscale network. You can find it in the top left corner in the Tailscale Admin Panel (beside the Tailscale logo).",
+        "description": "This integration monitors your Tailscale network, it **DOES NOT** make your Home Assistant accessible via Tailscale VPN. \n\nTo authenticate with Tailscale you'll need to create an API access token at {authkeys_url}.\n\nA Tailnet is the name of your Tailscale network. You can find it in the top left corner in the Tailscale Admin Panel (beside the Tailscale logo).",
         "data": {
           "tailnet": "Tailnet",
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "reauth_confirm": {
-        "description": "Tailscale API tokens are valid for 90-days. You can create a fresh Tailscale API key at https://login.tailscale.com/admin/settings/authkeys.",
+        "description": "Tailscale API access tokens are valid for 90-days. You can create a fresh Tailscale API access token at {authkeys_url}.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -22,6 +22,45 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "client": {
+        "name": "Client"
+      },
+      "key_expiry_disabled": {
+        "name": "Key expiry disabled"
+      },
+      "client_supports_hair_pinning": {
+        "name": "Supports hairpinning"
+      },
+      "client_supports_ipv6": {
+        "name": "Supports IPv6"
+      },
+      "client_supports_pcp": {
+        "name": "Supports PCP"
+      },
+      "client_supports_pmp": {
+        "name": "Supports NAT-PMP"
+      },
+      "client_supports_udp": {
+        "name": "Supports UDP"
+      },
+      "client_supports_upnp": {
+        "name": "Supports UPnP"
+      }
+    },
+    "sensor": {
+      "expires": {
+        "name": "Expires"
+      },
+      "ip": {
+        "name": "IP address"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      }
     }
   }
 }

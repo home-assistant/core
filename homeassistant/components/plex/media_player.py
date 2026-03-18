@@ -1,11 +1,13 @@
 """Support to interface with the Plex API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import Any, Concatenate, cast
 
+from plexapi.client import PlexClient
 import plexapi.exceptions
 import requests.exceptions
 
@@ -21,13 +23,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
@@ -46,15 +47,11 @@ from .helpers import get_plex_data, get_plex_server
 from .media_browser import browse_media
 from .services import process_plex_payload
 
-_PlexMediaPlayerT = TypeVar("_PlexMediaPlayerT", bound="PlexMediaPlayer")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 
-def needs_session(
-    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R]
+def needs_session[_PlexMediaPlayerT: PlexMediaPlayer, **_P, _R](
+    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R],
 ) -> Callable[Concatenate[_PlexMediaPlayerT, _P], _R | None]:
     """Ensure session is available for certain attributes."""
 
@@ -72,7 +69,7 @@ def needs_session(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
@@ -118,6 +115,10 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
 class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
+    _attr_available = False
+    _attr_should_poll = False
+    _attr_state = MediaPlayerState.IDLE
+
     def __init__(self, plex_server, device, player_source, session=None):
         """Initialize the Plex device."""
         self.plex_server = plex_server
@@ -137,9 +138,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._volume_level = 1  # since we can't retrieve remotely
         self._volume_muted = False  # since we can't retrieve remotely
 
-        self._attr_available = False
-        self._attr_should_poll = False
-        self._attr_state = MediaPlayerState.IDLE
         self._attr_unique_id = (
             f"{self.plex_server.machine_identifier}:{self.machine_identifier}"
         )
@@ -192,7 +190,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.plex_server.machine_identifier),
         )
 
-    def update(self):
+    def update(self) -> None:
         """Refresh key device data."""
         if not self.session:
             self.force_idle()
@@ -210,6 +208,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.device.proxyThroughServer()
         self._device_protocol_capabilities = self.device.protocolCapabilities
 
+        device: PlexClient
         for device in filter(None, [self.device, self.session_device]):
             self.device_make = self.device_make or device.device
             self.device_platform = self.device_platform or device.platform

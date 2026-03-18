@@ -1,27 +1,26 @@
 """Config flow for TP-Link Omada integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 import re
-from types import MappingProxyType
 from typing import Any, NamedTuple
 from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
+from tplink_omada_client import OmadaClient, OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaClient, OmadaSite
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
@@ -45,7 +44,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def create_omada_client(
-    hass: HomeAssistant, data: MappingProxyType[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> OmadaClient:
     """Create a TP-Link Omada client API for the given config entry."""
 
@@ -61,7 +60,9 @@ async def create_omada_client(
         is not None
     ):
         # TP-Link API uses cookies for login session, so an unsafe cookie jar is required for IP addresses
-        websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+        websession = async_create_clientsession(
+            hass, cookie_jar=CookieJar(unsafe=True), verify_ssl=verify_ssl
+        )
     else:
         websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
 
@@ -82,7 +83,7 @@ class HubInfo(NamedTuple):
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
     """Validate the user input allows us to connect."""
 
-    client = await create_omada_client(hass, MappingProxyType(data))
+    client = await create_omada_client(hass, data)
     controller_id = await client.login()
     name = await client.get_controller_name()
     sites = await client.get_sites()
@@ -90,7 +91,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
     return HubInfo(controller_id, name, sites)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TP-Link Omada."""
 
     VERSION = 1
@@ -103,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors: dict[str, str] = {}
@@ -128,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_site(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle step to select site to manage."""
 
         if user_input is None:
@@ -157,14 +158,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=display_name, data=self._omada_opts)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._omada_opts = dict(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
 
         errors: dict[str, str] = {}
@@ -175,15 +178,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if info is not None:
                 # Auth successful - update the config entry with the new credentials
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=self._omada_opts
                 )
-                assert entry is not None
-                self.hass.config_entries.async_update_entry(
-                    entry, data=self._omada_opts
-                )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -214,7 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except OmadaClientException as ex:
             _LOGGER.error("Unexpected API error: %s", ex)
             errors["base"] = "unknown"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return None

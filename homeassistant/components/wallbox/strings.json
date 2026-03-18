@@ -3,9 +3,14 @@
     "step": {
       "user": {
         "data": {
-          "station": "Station Serial Number",
+          "station": "Station serial number",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "station": "Serial number of the charger. Can be found in the Wallbox app or in the Wallbox portal.",
+          "username": "Username for your Wallbox account.",
+          "password": "Password for your Wallbox account."
         }
       },
       "reauth_confirm": {
@@ -19,11 +24,114 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "reauth_invalid": "Re-authentication failed; Serial Number does not match original"
+      "reauth_invalid": "Re-authentication failed; serial number does not match original"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "number": {
+      "maximum_charging_current": {
+        "name": "Maximum charging current"
+      },
+      "energy_price": {
+        "name": "Energy price"
+      },
+      "maximum_icp_current": {
+        "name": "Maximum ICP current"
+      }
+    },
+    "sensor": {
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "max_available_power": {
+        "name": "Max available power"
+      },
+      "charging_speed": {
+        "name": "Charging speed"
+      },
+      "added_range": {
+        "name": "Added range"
+      },
+      "added_energy": {
+        "name": "Added energy"
+      },
+      "added_green_energy": {
+        "name": "Added green energy"
+      },
+      "added_grid_energy": {
+        "name": "Added grid energy"
+      },
+      "added_discharged_energy": {
+        "name": "Discharged energy"
+      },
+      "cost": {
+        "name": "Cost"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "current_mode": {
+        "name": "Current mode"
+      },
+      "depot_price": {
+        "name": "Depot price"
+      },
+      "energy_price": {
+        "name": "Energy price"
+      },
+      "status_description": {
+        "name": "Status description"
+      },
+      "max_charging_current": {
+        "name": "Max charging current"
+      },
+      "icp_max_current": {
+        "name": "Max ICP current"
+      }
+    },
+    "switch": {
+      "pause_resume": {
+        "name": "Pause/resume"
+      }
+    },
+    "select": {
+      "ecosmart": {
+        "name": "Solar charging",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "eco_mode": "Eco mode",
+          "full_solar": "Full solar"
+        }
+      }
+    }
+  },
+  "issues": {
+    "insufficient_rights": {
+      "title": "The Wallbox account has insufficient rights.",
+      "description": "The Wallbox account has insufficient rights to lock/unlock and change the charging power. Please assign the user admin rights in the Wallbox portal."
+    }
+  },
+  "exceptions": {
+    "api_failed": {
+      "message": "Error communicating with Wallbox API"
+    },
+    "too_many_requests": {
+      "message": "Error communicating with Wallbox API, too many requests"
+    },
+    "invalid_auth": {
+      "message": "Invalid authentication"
+    },
+    "insufficient_rights": {
+      "message": "Insufficient rights for Wallbox user"
     }
   }
 }

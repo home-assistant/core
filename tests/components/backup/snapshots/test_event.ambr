@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_event_entity[event.backup_automatic_backup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'completed',
+        'failed',
+        'in_progress',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.backup_automatic_backup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Automatic backup',
+    'platform': 'backup',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'automatic_backup_event',
+    'unique_id': 'automatic_backup_event',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity[event.backup_automatic_backup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'completed',
+        'failed',
+        'in_progress',
+      ]),
+      'friendly_name': 'Backup Automatic backup',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.backup_automatic_backup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

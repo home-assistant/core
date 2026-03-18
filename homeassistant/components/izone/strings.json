@@ -9,5 +9,27 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "services": {
+    "airflow_min": {
+      "name": "Set minimum airflow",
+      "description": "Sets the airflow minimum percent for a zone.",
+      "fields": {
+        "airflow": {
+          "name": "Percent",
+          "description": "Airflow percent."
+        }
+      }
+    },
+    "airflow_max": {
+      "name": "Set maximum airflow",
+      "description": "Sets the airflow maximum percent for a zone.",
+      "fields": {
+        "airflow": {
+          "name": "[%key:component::izone::services::airflow_min::fields::airflow::name%]",
+          "description": "[%key:component::izone::services::airflow_min::fields::airflow::description%]"
+        }
+      }
+    }
   }
 }

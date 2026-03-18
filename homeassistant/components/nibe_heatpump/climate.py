@@ -1,6 +1,8 @@
 """The Nibe Heat Pump climate."""
+
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 from nibe.coil import Coil
@@ -24,10 +26,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator
 from .const import (
     DOMAIN,
     LOGGER,
@@ -36,21 +38,19 @@ from .const import (
     VALUES_PRIORITY_COOLING,
     VALUES_PRIORITY_HEATING,
 )
+from .coordinator import CoilCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    main_unit = UNIT_COILGROUPS.get(coordinator.series, {}).get("main")
-    if not main_unit:
-        LOGGER.debug("Skipping climates - no main unit found")
-        return
+    main_unit = UNIT_COILGROUPS[coordinator.series]["main"]
 
     def climate_systems():
         for key, group in CLIMATE_COILGROUPS.get(coordinator.series, ()).items():
@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(climate_systems())
 
 
-class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
+class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
     """Climate entity."""
 
     _attr_entity_category = None
@@ -70,14 +70,14 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF, HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.HEAT_COOL]
     _attr_target_temperature_step = 0.5
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: CoilCoordinator,
         key: str,
         unit: UnitCoilGroup,
         climate: ClimateCoilGroup,
@@ -101,7 +101,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         self._attr_unique_id = f"{coordinator.unique_id}-{key}"
         self._attr_device_info = coordinator.device_info
         self._attr_hvac_action = HVACAction.IDLE
-        self._attr_hvac_mode = HVACMode.OFF
+        self._attr_hvac_mode = HVACMode.AUTO
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None
         self._attr_target_temperature = None
@@ -112,7 +112,12 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         self._coil_current = _get(climate.current)
         self._coil_setpoint_heat = _get(climate.setpoint_heat)
-        self._coil_setpoint_cool = _get(climate.setpoint_cool)
+        self._coil_setpoint_cool: Coil | None
+        try:
+            self._coil_setpoint_cool = _get(climate.setpoint_cool)
+        except CoilNotFoundException:
+            self._coil_setpoint_cool = None
+            self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
         self._coil_prio = _get(unit.prio)
         self._coil_mixing_valve_state = _get(climate.mixing_valve_state)
         if climate.active_accessory is None:
@@ -127,10 +132,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not self.coordinator.data:
-            return
-
-        def _get_value(coil: Coil) -> int | str | float | None:
+        def _get_value(coil: Coil) -> int | str | float | date | None:
             return self.coordinator.get_coil_value(coil)
 
         def _get_float(coil: Coil) -> float | None:
@@ -138,7 +140,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         self._attr_current_temperature = _get_float(self._coil_current)
 
-        mode = HVACMode.OFF
+        mode = HVACMode.AUTO
         if _get_value(self._coil_use_room_sensor) == "ON":
             if (
                 _get_value(self._coil_cooling_with_room_sensor)
@@ -150,8 +152,10 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         self._attr_hvac_mode = mode
 
         setpoint_heat = _get_float(self._coil_setpoint_heat)
-        setpoint_cool = _get_float(self._coil_setpoint_cool)
-
+        if self._coil_setpoint_cool:
+            setpoint_cool = _get_float(self._coil_setpoint_cool)
+        else:
+            setpoint_cool = None
         if mode == HVACMode.HEAT_COOL:
             self._attr_target_temperature = None
             self._attr_target_temperature_low = setpoint_heat
@@ -178,7 +182,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
             else:
                 self._attr_hvac_action = HVACAction.IDLE
         else:
-            self._attr_hvac_action = None
+            self._attr_hvac_action = HVACAction.OFF
 
         self.async_write_ha_state()
 
@@ -210,11 +214,16 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
                     self._coil_setpoint_heat, temperature
                 )
             elif hvac_mode == HVACMode.COOL:
-                await coordinator.async_write_coil(
-                    self._coil_setpoint_cool, temperature
-                )
+                if self._coil_setpoint_cool:
+                    await coordinator.async_write_coil(
+                        self._coil_setpoint_cool, temperature
+                    )
+                else:
+                    raise ServiceValidationError(
+                        f"{hvac_mode} mode not supported for {self.name}"
+                    )
             else:
-                raise ValueError(
+                raise ServiceValidationError(
                     "'set_temperature' requires 'hvac_mode' when passing"
                     " 'temperature' and 'hvac_mode' is not already set to"
                     " 'heat' or 'cool'"
@@ -223,5 +232,32 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
             await coordinator.async_write_coil(self._coil_setpoint_heat, temperature)
 
-        if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
+        if (
+            self._coil_setpoint_cool
+            and (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None
+        ):
             await coordinator.async_write_coil(self._coil_setpoint_cool, temperature)
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        coordinator = self.coordinator
+
+        if hvac_mode == HVACMode.HEAT_COOL:
+            await coordinator.async_write_coil(
+                self._coil_cooling_with_room_sensor, "ON"
+            )
+            await coordinator.async_write_coil(self._coil_use_room_sensor, "ON")
+        elif hvac_mode == HVACMode.HEAT:
+            await coordinator.async_write_coil(
+                self._coil_cooling_with_room_sensor, "OFF"
+            )
+            await coordinator.async_write_coil(self._coil_use_room_sensor, "ON")
+        elif hvac_mode == HVACMode.AUTO:
+            await coordinator.async_write_coil(
+                self._coil_cooling_with_room_sensor, "OFF"
+            )
+            await coordinator.async_write_coil(self._coil_use_room_sensor, "OFF")
+        else:
+            raise ServiceValidationError(
+                f"{hvac_mode} mode not supported for {self.name}"
+            )

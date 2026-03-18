@@ -1,0 +1,10 @@
+{
+  "domain": "microbees",
+  "name": "microBees",
+  "codeowners": ["@microBeesTech"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/microbees",
+  "iot_class": "cloud_polling",
+  "requirements": ["microBeesPy==0.3.5"]
+}

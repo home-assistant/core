@@ -1,4 +1,5 @@
 """Tests for the Remote Python Debugger integration."""
+
 from unittest.mock import patch
 
 import pytest

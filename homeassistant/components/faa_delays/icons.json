@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "ground_delay": {
+        "default": "mdi:airport"
+      },
+      "ground_stop": {
+        "default": "mdi:airport"
+      },
+      "depart_delay": {
+        "default": "mdi:airplane-takeoff"
+      },
+      "arrive_delay": {
+        "default": "mdi:airplane-landing"
+      },
+      "closure": {
+        "default": "mdi:airplane-off"
+      }
+    }
+  }
+}

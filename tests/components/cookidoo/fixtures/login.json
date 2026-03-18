@@ -1,0 +1,7 @@
+{
+  "access_token": "eyJhbGci<redacted>",
+  "expires_in": 43199,
+  "refresh_token": "eyJhbGciOiJSUzI1NiI<redacted>",
+  "token_type": "bearer",
+  "sub": "sub_uuid"
+}

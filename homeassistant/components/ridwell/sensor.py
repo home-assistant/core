@@ -1,4 +1,5 @@
 """Support for Ridwell sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -14,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, SENSOR_TYPE_NEXT_PICKUP
 from .coordinator import RidwellDataUpdateCoordinator
@@ -27,13 +28,15 @@ ATTR_QUANTITY = "quantity"
 
 SENSOR_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_NEXT_PICKUP,
-    name="Next Ridwell pickup",
+    translation_key="next_pickup",
     device_class=SensorDeviceClass.DATE,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
     coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

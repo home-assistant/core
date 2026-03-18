@@ -1,12 +1,16 @@
 """Test helpers for the Alexa integration."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
 
-from homeassistant.components.alexa import config, smart_home, smart_home_http
+from homeassistant.components.alexa import config, smart_home
 from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
@@ -16,7 +20,7 @@ TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 TEST_LOCALE = "en-US"
 
 
-class MockConfig(smart_home_http.AlexaConfig):
+class MockConfig(smart_home.AlexaConfig):
     """Mock Alexa config."""
 
     entity_config = {
@@ -27,7 +31,7 @@ class MockConfig(smart_home_http.AlexaConfig):
         "camera.test": {"display_categories": "CAMERA"},
     }
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Mock Alexa config."""
         super().__init__(
             hass,
@@ -61,7 +65,7 @@ class MockConfig(smart_home_http.AlexaConfig):
         """Accept a grant."""
 
 
-def get_default_config(hass):
+def get_default_config(hass: HomeAssistant) -> MockConfig:
     """Return a MockConfig instance."""
     return MockConfig(hass)
 
@@ -92,15 +96,15 @@ def get_new_request(namespace, name, endpoint=None):
 
 
 async def assert_request_calls_service(
-    namespace,
-    name,
-    endpoint,
-    service,
-    hass,
+    namespace: str,
+    name: str,
+    endpoint: str,
+    service: str,
+    hass: HomeAssistant,
     response_type="Response",
-    payload=None,
-    instance=None,
-):
+    payload: dict[str, Any] | None = None,
+    instance: str | None = None,
+) -> tuple[ServiceCall, dict[str, Any]]:
     """Assert an API request calls a hass service."""
     context = Context()
     request = get_new_request(namespace, name, endpoint)
@@ -128,12 +132,20 @@ async def assert_request_calls_service(
 
 
 async def assert_request_fails(
-    namespace, name, endpoint, service_not_called, hass, payload=None
-):
+    namespace: str,
+    name: str,
+    endpoint: str,
+    service_not_called: str,
+    hass: HomeAssistant,
+    payload: dict[str, Any] | None = None,
+    instance: str | None = None,
+) -> None:
     """Assert an API request returns an ErrorResponse."""
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)
@@ -149,25 +161,33 @@ async def assert_request_fails(
 
 
 async def assert_power_controller_works(
-    endpoint, on_service, off_service, hass, timestamp
-):
+    endpoint: str,
+    on_service: str,
+    off_service: str,
+    hass: HomeAssistant,
+    timestamp: str,
+) -> None:
     """Assert PowerController API requests work."""
     _, response = await assert_request_calls_service(
         "Alexa.PowerController", "TurnOn", endpoint, on_service, hass
     )
-    for property in response["context"]["properties"]:
-        assert property["timeOfSample"] == timestamp
+    for context_property in response["context"]["properties"]:
+        assert context_property["timeOfSample"] == timestamp
 
     _, response = await assert_request_calls_service(
         "Alexa.PowerController", "TurnOff", endpoint, off_service, hass
     )
-    for property in response["context"]["properties"]:
-        assert property["timeOfSample"] == timestamp
+    for context_property in response["context"]["properties"]:
+        assert context_property["timeOfSample"] == timestamp
 
 
 async def assert_scene_controller_works(
-    endpoint, activate_service, deactivate_service, hass, timestamp
-):
+    endpoint: str,
+    activate_service: str,
+    deactivate_service: str,
+    hass: HomeAssistant,
+    timestamp: str,
+) -> None:
     """Assert SceneController API requests work."""
     _, response = await assert_request_calls_service(
         "Alexa.SceneController",
@@ -193,7 +213,9 @@ async def assert_scene_controller_works(
         assert response["event"]["payload"]["timestamp"] == timestamp
 
 
-async def reported_properties(hass, endpoint, return_full_response=False):
+async def reported_properties(
+    hass: HomeAssistant, endpoint: str, return_full_response: bool = False
+) -> ReportedProperties:
     """Use ReportState to get properties and return them.
 
     The result is a ReportedProperties instance, which has methods to make
@@ -210,7 +232,7 @@ async def reported_properties(hass, endpoint, return_full_response=False):
 class ReportedProperties:
     """Class to help assert reported properties."""
 
-    def __init__(self, properties):
+    def __init__(self, properties) -> None:
         """Initialize class."""
         self.properties = properties
 
@@ -222,9 +244,20 @@ class ReportedProperties:
 
     def assert_equal(self, namespace, name, value):
         """Assert a property is equal to a given value."""
+        prop_set = None
+        prop_count = 0
         for prop in self.properties:
             if prop["namespace"] == namespace and prop["name"] == name:
                 assert prop["value"] == value
-                return prop
+                prop_set = prop
+                prop_count += 1
+
+        if prop_count > 1:
+            pytest.fail(
+                f"property {namespace}:{name} more than once in {self.properties!r}"
+            )
+
+        if prop_set:
+            return prop_set
 
         pytest.fail(f"property {namespace}:{name} not in {self.properties!r}")

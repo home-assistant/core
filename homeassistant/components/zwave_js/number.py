@@ -1,36 +1,36 @@
 """Support for Z-Wave controls using the number platform."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any, cast
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_RESERVED_VALUES, DATA_CLIENT, DOMAIN
+from .const import ATTR_RESERVED_VALUES, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Number entity from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_number(info: ZwaveDiscoveryInfo) -> None:
@@ -61,7 +61,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     """Representation of a Z-Wave number entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveNumberEntity entity."""
         super().__init__(config_entry, driver, info)
@@ -113,7 +113,7 @@ class ZWaveConfigParameterNumberEntity(ZwaveNumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZWaveConfigParameterNumber entity."""
         super().__init__(config_entry, driver, info)
@@ -141,7 +141,7 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
     """Representation of a volume number entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveVolumeNumberEntity entity."""
         super().__init__(config_entry, driver, info)

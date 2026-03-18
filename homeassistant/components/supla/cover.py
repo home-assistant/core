@@ -1,4 +1,5 @@
-"""Support for Supla cover - curtains, rollershutters, entry gate etc."""
+"""Support for SUPLA covers - curtains, rollershutters, entry gate etc."""
+
 from __future__ import annotations
 
 import logging
@@ -26,7 +27,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Supla covers."""
+    """Set up the SUPLA covers."""
     if discovery_info is None:
         return
 
@@ -59,7 +60,7 @@ async def async_setup_platform(
 
 
 class SuplaCoverEntity(SuplaEntity, CoverEntity):
-    """Representation of a Supla Cover."""
+    """Representation of a SUPLA Cover."""
 
     @property
     def current_cover_position(self) -> int | None:
@@ -70,7 +71,9 @@ class SuplaCoverEntity(SuplaEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self.async_action("REVEAL", percentage=kwargs.get(ATTR_POSITION))
+        await self.async_action(
+            "REVEAL_PARTIALLY", percentage=kwargs.get(ATTR_POSITION)
+        )
 
     @property
     def is_closed(self) -> bool | None:
@@ -93,7 +96,9 @@ class SuplaCoverEntity(SuplaEntity, CoverEntity):
 
 
 class SuplaDoorEntity(SuplaEntity, CoverEntity):
-    """Representation of a Supla door."""
+    """Representation of a SUPLA door."""
+
+    _attr_device_class = CoverDeviceClass.GARAGE
 
     @property
     def is_closed(self) -> bool | None:
@@ -120,8 +125,3 @@ class SuplaDoorEntity(SuplaEntity, CoverEntity):
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the door."""
         await self.async_action("OPEN_CLOSE")
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return CoverDeviceClass.GARAGE

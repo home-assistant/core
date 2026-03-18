@@ -19,17 +19,13 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
-SENSOR_ICON = "mdi:television-shimmer"
-
 
 async def test_presentation(hass: HomeAssistant) -> None:
-    """Test the presenstation of UptimeRobot sensors."""
+    """Test the presentation of UptimeRobot sensors."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)
-
+    assert (entity := hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)) is not None
     assert entity.state == STATE_UP
-    assert entity.attributes["icon"] == SENSOR_ICON
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
     assert entity.attributes["device_class"] == SensorDeviceClass.ENUM
     assert entity.attributes["options"] == [
@@ -41,11 +37,11 @@ async def test_presentation(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
-    """Test entity unaviable on update failure."""
+async def test_unavailable_on_update_failure(hass: HomeAssistant) -> None:
+    """Test entity unavailable on update failure."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)) is not None
     assert entity.state == STATE_UP
 
     with patch(
@@ -55,5 +51,5 @@ async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt_util.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
-    entity = hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)) is not None
     assert entity.state == STATE_UNAVAILABLE

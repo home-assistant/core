@@ -1,0 +1,17 @@
+{
+  "domain": "loqed",
+  "name": "LOQED Touch Smart Lock",
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@mikewoudenberg"],
+  "config_flow": true,
+  "dependencies": ["webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/loqed",
+  "iot_class": "local_push",
+  "requirements": ["loqedAPI==2.1.10"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "loqed*"
+    }
+  ]
+}

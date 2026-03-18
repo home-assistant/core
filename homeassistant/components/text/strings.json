@@ -3,6 +3,9 @@
   "device_automation": {
     "action_type": {
       "set_value": "Set value for {entity_name}"
+    },
+    "extra_fields": {
+      "value": "[%key:common::device_automation::extra_fields::value%]"
     }
   },
   "entity_component": {
@@ -16,10 +19,10 @@
           "name": "Min length"
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "state": {
             "text": "Text",
-            "password": "Password"
+            "password": "[%key:common::config_flow::data::password%]"
           }
         },
         "pattern": {
@@ -28,10 +31,16 @@
       }
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "set_value": {
+      "name": "Set value",
+      "description": "Sets the value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "Enter your text."
+        }
+      }
     }
   }
 }

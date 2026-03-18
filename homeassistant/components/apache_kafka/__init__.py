@@ -1,6 +1,10 @@
 """Support for Apache Kafka."""
+
+from __future__ import annotations
+
 from datetime import datetime
 import json
+from typing import Any, Literal
 
 from aiokafka import AIOKafkaProducer
 import voluptuous as vol
@@ -12,12 +16,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
 
@@ -36,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_TOPIC): cv.string,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_SECURITY_PROTOCOL, default="PLAINTEXT"): vol.In(
-                    ["PLAINTEXT", "SASL_SSL"]
+                    ["PLAINTEXT", "SSL", "SASL_SSL"]
                 ),
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PASSWORD): cv.string,
@@ -51,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Apache Kafka integration."""
     conf = config[DOMAIN]
 
-    kafka = hass.data[DOMAIN] = KafkaManager(
+    kafka = KafkaManager(
         hass,
         conf[CONF_IP_ADDRESS],
         conf[CONF_PORT],
@@ -75,11 +77,11 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
-    def default(self, o):
+    def default(self, o: Any) -> str:
         """Implement encoding logic."""
         if isinstance(o, datetime):
             return o.isoformat()
-        return super().default(o)
+        return super().default(o)  # type: ignore[no-any-return]
 
 
 class KafkaManager:
@@ -87,15 +89,15 @@ class KafkaManager:
 
     def __init__(
         self,
-        hass,
-        ip_address,
-        port,
-        topic,
-        entities_filter,
-        security_protocol,
-        username,
-        password,
-    ):
+        hass: HomeAssistant,
+        ip_address: str,
+        port: int,
+        topic: str,
+        entities_filter: EntityFilter,
+        security_protocol: Literal["PLAINTEXT", "SSL", "SASL_SSL"],
+        username: str | None,
+        password: str | None,
+    ) -> None:
         """Initialize."""
         self._encoder = DateTimeJSONEncoder()
         self._entities_filter = entities_filter
@@ -112,32 +114,33 @@ class KafkaManager:
         )
         self._topic = topic
 
-    def _encode_event(self, event):
+    def _encode_event(self, event: Event[EventStateChangedData]) -> bytes | None:
         """Translate events into a binary JSON payload."""
-        state = event.data.get("new_state")
+        state = event.data["new_state"]
         if (
             state is None
-            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+            or state.state == ""
             or not self._entities_filter(state.entity_id)
         ):
-            return
+            return None
 
         return json.dumps(obj=state.as_dict(), default=self._encoder.encode).encode(
             "utf-8"
         )
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the Kafka manager."""
         self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)
         await self._producer.start()
 
-    async def shutdown(self, _):
+    async def shutdown(self, _: Event) -> None:
         """Shut the manager down."""
         await self._producer.stop()
 
-    async def write(self, event):
+    async def write(self, event: Event[EventStateChangedData]) -> None:
         """Write a binary payload to Kafka."""
+        key = event.data["entity_id"].encode("utf-8")
         payload = self._encode_event(event)
 
         if payload:
-            await self._producer.send_and_wait(self._topic, payload)
+            await self._producer.send_and_wait(self._topic, payload, key)

@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,10 +24,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base_class import TradfriBaseEntity
 from .const import (
     CONF_GATEWAY_ID,
     COORDINATOR,
@@ -36,21 +35,14 @@ from .const import (
     LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
-@dataclass
-class TradfriSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TradfriSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tradfri sensor entities."""
 
     value: Callable[[Device], Any | None]
-
-
-@dataclass
-class TradfriSensorEntityDescription(
-    SensorEntityDescription,
-    TradfriSensorEntityDescriptionMixin,
-):
-    """Class describing Tradfri sensor entities."""
 
 
 def _get_air_quality(device: Device) -> int | None:
@@ -65,7 +57,7 @@ def _get_air_quality(device: Device) -> int | None:
 
 
 def _get_filter_time_left(device: Device) -> int:
-    """Fetch the filter's remaining life (in hours)."""
+    """Fetch the filter's remaining lifetime (in hours)."""
     assert device.air_purifier_control is not None
     return round(
         cast(
@@ -89,18 +81,16 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
 SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="aqi",
-        name="air quality",
+        translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:air-filter",
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
         key="filter_life_remaining",
-        name="filter time left",
+        translation_key="filter_life_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),
 )
@@ -138,7 +128,7 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Tradfri config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
@@ -202,9 +192,6 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
         self.entity_description = description
 
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
-
-        if description.name is not UNDEFINED:
-            self._attr_name = f"{self._attr_name}: {description.name}"
 
         self._refresh()  # Set initial state
 

@@ -1,4 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
+
 from collections.abc import Callable
 from unittest.mock import AsyncMock
 
@@ -22,7 +23,7 @@ from tests.common import MockConfigEntry
     ("entity_id", "entity_name"),
     [
         ("media_player.anthem_av", "Anthem AV"),
-        ("media_player.anthem_av_zone_2", "Anthem AV zone 2"),
+        ("media_player.zone_2", "Zone 2"),
     ],
 )
 async def test_zones_loaded(

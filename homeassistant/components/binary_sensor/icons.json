@@ -1,0 +1,178 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:radiobox-blank",
+      "state": {
+        "on": "mdi:checkbox-marked-circle"
+      }
+    },
+    "battery": {
+      "default": "mdi:battery",
+      "state": {
+        "on": "mdi:battery-outline"
+      }
+    },
+    "battery_charging": {
+      "default": "mdi:battery",
+      "state": {
+        "on": "mdi:battery-charging"
+      }
+    },
+    "carbon_monoxide": {
+      "default": "mdi:smoke-detector",
+      "state": {
+        "on": "mdi:smoke-detector-alert"
+      }
+    },
+    "cold": {
+      "default": "mdi:thermometer",
+      "state": {
+        "on": "mdi:snowflake"
+      }
+    },
+    "connectivity": {
+      "default": "mdi:close-network-outline",
+      "state": {
+        "on": "mdi:check-network-outline"
+      }
+    },
+    "door": {
+      "default": "mdi:door-closed",
+      "state": {
+        "on": "mdi:door-open"
+      }
+    },
+    "garage_door": {
+      "default": "mdi:garage",
+      "state": {
+        "on": "mdi:garage-open"
+      }
+    },
+    "gas": {
+      "default": "mdi:check-circle",
+      "state": {
+        "on": "mdi:alert-circle"
+      }
+    },
+    "heat": {
+      "default": "mdi:thermometer",
+      "state": {
+        "on": "mdi:fire"
+      }
+    },
+    "light": {
+      "default": "mdi:brightness-5",
+      "state": {
+        "on": "mdi:brightness-7"
+      }
+    },
+    "lock": {
+      "default": "mdi:lock",
+      "state": {
+        "on": "mdi:lock-open"
+      }
+    },
+    "moisture": {
+      "default": "mdi:water-off",
+      "state": {
+        "on": "mdi:water"
+      }
+    },
+    "motion": {
+      "default": "mdi:motion-sensor-off",
+      "state": {
+        "on": "mdi:motion-sensor"
+      }
+    },
+    "moving": {
+      "default": "mdi:arrow-right",
+      "state": {
+        "on": "mdi:octagon"
+      }
+    },
+    "occupancy": {
+      "default": "mdi:home-outline",
+      "state": {
+        "on": "mdi:home"
+      }
+    },
+    "opening": {
+      "default": "mdi:square",
+      "state": {
+        "on": "mdi:square-outline"
+      }
+    },
+    "plug": {
+      "default": "mdi:power-plug-off",
+      "state": {
+        "on": "mdi:power-plug"
+      }
+    },
+    "power": {
+      "default": "mdi:power-plug-off",
+      "state": {
+        "on": "mdi:power-plug"
+      }
+    },
+    "presence": {
+      "default": "mdi:home-outline",
+      "state": {
+        "on": "mdi:home"
+      }
+    },
+    "problem": {
+      "default": "mdi:check-circle",
+      "state": {
+        "on": "mdi:alert-circle"
+      }
+    },
+    "running": {
+      "default": "mdi:stop",
+      "state": {
+        "on": "mdi:play"
+      }
+    },
+    "safety": {
+      "default": "mdi:check-circle",
+      "state": {
+        "on": "mdi:alert-circle"
+      }
+    },
+    "smoke": {
+      "default": "mdi:smoke-detector-variant",
+      "state": {
+        "on": "mdi:smoke-detector-variant-alert"
+      }
+    },
+    "sound": {
+      "default": "mdi:music-note-off",
+      "state": {
+        "on": "mdi:music-note"
+      }
+    },
+    "tamper": {
+      "default": "mdi:check-circle",
+      "state": {
+        "on": "mdi:alert-circle"
+      }
+    },
+    "update": {
+      "default": "mdi:package",
+      "state": {
+        "on": "mdi:package-up"
+      }
+    },
+    "vibration": {
+      "default": "mdi:crop-portrait",
+      "state": {
+        "on": "mdi:vibrate"
+      }
+    },
+    "window": {
+      "default": "mdi:window-closed",
+      "state": {
+        "on": "mdi:window-open"
+      }
+    }
+  }
+}

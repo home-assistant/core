@@ -1,4 +1,5 @@
 """Coordinator for lifx."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,12 +15,15 @@ from aiolifx.aiolifx import (
     Message,
     MultiZoneDirection,
     MultiZoneEffectType,
+    TileEffectSkyType,
     TileEffectType,
 )
 from aiolifx.connection import LIFXConnection
 from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
+from propcache.api import cached_property
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -37,6 +41,7 @@ from .const import (
     DEFAULT_ATTEMPTS,
     DOMAIN,
     IDENTIFY_WAVEFORM,
+    LIFX_128ZONE_CEILING_PRODUCT_IDS,
     MAX_ATTEMPTS_PER_UPDATE_REQUEST_MESSAGE,
     MAX_UPDATE_TIME,
     MESSAGE_RETRIES,
@@ -61,6 +66,8 @@ ZONES_PER_COLOR_UPDATE_REQUEST = 8
 
 RSSI_DBM_FW = AwesomeVersion("2.77")
 
+type LIFXConfigEntry = ConfigEntry[LIFXUpdateCoordinator]
+
 
 class FirmwareEffect(IntEnum):
     """Enumeration of LIFX firmware effects."""
@@ -69,16 +76,27 @@ class FirmwareEffect(IntEnum):
     MOVE = 1
     MORPH = 2
     FLAME = 3
+    SKY = 5
+
+
+class SkyType(IntEnum):
+    """Enumeration of sky types for SKY firmware effect."""
+
+    SUNRISE = 0
+    SUNSET = 1
+    CLOUDS = 2
 
 
 class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
+    config_entry: LIFXConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: LIFXConfigEntry,
         connection: LIFXConnection,
-        title: str,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         assert connection.device is not None
@@ -93,7 +111,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{title} ({self.device.ip_addr})",
+            config_entry=config_entry,
+            name=f"{config_entry.title} ({self.device.ip_addr})",
             update_interval=timedelta(seconds=LIGHT_UPDATE_INTERVAL),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
@@ -127,14 +146,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         """Return the current infrared brightness as a string."""
         return infrared_brightness_value_to_option(self.device.infrared_brightness)
 
-    @property
+    @cached_property
     def serial_number(self) -> str:
         """Return the internal mac address."""
         return cast(
             str, self.device.mac_addr
         )  # device.mac_addr is not the mac_address, its the serial number
 
-    @property
+    @cached_property
     def mac_address(self) -> str:
         """Return the physical mac address."""
         return get_real_mac_addr(
@@ -147,6 +166,28 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     def label(self) -> str:
         """Return the label of the bulb."""
         return cast(str, self.device.label)
+
+    @cached_property
+    def is_extended_multizone(self) -> bool:
+        """Return true if this is a multizone device."""
+        return bool(lifx_features(self.device)["extended_multizone"])
+
+    @cached_property
+    def is_legacy_multizone(self) -> bool:
+        """Return true if this is a legacy multizone device."""
+        return bool(
+            lifx_features(self.device)["multizone"] and not self.is_extended_multizone
+        )
+
+    @cached_property
+    def is_matrix(self) -> bool:
+        """Return true if this is a matrix device."""
+        return bool(lifx_features(self.device)["matrix"])
+
+    @cached_property
+    def is_128zone_matrix(self) -> bool:
+        """Return true if this is a 128-zone matrix device."""
+        return bool(self.device.product in LIFX_128ZONE_CEILING_PRODUCT_IDS)
 
     async def diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the device."""
@@ -179,6 +220,16 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 "hev_cycle": self.device.hev_cycle,
                 "hev_config": self.device.hev_cycle_configuration,
                 "last_result": self.device.last_hev_cycle_result,
+            }
+
+        if features["matrix"] is True:
+            device_data["matrix"] = {
+                "effect": self.device.effect,
+                "chain": self.device.chain,
+                "chain_length": self.device.chain_length,
+                "tile_devices": self.device.tile_devices,
+                "tile_devices_count": self.device.tile_devices_count,
+                "tile_device_width": self.device.tile_device_width,
             }
 
         if features["infrared"] is True:
@@ -256,6 +307,37 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         return calls
 
+    @callback
+    def _async_build_get64_update_requests(self) -> list[Callable]:
+        """Build one or more get64 update requests."""
+        if self.device.tile_device_width == 0:
+            return []
+
+        calls: list[Callable] = []
+        calls.append(
+            partial(
+                self.device.get64,
+                tile_index=0,
+                length=1,
+                x=0,
+                y=0,
+                width=self.device.tile_device_width,
+            )
+        )
+        if self.is_128zone_matrix:
+            # For 128-zone ceiling devices, we need another get64 request for the next set of zones
+            calls.append(
+                partial(
+                    self.device.get64,
+                    tile_index=0,
+                    length=1,
+                    x=0,
+                    y=4,
+                    width=self.device.tile_device_width,
+                )
+            )
+        return calls
+
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         device = self.device
@@ -268,17 +350,23 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         num_zones = self.get_number_of_zones()
         features = lifx_features(self.device)
-        is_extended_multizone = features["extended_multizone"]
-        is_legacy_multizone = not is_extended_multizone and features["multizone"]
         update_rssi = self._update_rssi
         methods: list[Callable] = [self.device.get_color]
         if update_rssi:
             methods.append(self.device.get_wifiinfo)
-        if is_extended_multizone:
+        if self.is_matrix:
+            methods.extend(
+                [
+                    self.device.get_tile_effect,
+                    self.device.get_device_chain,
+                ]
+            )
+            methods.extend(self._async_build_get64_update_requests())
+        if self.is_extended_multizone:
             methods.append(self.device.get_extended_color_zones)
-        elif is_legacy_multizone:
+        elif self.is_legacy_multizone:
             methods.extend(self._async_build_color_zones_update_requests())
-        if is_extended_multizone or is_legacy_multizone:
+        if self.is_extended_multizone or self.is_legacy_multizone:
             methods.append(self.device.get_multizone_effect)
         if features["hev"]:
             methods.append(self.device.get_hev_cycle)
@@ -296,9 +384,10 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             # We always send the rssi request second
             self._rssi = int(floor(10 * log10(responses[1].signal) + 0.5))
 
-        if is_extended_multizone or is_legacy_multizone:
+        if self.is_matrix or self.is_extended_multizone or self.is_legacy_multizone:
             self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
-        if is_legacy_multizone and num_zones != self.get_number_of_zones():
+
+        if self.is_legacy_multizone and num_zones != self.get_number_of_zones():
             # The number of zones has changed so we need
             # to update the zones again. This happens rarely.
             await self.async_get_color_zones()
@@ -315,7 +404,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         """Get updated color information for all zones."""
         try:
             await async_execute_lifx(self.device.get_extended_color_zones)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout getting color zones from {self.name}"
             ) from ex
@@ -380,8 +469,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         # pad the color list with blanks if necessary
         if len(colors) < 82:
-            for _ in range(82 - len(colors)):
-                colors.append((0, 0, 0, 0))
+            colors.extend([(0, 0, 0, 0) for _ in range(82 - len(colors))])
 
         await async_execute_lifx(
             partial(
@@ -402,7 +490,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         power_on: bool = True,
     ) -> None:
         """Control the firmware-based Move effect on a multizone device."""
-        if lifx_features(self.device)["multizone"] is True:
+        if self.is_extended_multizone or self.is_legacy_multizone:
             if power_on and self.device.power_level == 0:
                 await self.async_set_power(True, 0)
 
@@ -426,16 +514,22 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         effect: str,
         palette: list[tuple[int, int, int, int]] | None = None,
-        speed: float = 3,
+        speed: float | None = None,
         power_on: bool = True,
+        sky_type: str | None = None,
+        cloud_saturation_min: int | None = None,
+        cloud_saturation_max: int | None = None,
     ) -> None:
         """Control the firmware-based effects on a matrix device."""
-        if lifx_features(self.device)["matrix"] is True:
+        if self.is_matrix:
             if power_on and self.device.power_level == 0:
                 await self.async_set_power(True, 0)
 
             if palette is None:
                 palette = []
+
+            if sky_type is not None:
+                sky_type = TileEffectSkyType[sky_type.upper()].value
 
             await async_execute_lifx(
                 partial(
@@ -443,6 +537,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                     effect=TileEffectType[effect.upper()].value,
                     speed=speed,
                     palette=palette,
+                    sky_type=sky_type,
+                    cloud_saturation_min=cloud_saturation_min,
+                    cloud_saturation_max=cloud_saturation_max,
                 )
             )
             self.active_effect = FirmwareEffect[effect.upper()]

@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "post_heater": {
+        "default": "mdi:radiator"
+      }
+    },
+    "date": {
+      "filter_change_date": {
+        "default": "mdi:air-filter"
+      }
+    },
+    "sensor": {
+      "current_profile": {
+        "default": "mdi:gauge"
+      },
+      "fan_speed": {
+        "default": "mdi:fan"
+      },
+      "extract_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "supply_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "cell_state": {
+        "default": "mdi:swap-horizontal-bold"
+      },
+      "efficiency": {
+        "default": "mdi:gauge"
+      }
+    },
+    "switch": {
+      "bypass_locked": {
+        "default": "mdi:arrow-horizontal-lock"
+      }
+    }
+  },
+  "services": {
+    "set_profile_fan_speed_home": {
+      "service": "mdi:home"
+    },
+    "set_profile_fan_speed_away": {
+      "service": "mdi:walk"
+    },
+    "set_profile_fan_speed_boost": {
+      "service": "mdi:speedometer"
+    },
+    "set_profile": {
+      "service": "mdi:fan"
+    }
+  }
+}

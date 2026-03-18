@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "current_gas": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_today": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_week": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_month": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_year": {
+        "default": "mdi:meter-gas"
+      }
+    }
+  }
+}

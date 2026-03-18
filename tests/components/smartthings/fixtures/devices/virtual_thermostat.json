@@ -1,0 +1,69 @@
+{
+  "items": [
+    {
+      "deviceId": "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+      "name": "asd",
+      "label": "asd",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "78906115-bf23-3c43-9cd6-f42ca3d5517a",
+      "locationId": "88a3a314-f0c8-40b4-bb44-44ba06c9c42f",
+      "ownerId": "12d4af93-cb68-b108-87f5-625437d7371f",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "thermostatHeatingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "thermostatOperatingState",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatMode",
+              "version": 1
+            },
+            {
+              "id": "thermostatFanMode",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-02-10T22:04:56.174Z",
+      "profile": {
+        "id": "e921d7f2-5851-363d-89d5-5e83f5ab44c6"
+      },
+      "virtual": {
+        "name": "asd",
+        "executingLocally": false
+      },
+      "type": "VIRTUAL",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

@@ -1,0 +1,88 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register services.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register services.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register services.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options to configure.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication required.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: The integration is a cloud service and thus does not support discovery.
+  discovery:
+    status: exempt
+    comment: The integration is a cloud service and thus does not support discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: This is a service, which doesn't integrate with any devices.
+  docs-supported-functions: todo
+  docs-troubleshooting:
+    status: exempt
+    comment: No known issues that could be resolved by the user.
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: This integration has a fixed single service.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not have any entities that should disabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: Only parameter that could be changed station_id would force a new config entry.
+  repair-issues:
+    status: exempt
+    comment: This integration doesn't have any cases where raising an issue is needed.
+  stale-devices:
+    status: exempt
+    comment: This integration has a fixed single service.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

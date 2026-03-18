@@ -1,8 +1,15 @@
 {
+  "entity": {
+    "binary_sensor": {
+      "wash_cycle": {
+        "name": "Cycle"
+      }
+    }
+  },
   "config": {
     "step": {
       "init": {
-        "description": "Please enter your personal Auth Code that is shown in the laundrify-App.",
+        "description": "Please enter your personal Auth Code that is shown in the laundrify app.",
         "data": {
           "code": "Auth Code (xxx-xxx)"
         }

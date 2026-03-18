@@ -1,4 +1,5 @@
 """Common fixutres with default mocks as well as common test helper methods."""
+
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -13,7 +14,7 @@ from homeassistant.components.tesla_wall_connector.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -62,18 +63,22 @@ async def create_wall_connector_entry(
 
     entry.add_to_hass(hass)
 
-    with patch(
-        "tesla_wall_connector.WallConnector.async_get_version",
-        return_value=get_default_version_data(),
-        side_effect=side_effect,
-    ), patch(
-        "tesla_wall_connector.WallConnector.async_get_vitals",
-        return_value=vitals_data,
-        side_effect=side_effect,
-    ), patch(
-        "tesla_wall_connector.WallConnector.async_get_lifetime",
-        return_value=lifetime_data,
-        side_effect=side_effect,
+    with (
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_version",
+            return_value=get_default_version_data(),
+            side_effect=side_effect,
+        ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_vitals",
+            return_value=vitals_data,
+            side_effect=side_effect,
+        ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_lifetime",
+            return_value=lifetime_data,
+            side_effect=side_effect,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -83,14 +88,28 @@ async def create_wall_connector_entry(
 
 def get_vitals_mock() -> Vitals:
     """Get mocked vitals object."""
-    vitals = MagicMock(auto_spec=Vitals)
-    return vitals
+    mock = MagicMock(auto_spec=Vitals)
+    mock.evse_state = 1
+    mock.handle_temp_c = 25.51
+    mock.pcba_temp_c = 30.5
+    mock.mcu_temp_c = 42.0
+    mock.grid_v = 230.15
+    mock.grid_hz = 50.021
+    mock.voltageA_v = 230.1
+    mock.voltageB_v = 231
+    mock.voltageC_v = 232.1
+    mock.currentA_a = 10
+    mock.currentB_a = 11.1
+    mock.currentC_a = 12
+    mock.session_energy_wh = 1234.56
+    mock.contactor_closed = False
+    mock.vehicle_connected = True
+    return mock
 
 
 def get_lifetime_mock() -> Lifetime:
     """Get mocked lifetime object."""
-    lifetime = MagicMock(auto_spec=Lifetime)
-    return lifetime
+    return MagicMock(auto_spec=Lifetime)
 
 
 @dataclass
@@ -121,17 +140,20 @@ async def _test_sensors(
     for entity in entities_and_expected_values:
         state = hass.states.get(entity.entity_id)
         assert state, f"Unable to get state of {entity.entity_id}"
-        assert (
-            state.state == entity.first_value
-        ), f"First update: {entity.entity_id} is expected to have state {entity.first_value} but has {state.state}"
+        assert state.state == entity.first_value, (
+            f"First update: {entity.entity_id} is expected to have state {entity.first_value} but has {state.state}"
+        )
 
     # Simulate second data update
-    with patch(
-        "tesla_wall_connector.WallConnector.async_get_vitals",
-        return_value=vitals_second_update,
-    ), patch(
-        "tesla_wall_connector.WallConnector.async_get_lifetime",
-        return_value=lifetime_second_update,
+    with (
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_vitals",
+            return_value=vitals_second_update,
+        ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_lifetime",
+            return_value=lifetime_second_update,
+        ),
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL)
@@ -141,6 +163,6 @@ async def _test_sensors(
     # Verify expected vs actual values of second update
     for entity in entities_and_expected_values:
         state = hass.states.get(entity.entity_id)
-        assert (
-            state.state == entity.second_value
-        ), f"Second update: {entity.entity_id} is expected to have state {entity.second_value} but has {state.state}"
+        assert state.state == entity.second_value, (
+            f"Second update: {entity.entity_id} is expected to have state {entity.second_value} but has {state.state}"
+        )

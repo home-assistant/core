@@ -1,0 +1,12 @@
+[
+  {
+    "centrale_online": true,
+    "hash": "2db3dae30b9102de4d078706f94d0708",
+    "username": [{ "name": "this.is@test.com", "label": "Test Panel Name" }]
+  },
+  {
+    "centrale_online": true,
+    "hash": "d8e8fca2dc0f896fd7cb4cb0031ba249",
+    "username": [{ "name": "this.is@test.com", "label": "Test Panel Name" }]
+  }
+]

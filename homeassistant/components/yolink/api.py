@@ -1,4 +1,5 @@
 """API for yolink bound to Home Assistant OAuth."""
+
 from aiohttp import ClientSession
 from yolink.auth_mgr import YoLinkAuthMgr
 

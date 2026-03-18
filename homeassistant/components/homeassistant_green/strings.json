@@ -1,0 +1,27 @@
+{
+  "options": {
+    "step": {
+      "hardware_settings": {
+        "title": "Configure hardware settings",
+        "data": {
+          "activity_led": "Green: activity LED",
+          "power_led": "White: power LED",
+          "system_health_led": "Yellow: system health LED"
+        }
+      },
+      "reboot_menu": {
+        "title": "Reboot required",
+        "description": "The settings have changed, but the new settings will not take effect until the system is rebooted",
+        "menu_options": {
+          "reboot_later": "Reboot manually later",
+          "reboot_now": "Reboot now"
+        }
+      }
+    },
+    "abort": {
+      "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
+      "read_hw_settings_error": "Failed to read hardware settings",
+      "write_hw_settings_error": "Failed to write hardware settings"
+    }
+  }
+}

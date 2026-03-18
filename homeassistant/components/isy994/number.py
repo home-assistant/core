@@ -1,4 +1,5 @@
 """Support for ISY number entities."""
+
 from __future__ import annotations
 
 from dataclasses import replace
@@ -25,7 +26,6 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_VARIABLES,
     PERCENTAGE,
@@ -36,21 +36,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from .const import (
-    CONF_VAR_SENSOR_STRING,
-    DEFAULT_VAR_SENSOR_STRING,
-    DOMAIN,
-    UOM_8_BIT_RANGE,
-)
+from .const import CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING, UOM_8_BIT_RANGE
 from .entity import ISYAuxControlEntity
 from .helpers import convert_isy_value_to_hass
+from .models import IsyConfigEntry
 
 ISY_MAX_SIZE = (2**32) / 2
 ON_RANGE = (1, 255)  # Off is not included
@@ -77,11 +73,11 @@ BACKLIGHT_MEMORY_FILTER = {"memory": DEV_BL_ADDR, "cmd1": DEV_CMD_MEMORY_WRITE}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: IsyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX number entities from config entry."""
-    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    isy_data = config_entry.runtime_data
     device_info = isy_data.devices
     entities: list[
         ISYVariableNumberEntity | ISYAuxControlNumberEntity | ISYBacklightNumberEntity

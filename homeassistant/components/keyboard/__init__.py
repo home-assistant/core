@@ -1,5 +1,6 @@
 """Support to emulate keyboard presses on host machine."""
-from pykeyboard import PyKeyboard  # pylint: disable=import-error
+
+from pykeyboard import PyKeyboard
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -10,8 +11,9 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "keyboard"
@@ -23,6 +25,20 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Listen for keyboard events."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Keyboard",
+        },
+    )
 
     keyboard = PyKeyboard()
     keyboard.special_key_assignment()

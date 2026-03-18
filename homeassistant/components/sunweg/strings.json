@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "title": "The SunWEG integration has been removed",
+      "description": "The SunWEG integration has been removed from Home Assistant.\n\nThe library that Home Assistant uses to connect with SunWEG services, [doesn't work as expected anymore, demanding daily token renew]({issue}).\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing SunWEG integration entries]({entries})."
+    }
+  }
+}

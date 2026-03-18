@@ -1,4 +1,5 @@
 """Config flow for Balboa Spa Client integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,16 +9,16 @@ from pybalboa import SpaClient
 from pybalboa.exceptions import SpaConnectionError
 import voluptuous as vol
 
-from homeassistant import exceptions
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_SYNC_TIME, DOMAIN
 
@@ -55,7 +56,8 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _host: str | None
+    _host: str
+    _model: str
 
     @staticmethod
     @callback
@@ -63,9 +65,46 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
+
+        error = None
+        try:
+            info = await validate_input({CONF_HOST: discovery_info.ip})
+        except CannotConnect:
+            error = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            error = "unknown"
+        if not error:
+            self._host = discovery_info.ip
+            self._model = info["title"]
+            self.context["title_placeholders"] = {CONF_MODEL: self._model}
+            return await self.async_step_discovery_confirm()
+        return self.async_abort(reason=error)
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow the user to confirm adding the device."""
+        if user_input is not None:
+            data = {CONF_HOST: self._host}
+            return self.async_create_entry(title=self._model, data=data)
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={CONF_HOST: self._host},
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -74,11 +113,13 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["formatted_mac"])
+                await self.async_set_unique_id(
+                    info["formatted_mac"], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -87,5 +128,5 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

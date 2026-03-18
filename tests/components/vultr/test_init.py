@@ -1,4 +1,5 @@
 """The tests for the Vultr component."""
+
 from copy import deepcopy
 import json
 from unittest.mock import patch

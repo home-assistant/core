@@ -1,4 +1,5 @@
 """Fixtures for tests."""
+
 from http import HTTPStatus
 
 import pytest
@@ -6,10 +7,11 @@ import pytest
 from homeassistant.const import CONTENT_TYPE_JSON
 
 from tests.common import load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
-def aioclient_mock_fixture(aioclient_mock) -> None:
+def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture to provide a aioclient mocker."""
     aioclient_mock.get(
         "http://1.1.1.1:8080/status.json?show_avail=1",

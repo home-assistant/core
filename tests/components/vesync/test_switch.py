@@ -1,15 +1,23 @@
 """Tests for the switch module."""
+
+from contextlib import nullcontext
+from unittest.mock import patch
+
 import pytest
-import requests_mock
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ALL_DEVICE_NAMES, mock_devices_response
+from .common import ALL_DEVICE_NAMES, ENTITY_SWITCH_DISPLAY, mock_devices_response
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+NoException = nullcontext()
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
@@ -19,13 +27,13 @@ async def test_switch_state(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    requests_mock: requests_mock.Mocker,
+    aioclient_mock: AiohttpClientMocker,
     device_name: str,
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
     # Configure the API devices call for device_name
-    mock_devices_response(requests_mock, device_name)
+    mock_devices_response(aioclient_mock, device_name)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -48,3 +56,90 @@ async def test_switch_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+    ],
+)
+async def test_turn_on_off_display_success(
+    hass: HomeAssistant,
+    humidifier_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    action: str,
+    command: str,
+) -> None:
+    """Test switch turn on and off command with success response."""
+
+    mock_devices_response(aioclient_mock, "Humidifier 200s")
+
+    with (
+        patch(
+            command,
+            return_value=True,
+        ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.switch.VeSyncSwitchEntity.schedule_update_ha_state"
+        ) as update_mock,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    method_mock.assert_called_once()
+    update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+    ],
+)
+async def test_turn_on_off_display_raises_error(
+    hass: HomeAssistant,
+    humidifier_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    action: str,
+    command: str,
+) -> None:
+    """Test switch turn on and off command raises HomeAssistantError."""
+
+    mock_devices_response(aioclient_mock, "Humidifier 200s")
+
+    with (
+        patch(
+            command,
+            return_value=False,
+        ) as method_mock,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    method_mock.assert_called_once()

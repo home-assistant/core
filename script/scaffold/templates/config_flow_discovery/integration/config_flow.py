@@ -1,4 +1,5 @@
-"""Config flow for NEW_NAME."""
+"""Config flow for the NEW_NAME integration."""
+
 import my_pypi_dependency
 
 from homeassistant.core import HomeAssistant

@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Dremel 3D printer."
         }
       }
     },
@@ -16,6 +19,17 @@
     }
   },
   "entity": {
+    "button": {
+      "cancel_job": {
+        "name": "Cancel job"
+      },
+      "pause_job": {
+        "name": "Pause job"
+      },
+      "resume_job": {
+        "name": "Resume job"
+      }
+    },
     "sensor": {
       "job_phase": {
         "name": "Job phase"

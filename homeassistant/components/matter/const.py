@@ -1,4 +1,5 @@
 """Constants for the Matter integration."""
+
 import logging
 
 ADDON_SLUG = "core_matter_server"
@@ -12,3 +13,5 @@ LOGGER = logging.getLogger(__package__)
 # prefixes to identify device identifier id types
 ID_TYPE_DEVICE_ID = "deviceid"
 ID_TYPE_SERIAL = "serial"
+
+FEATUREMAP_ATTRIBUTE_ID = 65532

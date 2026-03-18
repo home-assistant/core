@@ -1,4 +1,5 @@
 """The test for the NuHeat thermostat module."""
+
 from unittest.mock import MagicMock, Mock
 
 from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD

@@ -1,7 +1,8 @@
 """The ReCollect Waste integration."""
+
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from aiorecollect.client import Client, PickupEvent
@@ -31,7 +32,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_get_pickup_events() -> list[PickupEvent]:
         """Get the next pickup."""
         try:
-            return await client.async_get_pickup_events()
+            # Retrieve today through to 35 days in the future, to get
+            # coverage across a full two months boundary so that no
+            # upcoming pickups are missed. The api.recollect.net base API
+            # call returns only the current month when no dates are passed.
+            # This ensures that data about when the next pickup is will be
+            # returned when the next pickup is the first day of the next month.
+            # Ex: Today is August 31st, tomorrow is a pickup on September 1st.
+            today = date.today()
+            return await client.async_get_pickup_events(
+                start_date=today,
+                end_date=today + timedelta(days=35),
+            )
         except RecollectError as err:
             raise UpdateFailed(
                 f"Error while requesting data from ReCollect: {err}"
@@ -40,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=(
             f"Place {entry.data[CONF_PLACE_ID]}, Service {entry.data[CONF_SERVICE_ID]}"
         ),
@@ -81,7 +94,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 1 -> 2: Update unique ID of existing, single sensor entity to be consistent with
     # common format for platforms going forward:
     if version == 1:
-        version = entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
 
         @callback
         def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
@@ -96,6 +110,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
-    LOGGER.info("Migration to version %s successful", version)
+    LOGGER.debug("Migration to version %s successful", version)
 
     return True

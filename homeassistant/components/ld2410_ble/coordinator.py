@@ -1,8 +1,11 @@
 """Data coordinator for receiving LD2410B updates."""
 
+from __future__ import annotations
+
 from datetime import datetime
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from ld2410_ble import LD2410BLE, LD2410BLEState
 
@@ -11,6 +14,9 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .models import LD2410BLEConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,11 +27,19 @@ DEBOUNCE_SECONDS = 1.0
 class LD2410BLECoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for receiving LD2410B updates."""
 
-    def __init__(self, hass: HomeAssistant, ld2410_ble: LD2410BLE) -> None:
+    config_entry: LD2410BLEConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: LD2410BLEConfigEntry,
+        ld2410_ble: LD2410BLE,
+    ) -> None:
         """Initialise the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
         )
         self._ld2410_ble = ld2410_ble

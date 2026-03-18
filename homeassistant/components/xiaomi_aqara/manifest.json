@@ -1,7 +1,6 @@
 {
   "domain": "xiaomi_aqara",
   "name": "Xiaomi Gateway (Aqara)",
-  "after_dependencies": ["discovery"],
   "codeowners": ["@danielhiversen", "@syssi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_aqara",

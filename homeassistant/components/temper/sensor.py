@@ -1,4 +1,5 @@
 """Support for getting temperature from TEMPer devices."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ from temperusb.temper import TemperHandler
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -25,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SCALE = "scale"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
@@ -65,7 +66,7 @@ def reset_devices():
     This assumes the same sensor devices are present in the same order.
     """
     temper_devices = get_temper_devices()
-    for sensor, device in zip(TEMPER_SENSORS, temper_devices):
+    for sensor, device in zip(TEMPER_SENSORS, temper_devices, strict=False):
         sensor.set_temper_device(device)
 
 

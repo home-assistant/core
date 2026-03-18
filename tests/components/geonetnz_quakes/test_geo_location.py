@@ -1,10 +1,12 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
+
 import datetime
 from unittest.mock import patch
 
-from homeassistant.components import geonetnz_quakes
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
+from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_DEPTH,
     ATTR_EXTERNAL_ID,
@@ -28,17 +30,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
 
 from tests.common import async_fire_time_changed
 
-CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
+CONFIG = {DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -48,7 +54,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
+        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,
@@ -64,11 +70,10 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    freezer.move_to(utcnow)
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
-        assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -80,7 +85,6 @@ async def test_setup(hass: HomeAssistant) -> None:
             + len(hass.states.async_entity_ids("sensor"))
             == 4
         )
-        entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 4
 
         state = hass.states.get("geo_location.title_1")
@@ -93,9 +97,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             ATTR_FRIENDLY_NAME: "Title 1",
             ATTR_LOCALITY: "Locality 1",
             ATTR_ATTRIBUTION: "Attribution 1",
-            ATTR_TIME: datetime.datetime(
-                2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
-            ),
+            ATTR_TIME: datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
             ATTR_MAGNITUDE: 5.7,
             ATTR_DEPTH: 10.5,
             ATTR_MMI: 5,
@@ -170,21 +172,22 @@ async def test_setup(hass: HomeAssistant) -> None:
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass: HomeAssistant) -> None:
+async def test_setup_imperial(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (38.0, -3.0))
 
     # Patching 'utcnow' to gain more control over the timed update.
-    utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True
+    freezer.move_to(dt_util.utcnow())
+    with (
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+        patch("aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True),
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -197,10 +200,7 @@ async def test_setup_imperial(hass: HomeAssistant) -> None:
         )
 
         # Test conversion of 200 miles to kilometers.
-        feeds = hass.data[DOMAIN][FEED]
-        assert feeds is not None
-        assert len(feeds) == 1
-        manager = list(feeds.values())[0]
+        manager = hass.config_entries.async_loaded_entries(DOMAIN)[0].runtime_data
         # Ensure that the filter value in km is correctly set.
         assert manager._feed_manager._feed._filter_radius == 321.8688
 

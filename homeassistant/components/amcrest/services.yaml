@@ -1,82 +1,66 @@
 enable_recording:
-  name: Enable recording
-  description: Enable continuous recording to camera storage.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 disable_recording:
-  name: Disable recording
-  description: Disable continuous recording to camera storage.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 enable_audio:
-  name: Enable audio
-  description: Enable audio stream.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 disable_audio:
-  name: Disable audio
-  description: Disable audio stream.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 enable_motion_recording:
-  name: Enable motion recording
-  description: Enable recording a clip to camera storage when motion is detected.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 disable_motion_recording:
-  name: Disable motion recording
-  description: Disable recording a clip to camera storage when motion is detected.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 goto_preset:
-  name: Go to preset
-  description: Move camera to PTZ preset.
   fields:
     entity_id:
-      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
       selector:
         entity:
           integration: amcrest
           domain: camera
     preset:
-      name: Preset
-      description: Preset number.
       required: true
       selector:
         number:
@@ -84,18 +68,14 @@ goto_preset:
           max: 1000
 
 set_color_bw:
-  name: Set color
-  description: Set camera color mode.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
     color_bw:
-      name: Color
-      description: Color mode.
       selector:
         select:
           options:
@@ -104,40 +84,32 @@ set_color_bw:
             - "color"
 
 start_tour:
-  name: Start tour
-  description: Start camera's PTZ tour function.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 stop_tour:
-  name: Stop tour
-  description: Stop camera's PTZ tour function.
   fields:
     entity_id:
-      name: Entity
-      description: "Name(s) of the cameras, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
 
 ptz_control:
-  name: PTZ control
-  description: Move (Pan/Tilt) and/or Zoom a PTZ camera.
   fields:
     entity_id:
-      name: Entity
-      description: "Name of the camera, or 'all' for all cameras."
       example: "camera.house_front"
       selector:
-        text:
+        entity:
+          integration: amcrest
+          domain: camera
     movement:
-      name: Movement
-      description: "Direction to move the camera."
       required: true
       selector:
         select:
@@ -153,8 +125,6 @@ ptz_control:
             - "zoom_in"
             - "zoom_out"
     travel_time:
-      name: Travel time
-      description: "Travel time in fractional seconds: from 0 to 1."
       default: .2
       selector:
         number:

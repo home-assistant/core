@@ -1,4 +1,5 @@
 """Support for Buienradar.nl weather service."""
+
 import logging
 
 from buienradar.constants import (
@@ -8,6 +9,7 @@ from buienradar.constants import (
     MAX_TEMP,
     MIN_TEMP,
     RAIN,
+    RAIN_CHANCE,
     WINDAZIMUTH,
     WINDSPEED,
 )
@@ -32,11 +34,13 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -48,11 +52,11 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-# Reuse data and API logic from the sensor implementation
-from .const import DEFAULT_TIMEFRAME, DOMAIN
+from . import BuienRadarConfigEntry
+from .const import DEFAULT_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,10 +86,17 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_WINDY_VARIANT: (),
     ATTR_CONDITION_EXCEPTIONAL: (),
 }
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
+}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BuienRadarConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the buienradar platform."""
     config = entry.data
@@ -99,24 +110,16 @@ async def async_setup_entry(
 
     coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
 
-    # create weather data:
-    data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, None)
-    hass.data[DOMAIN][entry.entry_id][Platform.WEATHER] = data
-    # create weather device:
+    # create weather entity:
     _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
+    entities = [BrWeather(config, coordinates)]
 
-    # create condition helper
-    if DATA_CONDITION not in hass.data[DOMAIN]:
-        cond_keys = [str(chr(x)) for x in range(97, 123)]
-        hass.data[DOMAIN][DATA_CONDITION] = dict.fromkeys(cond_keys)
-        for cond, condlst in CONDITION_CLASSES.items():
-            for condi in condlst:
-                hass.data[DOMAIN][DATA_CONDITION][condi] = cond
+    # create weather data:
+    data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, entities)
+    entry.runtime_data[Platform.WEATHER] = data
+    await data.async_update()
 
-    async_add_entities([BrWeather(data, config, coordinates)])
-
-    # schedule the first update in 1 minute from now:
-    await data.schedule_update(1)
+    async_add_entities(entities)
 
 
 class BrWeather(WeatherEntity):
@@ -127,84 +130,69 @@ class BrWeather(WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_should_poll = False
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
-    def __init__(self, data, config, coordinates):
+    def __init__(self, config, coordinates) -> None:
         """Initialize the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME, "Buienradar")
+        self._attr_name = self._stationname or f"BR {'(unknown station)'}"
+
+        self._attr_unique_id = (
+            f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
+        )
+        self._forecast: list | None = None
+
+    @callback
+    def data_updated(self, data: BrData) -> None:
+        """Update data."""
+        self._attr_attribution = data.attribution
+        self._attr_condition = self._calc_condition(data)
+        self._forecast = self._calc_forecast(data)
+        self._attr_humidity = data.humidity
         self._attr_name = (
             self._stationname or f"BR {data.stationname or '(unknown station)'}"
         )
-        self._data = data
+        self._attr_native_pressure = data.pressure
+        self._attr_native_temperature = data.temperature
+        self._attr_native_apparent_temperature = data.feeltemperature
+        self._attr_native_visibility = data.visibility
+        self._attr_native_wind_gust_speed = data.wind_gust
+        self._attr_native_wind_speed = data.wind_speed
+        self._attr_wind_bearing = data.wind_bearing
 
-        self._attr_unique_id = "{:2.6f}{:2.6f}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
+        if not self.hass:
+            return
+        self.async_write_ha_state()
+        assert self.platform.config_entry
+        self.platform.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("daily",))
         )
 
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return self._data.attribution
-
-    @property
-    def condition(self):
+    def _calc_condition(self, data: BrData):
         """Return the current condition."""
-        if (
-            self._data
-            and self._data.condition
-            and (ccode := self._data.condition.get(CONDCODE))
-            and (conditions := self.hass.data[DOMAIN].get(DATA_CONDITION))
-        ):
-            return conditions.get(ccode)
+        if data.condition and (ccode := data.condition.get(CONDCODE)):
+            return CONDITION_MAP.get(ccode)
+        return None
 
-    @property
-    def native_temperature(self):
-        """Return the current temperature."""
-        return self._data.temperature
-
-    @property
-    def native_pressure(self):
-        """Return the current pressure."""
-        return self._data.pressure
-
-    @property
-    def humidity(self):
-        """Return the name of the sensor."""
-        return self._data.humidity
-
-    @property
-    def native_visibility(self):
-        """Return the current visibility in m."""
-        return self._data.visibility
-
-    @property
-    def native_wind_speed(self):
-        """Return the current windspeed in m/s."""
-        return self._data.wind_speed
-
-    @property
-    def wind_bearing(self):
-        """Return the current wind bearing (degrees)."""
-        return self._data.wind_bearing
-
-    @property
-    def forecast(self):
+    def _calc_forecast(self, data: BrData):
         """Return the forecast array."""
         fcdata_out = []
-        cond = self.hass.data[DOMAIN][DATA_CONDITION]
 
-        if not self._data.forecast:
+        if not data.forecast:
             return None
 
-        for data_in in self._data.forecast:
+        for data_in in data.forecast:
             # remap keys from external library to
             # keys understood by the weather component:
-            condcode = data_in.get(CONDITION, []).get(CONDCODE)
+            condcode = data_in.get(CONDITION, {}).get(CONDCODE)
             data_out = {
                 ATTR_FORECAST_TIME: data_in.get(DATETIME).isoformat(),
-                ATTR_FORECAST_CONDITION: cond[condcode],
+                ATTR_FORECAST_CONDITION: CONDITION_MAP.get(condcode),
                 ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.get(MIN_TEMP),
                 ATTR_FORECAST_NATIVE_TEMP: data_in.get(MAX_TEMP),
                 ATTR_FORECAST_NATIVE_PRECIPITATION: data_in.get(RAIN),
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.get(RAIN_CHANCE),
                 ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.get(WINDSPEED),
             }
@@ -212,3 +200,7 @@ class BrWeather(WeatherEntity):
             fcdata_out.append(data_out)
 
         return fcdata_out
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._forecast

@@ -1,3 +1,15 @@
 {
-  "title": "Tag"
+  "title": "Tag",
+  "entity_component": {
+    "_": {
+      "state_attributes": {
+        "tag_id": {
+          "name": "Tag ID"
+        },
+        "last_scanned_by_device_id": {
+          "name": "Last scanned by device ID"
+        }
+      }
+    }
+  }
 }

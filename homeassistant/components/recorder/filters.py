@@ -1,4 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Collection, Iterable
@@ -187,8 +188,6 @@ class Filters:
         if self._included_domains or self._included_entity_globs:
             return or_(
                 i_entities,
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9190
-                # pylint: disable-next=invalid-unary-operand-type
                 (~e_entities & (i_entity_globs | (~e_entity_globs & i_domains))),
             ).self_group()
 
@@ -199,7 +198,7 @@ class Filters:
         # - Otherwise, entity matches domain exclude: exclude
         # - Otherwise: include
         if self._excluded_domains or self._excluded_entity_globs:
-            return (not_(or_(*excludes)) | i_entities).self_group()  # type: ignore[no-any-return, no-untyped-call]
+            return (not_(or_(*excludes)) | i_entities).self_group()
 
         # Case 6 - No Domain and/or glob includes or excludes
         # - Entity listed in entities include: include
@@ -246,7 +245,8 @@ class Filters:
             ),
             # Needs https://github.com/bdraco/home-assistant/commit/bba91945006a46f3a01870008eb048e4f9cbb1ef
             self._generate_filter_for_columns(
-                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder  # type: ignore[arg-type]
+                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT),  # type: ignore[arg-type]
+                _encoder,
             ).self_group(),
         )
 

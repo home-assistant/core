@@ -3,27 +3,40 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Group",
+        "title": "Create group",
         "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
         "menu_options": {
           "binary_sensor": "Binary sensor group",
+          "button": "Button group",
           "cover": "Cover group",
+          "event": "Event group",
           "fan": "Fan group",
           "light": "Light group",
           "lock": "Lock group",
           "media_player": "Media player group",
+          "notify": "Notify group",
           "sensor": "Sensor group",
           "switch": "Switch group"
         }
       },
       "binary_sensor": {
         "title": "[%key:component::group::config::step::user::title%]",
-        "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
         "data": {
           "all": "All entities",
           "entities": "Members",
           "hide_members": "Hide members",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "all": "If enabled, the group's state is on only if all members are on. If disabled, the group's state is on if any member is on."
+        }
+      },
+      "button": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "cover": {
@@ -31,7 +44,15 @@
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
-          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "event": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "fan": {
@@ -39,15 +60,19 @@
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
-          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "light": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
-          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
         }
       },
       "lock": {
@@ -55,7 +80,7 @@
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
-          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "media_player": {
@@ -63,29 +88,44 @@
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
-          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "notify": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "sensor": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
           "ignore_non_numeric": "Ignore non-numeric",
-          "entities": "Members",
-          "hide_members": "Hide members",
-          "name": "Name",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "type": "Type",
           "round_digits": "Round value to number of decimals",
           "device_class": "Device class",
           "state_class": "State class",
-          "unit_of_measurement": "Unit of Measurement"
+          "unit_of_measurement": "Unit of measurement"
+        },
+        "data_description": {
+          "ignore_non_numeric": "If enabled, the group's state is calculated if at least one member has a numerical value. If disabled, the group's state is calculated only if all group members have numerical values."
         }
       },
       "switch": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
-          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
         }
       }
     }
@@ -93,9 +133,17 @@
   "options": {
     "step": {
       "binary_sensor": {
-        "description": "[%key:component::group::config::step::binary_sensor::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
+        }
+      },
+      "button": {
+        "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
@@ -113,11 +161,13 @@
         }
       },
       "light": {
-        "description": "[%key:component::group::config::step::binary_sensor::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
         }
       },
       "lock": {
@@ -132,25 +182,35 @@
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       },
+      "notify": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
       "sensor": {
-        "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values.",
         "data": {
           "ignore_non_numeric": "[%key:component::group::config::step::sensor::data::ignore_non_numeric%]",
-          "entities": "[%key:component::group::config::step::sensor::data::entities%]",
-          "hide_members": "[%key:component::group::config::step::sensor::data::hide_members%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "type": "[%key:component::group::config::step::sensor::data::type%]",
           "round_digits": "[%key:component::group::config::step::sensor::data::round_digits%]",
           "device_class": "[%key:component::group::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::group::config::step::sensor::data::state_class%]",
           "unit_of_measurement": "[%key:component::group::config::step::sensor::data::unit_of_measurement%]"
+        },
+        "data_description": {
+          "ignore_non_numeric": "[%key:component::group::config::step::sensor::data_description::ignore_non_numeric%]"
         }
       },
       "switch": {
-        "description": "[%key:component::group::config::step::binary_sensor::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
         }
       }
     }
@@ -161,8 +221,8 @@
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]",
-        "home": "[%key:component::device_tracker::entity_component::_::state::home%]",
-        "not_home": "[%key:component::device_tracker::entity_component::_::state::not_home%]",
+        "home": "[%key:common::state::home%]",
+        "not_home": "[%key:common::state::not_home%]",
         "open": "[%key:common::state::open%]",
         "closed": "[%key:common::state::closed%]",
         "locked": "[%key:common::state::locked%]",
@@ -172,7 +232,7 @@
       },
       "state_attributes": {
         "entity_id": {
-          "name": "Members"
+          "name": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       }
     }
@@ -180,15 +240,84 @@
   "selector": {
     "type": {
       "options": {
-        "min": "Minimum",
+        "last": "Most recently updated",
         "max": "Maximum",
         "mean": "Arithmetic mean",
         "median": "Median",
-        "last": "Most recently updated",
+        "min": "Minimum",
+        "product": "Product",
         "range": "Statistical range",
-        "sum": "Sum",
-        "product": "Product"
+        "stdev": "Standard deviation",
+        "sum": "Sum"
       }
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads group configuration, entities, and notify services from YAML-configuration."
+    },
+    "set": {
+      "name": "Set",
+      "description": "Creates/Updates a group.",
+      "fields": {
+        "object_id": {
+          "name": "Object ID",
+          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id]."
+        },
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Name of the group."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Name of the icon for the group."
+        },
+        "entities": {
+          "name": "Entities",
+          "description": "List of all members in the group. Cannot be used in combination with `Add entities` or `Remove entities`."
+        },
+        "add_entities": {
+          "name": "Add entities",
+          "description": "List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove entities`."
+        },
+        "remove_entities": {
+          "name": "Remove entities",
+          "description": "List of members to be removed from a group. Cannot be used in combination with `Entities` or `Add entities`."
+        },
+        "all": {
+          "name": "All",
+          "description": "Enable this option if the group should only be used when all entities are in state `on`."
+        }
+      }
+    },
+    "remove": {
+      "name": "Remove",
+      "description": "Removes a group.",
+      "fields": {
+        "object_id": {
+          "name": "[%key:component::group::services::set::fields::object_id::name%]",
+          "description": "[%key:component::group::services::set::fields::object_id::description%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "uoms_not_matching_device_class": {
+      "title": "Units of measurement are not correct",
+      "description": "Units of measurement `{uoms}` of input sensors `{source_entities}` are not compatible and can't be converted with the device class `{device_class}` of sensor group `{entity_id}`.\n\nPlease correct the unit of measurement on the source entities and reload the group sensor to fix this issue."
+    },
+    "uoms_not_matching_no_device_class": {
+      "title": "Units of measurement are not correct",
+      "description": "Units of measurement `{uoms}` of input sensors `{source_entities}` are not compatible when not using a device class on sensor group `{entity_id}`.\n\nPlease correct the unit of measurement on the source entities or set a proper device class on the sensor group and reload the group sensor to fix this issue."
+    },
+    "device_classes_not_matching": {
+      "title": "Device classes are not correct",
+      "description": "Device classes `{device_classes}` on source entities `{source_entities}` need to be identical for sensor group `{entity_id}`.\n\nPlease correct the device classes on the source entities and reload the group sensor to fix this issue."
+    },
+    "state_classes_not_matching": {
+      "title": "State classes are not correct",
+      "description": "State classes `{state_classes}` on source entities `{source_entities}` need to be identical for sensor group `{entity_id}`.\n\nPlease correct the state classes on the source entities and reload the group sensor to fix this issue."
     }
   }
 }

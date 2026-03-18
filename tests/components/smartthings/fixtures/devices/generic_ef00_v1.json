@@ -1,0 +1,95 @@
+{
+  "items": [
+    {
+      "deviceId": "656569c2-7976-4232-a789-34b4d1176c3a",
+      "name": "generic-ef00-v1",
+      "label": "Thermostat K\u00fcche",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "be641577-f796-315b-af6f-b3ad14dd7a58",
+      "deviceManufacturerCode": "_TZE200_rxntag7i",
+      "locationId": "0b6618a6-c3ab-4b6e-968d-59cc8c2761bc",
+      "ownerId": "8a20b799-9d87-ecdc-39de-c93c6e4d3ea1",
+      "roomId": "eeb2f9d2-19cc-4dad-9f23-28ec807de97e",
+      "components": [
+        {
+          "id": "main",
+          "label": "Thermostat",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "thermostatMode",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatHeatingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "thermostatOperatingState",
+              "version": 1
+            },
+            {
+              "id": "signalStrength",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "valleyboard16460.debug",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "main02",
+          "label": "Floor",
+          "capabilities": [
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-12-02T15:58:01.598Z",
+      "profile": {
+        "id": "3ad2e1e3-8867-332c-85b5-b291602c324f"
+      },
+      "zigbee": {
+        "eui": "A4C1388B31017B5F",
+        "networkId": "162F",
+        "driverId": "585328e6-ac85-4ac5-bce4-286efd0ab980",
+        "executingLocally": true,
+        "hubId": "61bd280e-71c4-44fb-9b6e-53fdf14718a2",
+        "provisioningState": "DRIVER_SWITCH"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

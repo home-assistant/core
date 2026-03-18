@@ -1,116 +1,100 @@
 """The Enphase Envoy integration."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from typing import TYPE_CHECKING
 
-import async_timeout
-from envoy_reader.envoy_reader import EnvoyReader
-import httpx
+from pyenphase import Envoy
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS, SENSORS
-
-SCAN_INTERVAL = timedelta(seconds=60)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, PLATFORMS
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Set up Enphase Envoy from a config entry."""
 
-    config = entry.data
-    name = config[CONF_NAME]
+    host = entry.data[CONF_HOST]
+    session = async_create_clientsession(hass, verify_ssl=False)
+    envoy = Envoy(host, session)
+    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
 
-    envoy_reader = EnvoyReader(
-        config[CONF_HOST],
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        inverters=True,
-        async_client=get_async_client(hass),
-    )
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        async with async_timeout.timeout(30):
-            try:
-                await envoy_reader.getData()
-            except httpx.HTTPStatusError as err:
-                raise ConfigEntryAuthFailed from err
-            except httpx.HTTPError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-            data = {
-                description.key: await getattr(envoy_reader, description.key)()
-                for description in SENSORS
-            }
-            data["inverters_production"] = await envoy_reader.inverters_production()
-
-            _LOGGER.debug("Retrieved data from API: %s", data)
-
-            return data
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"envoy {name}",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-    )
-
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed:
-        envoy_reader.get_inverters = False
-        await coordinator.async_config_entry_first_refresh()
-
+    await coordinator.async_config_entry_first_refresh()
     if not entry.unique_id:
-        try:
-            serial = await envoy_reader.get_full_serial_number()
-        except httpx.HTTPError as ex:
-            raise ConfigEntryNotReady(
-                f"Could not obtain serial number from envoy: {ex}"
-            ) from ex
+        hass.config_entries.async_update_entry(entry, unique_id=envoy.serial_number)
 
-        hass.config_entries.async_update_entry(entry, unique_id=serial)
+    if entry.unique_id != envoy.serial_number:
+        # If the serial number of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={
+                "host": host,
+                "expected_serial": str(entry.unique_id),
+                "actual_serial": str(envoy.serial_number),
+            },
+        )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        COORDINATOR: coordinator,
-        NAME: name,
-    }
+    # register envoy before via_device is used
+    device_registry = dr.async_get(hass)
+    if TYPE_CHECKING:
+        assert envoy.serial_number
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, envoy.serial_number)},
+        manufacturer="Enphase",
+        name=coordinator.name,
+        model=envoy.envoy_model,
+        sw_version=str(envoy.firmware),
+        hw_version=envoy.part_number,
+        serial_number=envoy.serial_number,
+    )
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    coordinator = entry.runtime_data
+    coordinator.async_cancel_token_refresh()
+    coordinator.async_cancel_firmware_refresh()
+    coordinator.async_cancel_mac_verification()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: EnphaseConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove an enphase_envoy config entry from a device."""
     dev_ids = {dev_id[1] for dev_id in device_entry.identifiers if dev_id[0] == DOMAIN}
-    data: dict = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator: DataUpdateCoordinator = data[COORDINATOR]
-    envoy_data: dict = coordinator.data
+    coordinator = config_entry.runtime_data
+    envoy_data = coordinator.envoy.data
     envoy_serial_num = config_entry.unique_id
     if envoy_serial_num in dev_ids:
         return False
-    for inverter in envoy_data.get("inverters_production", []):
-        if str(inverter) in dev_ids:
-            return False
+    if envoy_data:
+        if envoy_data.inverters:
+            for inverter in envoy_data.inverters:
+                if str(inverter) in dev_ids:
+                    return False
+        if envoy_data.encharge_inventory:
+            for encharge in envoy_data.encharge_inventory:
+                if str(encharge) in dev_ids:
+                    return False
+        if envoy_data.enpower:
+            if str(envoy_data.enpower.serial_number) in dev_ids:
+                return False
     return True

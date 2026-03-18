@@ -10,40 +10,31 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import StarlinkData
+from .coordinator import StarlinkConfigEntry, StarlinkData
 from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: StarlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        StarlinkBinarySensorEntity(coordinator, description)
+        StarlinkBinarySensorEntity(config_entry.runtime_data, description)
         for description in BINARY_SENSORS
     )
 
 
-@dataclass
-class StarlinkBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Starlink binary sensor entity."""
 
     value_fn: Callable[[StarlinkData], bool | None]
-
-
-@dataclass
-class StarlinkBinarySensorEntityDescription(
-    BinarySensorEntityDescription, StarlinkBinarySensorEntityDescriptionMixin
-):
-    """Describes a Starlink binary sensor entity."""
 
 
 class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
@@ -60,66 +51,71 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
 BINARY_SENSORS = [
     StarlinkBinarySensorEntityDescription(
         key="update",
-        name="Update available",
         device_class=BinarySensorDeviceClass.UPDATE,
         value_fn=lambda data: data.alert["alert_install_pending"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="roaming",
-        name="Roaming mode",
+        translation_key="roaming",
         value_fn=lambda data: data.alert["alert_roaming"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="currently_obstructed",
-        name="Obstructed",
+        translation_key="currently_obstructed",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status["currently_obstructed"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="heating",
-        name="Heating",
+        translation_key="heating",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_is_heating"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="power_save_idle",
-        name="Idle",
+        translation_key="power_save_idle",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_is_power_save_idle"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="mast_near_vertical",
-        name="Mast near vertical",
+        translation_key="mast_near_vertical",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_mast_not_near_vertical"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="motors_stuck",
-        name="Motors stuck",
+        translation_key="motors_stuck",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_motors_stuck"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="slow_ethernet",
-        name="Ethernet speeds",
+        translation_key="slow_ethernet",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_slow_ethernet_speeds"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="thermal_throttle",
-        name="Thermal throttle",
+        translation_key="thermal_throttle",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_thermal_throttle"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="unexpected_location",
-        name="Unexpected location",
+        translation_key="unexpected_location",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_unexpected_location"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="connection",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda data: data.status["state"] == "CONNECTED",
     ),
 ]

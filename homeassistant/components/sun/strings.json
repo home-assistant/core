@@ -5,9 +5,6 @@
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity_component": {
@@ -28,7 +25,23 @@
       "next_rising": { "name": "Next rising" },
       "next_setting": { "name": "Next setting" },
       "solar_azimuth": { "name": "Solar azimuth" },
-      "solar_elevation": { "name": "Solar elevation" }
+      "solar_elevation": { "name": "Solar elevation" },
+      "solar_rising": { "name": "Solar rising" }
+    },
+    "binary_sensor": {
+      "solar_rising": {
+        "name": "Solar rising",
+        "state": {
+          "on": "Rising",
+          "off": "Setting"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_sun_solar_rising": {
+      "title": "Deprecated 'Solar rising' sensor",
+      "description": "The 'Solar rising' sensor of the Sun integration is being deprecated; an equivalent 'Solar rising' binary sensor has been made available as a replacement. To resolve this issue, disable {entity}."
     }
   }
 }

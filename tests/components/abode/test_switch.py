@@ -1,10 +1,9 @@
 """Tests for the Abode switch device."""
+
 from unittest.mock import patch
 
-from homeassistant.components.abode import (
-    DOMAIN as ABODE_DOMAIN,
-    SERVICE_TRIGGER_AUTOMATION,
-)
+from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.services import SERVICE_TRIGGER_AUTOMATION
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,10 +23,11 @@ DEVICE_ID = "switch.test_switch"
 DEVICE_UID = "0012a4d3614cb7e2b8c9abea31d2fb2a"
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SWITCH_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(AUTOMATION_ID)
     assert entry.unique_id == AUTOMATION_UID
@@ -117,7 +117,7 @@ async def test_trigger_automation(hass: HomeAssistant) -> None:
 
     with patch("jaraco.abode.automation.Automation.trigger") as mock:
         await hass.services.async_call(
-            ABODE_DOMAIN,
+            DOMAIN,
             SERVICE_TRIGGER_AUTOMATION,
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,

@@ -1,4 +1,5 @@
 """Test the Z-Wave JS fan platform."""
+
 import copy
 
 import pytest
@@ -28,10 +29,17 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.FAN]
 
 
 async def test_generic_fan(
@@ -231,6 +239,7 @@ async def test_configurable_speeds_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -356,6 +365,7 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -448,6 +458,7 @@ async def test_inovelli_lzw36(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -518,6 +529,7 @@ async def test_inovelli_lzw36(
     assert state.attributes[ATTR_PERCENTAGE] is None
 
     client.async_send_command.reset_mock()
+
     await hass.services.async_call(
         "fan",
         "turn_on",
@@ -532,13 +544,14 @@ async def test_inovelli_lzw36(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             "fan",
             "turn_on",
             {"entity_id": entity_id, "preset_mode": "wheeze"},
             blocking=True,
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(client.async_send_command.call_args_list) == 0
 
 
@@ -553,6 +566,7 @@ async def test_leviton_zw4sf_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -646,7 +660,12 @@ async def test_thermostat_fan(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FAN_STATE) == "Idle / off"
     assert state.attributes.get(ATTR_PRESET_MODE) == "Auto low"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == FanEntityFeature.PRESET_MODE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        == FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     # Test setting preset mode
     await hass.services.async_call(
@@ -670,13 +689,14 @@ async def test_thermostat_fan(
     client.async_send_command.reset_mock()
 
     # Test setting unknown preset mode
-    with pytest.raises(ValueError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Turbo"},
             blocking=True,
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     client.async_send_command.reset_mock()
 
@@ -951,6 +971,7 @@ async def test_honeywell_39358_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",

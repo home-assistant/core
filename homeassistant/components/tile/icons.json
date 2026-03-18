@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "lost": {
+        "default": "mdi:map-marker-remove"
+      }
+    },
+    "device_tracker": {
+      "tile": {
+        "default": "mdi:view-grid"
+      }
+    }
+  }
+}

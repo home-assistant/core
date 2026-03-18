@@ -1,11 +1,13 @@
 """The IntelliFire Light."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from intellifire4py import IntellifireControlAsync, IntellifirePollData
+from intellifire4py.control import IntelliFireController
+from intellifire4py.model import IntelliFirePollData
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,24 +15,23 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER
-from .coordinator import IntellifireDataUpdateCoordinator
+from .const import LOGGER
+from .coordinator import IntellifireConfigEntry
 from .entity import IntellifireEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireLightRequiredKeysMixin:
     """Required keys for fan entity."""
 
-    set_fn: Callable[[IntellifireControlAsync, int], Awaitable]
-    value_fn: Callable[[IntellifirePollData], bool]
+    set_fn: Callable[[IntelliFireController, int], Awaitable]
+    value_fn: Callable[[IntelliFirePollData], int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireLightEntityDescription(
     LightEntityDescription, IntellifireLightRequiredKeysMixin
 ):
@@ -40,7 +41,7 @@ class IntellifireLightEntityDescription(
 INTELLIFIRE_LIGHTS: tuple[IntellifireLightEntityDescription, ...] = (
     IntellifireLightEntityDescription(
         key="lights",
-        name="Lights",
+        translation_key="lights",
         set_fn=lambda control_api, level: control_api.set_lights(level=level),
         value_fn=lambda data: data.light_level,
     ),
@@ -55,7 +56,7 @@ class IntellifireLight(IntellifireEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the current brightness 0-255."""
         return 85 * self.entity_description.value_fn(self.coordinator.read_api.data)
 
@@ -82,11 +83,11 @@ class IntellifireLight(IntellifireEntity, LightEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: IntellifireConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fans."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if coordinator.data.has_light:
         async_add_entities(

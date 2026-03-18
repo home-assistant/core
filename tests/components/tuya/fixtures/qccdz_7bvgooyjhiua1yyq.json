@@ -1,0 +1,103 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "AC charging control box",
+  "category": "qccdz",
+  "product_id": "7bvgooyjhiua1yyq",
+  "product_name": "AC charging control box",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-01-21T17:00:03+00:00",
+  "create_time": "2025-01-21T17:00:03+00:00",
+  "update_time": "2025-01-21T17:00:03+00:00",
+  "function": {
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "charge_now",
+          "charge_pct",
+          "charge_energy",
+          "charge_schedule"
+        ]
+      }
+    },
+    "clear_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "charger_free",
+          "charger_insert",
+          "charger_free_fault",
+          "charger_wait",
+          "charger_charging",
+          "charger_pause",
+          "charger_end",
+          "charger_fault"
+        ]
+      }
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "charge_now",
+          "charge_pct",
+          "charge_energy",
+          "charge_schedule"
+        ]
+      }
+    },
+    "balance_energy": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "clear_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "charge_energy_once": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 1,
+        "max": 999999,
+        "scale": 2,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "work_state": "charger_free",
+    "work_mode": "charge_now",
+    "balance_energy": 0,
+    "clear_energy": false,
+    "switch": false,
+    "charge_energy_once": 1
+  },
+  "set_up": false,
+  "support_local": true
+}

@@ -1,4 +1,5 @@
 """Tests for the Tailscale integration."""
+
 from unittest.mock import MagicMock
 
 from tailscale import TailscaleAuthenticationError, TailscaleConnectionError

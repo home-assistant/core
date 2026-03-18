@@ -1,7 +1,10 @@
 """The tests device sun light trigger component."""
+
+from collections.abc import Callable
 from datetime import datetime
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import (
@@ -10,7 +13,7 @@ from homeassistant.components import (
     group,
     light,
 )
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -19,25 +22,30 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, setup_test_component_platform
+from tests.components.device_tracker.common import MockScanner
+from tests.components.light.common import MockLight
 
 
 @pytest.fixture
-async def scanner(hass, enable_custom_integrations):
+async def scanner(
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
+    mock_legacy_device_scanner: MockScanner,
+    mock_legacy_device_tracker_setup: Callable[[HomeAssistant, MockScanner], None],
+) -> None:
     """Initialize components."""
-    scanner = await getattr(hass.components, "test.device_tracker").async_get_scanner(
-        None, None
-    )
+    mock_legacy_device_tracker_setup(hass, mock_legacy_device_scanner)
+    mock_legacy_device_scanner.reset()
+    mock_legacy_device_scanner.come_home("DEV1")
 
-    scanner.reset()
-    scanner.come_home("DEV1")
-
-    getattr(hass.components, "test.light").init()
+    setup_test_component_platform(hass, "light", mock_light_entities)
 
     with patch(
         "homeassistant.components.device_tracker.legacy.load_yaml_config_file",
@@ -69,16 +77,17 @@ async def scanner(hass, enable_custom_integrations):
     )
     await hass.async_block_till_done()
 
-    return scanner
 
-
-async def test_lights_on_when_sun_sets(hass: HomeAssistant, scanner) -> None:
+@pytest.mark.usefixtures("scanner")
+async def test_lights_on_when_sun_sets(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test lights go on when there is someone home and the sun sets."""
     test_time = datetime(2017, 4, 5, 1, 2, 3, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
-        assert await async_setup_component(
-            hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
-        )
+    freezer.move_to(test_time)
+    assert await async_setup_component(
+        hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
+    )
 
     await hass.services.async_call(
         light.DOMAIN,
@@ -88,9 +97,9 @@ async def test_lights_on_when_sun_sets(hass: HomeAssistant, scanner) -> None:
     )
 
     test_time = test_time.replace(hour=3)
-    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
-        async_fire_time_changed(hass, test_time)
-        await hass.async_block_till_done()
+    freezer.move_to(test_time)
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
 
     assert all(
         hass.states.get(ent_id).state == STATE_ON
@@ -98,9 +107,8 @@ async def test_lights_on_when_sun_sets(hass: HomeAssistant, scanner) -> None:
     )
 
 
-async def test_lights_turn_off_when_everyone_leaves(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_lights_turn_off_when_everyone_leaves(hass: HomeAssistant) -> None:
     """Test lights turn off when everyone leaves the house."""
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -127,106 +135,132 @@ async def test_lights_turn_off_when_everyone_leaves(
     )
 
 
+@pytest.mark.usefixtures("scanner")
 async def test_lights_turn_on_when_coming_home_after_sun_set(
-    hass: HomeAssistant, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
-        await hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
-        )
+    freezer.move_to(test_time)
+    await hass.services.async_call(
+        light.DOMAIN, light.SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
+    )
 
-        assert await async_setup_component(
-            hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
-        )
+    assert await async_setup_component(
+        hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
+    )
 
-        hass.states.async_set(f"{DOMAIN}.device_2", STATE_HOME)
+    hass.states.async_set(f"{DEVICE_TRACKER_DOMAIN}.device_2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
 
-        await hass.async_block_till_done()
+    hass.states.async_set(f"{DEVICE_TRACKER_DOMAIN}.device_2", STATE_NOT_HOME)
+    await hass.async_block_till_done()
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
 
+    hass.states.async_set(f"{DEVICE_TRACKER_DOMAIN}.device_2", STATE_HOME)
+    await hass.async_block_till_done()
     assert all(
         hass.states.get(ent_id).state == light.STATE_ON
         for ent_id in hass.states.async_entity_ids("light")
     )
 
 
+@pytest.mark.usefixtures("scanner")
 async def test_lights_turn_on_when_coming_home_after_sun_set_person(
-    hass: HomeAssistant, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
-    device_1 = f"{DOMAIN}.device_1"
-    device_2 = f"{DOMAIN}.device_2"
+    # Ensure all setup tasks are done (avoid flaky tests)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_1 = f"{DEVICE_TRACKER_DOMAIN}.device_1"
+    device_2 = f"{DEVICE_TRACKER_DOMAIN}.device_2"
 
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
-        await hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
-        )
-        hass.states.async_set(device_1, STATE_NOT_HOME)
-        hass.states.async_set(device_2, STATE_NOT_HOME)
-        await hass.async_block_till_done()
+    freezer.move_to(test_time)
+    await hass.services.async_call(
+        light.DOMAIN, light.SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
+    )
+    hass.states.async_set(device_1, STATE_NOT_HOME)
+    hass.states.async_set(device_2, STATE_NOT_HOME)
+    await hass.async_block_till_done()
 
-        assert all(
-            not light.is_on(hass, ent_id)
-            for ent_id in hass.states.async_entity_ids("light")
-        )
-        assert hass.states.get(device_1).state == "not_home"
-        assert hass.states.get(device_2).state == "not_home"
+    assert all(
+        not light.is_on(hass, ent_id)
+        for ent_id in hass.states.async_entity_ids("light")
+    )
+    assert hass.states.get(device_1).state == "not_home"
+    assert hass.states.get(device_2).state == "not_home"
 
-        assert await async_setup_component(
-            hass,
-            "person",
-            {"person": [{"id": "me", "name": "Me", "device_trackers": [device_1]}]},
-        )
+    assert await async_setup_component(
+        hass,
+        "person",
+        {"person": [{"id": "me", "name": "Me", "device_trackers": [device_1]}]},
+    )
 
-        assert await async_setup_component(hass, "group", {})
-        await hass.async_block_till_done()
-        await group.Group.async_create_group(hass, "person_me", ["person.me"])
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
+    await group.Group.async_create_group(
+        hass,
+        "person_me",
+        created_by_service=False,
+        entity_ids=["person.me"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
-        assert await async_setup_component(
-            hass,
-            device_sun_light_trigger.DOMAIN,
-            {device_sun_light_trigger.DOMAIN: {"device_group": "group.person_me"}},
-        )
+    assert await async_setup_component(
+        hass,
+        device_sun_light_trigger.DOMAIN,
+        {device_sun_light_trigger.DOMAIN: {"device_group": "group.person_me"}},
+    )
 
-        assert all(
-            hass.states.get(ent_id).state == STATE_OFF
-            for ent_id in hass.states.async_entity_ids("light")
-        )
-        assert hass.states.get(device_1).state == "not_home"
-        assert hass.states.get(device_2).state == "not_home"
-        assert hass.states.get("person.me").state == "not_home"
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
+    assert hass.states.get(device_1).state == "not_home"
+    assert hass.states.get(device_2).state == "not_home"
+    assert hass.states.get("person.me").state == "not_home"
 
-        # Unrelated device has no impact
-        hass.states.async_set(device_2, STATE_HOME)
-        await hass.async_block_till_done()
+    # Unrelated device has no impact
+    hass.states.async_set(device_2, STATE_HOME)
+    await hass.async_block_till_done()
 
-        assert all(
-            hass.states.get(ent_id).state == STATE_OFF
-            for ent_id in hass.states.async_entity_ids("light")
-        )
-        assert hass.states.get(device_1).state == "not_home"
-        assert hass.states.get(device_2).state == "home"
-        assert hass.states.get("person.me").state == "not_home"
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
+    assert hass.states.get(device_1).state == "not_home"
+    assert hass.states.get(device_2).state == "home"
+    assert hass.states.get("person.me").state == "not_home"
 
-        # person home switches on
-        hass.states.async_set(device_1, STATE_HOME)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+    # person home switches on
+    hass.states.async_set(device_1, STATE_HOME)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        assert all(
-            hass.states.get(ent_id).state == light.STATE_ON
-            for ent_id in hass.states.async_entity_ids("light")
-        )
-        assert hass.states.get(device_1).state == "home"
-        assert hass.states.get(device_2).state == "home"
-        assert hass.states.get("person.me").state == "home"
+    assert all(
+        hass.states.get(ent_id).state == light.STATE_ON
+        for ent_id in hass.states.async_entity_ids("light")
+    )
+    assert hass.states.get(device_1).state == "home"
+    assert hass.states.get(device_2).state == "home"
+    assert hass.states.get("person.me").state == "home"
 
 
 async def test_initialize_start(hass: HomeAssistant) -> None:
     """Test we initialize when HA starts."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     assert await async_setup_component(
         hass,
         device_sun_light_trigger.DOMAIN,

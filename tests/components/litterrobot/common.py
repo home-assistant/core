@@ -1,4 +1,5 @@
 """Common utils for Litter-Robot tests."""
+
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -32,13 +33,15 @@ ROBOT_4_DATA = {
     "wifiRssi": -53.0,
     "unitPowerType": "AC",
     "catWeight": 12.0,
+    "displayCode": "DC_MODE_IDLE",
     "unitTimezone": "America/New_York",
     "unitTime": None,
     "cleanCycleWaitTime": 15,
     "isKeypadLockout": False,
     "nightLightMode": "OFF",
-    "nightLightBrightness": 85,
+    "nightLightBrightness": 50,
     "isPanelSleepMode": False,
+    "panelBrightnessHigh": 50,
     "panelSleepTime": 0,
     "panelWakeTime": 0,
     "weekdaySleepModeEnabled": {
@@ -65,7 +68,7 @@ ROBOT_4_DATA = {
     "isDFIResetPending": False,
     "DFINumberOfCycles": 104,
     "DFILevelPercent": 76,
-    "isDFIFull": True,
+    "isDFIFull": False,
     "DFIFullCounter": 3,
     "DFITriggerCount": 42,
     "litterLevel": 460,
@@ -88,6 +91,14 @@ ROBOT_4_DATA = {
     "isUSBPowerOn": True,
     "USBFaultStatus": "CLEAR",
     "isDFIPartialFull": True,
+    "isLaserDirty": False,
+    "surfaceType": "TILE",
+    "hopperStatus": None,
+    "scoopsSavedCount": 3769,
+    "isHopperRemoved": None,
+    "optimalLitterLevel": 450,
+    "litterLevelPercentage": 0.7,
+    "litterLevelState": "OPTIMAL",
 }
 FEEDER_ROBOT_DATA = {
     "id": 1,
@@ -118,6 +129,25 @@ FEEDER_ROBOT_DATA = {
             "mealInsertSize": 1,
         },
         "updated_at": "2022-09-08T15:07:00.000000+00:00",
+        "active_schedule": {
+            "id": "1",
+            "name": "Feeding",
+            "meals": [
+                {
+                    "id": "1",
+                    "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    "hour": 6,
+                    "name": "Breakfast",
+                    "skip": None,
+                    "minute": 30,
+                    "paused": False,
+                    "portions": 3,
+                    "mealNumber": 1,
+                    "scheduleId": None,
+                }
+            ],
+            "created_at": "2021-12-17T07:07:31.047747+00:00",
+        },
     },
     "feeding_snack": [
         {"timestamp": "2022-09-04T03:03:00.000000+00:00", "amount": 0.125},
@@ -138,6 +168,25 @@ FEEDER_ROBOT_DATA = {
             "meal_number": 1,
             "meal_total_portions": 1,
         },
+    ],
+}
+PET_DATA = {
+    "petId": "PET-123",
+    "userId": "1234567",
+    "createdAt": "2023-04-27T23:26:49.813Z",
+    "name": "Kitty",
+    "type": "CAT",
+    "gender": "FEMALE",
+    "lastWeightReading": 9.1,
+    "breeds": ["sphynx"],
+    "weightHistory": [
+        {"weight": 6.48, "timestamp": "2025-06-13T16:12:36"},
+        {"weight": 6.6, "timestamp": "2025-06-14T03:52:00"},
+        {"weight": 6.59, "timestamp": "2025-06-14T17:20:32"},
+        {"weight": 6.5, "timestamp": "2025-06-14T19:22:48"},
+        {"weight": 6.35, "timestamp": "2025-06-15T03:12:15"},
+        {"weight": 6.45, "timestamp": "2025-06-15T15:27:21"},
+        {"weight": 6.25, "timestamp": "2025-06-15T15:29:26"},
     ],
 }
 

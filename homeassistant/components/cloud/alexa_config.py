@@ -1,17 +1,22 @@
 """Alexa configuration for Home Assistant Cloud."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime, timedelta
-from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
-import async_timeout
-from hass_nabucasa import Cloud, cloud_api
+from hass_nabucasa import AlexaApiError, Cloud
+from hass_nabucasa.alexa_api import (
+    AlexaAccessTokenDetails,
+    AlexaApiNeedsRelinkError,
+    AlexaApiNoTokenError,
+)
+from yarl import URL
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.alexa import (
@@ -42,7 +47,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
-    DOMAIN as CLOUD_DOMAIN,
+    DOMAIN,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_SHOULD_EXPOSE,
@@ -54,7 +59,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-CLOUD_ALEXA = f"{CLOUD_DOMAIN}.{ALEXA_DOMAIN}"
+CLOUD_ALEXA = f"{DOMAIN}.{ALEXA_DOMAIN}"
 
 # Time to wait when entity preferences have changed before syncing it to
 # the cloud.
@@ -145,11 +150,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._cloud_user = cloud_user
         self._prefs = prefs
         self._cloud = cloud
-        self._token = None
+        self._token: str | None = None
         self._token_valid: datetime | None = None
         self._cur_entity_prefs = async_get_assistant_settings(hass, CLOUD_ALEXA)
         self._alexa_sync_unsub: Callable[[], None] | None = None
-        self._endpoint: Any = None
+        self._endpoint: str | URL | None = None
 
     @property
     def enabled(self) -> bool:
@@ -175,7 +180,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @property
-    def endpoint(self) -> Any | None:
+    def endpoint(self) -> str | URL | None:
         """Endpoint for report state."""
         if self._endpoint is None:
             raise ValueError("No endpoint available. Fetch access token first")
@@ -246,21 +251,27 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 await self._prefs.async_update(
                     alexa_settings_version=ALEXA_SETTINGS_VERSION
                 )
-            async_listen_entity_updates(
-                self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
+            self._on_deinitialize.append(
+                async_listen_entity_updates(
+                    self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
+                )
             )
 
         async def on_hass_start(hass: HomeAssistant) -> None:
             if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
-        start.async_at_start(self.hass, on_hass_start)
-        start.async_at_started(self.hass, on_hass_started)
+        self._on_deinitialize.append(start.async_at_start(self.hass, on_hass_start))
+        self._on_deinitialize.append(start.async_at_started(self.hass, on_hass_started))
 
-        self._prefs.async_listen_updates(self._async_prefs_updated)
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
+        self._on_deinitialize.append(
+            self._prefs.async_listen_updates(self._async_prefs_updated)
+        )
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._handle_entity_registry_updated,
+            )
         )
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
@@ -309,34 +320,33 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         """Invalidate access token."""
         self._token_valid = None
 
-    async def async_get_access_token(self) -> Any:
+    async def async_get_access_token(self) -> str | None:
         """Get an access token."""
+        details: AlexaAccessTokenDetails | None
         if self._token_valid is not None and self._token_valid > utcnow():
             return self._token
 
-        resp = await cloud_api.async_alexa_access_token(self._cloud)
-        body = await resp.json()
+        try:
+            details = await self._cloud.alexa_api.access_token()
+        except AlexaApiNeedsRelinkError as exception:
+            if self.should_report_state:
+                persistent_notification.async_create(
+                    self.hass,
+                    (
+                        "There was an error reporting state to Alexa"
+                        f" ({exception.reason}). Please re-link your Alexa skill via"
+                        " the Alexa app to continue using it."
+                    ),
+                    "Alexa state reporting disabled",
+                    "cloud_alexa_report",
+                )
+            raise alexa_errors.RequireRelink from exception
+        except (AlexaApiNoTokenError, AlexaApiError) as exception:
+            raise alexa_errors.NoTokenAvailable from exception
 
-        if resp.status == HTTPStatus.BAD_REQUEST:
-            if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
-                if self.should_report_state:
-                    persistent_notification.async_create(
-                        self.hass,
-                        (
-                            "There was an error reporting state to Alexa"
-                            f" ({body['reason']}). Please re-link your Alexa skill via"
-                            " the Alexa app to continue using it."
-                        ),
-                        "Alexa state reporting disabled",
-                        "cloud_alexa_report",
-                    )
-                raise alexa_errors.RequireRelink
-
-            raise alexa_errors.NoTokenAvailable
-
-        self._token = body["access_token"]
-        self._endpoint = body["event_endpoint"]
-        self._token_valid = utcnow() + timedelta(seconds=body["expires_in"])
+        self._token = details["access_token"]
+        self._endpoint = details["event_endpoint"]
+        self._token_valid = utcnow() + timedelta(seconds=details["expires_in"])
         return self._token
 
     async def _async_prefs_updated(self, prefs: CloudPreferences) -> None:
@@ -500,20 +510,19 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             )
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-
-            return True
-
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Timeout trying to sync entities to Alexa")
             return False
-
         except aiohttp.ClientError as err:
             _LOGGER.warning("Error trying to sync entities to Alexa: %s", err)
             return False
+        return True
 
-    async def _handle_entity_registry_updated(self, event: Event) -> None:
+    async def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle when entity registry updated."""
         if not self.enabled or not self._cloud.is_logged_in:
             return
@@ -523,15 +532,14 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         if not self.should_expose(entity_id):
             return
 
-        action = event.data["action"]
-        to_update = []
-        to_remove = []
+        to_update: list[str] = []
+        to_remove: list[str] = []
 
-        if action == "create":
+        if event.data["action"] == "create":
             to_update.append(entity_id)
-        elif action == "remove":
+        elif event.data["action"] == "remove":
             to_remove.append(entity_id)
-        elif action == "update" and bool(
+        elif event.data["action"] == "update" and bool(
             set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
         ):
             to_update.append(entity_id)

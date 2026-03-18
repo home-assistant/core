@@ -1,4 +1,5 @@
 """Support for LIFX Cloud scenes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,14 +9,13 @@ from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
 from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,16 +42,16 @@ async def async_setup_platform(
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
 
-    headers = {AUTHORIZATION: f"Bearer {token}"}
+    headers: dict[str, str] = {AUTHORIZATION: f"Bearer {token}"}
 
     url = "https://api.lifx.com/v1/scenes"
 
     try:
         httpsession = async_get_clientsession(hass)
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             scenes_resp = await httpsession.get(url, headers=headers)
 
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", url)
         return
 
@@ -90,8 +90,8 @@ class LifxCloudScene(Scene):
 
         try:
             httpsession = async_get_clientsession(self.hass)
-            async with async_timeout.timeout(self._timeout):
+            async with asyncio.timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error on %s", url)

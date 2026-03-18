@@ -1,20 +1,27 @@
 """Base for Hass.io entities."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, HassioDataUpdateCoordinator
 from .const import (
     ATTR_SLUG,
+    CONTAINER_STATS,
+    CORE_CONTAINER,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    DOMAIN,
+    KEY_TO_UPDATE_TYPES,
+    SUPERVISOR_CONTAINER,
 )
+from .coordinator import HassioDataUpdateCoordinator
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -44,6 +51,18 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             and self.entity_description.key
             in self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
+        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
+        self.async_on_remove(
+            self.coordinator.async_enable_container_updates(
+                self._addon_slug, self.entity_id, update_types
+            )
+        )
+        if CONTAINER_STATS in update_types:
+            await self.coordinator.async_request_refresh()
 
 
 class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -124,6 +143,18 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             in self.coordinator.data[DATA_KEY_SUPERVISOR]
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
+        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
+        self.async_on_remove(
+            self.coordinator.async_enable_container_updates(
+                SUPERVISOR_CONTAINER, self.entity_id, update_types
+            )
+        )
+        if CONTAINER_STATS in update_types:
+            await self.coordinator.async_request_refresh()
+
 
 class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
     """Base Entity for Core."""
@@ -149,3 +180,15 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             and DATA_KEY_CORE in self.coordinator.data
             and self.entity_description.key in self.coordinator.data[DATA_KEY_CORE]
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
+        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
+        self.async_on_remove(
+            self.coordinator.async_enable_container_updates(
+                CORE_CONTAINER, self.entity_id, update_types
+            )
+        )
+        if CONTAINER_STATS in update_types:
+            await self.coordinator.async_request_refresh()

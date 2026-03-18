@@ -1,4 +1,5 @@
 """Model definitions for Actiontec MI424WR (Verizon FIOS) routers."""
+
 from dataclasses import dataclass
 
 

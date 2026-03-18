@@ -1,4 +1,5 @@
 """YoLink Dimmer."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,7 +10,7 @@ from yolink.const import ATTR_DEVICE_DIMMER
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
@@ -19,7 +20,7 @@ from .entity import YoLinkEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Dimmer from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
@@ -35,7 +36,6 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
     """YoLink Dimmer Entity."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes: set[ColorMode] = {ColorMode.BRIGHTNESS}
 

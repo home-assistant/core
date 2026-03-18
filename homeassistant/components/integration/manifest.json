@@ -1,6 +1,7 @@
 {
   "domain": "integration",
-  "name": "Integration - Riemann sum integral",
+  "name": "Integral",
+  "after_dependencies": ["counter"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/integration",

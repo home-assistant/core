@@ -1,40 +1,38 @@
 """Config flow to configure the Meteo-France integration."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from meteofrance_api.client import MeteoFranceClient
+from meteofrance_api.model import Place
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 
-from .const import CONF_CITY, DOMAIN, FORECAST_MODE, FORECAST_MODE_DAILY
+from .const import CONF_CITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Meteo-France config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init MeteoFranceFlowHandler."""
-        self.places = []
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> MeteoFranceOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return MeteoFranceOptionsFlowHandler(config_entry)
+        self.places: list[Place] = []
 
     @callback
-    def _show_setup_form(self, user_input=None, errors=None):
+    def _show_setup_form(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -48,9 +46,11 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is None:
             return self._show_setup_form(user_input, errors)
@@ -80,15 +80,13 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
         )
 
-    async def async_step_import(self, user_input):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
-    async def async_step_cities(self, user_input=None):
+    async def async_step_cities(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Step where the user choose the city from the API search results."""
         if not user_input:
             if len(self.places) > 1 and self.source != SOURCE_IMPORT:
-                places_for_form = {}
+                places_for_form: dict[str, str] = {}
                 for place in self.places:
                     places_for_form[_build_place_key(place)] = f"{place}"
 
@@ -114,30 +112,5 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class MeteoFranceOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_MODE, FORECAST_MODE_DAILY
-                    ),
-                ): vol.In(FORECAST_MODE)
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
-
-
-def _build_place_key(place) -> str:
+def _build_place_key(place: Place) -> str:
     return f"{place};{place.latitude};{place.longitude}"

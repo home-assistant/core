@@ -1,0 +1,30 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Dehumidifier ",
+  "category": "cs",
+  "product_id": "vmxuxszzjwp5smli",
+  "product_name": "the Smart Dry Plus\u2122 Connect Dehumidifier ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+10:00",
+  "active_time": "2024-05-28T01:57:58+00:00",
+  "create_time": "2024-05-28T01:57:58+00:00",
+  "update_time": "2024-05-28T01:57:58+00:00",
+  "function": {},
+  "status_range": {
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["E1", "E2"]
+      }
+    }
+  },
+  "status": {
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

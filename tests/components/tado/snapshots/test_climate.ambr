@@ -1,0 +1,538 @@
+# serializer version: 1
+# name: test_aircon_set_hvac_mode[cool-COOL]
+  _Call(
+    tuple(
+      3,
+      'NEXT_TIME_BLOCK',
+      24.76,
+      None,
+      'AIR_CONDITIONING',
+      'ON',
+      'COOL',
+      'AUTO',
+      None,
+      None,
+      None,
+      None,
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_aircon_set_hvac_mode[dry-DRY]
+  _Call(
+    tuple(
+      3,
+      'NEXT_TIME_BLOCK',
+      24.76,
+      None,
+      'AIR_CONDITIONING',
+      'ON',
+      'DRY',
+      None,
+      None,
+      None,
+      None,
+      None,
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_aircon_set_hvac_mode[fan_only-FAN]
+  _Call(
+    tuple(
+      3,
+      'NEXT_TIME_BLOCK',
+      None,
+      None,
+      'AIR_CONDITIONING',
+      'ON',
+      'FAN',
+      None,
+      None,
+      None,
+      None,
+      None,
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_aircon_set_hvac_mode[heat-HEAT]
+  _Call(
+    tuple(
+      3,
+      'NEXT_TIME_BLOCK',
+      24.76,
+      None,
+      'AIR_CONDITIONING',
+      'ON',
+      'HEAT',
+      'AUTO',
+      None,
+      None,
+      None,
+      None,
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_aircon_set_hvac_mode[off-OFF]
+  _Call(
+    tuple(
+      3,
+      'MANUAL',
+      None,
+      None,
+      'AIR_CONDITIONING',
+      'OFF',
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_entities[climate.air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'high',
+        'medium',
+        'low',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 31.0,
+      'min_temp': 16.0,
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 409>,
+    'translation_key': 'tado',
+    'unique_id': 'AIR_CONDITIONING 3 1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[climate.air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 60.9,
+      'current_temperature': 24.8,
+      'default_overlay_seconds': None,
+      'default_overlay_type': 'MANUAL',
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'auto',
+        'high',
+        'medium',
+        'low',
+      ]),
+      'friendly_name': 'Air Conditioning',
+      'hvac_action': <HVACAction.COOLING: 'cooling'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 31.0,
+      'min_temp': 16.0,
+      'offset_celsius': -1.0,
+      'offset_fahrenheit': -1.8,
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'supported_features': <ClimateEntityFeature: 409>,
+      'target_temp_step': 1,
+      'temperature': 17.8,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_entities[climate.air_conditioning_with_fanlevel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'high',
+        'medium',
+        'auto',
+        'low',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 31.0,
+      'min_temp': 16.0,
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'swing_modes': list([
+        'vertical',
+        'horizontal',
+        'both',
+        'off',
+      ]),
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.air_conditioning_with_fanlevel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 441>,
+    'translation_key': 'tado',
+    'unique_id': 'AIR_CONDITIONING 6 1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[climate.air_conditioning_with_fanlevel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 70.9,
+      'current_temperature': 24.3,
+      'default_overlay_seconds': None,
+      'default_overlay_type': 'MANUAL',
+      'fan_mode': 'high',
+      'fan_modes': list([
+        'high',
+        'medium',
+        'auto',
+        'low',
+      ]),
+      'friendly_name': 'Air Conditioning with fanlevel',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 31.0,
+      'min_temp': 16.0,
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'supported_features': <ClimateEntityFeature: 441>,
+      'swing_mode': 'both',
+      'swing_modes': list([
+        'vertical',
+        'horizontal',
+        'both',
+        'off',
+      ]),
+      'target_temp_step': 1.0,
+      'temperature': 25.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.air_conditioning_with_fanlevel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_entities[climate.air_conditioning_with_swing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'high',
+        'medium',
+        'low',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 16.0,
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'swing_modes': list([
+        'on',
+        'off',
+      ]),
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.air_conditioning_with_swing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 441>,
+    'translation_key': 'tado',
+    'unique_id': 'AIR_CONDITIONING 5 1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[climate.air_conditioning_with_swing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 42.3,
+      'current_temperature': 20.9,
+      'default_overlay_seconds': None,
+      'default_overlay_type': 'MANUAL',
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'auto',
+        'high',
+        'medium',
+        'low',
+      ]),
+      'friendly_name': 'Air Conditioning with swing',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 16.0,
+      'offset_celsius': -1.0,
+      'offset_fahrenheit': -1.8,
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'supported_features': <ClimateEntityFeature: 441>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'on',
+        'off',
+      ]),
+      'target_temp_step': 1.0,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.air_conditioning_with_swing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[climate.baseboard_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 31.0,
+      'min_temp': 16.0,
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.baseboard_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'tado',
+    'unique_id': 'HEATING 1 1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[climate.baseboard_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 45.2,
+      'current_temperature': 20.6,
+      'default_overlay_seconds': None,
+      'default_overlay_type': 'MANUAL',
+      'friendly_name': 'Baseboard Heater',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 31.0,
+      'min_temp': 16.0,
+      'offset_celsius': -1.0,
+      'offset_fahrenheit': -1.8,
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'away',
+        'home',
+        'auto',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 1,
+      'temperature': 20.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.baseboard_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_heater_set_temperature
+  _Call(
+    tuple(
+      1,
+      'NEXT_TIME_BLOCK',
+      22.0,
+      None,
+      'HEATING',
+      'ON',
+      'HEAT',
+      None,
+      None,
+      None,
+      None,
+      None,
+    ),
+    dict({
+    }),
+  )
+# ---

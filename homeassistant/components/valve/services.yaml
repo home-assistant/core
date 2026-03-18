@@ -1,0 +1,45 @@
+# Describes the format for available valve services
+
+open_valve:
+  target:
+    entity:
+      domain: valve
+      supported_features:
+        - valve.ValveEntityFeature.OPEN
+
+close_valve:
+  target:
+    entity:
+      domain: valve
+      supported_features:
+        - valve.ValveEntityFeature.CLOSE
+
+toggle:
+  target:
+    entity:
+      domain: valve
+      supported_features:
+        - - valve.ValveEntityFeature.CLOSE
+          - valve.ValveEntityFeature.OPEN
+
+set_valve_position:
+  target:
+    entity:
+      domain: valve
+      supported_features:
+        - valve.ValveEntityFeature.SET_POSITION
+  fields:
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+stop_valve:
+  target:
+    entity:
+      domain: valve
+      supported_features:
+        - valve.ValveEntityFeature.STOP

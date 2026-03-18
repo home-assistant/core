@@ -1,0 +1,60 @@
+{
+  "library_artists": [
+    {
+      "item_id": "127",
+      "provider": "library",
+      "name": "W O L F C L U B",
+      "version": "",
+      "sort_name": "w o l f c l u b",
+      "uri": "library://artist/127",
+      "external_ids": [],
+      "media_type": "artist",
+      "provider_mappings": [
+        {
+          "item_id": "8741977",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--56X5qDS7",
+          "available": 1,
+          "audio_format": {
+            "content_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/artist/8741977",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/1e01cdb6/f15d/4d8b/8440/a047976c1cac/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "library_radios": [
+    {
+      "item_id": "1",
+      "provider": "library",
+      "name": "fm4 | ORF | HQ",
+      "version": "",
+      "sort_name": "fm4 | orf | hq",
+      "uri": "library://radio/1",
+      "external_ids": [],
+      "media_type": "radio",
+      "provider_mappings": [
+        {
+          "item_id": "1e13ed4e-daa9-4728-8550-e08d89c1c8e7",
+          "provider_domain": "radiobrowser",
+          "provider_instance": "radiobrowser--FRc3pD3t",
+          "available": 1,
+          "audio_format": {
+            "content_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://tubestatic.orf.at/mojo/1_3/storyserver//tube/fm4/images/touch-icon-iphone-retina.png",
+            "provider": "radiobrowser",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": [
+          {
+            "type": "website",
+            "url": "https://fm4.orf.at/"
+          }
+        ],
+        "performers": null,
+        "preview": null,
+        "popularity": 166,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 172800
+    }
+  ]
+}
