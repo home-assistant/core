@@ -93,12 +93,11 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         return False
 
     async def _error(error: Exception) -> None:
-        if (
-            isinstance(error, OperationError)
-            and str(error) == "Timeout in command: CLOCK"
-        ):
-            _LOGGER.warning("Risco keep-alive timeout, waiting for reconnection")
-            return
+        if isinstance(error, OperationError):
+            message = str(error)
+            if "Timeout in command: CLOCK" in message:
+                _LOGGER.warning("Risco keep-alive timeout, waiting for reconnection")
+                return
 
         _LOGGER.error("Error in Risco library", exc_info=error)
         if isinstance(error, ConnectionResetError) and not hass.is_stopping:
@@ -182,7 +181,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await local_data.system.disconnect()
             except Exception:  # noqa: BLE001
-                _LOGGER.warning("Failed to disconnect from local Risco panel")
+                _LOGGER.warning(
+                    "Failed to disconnect from local Risco panel", exc_info=True
+                )
 
         hass.data[DOMAIN].pop(entry.entry_id)
 
