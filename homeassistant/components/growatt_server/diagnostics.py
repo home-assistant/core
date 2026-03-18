@@ -5,11 +5,22 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_PLANT_ID
 from .coordinator import GrowattConfigEntry
 
-TO_REDACT = {"password", "token", "username", "user_id", "plant_id", "unique_id"}
+TO_REDACT = {
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    CONF_UNIQUE_ID,
+    CONF_PLANT_ID,
+    "user_id",
+    "device_sn",
+    "deviceSn",
+}
 
 
 async def async_get_config_entry_diagnostics(

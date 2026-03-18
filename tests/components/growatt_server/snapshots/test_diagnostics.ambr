@@ -31,7 +31,7 @@
         'data': dict({
           'acChargeEnable': 1,
           'chargePowerCommand': 50,
-          'deviceSn': 'MIN123456',
+          'deviceSn': '**REDACTED**',
           'disChargePowerCommand': 80,
           'eBatChargeToday': 6.3,
           'eBatChargeTotal': 150.2,
@@ -83,7 +83,7 @@
           'wchargeSOCLowLimit': 10,
           'wdisChargeSOCLowLimit': 20,
         }),
-        'device_sn': 'MIN123456',
+        'device_sn': '**REDACTED**',
         'device_type': 'min',
       }),
     ]),
@@ -94,6 +94,35 @@
       'today_energy': 12.5,
       'totalEnergy': 1250.0,
       'total_energy': 1250.0,
+    }),
+  })
+# ---
+# name: test_diagnostics_classic_api
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'auth_type': 'password',
+        'name': 'Test Plant',
+        'password': '**REDACTED**',
+        'plant_id': '**REDACTED**',
+        'url': 'other_regions',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'growatt_server',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
     }),
   })
 # ---
