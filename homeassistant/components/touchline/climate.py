@@ -61,12 +61,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Touchline devices from a config entry."""
     host = entry.data[CONF_HOST]
-    py_touchline = PyTouchline(url=host)
-    number_of_devices = int(
-        await hass.async_add_executor_job(py_touchline.get_number_of_devices)
-    )
+
+    number_of_devices = entry.runtime_data["number_of_devices"]
     devices = [
-        Touchline(PyTouchline(id=device_id, url=host))
+        Touchline(PyTouchline(id=device_id, url=host), device_id, entry.entry_id)
         for device_id in range(number_of_devices)
     ]
     async_add_entities(devices, True)
@@ -134,23 +132,20 @@ class Touchline(ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, touchline_thermostat):
+    def __init__(self, touchline_thermostat, device_id, controller_id):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
         self._attr_name = None
         self._current_operation_mode = None
         self._attr_preset_mode = None
-        self._device_id = None
-        self._controller_id = None
-        self._attr_unique_id = None
+        self._device_id = device_id
+        self._controller_id = controller_id
+        self._attr_unique_id = f"{self._device_id}_{self._controller_id}"
 
     def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
         self._attr_name = self.unit.get_name()
-        self._device_id = self.unit.get_device_id()
-        self._controller_id = self.unit.get_controller_id()
-        self._attr_unique_id = f"{self._device_id}_{self._controller_id}"
         self._attr_current_temperature = self.unit.get_current_temperature()
         self._attr_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(

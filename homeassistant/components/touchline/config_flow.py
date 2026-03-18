@@ -61,6 +61,7 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 unique_id = await _async_validate_input(self.hass, user_input)
+
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pragma: no cover
@@ -68,6 +69,10 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
+                _LOGGER.debug(
+                    "Setting unique id: %s and aborting if unique id is configured",
+                    unique_id,
+                )
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
