@@ -50,8 +50,18 @@ class CommandLineNotificationService(BaseNotificationService):
 
         LOGGER.debug("Running with message: %s", message)
 
+        try:
+            argv = shlex.split(command)
+        except ValueError as err:
+            _LOGGER.error("Error parsing command %s: %s", command, err)
+            return
+
+        if not argv:
+            _LOGGER.error("Empty command provided for notification")
+            return
+
         with subprocess.Popen(
-            shlex.split(command),
+            argv,
             universal_newlines=True,
             stdin=subprocess.PIPE,
             close_fds=False,  # required for posix_spawn
