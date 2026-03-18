@@ -10,7 +10,6 @@ LABEL \
     org.opencontainers.image.description="Open-source home automation platform running on Python 3" \
     org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
     org.opencontainers.image.licenses="Apache-2.0" \
-    org.opencontainers.image.source="https://github.com/home-assistant/core" \
     org.opencontainers.image.title="Home Assistant" \
     org.opencontainers.image.url="https://www.home-assistant.io/"
 
