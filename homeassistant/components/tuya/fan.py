@@ -10,9 +10,11 @@ from tuya_device_handlers.device_wrapper.common import (
     DPCodeEnumWrapper,
 )
 from tuya_device_handlers.device_wrapper.fan import (
+    FanDirectionEnumWrapper,
     FanSpeedEnumWrapper,
     FanSpeedIntegerWrapper,
 )
+from tuya_device_handlers.helpers.homeassistant import TuyaFanDirection
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.fan import (
@@ -50,18 +52,13 @@ TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
     DeviceCategory.KS,
 }
 
-
-class _DirectionEnumWrapper(DPCodeEnumWrapper):
-    """Wrapper for fan direction DP code."""
-
-    def read_device_status(self, device: CustomerDevice) -> str | None:
-        """Read the device status and return the direction string."""
-        if (value := self._read_dpcode_value(device)) and value in {
-            DIRECTION_FORWARD,
-            DIRECTION_REVERSE,
-        }:
-            return value
-        return None
+_TUYA_TO_HA_DIRECTION_MAPPINGS = {
+    TuyaFanDirection.FORWARD: DIRECTION_FORWARD,
+    TuyaFanDirection.REVERSE: DIRECTION_REVERSE,
+}
+_HA_TO_TUYA_DIRECTION_MAPPINGS = {
+    v: k for k, v in _TUYA_TO_HA_DIRECTION_MAPPINGS.items()
+}
 
 
 def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
@@ -107,7 +104,7 @@ async def async_setup_entry(
                     TuyaFanEntity(
                         device,
                         manager,
-                        direction_wrapper=_DirectionEnumWrapper.find_dpcode(
+                        direction_wrapper=FanDirectionEnumWrapper.find_dpcode(
                             device, _DIRECTION_DPCODES, prefer_function=True
                         ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
@@ -141,7 +138,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        direction_wrapper: DeviceWrapper[str] | None,
+        direction_wrapper: DeviceWrapper[TuyaFanDirection] | None,
         mode_wrapper: DeviceWrapper[str] | None,
         oscillate_wrapper: DeviceWrapper[bool] | None,
         speed_wrapper: DeviceWrapper[int] | None,
@@ -182,7 +179,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        await self._async_send_wrapper_updates(self._direction_wrapper, direction)
+        if tuya_value := _HA_TO_TUYA_DIRECTION_MAPPINGS.get(direction):
+            await self._async_send_wrapper_updates(self._direction_wrapper, tuya_value)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -227,7 +225,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
-        return self._read_wrapper(self._direction_wrapper)
+        tuya_value = self._read_wrapper(self._direction_wrapper)
+        return _TUYA_TO_HA_DIRECTION_MAPPINGS.get(tuya_value) if tuya_value else None
 
     @property
     def oscillating(self) -> bool | None:

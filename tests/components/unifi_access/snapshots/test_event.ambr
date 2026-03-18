@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_event_entities[event.back_door_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -60,8 +61,9 @@
 # ---
 # name: test_event_entities[event.back_door_doorbell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -118,8 +120,9 @@
 # ---
 # name: test_event_entities[event.front_door_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -177,8 +180,9 @@
 # ---
 # name: test_event_entities[event.front_door_doorbell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
