@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import collections.abc
-import logging
 from collections.abc import Callable
+import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
