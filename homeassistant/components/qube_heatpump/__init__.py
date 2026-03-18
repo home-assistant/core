@@ -36,11 +36,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
     try:
         connected = await client.connect()
         if not connected:
+            await client.close()
             raise ConfigEntryNotReady(
                 f"Unable to connect to Qube heat pump at {entry.data[CONF_HOST]}"
             )
         sw_version = await client.async_get_software_version()
     except (OSError, TimeoutError) as err:
+        await client.close()
         raise ConfigEntryNotReady(
             f"Unable to connect to Qube heat pump at {entry.data[CONF_HOST]}"
         ) from err
