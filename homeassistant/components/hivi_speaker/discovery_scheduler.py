@@ -369,13 +369,12 @@ def _is_safe_location_url(url: str) -> bool:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
         return False
-    else:
-        try:
-            host = parsed.hostname or ""
-            addr = ip_address(host)
-            return addr.is_private or addr.is_link_local
-        except ValueError:
-            return False
+    try:
+        host = parsed.hostname or ""
+        addr = ip_address(host)
+        return addr.is_private or addr.is_link_local
+    except ValueError:
+        return False
 
 
 async def parse_local_url(session: aiohttp.ClientSession, url: str):
