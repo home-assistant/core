@@ -66,6 +66,7 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         discovery_info = self._discovered_devices_info[self._discovered_device]
         title = discovery_info.name
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             # see if we can create a device with the access token
             device = VictronBluetoothDeviceData(user_input[CONF_ACCESS_TOKEN])
@@ -76,12 +77,13 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=title,
                     data=user_input,
                 )
-            return self.async_abort(reason="invalid_access_token")
+            errors["base"] = "invalid_access_token"
 
         return self.async_show_form(
             step_id="access_token",
             data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
             description_placeholders={"title": title},
+            errors=errors,
         )
 
     async def async_step_user(
