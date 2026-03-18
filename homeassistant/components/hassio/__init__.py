@@ -491,8 +491,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         nonlocal last_timezone
         nonlocal last_country
 
-        new_timezone = str(hass.config.time_zone)
-        new_country = str(hass.config.country)
+        new_timezone = hass.config.time_zone
+        new_country = hass.config.country
 
         if new_timezone != last_timezone or new_country != last_country:
             last_timezone = new_timezone

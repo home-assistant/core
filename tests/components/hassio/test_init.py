@@ -235,6 +235,23 @@ async def test_setup_api_push_api_data(
     )
 
 
+async def test_setup_api_push_api_data_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with error while pushing core config data to API."""
+    supervisor_client.homeassistant.set_options.side_effect = SupervisorError("boom")
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
+        await hass.async_block_till_done()
+
+    assert result
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert "Failed to update Home Assistant options in Supervisor: boom" in caplog.text
+
+
 async def test_setup_api_push_api_data_server_host(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -376,7 +393,7 @@ async def test_setup_core_push_config(
     assert result
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
     supervisor_client.supervisor.set_options.assert_called_once_with(
-        SupervisorOptions(timezone="testzone", country=ANY)
+        SupervisorOptions(timezone="testzone")
     )
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -385,6 +402,25 @@ async def test_setup_core_push_config(
     supervisor_client.supervisor.set_options.assert_called_with(
         SupervisorOptions(timezone="America/New_York", country="US")
     )
+
+
+async def test_setup_core_push_config_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with error whie pushing supervisor config data to API."""
+    hass.config.time_zone = "testzone"
+    supervisor_client.supervisor.set_options.side_effect = SupervisorError("boom")
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {"hassio": {}})
+        await hass.async_block_till_done()
+
+    assert result
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert "Failed to update Supervisor options: boom" in caplog.text
 
 
 async def test_setup_hassio_no_additional_data(
