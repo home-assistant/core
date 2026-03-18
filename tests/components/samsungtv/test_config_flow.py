@@ -1823,6 +1823,53 @@ async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     assert result2["reason"] == "reauth_successful"
 
 
+async def test_reconfigure_host(hass: HomeAssistant) -> None:
+    """Test reconfigure flow updates the host."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="10.10.12.77",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new-host"},
+        )
+
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "10.10.12.77"
+
+
+async def test_reconfigure_host_invalid(hass: HomeAssistant) -> None:
+    """Test reconfigure flow retries on invalid host."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror("invalid host"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "bad-host"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == config_entries.SOURCE_RECONFIGURE
+    assert result2["errors"] == {"base": "invalid_host"}
+
+
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket."""
