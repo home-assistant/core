@@ -397,6 +397,8 @@ build.json @home-assistant/supervisor
 /tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/drop_connect/ @ChandlerSystems @pfrazer
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
+/homeassistant/components/dropbox/ @bdr99
+/tests/components/dropbox/ @bdr99
 /homeassistant/components/droplet/ @sarahseidman
 /tests/components/droplet/ @sarahseidman
 /homeassistant/components/dsmr/ @Robbie1221
@@ -974,6 +976,8 @@ build.json @home-assistant/supervisor
 /tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
+/homeassistant/components/lojack/ @devinslick
+/tests/components/lojack/ @devinslick
 /homeassistant/components/london_underground/ @jpbede
 /tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
@@ -1614,8 +1618,6 @@ build.json @home-assistant/supervisor
 /tests/components/srp_energy/ @briglx
 /homeassistant/components/starline/ @anonym-tsk
 /tests/components/starline/ @anonym-tsk
-/homeassistant/components/starlink/ @boswelja
-/tests/components/starlink/ @boswelja
 /homeassistant/components/statistics/ @ThomDietrich @gjohansson-ST
 /tests/components/statistics/ @ThomDietrich @gjohansson-ST
 /homeassistant/components/steam_online/ @tkdrob
@@ -1770,6 +1772,8 @@ build.json @home-assistant/supervisor
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
 /tests/components/triggercmd/ @rvmey
+/homeassistant/components/trmnl/ @joostlek
+/tests/components/trmnl/ @joostlek
 /homeassistant/components/tts/ @home-assistant/core
 /tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuya/ @Tuya @zlinoliver
@@ -1786,6 +1790,8 @@ build.json @home-assistant/supervisor
 /tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
+/homeassistant/components/unifi_access/ @imhotep @RaHehl
+/tests/components/unifi_access/ @imhotep @RaHehl
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifiled/ @florisvdk
 /homeassistant/components/unifiprotect/ @RaHehl
