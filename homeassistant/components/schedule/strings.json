@@ -1,6 +1,6 @@
 {
   "common": {
-    "condition_behavior_description": "The behavior of the targeted schedules to check.",
+    "condition_behavior_description": "How the state should match on the targeted schedules.",
     "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted schedules to trigger on.",
     "trigger_behavior_name": "Behavior"
