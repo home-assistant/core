@@ -172,10 +172,16 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
     def _update_device_firmware(self, data: dict[str, GwEntityData]) -> None:
         """Detect firmware changes and update the device registry."""
         for device_id, device in data.items():
+            # Only update firmware when the key is present and not None, to avoid
+            # wiping stored firmware on partial or transient updates.
+            if "firmware" not in device:
+                continue
+            new_firmware = device.get("firmware")
+            if new_firmware is None:
+                continue
             if (
                 device_id in self._firmware_list
-                and (new_firmware := device.get("firmware"))
-                != self._firmware_list[device_id]
+                and new_firmware != self._firmware_list[device_id]
             ):
                 updated = self._update_firmware_in_dr(device_id, new_firmware)
                 if updated:
