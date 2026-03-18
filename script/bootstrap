@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CORE_DIR="$ROOT/core"
+CORE_BRANCH="${HASS_CLIENT_CORE_BRANCH:-dev}"
+
+if [[ ! -d "$CORE_DIR/.git" ]]; then
+  exec "$ROOT/script/setup"
+fi
+
+if [[ -n "$(git -C "$CORE_DIR" status --porcelain)" ]]; then
+  echo "error: $CORE_DIR has local changes; refusing to update it" >&2
+  exit 1
+fi
+
+CURRENT_BRANCH="$(git -C "$CORE_DIR" branch --show-current)"
+if [[ "$CURRENT_BRANCH" != "$CORE_BRANCH" ]]; then
+  echo "error: $CORE_DIR is on branch '$CURRENT_BRANCH', expected '$CORE_BRANCH'" >&2
+  exit 1
+fi
+
+git -C "$CORE_DIR" pull --ff-only origin "$CORE_BRANCH"

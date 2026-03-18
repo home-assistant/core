@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-core:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+            core/**/*requirements*.txt
+            core/**/*constraints*.txt
+
+      - name: Setup Home Assistant core
+        run: ./script/setup
+
+      - name: Verify lockfile
+        run: uv lock --check
+
+      - name: Run compatibility tests
+        run: ./script/test-core -q

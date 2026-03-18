@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CORE_DIR="$ROOT/core"
+CORE_REPO="${HASS_CLIENT_CORE_REPO:-https://github.com/home-assistant/core.git}"
+CORE_BRANCH="${HASS_CLIENT_CORE_BRANCH:-dev}"
+
+if [[ -e "$CORE_DIR" && ! -d "$CORE_DIR/.git" ]]; then
+  echo "error: $CORE_DIR exists but is not a git checkout" >&2
+  exit 1
+fi
+
+if [[ -d "$CORE_DIR/.git" ]]; then
+  echo "core already checked out at $CORE_DIR"
+  exit 0
+fi
+
+git clone \
+  --branch "$CORE_BRANCH" \
+  --single-branch \
+  --depth 1 \
+  "$CORE_REPO" \
+  "$CORE_DIR"

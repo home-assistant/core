@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CORE_DIR="$ROOT/core"
+PYTHON_VERSION="${HASS_CLIENT_PYTHON:-3.14}"
+TEST_TARGET="${HASS_CLIENT_TEST_TARGET:-tests/test_core.py}"
+
+if [[ ! -d "$CORE_DIR/.git" ]]; then
+  "$ROOT/script/setup"
+fi
+
+(
+  cd "$CORE_DIR"
+  PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" \
+    uv run \
+      --project "$ROOT" \
+      --python "$PYTHON_VERSION" \
+      --with-requirements "$CORE_DIR/requirements.txt" \
+      --with-requirements "$CORE_DIR/requirements_test.txt" \
+      python -m pytest \
+        -p hass_client.testing.pytest_plugin \
+        "$TEST_TARGET" \
+        "$@"
+)

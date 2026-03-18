@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hass-client"
+version = "0.1.0"
+description = "A remote-capable Home Assistant compatibility layer for running integrations outside Home Assistant."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Paulus Schoutsen" }]
+dependencies = [
+  "aiohttp>=3.11.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+packages = ["hass_client", "hass_client.testing"]
+zip-safe = false
+
+[tool.setuptools.package-data]
+hass_client = ["py.typed"]
+
+[tool.uv]
+default-groups = ["dev"]
