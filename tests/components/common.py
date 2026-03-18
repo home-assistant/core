@@ -235,7 +235,7 @@ def _parametrize_condition_states(
                     "attributes": additional_attributes,
                 },
                 "excluded": {
-                    "state": state,
+                    "state": state if additional_attributes else None,
                     "attributes": {},
                 },
                 "condition_true": condition_true,
@@ -247,7 +247,7 @@ def _parametrize_condition_states(
                 "attributes": state[1] | additional_attributes,
             },
             "excluded": {
-                "state": state[0],
+                "state": state[0] if additional_attributes else None,
                 "attributes": state[1],
             },
             "condition_true": condition_true,
@@ -896,15 +896,22 @@ async def assert_condition_behavior_any(
     for state in states:
         included_state = state["included"]
         excluded_state = state["excluded"]
+
+        # Set excluded entities first to verify that they don't make the
+        # condition evaluate to true
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert condition(hass) is False
+
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
 
+        # Set other included entities to the included state to verify that
+        # they don't change the condition evaluation
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        for excluded_entity_id in excluded_entity_ids:
-            set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
 
