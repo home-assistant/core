@@ -176,7 +176,7 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     ]
 
 
-class _StateDescription(TypedDict):
+class StateDescription(TypedDict):
     """Test state with attributes."""
 
     state: str | None
@@ -186,16 +186,16 @@ class _StateDescription(TypedDict):
 class TriggerStateDescription(TypedDict):
     """Test state and expected service call count."""
 
-    included: _StateDescription  # State for entities meant to be targeted
-    excluded: _StateDescription  # State for entities not meant to be targeted
+    included: StateDescription  # State for entities meant to be targeted
+    excluded: StateDescription  # State for entities not meant to be targeted
     count: int  # Expected service call count
 
 
 class ConditionStateDescription(TypedDict):
     """Test state and expected condition evaluation."""
 
-    included: _StateDescription  # State for entities meant to be targeted
-    excluded: _StateDescription  # State for entities not meant to be targeted
+    included: StateDescription  # State for entities meant to be targeted
+    excluded: StateDescription  # State for entities not meant to be targeted
 
     condition_true: bool  # If the condition is expected to evaluate to true
     condition_true_first_entity: bool  # If the condition is expected to evaluate to true for the first targeted entity
@@ -791,7 +791,7 @@ async def create_target_condition(
 def set_or_remove_state(
     hass: HomeAssistant,
     entity_id: str,
-    state: TriggerStateDescription,
+    state: StateDescription,
 ) -> None:
     """Set or remove the state of an entity."""
     if state["state"] is None:
