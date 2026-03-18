@@ -45,7 +45,7 @@ class HIVIGroupCoordinator:
         self._operation_lock = asyncio.Lock()
         self._request_callbacks: dict[str, Callable] = {}  # operation_id -> callback
 
-        self._dispatcher_connections = []
+        self._dispatcher_connections: list[Callable[[], None]] = []
         self._unsub_operation_started = None
         self._unsub_device_updated = None
 
@@ -207,7 +207,7 @@ class HIVIGroupCoordinator:
             if callback_func:
                 self._request_callbacks[operation_id] = callback_func
 
-            result = {
+            accepted: dict[str, Any] = {
                 "accepted": True,
                 "operation_id": operation_id,
                 "reason": "accepted",
@@ -224,9 +224,9 @@ class HIVIGroupCoordinator:
                     },
                 )
 
-            return result
+            return accepted
 
-    def _generate_operation_id(self, operation_data: dict) -> str:  # noqa: PLR6301
+    def _generate_operation_id(self, operation_data: dict) -> str:
         """Generate unique operation ID."""
         op_type = operation_data.get("type", "unknown")
         master = operation_data.get("master", "unknown")
@@ -454,7 +454,7 @@ class HIVIGroupCoordinator:
                 self._poll_operation_status_with_callback(operation_id)
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             _LOGGER.error("Operation processing exception: %s - %s", operation_id, e)
 
             if callback_func:
@@ -594,7 +594,7 @@ class HIVIGroupCoordinator:
                     )
                 break
 
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _LOGGER.error("Polling operation exception: %s - %s", operation_id, e)
 
                 if callback_func:
@@ -614,7 +614,7 @@ class HIVIGroupCoordinator:
         if operation_id in self._poll_tasks:
             del self._poll_tasks[operation_id]
 
-    async def _execute_operation(self, operation: dict) -> bool:  # noqa: PLR6301
+    async def _execute_operation(self, operation: dict) -> bool:
         """Execute specific operation."""
         op_type = operation.get("type")
         operation_data = operation.get("data", {})
@@ -659,15 +659,15 @@ class HIVIGroupCoordinator:
                             master_ip=master_ip,
                             uuid=uuid,
                         )
-                    return True  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
+                    return True
+                except Exception as e:
                     _LOGGER.error("Failed to set slave speaker operation: %s", e)
                     return False
             elif op_type == "remove_slave":
                 try:
                     params = operation_data.get("params", {})
-                    required_keys = ("master_ip", "slave_ip_ra0")
-                    missing = [k for k in required_keys if k not in params]
+                    remove_slave_keys = ("master_ip", "slave_ip_ra0")
+                    missing = [k for k in remove_slave_keys if k not in params]
                     if missing:
                         _LOGGER.error(
                             "Missing required params for remove_slave: %s", missing
@@ -677,14 +677,14 @@ class HIVIGroupCoordinator:
                     slave_ip_ra0 = params["slave_ip_ra0"]
                     async with HivicoClient(timeout=5, debug=False) as client:
                         await client.remove_slave_from_group(master_ip, slave_ip_ra0)
-                    return True  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
+                    return True
+                except Exception as e:
                     _LOGGER.error("Failed to remove slave speaker operation: %s", e)
                     return False
             else:
                 _LOGGER.error("Unknown operation type: %s", op_type)
                 return False
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             _LOGGER.error("Operation execution exception: %s", e)
             return False
 
@@ -815,14 +815,14 @@ class HIVIGroupCoordinator:
             except asyncio.CancelledError:
                 _LOGGER.debug("Polling task cancelled: %s", operation_id)
                 break
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 _LOGGER.error("Polling operation exception: %s - %s", operation_id, e)
                 await asyncio.sleep(self._poll_interval)
 
         if operation_id in self._poll_tasks:
             del self._poll_tasks[operation_id]
 
-    async def _verify_operation_state(self, operation: dict) -> bool:  # noqa: PLR6301
+    async def _verify_operation_state(self, operation: dict) -> bool:
         """Verify operation status."""
         slave_speaker_device_id = operation["slave"]
 
@@ -852,8 +852,8 @@ class HIVIGroupCoordinator:
                         if uuid == slave_speaker_device_id:
                             _LOGGER.debug("find match UUID: %s", uuid)
                             return True
-                    return False  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
+                    return False
+                except Exception as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
             elif op_type == "remove_slave":
@@ -878,16 +878,19 @@ class HIVIGroupCoordinator:
                             break
                     if still_exists:
                         return False
-                    return True  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
+                    return True
+                except Exception as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
+            else:
+                _LOGGER.error("Unknown operation type for verify: %s", op_type)
+                return False
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             _LOGGER.error("Exception verifying operation status: %s", e)
             return False
 
-    async def _check_actual_state(  # noqa: PLR6301
+    async def _check_actual_state(
         self, master_client, slave_speaker_device_id: str
     ) -> str:
         """Check actual status."""
@@ -898,12 +901,12 @@ class HIVIGroupCoordinator:
 
             if slave_speaker_device_id in slave_devices:
                 return "slave"
-            return "standalone"  # noqa: TRY300
+            return "standalone"
 
         except TimeoutError:
             _LOGGER.debug("Timeout getting slave speaker list")
             return "unknown"
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             _LOGGER.debug("Exception getting slave speaker list: %s", e)
             return "unknown"
 
@@ -935,7 +938,7 @@ class HIVIGroupCoordinator:
         await self._cleanup_operation(operation_id)
 
     @callback
-    def _handle_operation_started(self, event):  # noqa: PLR6301
+    def _handle_operation_started(self, event):
         """Handle operation start event."""
         operation_id = event.data.get("operation_id")
         _LOGGER.debug("Group operation started: %s", operation_id)
@@ -972,12 +975,14 @@ class HIVIGroupCoordinator:
 
         return result
 
-    async def get_all_operations(self) -> dict[str, dict]:
+    async def get_all_operations(self) -> dict[str, dict[str, Any]]:
         """Get all operation statuses."""
-        results = {}
+        results: dict[str, dict[str, Any]] = {}
 
         for operation_id in self._pending_operations:
-            results[operation_id] = await self.get_operation_status(operation_id)
+            status = await self.get_operation_status(operation_id)
+            if status is not None:
+                results[operation_id] = status
 
         return results
 
