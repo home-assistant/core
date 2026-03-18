@@ -95,8 +95,8 @@ def mock_disneyland_paris_client() -> Generator[AsyncMock]:
                     "P1RA06": 20,
                 },
             ),
-            Parks.WALT_DISNEY_STUDIOS: Park(
-                slug=Parks.WALT_DISNEY_STUDIOS,
+            Parks.DISNEY_ADVENTURE_WORLD: Park(
+                slug=Parks.DISNEY_ADVENTURE_WORLD,
                 opening_time=datetime(
                     2026, 3, 5, 9, 30, tzinfo=ZoneInfo(key="Europe/Paris")
                 ),

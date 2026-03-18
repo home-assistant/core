@@ -539,7 +539,7 @@ class DisneyAdventureWorldSensor(DisneyAdventureWorldEntity, SensorEntity):
     def native_value(self) -> int | datetime | None:
         """Return the native value of the sensor."""
 
-        park = self.coordinator.client.parks.get(Parks.WALT_DISNEY_STUDIOS)
+        park = self.coordinator.client.parks.get(Parks.DISNEY_ADVENTURE_WORLD)
 
         if park is None:
             return None
