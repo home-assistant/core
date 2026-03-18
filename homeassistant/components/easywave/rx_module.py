@@ -890,10 +890,7 @@ class RxModule:
             # fail the oldest to recover sync
             if not in_startup:
                 with self._protocol_lock:
-                    if (
-                        self._tx_req_sent_size > 0
-                        and len(self._req_pending) == 0
-                    ):
+                    if self._tx_req_sent_size > 0 and len(self._req_pending) == 0:
                         _LOGGER.error(
                             "Corrupt packet with pending requests — failing oldest sent request to recover sync"
                         )
@@ -970,9 +967,7 @@ class RxModule:
                             handle,
                         )
                         return
-                    _LOGGER.warning(
-                        "ICP for unknown handle 0x%04x - ignoring", handle
-                    )
+                    _LOGGER.warning("ICP for unknown handle 0x%04x - ignoring", handle)
                     return
             else:
                 req = self._dequeue_sent()
@@ -980,9 +975,7 @@ class RxModule:
                     if in_startup:
                         _LOGGER.debug("Ignoring synchronous ICP during startup")
                         return
-                    _LOGGER.warning(
-                        "Unexpected synchronous ICP - no request pending"
-                    )
+                    _LOGGER.warning("Unexpected synchronous ICP - no request pending")
                     return
 
             # Validate ICP length
@@ -1005,9 +998,7 @@ class RxModule:
                         icp_byte_count,
                         req.expected_icp_byte_count,
                     )
-                    req.icp = ICP(
-                        handle=handle, result=ErrorCode.ERR_SIZE_MISMATCH
-                    )
+                    req.icp = ICP(handle=handle, result=ErrorCode.ERR_SIZE_MISMATCH)
                     req.signal()
                     return
             elif icp_byte_count != 3:
@@ -1025,9 +1016,7 @@ class RxModule:
                     self._enqueue_queued(req)
                     return
                 _LOGGER.warning("Cannot requeue - queue full")
-                req.icp = ICP(
-                    handle=handle, result=ErrorCode.ERR_OUT_OF_QUEUE
-                )
+                req.icp = ICP(handle=handle, result=ErrorCode.ERR_OUT_OF_QUEUE)
                 req.signal()
                 return
 

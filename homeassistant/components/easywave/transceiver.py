@@ -340,6 +340,7 @@ class RX11Transceiver:
 
     def _on_rxmodule_disconnect(self) -> None:
         """Called from RxModule serial handler thread on USB disconnect."""
+
         # Marshal the actual disconnect handling back onto the HA event loop
         # to avoid unsynchronized cross-thread state changes.
         def _schedule_disconnect() -> None:
