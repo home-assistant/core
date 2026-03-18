@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_snapshots[select.wled_rgb_light_color_palette-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -197,8 +198,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_live_override-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -257,8 +259,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_playlist-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -311,8 +314,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_preset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -365,8 +369,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_segment_1_color_palette-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
