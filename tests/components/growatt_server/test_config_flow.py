@@ -1,6 +1,7 @@
 """Tests for the Growatt server config flow."""
 
 from copy import deepcopy
+from unittest.mock import MagicMock
 
 import growattServer
 import pytest
@@ -1077,7 +1078,7 @@ async def test_reauth_unknown_auth_type(hass: HomeAssistant) -> None:
 )
 async def test_reconfigure_password_success(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     snapshot: SnapshotAssertion,
     stored_url: str,
     user_input: dict,
@@ -1135,7 +1136,7 @@ async def test_reconfigure_password_success(
 )
 async def test_reconfigure_password_error_then_recovery(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
     login_side_effect: Exception | None,
     login_return_value: dict | None,
@@ -1157,6 +1158,10 @@ async def test_reconfigure_password_error_then_recovery(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    expected_error = (
+        ERROR_INVALID_AUTH if login_side_effect is None else ERROR_CANNOT_CONNECT
+    )
+    assert result["errors"] == {"base": expected_error}
 
     # Recover with correct credentials
     mock_growatt_classic_api.login.side_effect = None
@@ -1171,7 +1176,7 @@ async def test_reconfigure_password_error_then_recovery(
 
 async def test_reconfigure_token_success(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1203,7 +1208,7 @@ async def test_reconfigure_token_success(
 )
 async def test_reconfigure_token_error_then_recovery(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     plant_list_side_effect: Exception,
 ) -> None:
@@ -1222,6 +1227,12 @@ async def test_reconfigure_token_error_then_recovery(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    expected_error = (
+        ERROR_INVALID_AUTH
+        if isinstance(plant_list_side_effect, growattServer.GrowattV1ApiError)
+        else ERROR_CANNOT_CONNECT
+    )
+    assert result["errors"] == {"base": expected_error}
 
     # Recover with a valid token
     mock_growatt_v1_api.plant_list.side_effect = None

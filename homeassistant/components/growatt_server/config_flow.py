@@ -8,7 +8,7 @@ import growattServer
 import requests
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -91,7 +91,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_credentials(
         self,
         step_id: str,
-        entry: Any,
+        entry: ConfigEntry,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Handle credential update for both reauth and reconfigure."""
