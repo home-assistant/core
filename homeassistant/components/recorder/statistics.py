@@ -31,7 +31,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
-from voluptuous import MultipleInvalid
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
@@ -722,12 +721,12 @@ def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str
                 platform_custom_equivalent_units
             )
             custom_equivalent_units_per_entity |= validated_data
-        except MultipleInvalid as ve:
+        except vol.Invalid as inv:
             _LOGGER.warning(
                 "Error processing result of %s for recorder platform domain %s: %s for object: %s",
                 INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
                 domain,
-                ve,
+                inv,
                 platform_custom_equivalent_units,
             )
 
