@@ -241,7 +241,14 @@ class HIVIDeviceManager:
                 else:
                     try:
                         slave_device_result = await self._fetch_slave_device(device_obj)
-                    except (OSError, TimeoutError, ValueError, TypeError, RuntimeError) as e:
+                    except (
+                        OSError,
+                        TimeoutError,
+                        ValueError,
+                        TypeError,
+                        RuntimeError,
+                        ConnectionError,
+                    ) as e:
                         _LOGGER.error(
                             "Failed to get slave device list for %s, error: %s",
                             device_obj.friendly_name,
