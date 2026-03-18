@@ -73,6 +73,9 @@
       "keep_fresh_mode_active": {
         "name": "Keep fresh mode active"
       },
+      "microfiber_filter_blockage": {
+        "name": "Filter blockage"
+      },
       "oven_cavity_status": {
         "name": "Second cavity status"
       },
