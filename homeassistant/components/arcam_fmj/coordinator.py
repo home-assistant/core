@@ -11,7 +11,10 @@ from arcam.fmj.state import State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +30,7 @@ class ArcamFmjRuntimeData:
 type ArcamFmjConfigEntry = ConfigEntry[ArcamFmjRuntimeData]
 
 
-class ArcamFmjCoordinator(DataUpdateCoordinator[State]):
+class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a single Arcam FMJ zone."""
 
     config_entry: ArcamFmjConfigEntry
@@ -50,21 +53,25 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[State]):
         self.state = State(client, zone)
         self.last_update_success = False
 
-    async def _async_initial_update(self) -> None:
-        """Perform initial state update after connection is established."""
-        try:
-            await self.state.update()
-        except ConnectionFailed:
-            _LOGGER.debug(
-                "Connection lost during initial update for zone %s", self.state.zn
-            )
-            self.last_update_success = False
-            self.async_update_listeners()
-        else:
-            self.last_update_success = True
-            self.async_set_updated_data(self.state)
+        name = config_entry.title
+        unique_id = config_entry.unique_id or config_entry.entry_id
+        unique_id_device = unique_id
+        if zone != 1:
+            unique_id_device += f"-{zone}"
+            name += f" Zone {zone}"
 
-    async def _async_update_data(self) -> State:
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id_device)},
+            manufacturer="Arcam",
+            model="Arcam FMJ AVR",
+            name=name,
+        )
+        self.zone_unique_id = f"{unique_id}-{zone}"
+
+        if zone != 1:
+            self.device_info["via_device"] = (DOMAIN, unique_id)
+
+    async def _async_update_data(self) -> None:
         """Fetch data for manual refresh."""
         try:
             await self.state.update()
@@ -72,17 +79,16 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[State]):
             raise UpdateFailed(
                 f"Connection failed during update for zone {self.state.zn}"
             ) from err
-        return self.state
 
     @callback
     def async_notify_data_updated(self) -> None:
         """Notify that new data has been received from the device."""
-        self.async_set_updated_data(self.state)
+        self.async_set_updated_data(None)
 
     @callback
     def async_notify_connected(self) -> None:
         """Handle client connected."""
-        self.hass.async_create_task(self._async_initial_update())
+        self.hass.async_create_task(self.async_refresh())
 
     @callback
     def async_notify_disconnected(self) -> None:

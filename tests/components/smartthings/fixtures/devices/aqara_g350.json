@@ -1,0 +1,170 @@
+{
+  "items": [
+    {
+      "deviceId": "148dcc52-0ddd-496b-b7ac-3721d0da5fb1",
+      "name": "matter-bridge",
+      "label": "G350",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "f866541d-ce12-3f37-9be2-5fce4eecec98",
+      "deviceManufacturerCode": "Aqara",
+      "locationId": "182958f3-a035-4111-a6a3-c52690b41609",
+      "ownerId": "feaa6b67-1c35-7fcc-3f25-6c1bc12d994f",
+      "roomId": "2bcb53e5-c79e-47d1-b7ed-b20e19a38775",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "webrtc",
+              "version": 1
+            },
+            {
+              "id": "videoStreamSettings",
+              "version": 1
+            },
+            {
+              "id": "imageCapture",
+              "version": 1
+            },
+            {
+              "id": "nightVision",
+              "version": 1
+            },
+            {
+              "id": "cameraViewportSettings",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Camera",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "speaker",
+          "label": "speaker",
+          "capabilities": [
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "microphone",
+          "label": "microphone",
+          "capabilities": [
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2026-03-16T09:56:39.664Z",
+      "parentDeviceId": "0deded1a-8eb9-4243-a1d9-8078d98b1266",
+      "profile": {
+        "id": "b8bc8e03-5efb-3339-9255-eb4fa85164eb"
+      },
+      "matter": {
+        "driverId": "7103039b-68d6-442c-afe5-e1bc955924a9",
+        "hubId": "0deded1a-8eb9-4243-a1d9-8078d98b1266",
+        "provisioningState": "PROVISIONED",
+        "networkId": "0F6613B2D95F7544-2444FD182E9DA1BB",
+        "executingLocally": true,
+        "uniqueId": "8e5b824ed944f5db",
+        "vendorId": 4447,
+        "productId": 12307,
+        "serialNumber": "a4367b4d2bbfde94",
+        "listeningType": "ALWAYS",
+        "supportedNetworkInterfaces": ["WIFI"],
+        "version": {
+          "hardware": 1000,
+          "hardwareLabel": "1.0.0.0",
+          "software": 4005020,
+          "softwareLabel": "4.5.20"
+        },
+        "endpoints": [
+          {
+            "endpointId": 0,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 22
+              }
+            ]
+          },
+          {
+            "endpointId": 1,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 14
+              }
+            ]
+          },
+          {
+            "endpointId": 2,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 322
+              }
+            ]
+          }
+        ],
+        "syncDrivers": true,
+        "fingerprintType": "MATTER_GENERIC",
+        "fingerprintId": "matter/bridge"
+      },
+      "type": "MATTER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "indoorMap": {
+        "coordinates": [180.0, 40.0, 259.0],
+        "rotation": [0.0, 90.0, 0.0],
+        "visible": true,
+        "data": {
+          "expressionType": "only_2d",
+          "lastHideTime": "0",
+          "lastUpdateTime": "1773655456364",
+          "lightingGroupId": "00000000-0000-0000-0000-000000000000"
+        }
+      },
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}
