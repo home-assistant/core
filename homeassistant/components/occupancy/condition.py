@@ -7,30 +7,16 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.condition import Condition, EntityStateConditionBase
+from homeassistant.helpers.condition import Condition, make_entity_state_condition
 
-
-class OccupancyIsDetectedCondition(EntityStateConditionBase):
-    """Condition for occupancy detected (binary sensor ON)."""
-
-    _domain_specs = {
-        BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY)
-    }
-    _states = {STATE_ON}
-
-
-class OccupancyIsNotDetectedCondition(EntityStateConditionBase):
-    """Condition for occupancy not detected (binary sensor OFF)."""
-
-    _domain_specs = {
-        BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY)
-    }
-    _states = {STATE_OFF}
+_OCCUPANCY_DOMAIN_SPECS = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY)
+}
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_detected": OccupancyIsDetectedCondition,
-    "is_not_detected": OccupancyIsNotDetectedCondition,
+    "is_detected": make_entity_state_condition(_OCCUPANCY_DOMAIN_SPECS, STATE_ON),
+    "is_not_detected": make_entity_state_condition(_OCCUPANCY_DOMAIN_SPECS, STATE_OFF),
 }
 
 
