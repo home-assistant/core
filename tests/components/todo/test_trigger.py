@@ -350,6 +350,58 @@ async def test_item_change_trigger_does_not_fire_for_other_entity(
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+async def test_new_entity_added_to_target_fires_triggers(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test triggers fire for a new entity added to an existing target."""
+    todo_entity_id3 = "todo.list_three"
+
+    # Set up automation targeting label_list_one (initially only entity1)
+    await _setup_automation(hass, {ATTR_LABEL_ID: "label_list_one"})
+
+    entity3 = _make_entity(
+        todo_entity_id3,
+        unique_id="list_three",
+        items=[
+            TodoItem(
+                summary="prefilled_item",
+                uid="prefilled_id",
+                status=TodoItemStatus.NEEDS_ACTION,
+            )
+        ],
+    )
+    await create_mock_platform(hass, [entity3])
+
+    # Changing items on the new entity should NOT fire (not in label yet)
+    await _add_item(hass, todo_entity_id3, "item_before_label")
+    await _complete_item(hass, todo_entity_id3, "item_before_label")
+    await _remove_item(hass, todo_entity_id3, "item_before_label")
+    _assert_service_calls(service_calls, [])
+
+    # Now add the label to the third entity so the trigger starts tracking it
+    entity_registry.async_update_entity(
+        todo_entity_id3,
+        labels={"label_list_one"},
+    )
+    await hass.async_block_till_done()
+
+    # Adding an item to the third entity should now fire the trigger
+    await _add_item(hass, todo_entity_id3, "item_after_label")
+    await _complete_item(hass, todo_entity_id3, "item_after_label")
+    await _remove_item(hass, todo_entity_id3, "item_after_label")
+    _assert_service_calls(
+        service_calls,
+        [
+            {"platform": "todo.item_added", "entity_id": todo_entity_id3},
+            {"platform": "todo.item_completed", "entity_id": todo_entity_id3},
+            {"platform": "todo.item_removed", "entity_id": todo_entity_id3},
+        ],
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
 @pytest.mark.parametrize(
     "trigger_target",
     [
