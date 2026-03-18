@@ -9,9 +9,9 @@ from types import MappingProxyType
 from typing import Any, Protocol
 from unittest.mock import AsyncMock, patch
 
-from aiohttp.client_reqrep import URL
 from axis.rtsp import Signal, State
 import pytest
+from yarl import URL
 
 from homeassistant.components.axis.const import DOMAIN
 from homeassistant.const import (
