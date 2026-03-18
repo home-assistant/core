@@ -230,11 +230,11 @@ def _parametrize_condition_states(
         """Return ConditionStateDescription dict."""
         if isinstance(state, str) or state is None:
             return {
-                "included_target_state": {
+                "included_state": {
                     "state": state,
                     "attributes": required_filter_attributes,
                 },
-                "excluded_target_state": {
+                "excluded_state": {
                     "state": state,
                     "attributes": {},
                 },
@@ -242,11 +242,11 @@ def _parametrize_condition_states(
                 "condition_true_first_entity": condition_true_first_entity,
             }
         return {
-            "included_target_state": {
+            "included_state": {
                 "state": state[0],
                 "attributes": state[1] | required_filter_attributes,
             },
-            "excluded_target_state": {
+            "excluded_state": {
                 "state": state[0],
                 "attributes": state[1],
             },
@@ -386,22 +386,22 @@ def parametrize_trigger_states(
         """Return TriggerStateDescription dict."""
         if isinstance(state, str) or state is None:
             return {
-                "included_target_state": {
+                "included_state": {
                     "state": state,
                     "attributes": required_filter_attributes,
                 },
-                "excluded_target_state": {
+                "excluded_state": {
                     "state": state if required_filter_attributes else None,
                     "attributes": {},
                 },
                 "count": count,
             }
         return {
-            "included_target_state": {
+            "included_state": {
                 "state": state[0],
                 "attributes": state[1] | required_filter_attributes,
             },
-            "excluded_target_state": {
+            "excluded_state": {
                 "state": state[0] if required_filter_attributes else None,
                 "attributes": state[1],
             },
@@ -880,10 +880,10 @@ async def assert_condition_behavior_any(
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
     for eid in target_entities["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded_target_state"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -894,8 +894,8 @@ async def assert_condition_behavior_any(
     )
 
     for state in states:
-        included_state = state["included_target_state"]
-        excluded_state = state["excluded_target_state"]
+        included_state = state["included_state"]
+        excluded_state = state["excluded_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
@@ -925,10 +925,10 @@ async def assert_condition_behavior_all(
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
     for eid in target_entities["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded_target_state"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -939,8 +939,8 @@ async def assert_condition_behavior_all(
     )
 
     for state in states:
-        included_state = state["included_target_state"]
-        excluded_state = state["excluded_target_state"]
+        included_state = state["included_state"]
+        excluded_state = state["excluded_state"]
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
@@ -973,17 +973,17 @@ async def assert_trigger_behavior_any(
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
     for eid in target_entities["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded_target_state"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state in states[1:]:
-        excluded_state = state["excluded_target_state"]
-        included_state = state["included_target_state"]
+        excluded_state = state["excluded_state"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
@@ -1018,10 +1018,10 @@ async def assert_trigger_behavior_first(
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
     for eid in target_entities["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded_target_state"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -1029,8 +1029,8 @@ async def assert_trigger_behavior_first(
     )
 
     for state in states[1:]:
-        excluded_state = state["excluded_target_state"]
-        included_state = state["included_target_state"]
+        excluded_state = state["excluded_state"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
@@ -1064,10 +1064,10 @@ async def assert_trigger_behavior_last(
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
     for eid in target_entities["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded_target_state"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -1075,8 +1075,8 @@ async def assert_trigger_behavior_last(
     )
 
     for state in states[1:]:
-        excluded_state = state["excluded_target_state"]
-        included_state = state["included_target_state"]
+        excluded_state = state["excluded_state"]
+        included_state = state["included_state"]
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()

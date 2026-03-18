@@ -85,7 +85,7 @@ async def test_siren_state_condition_behavior_any(
 
     # Set all sirens, including the tested siren, to the initial state
     for eid in target_sirens["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -98,12 +98,12 @@ async def test_siren_state_condition_behavior_any(
     # Set state for switches to ensure that they don't impact the condition
     for state in states:
         for eid in target_switches["included_entities"]:
-            set_or_remove_state(hass, eid, state["included_target_state"])
+            set_or_remove_state(hass, eid, state["included_state"])
             await hass.async_block_till_done()
             assert condition(hass) is False
 
     for state in states:
-        included_state = state["included_target_state"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
@@ -153,7 +153,7 @@ async def test_siren_state_condition_behavior_all(
 
     # Set all sirens, including the tested siren, to the initial state
     for eid in target_sirens["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -164,7 +164,7 @@ async def test_siren_state_condition_behavior_all(
     )
 
     for state in states:
-        included_state = state["included_target_state"]
+        included_state = state["included_state"]
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()

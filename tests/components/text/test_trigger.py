@@ -41,15 +41,15 @@ async def test_text_triggers_gated_by_labs_flag(
             "text.changed",
             [
                 {
-                    "included_target_state": {"state": None, "attributes": {}},
+                    "included_state": {"state": None, "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included_target_state": {"state": "bar", "attributes": {}},
+                    "included_state": {"state": "bar", "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included_target_state": {"state": "baz", "attributes": {}},
+                    "included_state": {"state": "baz", "attributes": {}},
                     "count": 1,
                 },
             ],
@@ -58,15 +58,15 @@ async def test_text_triggers_gated_by_labs_flag(
             "text.changed",
             [
                 {
-                    "included_target_state": {"state": "foo", "attributes": {}},
+                    "included_state": {"state": "foo", "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included_target_state": {"state": "bar", "attributes": {}},
+                    "included_state": {"state": "bar", "attributes": {}},
                     "count": 1,
                 },
                 {
-                    "included_target_state": {"state": "baz", "attributes": {}},
+                    "included_state": {"state": "baz", "attributes": {}},
                     "count": 1,
                 },
             ],
@@ -75,13 +75,13 @@ async def test_text_triggers_gated_by_labs_flag(
             "text.changed",
             [
                 {
-                    "included_target_state": {"state": "foo", "attributes": {}},
+                    "included_state": {"state": "foo", "attributes": {}},
                     "count": 0,
                 },
                 # empty string
-                {"included_target_state": {"state": "", "attributes": {}}, "count": 1},
+                {"included_state": {"state": "", "attributes": {}}, "count": 1},
                 {
-                    "included_target_state": {"state": "baz", "attributes": {}},
+                    "included_state": {"state": "baz", "attributes": {}},
                     "count": 1,
                 },
             ],
@@ -90,22 +90,22 @@ async def test_text_triggers_gated_by_labs_flag(
             "text.changed",
             [
                 {
-                    "included_target_state": {
+                    "included_state": {
                         "state": STATE_UNAVAILABLE,
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included_target_state": {"state": "bar", "attributes": {}},
+                    "included_state": {"state": "bar", "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included_target_state": {"state": "baz", "attributes": {}},
+                    "included_state": {"state": "baz", "attributes": {}},
                     "count": 1,
                 },
                 {
-                    "included_target_state": {
+                    "included_state": {
                         "state": STATE_UNAVAILABLE,
                         "attributes": {},
                     },
@@ -117,19 +117,19 @@ async def test_text_triggers_gated_by_labs_flag(
             "text.changed",
             [
                 {
-                    "included_target_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included_target_state": {"state": "bar", "attributes": {}},
+                    "included_state": {"state": "bar", "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included_target_state": {"state": "baz", "attributes": {}},
+                    "included_state": {"state": "baz", "attributes": {}},
                     "count": 1,
                 },
                 {
-                    "included_target_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
                     "count": 0,
                 },
             ],
@@ -151,13 +151,13 @@ async def test_text_state_trigger(
 
     # Set all texts, including the tested text, to the initial state
     for eid in target_texts["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_target_state"])
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included_target_state"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
