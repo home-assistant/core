@@ -278,7 +278,7 @@ async def test_vm_buttons_exceptions(
         (
             "button.ct_nginx_restart",
             200,
-            "restart",
+            "reboot",
             ConnectTimeout("timeout"),
         ),
         (
