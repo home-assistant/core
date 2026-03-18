@@ -20,39 +20,39 @@ TEST_TRIGGER_STATES = [
     (
         "text.changed",
         [
-            {"included": {"state": None, "attributes": {}}, "count": 0},
-            {"included": {"state": "bar", "attributes": {}}, "count": 0},
-            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+            {"included_state": {"state": None, "attributes": {}}, "count": 0},
+            {"included_state": {"state": "bar", "attributes": {}}, "count": 0},
+            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
         ],
     ),
     (
         "text.changed",
         [
-            {"included": {"state": "foo", "attributes": {}}, "count": 0},
-            {"included": {"state": "bar", "attributes": {}}, "count": 1},
-            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+            {"included_state": {"state": "foo", "attributes": {}}, "count": 0},
+            {"included_state": {"state": "bar", "attributes": {}}, "count": 1},
+            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
         ],
     ),
     (
         "text.changed",
         [
-            {"included": {"state": "foo", "attributes": {}}, "count": 0},
+            {"included_state": {"state": "foo", "attributes": {}}, "count": 0},
             # empty string
-            {"included": {"state": "", "attributes": {}}, "count": 1},
-            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+            {"included_state": {"state": "", "attributes": {}}, "count": 1},
+            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
         ],
     ),
     (
         "text.changed",
         [
             {
-                "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
                 "count": 0,
             },
-            {"included": {"state": "bar", "attributes": {}}, "count": 0},
-            {"included": {"state": "baz", "attributes": {}}, "count": 1},
+            {"included_state": {"state": "bar", "attributes": {}}, "count": 0},
+            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
             {
-                "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
                 "count": 0,
             },
         ],
@@ -60,10 +60,10 @@ TEST_TRIGGER_STATES = [
     (
         "text.changed",
         [
-            {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-            {"included": {"state": "bar", "attributes": {}}, "count": 0},
-            {"included": {"state": "baz", "attributes": {}}, "count": 1},
-            {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+            {"included_state": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+            {"included_state": {"state": "bar", "attributes": {}}, "count": 0},
+            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
+            {"included_state": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
         ],
     ),
 ]
@@ -95,7 +95,7 @@ async def test_text_triggers_gated_by_labs_flag(
     parametrize_target_entities(DOMAIN),
 )
 @pytest.mark.parametrize(("trigger", "states"), TEST_TRIGGER_STATES)
-async def test_text_state_trigger_behavior(
+async def test_text_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_texts: dict[str, list[str]],
@@ -111,7 +111,7 @@ async def test_text_state_trigger_behavior(
     # Set all texts, including the tested text, to the initial state
     for eid in target_texts["included_entities"]:
         set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
@@ -127,7 +127,7 @@ async def test_text_state_trigger_behavior(
         # Check if changing other texts also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
 
@@ -138,7 +138,7 @@ async def test_text_state_trigger_behavior(
     parametrize_target_entities(INPUT_TEXT_DOMAIN),
 )
 @pytest.mark.parametrize(("trigger", "states"), TEST_TRIGGER_STATES)
-async def test_input_text_state_trigger_behavior(
+async def test_input_text_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_input_texts: dict[str, list[str]],
@@ -149,17 +149,17 @@ async def test_input_text_state_trigger_behavior(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the `text.changed` trigger fires when any input_text entity's state changes."""
-    other_entity_ids = set(target_input_texts["included"]) - {entity_id}
+    other_entity_ids = set(target_input_texts["included_entities"]) - {entity_id}
 
     # Set all input_texts, including the tested input_text, to the initial state
-    for eid in target_input_texts["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
+    for eid in target_input_texts["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
+    await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
@@ -170,6 +170,6 @@ async def test_input_text_state_trigger_behavior(
         # Check if changing other input_texts also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
