@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
     try:
         await client.connect()
         sw_version = await client.async_get_software_version()
-    except (OSError, TimeoutError):
+    except OSError, TimeoutError:
         pass  # Version will be None; coordinator retry handles connectivity
 
     coordinator = QubeCoordinator(hass, client, entry)

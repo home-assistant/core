@@ -17,6 +17,8 @@ from .conftest import get_entity_id_by_unique_id_suffix
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+MOCK_MAC = "00:0a:5c:94:83:15"
+
 
 async def test_coordinator_fetches_data(
     hass: HomeAssistant, mock_qube_client: MagicMock
@@ -26,6 +28,7 @@ async def test_coordinator_fetches_data(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -74,6 +77,7 @@ async def test_coordinator_reconnects_when_disconnected(
             domain=DOMAIN,
             data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
             title="Qube Heat Pump",
+            unique_id=MOCK_MAC,
         )
         entry.add_to_hass(hass)
 
@@ -172,6 +176,7 @@ async def test_coordinator_handles_no_data(
             domain=DOMAIN,
             data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
             title="Qube Heat Pump",
+            unique_id=MOCK_MAC,
         )
         entry.add_to_hass(hass)
 
