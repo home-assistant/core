@@ -328,13 +328,26 @@ class RX11Transceiver:
                 _LOGGER.debug("Error in health check: %s", e)
                 await asyncio.sleep(1.0)
 
+    async def _handle_rxmodule_disconnect(self) -> None:
+        """Handle RxModule disconnect on the Home Assistant event loop."""
+        async with self._lock:
+            if not self.is_connected:
+                return
+            self.is_connected = False
+            self._hardware_error = True
+
+        self._notify_disconnect()
+
     def _on_rxmodule_disconnect(self) -> None:
         """Called from RxModule serial handler thread on USB disconnect."""
-        if not self.is_connected:
-            return
-        self.is_connected = False
-        self._hardware_error = True
-        self._notify_disconnect()
+        # Marshal the actual disconnect handling back onto the HA event loop
+        # to avoid unsynchronized cross-thread state changes.
+        def _schedule_disconnect() -> None:
+            self.hass.async_create_background_task(
+                self._handle_rxmodule_disconnect(), "easywave rxmodule disconnect"
+            )
+
+        self.hass.loop.call_soon_threadsafe(_schedule_disconnect)
 
     async def _ensure_versions_fetched(self) -> bool:
         """Ensure hardware and firmware versions are fetched.

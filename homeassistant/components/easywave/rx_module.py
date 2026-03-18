@@ -887,19 +887,20 @@ class RxModule:
                 )
 
             # If we have sent requests waiting and we're outside startup,
-            # fail the oldest to recover sync (matches HACS behavior)
-            if (
-                not in_startup
-                and self._tx_req_sent_size > 0
-                and len(self._req_pending) == 0
-            ):
-                _LOGGER.error(
-                    "Corrupt packet with pending requests — failing oldest sent request to recover sync"
-                )
-                req = self._dequeue_sent()
-                if req:
-                    req.icp = ICP(handle=0, result=ErrorCode.ERR_FAILSTATE)
-                    req.signal()
+            # fail the oldest to recover sync
+            if not in_startup:
+                with self._protocol_lock:
+                    if (
+                        self._tx_req_sent_size > 0
+                        and len(self._req_pending) == 0
+                    ):
+                        _LOGGER.error(
+                            "Corrupt packet with pending requests — failing oldest sent request to recover sync"
+                        )
+                        req = self._dequeue_sent()
+                        if req:
+                            req.icp = ICP(handle=0, result=ErrorCode.ERR_FAILSTATE)
+                            req.signal()
             return
 
         self._mark_communication_success()
@@ -916,39 +917,40 @@ class RxModule:
         """Process an I/O Pending Packet."""
         in_startup = time.time() < self._startup_tolerance_until
 
-        if self._tx_req_sent_size == 0:
-            if in_startup:
-                _LOGGER.debug("Ignoring unexpected IPP during startup")
+        with self._protocol_lock:
+            if self._tx_req_sent_size == 0:
+                if in_startup:
+                    _LOGGER.debug("Ignoring unexpected IPP during startup")
+                    return
+                _LOGGER.warning(
+                    "Unexpected IPP (handle=0x%04x) - no request pending", handle
+                )
                 return
-            _LOGGER.warning(
-                "Unexpected IPP (handle=0x%04x) - no request pending", handle
-            )
-            return
 
-        req = self._dequeue_sent()
-        if not req:
-            return
+            req = self._dequeue_sent()
+            if not req:
+                return
 
-        if handle == 0:
-            _LOGGER.warning("Received zero handle - failing request")
-            req.icp = ICP(handle=0, result=ErrorCode.ERR_INVALID_REQUEST)
-            req.signal()
-            return
+            if handle == 0:
+                _LOGGER.warning("Received zero handle - failing request")
+                req.icp = ICP(handle=0, result=ErrorCode.ERR_INVALID_REQUEST)
+                req.signal()
+                return
 
-        if handle in self._req_pending:
-            _LOGGER.warning("Duplicate handle 0x%04x", handle)
-            old_req = self._req_pending.pop(handle)
-            old_req.icp = ICP(handle=0, result=ErrorCode.ERR_INVALID_REQUEST)
-            old_req.signal()
-            req.icp = ICP(handle=0, result=ErrorCode.ERR_INVALID_REQUEST)
-            req.signal()
-            return
+            if handle in self._req_pending:
+                _LOGGER.warning("Duplicate handle 0x%04x", handle)
+                old_req = self._req_pending.pop(handle)
+                old_req.icp = ICP(handle=0, result=ErrorCode.ERR_INVALID_REQUEST)
+                old_req.signal()
+                req.icp = ICP(handle=0, result=ErrorCode.ERR_INVALID_REQUEST)
+                req.signal()
+                return
 
-        req.handle = handle
-        self._req_pending[handle] = req
+            req.handle = handle
+            self._req_pending[handle] = req
 
-        if req.cancel:
-            self._cancel_request_impl(req)
+            if req.cancel:
+                self._cancel_request_impl(req)
 
     def _process_icp(
         self, handle: int, icp: ICP, icp_byte_count: int, raw_buffer: bytes
@@ -956,95 +958,105 @@ class RxModule:
         """Process an I/O Completion Packet."""
         in_startup = time.time() < self._startup_tolerance_until
 
-        req: Request | None = None
+        with self._protocol_lock:
+            req: Request | None = None
 
-        if handle != 0:
-            req = self._req_pending.pop(handle, None)
-            if not req:
-                if time.time() < self._cancel_tolerance_until or in_startup:
-                    _LOGGER.debug(
-                        "ICP for unknown handle 0x%04x during tolerance period", handle
+            if handle != 0:
+                req = self._req_pending.pop(handle, None)
+                if not req:
+                    if time.time() < self._cancel_tolerance_until or in_startup:
+                        _LOGGER.debug(
+                            "ICP for unknown handle 0x%04x during tolerance period",
+                            handle,
+                        )
+                        return
+                    _LOGGER.warning(
+                        "ICP for unknown handle 0x%04x - ignoring", handle
                     )
                     return
-                _LOGGER.warning("ICP for unknown handle 0x%04x - ignoring", handle)
-                return
-        else:
-            req = self._dequeue_sent()
-            if not req:
-                if in_startup:
-                    _LOGGER.debug("Ignoring synchronous ICP during startup")
+            else:
+                req = self._dequeue_sent()
+                if not req:
+                    if in_startup:
+                        _LOGGER.debug("Ignoring synchronous ICP during startup")
+                        return
+                    _LOGGER.warning(
+                        "Unexpected synchronous ICP - no request pending"
+                    )
                     return
-                _LOGGER.warning("Unexpected synchronous ICP - no request pending")
-                return
 
-        # Validate ICP length
-        if icp.result == ErrorCode.SUCCESS:
-            if icp_byte_count != req.expected_icp_byte_count:
-                if in_startup:
-                    _LOGGER.debug(
-                        "ICP length mismatch for '%s' during startup: got %d, expected %d "
-                        "— discarding stale ICP, keeping request alive",
+            # Validate ICP length
+            if icp.result == ErrorCode.SUCCESS:
+                if icp_byte_count != req.expected_icp_byte_count:
+                    if in_startup:
+                        _LOGGER.debug(
+                            "ICP length mismatch for '%s' during startup: got %d, expected %d "
+                            "— discarding stale ICP, keeping request alive",
+                            req.req_str,
+                            icp_byte_count,
+                            req.expected_icp_byte_count,
+                        )
+                        if handle != 0:
+                            self._req_pending[handle] = req
+                        return
+                    _LOGGER.warning(
+                        "ICP length mismatch for '%s': got %d, expected %d — failing request",
                         req.req_str,
                         icp_byte_count,
                         req.expected_icp_byte_count,
                     )
-                    if handle != 0:
-                        self._req_pending[handle] = req
+                    req.icp = ICP(
+                        handle=handle, result=ErrorCode.ERR_SIZE_MISMATCH
+                    )
+                    req.signal()
                     return
+            elif icp_byte_count != 3:
                 _LOGGER.warning(
-                    "ICP length mismatch for '%s': got %d, expected %d — failing request",
-                    req.req_str,
+                    "Error ICP has unexpected length %d (expected 3) for '%s'",
                     icp_byte_count,
-                    req.expected_icp_byte_count,
+                    req.req_str,
                 )
                 req.icp = ICP(handle=handle, result=ErrorCode.ERR_SIZE_MISMATCH)
                 req.signal()
                 return
-        elif icp_byte_count != 3:
-            _LOGGER.warning(
-                "Error ICP has unexpected length %d (expected 3) for '%s'",
-                icp_byte_count,
-                req.req_str,
-            )
-            req.icp = ICP(handle=handle, result=ErrorCode.ERR_SIZE_MISMATCH)
-            req.signal()
-            return
 
-        if icp.result == ErrorCode.ERR_OUT_OF_QUEUE:
-            if self._tx_req_queued_size < self.MAX_REQUEST_QUEUED:
-                self._enqueue_queued(req)
+            if icp.result == ErrorCode.ERR_OUT_OF_QUEUE:
+                if self._tx_req_queued_size < self.MAX_REQUEST_QUEUED:
+                    self._enqueue_queued(req)
+                    return
+                _LOGGER.warning("Cannot requeue - queue full")
+                req.icp = ICP(
+                    handle=handle, result=ErrorCode.ERR_OUT_OF_QUEUE
+                )
+                req.signal()
                 return
-            _LOGGER.warning("Cannot requeue - queue full")
-            req.icp = ICP(handle=handle, result=ErrorCode.ERR_OUT_OF_QUEUE)
-            req.signal()
-            return
 
-        req.icp = icp
-        req.signal()
+            req.icp = icp
+            req.signal()
 
     def _process_queued_requests(self):
         """Process queued requests and send if possible."""
-        self._remove_canceled_queued_requests()
+        with self._protocol_lock:
+            self._remove_canceled_queued_requests()
 
-        while (
-            self._tx_req_queued_size > 0
-            and (self._tx_req_sent_size + len(self._req_pending))
-            < self.MAX_REQUEST_COUNT
-        ):
-            req = self._dequeue_queued()
-            if not req:
-                break
+            while (
+                self._tx_req_queued_size > 0
+                and (self._tx_req_sent_size + len(self._req_pending))
+                < self.MAX_REQUEST_COUNT
+            ):
+                req = self._dequeue_queued()
+                if not req:
+                    break
 
-            with self._protocol_lock:
                 state_good = self._state_good
 
-            if not state_good:
-                req.icp = ICP(handle=0, result=ErrorCode.ERR_FAILSTATE)
-                req.signal()
-            else:
-                req.queued = False
-                self._enqueue_sent(req)
-                self._write_to_buffer(req.irp, req.req_str)
+                if not state_good:
+                    req.icp = ICP(handle=0, result=ErrorCode.ERR_FAILSTATE)
+                    req.signal()
+                else:
+                    req.queued = False
+                    self._enqueue_sent(req)
+                    self._write_to_buffer(req.irp, req.req_str)
 
     def _check_connection_health(self):
         """Check if connection is healthy."""
