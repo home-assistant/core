@@ -14,7 +14,6 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
@@ -96,18 +95,6 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         if self.target_temperature == MAX_TEMP:
             return HVACMode.HEAT
         return HVACMode.AUTO
-
-    @property
-    def hvac_action(self) -> HVACAction | None:
-        """Return the current running hvac action if supported."""
-
-        if self.target_temperature == MIN_TEMP:
-            return HVACAction.OFF
-        if (self.target_temperature or 0.0) > (
-            self.target_temperature_low or 0.0
-        ) or self.target_temperature == MAX_TEMP:
-            return HVACAction.HEATING
-        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str | None:
