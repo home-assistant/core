@@ -639,28 +639,27 @@ class HIVIGroupCoordinator:
                             "Missing required params for set_slave: %s", missing
                         )
                         return False
-                    else:
-                        slave_ip = params["slave_ip"]
-                        ssid = params["ssid"]
-                        wifi_channel = params["wifi_channel"]
-                        auth = params["auth"]
-                        encry = params["encry"]
-                        psk = params["psk"]
-                        master_ip = params["master_ip"]
-                        uuid = params["uuid"]
-                        ssid_hex = binascii.hexlify(ssid.encode()).decode()
-                        async with HivicoClient(timeout=5, debug=False) as client:
-                            await client.connect_slave_to_master(
-                                slave_ip=slave_ip,
-                                ssid=ssid_hex,
-                                wifi_channel=wifi_channel,
-                                auth=auth,
-                                encry=encry,
-                                psk=psk,
-                                master_ip=master_ip,
-                                uuid=uuid,
-                            )
-                        return True
+                    slave_ip = params["slave_ip"]
+                    ssid = params["ssid"]
+                    wifi_channel = params["wifi_channel"]
+                    auth = params["auth"]
+                    encry = params["encry"]
+                    psk = params["psk"]
+                    master_ip = params["master_ip"]
+                    uuid = params["uuid"]
+                    ssid_hex = binascii.hexlify(ssid.encode()).decode()
+                    async with HivicoClient(timeout=5, debug=False) as client:
+                        await client.connect_slave_to_master(
+                            slave_ip=slave_ip,
+                            ssid=ssid_hex,
+                            wifi_channel=wifi_channel,
+                            auth=auth,
+                            encry=encry,
+                            psk=psk,
+                            master_ip=master_ip,
+                            uuid=uuid,
+                        )
+                    return True
                 except Exception as e:
                     _LOGGER.error("Failed to set slave speaker operation: %s", e)
                     return False
@@ -674,12 +673,11 @@ class HIVIGroupCoordinator:
                             "Missing required params for remove_slave: %s", missing
                         )
                         return False
-                    else:
-                        master_ip = params["master_ip"]
-                        slave_ip_ra0 = params["slave_ip_ra0"]
-                        async with HivicoClient(timeout=5, debug=False) as client:
-                            await client.remove_slave_from_group(master_ip, slave_ip_ra0)
-                        return True
+                    master_ip = params["master_ip"]
+                    slave_ip_ra0 = params["slave_ip_ra0"]
+                    async with HivicoClient(timeout=5, debug=False) as client:
+                        await client.remove_slave_from_group(master_ip, slave_ip_ra0)
+                    return True
                 except Exception as e:
                     _LOGGER.error("Failed to remove slave speaker operation: %s", e)
                     return False
@@ -848,14 +846,13 @@ class HIVIGroupCoordinator:
                     if slave_list is None:
                         _LOGGER.error("Slave list is None")
                         return False
-                    else:
-                        for slave in slave_list:
-                            uuid = slave.get("uuid")
-                            _LOGGER.debug("check slave get UUID: %s", uuid)
-                            if uuid == slave_speaker_device_id:
-                                _LOGGER.debug("find match UUID: %s", uuid)
-                                return True
-                        return False
+                    for slave in slave_list:
+                        uuid = slave.get("uuid")
+                        _LOGGER.debug("check slave get UUID: %s", uuid)
+                        if uuid == slave_speaker_device_id:
+                            _LOGGER.debug("find match UUID: %s", uuid)
+                            return True
+                    return False
                 except Exception as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
@@ -881,8 +878,7 @@ class HIVIGroupCoordinator:
                             break
                     if still_exists:
                         return False
-                    else:
-                        return False
+                    return True
                 except Exception as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
@@ -905,8 +901,7 @@ class HIVIGroupCoordinator:
 
             if slave_speaker_device_id in slave_devices:
                 return "slave"
-            else:
-                return "standalone"
+            return "standalone"
 
         except TimeoutError:
             _LOGGER.debug("Timeout getting slave speaker list")
