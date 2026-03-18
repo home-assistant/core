@@ -10,7 +10,7 @@ from typing import Any
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-from pysmlight.models import FirmwareList
+from pysmlight.models import AmbilightPayload, FirmwareList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -151,6 +151,14 @@ class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
         prop = SettingsProp[setting.name].value
         setattr(self.data.sensors, prop, value)
 
+        self.async_set_updated_data(self.data)
+
+    def update_ambilight(self, changes: dict) -> None:
+        """Update the ambilight state from event."""
+        for key in ("ultLedColor", "ultLedColor2"):
+            if isinstance(color := changes.get(key), int):
+                changes[key] = f"#{color:06x}"
+        self.data.sensors.ambilight = AmbilightPayload(**changes)
         self.async_set_updated_data(self.data)
 
     async def _internal_update_data(self) -> SmData:
