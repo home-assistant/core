@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -95,7 +95,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.9.0",
+            breaks_in_ha_version="2026.10.0",
             is_fixable=False,
             is_persistent=True,
             issue_domain=DOMAIN,
@@ -109,9 +109,9 @@ async def async_setup_platform(
         return
     ir.async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
+        DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2026.9.0",
+        breaks_in_ha_version="2026.10.0",
         is_fixable=False,
         is_persistent=True,
         issue_domain=DOMAIN,
