@@ -67,6 +67,7 @@ INFO_DATA: Final[InfoData] = InfoData(
 LEGACY_INFO_DATA: Final[InfoData] = InfoData(
     name="Test",
     version=VERSION,
+    uid=None,
     device=DEVICE_INFO_DATA,
     lines={
         "0": DALIBusData(
