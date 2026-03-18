@@ -196,7 +196,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except CancelledError:
                 raise
             except Exception:  # noqa: BLE001
-                _LOGGER.warning(
+                _LOGGER.error(
                     "Failed to disconnect from local Risco panel", exc_info=True
                 )
 
