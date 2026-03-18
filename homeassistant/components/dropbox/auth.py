@@ -8,7 +8,7 @@ from python_dropbox_api import Auth
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 
-class AsyncConfigEntryAuth(Auth):
+class DropboxConfigEntryAuth(Auth):
     """Provide Dropbox authentication tied to an OAuth2 based config entry."""
 
     def __init__(
@@ -16,7 +16,7 @@ class AsyncConfigEntryAuth(Auth):
         websession: ClientSession,
         oauth_session: OAuth2Session,
     ) -> None:
-        """Initialize AsyncConfigEntryAuth."""
+        """Initialize DropboxConfigEntryAuth."""
         super().__init__(websession)
         self._oauth_session = oauth_session
 
@@ -27,7 +27,7 @@ class AsyncConfigEntryAuth(Auth):
         return cast(str, self._oauth_session.token["access_token"])
 
 
-class AsyncConfigFlowAuth(Auth):
+class DropboxConfigFlowAuth(Auth):
     """Provide authentication tied to a fixed token for the config flow."""
 
     def __init__(
@@ -35,7 +35,7 @@ class AsyncConfigFlowAuth(Auth):
         websession: ClientSession,
         token: str,
     ) -> None:
-        """Initialize AsyncConfigFlowAuth."""
+        """Initialize DropboxConfigFlowAuth."""
         super().__init__(websession)
         self._token = token
 

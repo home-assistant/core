@@ -11,11 +11,11 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .auth import AsyncConfigFlowAuth
+from .auth import DropboxConfigFlowAuth
 from .const import DOMAIN
 
 
-class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
+class DropboxConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Dropbox OAuth2 authentication."""
 
     DOMAIN = DOMAIN
@@ -29,7 +29,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Create an entry for the flow, or update existing entry."""
         access_token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]
 
-        auth = AsyncConfigFlowAuth(async_get_clientsession(self.hass), access_token)
+        auth = DropboxConfigFlowAuth(async_get_clientsession(self.hass), access_token)
 
         client = DropboxAPIClient(auth)
         account_info = await client.get_account_info()

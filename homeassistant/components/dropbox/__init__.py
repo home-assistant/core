@@ -18,7 +18,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .auth import AsyncConfigEntryAuth
+from .auth import DropboxConfigEntryAuth
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 type DropboxConfigEntry = ConfigEntry[DropboxAPIClient]
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> b
         ) from err
     oauth2_session = OAuth2Session(hass, entry, oauth2_implementation)
 
-    auth = AsyncConfigEntryAuth(
+    auth = DropboxConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), oauth2_session
     )
 
