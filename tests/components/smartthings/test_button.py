@@ -125,7 +125,7 @@ async def test_turn_on_without_remote_control(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.dishwasher_start"},
+            {ATTR_ENTITY_ID: "button.dishwasher_1_start"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -159,7 +159,7 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.dishwasher_start"},
+            {ATTR_ENTITY_ID: "button.dishwasher_1_start"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()

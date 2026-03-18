@@ -22,7 +22,9 @@ from .entity import SmartThingsEntity
 class SmartThingsButtonDescription(ButtonEntityDescription):
     """Class describing SmartThings button entities."""
 
+    key: Capability
     command: Command
+    command_identifier: str | None = None
     components: list[str] | None = None
     argument: int | str | list[Any] | dict[str, Any] | None = None
     requires_remote_control_status: bool = False
@@ -61,28 +63,29 @@ DISHWASHER_OPERATION_COMMANDS_TO_BUTTONS: dict[
     Command | str, SmartThingsButtonDescription
 ] = {
     Command.CANCEL: SmartThingsButtonDescription(
-        key=Command.CANCEL,
+        key=Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
         translation_key="cancel",
+        command_identifier="drain",
         command=Command.CANCEL,
         argument=[True],
         requires_remote_control_status=True,
     ),
     Command.PAUSE: SmartThingsButtonDescription(
-        key=Command.PAUSE,
+        key=Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
         translation_key="pause",
         command=Command.PAUSE,
         requires_remote_control_status=True,
         requires_dishwasher_machine_state={"run"},
     ),
     Command.RESUME: SmartThingsButtonDescription(
-        key=Command.RESUME,
+        key=Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
         translation_key="resume",
         command=Command.RESUME,
         requires_remote_control_status=True,
         requires_dishwasher_machine_state={"pause"},
     ),
     Command.START: SmartThingsButtonDescription(
-        key=Command.START,
+        key=Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
         translation_key="start",
         command=Command.START,
         requires_remote_control_status=True,
@@ -91,8 +94,9 @@ DISHWASHER_OPERATION_COMMANDS_TO_BUTTONS: dict[
 }
 
 DISHWASHER_CANCEL_AND_DRAIN_BUTTON = SmartThingsButtonDescription(
-    key="cancel_and_drain",
+    key=Capability.CUSTOM_SUPPORTED_OPTIONS,
     translation_key="cancel_and_drain",
+    command_identifier="89",
     command=Command.SET_COURSE,
     argument="89",
     requires_remote_control_status=True,
@@ -166,6 +170,8 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         self.entity_description = entity_description
         self.button_capability = capability
         self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.command}"
+        if entity_description.command_identifier is not None:
+            self._attr_unique_id += f"_{entity_description.command_identifier}"
 
     async def async_press(self) -> None:
         """Press the button."""

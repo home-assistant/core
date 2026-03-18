@@ -582,7 +582,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cancel',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_cancel_cancel',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherOperation_cancel_drain',
     'unit_of_measurement': None,
   })
 # ---
@@ -632,7 +632,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cancel_and_drain',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_cancel_and_drain_setCourse',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_custom.supportedOptions_setCourse_89',
     'unit_of_measurement': None,
   })
 # ---
@@ -682,7 +682,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_pause_pause',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherOperation_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -732,7 +732,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_resume_resume',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherOperation_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -782,7 +782,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_start_start',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherOperation_start',
     'unit_of_measurement': None,
   })
 # ---
@@ -832,7 +832,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cancel',
-    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_cancel_cancel',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherOperation_cancel_drain',
     'unit_of_measurement': None,
   })
 # ---
@@ -882,7 +882,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cancel_and_drain',
-    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_cancel_and_drain_setCourse',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_custom.supportedOptions_setCourse_89',
     'unit_of_measurement': None,
   })
 # ---
@@ -932,7 +932,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause',
-    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_pause_pause',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherOperation_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -982,7 +982,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume',
-    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_resume_resume',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherOperation_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -1032,7 +1032,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_start_start',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherOperation_start',
     'unit_of_measurement': None,
   })
 # ---
