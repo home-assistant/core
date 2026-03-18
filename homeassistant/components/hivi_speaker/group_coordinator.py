@@ -19,6 +19,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+_GROUP_ERRS = (
+    OSError,
+    TimeoutError,
+    ValueError,
+    TypeError,
+    RuntimeError,
+    ConnectionError,
+)
+
 # Callback invoked with a single result dict; must be async (awaitable).
 OperationResultCallback = Callable[[dict[str, Any]], Awaitable[None]] | None
 
@@ -454,7 +463,7 @@ class HIVIGroupCoordinator:
                 self._poll_operation_status_with_callback(operation_id)
             )
 
-        except Exception as e:
+        except _GROUP_ERRS as e:
             _LOGGER.error("Operation processing exception: %s - %s", operation_id, e)
 
             if callback_func:
@@ -594,7 +603,7 @@ class HIVIGroupCoordinator:
                     )
                 break
 
-            except Exception as e:
+            except _GROUP_ERRS as e:
                 _LOGGER.error("Polling operation exception: %s - %s", operation_id, e)
 
                 if callback_func:
@@ -659,10 +668,11 @@ class HIVIGroupCoordinator:
                             master_ip=master_ip,
                             uuid=uuid,
                         )
-                    return True
-                except Exception as e:
+                except _GROUP_ERRS as e:
                     _LOGGER.error("Failed to set slave speaker operation: %s", e)
                     return False
+                else:
+                    return True
             elif op_type == "remove_slave":
                 try:
                     params = operation_data.get("params", {})
@@ -677,14 +687,15 @@ class HIVIGroupCoordinator:
                     slave_ip_ra0 = params["slave_ip_ra0"]
                     async with HivicoClient(timeout=5, debug=False) as client:
                         await client.remove_slave_from_group(master_ip, slave_ip_ra0)
-                    return True
-                except Exception as e:
+                except _GROUP_ERRS as e:
                     _LOGGER.error("Failed to remove slave speaker operation: %s", e)
                     return False
+                else:
+                    return True
             else:
                 _LOGGER.error("Unknown operation type: %s", op_type)
                 return False
-        except Exception as e:
+        except _GROUP_ERRS as e:
             _LOGGER.error("Operation execution exception: %s", e)
             return False
 
@@ -815,7 +826,7 @@ class HIVIGroupCoordinator:
             except asyncio.CancelledError:
                 _LOGGER.debug("Polling task cancelled: %s", operation_id)
                 break
-            except Exception as e:
+            except _GROUP_ERRS as e:
                 _LOGGER.error("Polling operation exception: %s - %s", operation_id, e)
                 await asyncio.sleep(self._poll_interval)
 
@@ -852,8 +863,9 @@ class HIVIGroupCoordinator:
                         if uuid == slave_speaker_device_id:
                             _LOGGER.debug("find match UUID: %s", uuid)
                             return True
-                    return False
-                except Exception as e:
+                    else:
+                        return False
+                except _GROUP_ERRS as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
             elif op_type == "remove_slave":
@@ -878,15 +890,16 @@ class HIVIGroupCoordinator:
                             break
                     if still_exists:
                         return False
-                    return True
-                except Exception as e:
+                    else:
+                        return True
+                except _GROUP_ERRS as e:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
             else:
                 _LOGGER.error("Unknown operation type for verify: %s", op_type)
                 return False
 
-        except Exception as e:
+        except _GROUP_ERRS as e:
             _LOGGER.error("Exception verifying operation status: %s", e)
             return False
 
@@ -901,12 +914,13 @@ class HIVIGroupCoordinator:
 
             if slave_speaker_device_id in slave_devices:
                 return "slave"
-            return "standalone"
+            else:
+                return "standalone"
 
         except TimeoutError:
             _LOGGER.debug("Timeout getting slave speaker list")
             return "unknown"
-        except Exception as e:
+        except _GROUP_ERRS as e:
             _LOGGER.debug("Exception getting slave speaker list: %s", e)
             return "unknown"
 
