@@ -71,6 +71,15 @@
           "off": "[%key:common::state::off%]"
         }
       },
+      "hdr_processing": {
+        "name": "HDR Processing",
+        "state": {
+          "frame_by_frame": "Frame-by-Frame",
+          "hdr10p": "HDR10+",
+          "scene_by_scene": "Scene-by-Scene",
+          "static": "Static"
+        }
+      },
       "input": {
         "name": "Input",
         "state": {
@@ -100,6 +109,23 @@
           "low": "[%key:common::state::low%]",
           "mid": "[%key:common::state::medium%]",
           "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "picture_mode": {
+        "name": "Picture Mode",
+        "state": {
+          "frame_adapt_hdr": "Frame Adapt HDR",
+          "frame_adapt_hdr2": "Frame Adapt HDR2",
+          "frame_adapt_hdr3": "Frame Adapt HDR3",
+          "hdr1": "HDR1",
+          "hdr10": "HDR10",
+          "hdr10_ll": "HDR10 LL",
+          "hdr2": "HDR2",
+          "last_setting": "Last setting",
+          "pana_pq": "Pana PQ",
+          "user_4": "User 4",
+          "user_5": "User 5",
+          "user_6": "User 6"
         }
       }
     },
@@ -156,7 +182,7 @@
           "hdr10": "HDR10",
           "hdr10-ll": "HDR10 LL",
           "hdr2": "HDR2",
-          "last-setting": "Last Setting",
+          "last-setting": "Last setting",
           "pana-pq": "Pana PQ",
           "user-4": "User 4",
           "user-5": "User 5",
@@ -181,6 +207,16 @@
       "low_latency_mode": {
         "name": "Low latency mode"
       }
+    }
+  },
+  "issues": {
+    "deprecated_sensor": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nUpdate your dashboards, templates, automations and scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
+      "title": "Deprecated sensor detected"
+    },
+    "deprecated_sensor_scripts": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nUpdate the above automations or scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
+      "title": "[%key:component::jvc_projector::issues::deprecated_sensor::title%]"
     }
   }
 }
