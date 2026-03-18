@@ -1,9 +1,39 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted motion sensors.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted motion sensors to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if one or more motion sensors are detecting motion.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::motion::common::condition_behavior_description%]",
+          "name": "[%key:component::motion::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Motion is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if one or more motion sensors are not detecting motion.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::motion::common::condition_behavior_description%]",
+          "name": "[%key:component::motion::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Motion is not detected"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

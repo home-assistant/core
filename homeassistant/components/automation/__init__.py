@@ -129,6 +129,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "light",
     "lock",
     "media_player",
+    "motion",
     "person",
     "siren",
     "switch",
