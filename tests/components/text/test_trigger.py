@@ -95,7 +95,7 @@ async def test_text_triggers_gated_by_labs_flag(
     parametrize_target_entities(DOMAIN),
 )
 @pytest.mark.parametrize(("trigger", "states"), TEST_TRIGGER_STATES)
-async def test_text_state_trigger_behavior_any(
+async def test_text_state_trigger_behavior(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_texts: dict[str, list[str]],
@@ -105,18 +105,18 @@ async def test_text_state_trigger_behavior_any(
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the text state trigger fires when any text state changes to a specific state."""
-    other_entity_ids = set(target_texts["included"]) - {entity_id}
+    """Test that the text state trigger fires when targeted text state changes."""
+    other_entity_ids = set(target_texts["included_entities"]) - {entity_id}
 
     # Set all texts, including the tested text, to the initial state
-    for eid in target_texts["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_texts["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
@@ -138,7 +138,7 @@ async def test_text_state_trigger_behavior_any(
     parametrize_target_entities(INPUT_TEXT_DOMAIN),
 )
 @pytest.mark.parametrize(("trigger", "states"), TEST_TRIGGER_STATES)
-async def test_input_text_state_trigger_behavior_any(
+async def test_input_text_state_trigger_behavior(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_input_texts: dict[str, list[str]],
