@@ -75,8 +75,43 @@ jobs:
         env:
           LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
 
+      - name: Archive translations
+        shell: bash
+        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
+
+      - name: Upload translations
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: translations
+          path: translations.tar.gz
+          if-no-files-found: error
+
+  build_base:
+    name: Build ${{ matrix.arch }} base core image
+    if: github.repository_owner == 'home-assistant'
+    needs: init
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      id-token: write # For cosign signing
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        include:
+          - arch: amd64
+            os: ubuntu-24.04
+          - arch: aarch64
+            os: ubuntu-24.04-arm
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
       - name: Download nightly wheels of frontend
-        if: steps.version.outputs.channel == 'dev'
+        if: needs.init.outputs.channel == 'dev'
         uses: dawidd6/action-download-artifact@2536c51d3d126276eb39f74d6bc9c72ac6ef30d3 # v16
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -87,7 +122,7 @@ jobs:
           name: wheels
 
       - name: Download nightly wheels of intents
-        if: steps.version.outputs.channel == 'dev'
+        if: needs.init.outputs.channel == 'dev'
         uses: dawidd6/action-download-artifact@2536c51d3d126276eb39f74d6bc9c72ac6ef30d3 # v16
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -97,12 +132,18 @@ jobs:
           workflow_conclusion: success
           name: package
 
+      - name: Set up Python
+        if: needs.init.outputs.channel == 'dev'
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version-file: ".python-version"
+
       - name: Adjust nightly version
-        if: steps.version.outputs.channel == 'dev'
+        if: needs.init.outputs.channel == 'dev'
         shell: bash
         env:
           UV_PRERELEASE: allow
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.init.outputs.version }}
         run: |
           python3 -m pip install "$(grep '^uv' < requirements.txt)"
           uv pip install packaging tomli
@@ -140,56 +181,20 @@ jobs:
             sed -i "s|home-assistant-intents==.*||" requirements_all.txt requirements.txt
           fi
 
+      - name: Download translations
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          name: translations
+
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
+
       - name: Write meta info file
         shell: bash
         run: |
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
-
-      - name: Upload build context overlay
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: build-context
-          if-no-files-found: ignore
-          path: |
-            homeassistant/components/*/translations/
-            rootfs/OFFICIAL_IMAGE
-            home_assistant_frontend-*.whl
-            home_assistant_intents-*.whl
-            homeassistant/const.py
-            homeassistant/components/frontend/manifest.json
-            homeassistant/components/conversation/manifest.json
-            homeassistant/package_constraints.txt
-            requirements_all.txt
-            requirements.txt
-            pyproject.toml
-
-  build_base:
-    name: Build ${{ matrix.arch }} base core image
-    if: github.repository_owner == 'home-assistant'
-    needs: init
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read # To check out the repository
-      packages: write # To push to GHCR
-      id-token: write # For cosign signing
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: amd64
-            os: ubuntu-24.04
-          - arch: aarch64
-            os: ubuntu-24.04-arm
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Download build context overlay
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
-        with:
-          name: build-context
 
       - name: Build base image
         uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
@@ -484,10 +489,15 @@ jobs:
         with:
           python-version-file: ".python-version"
 
-      - name: Download build context overlay
+      - name: Download translations
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
-          name: build-context
+          name: translations
+
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
 
       - name: Build package
         shell: bash
