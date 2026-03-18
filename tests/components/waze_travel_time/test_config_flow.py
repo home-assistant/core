@@ -209,7 +209,7 @@ async def test_invalid_config_entry(
 
 @pytest.mark.usefixtures("mock_update")
 async def test_reset_filters(hass: HomeAssistant) -> None:
-    """Test resetting inclusive and exclusive filters to empty string."""
+    """Test resetting inclusive and exclusive filters to empty lists."""
     options = {**DEFAULT_OPTIONS}
     options[CONF_INCL_FILTER] = ["test"]
     options[CONF_EXCL_FILTER] = ["test"]
@@ -244,8 +244,8 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: [""],
-        CONF_INCL_FILTER: [""],
+        CONF_EXCL_FILTER: [],
+        CONF_INCL_FILTER: [],
         CONF_REALTIME: False,
         CONF_TIME_DELTA: {"minutes": 0},
         CONF_UNITS: IMPERIAL_UNITS,
