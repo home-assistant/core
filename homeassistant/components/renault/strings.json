@@ -94,6 +94,14 @@
         "name": "[%key:common::config_flow::data::location%]"
       }
     },
+    "number": {
+      "charge_limit_min": {
+        "name": "Minimum charge level"
+      },
+      "charge_limit_target": {
+        "name": "Target charge level"
+      }
+    },
     "select": {
       "charge_mode": {
         "name": "Charge mode",
@@ -199,6 +207,9 @@
     }
   },
   "exceptions": {
+    "battery_soc_unavailable": {
+      "message": "Battery state of charge data is currently unavailable"
+    },
     "invalid_device_id": {
       "message": "No device with ID {device_id} was found"
     },
