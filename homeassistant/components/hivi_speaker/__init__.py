@@ -144,11 +144,11 @@ async def async_remove_config_entry_device(
                 speaker_device_id,
             )
 
-        return True
-
     except Exception:
         _LOGGER.exception(
             "Error in async_remove_config_entry_device for device %s",
             device_entry.id,
         )
+        return True
+    else:
         return True
