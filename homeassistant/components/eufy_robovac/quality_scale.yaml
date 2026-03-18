@@ -77,7 +77,6 @@ rules:
     comment: |
       No known use cases for repair issues or flows at this time.
   stale-devices: todo
-
   # Platinum
   async-dependency: todo
   inject-websession:

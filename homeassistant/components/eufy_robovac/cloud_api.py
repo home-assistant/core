@@ -72,9 +72,7 @@ _TUYA_SIGNATURE_FIELDS = {
     "sid",
     "sp",
 }
-_TUYA_HMAC_KEY = (
-    b"A_cepev5pfnhua4dkqkdpmnrdxx378mpjr_s8x78u7xwymasd9kqa7a73pjhxqsedaj"
-)
+_TUYA_HMAC_KEY = b"A_cepev5pfnhua4dkqkdpmnrdxx378mpjr_s8x78u7xwymasd9kqa7a73pjhxqsedaj"
 _TUYA_HEADERS = {"User-Agent": "TY-UA=APP/Android/2.4.0/SDK/null"}
 _TUYA_PASSWORD_CIPHER = Cipher(
     algorithms.AES(
@@ -136,7 +134,9 @@ def _shuffled_md5(value: str) -> str:
 class _TuyaApiSession:
     """Minimal Tuya cloud session for looking up device local keys."""
 
-    def __init__(self, *, username: str, region: str, timezone: str, phone_code: str) -> None:
+    def __init__(
+        self, *, username: str, region: str, timezone: str, phone_code: str
+    ) -> None:
         self._username = username
         self._phone_code = phone_code
         self._session_id: str | None = None
@@ -200,7 +200,10 @@ class _TuyaApiSession:
             "v": version,
         }
         encoded_post_data = json.dumps(data, separators=(",", ":")) if data else ""
-        signed_query = {**query_params, "sign": self._sign(query_params, encoded_post_data)}
+        signed_query = {
+            **query_params,
+            "sign": self._sign(query_params, encoded_post_data),
+        }
 
         try:
             response = self._session.post(
@@ -230,7 +233,9 @@ class _TuyaApiSession:
         padded_size = 16 * math.ceil(len(self._username) / 16)
         password_uid = self._username.zfill(padded_size)
         encryptor = _TUYA_PASSWORD_CIPHER.encryptor()
-        encrypted_uid = encryptor.update(password_uid.encode("utf8")) + encryptor.finalize()
+        encrypted_uid = (
+            encryptor.update(password_uid.encode("utf8")) + encryptor.finalize()
+        )
         return md5(encrypted_uid.hex().upper().encode("utf-8")).hexdigest()
 
     def _request_session(self, password: str) -> dict[str, Any]:
@@ -283,7 +288,9 @@ class EufyRoboVacCloudApi:
         self._username = username
         self._password = password
 
-    async def async_list_robovacs(self, hass: HomeAssistant) -> list[CloudDiscoveredRoboVac]:
+    async def async_list_robovacs(
+        self, hass: HomeAssistant
+    ) -> list[CloudDiscoveredRoboVac]:
         """Discover RoboVac devices from the account."""
         return await hass.async_add_executor_job(self._list_robovacs_sync)
 
@@ -310,7 +317,9 @@ class EufyRoboVacCloudApi:
         if phone_code := user_info.get("phone_code"):
             resolved_phone = str(phone_code)
         else:
-            resolved_phone = _PHONE_BY_REGION.get(resolved_region, _PHONE_BY_REGION["EU"])
+            resolved_phone = _PHONE_BY_REGION.get(
+                resolved_region, _PHONE_BY_REGION["EU"]
+            )
 
         timezone = str(user_info.get("timezone") or "UTC")
         return resolved_region, resolved_phone, timezone
@@ -327,7 +336,9 @@ class EufyRoboVacCloudApi:
         headers["token"] = access_token
         headers["id"] = user_id
         try:
-            response = requests.get(f"{base_url}{endpoint}", headers=headers, timeout=10)
+            response = requests.get(
+                f"{base_url}{endpoint}", headers=headers, timeout=10
+            )
             response.raise_for_status()
             payload = response.json()
         except (requests.RequestException, ValueError) as err:
@@ -419,7 +430,9 @@ class EufyRoboVacCloudApi:
         user_id = user_info.get("id")
         access_token = login_json.get("access_token")
         if not all([request_host, user_id, access_token]):
-            raise EufyRoboVacCloudApiError("Eufy login response missing required fields")
+            raise EufyRoboVacCloudApiError(
+                "Eufy login response missing required fields"
+            )
 
         device_payload = self._eufy_get(
             base_url=str(request_host),
