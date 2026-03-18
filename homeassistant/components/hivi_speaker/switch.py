@@ -264,9 +264,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
             if result.get("status") == "rejected":
                 self._attr_is_on = False
             elif result.get("status") == "accepted":
-                await self.hass.services.async_call(
-                    DOMAIN, "postpone_discovery", {}, blocking=False
-                )
+                await self._device_manager.postpone_discovery()
             elif result.get("status") in {
                 "executing",
                 "verifying",
@@ -288,9 +286,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
                 _LOGGER.debug("need to refresh, status: %s", result.get("status"))
 
             if need_refresh_flg:
-                await self.hass.services.async_call(
-                    DOMAIN, "refresh_discovery", {}, blocking=False
-                )
+                await self._device_manager.refresh_discovery()
 
             self.async_write_ha_state()
 
@@ -370,9 +366,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
             if result.get("status") == "rejected":
                 self._attr_is_on = True
             elif result.get("status") == "accepted":
-                await self.hass.services.async_call(
-                    DOMAIN, "postpone_discovery", {}, blocking=False
-                )
+                await self._device_manager.postpone_discovery()
             elif result.get("status") in {
                 "executing",
                 "verifying",
@@ -391,9 +385,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
                 _LOGGER.debug("need to refresh, status: %s", result.get("status"))
 
             if need_refresh_flg:
-                await self.hass.services.async_call(
-                    DOMAIN, "refresh_discovery", {}, blocking=False
-                )
+                await self._device_manager.refresh_discovery()
 
             self.async_write_ha_state()
 
