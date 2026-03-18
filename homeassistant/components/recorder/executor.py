@@ -56,8 +56,6 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
         num_threads = len(self._threads)
         if num_threads < self._max_workers:
             thread_name = f"{self._thread_name_prefix or self}_{num_threads}"
-            initializer = getattr(self, "_initializer", None)
-            initargs = getattr(self, "_initargs", ())
             executor_thread = threading.Thread(
                 name=thread_name,
                 target=_worker_with_shutdown_hook,
@@ -66,8 +64,8 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
                     self.recorder_and_worker_thread_ids,
                     weakref.ref(self, weakref_cb),
                     self._work_queue,
-                    initializer,
-                    initargs,
+                    self._initializer,
+                    self._initargs,
                 ),
             )
             executor_thread.start()
