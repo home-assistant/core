@@ -627,6 +627,7 @@ rules:
   - Error recovery scenarios
   - Prevention of duplicate entries
   - Flow completion after errors
+  - Reauthentication/reconfigure flows
 
 ### Testing
 - **Integration-specific tests** (recommended):
