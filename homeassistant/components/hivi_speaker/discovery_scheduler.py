@@ -121,9 +121,7 @@ class HIVIDiscoveryScheduler:
         try:
             self._discovery_unsub = async_call_later(self.hass, delay, _callback)
         except Exception:
-            _LOGGER.exception(
-                "Failed to register delayed callback, backing off 60s"
-            )
+            _LOGGER.exception("Failed to register delayed callback, backing off 60s")
             self._next_discovery = datetime.now() + timedelta(seconds=60)
             try:
                 self._discovery_unsub = async_call_later(
@@ -151,7 +149,7 @@ class HIVIDiscoveryScheduler:
             # adjust interval
             await self._adjust_interval()
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             _LOGGER.error("Discovery failed: %s", e)
             self._next_discovery = datetime.now() + timedelta(seconds=60)
         finally:
@@ -195,7 +193,7 @@ class HIVIDiscoveryScheduler:
                     self.hass, SIGNAL_DEVICE_DISCOVERED, discovered_devices
                 )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             _LOGGER.error("Device discovery failed: %s", e)
 
         duration = (datetime.now() - start_time).total_seconds()
@@ -344,7 +342,7 @@ def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
         for _ in range(SEND_REPEAT):
             try:
                 sock.sendto(msearch_message, MCAST_ADDR)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 break
 
         start = time.time()
@@ -355,7 +353,7 @@ def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
                 discovered_raw.append((text, addr))
             except TimeoutError:
                 continue
-            except Exception:  # noqa: BLE001
+            except Exception:
                 break
 
     finally:
@@ -374,7 +372,7 @@ def _is_safe_location_url(url: str) -> bool:
     try:
         host = parsed.hostname or ""
         addr = ip_address(host)
-        return addr.is_private or addr.is_link_local  # noqa: TRY300
+        return addr.is_private or addr.is_link_local
     except ValueError:
         return False
 
@@ -406,7 +404,7 @@ async def parse_local_url(session: aiohttp.ClientSession, url: str):
                     "UDN": device.findtext("device:UDN", "", ns),
                 }
             return None
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         _LOGGER.debug("Error parsing DLNA description: %s", e)
         return None
 
@@ -436,6 +434,6 @@ async def parse_ssdp_response(response_text, addr):
                     "date",
                 }:
                     device_info[key] = value
-            except Exception:  # noqa: BLE001
+            except Exception:
                 continue
     return device_info
