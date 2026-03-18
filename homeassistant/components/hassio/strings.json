@@ -175,7 +175,7 @@
           }
         }
       },
-      "title": "NTP sync failed - system time was corrected"
+      "title": "Time synchronization issue detected"
     },
     "issue_system_reboot_required": {
       "fix_flow": {
