@@ -120,6 +120,19 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
                 value_type=config[CONF_TYPE],
             ),
         )
+        dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
+        dpt_info = get_supported_dpts()[dpt_string]
+
+        self._attr_device_class = config.get(
+            CONF_DEVICE_CLASS,
+            try_parse_enum(
+                # sensor device classes should, with some exceptions ("enum" etc.), align with number device classes
+                NumberDeviceClass,
+                dpt_info["sensor_device_class"],
+            ),
+        )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_mode = config[CONF_MODE]
         self._attr_native_max_value = config.get(
             NumberConf.MAX,
             self._device.sensor_value.dpt_class.value_max,
@@ -128,14 +141,16 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
             NumberConf.MIN,
             self._device.sensor_value.dpt_class.value_min,
         )
-        self._attr_mode = config[CONF_MODE]
         self._attr_native_step = config.get(
             NumberConf.STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_native_unit_of_measurement = config.get(
+            CONF_UNIT_OF_MEASUREMENT,
+            dpt_info["unit"],
+        )
         self._attr_unique_id = str(self._device.sensor_value.group_address)
-        self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
+
         self._device.sensor_value.value = max(0, self._attr_native_min_value)
 
 

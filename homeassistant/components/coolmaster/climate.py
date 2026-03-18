@@ -107,17 +107,17 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._unit.temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we are trying to reach."""
         return self._unit.thermostat
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
         mode = self._unit.mode
         if not self._unit.is_on:
@@ -126,7 +126,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         return CM_TO_HA_STATE[mode]
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the fan setting."""
 
         # Normalize to lowercase for lookup, and pass unknown lowercase values through.
@@ -145,7 +145,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         return CM_TO_HA_FAN[fan_speed_lower]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return FAN_MODES
 
