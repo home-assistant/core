@@ -132,6 +132,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "person",
     "siren",
     "switch",
+    "text",
     "vacuum",
 }
 

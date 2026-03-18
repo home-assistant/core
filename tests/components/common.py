@@ -776,6 +776,7 @@ async def create_target_condition(
     condition: str,
     target: dict,
     behavior: str,
+    condition_options: dict[str, Any] | None = None,
 ) -> ConditionCheckerTypeOptional:
     """Create a target condition."""
     return await async_condition_from_config(
@@ -783,7 +784,7 @@ async def create_target_condition(
         {
             CONF_CONDITION: condition,
             CONF_TARGET: target,
-            CONF_OPTIONS: {"behavior": behavior},
+            CONF_OPTIONS: {"behavior": behavior, **(condition_options or {})},
         },
     )
 
@@ -891,6 +892,7 @@ async def assert_condition_behavior_any(
         condition=condition,
         target=condition_target_config,
         behavior="any",
+        condition_options=condition_options,
     )
 
     for state in states:
@@ -936,6 +938,7 @@ async def assert_condition_behavior_all(
         condition=condition,
         target=condition_target_config,
         behavior="all",
+        condition_options=condition_options,
     )
 
     for state in states:
