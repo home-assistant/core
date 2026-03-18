@@ -136,6 +136,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "siren",
     "switch",
     "vacuum",
+    "window",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
