@@ -19,10 +19,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: exempt
-    comment: |
-      The primary vacuum entity intentionally uses the discovered device name.
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -82,9 +79,9 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: done
+  async-dependency: todo
   inject-websession:
     status: exempt
     comment: |
       This integration does not use a web session.
-  strict-typing: done
+  strict-typing: todo

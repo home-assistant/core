@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -35,6 +36,7 @@ from .local_api import EufyRoboVacLocalApi, EufyRoboVacLocalApiError
 from .model_mappings import MODEL_MAPPINGS, RoboVacModelMapping
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 _STATUS_TO_ACTIVITY: dict[str, VacuumActivity] = {
     "charge_done": VacuumActivity.DOCKED,
@@ -72,6 +74,7 @@ async def async_setup_entry(
 class EufyRoboVacEntity(StateVacuumEntity):
     """Representation of a Eufy RoboVac vacuum entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = True
 
     def __init__(
@@ -82,7 +85,7 @@ class EufyRoboVacEntity(StateVacuumEntity):
         self._mapping = mapping
 
         self._attr_unique_id = entry.data[CONF_ID]
-        self._attr_name = entry.data[CONF_NAME]
+        self._attr_name = None
         self._attr_available = True
         self._attr_activity = VacuumActivity.IDLE
         self._attr_fan_speed = "standard"
@@ -101,7 +104,7 @@ class EufyRoboVacEntity(StateVacuumEntity):
             identifiers={(DOMAIN, str(self._attr_unique_id))},
             manufacturer="Eufy",
             model=mapping.display_name,
-            name=self._attr_name,
+            name=entry.data[CONF_NAME],
         )
 
         self._last_status_raw: str | None = None
@@ -115,6 +118,11 @@ class EufyRoboVacEntity(StateVacuumEntity):
                 CONF_PROTOCOL_VERSION, DEFAULT_PROTOCOL_VERSION
             ),
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore initial state from setup-time DPS data."""
+        if isinstance(dps := self._entry.runtime_data.get("dps"), dict) and dps:
+            self._apply_dps(dps)
 
     def _dps_code(self, command: RoboVacCommand) -> str:
         """Return the DPS code for a given command."""
@@ -157,33 +165,10 @@ class EufyRoboVacEntity(StateVacuumEntity):
 
         async_dispatcher_send(self.hass, dps_update_signal(self._entry.entry_id), dps)
 
-    async def _async_send_and_refresh(self, dps: dict[str, Any]) -> None:
-        """Send DPS commands and refresh entity state."""
-        try:
-            await self._api.async_send_dps(self.hass, dps)
-        except EufyRoboVacLocalApiError as err:
-            raise HomeAssistantError(str(err)) from err
-
-        await self.async_update()
-        if self.hass is not None:
-            self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Fetch state from the local vacuum API."""
-        try:
-            dps = await self._api.async_get_dps(self.hass)
-        except EufyRoboVacLocalApiError as err:
-            _LOGGER.warning("Failed updating %s: %s", self._attr_unique_id, err)
-            self._attr_available = False
-            return
-
-        if not dps:
-            self._attr_available = False
-            return
-
+    def _apply_dps(self, dps: dict[str, Any]) -> None:
+        """Update entity attributes from a DPS payload."""
         self._attr_available = True
         self._dps = dps
-        self._async_publish_dps(dps)
         status_raw = dps.get(self._dps_code(RoboVacCommand.STATUS))
         error_raw = dps.get(self._dps_code(RoboVacCommand.ERROR))
         fan_raw = dps.get(self._dps_code(RoboVacCommand.FAN_SPEED))
@@ -209,6 +194,33 @@ class EufyRoboVacEntity(StateVacuumEntity):
                 self._mapping.fan_speed_values, fan_raw
             ):
                 self._attr_fan_speed = canonical_fan
+
+    async def _async_send_and_refresh(self, dps: dict[str, Any]) -> None:
+        """Send DPS commands and refresh entity state."""
+        try:
+            await self._api.async_send_dps(self.hass, dps)
+        except EufyRoboVacLocalApiError as err:
+            raise HomeAssistantError(str(err)) from err
+
+        await self.async_update()
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Fetch state from the local vacuum API."""
+        try:
+            dps = await self._api.async_get_dps(self.hass)
+        except EufyRoboVacLocalApiError as err:
+            _LOGGER.warning("Failed updating %s: %s", self._attr_unique_id, err)
+            self._attr_available = False
+            return
+
+        if not dps:
+            self._attr_available = False
+            return
+
+        self._apply_dps(dps)
+        self._async_publish_dps(dps)
 
     async def async_start(self) -> None:
         """Start cleaning."""

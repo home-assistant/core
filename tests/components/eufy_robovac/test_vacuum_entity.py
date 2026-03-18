@@ -87,6 +87,13 @@ async def test_async_update_maps_activity_and_battery(entity: EufyRoboVacEntity)
     assert entity.extra_state_attributes["status_raw"] == "standby"
 
 
+def test_primary_entity_uses_device_name(entity: EufyRoboVacEntity) -> None:
+    """Primary vacuum entity should rely on device naming."""
+    assert entity.has_entity_name is True
+    assert entity.name is None
+    assert entity.device_info["name"] == "Hall Vacuum"
+
+
 @pytest.mark.asyncio
 async def test_async_update_marks_entity_unavailable_on_error(
     entity: EufyRoboVacEntity,

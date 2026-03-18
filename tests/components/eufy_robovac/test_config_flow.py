@@ -92,9 +92,22 @@ async def test_cloud_flow_success(hass) -> None:
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "device"
 
-    with patch(
-        "homeassistant.components.eufy_robovac.config_flow._async_validate_local_connection",
-        AsyncMock(return_value=None),
+    with (
+        patch(
+            "homeassistant.components.eufy_robovac.config_flow._async_validate_local_connection",
+            AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.eufy_robovac.local_api.EufyRoboVacLocalApi.async_get_dps",
+            AsyncMock(
+                return_value={
+                    "15": "standby",
+                    "102": "Standard",
+                    "104": "72",
+                    "106": "0",
+                }
+            ),
+        ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],

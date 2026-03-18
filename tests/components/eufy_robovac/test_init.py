@@ -9,6 +9,7 @@ from homeassistant.components.eufy_robovac.const import (
     CONF_PROTOCOL_VERSION,
     DOMAIN,
 )
+from homeassistant.components.eufy_robovac.local_api import EufyRoboVacLocalApiError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumActivity
 from homeassistant.config_entries import ConfigEntryState
@@ -48,7 +49,7 @@ async def test_setup_entry_creates_vacuum_and_polls_dps(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Config entry setup should create a vacuum entity and allow polling."""
+    """Config entry setup should validate DPS and seed initial state."""
     mock_get_dps = AsyncMock(
         return_value={
             "15": "standby",
@@ -68,6 +69,7 @@ async def test_setup_entry_creates_vacuum_and_polls_dps(
             VACUUM_DOMAIN, DOMAIN, config_entry.data[CONF_ID]
         )
         assert entity_id is not None
+        assert mock_get_dps.await_count == 1
 
         battery_entity_id = entity_registry.async_get_entity_id(
             SENSOR_DOMAIN,
@@ -77,6 +79,18 @@ async def test_setup_entry_creates_vacuum_and_polls_dps(
         assert battery_entity_id is not None
 
         calls_before_update = mock_get_dps.await_count
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == VacuumActivity.IDLE
+        assert state.attributes["fan_speed"] == "max"
+        assert state.attributes["status_raw"] == "standby"
+        assert state.attributes["friendly_name"] == "Hall Vacuum"
+
+        battery_state = hass.states.get(battery_entity_id)
+        assert battery_state is not None
+        assert battery_state.state == "72"
+        assert battery_state.attributes["device_class"] == "battery"
+
         await async_update_entity(hass, entity_id)
         await hass.async_block_till_done()
 
@@ -88,10 +102,26 @@ async def test_setup_entry_creates_vacuum_and_polls_dps(
         assert state.attributes["model_name"] == "G30 Hybrid"
         assert mock_get_dps.await_count == calls_before_update + 1
 
-        battery_state = hass.states.get(battery_entity_id)
-        assert battery_state is not None
-        assert battery_state.state == "72"
-        assert battery_state.attributes["device_class"] == "battery"
+
+async def test_setup_entry_retries_when_initial_dps_fetch_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Config entry setup should retry when the vacuum cannot be reached."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ENTRY_DATA[CONF_ID],
+        data=ENTRY_DATA,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.eufy_robovac.local_api.EufyRoboVacLocalApi.async_get_dps",
+        AsyncMock(side_effect=EufyRoboVacLocalApiError("boom")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry_removes_vacuum_entity(
