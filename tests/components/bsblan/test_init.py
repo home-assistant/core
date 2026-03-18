@@ -78,19 +78,26 @@ async def test_config_entry_auth_failed_triggers_reauth(
 
 
 @pytest.mark.parametrize(
-    ("method", "exception", "expected_state"),
+    ("method", "exception", "expected_state", "assert_static_fallback"),
     [
         (
             "device",
             BSBLANConnectionError("Connection failed"),
             ConfigEntryState.SETUP_RETRY,
+            False,
         ),
         (
             "info",
             BSBLANAuthError("Authentication failed"),
             ConfigEntryState.SETUP_ERROR,
+            False,
         ),
-        ("static_values", BSBLANError("General error"), ConfigEntryState.LOADED),
+        (
+            "static_values",
+            BSBLANError("General error"),
+            ConfigEntryState.LOADED,
+            True,
+        ),
     ],
 )
 async def test_config_entry_static_data_errors(
@@ -100,6 +107,7 @@ async def test_config_entry_static_data_errors(
     method: str,
     exception: Exception,
     expected_state: ConfigEntryState,
+    assert_static_fallback: bool,
 ) -> None:
     """Test various errors during static data fetching trigger appropriate config entry states."""
     # Mock the specified method to raise the exception
@@ -110,22 +118,8 @@ async def test_config_entry_static_data_errors(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
-
-
-async def test_entry_loads_without_static_values(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_bsblan: MagicMock,
-) -> None:
-    """Test the config entry still loads when static values are not available."""
-    mock_bsblan.static_values.side_effect = BSBLANError("General error")
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.static is None
+    if assert_static_fallback:
+        assert mock_config_entry.runtime_data.static is None
 
 
 async def test_config_entry_general_setup_error(
