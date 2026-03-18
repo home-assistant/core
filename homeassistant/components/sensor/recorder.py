@@ -205,7 +205,7 @@ def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
 
 
 def _equivalent_units(
-    units: set[str | None], all_equivalent_units: dict[str, str]
+    units: set[str | None], all_equivalent_units: dict[str | None, str]
 ) -> bool:
     """Return True if the units are equivalent."""
     if len(units) == 1:
@@ -275,7 +275,7 @@ def _get_unit_converter(
 
 def _collect_equivalent_units_for_entity(
     custom_units_for_entity: dict[str, str] | None,
-) -> dict[str, str]:
+) -> dict[str | None, str]:
     if custom_units_for_entity:
         equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
     else:
