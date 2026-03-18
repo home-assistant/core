@@ -192,6 +192,8 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 updates["door_lock_relay_status"] = DoorLockRelayStatus.LOCK
             elif ws_state.lock == "unlocked":
                 updates["door_lock_relay_status"] = DoorLockRelayStatus.UNLOCK
+        if not updates and thumbnail is None:
+            return
         updated_door = current_door.with_updates(**updates) if updates else current_door
         new_thumbnails = (
             {**self.data.door_thumbnails, door_id: thumbnail}

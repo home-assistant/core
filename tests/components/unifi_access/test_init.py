@@ -246,6 +246,35 @@ async def test_ws_location_update_no_state_ignored(
     assert coordinator.data is original_data
 
 
+async def test_ws_location_update_no_op_state_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test location update with state but no relevant fields is ignored."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    original_data = coordinator.data
+
+    handlers = _get_ws_handlers(mock_client)
+    msg = LocationUpdateV2(
+        event="access.data.device.location_update_v2",
+        data=LocationUpdateData(
+            id="door-001",
+            location_type="DOOR",
+            state=LocationUpdateState.model_construct(
+                dps=None,
+                lock="unknown",
+            ),
+        ),
+    )
+
+    await handlers["access.data.device.location_update_v2"](msg)
+    await hass.async_block_till_done()
+
+    assert coordinator.data is original_data
+
+
 async def test_ws_location_update_with_thumbnail(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
