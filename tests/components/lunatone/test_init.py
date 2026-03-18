@@ -10,7 +10,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import BASE_URL, PRODUCT_NAME, SERIAL_NUMBER, VERSION, setup_integration
+from . import BASE_URL, PRODUCT_NAME, SERIAL_NUMBER, UUID, VERSION, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -136,14 +136,14 @@ async def test_config_entry_not_ready_no_serial_number(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_config_entry_migrating_unique_ids(
+async def test_config_entry_migration_successful(
     hass: HomeAssistant,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test migration of the Lunatone config entry unique_id from serial number to UUID."""
+    """Test the Lunatone config entry migration to be successful."""
     config_entry = MockConfigEntry(
         title=BASE_URL,
         domain=DOMAIN,
@@ -151,7 +151,43 @@ async def test_config_entry_migrating_unique_ids(
         unique_id=str(SERIAL_NUMBER),
     )
 
+    mock_lunatone_info.uid = None
+
     await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == str(SERIAL_NUMBER)
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 1
+
+    mock_lunatone_info.uid = UUID
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == mock_config_entry.unique_id
+    assert config_entry.version == mock_config_entry.version
+    assert config_entry.minor_version == mock_config_entry.minor_version
+
+
+async def test_config_entry_migration_failed(
+    hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the Lunatone config entry migration to fail."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        unique_id=str(SERIAL_NUMBER),
+        version=mock_config_entry.version + 1,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR

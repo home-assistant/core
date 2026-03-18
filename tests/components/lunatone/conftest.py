@@ -7,6 +7,7 @@ from lunatone_rest_api_client import Device, Devices, Info
 from lunatone_rest_api_client.models import InfoData
 import pytest
 
+from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
@@ -107,4 +108,6 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_URL: BASE_URL},
         unique_id=UUID.replace("-", ""),
+        version=LunatoneConfigFlow.VERSION,
+        minor_version=LunatoneConfigFlow.MINOR_VERSION,
     )

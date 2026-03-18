@@ -1,5 +1,6 @@
 """The Lunatone integration."""
 
+import logging
 from typing import Final
 
 from lunatone_rest_api_client import Auth, DALIBroadcast, Devices, Info
@@ -18,6 +19,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
 )
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
 
@@ -67,31 +69,71 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if info_api.uid is not None:
-        new_unique_id = info_api.uid.replace("-", "")
-
-        # Check if unique ID migration is needed
-        if entry.unique_id != new_unique_id:
-            # Update the config entry itself
-            hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
-
-            # Update all associated entities
-            entity_registry = er.async_get(hass)
-            entities = er.async_entries_for_config_entry(
-                entity_registry, entry.entry_id
-            )
-
-            for entity in entities:
-                parts = list(entity.unique_id.partition("-"))
-                parts[0] = new_unique_id
-
-                entity_registry.async_update_entity(
-                    entity.entity_id, new_unique_id="".join(parts)
-                )
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
+    """Migrate old entry."""
+    info_api = Info(Auth(async_get_clientsession(hass), entry.data[CONF_URL]))
+    await info_api.async_update()
+
+    if info_api.uid is None:
+        # No migration needed
+        # The API interface is on a version that doesn't support the uid yet
+        return True
+
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        entry.version,
+        entry.minor_version,
+    )
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1:
+        new_unique_id = info_api.uid.replace("-", "")
+
+        # Update all associated entities
+        entity_registry = er.async_get(hass)
+        entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+        for entity in entities:
+            parts = list(entity.unique_id.partition("-"))
+            parts[0] = new_unique_id
+
+            entity_registry.async_update_entity(
+                entity.entity_id, new_unique_id="".join(parts)
+            )
+
+        # Update all associated devices
+        device_registry = dr.async_get(hass)
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+        for device in devices:
+            identifier = device.identifiers.pop()
+            parts = list(identifier[1].partition("-"))
+            parts[0] = new_unique_id
+
+            device_registry.async_update_device(
+                device.id, new_identifiers={(identifier[0], "".join(parts))}
+            )
+
+        # Update the config entry itself
+        hass.config_entries.async_update_entry(
+            entry, unique_id=new_unique_id, minor_version=0, version=2
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
