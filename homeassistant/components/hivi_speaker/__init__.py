@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -87,7 +88,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         _LOGGER.exception("Error cleaning up device registry on entry removal")
 
     try:
-        store = Store(hass, 1, "hivi_speaker_device_data")
+        store: Store[Any] = Store(hass, 1, "hivi_speaker_device_data")
         await store.async_remove()
         _LOGGER.debug("Persistent device data storage removed")
     except Exception:
@@ -143,7 +144,7 @@ async def async_remove_config_entry_device(
                 speaker_device_id,
             )
 
-        return True  # noqa: TRY300
+        return True
 
     except Exception:
         _LOGGER.exception(
