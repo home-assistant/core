@@ -41,7 +41,6 @@ from .const import (
     TessieWallConnectorStates,
 )
 from .entity import (
-    TessieBatteryEntity,
     TessieEnergyEntity,
     TessieEnergyHistoryEntity,
     TessieEntity,
@@ -62,6 +61,7 @@ def minutes_to_datetime(value: StateType) -> datetime | None:
 class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
 
+    data_key: str | None = None
     value_fn: Callable[[StateType], StateType | datetime] = lambda x: x
     available_fn: Callable[[StateType], bool] = lambda _: True
 
@@ -141,6 +141,14 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
+    ),
+    TessieSensorEntityDescription(
+        key="phantom_drain_percent",
+        data_key="charge_state_phantom_drain_percent",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
     ),
     TessieSensorEntityDescription(
         key="charge_state_energy_remaining",
@@ -293,14 +301,8 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
 
 BATTERY_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
-        key="phantom_drain_percent",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        suggested_display_precision=2,
-    ),
-    TessieSensorEntityDescription(
         key="lifetime_energy_used",
+        data_key="charge_state_lifetime_energy_used",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -309,6 +311,7 @@ BATTERY_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="pack_current",
+        data_key="charge_state_pack_current",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -317,6 +320,7 @@ BATTERY_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="pack_voltage",
+        data_key="charge_state_pack_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -325,6 +329,7 @@ BATTERY_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="module_temp_min",
+        data_key="charge_state_module_temp_min",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -333,6 +338,7 @@ BATTERY_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="module_temp_max",
+        data_key="charge_state_module_temp_max",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -494,11 +500,10 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
                 for description in DESCRIPTIONS
             ),
-            (  # Add vehicle battery health
-                TessieBatteryHealthSensorEntity(vehicle, description)
+            (  # Add vehicle battery health from state endpoint
+                TessieVehicleSensorEntity(vehicle, description)
                 for vehicle in entry.runtime_data.vehicles
                 for description in BATTERY_DESCRIPTIONS
-                if description.key in vehicle.battery_coordinator.data
             ),
             (  # Add energy site info
                 TessieEnergyInfoSensorEntity(energysite, description)
@@ -545,7 +550,7 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        super().__init__(vehicle, description.key)
+        super().__init__(vehicle, description.key, description.data_key)
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -556,25 +561,6 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
     def available(self) -> bool:
         """Return if sensor is available."""
         return super().available and self.entity_description.available_fn(self.get())
-
-
-class TessieBatteryHealthSensorEntity(TessieBatteryEntity, SensorEntity):
-    """Sensor entity for Tessie battery health data."""
-
-    entity_description: TessieSensorEntityDescription
-
-    def __init__(
-        self,
-        vehicle: TessieVehicleData,
-        description: TessieSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        self.entity_description = description
-        super().__init__(vehicle, description.key)
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the sensor."""
-        self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
 class TessieEnergyLiveSensorEntity(TessieEnergyEntity, SensorEntity):
