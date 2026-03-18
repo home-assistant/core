@@ -9,6 +9,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     PRESET_AWAY,
+    PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
@@ -30,8 +31,6 @@ PARALLEL_UPDATES = 1
 MIN_TEMP = 7.5
 MAX_TEMP = 28.5
 
-DEFAULT_PRESETS = {PRESET_COMFORT, PRESET_ECO}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,6 +50,13 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
     _attr_max_temp = MAX_TEMP
     _attr_name = None
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
+    _attr_preset_modes = [
+        PRESET_COMFORT,
+        PRESET_ECO,
+        PRESET_BOOST,
+        PRESET_AWAY,
+        PRESET_NONE,
+    ]
     _attr_supported_features: ClimateEntityFeature = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -108,21 +114,13 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             == self.coordinator.data.holiday.get("temperature")
         ):
             return PRESET_AWAY
+        if self.target_temperature == MAX_TEMP:
+            return PRESET_BOOST
         if self.target_temperature == self.target_temperature_high:
             return PRESET_COMFORT
         if self.target_temperature == self.target_temperature_low:
             return PRESET_ECO
         return PRESET_NONE
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes.
-
-        Will only show presets that are supported by the device.
-        """
-        if self.preset_mode:
-            return list(DEFAULT_PRESETS | {self.preset_mode})
-        return list(DEFAULT_PRESETS)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -163,6 +161,8 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return await self.async_set_temperature(
                 temperature=self.target_temperature_high
             )
+        if preset_mode == PRESET_BOOST:
+            return await self.async_set_temperature(temperature=MAX_TEMP)
         return None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
