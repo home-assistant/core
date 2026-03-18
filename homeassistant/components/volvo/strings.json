@@ -425,7 +425,7 @@
   },
   "services": {
     "execute_command": {
-      "description": "Send a command to your vehicle.",
+      "description": "Sends a command to your vehicle.",
       "fields": {
         "command": {
           "description": "The command to execute.",
