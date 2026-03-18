@@ -65,10 +65,10 @@ def validate_topic_required(config: ConfigType) -> ConfigType:
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
-        vol.Optional(CONF_IMAGE_ENCODING): vol.In({"b64", "raw"}),
+        vol.Optional(CONF_IMAGE_ENCODING): "b64",
         vol.Optional(CONF_URL_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -104,6 +104,7 @@ class MqttImage(MqttEntity, ImageEntity):
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
     _client: httpx.AsyncClient
+    _url: str | None = None
     _url_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _topic: dict[str, Any]
 

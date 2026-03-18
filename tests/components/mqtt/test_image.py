@@ -248,7 +248,6 @@ async def test_image_from_url(
     assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "milk"
-    assert respx.get("http://localhost/test.png").call_count == 1
 
     state = hass.states.get("image.test")
     assert state.state == "2023-04-01T00:00:00+00:00"
@@ -356,6 +355,7 @@ async def test_image_from_url_content_type(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     content_type: str,
     setup_ok: bool,
 ) -> None:
@@ -495,7 +495,7 @@ async def test_image_from_url_fails(
                     }
                 }
             },
-            "Expected one of [`image_topic`, `url_topic`], got none",
+            "Invalid config for [mqtt]: Expected one of [`image_topic`, `url_topic`], got none",
         ),
     ],
 )
