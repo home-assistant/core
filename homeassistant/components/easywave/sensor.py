@@ -134,7 +134,8 @@ class EasywaveGatewaySensor(SensorEntity):
             return "disconnected"
 
         # Check transceiver connection status
-        if self._coordinator.transceiver and self._coordinator.transceiver.is_connected:
+        transceiver = self._coordinator.transceiver
+        if transceiver and transceiver.is_connected:
             return "connected"
 
         return "disconnected"

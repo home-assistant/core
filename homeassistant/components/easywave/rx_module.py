@@ -1,30 +1,9 @@
-"""Python implementation of EASYWAVE RX11 RxModule.
+"""Support for communicating with EASYWAVE RX11 transceivers.
 
-© EASYWAVE EaS GmbH 2024
-Adapted for Home Assistant Core - Minimal but Complete Version
-
-This module provides a Python implementation of the RxModule communication
-protocol for the EASYWAVE RX11 transceiver, with only essential features
-for Home Assistant Core integration.
-
-Original:       RxModule.c by L.Koepping, ELDAT EaS GmbH
-Adapted:        2024-12-18 for HA Core (v2.0.0-core)
-
-Features Removed for Core:
-- EWB (Easywave Neo) device management
-- Security module and encrypted communication
-- Transmitter learning and control
-- Firmware update support
-- Multi-device support (Dual/Quad devices)
-
-Features Retained:
-- Complete RxModule protocol implementation
-- Packet encoding/decoding with byte stuffing
-- Hardware and firmware version queries
-- Connect/disconnect with graceful cleanup
-- Health check loop with independent monitoring
-- Communication error tracking
-- Callback system for connection state changes
+This module implements the RxModule communication protocol used by
+EASYWAVE RX11 devices, including packet encoding/decoding, version
+queries, connection management, health checks, error tracking, and
+callbacks for connection state changes.
 """
 
 from __future__ import annotations
@@ -41,6 +20,7 @@ import time
 from typing import Any
 
 import serial
+import serial.tools.list_ports
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -759,10 +739,14 @@ class RxModule:
                 return False
 
             if hasattr(self._serial, "port") and self._serial.port:
-                if not os.path.exists(self._serial.port):
-                    _LOGGER.warning(
-                        "Serial port %s no longer exists", self._serial.port
-                    )
+                port = self._serial.port
+                if os.name == "nt":
+                    available = (p.device for p in serial.tools.list_ports.comports())
+                    if port.upper() not in (p.upper() for p in available):
+                        _LOGGER.warning("Serial port %s no longer exists", port)
+                        return False
+                elif os.path.isabs(port) and not os.path.exists(port):
+                    _LOGGER.warning("Serial port %s no longer exists", port)
                     return False
         except (OSError, ValueError) as e:
             _LOGGER.warning("Error checking serial port validity: %s", e)
@@ -813,7 +797,7 @@ class RxModule:
                     break
 
                 self._process_queued_requests()
-                time.sleep(0.001)
+                time.sleep(0.01)
 
             except _SERIAL_ERRORS as e:
                 if not self._shutdown_requested:
@@ -1090,7 +1074,7 @@ class RxModule:
         """Mark that we had a successful communication."""
         with self._protocol_lock:
             self._last_successful_communication = time.time()
-            self._reconnect_attempts = min(self._reconnect_attempts, 0)
+            self._reconnect_attempts = 0
 
     # ================================================================================================
     # CANCEL OPERATIONS
