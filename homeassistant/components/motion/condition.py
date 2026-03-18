@@ -7,30 +7,16 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.condition import Condition, EntityStateConditionBase
+from homeassistant.helpers.condition import Condition, make_entity_state_condition
 
-
-class MotionIsDetectedCondition(EntityStateConditionBase):
-    """Condition for motion detected (binary sensor ON)."""
-
-    _domain_specs = {
-        BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOTION)
-    }
-    _states = {STATE_ON}
-
-
-class MotionIsNotDetectedCondition(EntityStateConditionBase):
-    """Condition for motion not detected (binary sensor OFF)."""
-
-    _domain_specs = {
-        BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOTION)
-    }
-    _states = {STATE_OFF}
+_MOTION_DOMAIN_SPECS = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOTION)
+}
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_detected": MotionIsDetectedCondition,
-    "is_not_detected": MotionIsNotDetectedCondition,
+    "is_detected": make_entity_state_condition(_MOTION_DOMAIN_SPECS, STATE_ON),
+    "is_not_detected": make_entity_state_condition(_MOTION_DOMAIN_SPECS, STATE_OFF),
 }
 
 
