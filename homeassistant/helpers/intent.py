@@ -1485,7 +1485,6 @@ class IntentResponse:
             response_data["code"] = self.error_code.value
         else:
             # action done or query answer
-
             response_data["success"] = [
                 dataclasses.asdict(target) for target in self.success_results
             ]
