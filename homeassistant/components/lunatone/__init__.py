@@ -11,6 +11,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .config_flow import LunatoneConfigFlow
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import (
     LunatoneConfigEntry,
@@ -93,7 +94,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -
         entry.minor_version,
     )
 
-    if entry.version > 1:
+    if entry.version > LunatoneConfigFlow.VERSION:
         # This means the user has downgraded from a future version
         return False
 
@@ -127,7 +128,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -
 
         # Update the config entry itself
         hass.config_entries.async_update_entry(
-            entry, unique_id=new_unique_id, minor_version=0, version=2
+            entry,
+            unique_id=new_unique_id,
+            minor_version=LunatoneConfigFlow.MINOR_VERSION,
+            version=LunatoneConfigFlow.VERSION,
         )
 
     _LOGGER.debug(
