@@ -64,7 +64,7 @@ async def async_setup_entry(
 
     number_of_devices = entry.runtime_data["number_of_devices"]
     devices = [
-        Touchline(PyTouchline(id=device_id, url=host), device_id, entry.unique_id)
+        Touchline(PyTouchline(id=device_id, url=host))
         for device_id in range(number_of_devices)
     ]
     async_add_entities(devices, True)
@@ -113,7 +113,7 @@ async def async_setup_platform(
         "deprecated_yaml",
         breaks_in_ha_version="2026.10.0",
         is_fixable=False,
-        is_persistent=True,
+        is_persistent=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -132,15 +132,12 @@ class Touchline(ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, touchline_thermostat, device_id, controller_id):
+    def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
         self._attr_name = None
         self._current_operation_mode = None
         self._attr_preset_mode = None
-        self._device_id = device_id
-        self._controller_id = controller_id
-        self._attr_unique_id = f"{self._device_id}_{self._controller_id}"
 
     def update(self) -> None:
         """Update thermostat attributes."""
