@@ -1,7 +1,9 @@
 """Tests for the Risco integration."""
 
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyrisco import OperationError
 import pytest
 
 from homeassistant.components.risco.const import (
@@ -16,14 +18,17 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_error_handler():
+def mock_error_handler() -> MagicMock:
     """Create a mock for add_error_handler."""
     with patch("homeassistant.components.risco.RiscoLocal.add_error_handler") as mock:
         yield mock
 
 
 async def test_connection_reset(
-    hass: HomeAssistant, two_zone_local, mock_error_handler, setup_risco_local
+    hass: HomeAssistant,
+    two_zone_local: dict[int, Any],
+    mock_error_handler: MagicMock,
+    setup_risco_local: MockConfigEntry,
 ) -> None:
     """Test config entry reload on connection reset."""
 
@@ -39,7 +44,9 @@ async def test_connection_reset(
 
 
 async def test_unload_handles_disconnect_error(
-    hass: HomeAssistant, two_zone_local, setup_risco_local
+    hass: HomeAssistant,
+    two_zone_local: dict[int, Any],
+    setup_risco_local: MockConfigEntry,
 ) -> None:
     """Test unload succeeds when local disconnect errors out."""
     with patch(
@@ -88,3 +95,26 @@ async def test_local_setup_uses_stored_communication_delay(
             communication_delay=2,
             concurrency=4,
         )
+
+
+async def test_clock_operation_error_is_downgraded(
+    hass: HomeAssistant,
+    two_zone_local: dict[int, Any],
+    mock_error_handler: MagicMock,
+    setup_risco_local: MockConfigEntry,
+) -> None:
+    """Test CLOCK keep-alive operation errors do not trigger reload/error."""
+    callback = mock_error_handler.call_args.args[0]
+    assert callback is not None
+
+    with (
+        patch.object(hass.config_entries, "async_reload") as reload_mock,
+        patch("homeassistant.components.risco._LOGGER") as logger_mock,
+    ):
+        await callback(OperationError("Timeout in command: CLOCK"))
+
+    reload_mock.assert_not_awaited()
+    logger_mock.error.assert_not_called()
+    logger_mock.warning.assert_called_once_with(
+        "Risco keep-alive timeout, waiting for reconnection"
+    )
