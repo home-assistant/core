@@ -33,11 +33,16 @@ Update that checkout to the latest upstream `dev` branch with:
 ./script/bootstrap
 ```
 
-Run the Home Assistant core compatibility slice with:
+Run the Home Assistant core compatibility suite with:
 
 ```bash
 ./script/test-core -q
 ```
+
+By default this runs:
+
+- `tests/test_*.py`
+- `tests/helpers`
 
 The compatibility harness expects Home Assistant core to live in `./core`.
 
@@ -52,5 +57,7 @@ Useful environment variables:
 - `HASS_CLIENT_CORE_BRANCH`
 - `HASS_CLIENT_PYTHON`
 - `HASS_CLIENT_TEST_TARGET`
+  Use a whitespace-separated pytest target list, for example:
+  `HASS_CLIENT_TEST_TARGET="tests/test_core.py tests/helpers/test_event.py"`
 
 Remote sync is enabled only when `HASS_CLIENT_WS_URL` is set.

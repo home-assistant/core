@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
 from typing import Any
+from unittest.mock import Mock
 
 from .api import HomeAssistantAPI
 from .config import RemoteConfig
@@ -44,6 +45,8 @@ except ImportError as err:  # pragma: no cover - guarded by core test environmen
         "hass-client requires Home Assistant core to be importable"
     ) from err
 
+_ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL = ServiceRegistry.async_call
+
 
 def _parse_datetime(value: float | str | None) -> datetime:
     """Parse a Home Assistant timestamp."""
@@ -70,7 +73,7 @@ def _context_from_payload(payload: Mapping[str, Any] | None) -> Context | None:
 class HybridServiceRegistry(ServiceRegistry):
     """Local service registry with remote fallback."""
 
-    __slots__ = ("_remote_api", "_remote_services")
+    __slots__ = ("_local_call_passthrough_depth", "_remote_api", "_remote_services")
 
     def __init__(
         self,
@@ -79,6 +82,7 @@ class HybridServiceRegistry(ServiceRegistry):
     ) -> None:
         """Initialize the hybrid service registry."""
         super().__init__(hass)
+        self._local_call_passthrough_depth = 0
         self._remote_api = remote_api
         self._remote_services: dict[str, dict[str, dict[str, Any]]] = {}
 
@@ -106,6 +110,59 @@ class HybridServiceRegistry(ServiceRegistry):
             return True
         return service.lower() in self._remote_services.get(domain.lower(), {})
 
+    async def _async_call_local_service(
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None,
+        blocking: bool,
+        context: Context | None,
+        target: dict[str, Any] | None,
+        return_response: bool,
+    ) -> ServiceResponse:
+        """Call the local registry while remaining compatible with patched tests."""
+        call_kwargs = {
+            "domain": domain,
+            "service": service,
+            "service_data": service_data,
+            "blocking": blocking,
+            "context": context,
+            "target": target,
+            "return_response": return_response,
+        }
+        mock_args = (domain, service, service_data)
+        mock_kwargs = {
+            "blocking": blocking,
+            "context": context,
+            "return_response": return_response,
+        }
+        if target is not None:
+            mock_kwargs["target"] = target
+
+        if self._local_call_passthrough_depth:
+            return await _ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL(self, **call_kwargs)
+
+        patched_async_call = ServiceRegistry.async_call
+        if patched_async_call is _ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL:
+            return await _ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL(self, **call_kwargs)
+
+        try:
+            self._local_call_passthrough_depth += 1
+            if isinstance(patched_async_call, Mock):
+                return await patched_async_call(*mock_args, **mock_kwargs)
+            return await patched_async_call(
+                self,
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+                return_response,
+            )
+        finally:
+            self._local_call_passthrough_depth -= 1
+
     async def async_call(
         self,
         domain: str,
@@ -118,14 +175,14 @@ class HybridServiceRegistry(ServiceRegistry):
     ) -> ServiceResponse:
         """Call a local service, then fall back to the remote websocket API."""
         try:
-            return await super().async_call(
-                domain=domain,
-                service=service,
-                service_data=service_data,
-                blocking=blocking,
-                context=context,
-                target=target,
-                return_response=return_response,
+            return await self._async_call_local_service(
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+                return_response,
             )
         except ServiceNotFound:
             if self._remote_api is None or not self._remote_api.connected:
