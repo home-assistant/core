@@ -169,6 +169,21 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
+    """Class to represent a single entity selector config.
+
+    Provided for backwards compatibility and remains feature frozen.
+    """
+
+    integration: str
+    domain: str | list[str]
+    device_class: str | list[str]
+    # supported_features is supported by the schema, but included here
+    # because it was allowed before the separate TypedDict for legacy
+    # schema was added.
+    supported_features: list[str]
+
+
 # Legacy entity selector config schema used directly under entity selectors
 # is provided for backwards compatibility and remains feature frozen.
 # New filtering features should be added under the `filter` key instead.
@@ -888,7 +903,9 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total=False):
+class EntitySelectorConfig(
+    BaseSelectorConfig, _LegacyEntityFilterSelectorConfig, total=False
+):
     """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
