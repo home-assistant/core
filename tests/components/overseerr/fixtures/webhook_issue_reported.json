@@ -1,0 +1,23 @@
+{
+  "notification_type": "ISSUE_REPORTED",
+  "subject": "New Issue Reported",
+  "message": "A new video issue has been reported for Interstellar",
+  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+  "media": {
+    "media_type": "movie",
+    "tmdb_id": "157336",
+    "tvdb_id": "",
+    "status": "available",
+    "status4k": "unknown"
+  },
+  "issue": {
+    "issue_id": "1",
+    "issue_type": "video",
+    "issue_status": "open",
+    "reported_by_email": "user@example.com",
+    "reported_by_username": "testuser",
+    "reported_by_avatar": "/os_logo_square.png",
+    "reported_by_settings_discord_id": "",
+    "reported_by_settings_telegram_chat_id": ""
+  }
+}

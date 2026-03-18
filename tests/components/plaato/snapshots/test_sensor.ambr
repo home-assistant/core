@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_alcohol_by_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_batch_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -98,8 +102,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -117,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -147,8 +153,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles_per_minute-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -166,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
     'options': dict({
     }),
     'original_device_class': None,
@@ -196,8 +204,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_co2_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -215,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -244,8 +254,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_original_gravity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -263,6 +274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -293,8 +305,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_specific_gravity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -312,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -342,8 +356,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -361,6 +376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -390,8 +406,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_beer_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -409,6 +426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -441,8 +459,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_last_pour_amount-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -460,6 +479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -493,8 +513,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_percent_beer_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -512,6 +533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -545,8 +567,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -564,6 +587,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

@@ -1,6 +1,13 @@
 """Alexa Devices tests const."""
 
-from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
+from datetime import UTC, datetime
+
+from aioamazondevices.const.schedules import (
+    NOTIFICATION_ALARM,
+    NOTIFICATION_REMINDER,
+    NOTIFICATION_TIMER,
+)
+from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
 
 TEST_CODE = "023123"
 TEST_PASSWORD = "fake_password"
@@ -15,16 +22,52 @@ TEST_DEVICE_1 = AmazonDevice(
     device_type="echo",
     household_device=False,
     device_owner_customer_id="amazon_ower_id",
-    device_cluster_members=[TEST_DEVICE_1_SN],
+    device_cluster_members={TEST_DEVICE_1_SN: TEST_DEVICE_1_ID},
     online=True,
     serial_number=TEST_DEVICE_1_SN,
+    manufacturer="Test manufacturer",
+    model="Test model",
+    hardware_version="1.0",
     software_version="echo_test_software_version",
     entity_id="11111111-2222-3333-4444-555555555555",
     endpoint_id="G1234567890123456789012345678A",
     sensors={
-        "dnd": AmazonDeviceSensor(name="dnd", value=False, error=False, scale=None),
+        "dnd": AmazonDeviceSensor(
+            name="dnd",
+            value=False,
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=None,
+        ),
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", error=False, scale="CELSIUS"
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
+        ),
+    },
+    notifications_supported=True,
+    notifications={
+        NOTIFICATION_ALARM: AmazonSchedule(
+            type=NOTIFICATION_ALARM,
+            status="ON",
+            label="Morning Alarm",
+            next_occurrence=datetime(2023, 10, 1, 7, 0, 0, tzinfo=UTC),
+        ),
+        NOTIFICATION_REMINDER: AmazonSchedule(
+            type=NOTIFICATION_REMINDER,
+            status="ON",
+            label="Take out the trash",
+            next_occurrence=None,
+        ),
+        NOTIFICATION_TIMER: AmazonSchedule(
+            type=NOTIFICATION_TIMER,
+            status="OFF",
+            label="",
+            next_occurrence=None,
         ),
     },
 )
@@ -38,15 +81,25 @@ TEST_DEVICE_2 = AmazonDevice(
     device_type="echo",
     household_device=True,
     device_owner_customer_id="amazon_ower_id",
-    device_cluster_members=[TEST_DEVICE_2_SN],
+    device_cluster_members={TEST_DEVICE_2_SN: TEST_DEVICE_2_ID},
     online=True,
     serial_number=TEST_DEVICE_2_SN,
+    manufacturer="Test manufacturer 2",
+    model="Test model 2",
+    hardware_version="2.0",
     software_version="echo_test_2_software_version",
     entity_id="11111111-2222-3333-4444-555555555555",
     endpoint_id="G1234567890123456789012345678A",
     sensors={
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", error=False, scale="CELSIUS"
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
         )
     },
+    notifications_supported=False,
+    notifications={},
 )

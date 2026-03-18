@@ -13,6 +13,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -68,13 +69,14 @@ class GoogleDriveBackupAgent(BackupAgent):
         assert config_entry.unique_id
         self.name = config_entry.title
         self.unique_id = slugify(config_entry.unique_id)
-        self._client = config_entry.runtime_data
+        self._client = config_entry.runtime_data.client
 
     async def async_upload_backup(
         self,
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.

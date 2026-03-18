@@ -6,20 +6,20 @@
       }
     },
     "sensor": {
-      "odometer": {
-        "default": "mdi:road-variant"
-      },
       "average_fuel_consumption": {
         "default": "mdi:leaf"
       },
-      "range": {
-        "default": "mdi:gas-station"
+      "ev_range": {
+        "default": "mdi:ev-station"
       },
       "fuel_level": {
         "default": "mdi:gas-station"
       },
-      "ev_range": {
-        "default": "mdi:ev-station"
+      "odometer": {
+        "default": "mdi:road-variant"
+      },
+      "range": {
+        "default": "mdi:gas-station"
       }
     }
   },

@@ -1,28 +1,31 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "cloud_id": "Cloud ID",
-          "install_code": "Installation code"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Rainforest gateway."
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "cloud_id": "Cloud ID",
+          "host": "[%key:common::config_flow::data::host%]",
+          "install_code": "Installation code"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Rainforest gateway."
+        }
+      }
     }
   },
   "entity": {
     "sensor": {
+      "energy_price": {
+        "name": "Energy price"
+      },
       "power_demand": {
         "name": "Power demand"
       },
@@ -31,9 +34,6 @@
       },
       "total_energy_received": {
         "name": "Total energy received"
-      },
-      "energy_price": {
-        "name": "Energy price"
       }
     }
   }

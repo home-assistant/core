@@ -3,7 +3,7 @@
 DOMAIN = "homeassistant_connect_zbt2"
 
 NABU_CASA_FIRMWARE_RELEASES_URL = (
-    "https://api.github.com/repos/NabuCasa/silabs-firmware-builder/releases/latest"
+    "https://api.github.com/repos/NabuCasa/silabs-firmware-builder/releases"
 )
 
 FIRMWARE = "firmware"

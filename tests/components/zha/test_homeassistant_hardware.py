@@ -5,6 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from zigpy.application import ControllerApplication
 
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_callback,
 )
@@ -35,7 +38,7 @@ async def test_get_firmware_info_normal(hass: HomeAssistant) -> None:
             },
             "radio_type": "ezsp",
         },
-        version=4,
+        version=5,
     )
     zha.add_to_hass(hass)
     zha.mock_state(hass, ConfigEntryState.LOADED)
@@ -87,7 +90,7 @@ async def test_get_firmware_info_errors(
         domain="zha",
         unique_id="some_unique_id",
         data=data,
-        version=4,
+        version=5,
     )
     zha.add_to_hass(hass)
 
@@ -102,7 +105,7 @@ async def test_hardware_firmware_info_provider_notification(
     """Test that the ZHA gateway provides hardware and firmware information."""
     config_entry.add_to_hass(hass)
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     callback = MagicMock()
     async_register_firmware_info_callback(hass, "/dev/ttyUSB0", callback)

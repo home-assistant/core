@@ -8,7 +8,7 @@ from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
-from homeassistant.components.cast.home_assistant_cast import (
+from homeassistant.components.cast.home_assistant_cast import (  # pylint: disable=hass-component-root-import
     ATTR_URL_PATH,
     ATTR_VIEW_PATH,
     NO_URL_AVAILABLE_ERROR,
@@ -42,7 +42,7 @@ async def async_get_media_browser_root_object(
             media_class=MediaClass.APP,
             media_content_id="",
             media_content_type=DOMAIN,
-            thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+            thumbnail="/api/brands/integration/lovelace/logo.png",
             can_play=False,
             can_expand=True,
         )
@@ -72,7 +72,7 @@ async def async_browse_media(
                 media_class=MediaClass.APP,
                 media_content_id=DEFAULT_DASHBOARD,
                 media_content_type=DOMAIN,
-                thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+                thumbnail="/api/brands/integration/lovelace/logo.png",
                 can_play=True,
                 can_expand=False,
             )
@@ -104,7 +104,7 @@ async def async_browse_media(
                 media_class=MediaClass.APP,
                 media_content_id=f"{info['url_path']}/{view['path']}",
                 media_content_type=DOMAIN,
-                thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+                thumbnail="/api/brands/integration/lovelace/logo.png",
                 can_play=True,
                 can_expand=False,
             )
@@ -158,7 +158,15 @@ async def _get_dashboard_info(
     """Load a dashboard and return info on views."""
     if url_path == DEFAULT_DASHBOARD:
         url_path = None
-    dashboard = hass.data[LOVELACE_DATA].dashboards.get(url_path)
+
+    # When url_path is None, prefer "lovelace" dashboard if it exists (for YAML mode)
+    # Otherwise fall back to dashboards[None] (storage mode default)
+    if url_path is None:
+        dashboard = hass.data[LOVELACE_DATA].dashboards.get(DOMAIN) or hass.data[
+            LOVELACE_DATA
+        ].dashboards.get(None)
+    else:
+        dashboard = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
     if dashboard is None:
         raise ValueError("Invalid dashboard specified")
@@ -205,7 +213,7 @@ def _item_from_info(info: dict) -> BrowseMedia:
         media_class=MediaClass.APP,
         media_content_id=info["url_path"],
         media_content_type=DOMAIN,
-        thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+        thumbnail="/api/brands/integration/lovelace/logo.png",
         can_play=True,
         can_expand=len(info["views"]) > 1,
     )

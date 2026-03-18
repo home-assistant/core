@@ -16,7 +16,6 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
     CONF_BC_ONLY,
@@ -25,6 +24,7 @@ from homeassistant.components.reolink.const import (
     CONF_USE_HTTPS,
     DOMAIN,
 )
+from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.exceptions import ReolinkWebhookException
 from homeassistant.components.reolink.host import DEFAULT_TIMEOUT
 from homeassistant.config_entries import ConfigEntryState
@@ -564,7 +564,7 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
 
     # ensure the last_update_succes is False for the device_coordinator.
     reolink_host.get_states.side_effect = ReolinkError("Test error")
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -606,6 +606,33 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
     await hass.async_block_till_done()
     # Check that IP was not updated
     assert config_entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_dhcp_ip_update_aborted_if_no_host(hass: HomeAssistant) -> None:
+    """Test dhcp discovery does not update the IP if the config entry has no host."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={},
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    dhcp_data = DhcpServiceInfo(
+        ip=TEST_HOST2,
+        hostname="Reolink",
+        macaddress=DHCP_FORMATTED_MAC,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -661,7 +688,7 @@ async def test_dhcp_ip_update(
 
     # ensure the last_update_succes is False for the device_coordinator.
     reolink_host.get_states.side_effect = ReolinkError("Test error")
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

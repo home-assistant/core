@@ -22,21 +22,21 @@
       }
     },
     "sensor": {
-      "status": {
-        "default": "mdi:car",
-        "state": {
-          "unplugged": "mdi:power-plug-off",
-          "plugged_in": "mdi:power-plug",
-          "charging": "mdi:battery-charging-100",
-          "paused": "mdi:pause",
-          "pending_approval": "mdi:alert-decagram"
-        }
-      },
       "ct_current": {
         "default": "mdi:gauge"
       },
       "slot_list": {
         "default": "mdi:calendar-clock"
+      },
+      "status": {
+        "default": "mdi:car",
+        "state": {
+          "charging": "mdi:battery-charging-100",
+          "paused": "mdi:pause",
+          "pending_approval": "mdi:alert-decagram",
+          "plugged_in": "mdi:power-plug",
+          "unplugged": "mdi:power-plug-off"
+        }
       }
     },
     "switch": {
@@ -46,6 +46,9 @@
           "off": "mdi:lock-open"
         }
       },
+      "price_cap": {
+        "default": "mdi:car-speed-limiter"
+      },
       "require_approval": {
         "default": "mdi:check-decagram"
       },
@@ -54,9 +57,6 @@
         "state": {
           "off": "mdi:sleep-off"
         }
-      },
-      "price_cap": {
-        "default": "mdi:car-speed-limiter"
       }
     },
     "time": {

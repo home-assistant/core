@@ -1,10 +1,10 @@
 """Calendar platform for a Remote Calendar."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from ical.event import Event
-from ical.timeline import Timeline
+from ical.timeline import Timeline, materialize_timeline
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -20,6 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+# Every coordinator update refresh, we materialize a timeline of upcoming
+# events for determining state. This is done in the background to avoid blocking
+# the event loop. When a state update happens we can scan for active events on
+# the materialized timeline. These parameters control the maximum lookahead
+# window and number of events we materialize from the calendar.
+MAX_LOOKAHEAD_EVENTS = 20
+MAX_LOOKAHEAD_TIME = timedelta(days=365)
 
 
 async def async_setup_entry(
@@ -87,9 +95,15 @@ class RemoteCalendarEntity(
         await super().async_update()
 
         def _get_timeline() -> Timeline | None:
-            """Return the next active event."""
+            """Return a materialized timeline with upcoming events."""
             now = dt_util.now()
-            return self.coordinator.data.timeline_tz(now.tzinfo)
+            timeline = self.coordinator.data.timeline_tz(now.tzinfo)
+            return materialize_timeline(
+                timeline,
+                start=now,
+                stop=now + MAX_LOOKAHEAD_TIME,
+                max_number_of_events=MAX_LOOKAHEAD_EVENTS,
+            )
 
         self._timeline = await self.hass.async_add_executor_job(_get_timeline)
 

@@ -1,5 +1,4 @@
 {
-  "title": "Sensor",
   "device_automation": {
     "condition_type": {
       "is_absolute_humidity": "Current {entity_name} absolute humidity",
@@ -9,8 +8,8 @@
       "is_atmospheric_pressure": "Current {entity_name} atmospheric pressure",
       "is_battery_level": "Current {entity_name} battery level",
       "is_blood_glucose_concentration": "Current {entity_name} blood glucose concentration",
-      "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
       "is_carbon_dioxide": "Current {entity_name} carbon dioxide concentration level",
+      "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
       "is_conductivity": "Current {entity_name} conductivity",
       "is_current": "Current {entity_name} current",
       "is_data_rate": "Current {entity_name} data rate",
@@ -47,6 +46,7 @@
       "is_speed": "Current {entity_name} speed",
       "is_sulphur_dioxide": "Current {entity_name} sulphur dioxide concentration level",
       "is_temperature": "Current {entity_name} temperature",
+      "is_temperature_delta": "Current {entity_name} temperature interval",
       "is_value": "Current {entity_name} value",
       "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
       "is_volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::condition_type::is_volatile_organic_compounds%]",
@@ -58,6 +58,11 @@
       "is_wind_direction": "Current {entity_name} wind direction",
       "is_wind_speed": "Current {entity_name} wind speed"
     },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
     "trigger_type": {
       "absolute_humidity": "{entity_name} absolute humidity changes",
       "apparent_power": "{entity_name} apparent power changes",
@@ -66,8 +71,8 @@
       "atmospheric_pressure": "{entity_name} atmospheric pressure changes",
       "battery_level": "{entity_name} battery level changes",
       "blood_glucose_concentration": "{entity_name} blood glucose concentration changes",
-      "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
       "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
+      "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
       "conductivity": "{entity_name} conductivity changes",
       "current": "{entity_name} current changes",
       "data_rate": "{entity_name} data rate changes",
@@ -104,6 +109,7 @@
       "speed": "{entity_name} speed changes",
       "sulphur_dioxide": "{entity_name} sulphur dioxide concentration changes",
       "temperature": "{entity_name} temperature changes",
+      "temperature_delta": "{entity_name} temperature interval changes",
       "value": "{entity_name} value changes",
       "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
       "volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::trigger_type::volatile_organic_compounds%]",
@@ -114,11 +120,6 @@
       "weight": "{entity_name} weight changes",
       "wind_direction": "{entity_name} wind direction changes",
       "wind_speed": "{entity_name} wind speed changes"
-    },
-    "extra_fields": {
-      "above": "[%key:common::device_automation::extra_fields::above%]",
-      "below": "[%key:common::device_automation::extra_fields::below%]",
-      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {
@@ -146,12 +147,6 @@
         }
       }
     },
-    "date": {
-      "name": "Date"
-    },
-    "duration": {
-      "name": "Duration"
-    },
     "absolute_humidity": {
       "name": "Absolute humidity"
     },
@@ -173,11 +168,11 @@
     "blood_glucose_concentration": {
       "name": "Blood glucose concentration"
     },
-    "carbon_monoxide": {
-      "name": "Carbon monoxide"
-    },
     "carbon_dioxide": {
       "name": "Carbon dioxide"
+    },
+    "carbon_monoxide": {
+      "name": "Carbon monoxide"
     },
     "conductivity": {
       "name": "Conductivity"
@@ -191,8 +186,14 @@
     "data_size": {
       "name": "Data size"
     },
+    "date": {
+      "name": "Date"
+    },
     "distance": {
       "name": "Distance"
+    },
+    "duration": {
+      "name": "Duration"
     },
     "energy": {
       "name": "Energy"
@@ -245,20 +246,20 @@
     "pm1": {
       "name": "PM1"
     },
-    "pm4": {
-      "name": "PM4"
-    },
     "pm10": {
       "name": "PM10"
     },
     "pm25": {
       "name": "PM2.5"
     },
-    "power_factor": {
-      "name": "Power factor"
+    "pm4": {
+      "name": "PM4"
     },
     "power": {
       "name": "Power"
+    },
+    "power_factor": {
+      "name": "Power factor"
     },
     "precipitation": {
       "name": "Precipitation"
@@ -289,6 +290,9 @@
     },
     "temperature": {
       "name": "Temperature"
+    },
+    "temperature_delta": {
+      "name": "Temperature delta"
     },
     "timestamp": {
       "name": "Timestamp"
@@ -326,16 +330,17 @@
   },
   "issues": {
     "mean_type_changed": {
-      "title": "The mean type of {statistic_id} has changed",
-      "description": ""
+      "description": "",
+      "title": "The mean type of {statistic_id} has changed"
     },
     "state_class_removed": {
-      "title": "{statistic_id} no longer has a state class",
-      "description": ""
+      "description": "",
+      "title": "{statistic_id} no longer has a state class"
     },
     "units_changed": {
-      "title": "The unit of {statistic_id} has changed",
-      "description": ""
+      "description": "",
+      "title": "The unit of {statistic_id} has changed"
     }
-  }
+  },
+  "title": "Sensor"
 }

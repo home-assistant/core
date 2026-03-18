@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import DOMAIN
+from . import EbusdData
+from .const import EBUSD_DATA, SensorSpecs
 
 TIME_FRAME1_BEGIN = "time_frame1_begin"
 TIME_FRAME1_END = "time_frame1_end"
@@ -33,9 +35,9 @@ def setup_platform(
     """Set up the Ebus sensor."""
     if not discovery_info:
         return
-    ebusd_api = hass.data[DOMAIN]
-    monitored_conditions = discovery_info["monitored_conditions"]
-    name = discovery_info["client_name"]
+    ebusd_api = hass.data[EBUSD_DATA]
+    monitored_conditions: list[str] = discovery_info["monitored_conditions"]
+    name: str = discovery_info["client_name"]
 
     add_entities(
         (
@@ -49,9 +51,8 @@ def setup_platform(
 class EbusdSensor(SensorEntity):
     """Ebusd component sensor methods definition."""
 
-    def __init__(self, data, sensor, name):
+    def __init__(self, data: EbusdData, sensor: SensorSpecs, name: str) -> None:
         """Initialize the sensor."""
-        self._state = None
         self._client_name = name
         (
             self._name,
@@ -63,20 +64,15 @@ class EbusdSensor(SensorEntity):
         self.data = data
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._client_name} {self._name}"
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
-        if self._type == 1 and self._state is not None:
-            schedule = {
+        if self._type == 1 and (native_value := self.native_value) is not None:
+            schedule: dict[str, str | None] = {
                 TIME_FRAME1_BEGIN: None,
                 TIME_FRAME1_END: None,
                 TIME_FRAME2_BEGIN: None,
@@ -84,7 +80,7 @@ class EbusdSensor(SensorEntity):
                 TIME_FRAME3_BEGIN: None,
                 TIME_FRAME3_END: None,
             }
-            time_frame = self._state.split(";")
+            time_frame = cast(str, native_value).split(";")
             for index, item in enumerate(sorted(schedule.items())):
                 if index < len(time_frame):
                     parsed = datetime.datetime.strptime(time_frame[index], "%H:%M")
@@ -96,17 +92,17 @@ class EbusdSensor(SensorEntity):
         return None
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         return self._icon
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
@@ -118,6 +114,6 @@ class EbusdSensor(SensorEntity):
             if self._name not in self.data.value:
                 return
 
-            self._state = self.data.value[self._name]
+            self._attr_native_value = self.data.value[self._name]
         except RuntimeError:
             _LOGGER.debug("EbusdData.update exception")

@@ -36,6 +36,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
             try:
                 huum = Huum(
                     user_input[CONF_USERNAME],
@@ -43,17 +44,12 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 )
                 await huum.status()
-            except (Forbidden, NotAuthenticated):
-                # Most likely Forbidden as that is what is returned from `.status()` with bad creds
-                _LOGGER.error("Could not log in to Huum with given credentials")
+            except Forbidden, NotAuthenticated:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match(
-                    {CONF_USERNAME: user_input[CONF_USERNAME]}
-                )
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )

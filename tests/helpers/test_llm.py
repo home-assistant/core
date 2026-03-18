@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
-from homeassistant.components.script.config import ScriptConfig
+from homeassistant.components.script import ScriptConfig
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -183,19 +183,23 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetLiveContext"]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["test_intent", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "test_intent",
+        "GetDateTime",
+        "GetLiveContext",
+    ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 2
+    assert len(api.tools) == 3
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -365,6 +369,7 @@ async def test_assist_api_tools(
         "HassTurnOn",
         "HassTurnOff",
         "HassSetPosition",
+        "HassStopMoving",
         "HassStartTimer",
         "HassCancelTimer",
         "HassCancelAllTimers",
@@ -374,6 +379,7 @@ async def test_assist_api_tools(
         "HassUnpauseTimer",
         "HassTimerStatus",
         "Super_crazy_intent_with_unique_name",
+        "GetDateTime",
     ]
 
 
@@ -390,7 +396,7 @@ async def test_assist_api_description(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert len(api.tools) == 2
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
@@ -478,7 +484,9 @@ async def test_assist_api_prompt(
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
     def create_entity(
-        device: dr.DeviceEntry, write_state=True, aliases: set[str] | None = None
+        device: dr.DeviceEntry,
+        write_state=True,
+        aliases: list[er.AliasEntry] | None = None,
     ) -> None:
         """Create an entity for a device and track entity_id."""
         entity = entity_registry.async_get_or_create(
@@ -503,7 +511,7 @@ async def test_assist_api_prompt(
             model="Test Model",
             suggested_area="Test Area",
         ),
-        aliases={"my test light"},
+        aliases=[er.COMPUTED_NAME, "my test light"],
     )
     for i in range(3):
         create_entity(
@@ -570,9 +578,9 @@ async def test_assist_api_prompt(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={("test", "9876-integer-values")},
-            name=1,
-            manufacturer=2,
-            model=3,
+            name="1",
+            manufacturer="2",
+            model="3",
             suggested_area="Test Area 2",
         )
     )
@@ -769,6 +777,7 @@ async def test_script_tool(
         {
             "script": {
                 "test_script": {
+                    "alias": "test script",
                     "description": "This is a test script",
                     "sequence": [
                         {"variables": {"result": {"drinks": 2}}},
@@ -785,6 +794,7 @@ async def test_script_tool(
                     },
                 },
                 "script_with_no_fields": {
+                    "alias": "test script 2",
                     "description": "This is another test script",
                     "sequence": [],
                 },
@@ -798,7 +808,9 @@ async def test_script_tool(
     async_expose_entity(hass, "conversation", "script.script_with_no_fields", True)
 
     entity_registry.async_update_entity(
-        "script.test_script", name="script name", aliases={"script alias"}
+        "script.test_script",
+        name="script name",
+        aliases=[er.COMPUTED_NAME, "script alias"],
     )
 
     area = area_registry.async_create("Living room")
@@ -833,7 +845,10 @@ async def test_script_tool(
             "This is a test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
         ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "script_with_no_fields": (
+            "This is another test script. Aliases: ['test script 2']",
+            vol.Schema({}),
+        ),
     }
 
     # Test script with response
@@ -946,7 +961,10 @@ async def test_script_tool(
             "This is a new test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
         ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "script_with_no_fields": (
+            "This is another test script. Aliases: ['test script 2']",
+            vol.Schema({}),
+        ),
     }
 
 
@@ -1126,6 +1144,19 @@ async def test_selector_serializer(
             "metadata": {"type": "object", "additionalProperties": True},
         },
         "required": ["media_content_id", "media_content_type"],
+    }
+    assert selector_serializer(selector.MediaSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "entity_id": {"type": "string"},
+                "media_content_id": {"type": "string"},
+                "media_content_type": {"type": "string"},
+                "metadata": {"type": "object", "additionalProperties": True},
+            },
+            "required": ["media_content_id", "media_content_type"],
+        },
     }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
@@ -1463,6 +1494,41 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_get_date_time_tool(hass: HomeAssistant) -> None:
+    """Test the GetDateTime tool."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "GetDateTime"), None)
+    assert tool is not None
+
+    now = dt_util.parse_datetime("2025-09-22 12:30:45Z")
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput("GetDateTime", {}),
+            llm_context,
+        )
+        assert result == {
+            "success": True,
+            "result": {
+                "date": "2025-09-22",
+                "time": "12:30:45",
+                "timezone": "UTC",
+                "weekday": "Monday",
+            },
+        }
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1475,7 +1541,7 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.tools == []
+    assert [tool.name for tool in api.tools] == ["GetDateTime"]
 
 
 async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:

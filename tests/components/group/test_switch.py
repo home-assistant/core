@@ -14,6 +14,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
@@ -458,3 +459,43 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("switch.some_group").state == STATE_OFF
     assert hass.states.get("switch.nested_group").state == STATE_OFF
+
+
+async def test_assumed_state(hass: HomeAssistant) -> None:
+    """Test assumed_state attribute behavior."""
+    await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["switch.tv", "switch.soundbar"],
+                "name": "Media Group",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # No members with assumed_state -> group doesn't have assumed_state in attributes
+    hass.states.async_set("switch.tv", STATE_ON, {})
+    hass.states.async_set("switch.soundbar", STATE_OFF, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.media_group")
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+    # One member with assumed_state=True -> group has assumed_state=True
+    hass.states.async_set("switch.tv", STATE_ON, {ATTR_ASSUMED_STATE: True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.media_group")
+    assert state.attributes.get(ATTR_ASSUMED_STATE) is True
+
+    # All members without assumed_state -> group doesn't have assumed_state in attributes
+    hass.states.async_set("switch.tv", STATE_ON, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.media_group")
+    assert ATTR_ASSUMED_STATE not in state.attributes

@@ -1,5 +1,4 @@
 {
-  "title": "Weather",
   "entity_component": {
     "_": {
       "name": "[%key:component::weather::title%]",
@@ -21,6 +20,15 @@
         "windy-variant": "Windy, cloudy"
       },
       "state_attributes": {
+        "apparent_temperature": {
+          "name": "Apparent temperature"
+        },
+        "cloud_coverage": {
+          "name": "Cloud coverage"
+        },
+        "dew_point": {
+          "name": "Dew point temperature"
+        },
         "forecast": {
           "name": "Forecast"
         },
@@ -29,9 +37,6 @@
         },
         "ozone": {
           "name": "Ozone"
-        },
-        "cloud_coverage": {
-          "name": "Cloud coverage"
         },
         "precipitation_unit": {
           "name": "Precipitation unit"
@@ -42,17 +47,14 @@
         "pressure_unit": {
           "name": "Pressure unit"
         },
-        "apparent_temperature": {
-          "name": "Apparent temperature"
-        },
-        "dew_point": {
-          "name": "Dew point temperature"
-        },
         "temperature": {
           "name": "Temperature"
         },
         "temperature_unit": {
           "name": "Temperature unit"
+        },
+        "uv_index": {
+          "name": "UV index"
         },
         "visibility": {
           "name": "Visibility"
@@ -71,11 +73,21 @@
         },
         "wind_speed_unit": {
           "name": "Wind speed unit"
-        },
-        "uv_index": {
-          "name": "UV index"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_service_weather_get_forecast": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue.",
+            "title": "[%key:component::weather::issues::deprecated_service_weather_get_forecast::title%]"
+          }
+        }
+      },
+      "title": "Detected use of deprecated action weather.get_forecast"
     }
   },
   "selector": {
@@ -88,38 +100,26 @@
     }
   },
   "services": {
-    "get_forecasts": {
-      "name": "Get forecasts",
-      "description": "Retrieves the forecast from selected weather services.",
-      "fields": {
-        "type": {
-          "name": "Forecast type",
-          "description": "The scope of the weather forecast."
-        }
-      }
-    },
     "get_forecast": {
-      "name": "Get forecast",
       "description": "Retrieves the forecast from a selected weather service.",
       "fields": {
         "type": {
-          "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]",
-          "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]"
+          "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]",
+          "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]"
         }
-      }
+      },
+      "name": "Get forecast"
+    },
+    "get_forecasts": {
+      "description": "Retrieves the forecast from selected weather services.",
+      "fields": {
+        "type": {
+          "description": "The scope of the weather forecast.",
+          "name": "Forecast type"
+        }
+      },
+      "name": "Get forecasts"
     }
   },
-  "issues": {
-    "deprecated_service_weather_get_forecast": {
-      "title": "Detected use of deprecated action weather.get_forecast",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::weather::issues::deprecated_service_weather_get_forecast::title%]",
-            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue."
-          }
-        }
-      }
-    }
-  }
+  "title": "Weather"
 }

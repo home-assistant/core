@@ -65,7 +65,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self) -> int | None:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._channel.get_state()
 

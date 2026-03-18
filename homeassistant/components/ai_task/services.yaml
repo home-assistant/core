@@ -30,6 +30,7 @@ generate_data:
         media:
           accept:
             - "*"
+          multiple: true
 generate_image:
   fields:
     task_name:
@@ -57,3 +58,4 @@ generate_image:
         media:
           accept:
             - "*"
+          multiple: true

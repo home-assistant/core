@@ -7,6 +7,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 import dataclasses
 from datetime import datetime
+import errno
 import fcntl
 from io import TextIOWrapper
 import json
@@ -172,7 +173,7 @@ class RuntimeConfig:
     safe_mode: bool = False
 
 
-class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[name-defined,misc]
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
@@ -183,7 +184,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__  # type: ignore[no-any-return,attr-defined]
+        return self._loop_factory.__name__  # type: ignore[no-any-return]
 
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
@@ -207,17 +208,26 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
 
 @callback
-def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
+def _async_loop_exception_handler(
+    loop: asyncio.AbstractEventLoop,
+    context: dict[str, Any],
+) -> None:
     """Handle all exception inside the core loop."""
+    fatal_error: str | None = None
     kwargs = {}
     if exception := context.get("exception"):
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
+        if isinstance(exception, OSError) and exception.errno == errno.EMFILE:
+            # Too many open files – something is leaking them, and it's likely
+            # to be quite unrecoverable if the event loop can't pump messages
+            # (e.g. unable to accept a socket).
+            fatal_error = str(exception)
 
     logger = logging.getLogger(__package__)
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s (%s): %s",
+            "Error doing job: %s (task: %s): %s",
             context["message"],
             context.get("task"),
             stack_summary,
@@ -226,11 +236,19 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
         return
 
     logger.error(
-        "Error doing job: %s (%s)",
+        "Error doing job: %s (task: %s)",
         context["message"],
         context.get("task"),
         **kwargs,  # type: ignore[arg-type]
     )
+
+    if fatal_error:
+        logger.error(
+            "Fatal error '%s' raised in event loop, shutting it down",
+            fatal_error,
+        )
+        loop.stop()
+        loop.close()
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
@@ -263,7 +281,7 @@ def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     _enable_posix_spawn()
     set_open_file_descriptor_limit()
-    asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
+    asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))  # type: ignore[deprecated]
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()
     try:

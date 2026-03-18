@@ -3,7 +3,11 @@
 from unittest.mock import patch
 
 import pytest
-from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
+from pyuptimerobot import (
+    API_PATH_MONITOR_DETAIL,
+    UptimeRobotAuthenticationException,
+    UptimeRobotException,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.uptimerobot.const import COORDINATOR_UPDATE_INTERVAL
@@ -21,9 +25,9 @@ from homeassistant.util import dt as dt_util
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
     MOCK_UPTIMEROBOT_MONITOR,
+    MOCK_UPTIMEROBOT_MONITOR_2,
     MOCK_UPTIMEROBOT_MONITOR_PAUSED,
     UPTIMEROBOT_SWITCH_TEST_ENTITY,
-    MockApiResponseKey,
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
 )
@@ -55,7 +59,9 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyuptimerobot.UptimeRobot.async_edit_monitor",
-            return_value=mock_uptimerobot_api_response(),
+            return_value=mock_uptimerobot_api_response(
+                api_path=API_PATH_MONITOR_DETAIL, data=MOCK_UPTIMEROBOT_MONITOR_PAUSED
+            ),
         ),
     ):
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -85,7 +91,10 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyuptimerobot.UptimeRobot.async_edit_monitor",
-            return_value=mock_uptimerobot_api_response(),
+            return_value=mock_uptimerobot_api_response(
+                api_path=API_PATH_MONITOR_DETAIL,
+                data=MOCK_UPTIMEROBOT_MONITOR,
+            ),
         ),
     ):
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -154,7 +163,7 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
     assert exc_info.value.translation_domain == "uptimerobot"
     assert exc_info.value.translation_key == "api_exception"
     assert exc_info.value.translation_placeholders == {
-        "error": "UptimeRobotException()"
+        "error": "Generic UptimeRobot exception"
     }
 
 
@@ -165,23 +174,25 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
     assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
 
-    with patch(
-        "pyuptimerobot.UptimeRobot.async_edit_monitor",
-        return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ERROR),
+    with (
+        patch(
+            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            side_effect=UptimeRobotException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
-        with pytest.raises(HomeAssistantError) as exc_info:
-            await hass.services.async_call(
-                SWITCH_DOMAIN,
-                SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+            blocking=True,
+        )
 
-        assert exc_info.value.translation_domain == "uptimerobot"
-        assert exc_info.value.translation_key == "api_exception"
-        assert exc_info.value.translation_placeholders == {
-            "error": "test error from API."
-        }
+    assert exc_info.value.translation_domain == "uptimerobot"
+    assert exc_info.value.translation_key == "api_exception"
+    assert exc_info.value.translation_placeholders == {
+        "error": "Generic UptimeRobot exception"
+    }
 
 
 async def test_switch_dynamic(hass: HomeAssistant) -> None:
@@ -197,20 +208,8 @@ async def test_switch_dynamic(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         return_value=mock_uptimerobot_api_response(
             data=[
-                {
-                    "id": 1234,
-                    "friendly_name": "Test monitor",
-                    "status": 2,
-                    "type": 1,
-                    "url": "http://example.com",
-                },
-                {
-                    "id": 5678,
-                    "friendly_name": "Test monitor 2",
-                    "status": 2,
-                    "type": 1,
-                    "url": "http://example2.com",
-                },
+                MOCK_UPTIMEROBOT_MONITOR,
+                MOCK_UPTIMEROBOT_MONITOR_2,
             ]
         ),
     ):

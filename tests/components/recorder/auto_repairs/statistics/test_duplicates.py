@@ -14,6 +14,7 @@ from homeassistant.components.recorder.auto_repairs.statistics.duplicates import
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
 )
+from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
@@ -59,11 +60,12 @@ async def test_duplicate_statistics_handle_integrity_error(
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
 
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_1 = [

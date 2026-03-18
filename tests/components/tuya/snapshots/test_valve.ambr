@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[valve.balkonbewasserung_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -51,8 +53,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.garden_valve_yard_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -101,8 +105,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 1',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -151,8 +157,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 2',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -201,8 +209,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -220,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 3',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -251,8 +261,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -270,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 4',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -301,8 +313,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -320,6 +333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 5',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -351,8 +365,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -370,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 6',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -401,8 +417,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -420,6 +437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 7',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -451,8 +469,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -470,6 +489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 8',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -501,8 +521,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.smart_water_timer_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -520,6 +541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -551,8 +573,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.sprinkler_cesare_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -570,6 +593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -601,8 +625,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.valve_controller_2_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -620,6 +645,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,

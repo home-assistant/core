@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.my_home_station_air_density-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air density',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 5,
@@ -57,8 +59,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_dew_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -114,8 +118,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_feels_like-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -135,6 +140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -171,8 +177,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_heat_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -192,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -228,8 +236,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_lightning_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -249,6 +258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -280,8 +290,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_lightning_count_last_1_hr-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -301,6 +312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning count last 1 hr',
     'options': dict({
     }),
     'original_device_class': None,
@@ -332,8 +344,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_lightning_count_last_3_hr-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -353,6 +366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning count last 3 hr',
     'options': dict({
     }),
     'original_device_class': None,
@@ -384,8 +398,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_lightning_last_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -405,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning last distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -441,8 +457,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_lightning_last_strike-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -460,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning last strike',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -491,8 +509,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_duration_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -512,6 +531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nearcast precipitation duration yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -547,8 +567,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -568,6 +589,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nearcast precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -603,8 +625,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -624,6 +647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nearcast precipitation yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -659,8 +683,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_precipitation_duration_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -680,6 +705,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation duration today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -715,8 +741,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_precipitation_duration_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -736,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation duration yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -771,8 +799,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_precipitation_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -792,6 +821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -827,8 +857,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_precipitation_type_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -854,6 +885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation type yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -895,8 +927,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_precipitation_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -916,6 +949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -951,8 +985,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_pressure_barometric-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -972,6 +1007,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure barometric',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1011,8 +1047,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_pressure_sea_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1032,6 +1069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure sea level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1071,8 +1109,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_rain_last_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1092,6 +1131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain last hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1127,8 +1167,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1148,6 +1189,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1184,8 +1226,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wet_bulb_globe_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1205,6 +1248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wet bulb globe temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1241,8 +1285,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wet_bulb_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1262,6 +1307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wet bulb temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1298,8 +1344,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wind_chill-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1319,6 +1366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind chill',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1355,8 +1403,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wind_direction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1374,6 +1423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -1406,8 +1456,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wind_gust-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1427,6 +1478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1466,8 +1518,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wind_lull-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1487,6 +1540,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind lull',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1526,8 +1580,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wind_sample_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1547,6 +1602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind sample interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1582,8 +1638,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wind_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1603,6 +1660,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1642,8 +1700,9 @@
 # ---
 # name: test_all_entities[sensor.my_home_station_wind_speed_avg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1663,6 +1722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed (avg)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

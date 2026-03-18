@@ -184,6 +184,18 @@
         "engineEnergyType": "ELEC",
         "radioCode": "1234"
       }
+    },
+    {
+      "brand": "",
+      "vin": "VYSP0100875XXXXXX",
+      "status": "ACTIVE",
+      "linkType": "USER",
+      "garageBrand": "renault",
+      "startDate": "2025-09-12",
+      "createdDate": "2025-09-12T15:06:02.726341Z",
+      "lastModifiedDate": "2025-09-12T15:09:46.727038Z",
+      "cancellationReason": {},
+      "preferredDealer": {}
     }
   ]
 }

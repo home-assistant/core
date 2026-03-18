@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[vacuum.hoover-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -28,7 +30,7 @@
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 13080>,
+    'supported_features': <VacuumEntityFeature: 8984>,
     'translation_key': None,
     'unique_id': 'tuya.mwsaod7fa3gjyh6ids',
     'unit_of_measurement': None,
@@ -38,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hoover',
-      'supported_features': <VacuumEntityFeature: 13080>,
+      'supported_features': <VacuumEntityFeature: 8984>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.hoover',
@@ -50,8 +52,9 @@
 # ---
 # name: test_platform_setup_and_discovery[vacuum.v20-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_speed_list': list([
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

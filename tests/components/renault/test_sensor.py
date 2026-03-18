@@ -197,8 +197,8 @@ async def test_sensor_throttling_after_init(
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
-        ("zoe_50", 1, 300),  # 5 coordinators => 5 minutes interval
-        ("captur_fuel", 1, 240),  # 4 coordinators => 4 minutes interval
+        ("zoe_50", 1, 360),  # 6 coordinators => 6 minutes interval
+        ("captur_fuel", 1, 180),  # 3 coordinators => 3 minutes interval
         ("multi", 2, 480),  # 8 coordinators => 8 minutes interval
     ],
     indirect=["vehicle_type"],
@@ -236,9 +236,9 @@ async def test_dynamic_scan_interval(
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
-        ("zoe_50", 1, 240),  # (6-2) coordinators => 4 minutes interval
+        ("zoe_50", 1, 300),  # (6-1) coordinators => 5 minutes interval
         ("captur_fuel", 1, 180),  # (4-1) coordinators => 3 minutes interval
-        ("multi", 2, 360),  # (8-2) coordinators => 6 minutes interval
+        ("multi", 2, 420),  # (9-2) coordinators => 7 minutes interval
     ],
     indirect=["vehicle_type"],
 )

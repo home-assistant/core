@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
     CoverDeviceClass,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -38,6 +39,7 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
+    SERVICE_STOP_VALVE,
     ValveDeviceClass,
 )
 from homeassistant.const import (
@@ -143,6 +145,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
+    intent.async_register(hass, StopMovingIntentHandler())
     intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
     intent.async_register(hass, CancelAllTimersIntentHandler())
@@ -433,6 +436,31 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
 
+class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
+    """Intent handler for stopping covers and valves."""
+
+    def __init__(self) -> None:
+        """Create stop moving handler."""
+        super().__init__(
+            intent.INTENT_STOP_MOVING,
+            description="Stops a moving device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
+            device_classes={CoverDeviceClass, ValveDeviceClass},
+        )
+
+    def get_domain_and_service(
+        self, intent_obj: intent.Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        if state.domain == COVER_DOMAIN:
+            return (COVER_DOMAIN, SERVICE_STOP_COVER)
+
+        if state.domain == VALVE_DOMAIN:
+            return (VALVE_DOMAIN, SERVICE_STOP_VALVE)
+
+        raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
+
+
 class GetCurrentDateIntentHandler(intent.IntentHandler):
     """Gets the current date."""
 
@@ -599,13 +627,17 @@ class IntentHandleView(http.HomeAssistantView):
             {
                 vol.Required("name"): cv.string,
                 vol.Optional("data"): vol.Schema({cv.string: object}),
+                vol.Optional("language"): cv.string,
+                vol.Optional("assistant"): vol.Any(cv.string, None),
+                vol.Optional("device_id"): vol.Any(cv.string, None),
+                vol.Optional("satellite_id"): vol.Any(cv.string, None),
             }
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
         hass = request.app[http.KEY_HASS]
-        language = hass.config.language
+        language = data.get("language", hass.config.language)
 
         try:
             intent_name = data["name"]
@@ -613,14 +645,21 @@ class IntentHandleView(http.HomeAssistantView):
                 key: {"value": value} for key, value in data.get("data", {}).items()
             }
             intent_result = await intent.async_handle(
-                hass, DOMAIN, intent_name, slots, "", self.context(request)
+                hass,
+                DOMAIN,
+                intent_name,
+                slots,
+                "",
+                self.context(request),
+                language=language,
+                assistant=data.get("assistant"),
+                device_id=data.get("device_id"),
+                satellite_id=data.get("satellite_id"),
             )
         except (intent.IntentHandleError, intent.MatchFailedError) as err:
             intent_result = intent.IntentResponse(language=language)
-            intent_result.async_set_speech(str(err))
-
-        if intent_result is None:
-            intent_result = intent.IntentResponse(language=language)  # type: ignore[unreachable]
-            intent_result.async_set_speech("Sorry, I couldn't handle that")
+            intent_result.async_set_error(
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE, str(err)
+            )
 
         return self.json(intent_result)

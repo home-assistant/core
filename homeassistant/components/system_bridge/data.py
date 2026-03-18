@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from systembridgemodels.modules import (
+from systembridgeconnector.models.modules import (
     CPU,
     GPU,
     Battery,

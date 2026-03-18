@@ -732,7 +732,7 @@ def temperature_unit(value: Any) -> UnitOfTemperature:
     raise vol.Invalid("invalid temperature unit (expected C or F)")
 
 
-def template(value: Any | None) -> template_helper.Template:
+def template(value: Any) -> template_helper.Template:
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid("template value is None")
@@ -750,7 +750,7 @@ def template(value: Any | None) -> template_helper.Template:
     return template_value
 
 
-def dynamic_template(value: Any | None) -> template_helper.Template:
+def dynamic_template(value: Any) -> template_helper.Template:
     """Validate a dynamic (non static) jinja2 template."""
     if value is None:
         raise vol.Invalid("template value is None")
@@ -1319,49 +1319,66 @@ TARGET_FIELDS: VolDictType = {
 }
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
-    # Either accept static entity IDs, a single dynamic template or a mixed list
-    # of static and dynamic templates. While this could be solved with a single
-    # complex template, handling it like this, keeps config validation useful.
-    vol.Optional(ATTR_ENTITY_ID): vol.Any(
-        comp_entity_ids, dynamic_template, vol.All(list, template_complex)
-    ),
+    vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
     vol.Optional(ATTR_DEVICE_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        vol.All(ensure_list, [str]),
     ),
     vol.Optional(ATTR_AREA_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        vol.All(ensure_list, [str]),
     ),
     vol.Optional(ATTR_FLOOR_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        vol.All(ensure_list, [str]),
     ),
     vol.Optional(ATTR_LABEL_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        vol.All(ensure_list, [str]),
     ),
 }
 
-TARGET_SERVICE_FIELDS = {
-    # Same as ENTITY_SERVICE_FIELDS but supports specifying entity by entity registry
-    # ID.
+TARGET_SERVICE_FIELDS: VolDictType = {
+    # Same as ENTITY_SERVICE_FIELDS but supports specifying entity
+    # by entity registry ID.
+    **ENTITY_SERVICE_FIELDS,
+    vol.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
+}
+
+_TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
     # of static and dynamic templates. While this could be solved with a single
     # complex template, handling it like this, keeps config validation useful.
+    # Entity ID can be specified as either a user visible one or by entity registry ID.
+    #
+    # The schema supports templates as it is meant to be used in the initial validation
+    # before templates are automatically rendered by the core logic.
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
-        comp_entity_ids_or_uuids, dynamic_template, vol.All(list, template_complex)
+        comp_entity_ids_or_uuids,
+        dynamic_template,
+        vol.All(list, template_complex),
     ),
     vol.Optional(ATTR_DEVICE_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
     vol.Optional(ATTR_AREA_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
     vol.Optional(ATTR_FLOOR_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
     vol.Optional(ATTR_LABEL_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
 }
-
 
 _HAS_ENTITY_SERVICE_FIELD = has_at_least_one_key(*ENTITY_SERVICE_FIELDS)
 
@@ -1494,7 +1511,9 @@ SERVICE_SCHEMA = vol.All(
                 template, vol.All(dict, template_complex)
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
-            vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            vol.Optional(CONF_TARGET): vol.Any(
+                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+            ),
             vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
             vol.Remove("metadata"): dict,
@@ -1992,6 +2011,8 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
 _SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
+        # The frontend stores data here. Don't use in core.
+        vol.Remove("metadata"): dict,
         vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
     }
 )

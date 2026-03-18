@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -29,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .const import LOGGER
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 from .util import (
@@ -45,6 +46,14 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
     clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
+
+# Maximum Mireds value per the Matter spec is 65279
+# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin, so this corresponds to a minimum color temperature of ~15.3K
+# Which is shown in UI as 15 Kelvin due to rounding.
+# But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
+# and causes Invoke error, so cap values over maximum when sending
+MATTER_MAX_MIREDS = 65279
+
 
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
@@ -85,10 +94,15 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterLightEntityDescription(LightEntityDescription, MatterEntityDescription):
+    """Describe Matter Light entities."""
+
+
 class MatterLight(MatterEntity, LightEntity):
     """Representation of a Matter light."""
 
-    entity_description: LightEntityDescription
+    entity_description: MatterLightEntityDescription
     _supports_brightness = False
     _supports_color = False
     _supports_color_temperature = False
@@ -146,7 +160,7 @@ class MatterLight(MatterEntity, LightEntity):
         )
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
-                colorTemperatureMireds=color_temp_mired,
+                colorTemperatureMireds=min(color_temp_mired, MATTER_MAX_MIREDS),
                 # transition in matter is measured in tenths of a second
                 transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,
@@ -429,9 +443,9 @@ class MatterLight(MatterEntity, LightEntity):
                 and color_mode == ColorMode.XY
             ):
                 self._attr_xy_color = self._get_xy_color()
-        elif self._attr_color_temp_kelvin is not None:
+        elif self._supports_color_temperature:
             self._attr_color_mode = ColorMode.COLOR_TEMP
-        elif self._attr_brightness is not None:
+        elif self._supports_brightness:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_color_mode = ColorMode.ONOFF
@@ -458,7 +472,7 @@ class MatterLight(MatterEntity, LightEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
+        entity_description=MatterLightEntityDescription(
             key="MatterLight",
             name=None,
         ),
@@ -487,7 +501,7 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match (HS Color) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
+        entity_description=MatterLightEntityDescription(
             key="MatterHSColorLightFallback",
             name=None,
         ),
@@ -508,7 +522,7 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match (XY Color) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
+        entity_description=MatterLightEntityDescription(
             key="MatterXYColorLightFallback",
             name=None,
         ),
@@ -529,7 +543,7 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match (color temperature) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
+        entity_description=MatterLightEntityDescription(
             key="MatterColorTemperatureLightFallback",
             name=None,
         ),

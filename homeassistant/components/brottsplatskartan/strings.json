@@ -6,12 +6,12 @@
     "step": {
       "user": {
         "data": {
-          "location": "[%key:common::config_flow::data::location%]",
-          "area": "Area"
+          "area": "Area",
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "location": "Put marker on location to cover within 5km radius",
-          "area": "If area is selected, any marked location is ignored"
+          "area": "If area is selected, any marked location is ignored",
+          "location": "Put marker on location to cover within 5km radius"
         }
       }
     }

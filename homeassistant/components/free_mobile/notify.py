@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from freesms import FreeClient
 import voluptuous as vol
@@ -40,7 +41,7 @@ class FreeSMSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.free_client = FreeClient(username, access_token)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Free Mobile user cell."""
         resp = self.free_client.send_sms(message)
 

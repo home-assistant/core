@@ -3,8 +3,8 @@
     "_": {
       "default": "mdi:calendar",
       "state": {
-        "on": "mdi:calendar-check",
-        "off": "mdi:calendar-blank"
+        "off": "mdi:calendar-blank",
+        "on": "mdi:calendar-check"
       }
     }
   },
@@ -14,6 +14,14 @@
     },
     "get_events": {
       "service": "mdi:calendar-month"
+    }
+  },
+  "triggers": {
+    "event_ended": {
+      "trigger": "mdi:calendar-end"
+    },
+    "event_started": {
+      "trigger": "mdi:calendar-start"
     }
   }
 }

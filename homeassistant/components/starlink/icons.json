@@ -1,29 +1,29 @@
 {
   "entity": {
     "sensor": {
-      "ping": {
-        "default": "mdi:speedometer"
-      },
       "azimuth": {
         "default": "mdi:compass"
-      },
-      "elevation": {
-        "default": "mdi:compass"
-      },
-      "uplink_throughput": {
-        "default": "mdi:upload"
       },
       "downlink_throughput": {
         "default": "mdi:download"
       },
+      "download": {
+        "default": "mdi:download"
+      },
+      "elevation": {
+        "default": "mdi:compass"
+      },
       "last_boot_time": {
         "default": "mdi:clock"
       },
-      "upload": {
+      "ping": {
+        "default": "mdi:speedometer"
+      },
+      "uplink_throughput": {
         "default": "mdi:upload"
       },
-      "download": {
-        "default": "mdi:download"
+      "upload": {
+        "default": "mdi:upload"
       }
     }
   }

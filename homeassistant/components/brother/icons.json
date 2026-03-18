@@ -13,10 +13,10 @@
       "black_drum_remaining_pages": {
         "default": "mdi:chart-donut"
       },
-      "black_toner_remaining": {
+      "black_ink_remaining": {
         "default": "mdi:printer-3d-nozzle"
       },
-      "black_ink_remaining": {
+      "black_toner_remaining": {
         "default": "mdi:printer-3d-nozzle"
       },
       "bw_pages": {
@@ -73,9 +73,6 @@
       "magenta_toner_remaining": {
         "default": "mdi:printer-3d-nozzle"
       },
-      "status": {
-        "default": "mdi:printer"
-      },
       "page_counter": {
         "default": "mdi:file-document-outline"
       },
@@ -84,6 +81,9 @@
       },
       "pf_kit_mp_remaining_life": {
         "default": "mdi:printer-3d"
+      },
+      "status": {
+        "default": "mdi:printer"
       },
       "yellow_drum_page_counter": {
         "default": "mdi:chart-donut"

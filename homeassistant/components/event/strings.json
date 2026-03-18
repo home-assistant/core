@@ -1,5 +1,4 @@
 {
-  "title": "Event",
   "entity_component": {
     "_": {
       "name": "[%key:component::button::title%]",
@@ -12,14 +11,15 @@
         }
       }
     },
-    "doorbell": {
-      "name": "Doorbell"
-    },
     "button": {
       "name": "Button"
+    },
+    "doorbell": {
+      "name": "Doorbell"
     },
     "motion": {
       "name": "Motion"
     }
-  }
+  },
+  "title": "Event"
 }

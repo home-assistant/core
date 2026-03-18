@@ -1,5 +1,14 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -7,15 +16,6 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
-    },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again."
     }
   },
   "entity": {
@@ -33,19 +33,8 @@
       }
     },
     "sensor": {
-      "activity": {
-        "name": "Activity",
-        "state": {
-          "good": "Good",
-          "low": "Low",
-          "ok": "OK"
-        }
-      },
       "activity_time": {
         "name": "Activity time"
-      },
-      "calories": {
-        "name": "Calories burned"
       },
       "daily_goal": {
         "name": "Daily goal"
@@ -58,14 +47,6 @@
       },
       "rest_time": {
         "name": "Rest time"
-      },
-      "sleep": {
-        "name": "Sleep",
-        "state": {
-          "good": "[%key:component::tractive::entity::sensor::activity::state::good%]",
-          "low": "[%key:component::tractive::entity::sensor::activity::state::low%]",
-          "ok": "[%key:component::tractive::entity::sensor::activity::state::ok%]"
-        }
       },
       "tracker_battery_level": {
         "name": "Tracker battery"
@@ -82,14 +63,14 @@
       }
     },
     "switch": {
+      "live_tracking": {
+        "name": "Live tracking"
+      },
       "tracker_buzzer": {
         "name": "Tracker buzzer"
       },
       "tracker_led": {
         "name": "Tracker LED"
-      },
-      "live_tracking": {
-        "name": "Live tracking"
       }
     }
   }

@@ -1,10 +1,10 @@
 {
   "services": {
-    "publish": {
-      "service": "mdi:publish"
-    },
     "dump": {
       "service": "mdi:database-export"
+    },
+    "publish": {
+      "service": "mdi:publish"
     },
     "reload": {
       "service": "mdi:reload"

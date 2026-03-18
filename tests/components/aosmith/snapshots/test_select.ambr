@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state[True][select.my_water_heater_hot_water_plus_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'hot_water_plus_level',
     'options': dict({
     }),
     'original_device_class': None,

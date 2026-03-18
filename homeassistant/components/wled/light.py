@@ -19,7 +19,6 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WLEDConfigEntry
 from .const import (
     ATTR_CCT,
     ATTR_COLOR_PRIMARY,
@@ -29,7 +28,7 @@ from .const import (
     COLOR_TEMP_K_MIN,
     LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
 )
-from .coordinator import WLEDDataUpdateCoordinator
+from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
 from .helpers import kelvin_to_255, kelvin_to_255_reverse, wled_exception_handler
 
@@ -151,12 +150,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        try:
-            self.coordinator.data.state.segments[self._segment]
-        except KeyError:
-            return False
-
-        return super().available
+        return (
+            super().available and self._segment in self.coordinator.data.state.segments
+        )
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:

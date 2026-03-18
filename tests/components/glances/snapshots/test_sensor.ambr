@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_states[sensor.0_0_0_0_containers_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -52,8 +54,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_containers_cpu_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -73,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers CPU usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -104,8 +108,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_containers_memory_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -125,6 +130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers memory used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -160,8 +166,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_cpu_thermal_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -181,6 +188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'cpu_thermal 1 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -216,8 +224,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_dummy0_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -237,6 +246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dummy0 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -275,8 +285,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_dummy0_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -296,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dummy0 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -334,8 +346,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_err_temp_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -355,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'err_temp temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -390,8 +404,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_eth0_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -411,6 +426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eth0 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -449,8 +465,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_eth0_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -470,6 +487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eth0 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -508,8 +526,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_lo_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -529,6 +548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'lo RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -567,8 +587,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_lo_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -588,6 +609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'lo TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -626,8 +648,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_md1_available-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -647,6 +670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md1 available',
     'options': dict({
     }),
     'original_device_class': None,
@@ -677,8 +701,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_md1_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -698,6 +723,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md1 used',
     'options': dict({
     }),
     'original_device_class': None,
@@ -728,8 +754,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_md3_available-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -749,6 +776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md3 available',
     'options': dict({
     }),
     'original_device_class': None,
@@ -779,8 +807,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_md3_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -800,6 +829,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md3 used',
     'options': dict({
     }),
     'original_device_class': None,
@@ -830,8 +860,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_media_disk_free-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -851,6 +882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/media disk free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -886,8 +918,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_media_disk_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -907,6 +940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/media disk usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -938,8 +972,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_media_disk_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -959,6 +994,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/media disk used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -994,8 +1030,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_memory_free-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1015,6 +1052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1050,8 +1088,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1071,6 +1110,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1102,8 +1142,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_memory_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1123,6 +1164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1158,8 +1200,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_na_temp_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1179,6 +1222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'na_temp temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1214,8 +1258,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_fan_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1235,6 +1280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1266,8 +1312,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1287,6 +1334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1318,8 +1366,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_processor_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1339,6 +1388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1373,8 +1423,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1394,6 +1445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1429,8 +1481,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_nvme0n1_disk_read-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1450,6 +1503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'nvme0n1 disk read',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1488,8 +1542,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_nvme0n1_disk_write-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1509,6 +1564,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'nvme0n1 disk write',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1547,8 +1603,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_sda_disk_read-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1568,6 +1625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sda disk read',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1606,8 +1664,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_sda_disk_write-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1627,6 +1686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sda disk write',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1665,8 +1725,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_ssl_disk_free-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1686,6 +1747,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/ssl disk free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1721,8 +1783,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_ssl_disk_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1742,6 +1805,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/ssl disk usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1773,8 +1837,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_ssl_disk_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1794,6 +1859,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/ssl disk used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1829,8 +1895,9 @@
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1848,6 +1915,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
