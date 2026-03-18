@@ -178,10 +178,6 @@ class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
     integration: str
     domain: str | list[str]
     device_class: str | list[str]
-    # supported_features is not supported by the schema, included here
-    # to not break instantiation of EntitySelectorConfig when used with
-    # legacy config that includes supported_features.
-    supported_features: list[str]
 
 
 # Legacy entity selector config schema used directly under entity selectors
