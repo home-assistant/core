@@ -23,7 +23,7 @@
       },
       "pick_cloud_device": {
         "data": {
-          "serial": "Fireplace"
+          "serial": "Fireplace (serial number)"
         },
         "data_description": {
           "serial": "Serial number of the fireplace to configure"
