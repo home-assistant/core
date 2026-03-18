@@ -17,12 +17,15 @@ from wiim.models import (
     WiimGroupRole,
     WiimGroupSnapshot,
     WiimLoopState,
+    WiimProbeResult,
     WiimQueueSnapshot,
     WiimRepeatMode,
     WiimTransportCapabilities,
 )
 
+from homeassistant.components.wiim import DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -176,36 +179,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-@pytest.fixture(autouse=True)
-def mock_sdk_logger():
-    """Mocks the LOGGER to prevent actual logging and allow assertion of calls."""
-    with (
-        patch("homeassistant.components.wiim.const.LOGGER.warning") as mock_warning,
-        patch("homeassistant.components.wiim.const.LOGGER.debug") as mock_debug,
-        patch("homeassistant.components.wiim.const.LOGGER.info") as mock_info,
-        patch("homeassistant.components.wiim.const.LOGGER.error") as mock_error,
-    ):
-        yield mock_warning, mock_debug, mock_info, mock_error
-
-
-@pytest.fixture
-async def mock_hass(hass: HomeAssistant) -> HomeAssistant:
-    """Return a real HomeAssistant instance for integration tests."""
-    return hass
-
-
 @pytest.fixture
 def mock_config_entry() -> ConfigEntry:
     """Mock Home Assistant ConfigEntry."""
     return MockConfigEntry(
-        domain="wiim",
-        data={
-            "host": "192.168.1.100",
-            "udn": "uuid:test-udn-1234",
-            "name": "Test WiiM Device",
-        },
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
         title="Test WiiM Device",
-        source="user",
+        unique_id="uuid:test-udn-1234",
     )
 
 
@@ -300,12 +281,18 @@ async def init_wiim_media_player(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert WIIM_ENTITY_ID in hass.states.async_entity_ids("media_player")
-
 
 @pytest.fixture
-def mock_http_api():
-    """Mock WiimApiEndpoint."""
-    api = AsyncMock()
-    api.json_request = AsyncMock(return_value={"status": "ok"})
-    return api
+def mock_probe_player() -> Generator[AsyncMock]:
+    """Mock a WiimProbePlayer instance."""
+    with patch(
+        "homeassistant.components.wiim.config_flow.async_probe_wiim_device"
+    ) as mock_probe:
+        mock_probe.return_value = WiimProbeResult(
+            host="192.168.1.100",
+            udn="uuid:test-udn-1234",
+            name="WiiM Pro",
+            location="http://192.168.1.100:49152/description.xml",
+            model="WiiM Pro",
+        )
+        yield mock_probe
