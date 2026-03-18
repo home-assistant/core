@@ -290,7 +290,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'no_error',
   })
 # ---
 # name: test_sensors[ac_charger][sensor.smart_charger_output_phase_1_current-entry]
@@ -2861,7 +2861,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'no_error',
   })
 # ---
 # name: test_sensors[solar_charger][sensor.solar_charger_external_device_load-entry]
