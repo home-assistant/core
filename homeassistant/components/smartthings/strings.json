@@ -93,6 +93,15 @@
       }
     },
     "button": {
+      "cancel": {
+        "name": "Cancel"
+      },
+      "cancel_and_drain": {
+        "name": "Cancel and drain"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
       "reset_hepa_filter": {
         "name": "Reset HEPA filter"
       },
@@ -101,6 +110,12 @@
       },
       "reset_water_filter": {
         "name": "Reset water filter"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "[%key:common::action::start%]"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
@@ -1009,6 +1024,9 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "remote_control_status": {
+      "message": "Can only be changed when remote control is enabled"
     }
   },
   "issues": {
