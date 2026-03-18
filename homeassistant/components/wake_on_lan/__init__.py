@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, CONF_BROADCAST_INTERFACE
+from .const import CONF_BROADCAST_INTERFACE, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
