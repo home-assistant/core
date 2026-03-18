@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
-from decimal import Decimal
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+if TYPE_CHECKING:
+    from datetime import date, datetime
+
+    from homeassistant.helpers.typing import StateType
 
 from ..const import DOMAIN
 from ..coordinator import GrowattConfigEntry, GrowattCoordinator
@@ -112,7 +115,7 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType | date | datetime:
         """Return the state of the sensor."""
         return self.coordinator.get_data(self.entity_description)
 
