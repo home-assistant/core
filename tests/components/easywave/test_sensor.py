@@ -27,21 +27,11 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def gateway_sensor(
-    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_coordinator: MagicMock,
 ) -> EasywaveGatewaySensor:
     """Return a gateway sensor instance with a mocked coordinator."""
-    return EasywaveGatewaySensor(hass, mock_config_entry, coordinator=mock_coordinator)
-
-
-@pytest.fixture
-def gateway_sensor_no_coordinator(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> EasywaveGatewaySensor:
-    """Return a gateway sensor instance without coordinator."""
-    return EasywaveGatewaySensor(hass, mock_config_entry, coordinator=None)
+    return EasywaveGatewaySensor(mock_config_entry, mock_coordinator)
 
 
 async def test_sensor_setup_entry(
@@ -63,7 +53,7 @@ async def test_sensor_setup_entry(
     entities = async_add_entities.call_args[0][0]
     assert len(entities) == 1
     assert isinstance(entities[0], EasywaveGatewaySensor)
-    assert entities[0]._coordinator is mock_coordinator
+    assert entities[0].coordinator is mock_coordinator
 
 
 def test_sensor_class_attributes(gateway_sensor: EasywaveGatewaySensor) -> None:
@@ -177,7 +167,7 @@ def test_device_info_serial_number(gateway_sensor: EasywaveGatewaySensor) -> Non
 
 
 def test_device_info_fallback_unknown_device(
-    hass: HomeAssistant,
+    mock_coordinator: MagicMock,
 ) -> None:
     """Test device_info falls back to entry data for unknown VID/PID."""
     entry = MockConfigEntry(
@@ -191,7 +181,7 @@ def test_device_info_fallback_unknown_device(
             "usb_product": "RX11 USB Transceiver",
         },
     )
-    sensor = EasywaveGatewaySensor(hass, entry, coordinator=None)
+    sensor = EasywaveGatewaySensor(entry, mock_coordinator)
     info = sensor.device_info
     assert info["manufacturer"] == "ELDAT"
 
@@ -205,35 +195,30 @@ def test_connection_status_disconnected_offline(
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test _connection_status returns disconnected when offline."""
-    gateway_sensor._coordinator.is_offline = True
+    gateway_sensor.coordinator.is_offline = True
     assert gateway_sensor._connection_status() == "disconnected"
 
 
-def test_connection_status_no_coordinator(
-    gateway_sensor_no_coordinator: EasywaveGatewaySensor,
-) -> None:
-    """Test _connection_status returns disconnected without coordinator."""
-    assert gateway_sensor_no_coordinator._connection_status() == "disconnected"
-
-
-def test_handle_status_update(
+def test_handle_coordinator_update(
     hass: HomeAssistant,
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
-    """Test _handle_status_update updates current_status."""
+    """Test _handle_coordinator_update updates current_status."""
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
 
-    gateway_sensor._handle_status_update()
+    gateway_sensor._handle_coordinator_update()
 
     assert gateway_sensor._current_status == "connected"
     assert gateway_sensor.async_write_ha_state.called
 
 
-async def test_handle_status_update_fires_connected_event(
+async def test_handle_coordinator_update_fires_connected_event(
     hass: HomeAssistant,
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test that transitioning to connected fires EVENT_GATEWAY_CONNECTED."""
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor._last_status = "disconnected"
 
@@ -245,22 +230,23 @@ async def test_handle_status_update_fires_connected_event(
         EVENT_GATEWAY_STATUS_CHANGED, lambda e: events.append(e.event_type)
     )
 
-    gateway_sensor._handle_status_update()
+    gateway_sensor._handle_coordinator_update()
     await hass.async_block_till_done()
 
     assert EVENT_GATEWAY_STATUS_CHANGED in events
     assert EVENT_GATEWAY_CONNECTED in events
 
 
-async def test_handle_status_update_fires_disconnected_event(
+async def test_handle_coordinator_update_fires_disconnected_event(
     hass: HomeAssistant,
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test that transitioning to disconnected fires EVENT_GATEWAY_DISCONNECTED."""
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor._last_status = "connected"
-    gateway_sensor._coordinator.is_offline = True
-    gateway_sensor._coordinator.transceiver.is_connected = False
+    gateway_sensor.coordinator.is_offline = True
+    gateway_sensor.coordinator.transceiver.is_connected = False
 
     events: list[str] = []
     hass.bus.async_listen(
@@ -270,23 +256,11 @@ async def test_handle_status_update_fires_disconnected_event(
         EVENT_GATEWAY_STATUS_CHANGED, lambda e: events.append(e.event_type)
     )
 
-    gateway_sensor._handle_status_update()
+    gateway_sensor._handle_coordinator_update()
     await hass.async_block_till_done()
 
     assert EVENT_GATEWAY_STATUS_CHANGED in events
     assert EVENT_GATEWAY_DISCONNECTED in events
-
-
-async def test_async_update(
-    hass: HomeAssistant,
-    gateway_sensor: EasywaveGatewaySensor,
-) -> None:
-    """Test async_update calls _handle_status_update."""
-    gateway_sensor.async_write_ha_state = MagicMock()
-
-    await gateway_sensor.async_update()
-
-    assert gateway_sensor._current_status is not None
 
 
 # ── _connection_status edge cases ───────────────────────────────────────────
@@ -296,8 +270,8 @@ def test_connection_status_transceiver_not_connected(
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test _connection_status falls through to disconnected when transceiver not connected."""
-    gateway_sensor._coordinator.is_offline = False
-    gateway_sensor._coordinator.transceiver.is_connected = False
+    gateway_sensor.coordinator.is_offline = False
+    gateway_sensor.coordinator.transceiver.is_connected = False
     assert gateway_sensor._connection_status() == "disconnected"
 
 
@@ -305,27 +279,19 @@ def test_connection_status_transceiver_none(
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test _connection_status when transceiver is None."""
-    gateway_sensor._coordinator.is_offline = False
-    gateway_sensor._coordinator.transceiver = None
+    gateway_sensor.coordinator.is_offline = False
+    gateway_sensor.coordinator.transceiver = None
     assert gateway_sensor._connection_status() == "disconnected"
 
 
 # ── _update_gateway_device_info ─────────────────────────────────────────────
 
 
-def test_update_device_info_no_coordinator(
-    gateway_sensor_no_coordinator: EasywaveGatewaySensor,
-) -> None:
-    """Test _update_gateway_device_info returns early without coordinator."""
-    # Should not raise
-    gateway_sensor_no_coordinator._update_gateway_device_info()
-
-
 def test_update_device_info_no_transceiver(
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test _update_gateway_device_info returns early without transceiver."""
-    gateway_sensor._coordinator.transceiver = None
+    gateway_sensor.coordinator.transceiver = None
     # Should not raise
     gateway_sensor._update_gateway_device_info()
 
@@ -348,7 +314,7 @@ def test_update_device_info_serial_change(
     """Test _update_gateway_device_info updates serial number."""
     mock_config_entry.add_to_hass(hass)
     gateway_sensor.async_write_ha_state = MagicMock()
-    gateway_sensor._coordinator.transceiver.usb_serial_number = "NEW_SERIAL"
+    gateway_sensor.coordinator.transceiver.usb_serial_number = "NEW_SERIAL"
 
     with patch("homeassistant.components.easywave.sensor.dr.async_get") as mock_dr:
         mock_registry = MagicMock()
@@ -369,7 +335,7 @@ def test_update_device_info_hw_version_change(
     """Test _update_gateway_device_info updates hardware version."""
     mock_config_entry.add_to_hass(hass)
     gateway_sensor.async_write_ha_state = MagicMock()
-    gateway_sensor._coordinator.transceiver.hw_version = "3.5"
+    gateway_sensor.coordinator.transceiver.hw_version = "3.5"
 
     with patch("homeassistant.components.easywave.sensor.dr.async_get") as mock_dr:
         mock_dr.return_value = MagicMock()
@@ -386,7 +352,7 @@ def test_update_device_info_fw_version_change(
     """Test _update_gateway_device_info updates firmware version."""
     mock_config_entry.add_to_hass(hass)
     gateway_sensor.async_write_ha_state = MagicMock()
-    gateway_sensor._coordinator.transceiver.fw_version = "4.2"
+    gateway_sensor.coordinator.transceiver.fw_version = "4.2"
 
     with patch("homeassistant.components.easywave.sensor.dr.async_get") as mock_dr:
         mock_dr.return_value = MagicMock()
@@ -403,14 +369,14 @@ async def test_async_added_to_hass_running(
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test async_added_to_hass when HA is already running."""
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor.async_on_remove = MagicMock()
-    hass.state = hass.state  # ensure running
 
     await gateway_sensor.async_added_to_hass()
     await hass.async_block_till_done()
 
-    # _handle_status_update should have been called via loop.call_soon
+    # _handle_coordinator_update should have been called via loop.call_soon
     assert gateway_sensor._current_status is not None
     # Should have registered listeners
     assert gateway_sensor.async_on_remove.call_count >= 1
@@ -421,6 +387,7 @@ async def test_async_added_to_hass_not_started(
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test async_added_to_hass when HA has not started yet."""
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor.async_on_remove = MagicMock()
 

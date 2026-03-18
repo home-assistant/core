@@ -235,7 +235,7 @@ def test_find_easywave_devices_exception() -> None:
     """Test _find_easywave_devices when exception occurs."""
     with patch(
         "homeassistant.components.easywave.config_flow.serial.tools.list_ports.comports",
-        side_effect=Exception("Port enumeration failed"),
+        side_effect=OSError("Port enumeration failed"),
     ):
         devices = _find_easywave_devices()
 

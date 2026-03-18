@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class EasywaveCoordinator(DataUpdateCoordinator):
+class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Easywave integration."""
 
     config_entry: EasywaveConfigEntry

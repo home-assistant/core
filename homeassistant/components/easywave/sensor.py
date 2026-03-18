@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EasywaveConfigEntry
 from .const import (
@@ -31,6 +32,7 @@ from .const import (
     EVENT_GATEWAY_STATUS_CHANGED,
     USB_DEVICE_NAMES,
 )
+from .coordinator import EasywaveCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,16 +44,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Easywave Core sensors."""
     coordinator = entry.runtime_data.coordinator
-    async_add_entities([EasywaveGatewaySensor(hass, entry, coordinator)])
+    async_add_entities([EasywaveGatewaySensor(entry, coordinator)])
 
 
-class EasywaveGatewaySensor(SensorEntity):
-    """Represents the RX11 USB gateway connectivity/state.
-
-    For the CORE integration, stub methods are marked with # STUB.
-    Replace the stub body to wire in live functionality once a
-    transceiver object becomes available.
-    """
+class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity):
+    """Represents the RX11 USB gateway connectivity/state."""
 
     STATUS_KEYS = [
         "connected",
@@ -68,18 +65,13 @@ class EasywaveGatewaySensor(SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_options = STATUS_KEYS
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, coordinator=None
-    ) -> None:
+    def __init__(self, entry: ConfigEntry, coordinator: EasywaveCoordinator) -> None:
         """Initialize the sensor."""
-        self.hass = hass
+        super().__init__(coordinator)
         self._entry = entry
-        self._coordinator = coordinator
         self._attr_unique_id = f"{entry.entry_id}_rx11_gateway"
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_options = self.STATUS_KEYS
-        self._last_status = "disconnected"  # Default to disconnected
-        self._attr_icon = "mdi:close-thick"  # Default icon for disconnected state
+        self._last_status = "disconnected"
+        self._attr_icon = "mdi:close-thick"
 
         # Get USB device info — always use the canonical lookup table so
         # manufacturer/product stay in sync with const.py (the config entry
@@ -102,21 +94,17 @@ class EasywaveGatewaySensor(SensorEntity):
 
         # Prefer live transceiver serial/versions (already available after
         # coordinator.async_setup) over stale config entry values.
-        transceiver = coordinator.transceiver if coordinator else None
-        self._usb_serial_number = (
-            transceiver.usb_serial_number
-            if transceiver and transceiver.usb_serial_number
-            else entry.data.get(CONF_USB_SERIAL_NUMBER, "unknown")
+        transceiver = coordinator.transceiver
+        self._usb_serial_number = transceiver.usb_serial_number or entry.data.get(
+            CONF_USB_SERIAL_NUMBER, "unknown"
         )
-        self._hw_version: str | None = transceiver.hw_version if transceiver else None
-        self._sw_version: str | None = transceiver.fw_version if transceiver else None
+        self._hw_version: str | None = transceiver.hw_version
+        self._sw_version: str | None = transceiver.fw_version
 
         # CORE addition: _current_status stays None until EVENT_HOMEASSISTANT_STARTED
         # so the recorder captures a real unknown → connected transition (the
         # logbook would otherwise remain on the shutdown "unavailable" entry).
         self._current_status: str | None = None
-
-    # ── Stub hooks ──────────────────────────────────────────────────────────
 
     def _connection_status(self) -> str:
         """Get connection status as constant key (translated by HA frontend).
@@ -125,16 +113,12 @@ class EasywaveGatewaySensor(SensorEntity):
         - "connected": Device is currently connected
         - "disconnected": Device is not found or offline
         """
-        if self._coordinator is None:
-            # No coordinator available yet
-            return "disconnected"
-
         # Check if device is offline (not found)
-        if self._coordinator.is_offline:
+        if self.coordinator.is_offline:
             return "disconnected"
 
         # Check transceiver connection status
-        transceiver = self._coordinator.transceiver
+        transceiver = self.coordinator.transceiver
         if transceiver and transceiver.is_connected:
             return "connected"
 
@@ -147,10 +131,10 @@ class EasywaveGatewaySensor(SensorEntity):
         Updates local cached values from the transceiver and pushes changes
         to the Home Assistant device registry for persistence.
         """
-        if self._coordinator is None or self._coordinator.transceiver is None:
+        if self.coordinator.transceiver is None:
             return
 
-        transceiver = self._coordinator.transceiver
+        transceiver = self.coordinator.transceiver
         changed = False
 
         # Update serial number if transceiver reports a different one
@@ -184,12 +168,8 @@ class EasywaveGatewaySensor(SensorEntity):
             self.async_write_ha_state()
 
     @callback
-    def _handle_status_update(self) -> None:
-        """Handle coordinator/status updates (including connection changes).
-
-        Called from _on_ha_started, async_update, and — once a coordinator
-        exists — registered via coordinator.async_add_listener().
-        """
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         new_status = self._connection_status()
         self._update_gateway_device_info()
 
@@ -211,9 +191,7 @@ class EasywaveGatewaySensor(SensorEntity):
                 self.hass.bus.async_fire(EVENT_GATEWAY_DISCONNECTED, event_data)
 
         self._current_status = new_status
-        self.async_write_ha_state()
-
-    # ── HA lifecycle ────────────────────────────────────────────────────────
+        super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to hass."""
@@ -227,7 +205,7 @@ class EasywaveGatewaySensor(SensorEntity):
         # native_value returns None until this fires (see _current_status).
         @callback
         def _on_ha_started(_event: Any = None) -> None:
-            self._handle_status_update()
+            self._handle_coordinator_update()
 
         if self.hass.is_running:
             # Added while HA was already running (e.g. via UI config flow).
@@ -248,19 +226,6 @@ class EasywaveGatewaySensor(SensorEntity):
         self.async_on_remove(
             self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _handle_config_update)
         )
-
-        # Register as listener with coordinator for immediate updates on
-        # connection changes
-        if self._coordinator is not None:
-            self.async_on_remove(
-                self._coordinator.async_add_listener(self._handle_status_update)
-            )
-
-    async def async_update(self) -> None:
-        """Update sensor state."""
-        self._handle_status_update()
-
-    # ── Entity properties ───────────────────────────────────────────────────
 
     @property
     def native_value(self) -> str | None:

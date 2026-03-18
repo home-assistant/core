@@ -58,7 +58,7 @@ def _find_easywave_devices() -> list[dict[str, Any]]:
                         "product": prod,
                     }
                 )
-    except Exception:
+    except serial.SerialException, OSError:
         _LOGGER.exception("Error scanning for Easywave USB devices")
     return devices
 

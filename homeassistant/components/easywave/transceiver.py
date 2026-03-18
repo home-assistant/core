@@ -75,10 +75,6 @@ class RX11Transceiver:
         # Disposed flag
         self._disposed = False
 
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # CALLBACK MANAGEMENT
-    # ═══════════════════════════════════════════════════════════════════════════════
-
     def set_disconnect_callback(self, callback: Callable[[], None] | None) -> None:
         """Set callback to be called when disconnect/hardware error occurs."""
         self._disconnect_callback = callback
@@ -90,10 +86,6 @@ class RX11Transceiver:
                 self._disconnect_callback()
             except (OSError, RuntimeError) as err:
                 _LOGGER.error("Error in disconnect callback: %s", err)
-
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # CONNECTION MANAGEMENT
-    # ═══════════════════════════════════════════════════════════════════════════════
 
     async def connect(self) -> bool:
         """Connect to RX11 transceiver using RxModule protocol.
@@ -275,12 +267,8 @@ class RX11Transceiver:
         """Dispose of resources and clean up."""
         if self._disposed:
             return
-        self._disposed = True
         await self.disconnect()
-
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # HEALTH CHECK
-    # ═══════════════════════════════════════════════════════════════════════════════
+        self._disposed = True
 
     async def _start_health_check(self) -> None:
         """Start health check task for RxModule connection monitoring."""
@@ -297,16 +285,10 @@ class RX11Transceiver:
         self._health_check_stopping = True
         if self._health_check_task:
             task = self._health_check_task
-            try:
-                await asyncio.wait_for(task, timeout=2.0)
-            except TimeoutError:
-                _LOGGER.warning("Health check task did not complete within timeout")
-                task.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
-                    await task
-            finally:
-                if self._health_check_task is task:
-                    self._health_check_task = None
+            self._health_check_task = None
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
     async def _health_check_loop(self) -> None:
         """Monitor RxModule connection health.
@@ -342,10 +324,6 @@ class RX11Transceiver:
         self._hardware_error = True
         self._notify_disconnect()
 
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # VERSION QUERIES
-    # ═══════════════════════════════════════════════════════════════════════════════
-
     async def _ensure_versions_fetched(self) -> bool:
         """Ensure hardware and firmware versions are fetched.
 
@@ -361,9 +339,7 @@ class RX11Transceiver:
         # Query hardware version with retry
         hw_version = None
         for attempt in range(3):
-            hw, _fw_unused = await self.hass.async_add_executor_job(
-                self._query_hw_version
-            )
+            hw = await self.hass.async_add_executor_job(self._query_hw_version)
             if hw and hw not in {"unknown", "error"}:
                 hw_version = hw
                 break
@@ -407,10 +383,10 @@ class RX11Transceiver:
             return False
         return True
 
-    def _query_hw_version(self) -> tuple[str | None, None]:
-        """Query hardware version (blocking). Returns (hw_version, None)."""
+    def _query_hw_version(self) -> str | None:
+        """Query hardware version (blocking)."""
         if not self._rxmodule:
-            return (None, None)
+            return None
         try:
             result, hw_bytes = self._rxmodule.query_hw_version(timeout=5.0)
             if result == ErrorCode.SUCCESS:
@@ -420,14 +396,14 @@ class RX11Transceiver:
                     hw_bytes = hw_bytes[:null_idx]
                 hw_str = hw_bytes.decode("ascii", errors="ignore").strip()
                 if hw_str:
-                    return (hw_str, None)
+                    return hw_str
             elif result == ErrorCode.ERR_FAILSTATE:
                 _LOGGER.debug("HW query: device in failstate")
             else:
                 _LOGGER.debug("HW query failed: 0x%02x", result)
         except _SERIAL_VALUE_ERRORS as e:
             _LOGGER.debug("HW query exception: %s", e)
-        return (None, None)
+        return None
 
     def _query_fw_version(self) -> str | None:
         """Query firmware version (blocking). Returns fw_version string or None."""
@@ -449,10 +425,6 @@ class RX11Transceiver:
         except _SERIAL_VALUE_ERRORS as e:
             _LOGGER.debug("FW query exception: %s", e)
         return None
-
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # USB DEVICE DISCOVERY
-    # ═══════════════════════════════════════════════════════════════════════════════
 
     def _find_usb_device(self) -> tuple[str, str, int, int] | None:
         """Find EASYWAVE device by VID/PID.
@@ -490,10 +462,6 @@ class RX11Transceiver:
             return False
         else:
             return True
-
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # RECONNECT
-    # ═══════════════════════════════════════════════════════════════════════════════
 
     async def reconnect(self) -> bool:
         """Reconnect to RX11 with delay and exponential backoff.
