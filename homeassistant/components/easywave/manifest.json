@@ -1,0 +1,19 @@
+{
+  "domain": "easywave",
+  "name": "Easywave",
+  "version": "0.0.1",
+  "codeowners": ["@eldateas"],
+  "config_flow": true,
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["serial"],
+  "requirements": ["pyserial>=3.5"],
+  "usb": [
+    {
+      "vid": "155A",
+      "pid": "1014",
+      "manufacturer": "ELDAT*",
+      "description": "*RX11*"
+    }
+  ]
+}
