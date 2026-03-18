@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from python_qube_heatpump.models import QubeState
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -240,10 +238,7 @@ class QubeSensor(QubeEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return native value."""
-        data: QubeState = self.coordinator.data
-        if not data:
-            return None
-        return getattr(data, self.entity_description.key, None)
+        return getattr(self.coordinator.data, self.entity_description.key, None)
 
 
 class QubeStatusSensor(QubeEntity, SensorEntity):
@@ -275,11 +270,7 @@ class QubeStatusSensor(QubeEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the status as a string for enum translation."""
-        data: QubeState = self.coordinator.data
-        if not data:
-            return None
-
-        code = data.status_code
+        code = self.coordinator.data.status_code
         if code is None:
             return None
         return STATUS_MAP.get(code)

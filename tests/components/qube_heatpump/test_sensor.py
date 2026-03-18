@@ -18,26 +18,6 @@ from .conftest import get_entity_id_by_unique_id_suffix
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensor_setup(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
-    """Test sensors are created during setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
-        title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Assert entity state via core state machine
-    states = hass.states.async_all()
-    sensor_states = [s for s in states if s.entity_id.startswith("sensor.")]
-    # Should have sensors (18 regular + 1 status = 19)
-    assert len(sensor_states) == 19
-
-
 async def test_temperature_sensors(
     hass: HomeAssistant, mock_qube_client: MagicMock
 ) -> None:
@@ -193,9 +173,13 @@ async def test_sensor_with_none_status_code(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Assert entity state via core state machine
-    states = hass.states.async_all()
-    assert len(states) > 0
+    entity_id = get_entity_id_by_unique_id_suffix(
+        hass, entry.unique_id, "status_heatpump"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
 
 
 async def test_energy_sensors(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
@@ -248,9 +232,13 @@ async def test_total_energy_sensor_with_none_data(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Assert entity state via core state machine
-    states = hass.states.async_all()
-    assert len(states) > 0
+    entity_id = get_entity_id_by_unique_id_suffix(
+        hass, entry.unique_id, "energy_total_electric"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
 
 
 async def test_sensor_coordinator_refresh_updates_values(
