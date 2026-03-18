@@ -118,7 +118,7 @@ async def test_coordinator_handles_fetch_error(
             domain=DOMAIN,
             data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
             title="Qube Heat Pump",
-            unique_id=f"{DOMAIN}-1.2.3.4-502",
+            unique_id=MOCK_MAC,
         )
         entry.add_to_hass(hass)
 

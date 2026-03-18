@@ -17,6 +17,8 @@ from .conftest import get_entity_id_by_unique_id_suffix
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+MOCK_MAC = "00:0a:5c:94:83:15"
+
 
 async def test_temperature_sensors(
     hass: HomeAssistant, mock_qube_client: MagicMock
@@ -26,7 +28,7 @@ async def test_temperature_sensors(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -47,7 +49,7 @@ async def test_power_sensors(hass: HomeAssistant, mock_qube_client: MagicMock) -
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -72,7 +74,7 @@ async def test_computed_status_sensor(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -96,7 +98,7 @@ async def test_device_info(hass: HomeAssistant, mock_qube_client: MagicMock) -> 
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -118,7 +120,7 @@ async def test_cop_sensor(hass: HomeAssistant, mock_qube_client: MagicMock) -> N
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -141,7 +143,7 @@ async def test_flow_rate_sensor(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -166,7 +168,7 @@ async def test_sensor_with_none_status_code(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -188,7 +190,7 @@ async def test_energy_sensors(hass: HomeAssistant, mock_qube_client: MagicMock) 
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -225,7 +227,7 @@ async def test_total_energy_sensor_with_none_data(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -251,7 +253,7 @@ async def test_sensor_coordinator_refresh_updates_values(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
         title="Qube Heat Pump",
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
+        unique_id=MOCK_MAC,
     )
     entry.add_to_hass(hass)
 
