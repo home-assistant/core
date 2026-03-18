@@ -25,6 +25,6 @@ class MealieEntity(CoordinatorEntity[MealieDataUpdateCoordinator]):
         else:
             configuration_url = host
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, str(unique_id))},
             configuration_url=configuration_url,
         )

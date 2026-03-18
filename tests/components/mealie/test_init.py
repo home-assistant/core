@@ -34,6 +34,7 @@ async def test_device_info(
 
 async def test_device_info_with_url_host(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mealie_client: AsyncMock,
     mock_config_entry_with_url: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
@@ -44,6 +45,7 @@ async def test_device_info_with_url_host(
         identifiers={(DOMAIN, str(mock_config_entry_with_url.unique_id))}
     )
     assert device_entry is not None
+    assert device_entry == snapshot
     assert device_entry.configuration_url == "https://demo.mealie.io"
 
 
