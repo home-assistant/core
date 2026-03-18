@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 
 from .const import DOMAIN
@@ -18,7 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 class HIVISpeakerConfigFlow(ConfigFlow, domain=DOMAIN):
     """HIVI speaker configuration flow."""
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """User step - configure integration."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -26,7 +34,7 @@ class HIVISpeakerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get options flow."""
         return HIVISpeakerOptionsFlow()
 
@@ -39,7 +47,9 @@ class HIVISpeakerOptionsFlow(config_entries.OptionsFlow):
         super().__init__()
         self.open_num = 0
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Show initial step of the options flow."""
         _LOGGER.debug("Entering initial step of options flow")
         self.open_num = 0
@@ -68,7 +78,9 @@ class HIVISpeakerOptionsFlow(config_entries.OptionsFlow):
             ),
         )
 
-    async def async_step_success(self, user_input=None):
+    async def async_step_success(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Success page."""
         _LOGGER.debug("Displaying success page")
         if self.open_num == 0:
