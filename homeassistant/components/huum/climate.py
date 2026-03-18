@@ -73,13 +73,6 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
-    def icon(self) -> str:
-        """Return nice icon for heater."""
-        if self.hvac_mode == HVACMode.HEAT:
-            return "mdi:radiator"
-        return "mdi:radiator-off"
-
-    @property
     def current_temperature(self) -> int | None:
         """Return the current temperature."""
         return self.coordinator.data.temperature
