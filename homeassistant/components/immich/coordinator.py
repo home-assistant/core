@@ -16,11 +16,12 @@ from aioimmich.server.models import (
     ImmichServerVersionCheck,
 )
 from awesomeversion import AwesomeVersion
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -46,15 +47,16 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
 
     config_entry: ImmichConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api: Immich, is_admin: bool
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: Immich) -> None:
         """Initialize the data update coordinator."""
         self.api = api
-        self.is_admin = is_admin
-        self.configuration_url = (
-            f"{'https' if entry.data[CONF_SSL] else 'http'}://"
-            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.is_admin = False
+        self.configuration_url = str(
+            URL.build(
+                scheme="https" if entry.data[CONF_SSL] else "http",
+                host=entry.data[CONF_HOST],
+                port=entry.data[CONF_PORT],
+            )
         )
         super().__init__(
             hass,
@@ -63,6 +65,23 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )
+
+    async def _async_setup(self) -> None:
+        """Handle setup of the coordinator."""
+        try:
+            user_info = await self.api.users.async_get_my_user()
+        except ImmichUnauthorizedError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
+        except CONNECT_ERRORS as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+
+        self.is_admin = user_info.is_admin
 
     async def _async_update_data(self) -> ImmichData:
         """Update data via internal method."""
