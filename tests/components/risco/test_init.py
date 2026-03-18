@@ -103,7 +103,7 @@ async def test_clock_operation_error_is_downgraded(
     mock_error_handler: MagicMock,
     setup_risco_local: MockConfigEntry,
 ) -> None:
-    """Test CLOCK keep-alive operation errors warn and trigger reload."""
+    """Test CLOCK keep-alive operation errors warn without triggering reload."""
     callback = mock_error_handler.call_args.args[0]
     assert callback is not None
 
@@ -113,7 +113,7 @@ async def test_clock_operation_error_is_downgraded(
     ):
         await callback(OperationError("Timeout in command: CLOCK"))
 
-    reload_mock.assert_awaited_once_with(setup_risco_local.entry_id)
+    reload_mock.assert_not_awaited()
     logger_mock.error.assert_not_called()
     logger_mock.warning.assert_called_once_with(
         "Risco keep-alive timeout, waiting for reconnection"
