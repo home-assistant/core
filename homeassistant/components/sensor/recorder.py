@@ -273,6 +273,16 @@ def _get_unit_converter(
     return statistics.UNIT_CLASS_TO_UNIT_CONVERTER[unit_class]
 
 
+def _collect_equivalent_units_for_entity(
+    custom_units_for_entity: dict[str, str] | None,
+) -> dict:
+    if custom_units_for_entity:
+        equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
+    else:
+        equivalent_units_for_entity = EQUIVALENT_UNITS
+    return equivalent_units_for_entity
+
+
 def _normalize_states(
     hass: HomeAssistant,
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
@@ -286,10 +296,9 @@ def _normalize_states(
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
-    if custom_units_for_entity:
-        equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
-    else:
-        equivalent_units_for_entity = EQUIVALENT_UNITS
+    equivalent_units_for_entity = _collect_equivalent_units_for_entity(
+        custom_units_for_entity
+    )
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
@@ -617,10 +626,9 @@ def compile_statistics(  # noqa: C901
 
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
-            if custom_units_for_entity := custom_units_for_entities.get(entity_id):
-                equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
-            else:
-                equivalent_units_for_entity = EQUIVALENT_UNITS
+            equivalent_units_for_entity = _collect_equivalent_units_for_entity(
+                custom_units_for_entities.get(entity_id)
+            )
 
             if not _equivalent_units(
                 {old_metadata[1]["unit_of_measurement"], statistics_unit},
@@ -891,12 +899,9 @@ def _update_issues(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                if custom_units_for_entity := custom_units_for_entities.get(entity_id):
-                    equivalent_units_for_entity = (
-                        EQUIVALENT_UNITS | custom_units_for_entity
-                    )
-                else:
-                    equivalent_units_for_entity = EQUIVALENT_UNITS
+                equivalent_units_for_entity = _collect_equivalent_units_for_entity(
+                    custom_units_for_entities.get(entity_id)
+                )
 
                 if numeric and not _equivalent_units(
                     {state_unit, metadata_unit}, equivalent_units_for_entity
