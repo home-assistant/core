@@ -36,7 +36,6 @@ from enum import IntEnum
 import logging
 import os
 import struct
-import termios
 import threading
 import time
 from typing import Any
@@ -45,10 +44,17 @@ import serial
 
 _LOGGER = logging.getLogger(__name__)
 
+try:  # termios is not available on all platforms (e.g., Windows)
+    import termios
+except ImportError:  # pragma: no cover - platform specific
+    termios = None  # type: ignore[assignment]
+
 # Exception types raised by serial/termios operations.
 # In Python 3.14 termios.error no longer inherits from OSError,
-# so it must be caught explicitly.
-_SERIAL_ERRORS = (serial.SerialException, OSError, termios.error)
+# so it must be caught explicitly when available.
+_SERIAL_ERRORS: tuple[type[Exception], ...] = (serial.SerialException, OSError)
+if termios is not None:
+    _SERIAL_ERRORS = (*_SERIAL_ERRORS, termios.error)
 
 
 # ====================================================================================================

@@ -18,6 +18,8 @@ from .rx_module import _SERIAL_ERRORS, ErrorCode, RxModule
 
 _LOGGER = logging.getLogger(__name__)
 
+_SERIAL_VALUE_ERRORS: tuple[type[Exception], ...] = (*_SERIAL_ERRORS, ValueError)
+
 
 class RX11Transceiver:
     """ELDAT RX11 USB Transceiver implementation.
@@ -286,19 +288,25 @@ class RX11Transceiver:
             return  # Already running
 
         self._health_check_stopping = False
-        self._health_check_task = asyncio.create_task(self._health_check_loop())
+        self._health_check_task = self.hass.async_create_background_task(
+            self._health_check_loop(), "easywave health check"
+        )
 
     async def _stop_health_check(self) -> None:
         """Stop health check task."""
         self._health_check_stopping = True
         if self._health_check_task:
+            task = self._health_check_task
             try:
-                await asyncio.wait_for(self._health_check_task, timeout=2.0)
+                await asyncio.wait_for(task, timeout=2.0)
             except TimeoutError:
                 _LOGGER.warning("Health check task did not complete within timeout")
-                self._health_check_task.cancel()
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
             finally:
-                self._health_check_task = None
+                if self._health_check_task is task:
+                    self._health_check_task = None
 
     async def _health_check_loop(self) -> None:
         """Monitor RxModule connection health.
@@ -417,7 +425,7 @@ class RX11Transceiver:
                 _LOGGER.debug("HW query: device in failstate")
             else:
                 _LOGGER.debug("HW query failed: 0x%02x", result)
-        except (*_SERIAL_ERRORS, ValueError) as e:
+        except _SERIAL_VALUE_ERRORS as e:
             _LOGGER.debug("HW query exception: %s", e)
         return (None, None)
 
@@ -438,7 +446,7 @@ class RX11Transceiver:
                 _LOGGER.debug("FW query: device in failstate")
             else:
                 _LOGGER.debug("FW query failed: 0x%02x", result)
-        except (*_SERIAL_ERRORS, ValueError) as e:
+        except _SERIAL_VALUE_ERRORS as e:
             _LOGGER.debug("FW query exception: %s", e)
         return None
 

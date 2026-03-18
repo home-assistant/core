@@ -81,7 +81,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Abort if already configured, otherwise start auto-detection."""
         if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="single_instance_allowed")
         return await self.async_step_detect()
 
     # ------------------------------------------------------------------
@@ -103,11 +103,6 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm()
 
         # Multiple devices: let the user pick one.
-        if user_input is not None:
-            selected_path = user_input[CONF_DEVICE_PATH]
-            self._device = next(d for d in devices if d["device"] == selected_path)
-            return await self.async_step_confirm()
-
         options = [
             SelectOptionDict(
                 value=d["device"],
@@ -115,6 +110,32 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             for d in devices
         ]
+
+        if user_input is not None:
+            selected_path = user_input[CONF_DEVICE_PATH]
+            selected_device = next(
+                (d for d in devices if d["device"] == selected_path),
+                None,
+            )
+            if selected_device is None:
+                return self.async_show_form(
+                    step_id="detect",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_DEVICE_PATH): SelectSelector(
+                                SelectSelectorConfig(
+                                    options=options,
+                                    mode=SelectSelectorMode.LIST,
+                                )
+                            )
+                        }
+                    ),
+                    description_placeholders={"count": str(len(devices))},
+                    errors={"base": "device_no_longer_available"},
+                )
+            self._device = selected_device
+            return await self.async_step_confirm()
+
         return self.async_show_form(
             step_id="detect",
             data_schema=vol.Schema(
@@ -147,6 +168,8 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         device_entry = USB_DEVICE_NAMES.get((vid, pid))
         mfr = device_entry["manufacturer"] if device_entry else "ELDAT EaS GmbH"

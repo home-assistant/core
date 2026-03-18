@@ -107,23 +107,20 @@ class EasywaveCoordinator(DataUpdateCoordinator):
                     self.transceiver.set_disconnect_callback(
                         self._on_transceiver_disconnect
                     )
-                    # Notify all listeners of the reconnection and new device state
-                    self.async_set_updated_data(
-                        {
-                            "is_connected": self.transceiver.is_connected,
-                            "device_path": self.transceiver.device_path,
-                        }
-                    )
-                else:
-                    # Still offline, no need to log as error — offline mode is expected
+                    # Return new device state; coordinator will notify listeners
                     return {
-                        "is_connected": False,
-                        "device_path": None,
+                        "is_connected": self.transceiver.is_connected,
+                        "device_path": self.transceiver.device_path,
                     }
+                # Still offline, no need to log as error — offline mode is expected
+                return {
+                    "is_connected": False,
+                    "device_path": None,
+                }
             # Verify transceiver still reports connected
             # (disconnect callback handles immediate detection,
             # this is a safety net for edge cases)
-            elif not self.transceiver.is_connected:
+            if not self.transceiver.is_connected:
                 _LOGGER.warning("Connection lost, entering offline mode")
                 self.is_offline = True
                 return {

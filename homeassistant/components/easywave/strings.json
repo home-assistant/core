@@ -1,8 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "No supported RX11 USB Transceiver was found. Make sure the RX11 is plugged in and recognized by the system."
+      "no_devices_found": "No supported RX11 USB Transceiver was found. Make sure the RX11 is plugged in and recognized by the system.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "device_no_longer_available": "The selected device is no longer available. Please try again."
     },
     "step": {
       "confirm": {

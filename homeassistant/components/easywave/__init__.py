@@ -12,6 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import (
+    CONF_DEVICE_PATH,
     CONF_USB_PID,
     DOMAIN,
     get_frequency_for_pid,
@@ -77,8 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
 
     # ── Initialize transceiver and coordinator ──────────────────────────
-    # Create transceiver instance (will search for USB RX11 device)
-    transceiver = RX11Transceiver(hass)
+    # Create transceiver instance, prefer user-selected serial device_path
+    transceiver = RX11Transceiver(hass, entry.data.get(CONF_DEVICE_PATH))
 
     # Create coordinator for managing connection lifecycle & offline mode
     coordinator = EasywaveCoordinator(hass, transceiver, entry)

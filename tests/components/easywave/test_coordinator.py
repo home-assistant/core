@@ -186,13 +186,12 @@ async def test_update_data_reconnect_success(
     """Test update reconnects successfully from offline."""
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(return_value=True)
-    coordinator.async_set_updated_data = MagicMock()
 
-    await coordinator._async_update_data()
+    data = await coordinator._async_update_data()
 
     assert coordinator.is_offline is False
     mock_transceiver.set_disconnect_callback.assert_called()
-    coordinator.async_set_updated_data.assert_called_once()
+    assert data["is_connected"] is True
 
 
 async def test_update_data_reconnect_fails(
