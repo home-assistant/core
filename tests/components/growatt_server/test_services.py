@@ -274,7 +274,7 @@ async def test_no_min_devices_skips_service_registration(
     assert device_entry is not None
 
     # But calling them with a non-MIN device should fail with appropriate error
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -288,6 +288,8 @@ async def test_no_min_devices_skips_service_registration(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "no_devices_configured"
 
 
 async def test_multiple_devices_with_valid_device_id_works(
@@ -394,7 +396,7 @@ async def test_update_time_segment_invalid_segment_id(
     assert device_entry is not None
 
     # Test segment_id too low
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -408,9 +410,12 @@ async def test_update_time_segment_invalid_segment_id(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_segment_id"
+    assert excinfo.value.translation_placeholders == {"segment_id": "0"}
 
     # Test segment_id too high
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -424,6 +429,9 @@ async def test_update_time_segment_invalid_segment_id(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_segment_id"
+    assert excinfo.value.translation_placeholders == {"segment_id": "10"}
 
 
 @pytest.mark.usefixtures("mock_growatt_v1_api")
@@ -442,7 +450,7 @@ async def test_update_time_segment_invalid_batt_mode(
     assert device_entry is not None
 
     # Test invalid batt_mode
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -456,6 +464,10 @@ async def test_update_time_segment_invalid_batt_mode(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_batt_mode"
+    assert excinfo.value.translation_placeholders["batt_mode"] == "invalid_mode"
+    assert "allowed_modes" in excinfo.value.translation_placeholders
 
 
 @pytest.mark.usefixtures("mock_growatt_v1_api")
