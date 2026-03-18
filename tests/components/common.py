@@ -221,6 +221,7 @@ def _parametrize_condition_states(
 
     required_filter_attributes = required_filter_attributes or {}
     condition_options = condition_options or {}
+    has_required_filter_attributes = bool(required_filter_attributes)
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict],
@@ -235,7 +236,7 @@ def _parametrize_condition_states(
                     "attributes": required_filter_attributes,
                 },
                 "excluded_state": {
-                    "state": state if additional_attributes else None,
+                    "state": state if has_required_filter_attributes else None,
                     "attributes": {},
                 },
                 "condition_true": condition_true,
@@ -247,7 +248,7 @@ def _parametrize_condition_states(
                 "attributes": state[1] | required_filter_attributes,
             },
             "excluded_state": {
-                "state": state[0] if additional_attributes else None,
+                "state": state[0] if has_required_filter_attributes else None,
                 "attributes": state[1],
             },
             "condition_true": condition_true,
