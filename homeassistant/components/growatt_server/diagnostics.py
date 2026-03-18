@@ -18,6 +18,8 @@ TO_REDACT = {
     CONF_UNIQUE_ID,
     CONF_PLANT_ID,
     "user_id",
+    "deviceSn",
+    "device_sn",
 }
 
 
@@ -25,4 +27,18 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    return async_redact_data({"config_entry": config_entry.as_dict()}, TO_REDACT)
+    diag: dict[str, Any] = {"config_entry": config_entry.as_dict()}
+
+    runtime_data = getattr(config_entry, "runtime_data", None)
+    if runtime_data is not None:
+        diag["total_coordinator"] = runtime_data.total_coordinator.data
+        diag["devices"] = [
+            {
+                "device_sn": device_sn,
+                "device_type": coordinator.device_type,
+                "data": coordinator.data,
+            }
+            for device_sn, coordinator in runtime_data.devices.items()
+        ]
+
+    return async_redact_data(diag, TO_REDACT)
