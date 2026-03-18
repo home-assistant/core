@@ -45,7 +45,6 @@ async def async_setup_entry(
 
     entities: list[LightEntity] = [
         LunatoneLineBroadcastLight(
-            hass,
             coordinator_info,
             coordinator_devices,
             dali_line_broadcast,
@@ -180,7 +179,6 @@ class LunatoneLineBroadcastLight(
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator_info: LunatoneInfoDataUpdateCoordinator,
         coordinator_devices: LunatoneDevicesDataUpdateCoordinator,
         broadcast: DALIBroadcast,
