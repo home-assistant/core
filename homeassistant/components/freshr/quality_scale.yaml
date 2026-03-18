@@ -45,7 +45,9 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Integration connects to a cloud service; no local network discovery is possible.
-  discovery: todo
+  discovery:
+    status: exempt
+    comment: No local network discovery of devices is possible (no zeroconf, mdns or other discovery mechanisms).
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
