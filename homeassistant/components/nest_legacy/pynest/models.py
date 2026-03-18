@@ -1,4 +1,4 @@
-# flake8: noqa: N815
+# ruff: noqa: N815
 """Models used by PyNest."""
 
 from __future__ import annotations

@@ -137,7 +137,7 @@ class NestHeatLinkWaterHeater(NestEntity[NestHeatLink], WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if temp := kwargs.get("temperature"):
+        if (temp := kwargs.get("temperature")) is not None:
             await self._set_device_data({"hot_water_temperature": temp})
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
