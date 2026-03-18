@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_entities[sensor.disney_adventure_world_avengers_assemble_flight_force_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_cars_quatre_roues_rallye_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -109,8 +111,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_cars_road_trip_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -163,8 +166,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_crush_s_coaster_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -217,8 +221,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_frozen_ever_after_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -271,8 +276,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_les_tapis_volants_flying_carpets_over_agrabah_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -325,8 +331,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_park_closing_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -375,8 +382,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_park_opening_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -425,8 +433,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_raiponce_tangled_spin_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -479,8 +488,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_ratatouille_laventure_totalement_toquee_de_remy_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -533,8 +543,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_rc_racer_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -587,8 +598,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_slinky_dog_zigzag_spin_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -641,8 +653,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_spider_man_w_e_b_adventure_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -695,8 +708,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_the_twilight_zone_tower_of_terror_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -749,8 +763,9 @@
 # ---
 # name: test_sensor_entities[sensor.disney_adventure_world_toy_soldiers_parachute_drop_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -803,8 +818,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_adventure_isle_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -857,8 +873,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_alice_s_curious_labyrinth_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -911,8 +928,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_autopia_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -965,8 +983,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_big_thunder_mountain_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1019,8 +1038,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_blanche_neige_et_les_sept_nains_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1073,8 +1093,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_buzz_lightyear_laser_blast_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1127,8 +1148,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_casey_jr_le_petit_train_du_cirque_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1181,8 +1203,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_disneyland_railroad_discoveryland_station_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1235,8 +1258,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_disneyland_railroad_fantasyland_station_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1289,8 +1313,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_disneyland_railroad_frontierland_depot_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1343,8 +1368,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_disneyland_railroad_main_street_station_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1397,8 +1423,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_dumbo_the_flying_elephant_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1451,8 +1478,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_frontierland_playground_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1505,8 +1533,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_indiana_jones_and_the_temple_of_peril_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1559,8 +1588,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_it_s_a_small_world_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1613,8 +1643,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_la_cabane_des_robinson_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1667,8 +1698,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_la_galerie_de_la_belle_au_bois_dormant_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1721,8 +1753,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_la_taniere_du_dragon_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1775,8 +1808,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_le_carrousel_de_lancelot_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1829,8 +1863,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_le_passage_enchante_d_aladdin_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1883,8 +1918,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_le_pays_des_contes_de_fees_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1937,8 +1973,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_les_mysteres_du_nautilus_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1991,8 +2028,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_les_voyages_de_pinocchio_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2045,8 +2083,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_mad_hatter_s_tea_cups_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2099,8 +2138,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_main_street_vehicles_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2153,8 +2193,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_orbitron_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2207,8 +2248,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_park_closing_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2257,8 +2299,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_park_opening_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2307,8 +2350,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_peter_pan_s_flight_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2361,8 +2405,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_phantom_manor_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2415,8 +2460,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_pirate_galleon_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2469,8 +2515,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_pirates_beach_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2523,8 +2570,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_pirates_of_the_caribbean_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2577,8 +2625,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_rustler_roundup_shootin_gallery_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2631,8 +2680,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_star_tours_the_adventures_continue_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2685,8 +2735,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_star_wars_hyperspace_mountain_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2739,8 +2790,9 @@
 # ---
 # name: test_sensor_entities[sensor.disneyland_thunder_mesa_riverboat_landing_standby_wait_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
