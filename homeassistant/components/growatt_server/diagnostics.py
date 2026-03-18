@@ -21,12 +21,13 @@ async def async_get_config_entry_diagnostics(
     data = getattr(config_entry, "runtime_data", None)
     if data is not None:
         diag["total_coordinator"] = data.total_coordinator.data
-        diag["devices"] = {
-            device_sn: {
+        diag["devices"] = [
+            {
+                "device_sn": device_sn,
                 "device_type": coordinator.device_type,
                 "data": coordinator.data,
             }
             for device_sn, coordinator in data.devices.items()
-        }
+        ]
 
     return async_redact_data(diag, TO_REDACT)

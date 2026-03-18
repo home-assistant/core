@@ -5,10 +5,10 @@
       'data': dict({
         'auth_type': 'api_token',
         'name': 'Test Plant',
-        'plant_id': '123456',
+        'plant_id': '**REDACTED**',
         'token': '**REDACTED**',
         'url': 'other_regions',
-        'user_id': '12345',
+        'user_id': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -23,11 +23,11 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': '123456',
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
-    'devices': dict({
-      'MIN123456': dict({
+    'devices': list([
+      dict({
         'data': dict({
           'acChargeEnable': 1,
           'chargePowerCommand': 50,
@@ -83,9 +83,10 @@
           'wchargeSOCLowLimit': 10,
           'wdisChargeSOCLowLimit': 20,
         }),
+        'device_sn': 'MIN123456',
         'device_type': 'min',
       }),
-    }),
+    ]),
     'total_coordinator': dict({
       'current_power': 2500,
       'invTodayPpv': 2500,
