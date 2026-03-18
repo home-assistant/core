@@ -18,9 +18,7 @@ from .conftest import get_entity_id_by_unique_id_suffix
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensor_setup(
-    hass: HomeAssistant, mock_qube_client: MagicMock
-) -> None:
+async def test_sensor_setup(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
     """Test sensors are created during setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -56,18 +54,14 @@ async def test_temperature_sensors(
     await hass.async_block_till_done()
 
     # Look up entity by unique_id via entity registry
-    entity_id = get_entity_id_by_unique_id_suffix(
-        hass, entry.unique_id, "temp_supply"
-    )
+    entity_id = get_entity_id_by_unique_id_suffix(hass, entry.unique_id, "temp_supply")
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == 45.0
 
 
-async def test_power_sensors(
-    hass: HomeAssistant, mock_qube_client: MagicMock
-) -> None:
+async def test_power_sensors(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
     """Test power sensor values."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -116,9 +110,7 @@ async def test_computed_status_sensor(
     assert state.state == "standby"
 
 
-async def test_device_info(
-    hass: HomeAssistant, mock_qube_client: MagicMock
-) -> None:
+async def test_device_info(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
     """Test device info is set correctly."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -140,9 +132,7 @@ async def test_device_info(
     assert device.model == "Heat Pump"
 
 
-async def test_cop_sensor(
-    hass: HomeAssistant, mock_qube_client: MagicMock
-) -> None:
+async def test_cop_sensor(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
     """Test COP sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -179,9 +169,7 @@ async def test_flow_rate_sensor(
     await hass.async_block_till_done()
 
     # Look up entity by unique_id via entity registry
-    entity_id = get_entity_id_by_unique_id_suffix(
-        hass, entry.unique_id, "flow_rate"
-    )
+    entity_id = get_entity_id_by_unique_id_suffix(hass, entry.unique_id, "flow_rate")
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
@@ -210,9 +198,7 @@ async def test_sensor_with_none_status_code(
     assert len(states) > 0
 
 
-async def test_energy_sensors(
-    hass: HomeAssistant, mock_qube_client: MagicMock
-) -> None:
+async def test_energy_sensors(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
     """Test energy sensors exist and have correct values."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -285,9 +271,7 @@ async def test_sensor_coordinator_refresh_updates_values(
     await hass.async_block_till_done()
 
     # Look up entity by unique_id via entity registry
-    entity_id = get_entity_id_by_unique_id_suffix(
-        hass, entry.unique_id, "temp_supply"
-    )
+    entity_id = get_entity_id_by_unique_id_suffix(hass, entry.unique_id, "temp_supply")
     assert entity_id is not None
 
     # Assert initial state

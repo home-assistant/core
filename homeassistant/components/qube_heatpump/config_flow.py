@@ -40,7 +40,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                     version = await client.async_get_software_version()
                     if version is None:
                         errors["base"] = "not_qube_device"
-            except (OSError, TimeoutError):
+            except OSError, TimeoutError:
                 errors["base"] = "cannot_connect"
             finally:
                 await client.close()
@@ -68,6 +68,4 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST, default="qube.local"): str,
             }
         )
-        return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

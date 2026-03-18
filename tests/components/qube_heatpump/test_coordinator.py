@@ -212,9 +212,7 @@ async def test_coordinator_clamps_negative_flow_rate(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_id = get_entity_id_by_unique_id_suffix(
-        hass, entry.unique_id, "flow_rate"
-    )
+    entity_id = get_entity_id_by_unique_id_suffix(hass, entry.unique_id, "flow_rate")
     assert entity_id is not None
     sensor_state = hass.states.get(entity_id)
     assert sensor_state is not None

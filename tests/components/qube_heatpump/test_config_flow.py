@@ -58,9 +58,7 @@ async def test_form(
     assert result2["result"].unique_id == MOCK_MAC
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_qube_setup: dict
-) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, mock_qube_setup: dict) -> None:
     """Test we handle cannot connect error."""
     mock_qube_setup["client"].connect.return_value = False
 
@@ -94,9 +92,7 @@ async def test_form_connect_exception(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_not_qube_device(
-    hass: HomeAssistant, mock_qube_setup: dict
-) -> None:
+async def test_form_not_qube_device(hass: HomeAssistant, mock_qube_setup: dict) -> None:
     """Test we handle device that isn't a Qube."""
     mock_qube_setup["client"].async_get_software_version.return_value = None
 
@@ -112,9 +108,7 @@ async def test_form_not_qube_device(
     assert result2["errors"] == {"base": "not_qube_device"}
 
 
-async def test_form_mac_not_found(
-    hass: HomeAssistant, mock_qube_setup: dict
-) -> None:
+async def test_form_mac_not_found(hass: HomeAssistant, mock_qube_setup: dict) -> None:
     """Test we handle MAC address not found."""
     mock_qube_setup["mac"].return_value = None
 
