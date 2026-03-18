@@ -2325,6 +2325,57 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_mf_01001][binary_sensor.filtro_in_microfibra_filter_blockage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.filtro_in_microfibra_filter_blockage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filter blockage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Filter blockage',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'microfiber_filter_blockage',
+    'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_samsungce.microfiberFilterStatus_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_mf_01001][binary_sensor.filtro_in_microfibra_filter_blockage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Filtro in microfibra Filter blockage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.filtro_in_microfibra_filter_blockage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_mf_01001][binary_sensor.filtro_in_microfibra_filter_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
