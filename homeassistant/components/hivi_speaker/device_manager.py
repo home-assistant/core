@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime
 import logging
+from typing import Any
 
 from hivico import HivicoClient
 
@@ -37,7 +38,7 @@ class HIVIDeviceManager:
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the device manager."""
-        from .switch import HIVISlaveControlSwitchHub  # noqa: PLC0415
+        from .switch import HIVISlaveControlSwitchHub
 
         self.hass = hass
         self.config_entry = config_entry
@@ -56,10 +57,10 @@ class HIVIDeviceManager:
             hass=hass, device_manager=self, discovery_scheduler=self.discovery_scheduler
         )
 
-        self._add_entities_callbacks = {}
+        self._add_entities_callbacks: dict[str, AddEntitiesCallback] = {}
 
         self._unsub_discovery = None
-        self._discovery_queue = asyncio.Queue()
+        self._discovery_queue: asyncio.Queue[Any] = asyncio.Queue()
         self._handle_discovery_worker = hass.async_create_task(
             self._handle_discovery_loop()
         )
@@ -166,7 +167,7 @@ class HIVIDeviceManager:
                 else:
                     _LOGGER.warning("HA device ID is None after registering to HA")
 
-    async def _update_all_device_statuses(self):  # noqa: PLR0914
+    async def _update_all_device_statuses(self):
         """Update status information of all devices."""
         slave_device_uuid_set = set()
         can_fetch_status_devices = set()
@@ -239,7 +240,7 @@ class HIVIDeviceManager:
                 else:
                     try:
                         slave_device_result = await self._fetch_slave_device(device_obj)
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         _LOGGER.error(
                             "Failed to get slave device list for %s, error: %s",
                             device_obj.friendly_name,
@@ -313,7 +314,9 @@ class HIVIDeviceManager:
             entity_ids = [e.entity_id for e in device_entities]
             for entity_id in entity_ids:
                 ent_reg.async_remove(entity_id)
-            _LOGGER.debug("Removed entities for device %s: %s", ha_device_id, entity_ids)
+            _LOGGER.debug(
+                "Removed entities for device %s: %s", ha_device_id, entity_ids
+                )
         except Exception:
             _LOGGER.exception("Error removing entities for device %s", ha_device_id)
 
@@ -327,7 +330,7 @@ class HIVIDeviceManager:
         except Exception:
             _LOGGER.exception("Error when deleting device")
 
-    async def _fetch_device_status(self, device_obj: HIVIDevice):  # noqa: PLR6301
+    async def _fetch_device_status(self, device_obj: HIVIDevice):
         """Get device status through HTTP interface."""
         ip_addr = device_obj.ip_addr
         async with HivicoClient(timeout=5, debug=False) as client:
@@ -340,19 +343,29 @@ class HIVIDeviceManager:
                     _LOGGER.debug("device status: %s", device_status)
         return device_status
 
-    async def _fetch_slave_device(self, device_obj: HIVIDevice):  # noqa: PLR6301
+    async def _fetch_slave_device(self, device_obj: HIVIDevice):
         """Get device status through HTTP interface."""
         ip_addr = device_obj.ip_addr
         async with HivicoClient(timeout=5, debug=False) as client:
             return await client.get_slave_devices(ip_addr)
 
-    async def _add_or_remove_switches(self):  # noqa: PLR0914, C901
+    @staticmethod
+    def _master_slave_list_contains_uuid(
+        device_obj: HIVIDevice, slave_speaker_device_id: str
+    ) -> bool:
+        """Return True if master's slave_device_list includes the given speaker UUID."""
+        for slave_device in device_obj.slave_device_list:
+            if slave_device.uuid == slave_speaker_device_id:
+                return True
+        return False
+
+    async def _add_or_remove_switches(self):
         """Create or delete switch entities for controlling other speakers for each device."""
-        from .switch import HIVISlaveControlSwitch  # noqa: PLC0415
+        from .switch import HIVISlaveControlSwitch
 
         ha_device_list = await self._get_devices_for_device()
 
-        for ha_device in ha_device_list:  # noqa: PLR1702
+        for ha_device in ha_device_list:
             existing_entiy_entry_list = await self._get_entities_for_device(
                 ha_device.id
             )
@@ -398,17 +411,15 @@ class HIVIDeviceManager:
                             device_obj.friendly_name,
                             slave_speaker_device_id,
                         )
-                        should_remove_flg = True
-                        slave_device_list = device_obj.slave_device_list
-                        for slave_device in slave_device_list:
-                            if slave_device.uuid == slave_speaker_device_id:
-                                _LOGGER.debug(
-                                    "device %s's slave speaker list contains uuid: %s, keep its switch entity",
-                                    device_obj.friendly_name,
-                                    slave_speaker_device_id,
-                                )
-                                should_remove_flg = False
-                        if should_remove_flg:
+                        if self._master_slave_list_contains_uuid(
+                            device_obj, slave_speaker_device_id
+                        ):
+                            _LOGGER.debug(
+                                "device %s's slave speaker list contains uuid: %s, keep its switch entity",
+                                device_obj.friendly_name,
+                                slave_speaker_device_id,
+                            )
+                        else:
                             _LOGGER.debug(
                                 "remove %s 's invalid slave device: %s",
                                 device_obj.friendly_name,
@@ -667,9 +678,7 @@ class HIVIDeviceManager:
             last_seen = device_obj.last_seen
             if last_seen.tzinfo is None:
                 last_seen = last_seen.replace(tzinfo=UTC)
-            time_since_last_seen = (
-                datetime.now(tz=UTC) - last_seen
-            ).total_seconds()
+            time_since_last_seen = (datetime.now(tz=UTC) - last_seen).total_seconds()
             _LOGGER.debug(
                 "device %s time_since_last_seen: %.2f seconds",
                 device_obj.friendly_name,
@@ -749,7 +758,7 @@ class HIVIDeviceManager:
 
         return device_entry.id
 
-    def _suggest_area_from_name(self, name: str) -> str | None:  # noqa: PLR6301
+    def _suggest_area_from_name(self, name: str) -> str | None:
         """Infer area from device name."""
         name_lower = name.lower()
         if "living" in name_lower or "living room" in name_lower:
@@ -762,7 +771,7 @@ class HIVIDeviceManager:
             return "bathroom"
         return None
 
-    def _create_device_obj_from_discovered_device_info(self, device_info):  # noqa: PLR6301
+    def _create_device_obj_from_discovered_device_info(self, device_info):
         """Create device from private protocol information."""
         return HIVIDevice(
             speaker_device_id=device_info.get("UDN"),
