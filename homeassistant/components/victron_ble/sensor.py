@@ -148,7 +148,10 @@ def error_to_state(value: float | str | None) -> str | None:
         "network_c": "network",
         "network_d": "network",
     }
-    return value_map.get(value)
+    mapped = value_map.get(value)
+    if mapped is not None:
+        return mapped
+    return value if isinstance(value, str) and value in CHARGER_ERROR_OPTIONS else None
 
 
 DEVICE_STATE_OPTIONS = [
