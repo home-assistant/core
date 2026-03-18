@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any
 
-from homeassistant.components import logbook, persistent_notification
+from homeassistant.components import persistent_notification
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -95,6 +95,7 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
         self._lock_id = lock_id
         unique_suffix = lock_id
         if os.environ.get("LEVELHOME_FRESH_DEVICES"):
+            assert coordinator.config_entry is not None
             unique_suffix = f"{lock_id}_{coordinator.config_entry.entry_id}"
         self._attr_unique_id = f"{DOMAIN}_{unique_suffix}"
         self._attr_name = None
@@ -141,6 +142,7 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
         device = self._device
         lock_id = device.lock_id
         if os.environ.get("LEVELHOME_FRESH_DEVICES"):
+            assert self.coordinator.config_entry is not None
             lock_id = f"{lock_id}_{self.coordinator.config_entry.entry_id}"
         return DeviceInfo(
             identifiers={(DOMAIN, lock_id)},
@@ -170,13 +172,6 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
             await self.coordinator.async_request_refresh()
             error_msg = f"Failed to lock {device_name}: {err}"
             _LOGGER.error(error_msg)
-            logbook.async_log_entry(
-                self.hass,
-                name=device_name,
-                message=f"Lock command failed: {err}",
-                domain=DOMAIN,
-                entity_id=self.entity_id,
-            )
             persistent_notification.async_create(
                 self.hass,
                 message=f"Failed to lock **{device_name}**: {err}",
@@ -206,13 +201,6 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
             await self.coordinator.async_request_refresh()
             error_msg = f"Failed to unlock {device_name}: {err}"
             _LOGGER.error(error_msg)
-            logbook.async_log_entry(
-                self.hass,
-                name=device_name,
-                message=f"Unlock command failed: {err}",
-                domain=DOMAIN,
-                entity_id=self.entity_id,
-            )
             persistent_notification.async_create(
                 self.hass,
                 message=f"Failed to unlock **{device_name}**: {err}",
