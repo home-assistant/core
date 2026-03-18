@@ -58,7 +58,7 @@ async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
+        "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
         return_value=_mock_probe_result(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -79,7 +79,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
+        "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
         side_effect=CannotConnect("cannot_connect"),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -107,7 +107,7 @@ async def test_user_flow_already_configured(
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
+        "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
         return_value=_mock_probe_result(udn=test_udn),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -127,7 +127,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
+        "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
         return_value=device_info,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -152,7 +152,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
 async def test_zeroconf_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test the zeroconf flow aborts on connection errors."""
     with patch(
-        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
+        "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
         side_effect=CannotConnect("cannot_connect"),
     ):
         result = await hass.config_entries.flow.async_init(
