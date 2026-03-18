@@ -1,13 +1,13 @@
 """Config flow for the Easywave integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-import voluptuous as vol
 import serial.tools.list_ports
+import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -15,6 +15,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import (
     CONF_DEVICE_PATH,
@@ -42,7 +43,11 @@ def _find_easywave_devices() -> list[dict[str, Any]]:
             if (port.vid, port.pid) in SUPPORTED_USB_IDS:
                 device_entry = USB_DEVICE_NAMES.get((port.vid, port.pid))
                 mfr = device_entry["manufacturer"] if device_entry else "ELDAT EaS GmbH"
-                prod = device_entry["product"] if device_entry else "Unknown Easywave Device"
+                prod = (
+                    device_entry["product"]
+                    if device_entry
+                    else "Unknown Easywave Device"
+                )
                 devices.append(
                     {
                         "device": port.device,
@@ -53,7 +58,7 @@ def _find_easywave_devices() -> list[dict[str, Any]]:
                         "product": prod,
                     }
                 )
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.exception("Error scanning for Easywave USB devices")
     return devices
 
@@ -129,9 +134,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
     # USB auto-discovery (triggered by manifest `usb` matcher)
     # ------------------------------------------------------------------
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         vid = int(discovery_info.vid, 16)
         pid = int(discovery_info.pid, 16)
@@ -148,7 +151,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         device_entry = USB_DEVICE_NAMES.get((vid, pid))
         mfr = device_entry["manufacturer"] if device_entry else "ELDAT EaS GmbH"
         prod = device_entry["product"] if device_entry else "Unknown Easywave Device"
-        
+
         self._device = {
             "device": discovery_info.device,
             "vid": vid,

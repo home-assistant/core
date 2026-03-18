@@ -1,4 +1,5 @@
 """Sensor platform for the Easywave Core integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,13 +7,17 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import (
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import EasywaveConfigEntry
 from .const import (
     CONF_DEVICE_PATH,
     CONF_USB_MANUFACTURER,
@@ -32,11 +37,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: EasywaveConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Easywave Core sensors."""
-    async_add_entities([EasywaveGatewaySensor(entry)])
+    coordinator = entry.runtime_data.coordinator
+    async_add_entities([EasywaveGatewaySensor(hass, entry, coordinator)])
 
 
 class EasywaveGatewaySensor(SensorEntity):
@@ -62,36 +68,48 @@ class EasywaveGatewaySensor(SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_options = STATUS_KEYS
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, coordinator=None
+    ) -> None:
         """Initialize the sensor."""
+        self.hass = hass
         self._entry = entry
+        self._coordinator = coordinator
         self._attr_unique_id = f"{entry.entry_id}_rx11_gateway"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_options = self.STATUS_KEYS
         self._last_status = "disconnected"  # Default to disconnected
         self._attr_icon = "mdi:close-thick"  # Default icon for disconnected state
 
-        # Get version info from transceiver (loaded at connect time).
-        # STUB — no live transceiver in CORE; replace with real transceiver
-        # reads (getattr(transceiver, '_hw_version', None) etc.) once available.
-        self._hw_version: str | None = None
-        self._sw_version: str | None = None
-
         # Get USB device info — always use the canonical lookup table so
         # manufacturer/product stay in sync with const.py (the config entry
         # may still hold a stale value from the initial setup).
-        vid = entry.data.get(CONF_USB_VID)
-        pid = entry.data.get(CONF_USB_PID)
-        device_entry = USB_DEVICE_NAMES.get((vid, pid))
-        
+        vid: int | None = entry.data.get(CONF_USB_VID)
+        pid: int | None = entry.data.get(CONF_USB_PID)
+        device_entry = USB_DEVICE_NAMES.get((vid, pid)) if vid and pid else None
+
         # Use USB registry if available, fall back to entry config values
         if device_entry:
             self._usb_manufacturer = device_entry["manufacturer"]
             self._usb_product = device_entry["product"]
         else:
-            self._usb_manufacturer = entry.data.get(CONF_USB_MANUFACTURER) or "ELDAT EaS GmbH"
-            self._usb_product = entry.data.get(CONF_USB_PRODUCT) or "Unknown Easywave Device"
-        self._usb_serial_number = entry.data.get(CONF_USB_SERIAL_NUMBER, "unknown")
+            self._usb_manufacturer = (
+                entry.data.get(CONF_USB_MANUFACTURER) or "ELDAT EaS GmbH"
+            )
+            self._usb_product = (
+                entry.data.get(CONF_USB_PRODUCT) or "Unknown Easywave Device"
+            )
+
+        # Prefer live transceiver serial/versions (already available after
+        # coordinator.async_setup) over stale config entry values.
+        transceiver = coordinator.transceiver if coordinator else None
+        self._usb_serial_number = (
+            transceiver.usb_serial_number
+            if transceiver and transceiver.usb_serial_number
+            else entry.data.get(CONF_USB_SERIAL_NUMBER, "unknown")
+        )
+        self._hw_version: str | None = transceiver.hw_version if transceiver else None
+        self._sw_version: str | None = transceiver.fw_version if transceiver else None
 
         # CORE addition: _current_status stays None until EVENT_HOMEASSISTANT_STARTED
         # so the recorder captures a real unknown → connected transition (the
@@ -100,33 +118,69 @@ class EasywaveGatewaySensor(SensorEntity):
 
     # ── Stub hooks ──────────────────────────────────────────────────────────
 
-    def _get_connection_status_key(self) -> str:
+    def _connection_status(self) -> str:
         """Get connection status as constant key (translated by HA frontend).
 
-        STUB — CORE has no rx-library transceiver; the RX11 is assumed
-        connected whenever the integration is loaded.  Replace this body to
-        read transceiver._rx11_wrapper._rx_module.connection_status and fall
-        back to _is_connected() for full logic.
+        Returns the current connection status from the coordinator:
+        - "connected": Device is currently connected
+        - "disconnected": Device is not found or offline
         """
-        return "connected"
+        if self._coordinator is None:
+            # No coordinator available yet
+            return "disconnected"
 
-    def _is_connected(self) -> bool:
-        """Return True when the gateway is reachable.
+        # Check if device is offline (not found)
+        if self._coordinator.is_offline:
+            return "disconnected"
 
-        STUB — always True in CORE; replace with:
-            transceiver and hasattr(transceiver, 'is_connected') and transceiver.is_connected
-        """
-        return True
+        # Check transceiver connection status
+        if self._coordinator.transceiver and self._coordinator.transceiver.is_connected:
+            return "connected"
+
+        return "disconnected"
 
     @callback
     def _update_gateway_device_info(self) -> None:
-        """Check if USB serial/version changed and update HA device registry.
+        """Check if USB serial/version changed and update device registry.
 
-        STUB — no-op in CORE because there is no live transceiver.
-        Replace the body to read transceiver._hw_version / _fw_version,
-        compare to cached values, and push changes to the device registry
-        via dr.async_update_device() to enable live version tracking.
+        Updates local cached values from the transceiver and pushes changes
+        to the Home Assistant device registry for persistence.
         """
+        if self._coordinator is None or self._coordinator.transceiver is None:
+            return
+
+        transceiver = self._coordinator.transceiver
+        changed = False
+
+        # Update serial number if transceiver reports a different one
+        if (
+            transceiver.usb_serial_number
+            and transceiver.usb_serial_number != self._usb_serial_number
+        ):
+            self._usb_serial_number = transceiver.usb_serial_number
+            changed = True
+
+        # Update hardware/firmware versions if available
+        if transceiver.hw_version and transceiver.hw_version != self._hw_version:
+            self._hw_version = transceiver.hw_version
+            changed = True
+        if transceiver.fw_version and transceiver.fw_version != self._sw_version:
+            self._sw_version = transceiver.fw_version
+            changed = True
+
+        if changed:
+            # Push updated info to the device registry so the UI reflects
+            # serial/version changes immediately (async_write_ha_state only
+            # updates the entity state, not the device entry).
+            registry = dr.async_get(self.hass)
+            registry.async_get_or_create(
+                config_entry_id=self._entry.entry_id,
+                identifiers={(DOMAIN, f"{self._entry.entry_id}_gateway")},
+                serial_number=self._usb_serial_number,
+                hw_version=self._hw_version,
+                sw_version=self._sw_version,
+            )
+            self.async_write_ha_state()
 
     @callback
     def _handle_status_update(self) -> None:
@@ -135,14 +189,12 @@ class EasywaveGatewaySensor(SensorEntity):
         Called from _on_ha_started, async_update, and — once a coordinator
         exists — registered via coordinator.async_add_listener().
         """
-        new_status = self._get_connection_status_key()
+        new_status = self._connection_status()
         self._update_gateway_device_info()
 
         if new_status != self._last_status:
             old_status = self._last_status
-            _LOGGER.info(
-                "Gateway connection status changed: %s → %s", old_status, new_status
-            )
+            _LOGGER.info("Gateway status: %s -> %s", old_status, new_status)
             self._last_status = new_status
 
             event_data = {
@@ -165,10 +217,9 @@ class EasywaveGatewaySensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to hass."""
         await super().async_added_to_hass()
-        _LOGGER.debug("Gateway sensor added with translation_key='gateway_status'")
 
         # Initialise last status.
-        self._last_status = self._get_connection_status_key()
+        self._last_status = self._connection_status()
 
         # CORE addition: write the correct state once HA has fully started so
         # the recorder captures a real unknown → connected transition.
@@ -191,7 +242,6 @@ class EasywaveGatewaySensor(SensorEntity):
         @callback
         def _handle_config_update(_event: Any) -> None:
             """Handle core config updates (including language changes)."""
-            _LOGGER.debug("Core config updated, refreshing gateway sensor state")
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -199,12 +249,14 @@ class EasywaveGatewaySensor(SensorEntity):
         )
 
         # Register as listener with coordinator for immediate updates on
-        # connection changes — wire in once a coordinator is available:
-        #   self.async_on_remove(
-        #       self.coordinator.async_add_listener(self._handle_status_update)
-        #   )
+        # connection changes
+        if self._coordinator is not None:
+            self.async_on_remove(
+                self._coordinator.async_add_listener(self._handle_status_update)
+            )
 
     async def async_update(self) -> None:
+        """Update sensor state."""
         self._handle_status_update()
 
     # ── Entity properties ───────────────────────────────────────────────────
@@ -224,14 +276,14 @@ class EasywaveGatewaySensor(SensorEntity):
         status = self._current_status
         if status == "connected":
             return "mdi:usb"
-        elif status == "connecting":
+        if status == "connecting":
             return "mdi:usb-flash-drive"
-        elif status == "hardware_error":
+        if status == "hardware_error":
             return "mdi:usb-port"
-        elif status == "error":
+        if status == "error":
             return "mdi:alert-circle"
-        else:  # None / disconnected / not_configured
-            return "mdi:close-thick"
+        # None / disconnected / not_configured
+        return "mdi:close-thick"
 
     @property
     def available(self) -> bool:
@@ -241,39 +293,36 @@ class EasywaveGatewaySensor(SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {
+        """Return extra state attributes with device details."""
+        attrs = {
             "device_path": self._entry.data.get(CONF_DEVICE_PATH),
-            "usb_serial_number": (
-                self._usb_serial_number
-                if self._usb_serial_number != "unknown"
-                else None
-            ),
-            "hardware_version": self._hw_version,
-            "firmware_version": self._sw_version,
-            "connected": self._is_connected(),
         }
+
+        # Add serial number if available
+        if self._usb_serial_number and self._usb_serial_number != "unknown":
+            attrs["usb_serial_number"] = self._usb_serial_number
+
+        # Add hardware version if available
+        if self._hw_version and self._hw_version not in ("unknown", "error"):
+            attrs["hardware_version"] = self._hw_version
+
+        # Add firmware version if available
+        if self._sw_version and self._sw_version not in ("unknown", "error"):
+            attrs["firmware_version"] = self._sw_version
+
+        # Add connection status
+        attrs["connected"] = self._connection_status() == "connected"
+
+        return attrs
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info dynamically to support language changes."""
-        # Get device info from USB_DEVICE_NAMES based on VID/PID
-        vid = self._entry.data.get(CONF_USB_VID)
-        pid = self._entry.data.get(CONF_USB_PID)
-        device_entry = USB_DEVICE_NAMES.get((vid, pid))
-        
-        # Use USB registry if available, fall back to entry config values
-        if device_entry:
-            device_name = device_entry["product"]
-            manufacturer = device_entry["manufacturer"]
-        else:
-            device_name = self._usb_product
-            manufacturer = self._usb_manufacturer
-        
+        """Return device info for the gateway."""
         return DeviceInfo(
             identifiers={(DOMAIN, f"{self._entry.entry_id}_gateway")},
-            name=device_name,
-            manufacturer=manufacturer,
-            model=device_name,
+            name=self._usb_product,
+            manufacturer=self._usb_manufacturer,
+            model=self._usb_product,
             serial_number=(
                 self._usb_serial_number
                 if self._usb_serial_number != "unknown"
@@ -282,4 +331,3 @@ class EasywaveGatewaySensor(SensorEntity):
             hw_version=self._hw_version,
             sw_version=self._sw_version,
         )
-

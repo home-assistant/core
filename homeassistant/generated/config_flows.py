@@ -168,6 +168,7 @@ FLOWS = {
         "dynalite",
         "eafm",
         "easyenergy",
+        "easywave",
         "ecobee",
         "ecoforest",
         "econet",

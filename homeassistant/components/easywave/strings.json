@@ -1,21 +1,24 @@
 {
   "config": {
-    "step": {
-      "detect": {
-        "title": "Select Easywave device",
-        "description": "{count} Easywave USB sticks found. Select the one to use.",
-        "data": {
-          "device_path": "USB device"
-        }
-      },
-      "confirm": {
-        "title": "Set up RX11 USB Transceiver",
-        "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}"
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "No supported Easywave USB stick was found. Make sure the RX11 is plugged in and recognized by the system."
+      "no_devices_found": "No supported RX11 USB Transceiver was found. Make sure the RX11 is plugged in and recognized by the system."
+    },
+    "step": {
+      "confirm": {
+        "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}",
+        "title": "Set up RX11 USB Transceiver"
+      },
+      "detect": {
+        "data": {
+          "device_path": "USB device"
+        },
+        "data_description": {
+          "device_path": "Select the RX11 USB Transceiver to use."
+        },
+        "description": "{count} RX11 USB Transceivers found. Select the one to use.",
+        "title": "Select Easywave device"
+      }
     }
   },
   "entity": {
@@ -24,8 +27,8 @@
         "name": "Connection Status",
         "state": {
           "connected": "Connected",
-          "disconnected": "Not Connected",
           "connecting": "Connecting",
+          "disconnected": "Not Connected",
           "error": "Error",
           "hardware_error": "Hardware Error",
           "not_configured": "Not Configured"
@@ -34,14 +37,14 @@
     }
   },
   "exceptions": {
-    "cannot_delete_rx11": {
+    "cannot_delete_gateway": {
       "message": "The RX11 USB Transceiver cannot be removed via the device menu. To remove the RX11, please delete the entire Easywave integration via the three-dot menu of the integration entry."
     }
   },
   "issues": {
     "frequency_not_permitted": {
-      "title": "Easywave: {frequency} not permitted in {country}",
-      "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf you believe this is incorrect, verify your country setting under **Settings → System → General → Country**. The 868 MHz band is permitted in EU/EEA countries, the UK, Switzerland, and other CEPT member states."
+      "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf you believe this is incorrect, verify your country setting under **Settings → System → General → Country**. The 868 MHz band is permitted in EU/EEA countries, the UK, Switzerland, and other CEPT member states.",
+      "title": "Easywave: {frequency} not permitted in {country}"
     }
   }
 }

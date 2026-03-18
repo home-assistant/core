@@ -1,6 +1,8 @@
 """Constants for the Easywave integration."""
+
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Final
 
 DOMAIN: Final = "easywave"
@@ -21,6 +23,10 @@ USB_DEVICE_NAMES: Final[dict[tuple[int, int], dict[str, str]]] = {
 
 SUPPORTED_USB_IDS: Final = frozenset(USB_DEVICE_NAMES.keys())
 
+# ── Coordinator Update Interval ──────────────────────────────────────────────
+# Periodic polling interval for USB device reconnection attempts
+DEVICE_SCAN_INTERVAL: Final = timedelta(seconds=30)
+
 
 # ── Config Entry Keys ────────────────────────────────────────────────────────
 CONF_DEVICE_PATH: Final = "device_path"
@@ -35,16 +41,46 @@ CONF_USB_PRODUCT: Final = "usb_product"
 FREQUENCY_868MHZ: Final = "868 MHz"
 
 FREQUENCY_ALLOWED_COUNTRIES: Final = {
-    FREQUENCY_868MHZ: frozenset({
-        # EU Member States (CEPT)
-        "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE",
-        "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT",
-        "RO", "SK", "SI", "ES", "SE",
-        # CEPT Members (non-EU)
-        "CH", "NO", "IS", "LI",
-        # UK (post-Brexit)
-        "GB", "UK",
-    }),
+    FREQUENCY_868MHZ: frozenset(
+        {
+            # EU Member States (CEPT)
+            "AT",
+            "BE",
+            "BG",
+            "HR",
+            "CY",
+            "CZ",
+            "DK",
+            "EE",
+            "FI",
+            "FR",
+            "DE",
+            "GR",
+            "HU",
+            "IE",
+            "IT",
+            "LV",
+            "LT",
+            "LU",
+            "MT",
+            "NL",
+            "PL",
+            "PT",
+            "RO",
+            "SK",
+            "SI",
+            "ES",
+            "SE",
+            # CEPT Members (non-EU)
+            "CH",
+            "NO",
+            "IS",
+            "LI",
+            # UK (post-Brexit)
+            "GB",
+            "UK",
+        }
+    ),
 }
 
 # Legacy constant for backward compatibility
@@ -64,12 +100,12 @@ def is_country_allowed_for_frequency(frequency: str, country_code: str | None) -
     # No country configured — cannot enforce
     if country_code is None:
         return True
-    
+
     allowed = FREQUENCY_ALLOWED_COUNTRIES.get(frequency)
     if allowed is None:
         # Unknown frequency — conservative: allow
         return True
-    
+
     return country_code.upper() in allowed
 
 
