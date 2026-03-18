@@ -6435,6 +6435,15 @@ async def test_validate_statistics_other_domain(
     await assert_validation_result(hass, client, {}, {})
 
 
+async def _one_hour_stats(hass: HomeAssistant, start: datetime) -> datetime:
+    """Generate 5-minute statistics for one hour."""
+    for _ in range(12):
+        do_adhoc_statistics(hass, start=start)
+        await async_wait_recording_done(hass)
+        start += timedelta(minutes=5)
+    return start
+
+
 @pytest.mark.parametrize(
     ("units", "attributes"),
     [
@@ -6447,15 +6456,6 @@ async def test_update_statistics_issues(
     attributes,
 ) -> None:
     """Test update_statistics_issues."""
-
-    async def one_hour_stats(start: datetime) -> datetime:
-        """Generate 5-minute statistics for one hour."""
-        for _ in range(12):
-            do_adhoc_statistics(hass, start=start)
-            await async_wait_recording_done(hass)
-            start += timedelta(minutes=5)
-        return start
-
     now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
@@ -6463,7 +6463,7 @@ async def test_update_statistics_issues(
     await async_recorder_block_till_done(hass)
 
     # No statistics, no state - no issues
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     assert_issues(hass, {})
 
     # Statistics, valid state - no issues
@@ -6471,7 +6471,7 @@ async def test_update_statistics_issues(
         "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
     )
     await hass.async_block_till_done()
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     assert_issues(hass, {})
 
     # State update with invalid state class, statistics did not run again
@@ -6484,7 +6484,7 @@ async def test_update_statistics_issues(
     assert_issues(hass, {})
 
     # Let statistics run for one hour, expect issue
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     expected = {
         "state_class_removed_sensor.test": {
             "issue_type": STATE_CLASS_REMOVED_ISSUE,
@@ -6508,15 +6508,6 @@ async def test_update_statistics_issues_with_custom_equivalent_units(
     unit2: str,
 ) -> None:
     """Test update_statistics_issues when custom equivalent units are provided."""
-
-    async def one_hour_stats(start: datetime) -> datetime:
-        """Generate 5-minute statistics for one hour."""
-        for _ in range(12):
-            do_adhoc_statistics(hass, start=start)
-            await async_wait_recording_done(hass)
-            start += timedelta(minutes=5)
-        return start
-
     now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
@@ -6540,7 +6531,7 @@ async def test_update_statistics_issues_with_custom_equivalent_units(
     await async_recorder_block_till_done(hass)
 
     # No statistics, no state - no issues
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     assert_issues(hass, {})
 
     # Statistics, unit not part of unit system but still a valid state - no issues
@@ -6551,7 +6542,7 @@ async def test_update_statistics_issues_with_custom_equivalent_units(
         timestamp=now.timestamp(),
     )
     await hass.async_block_till_done()
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     assert_issues(hass, {})
 
     # State update with equivalent supported unit, statistics did not run again
@@ -6565,7 +6556,7 @@ async def test_update_statistics_issues_with_custom_equivalent_units(
     assert_issues(hass, {})
 
     # Let statistics run for one hour, expect no issues
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     assert_issues(hass, {})
 
 
