@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,27 +19,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, SIGNAL_DEVICE_STATUS_UPDATED
 from .device import ConnectionStatus, HIVIDevice
-from .device_manager import HIVIDeviceManager
+from .switch_hub import HIVISlaveControlSwitchHub
+
+if TYPE_CHECKING:
+    from .device_manager import HIVIDeviceManager
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class HIVISlaveControlSwitchHub:
-    """Hub that tracks all slave-control switch entities for a config entry."""
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the switch hub."""
-        self.hass = hass
-        self.entry = entry
-        self.switches: dict[str, HIVISlaveControlSwitch] = {}
-
-    def get_switch(self, unique_id: str):
-        """Return a switch entity by its unique ID."""
-        return self.switches.get(unique_id)
-
-    def add_switch(self, switch):
-        """Register a switch entity in the hub."""
-        self.switches[switch.unique_id] = switch
 
 
 class HIVISlaveControlSwitch(SwitchEntity):
