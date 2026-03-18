@@ -28,7 +28,7 @@
         "data_description": {
           "serial": "Serial number of the fireplace to configure"
         },
-        "description": "Select fireplace by serial number:",
+        "description": "Select fireplace by serial number.",
         "title": "Configure fireplace"
       }
     }
