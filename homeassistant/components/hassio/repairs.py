@@ -21,6 +21,7 @@ from .const import (
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
@@ -64,11 +65,16 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     @property
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
-        placeholders = {}
-        if self.issue:
-            placeholders = EXTRA_PLACEHOLDERS.get(self.issue.key, {})
-            if self.issue.reference:
-                placeholders |= {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
+        if not self.issue:
+            return None
+
+        if self.issue.key in EXTRA_PLACEHOLDERS:
+            placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[self.issue.key].copy()
+        else:
+            placeholders = {}
+
+        if self.issue.reference:
+            placeholders |= {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
 
         return placeholders or None
 
@@ -232,6 +238,7 @@ async def async_create_fix_flow(
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
         ISSUE_KEY_ADDON_PWNED,
+        ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     }:
         return AddonIssueRepairFlow(hass, issue_id)
 
