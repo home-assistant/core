@@ -104,6 +104,12 @@ async def test_config_entry_auth_failed_triggers_reauth(
             ConfigEntryState.LOADED,
             True,
         ),
+        (
+            "static_values",
+            TimeoutError("Connection timeout"),
+            ConfigEntryState.LOADED,
+            True,
+        ),
     ],
 )
 async def test_config_entry_setup_errors(
