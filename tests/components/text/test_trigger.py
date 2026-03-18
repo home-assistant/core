@@ -20,26 +20,62 @@ TEST_TRIGGER_STATES = [
     (
         "text.changed",
         [
-            {"included_state": {"state": None, "attributes": {}}, "count": 0},
-            {"included_state": {"state": "bar", "attributes": {}}, "count": 0},
-            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
+            {
+                "included_state": {"state": None, "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
+            {
+                "included_state": {"state": "bar", "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
+            {
+                "included_state": {"state": "baz", "attributes": {}},
+                "excluded_state": {},
+                "count": 1,
+            },
         ],
     ),
     (
         "text.changed",
         [
-            {"included_state": {"state": "foo", "attributes": {}}, "count": 0},
-            {"included_state": {"state": "bar", "attributes": {}}, "count": 1},
-            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
+            {
+                "included_state": {"state": "foo", "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
+            {
+                "included_state": {"state": "bar", "attributes": {}},
+                "excluded_state": {},
+                "count": 1,
+            },
+            {
+                "included_state": {"state": "baz", "attributes": {}},
+                "excluded_state": {},
+                "count": 1,
+            },
         ],
     ),
     (
         "text.changed",
         [
-            {"included_state": {"state": "foo", "attributes": {}}, "count": 0},
+            {
+                "included_state": {"state": "foo", "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
             # empty string
-            {"included_state": {"state": "", "attributes": {}}, "count": 1},
-            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
+            {
+                "included_state": {"state": "", "attributes": {}},
+                "excluded_state": {},
+                "count": 1,
+            },
+            {
+                "included_state": {"state": "baz", "attributes": {}},
+                "excluded_state": {},
+                "count": 1,
+            },
         ],
     ),
     (
@@ -47,12 +83,22 @@ TEST_TRIGGER_STATES = [
         [
             {
                 "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                "excluded_state": {},
                 "count": 0,
             },
-            {"included_state": {"state": "bar", "attributes": {}}, "count": 0},
-            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
+            {
+                "included_state": {"state": "bar", "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
+            {
+                "included_state": {"state": "baz", "attributes": {}},
+                "excluded_state": {},
+                "count": 1,
+            },
             {
                 "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                "excluded_state": {},
                 "count": 0,
             },
         ],
@@ -60,10 +106,26 @@ TEST_TRIGGER_STATES = [
     (
         "text.changed",
         [
-            {"included_state": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-            {"included_state": {"state": "bar", "attributes": {}}, "count": 0},
-            {"included_state": {"state": "baz", "attributes": {}}, "count": 1},
-            {"included_state": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+            {
+                "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
+            {
+                "included_state": {"state": "bar", "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
+            {
+                "included_state": {"state": "baz", "attributes": {}},
+                "excluded_state": {},
+                "count": 1,
+            },
+            {
+                "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                "excluded_state": {},
+                "count": 0,
+            },
         ],
     ),
 ]
