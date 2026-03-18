@@ -891,9 +891,13 @@ def _update_issues(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                equivalent_units_for_entity = (
-                    EQUIVALENT_UNITS | custom_units_for_entities.get(entity_id, {})
-                )
+                if custom_units_for_entity := custom_units_for_entities.get(entity_id):
+                    equivalent_units_for_entity = (
+                        EQUIVALENT_UNITS | custom_units_for_entity
+                    )
+                else:
+                    equivalent_units_for_entity = EQUIVALENT_UNITS
+
                 if numeric and not _equivalent_units(
                     {state_unit, metadata_unit}, equivalent_units_for_entity
                 ):
