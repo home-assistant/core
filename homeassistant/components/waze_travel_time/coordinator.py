@@ -56,8 +56,8 @@ async def async_get_travel_times(
 ) -> list[CalcRoutesResponse]:
     """Get all available routes."""
 
-    incl_filters = incl_filters or ()
-    excl_filters = excl_filters or ()
+    incl_filters = list(filter(None, incl_filters or ()))
+    excl_filters = list(filter(None, excl_filters or ()))
 
     _LOGGER.debug(
         "Getting update for origin: %s destination: %s",
@@ -91,8 +91,7 @@ async def async_get_travel_times(
             if len(incl_filters) < 1:
                 return True
             should_include = any(
-                street_name in incl_filters or "" in incl_filters
-                for street_name in route.street_names
+                street_name in incl_filters for street_name in route.street_names
             )
             if not should_include:
                 _LOGGER.debug(
