@@ -65,6 +65,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         )
         self._connected: bool = False
         self._current_devices: set[str] = set()
+        self._firmware_list: dict[str, str | None] = {}
         self._stored_devices: set[str] = set()
         self.new_devices: set[str] = set()
 
@@ -129,6 +130,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
             ) from err
 
         self._add_remove_devices(data)
+        self._update_device_firmware(data)
         return data
 
     def _add_remove_devices(self, data: dict[str, GwEntityData]) -> None:
@@ -138,6 +140,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         # 'new_devices' contains all devices present in 'data' at init ('self._current_devices' is empty)
         # this is required for the proper initialization of all the present platform entities.
         self.new_devices = set_of_data - self._current_devices
+        for device_id in self.new_devices:
+            self._firmware_list.setdefault(device_id, data[device_id].get("firmware"))
+
         current_devices = (
             self._stored_devices if not self._current_devices else self._current_devices
         )
@@ -149,21 +154,52 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         """Clean registries when removed devices found."""
         device_reg = dr.async_get(self.hass)
         for device_id in removed_devices:
-            device_entry = device_reg.async_get_device({(DOMAIN, device_id)})
-            if device_entry is None:
-                LOGGER.warning(
-                    "Failed to remove %s device/zone %s, not present in device_registry",
+            if (
+                device_entry := device_reg.async_get_device({(DOMAIN, device_id)})
+            ) is not None:
+                device_reg.async_update_device(
+                    device_entry.id, remove_config_entry_id=self.config_entry.entry_id
+                )
+                LOGGER.debug(
+                    "%s %s %s removed from device_registry",
                     DOMAIN,
+                    device_entry.model,
                     device_id,
                 )
-                continue  # pragma: no cover
 
-            device_reg.async_update_device(
-                device_entry.id, remove_config_entry_id=self.config_entry.entry_id
-            )
+            self._firmware_list.pop(device_id, None)
+
+    def _update_device_firmware(self, data: dict[str, GwEntityData]) -> None:
+        """Detect firmware changes and update the device registry."""
+        for device_id, device in data.items():
+            # Only update firmware when the key is present and not None, to avoid
+            # wiping stored firmware on partial or transient updates.
+            if "firmware" not in device:
+                continue
+            new_firmware = device.get("firmware")
+            if new_firmware is None:
+                continue
+            if (
+                device_id in self._firmware_list
+                and new_firmware != self._firmware_list[device_id]
+            ):
+                updated = self._update_firmware_in_dr(device_id, new_firmware)
+                if updated:
+                    self._firmware_list[device_id] = new_firmware
+
+    def _update_firmware_in_dr(self, device_id: str, firmware: str | None) -> bool:
+        """Update device sw_version in device_registry."""
+        device_reg = dr.async_get(self.hass)
+        if (
+            device_entry := device_reg.async_get_device({(DOMAIN, device_id)})
+        ) is not None:
+            device_reg.async_update_device(device_entry.id, sw_version=firmware)
             LOGGER.debug(
-                "%s %s %s removed from device_registry",
+                "Firmware in device_registry updated for %s %s %s",
                 DOMAIN,
                 device_entry.model,
                 device_id,
             )
+            return True
+
+        return False  # pragma: no cover
