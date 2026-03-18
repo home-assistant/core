@@ -908,6 +908,10 @@ class EntitySelectorConfig(
 ):
     """Class to represent an entity selector config."""
 
+    # Note: The class inherits _LegacyEntityFilterSelectorConfig to keep
+    # support for legacy entity filter at top level for backwards compatibility,
+    # new entity filter options should be added under the `filter` key instead.
+
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
