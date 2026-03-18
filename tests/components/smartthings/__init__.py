@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 DEVICE_FIXTURES = [
     "aq_sensor_3_ikea",
+    "aqara_g350",
     "aeotec_ms6",
     "da_ac_air_000001",
     "da_ac_air_01011",
