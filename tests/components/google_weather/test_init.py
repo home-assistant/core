@@ -42,15 +42,18 @@ async def test_config_not_ready(
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
     failing_api_method: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for setup failure if an API call fails."""
     getattr(
         mock_google_weather_api, failing_api_method
-    ).side_effect = GoogleWeatherApiError()
+    ).side_effect = GoogleWeatherApiError("API error")
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    assert "Error fetching weather data: API error" in caplog.text
 
 
 async def test_unload_entry(
