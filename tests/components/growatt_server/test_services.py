@@ -1,7 +1,7 @@
 """Test Growatt Server services."""
 
 import datetime as dt
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import growattServer
 import pytest
@@ -46,7 +46,7 @@ async def test_read_time_segments_single_device(
 async def test_update_time_segment_charge_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test updating time segment with charge mode."""
@@ -80,7 +80,7 @@ async def test_update_time_segment_charge_mode(
 async def test_update_time_segment_discharge_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test updating time segment with discharge mode."""
@@ -112,7 +112,7 @@ async def test_update_time_segment_discharge_mode(
 async def test_update_time_segment_standby_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test updating time segment with standby mode."""
@@ -144,7 +144,7 @@ async def test_update_time_segment_standby_mode(
 async def test_update_time_segment_disabled(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test disabling a time segment."""
@@ -176,7 +176,7 @@ async def test_update_time_segment_disabled(
 async def test_update_time_segment_with_seconds(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test updating time segment with HH:MM:SS format from UI."""
@@ -209,7 +209,7 @@ async def test_update_time_segment_with_seconds(
 async def test_update_time_segment_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling API error when updating time segment."""
@@ -252,7 +252,7 @@ async def test_update_time_segment_api_error(
 async def test_no_min_devices_skips_service_registration(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that services fail gracefully when no MIN devices exist."""
@@ -295,7 +295,7 @@ async def test_no_min_devices_skips_service_registration(
 async def test_multiple_devices_with_valid_device_id_works(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that multiple devices work when device_id is specified."""
@@ -555,7 +555,7 @@ async def test_service_with_non_growatt_device(
     )
 
     # Test with device from different integration
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -569,6 +569,9 @@ async def test_service_with_non_growatt_device(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "device_not_growatt"
+    assert excinfo.value.translation_placeholders == {"device_id": other_device.id}
 
 
 @pytest.mark.usefixtures("mock_growatt_v1_api")
@@ -591,7 +594,7 @@ async def test_service_with_non_min_growatt_device(
     )
 
     # Test with TLX device (not a MIN device)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -605,6 +608,12 @@ async def test_service_with_non_min_growatt_device(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "device_not_configured"
+    assert excinfo.value.translation_placeholders == {
+        "device_type": "MIN",
+        "serial_number": "TLX789012",
+    }
 
 
 @pytest.mark.parametrize(
@@ -629,7 +638,7 @@ async def test_update_time_segment_invalid_end_time_format(
     assert device_entry is not None
 
     # Test with invalid end_time format
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "update_time_segment",
@@ -643,12 +652,15 @@ async def test_update_time_segment_invalid_end_time_format(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_time_format"
+    assert excinfo.value.translation_placeholders == {"field_name": "end_time"}
 
 
 async def test_service_with_unloaded_config_entry(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test service call when config entry is not loaded."""
@@ -694,7 +706,7 @@ async def test_service_with_unloaded_config_entry(
 async def _setup_sph_integration(
     hass: HomeAssistant,
     mock_config_entry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
 ) -> None:
     """Set up the integration with a single SPH device."""
     mock_growatt_v1_api.device_list.return_value = {
@@ -709,7 +721,7 @@ async def _setup_sph_integration(
 async def test_read_ac_charge_times(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -734,7 +746,7 @@ async def test_read_ac_charge_times(
 async def test_read_ac_discharge_times(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -758,7 +770,7 @@ async def test_read_ac_discharge_times(
 async def test_write_ac_charge_times(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test writing AC charge times to SPH device."""
@@ -788,7 +800,7 @@ async def test_write_ac_charge_times(
 async def test_write_ac_charge_times_with_seconds_format(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test writing AC charge times with HH:MM:SS format from UI time selector."""
@@ -818,7 +830,7 @@ async def test_write_ac_charge_times_with_seconds_format(
 async def test_write_ac_discharge_times(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test writing AC discharge times to SPH device."""
@@ -847,7 +859,7 @@ async def test_write_ac_discharge_times(
 async def test_write_ac_charge_times_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling API error when writing AC charge times."""
@@ -877,7 +889,7 @@ async def test_write_ac_charge_times_api_error(
 async def test_write_ac_discharge_times_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling API error when writing AC discharge times."""
@@ -906,7 +918,7 @@ async def test_write_ac_discharge_times_api_error(
 async def test_write_ac_charge_times_invalid_charge_power(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test validation of charge_power range."""
@@ -915,7 +927,7 @@ async def test_write_ac_charge_times_invalid_charge_power(
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
     assert device_entry is not None
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -927,12 +939,15 @@ async def test_write_ac_charge_times_invalid_charge_power(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_charge_power"
+    assert excinfo.value.translation_placeholders == {"value": "150"}
 
 
 async def test_write_ac_charge_times_invalid_charge_stop_soc(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test validation of charge_stop_soc range."""
@@ -941,7 +956,7 @@ async def test_write_ac_charge_times_invalid_charge_stop_soc(
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
     assert device_entry is not None
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -953,12 +968,15 @@ async def test_write_ac_charge_times_invalid_charge_stop_soc(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_charge_stop_soc"
+    assert excinfo.value.translation_placeholders == {"value": "110"}
 
 
 async def test_write_ac_discharge_times_invalid_discharge_power(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test validation of discharge_power range."""
@@ -967,7 +985,7 @@ async def test_write_ac_discharge_times_invalid_discharge_power(
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
     assert device_entry is not None
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_discharge_times",
@@ -978,12 +996,15 @@ async def test_write_ac_discharge_times_invalid_discharge_power(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_discharge_power"
+    assert excinfo.value.translation_placeholders == {"value": "200"}
 
 
 async def test_write_ac_discharge_times_invalid_discharge_stop_soc(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test validation of discharge_stop_soc range."""
@@ -992,7 +1013,7 @@ async def test_write_ac_discharge_times_invalid_discharge_stop_soc(
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
     assert device_entry is not None
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_discharge_times",
@@ -1003,12 +1024,15 @@ async def test_write_ac_discharge_times_invalid_discharge_stop_soc(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_discharge_stop_soc"
+    assert excinfo.value.translation_placeholders == {"value": "-5"}
 
 
 async def test_write_ac_charge_times_invalid_period_time(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test validation of invalid period time format."""
@@ -1017,7 +1041,7 @@ async def test_write_ac_charge_times_invalid_period_time(
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
     assert device_entry is not None
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -1031,12 +1055,15 @@ async def test_write_ac_charge_times_invalid_period_time(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "invalid_time_format"
+    assert excinfo.value.translation_placeholders == {"field_name": "period_1_start"}
 
 
 async def test_no_sph_devices_fails_gracefully(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that SPH services fail gracefully when no SPH devices exist."""
@@ -1054,7 +1081,7 @@ async def test_no_sph_devices_fails_gracefully(
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
     assert device_entry is not None
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -1066,12 +1093,14 @@ async def test_no_sph_devices_fails_gracefully(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "no_devices_configured"
 
 
 async def test_sph_service_with_non_sph_growatt_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test SPH service called with a non-SPH Growatt device."""
@@ -1084,7 +1113,7 @@ async def test_sph_service_with_non_sph_growatt_device(
         name="MIN Device",
     )
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -1096,12 +1125,18 @@ async def test_sph_service_with_non_sph_growatt_device(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "device_not_configured"
+    assert excinfo.value.translation_placeholders == {
+        "device_type": "SPH",
+        "serial_number": "MIN999999",
+    }
 
 
 async def test_write_ac_charge_times_uses_cached_periods_for_unspecified(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that unspecified periods are filled from cached settings."""
