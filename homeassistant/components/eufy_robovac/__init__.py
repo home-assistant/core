@@ -10,16 +10,14 @@ from .const import (
     CONF_LOCAL_KEY,
     CONF_PROTOCOL_VERSION,
     DEFAULT_PROTOCOL_VERSION,
+    PLATFORMS,
     EufyRoboVacConfigEntry,
     EufyRoboVacRuntimeData,
-    PLATFORMS,
 )
 from .local_api import EufyRoboVacLocalApi, EufyRoboVacLocalApiError
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: EufyRoboVacConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EufyRoboVacConfigEntry) -> bool:
     """Set up Eufy RoboVac from a config entry."""
     api = EufyRoboVacLocalApi(
         host=entry.data[CONF_HOST],

@@ -62,28 +62,24 @@ def entity(hass: HomeAssistant) -> EufyRoboVacEntity:
     return vacuum
 
 
-@pytest.mark.asyncio
 async def test_async_start_sends_auto_mode(entity: EufyRoboVacEntity) -> None:
     """Starting should send DPS 2 True for T2253."""
     await entity.async_start()
     assert entity._api.sent[-1] == {"2": True}
 
 
-@pytest.mark.asyncio
 async def test_async_pause_sends_pause_command(entity: EufyRoboVacEntity) -> None:
     """Pausing should send DPS 2 False for T2253."""
     await entity.async_pause()
     assert entity._api.sent[-1] == {"2": False}
 
 
-@pytest.mark.asyncio
 async def test_async_return_to_base_sends_return(entity: EufyRoboVacEntity) -> None:
     """Return to base should send DPS 101 True for T2253."""
     await entity.async_return_to_base()
     assert entity._api.sent[-1] == {"101": True}
 
 
-@pytest.mark.asyncio
 async def test_async_update_maps_activity_and_battery(
     entity: EufyRoboVacEntity,
 ) -> None:
@@ -103,7 +99,6 @@ def test_primary_entity_uses_device_name(entity: EufyRoboVacEntity) -> None:
     assert entity.device_info["name"] == "Hall Vacuum"
 
 
-@pytest.mark.asyncio
 async def test_async_update_marks_entity_unavailable_on_error(
     entity: EufyRoboVacEntity,
 ) -> None:
@@ -118,7 +113,6 @@ async def test_async_update_marks_entity_unavailable_on_error(
     assert entity.available is False
 
 
-@pytest.mark.asyncio
 async def test_async_update_marks_entity_unavailable_on_empty_dps(
     entity: EufyRoboVacEntity,
 ) -> None:
@@ -130,7 +124,6 @@ async def test_async_update_marks_entity_unavailable_on_empty_dps(
     assert entity.available is False
 
 
-@pytest.mark.asyncio
 async def test_async_update_normalizes_no_error_variants(
     entity: EufyRoboVacEntity,
 ) -> None:

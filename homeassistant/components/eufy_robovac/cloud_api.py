@@ -20,9 +20,11 @@ from typing import Any
 import uuid
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+import requests
+import tinytuya
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import requests
 
 _EUFY_HEADERS = {
     "User-Agent": "EufyHome-Android-2.4.0",
@@ -71,7 +73,7 @@ _TUYA_SIGNATURE_FIELDS = {
     "sp",
 }
 _TUYA_HMAC_KEY = (
-    "A_cepev5pfnhua4dkqkdpmnrdxx378mpjr_s8x78u7xwymasd9kqa7a73pjhxqsedaj".encode()
+    b"A_cepev5pfnhua4dkqkdpmnrdxx378mpjr_s8x78u7xwymasd9kqa7a73pjhxqsedaj"
 )
 _TUYA_HEADERS = {"User-Agent": "TY-UA=APP/Android/2.4.0/SDK/null"}
 _TUYA_PASSWORD_CIPHER = Cipher(
@@ -277,6 +279,7 @@ class EufyRoboVacCloudApi:
     """Cloud API client for onboarding RoboVac devices."""
 
     def __init__(self, *, username: str, password: str) -> None:
+        """Initialize cloud API credentials for Eufy account discovery."""
         self._username = username
         self._password = password
 
@@ -339,12 +342,6 @@ class EufyRoboVacCloudApi:
     ) -> dict[str, str]:
         """Resolve local hosts by scanning the LAN for Tuya broadcast packets."""
         if not missing_device_ids:
-            return {}
-
-        try:
-            import tinytuya
-        except ImportError:
-            _LOGGER.debug("tinytuya unavailable for RoboVac host fallback")
             return {}
 
         try:

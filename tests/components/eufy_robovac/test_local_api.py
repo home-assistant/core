@@ -9,6 +9,9 @@ from typing import Any
 import pytest
 
 # pylint: disable-next=hass-component-root-import
+from homeassistant.components.eufy_robovac import local_api as local_api_module
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.eufy_robovac.local_api import (
     EufyRoboVacLocalApi,
     EufyRoboVacLocalApiError,
@@ -64,13 +67,10 @@ def fake_tinytuya(monkeypatch: pytest.MonkeyPatch) -> list[_FakeDevice]:
         created.append(device)
         return device
 
-    monkeypatch.setitem(
-        __import__("sys").modules, "tinytuya", SimpleNamespace(Device=_factory)
-    )
+    monkeypatch.setattr(local_api_module, "tinytuya", SimpleNamespace(Device=_factory))
     return created
 
 
-@pytest.mark.asyncio
 async def test_async_send_dps_uses_tinytuya_device(
     hass: HomeAssistant,
     fake_tinytuya: list[_FakeDevice],
@@ -97,7 +97,6 @@ async def test_async_send_dps_uses_tinytuya_device(
     assert device.closed is True
 
 
-@pytest.mark.asyncio
 async def test_async_get_dps_returns_dps_payload(
     hass: HomeAssistant,
     fake_tinytuya: list[_FakeDevice],
@@ -116,7 +115,6 @@ async def test_async_get_dps_returns_dps_payload(
     assert fake_tinytuya[0].closed is True
 
 
-@pytest.mark.asyncio
 async def test_async_send_dps_closes_device_on_error(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -139,9 +137,7 @@ async def test_async_send_dps_closes_device_on_error(
         created.append(device)
         return device
 
-    monkeypatch.setitem(
-        __import__("sys").modules, "tinytuya", SimpleNamespace(Device=_factory)
-    )
+    monkeypatch.setattr(local_api_module, "tinytuya", SimpleNamespace(Device=_factory))
 
     api = EufyRoboVacLocalApi(
         host="192.168.1.99",
@@ -156,7 +152,6 @@ async def test_async_send_dps_closes_device_on_error(
     assert created[0].closed is True
 
 
-@pytest.mark.asyncio
 async def test_async_get_dps_closes_device_on_error(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -179,9 +174,7 @@ async def test_async_get_dps_closes_device_on_error(
         created.append(device)
         return device
 
-    monkeypatch.setitem(
-        __import__("sys").modules, "tinytuya", SimpleNamespace(Device=_factory)
-    )
+    monkeypatch.setattr(local_api_module, "tinytuya", SimpleNamespace(Device=_factory))
 
     api = EufyRoboVacLocalApi(
         host="192.168.1.99",

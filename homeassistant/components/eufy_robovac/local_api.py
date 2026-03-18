@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+import tinytuya
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -28,8 +30,6 @@ class EufyRoboVacLocalApi:
 
     def _create_device(self):
         """Create a configured tinytuya Device instance."""
-        import tinytuya
-
         device = tinytuya.Device(
             dev_id=self.device_id,
             address=self.host,
@@ -46,7 +46,7 @@ class EufyRoboVacLocalApi:
         try:
             device = self._create_device()
             response = device.set_multiple_values(dps)
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             raise EufyRoboVacLocalApiError(
                 f"Failed sending DPS to {self.host}: {err}"
             ) from err
@@ -72,7 +72,7 @@ class EufyRoboVacLocalApi:
         try:
             device = self._create_device()
             response = device.status()
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             raise EufyRoboVacLocalApiError(
                 f"Failed reading DPS from {self.host}: {err}"
             ) from err

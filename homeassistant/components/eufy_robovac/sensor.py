@@ -10,18 +10,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_MODEL, PERCENTAGE
+from homeassistant.const import CONF_ID, CONF_MODEL, CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    EufyRoboVacConfigEntry,
-    RoboVacCommand,
-    dps_update_signal,
-)
+from .const import DOMAIN, EufyRoboVacConfigEntry, RoboVacCommand, dps_update_signal
 from .model_mappings import MODEL_MAPPINGS, RoboVacModelMapping
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +67,7 @@ class EufyRoboVacBatterySensor(SensorEntity):
 
         try:
             self._attr_native_value = int(float(str(battery_raw)))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             _LOGGER.debug(
                 "Could not parse battery for %s: %s",
                 self._entry.data[CONF_ID],

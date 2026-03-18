@@ -127,11 +127,11 @@ async def test_setup_entry_retries_when_initial_dps_fetch_fails(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry_removes_vacuum_entity(
+async def test_unload_entry_marks_vacuum_entity_unavailable(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Unloading config entry should unload integration runtime data."""
+    """Unloading config entry should mark entities unavailable."""
     with patch(
         "homeassistant.components.eufy_robovac.local_api.EufyRoboVacLocalApi.async_get_dps",
         AsyncMock(return_value={"15": "standby"}),
@@ -147,4 +147,6 @@ async def test_unload_entry_removes_vacuum_entity(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.states.get(entity_id) is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"

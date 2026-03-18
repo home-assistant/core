@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 
 DOMAIN = "eufy_robovac"
-PLATFORMS: list[Platform] = [Platform.VACUUM, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.VACUUM]
 
 CONF_LOCAL_KEY = "local_key"
 CONF_PROTOCOL_VERSION = "protocol_version"
