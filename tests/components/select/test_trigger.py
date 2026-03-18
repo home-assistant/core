@@ -2,17 +2,13 @@
 
 import pytest
 
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_gated_by_labs_flag,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -20,15 +16,15 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_selects(hass: HomeAssistant) -> list[str]:
+async def target_selects(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple select entities associated with different targets."""
-    return (await target_entities(hass, "select"))["included"]
+    return await target_entities(hass, "select")
 
 
 @pytest.fixture
-async def target_input_selects(hass: HomeAssistant) -> list[str]:
+async def target_input_selects(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple input_select entities associated with different targets."""
-    return (await target_entities(hass, "input_select"))["included"]
+    return await target_entities(hass, "input_select")
 
 
 @pytest.mark.parametrize("trigger_key", ["select.selection_changed"])
@@ -36,13 +32,7 @@ async def test_select_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the select triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -56,30 +46,30 @@ async def test_select_triggers_gated_by_labs_flag(
         (
             "select.selection_changed",
             [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
+                {"included_state": {"state": None, "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
             ],
         ),
         (
             "select.selection_changed",
             [
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
-                {"included": {"state": "option_c", "attributes": {}}, "count": 1},
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
+                {"included_state": {"state": "option_c", "attributes": {}}, "count": 1},
             ],
         ),
         (
             "select.selection_changed",
             [
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
                     "count": 0,
                 },
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
                     "count": 0,
                 },
             ],
@@ -87,36 +77,42 @@ async def test_select_triggers_gated_by_labs_flag(
         (
             "select.selection_changed",
             [
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
             ],
         ),
     ],
 )
-async def test_select_state_trigger_behavior_any(
+async def test_select_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_selects: list[str],
+    target_selects: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the select trigger fires when any select state changes."""
-    other_entity_ids = set(target_selects) - {entity_id}
+    """Test that the select trigger fires when targeted select state changes."""
+    other_entity_ids = set(target_selects["included_entities"]) - {entity_id}
 
     # Set all selects, including the tested select, to the initial state
-    for eid in target_selects:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_selects["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
@@ -146,30 +142,30 @@ async def test_select_state_trigger_behavior_any(
         (
             "select.selection_changed",
             [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
+                {"included_state": {"state": None, "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
             ],
         ),
         (
             "select.selection_changed",
             [
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
-                {"included": {"state": "option_c", "attributes": {}}, "count": 1},
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
+                {"included_state": {"state": "option_c", "attributes": {}}, "count": 1},
             ],
         ),
         (
             "select.selection_changed",
             [
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
                     "count": 0,
                 },
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
                     "count": 0,
                 },
             ],
@@ -177,36 +173,42 @@ async def test_select_state_trigger_behavior_any(
         (
             "select.selection_changed",
             [
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
-                {"included": {"state": "option_a", "attributes": {}}, "count": 0},
-                {"included": {"state": "option_b", "attributes": {}}, "count": 1},
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
+                {"included_state": {"state": "option_a", "attributes": {}}, "count": 0},
+                {"included_state": {"state": "option_b", "attributes": {}}, "count": 1},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
             ],
         ),
     ],
 )
-async def test_input_select_state_trigger_behavior_any(
+async def test_input_select_state_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_input_selects: list[str],
+    target_input_selects: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the select trigger fires when any input_select state changes."""
-    other_entity_ids = set(target_input_selects) - {entity_id}
+    """Test that the select trigger fires when targeted input_select state changes."""
+    other_entity_ids = set(target_input_selects["included_entities"]) - {entity_id}
 
     # Set all input_selects to the initial state
-    for eid in target_input_selects:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_input_selects["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
