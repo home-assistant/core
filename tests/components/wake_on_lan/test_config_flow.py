@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
-from homeassistant.components.wake_on_lan.const import DOMAIN
+from homeassistant.components.wake_on_lan.const import CONF_BROADCAST_INTERFACE, DOMAIN
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -82,6 +82,57 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
 
     state = hass.states.get("button.wake_on_lan_00_01_02_03_04_05")
     assert state is not None
+
+
+async def test_form_with_interface(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test config flow with broadcast interface."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_MAC: DEFAULT_MAC,
+            CONF_BROADCAST_INTERFACE: "192.168.1.5",
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        CONF_MAC: DEFAULT_MAC,
+        CONF_BROADCAST_INTERFACE: "192.168.1.5",
+    }
+
+
+async def test_options_flow_with_interface(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test options flow with broadcast interface."""
+
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BROADCAST_ADDRESS: "255.255.255.255",
+            CONF_BROADCAST_PORT: 9,
+            CONF_BROADCAST_INTERFACE: "192.168.1.5",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BROADCAST_INTERFACE] == "192.168.1.5"
 
 
 async def test_entry_already_exist(
