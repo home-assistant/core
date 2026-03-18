@@ -356,7 +356,7 @@ class RX11Transceiver:
         Includes retry with buffer flush between attempts, matching the
         proven HACS approach.
 
-        Returns True if both versions were obtained successfully.
+        Returns True if at least one version was obtained successfully.
         """
         if not self._rxmodule:
             return False

@@ -823,8 +823,8 @@ class RxModule:
                     "Unexpected SOP while already in packet (len=%d)",
                     len(self._rx_raw_buffer) - 1,
                 )
-                self._rx_raw_buffer = bytearray([SOP])
-                self._rx_stuffing = False
+            # Always resynchronize buffer on SOP to discard any stray bytes
+            self._rx_raw_buffer = bytearray([SOP])
             self._rx_sop = True
             self._rx_stuffing = False
             return
@@ -1100,13 +1100,13 @@ class RxModule:
 
     def cancel_all_io_requests(self):
         """Cancel all pending requests."""
-        while self._tx_req_queued_size > 0:
-            req = self._dequeue_queued()
-            if req and not req.cancel:
-                req.icp = ICP(handle=0, result=ErrorCode.ERR_CANCELED)
-                req.signal()
-
         with self._protocol_lock:
+            while self._tx_req_queued_size > 0:
+                req = self._dequeue_queued()
+                if req and not req.cancel:
+                    req.icp = ICP(handle=0, result=ErrorCode.ERR_CANCELED)
+                    req.signal()
+
             cancel_irp = IRP(function=FunctionCode.CANCEL_ALL_IO, params=b"")
             self._write_to_buffer(cancel_irp, "CANCEL_ALL_IO")
 

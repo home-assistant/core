@@ -97,9 +97,9 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         self._hw_version: str | None = transceiver.hw_version
         self._sw_version: str | None = transceiver.fw_version
 
-        # CORE addition: _current_status stays None until EVENT_HOMEASSISTANT_STARTED
-        # so the recorder captures a real unknown → connected transition (the
-        # logbook would otherwise remain on the shutdown "unavailable" entry).
+        # Keep _current_status as None until EVENT_HOMEASSISTANT_STARTED so the
+        # recorder/logbook can capture an initial "unknown" → "connected" transition
+        # instead of leaving the last shutdown "unavailable" state as the latest entry.
         self._current_status: str | None = None
 
     def _connection_status(self) -> str:
@@ -202,8 +202,8 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         # Initialise last status.
         self._last_status = self._connection_status()
 
-        # CORE addition: write the correct state once HA has fully started so
-        # the recorder captures a real unknown → connected transition.
+        # Write the correct state once HA has fully started so the recorder
+        # captures a real unknown → connected transition.
         # native_value returns None until this fires (see _current_status).
         @callback
         def _on_ha_started(_event: Any = None) -> None:
@@ -233,7 +233,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
     def native_value(self) -> str | None:
         """Return connection status key - translated by frontend via translation_key.
 
-        CORE addition: returns None before EVENT_HOMEASSISTANT_STARTED so the
+        Returns None before EVENT_HOMEASSISTANT_STARTED so the
         recorder captures the state transition on first write.
         """
         return self._current_status
