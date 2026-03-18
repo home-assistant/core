@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from python_qube_heatpump import QubeClient, async_get_mac_address
@@ -12,8 +11,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,7 +37,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                     version = await client.async_get_software_version()
                     if version is None:
                         errors["base"] = "not_qube_device"
-            except OSError, TimeoutError:
+            except (OSError, TimeoutError):
                 errors["base"] = "cannot_connect"
             finally:
                 await client.close()
