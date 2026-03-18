@@ -35,6 +35,7 @@ jobs:
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
       architectures: ${{ env.ARCHITECTURES }}
+      base_image_version: ${{ env.BASE_IMAGE_VERSION }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -100,7 +101,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         include:
           - arch: amd64
-            os: ubuntu-latest
+            os: ubuntu-24.04
           - arch: aarch64
             os: ubuntu-24.04-arm
     steps:
@@ -195,77 +196,20 @@ jobs:
         run: |
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
-        with:
-          cosign-release: "v2.5.3"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
-
-      - name: Build variables
-        id: vars
-        shell: bash
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: |
-          echo "base_image=ghcr.io/home-assistant/${ARCH}-homeassistant-base:${BASE_IMAGE_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "cache_image=ghcr.io/home-assistant/${ARCH}-homeassistant:latest" >> "$GITHUB_OUTPUT"
-          echo "created=$(date --rfc-3339=seconds --utc)" >> "$GITHUB_OUTPUT"
-
-      - name: Verify base image signature
-        env:
-          BASE_IMAGE: ${{ steps.vars.outputs.base_image }}
-        run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp "https://github.com/home-assistant/docker/.*" \
-            "${BASE_IMAGE}"
-
-      - name: Verify cache image signature
-        id: cache
-        continue-on-error: true
-        env:
-          CACHE_IMAGE: ${{ steps.vars.outputs.cache_image }}
-        run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp "https://github.com/home-assistant/core/.*" \
-            "${CACHE_IMAGE}"
-
       - name: Build base image
-        id: build
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
         with:
-          context: .
-          file: ./Dockerfile
-          platforms: ${{ steps.vars.outputs.platform }}
-          push: true
-          cache-from: ${{ steps.cache.outcome == 'success' && steps.vars.outputs.cache_image || '' }}
+          arch: ${{ matrix.arch }}
           build-args: |
-            BUILD_FROM=${{ steps.vars.outputs.base_image }}
-          tags: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
-          outputs: type=image,push=true,compression=zstd,compression-level=9,force-compression=true,oci-mediatypes=true
-          labels: |
-            io.hass.arch=${{ matrix.arch }}
-            io.hass.version=${{ needs.init.outputs.version }}
-            org.opencontainers.image.created=${{ steps.vars.outputs.created }}
-            org.opencontainers.image.version=${{ needs.init.outputs.version }}
-
-      - name: Sign image
-        env:
-          ARCH: ${{ matrix.arch }}
-          VERSION: ${{ needs.init.outputs.version }}
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "ghcr.io/home-assistant/${ARCH}-homeassistant:${VERSION}@${DIGEST}"
+            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          cache-gha: false
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          cosign-base-identity: "https://github.com/home-assistant/docker/.*"
+          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          image: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant
+          image-tags: ${{ needs.init.outputs.version }}
+          push: true
+          version: ${{ needs.init.outputs.version }}
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -314,35 +258,38 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set build additional args
+      - name: Compute extra tags
+        id: tags
+        shell: bash
         env:
           VERSION: ${{ needs.init.outputs.version }}
         run: |
-          # Create general tags
           if [[ "${VERSION}" =~ d ]]; then
-            echo "BUILD_ARGS=--additional-tag dev" >> $GITHUB_ENV
+            echo "extra_tags=dev" >> "$GITHUB_OUTPUT"
           elif [[ "${VERSION}" =~ b ]]; then
-            echo "BUILD_ARGS=--additional-tag beta" >> $GITHUB_ENV
+            echo "extra_tags=beta" >> "$GITHUB_OUTPUT"
           else
-            echo "BUILD_ARGS=--additional-tag stable" >> $GITHUB_ENV
+            echo "extra_tags=stable" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+      - name: Build machine image
+        uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build base image
-        uses: home-assistant/builder@6cb4fd3d1338b6e22d0958a4bcb53e0965ea63b4 # 2026.02.1
-        with:
-          image: ${{ matrix.arch }}
-          args: |
-            $BUILD_ARGS \
-            --target /data/machine \
-            --cosign \
-            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
+          arch: ${{ matrix.arch }}
+          build-args: |
+            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          cache-gha: false
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          context: machine/
+          cosign-base-identity: "https://github.com/home-assistant/core/.*"
+          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          file: machine/${{ matrix.machine }}
+          image: ghcr.io/home-assistant/${{ matrix.machine }}-homeassistant
+          image-tags: |
+            ${{ needs.init.outputs.version }}
+            ${{ steps.tags.outputs.extra_tags }}
+          push: true
+          version: ${{ needs.init.outputs.version }}
 
   publish_ha:
     name: Publish version files
