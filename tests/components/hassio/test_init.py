@@ -410,7 +410,7 @@ async def test_setup_core_push_config_error(
     supervisor_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup with error whie pushing supervisor config data to API."""
+    """Test setup with error while pushing supervisor config data to API."""
     hass.config.time_zone = "testzone"
     supervisor_client.supervisor.set_options.side_effect = SupervisorError("boom")
 

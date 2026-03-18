@@ -54,7 +54,9 @@ async def hassio_client_supervisor(
     """Return an authenticated HTTP client."""
     hassio_user_id = hass.data[DATA_CONFIG_STORE].data.hassio_user
     hassio_user = await hass.auth.async_get_user(hassio_user_id)
-    refresh_token = await hass.auth.async_create_refresh_token(hassio_user)
+    assert hassio_user
+    assert hassio_user.refresh_tokens
+    refresh_token = next(iter(hassio_user.refresh_tokens.values()))
     access_token = hass.auth.async_create_access_token(refresh_token)
     return await aiohttp_client(
         hass.http.app,
