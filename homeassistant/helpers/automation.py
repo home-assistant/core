@@ -1,17 +1,22 @@
 """Helpers for automation."""
 
-from collections.abc import Callable, Mapping
+from __future__ import annotations
+
+from collections.abc import Callable, Hashable, Mapping
 from dataclasses import dataclass
 from enum import Enum
+import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, State, split_entity_id
 
 from .entity import get_device_class_or_undefined
 from .typing import ConfigType
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AnyDeviceClassType(Enum):
@@ -43,24 +48,46 @@ class NumericalDomainSpec(DomainSpec):
     """Optional converter for numerical values (e.g. uint8 → percentage)."""
 
 
-def filter_by_domain_specs(
-    hass: HomeAssistant,
-    domain_specs: Mapping[str, DomainSpec],
-    entities: set[str],
-) -> set[str]:
-    """Filter entities matching any of the domain specs."""
-    result: set[str] = set()
-    for entity_id in entities:
-        if not (domain_spec := domain_specs.get(split_entity_id(entity_id)[0])):
-            continue
-        if (
-            domain_spec.device_class is not ANY_DEVICE_CLASS
-            and get_device_class_or_undefined(hass, entity_id)
-            != domain_spec.device_class
-        ):
-            continue
-        result.add(entity_id)
-    return result
+class DomainSpecMixin[DomainSpecT: DomainSpec = DomainSpec]:
+    """Mixin for triggers and conditions that use domain specs."""
+
+    _domain_specs: Mapping[str, DomainSpecT]
+    _hass: HomeAssistant
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities matching any of the domain specs."""
+        result: set[str] = set()
+        for entity_id in entities:
+            if not (
+                domain_spec := self._domain_specs.get(split_entity_id(entity_id)[0])
+            ):
+                continue
+            if (
+                domain_spec.device_class is not ANY_DEVICE_CLASS
+                and get_device_class_or_undefined(self._hass, entity_id)
+                != domain_spec.device_class
+            ):
+                continue
+            result.add(entity_id)
+        return result
+
+    def _get_tracked_value(self, state: State) -> Hashable:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_source is None:
+            return state.state
+        value = state.attributes.get(domain_spec.value_source)
+        if not isinstance(value, Hashable):
+            # mypy treats Any as always compatible with Hashable in isinstance
+            # checks, but attributes can hold unhashable types like list or dict
+            _LOGGER.warning(  # type: ignore[unreachable]
+                "Skipped for entity '%s': attribute '%s' has unhashable type '%s'",
+                state.entity_id,
+                domain_spec.value_source,
+                type(value).__name__,
+            )
+            return None
+        return value
 
 
 def get_absolute_description_key(domain: str, key: str) -> str:

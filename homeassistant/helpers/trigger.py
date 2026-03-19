@@ -70,8 +70,8 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, selector
 from .automation import (
     DomainSpec,
+    DomainSpecMixin,
     NumericalDomainSpec,
-    filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -336,10 +336,11 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
+class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](
+    DomainSpecMixin[DomainSpecT], Trigger
+):
     """Trigger for entity state changes."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -357,17 +358,6 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
             assert config.target is not None
         self._options = config.options or {}
         self._target = config.target
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities matching any of the domain specs."""
-        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
-
-    def _get_tracked_value(self, state: State) -> Any:
-        """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
-        if domain_spec.value_source is None:
-            return state.state
-        return state.attributes.get(domain_spec.value_source)
 
     @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
@@ -505,14 +495,14 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected one and that the state changed."""
-        return bool(
+        return (
             self._get_tracked_value(from_state) == self._from_state
             and self._get_tracked_value(to_state) != self._from_state
         )
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state is not the same as the expected origin state."""
-        return bool(self._get_tracked_value(state) != self._from_state)
+        return self._get_tracked_value(state) != self._from_state
 
 
 def _validate_range[_T: dict[str, Any]](

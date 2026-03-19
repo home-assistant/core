@@ -54,7 +54,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -77,7 +77,7 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
     DomainSpec,
-    filter_by_domain_specs,
+    DomainSpecMixin,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -334,10 +334,11 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
+class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](
+    DomainSpecMixin[DomainSpecT], Condition
+):
     """Base class for entity conditions."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -356,17 +357,6 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
             assert config.options
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities matching any of the domain specs."""
-        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
-
-    def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
-        if domain_spec.value_source is None:
-            return entity_state.state
-        return entity_state.attributes.get(domain_spec.value_source)
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
