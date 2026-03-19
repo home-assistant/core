@@ -719,6 +719,7 @@ FLOWS = {
         "thermopro",
         "thethingsnetwork",
         "thread",
+        "threema",
         "tibber",
         "tile",
         "tilt_ble",

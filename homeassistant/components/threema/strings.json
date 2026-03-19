@@ -1,0 +1,117 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "key_generation_failed": "Failed to generate encryption keys.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_gateway_id": "Gateway ID must be 8 characters long and start with *.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "credentials": {
+        "data": {
+          "api_secret": "API secret",
+          "gateway_id": "Gateway ID",
+          "private_key": "Private key (mandatory for E2E encryption)",
+          "public_key": "Public key (mandatory for E2E encryption)"
+        },
+        "data_description": {
+          "api_secret": "Secret you received from Threema",
+          "gateway_id": "ID of your Gateway, including '*', e.g.: *ABCD123",
+          "private_key": "Private key, including 'private:' prefix",
+          "public_key": "Public key, including 'public:' prefix"
+        },
+        "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch.",
+        "title": "Gateway credentials"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_secret": "API secret",
+          "private_key": "Private key (mandatory for E2E encryption)"
+        },
+        "data_description": {
+          "api_secret": "Enter the new API secret from gateway.threema.ch.",
+          "private_key": "Private key, including 'private:' prefix"
+        },
+        "description": "Your Threema Gateway credentials need to be updated.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "setup_new": {
+        "data": {
+          "private_key": "Private key",
+          "public_key": "Public key"
+        },
+        "data_description": {
+          "private_key": "Your generated private key. Store it securely.",
+          "public_key": "Your generated public key. Use when registering at gateway.threema.ch."
+        },
+        "description": "Save your keys now! When registering at gateway.threema.ch, paste only the hex part of your public key (without the 'public:' prefix). Save your private key securely.",
+        "title": "Keys generated"
+      },
+      "user": {
+        "data": {
+          "setup_type": "Setup type"
+        },
+        "data_description": {
+          "setup_type": "Choose 'existing' to enter your Gateway credentials, or 'new' to generate encryption keys first."
+        },
+        "description": "Choose whether to create a new Gateway ID or configure an existing one.",
+        "title": "Threema setup"
+      }
+    }
+  },
+  "entity": {
+    "image": {
+      "gateway_qr_code": {
+        "name": "Gateway QR code"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "entry_not_found": {
+      "message": "Config entry not found."
+    },
+    "entry_not_loaded": {
+      "message": "Config entry is not loaded."
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "multiple_entries_found": {
+      "message": "Multiple Threema integrations configured. Please specify a config_entry_id."
+    },
+    "no_entries_found": {
+      "message": "No Threema integration configured or loaded."
+    },
+    "send_error": {
+      "message": "Error sending message: {error}"
+    }
+  },
+  "services": {
+    "send_message": {
+      "description": "Send a text message via Threema Gateway.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Threema Gateway config entry to use.",
+          "name": "Config entry"
+        },
+        "message": {
+          "description": "The text message to send.",
+          "name": "Message"
+        },
+        "recipient": {
+          "description": "Threema ID of the recipient (8 characters).",
+          "name": "Recipient"
+        }
+      },
+      "name": "Send message"
+    }
+  }
+}
