@@ -93,6 +93,15 @@
       }
     },
     "button": {
+      "cancel": {
+        "name": "Cancel"
+      },
+      "cancel_and_drain": {
+        "name": "Cancel and drain"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
       "reset_hepa_filter": {
         "name": "Reset HEPA filter"
       },
@@ -101,6 +110,12 @@
       },
       "reset_water_filter": {
         "name": "Reset water filter"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "[%key:common::action::start%]"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
@@ -570,6 +585,25 @@
       "media_playback_status": {
         "name": "Media playback status"
       },
+      "microfiber_filter_job_state": {
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "bypassing": "Bypassing",
+          "filtering": "Filtering",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "sensing": "Weight sensing",
+          "stopping": "Stopping",
+          "waiting": "Waiting"
+        }
+      },
+      "microfiber_filter_operating_state": {
+        "name": "[%key:component::smartthings::entity::sensor::cooktop_operating_state::name%]",
+        "state": {
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
+        }
+      },
       "odor_sensor": {
         "name": "Odor sensor"
       },
@@ -916,6 +950,9 @@
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "bypass_mode": {
+        "name": "Bypass mode"
+      },
       "display_lighting": {
         "name": "Display lighting"
       },
@@ -1009,6 +1046,9 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "remote_control_status": {
+      "message": "Can only be changed when remote control is enabled"
     }
   },
   "issues": {
