@@ -636,7 +636,7 @@
   },
   "services": {
     "read_ac_charge_times": {
-      "description": "Read AC charge time periods from an SPH device.",
+      "description": "Reads AC charge time periods from an SPH device.",
       "fields": {
         "device_id": {
           "description": "The Growatt SPH device to read from.",
@@ -646,7 +646,7 @@
       "name": "Read AC charge times"
     },
     "read_ac_discharge_times": {
-      "description": "Read AC discharge time periods from an SPH device.",
+      "description": "Reads AC discharge time periods from an SPH device.",
       "fields": {
         "device_id": {
           "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
@@ -656,7 +656,7 @@
       "name": "Read AC discharge times"
     },
     "read_time_segments": {
-      "description": "Read all time segments from a supported inverter.",
+      "description": "Reads all time segments from a supported inverter.",
       "fields": {
         "device_id": {
           "description": "The Growatt device to perform the action on.",
@@ -666,7 +666,7 @@
       "name": "Read time segments"
     },
     "update_time_segment": {
-      "description": "Update a time segment for supported inverters.",
+      "description": "Updates a time segment for supported inverters.",
       "fields": {
         "batt_mode": {
           "description": "Battery operation mode for this time segment.",
@@ -696,7 +696,7 @@
       "name": "Update time segment"
     },
     "write_ac_charge_times": {
-      "description": "Write AC charge time periods to an SPH device.",
+      "description": "Writes AC charge time periods to an SPH device.",
       "fields": {
         "charge_power": {
           "description": "Charge power limit (%).",
@@ -707,8 +707,8 @@
           "name": "Charge stop SOC"
         },
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "The Growatt SPH device to write to.",
+          "name": "Device"
         },
         "mains_enabled": {
           "description": "Enable AC (mains) charging.",
@@ -754,11 +754,11 @@
       "name": "Write AC charge times"
     },
     "write_ac_discharge_times": {
-      "description": "Write AC discharge time periods to an SPH device.",
+      "description": "Writes AC discharge time periods to an SPH device.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::device_id::name%]"
         },
         "discharge_power": {
           "description": "Discharge power limit (%).",
