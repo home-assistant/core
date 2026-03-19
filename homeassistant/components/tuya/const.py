@@ -41,6 +41,8 @@ TUYA_SCHEMA = "haauthorize"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
+TUYA_HA_COVER_STATUS_INVERTED = "tuya_cover_status_inverted"
+TUYA_HA_SIGNAL_COVER_STATUS_INVERTED = "tuya_cover_status_inverted_{}"
 
 TUYA_RESPONSE_CODE = "code"
 TUYA_RESPONSE_MSG = "msg"

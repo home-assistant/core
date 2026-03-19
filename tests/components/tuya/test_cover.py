@@ -20,6 +20,10 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
 )
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_CLOSED,
@@ -342,3 +346,131 @@ async def test_cl_n3xgr5pdmpinictg_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_zah67ekd"],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER, Platform.SWITCH])
+async def test_cover_status_inversion_flips_state_and_position(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test local cover status inversion flips the interpreted cover state."""
+    mock_device.status["percent_state"] = 100
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    cover_entity_id = "cover.kitchen_blinds_curtain"
+    switch_entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN,
+        "tuya",
+        f"tuya.{mock_device.id}control_invert_status",
+    )
+    assert switch_entity_id is not None
+
+    state = hass.states.get(cover_entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: switch_entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(cover_entity_id)
+    assert state is not None
+    assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+
+
+@pytest.mark.parametrize(
+    ("mock_device_code", "service", "service_data", "expected_commands"),
+    [
+        (
+            "cl_zah67ekd",
+            SERVICE_OPEN_COVER,
+            {},
+            [{"code": "percent_control", "value": 100}],
+        ),
+        (
+            "cl_zah67ekd",
+            SERVICE_CLOSE_COVER,
+            {},
+            [{"code": "percent_control", "value": 0}],
+        ),
+        (
+            "cl_zah67ekd",
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 25},
+            [{"code": "percent_control", "value": 25}],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            SERVICE_OPEN_COVER,
+            {},
+            [{"code": "control", "value": "close"}],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            SERVICE_CLOSE_COVER,
+            {},
+            [{"code": "control", "value": "open"}],
+        ),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER, Platform.SWITCH])
+async def test_cover_status_inversion_flips_commands(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    service: str,
+    service_data: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
+) -> None:
+    """Test local cover status inversion flips outgoing cover commands."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    cover_entity_id = entity_registry.async_get_entity_id(
+        COVER_DOMAIN,
+        "tuya",
+        f"tuya.{mock_device.id}control",
+    )
+    switch_entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN,
+        "tuya",
+        f"tuya.{mock_device.id}control_invert_status",
+    )
+    assert cover_entity_id is not None
+    assert switch_entity_id is not None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: switch_entity_id},
+        blocking=True,
+    )
+    mock_manager.send_commands.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: cover_entity_id,
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, expected_commands
+    )

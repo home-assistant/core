@@ -34,7 +34,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import (
+    TUYA_DISCOVERY_NEW,
+    TUYA_HA_COVER_STATUS_INVERTED,
+    TUYA_HA_SIGNAL_COVER_STATUS_INVERTED,
+    DeviceCategory,
+    DPCode,
+)
 from .entity import TuyaEntity
 
 
@@ -168,6 +174,11 @@ def _get_instruction_wrapper(
     )
 
 
+def _cover_status_inverted_signal(unique_id: str) -> str:
+    """Return the signal name for cover status inversion updates."""
+    return TUYA_HA_SIGNAL_COVER_STATUS_INVERTED.format(unique_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -175,6 +186,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
     manager = entry.runtime_data.manager
+    hass.data.setdefault(TUYA_HA_COVER_STATUS_INVERTED, {})
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -264,10 +276,46 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if tilt_position:
             self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                _cover_status_inverted_signal(self.unique_id),
+                self.async_write_ha_state,
+            )
+        )
+
+    @property
+    def _is_status_inverted(self) -> bool:
+        """Return whether the cover status is locally inverted."""
+        return self.hass.data[TUYA_HA_COVER_STATUS_INVERTED].get(
+            self.unique_id, False
+        )
+
+    def _apply_position_inversion(self, position: int | None) -> int | None:
+        """Invert a cover position when configured."""
+        if position is None or not self._is_status_inverted:
+            return position
+        return 100 - position
+
+    def _apply_action_inversion(self, action: TuyaCoverAction) -> TuyaCoverAction:
+        """Invert open and close actions when configured."""
+        if not self._is_status_inverted:
+            return action
+        if action is TuyaCoverAction.OPEN:
+            return TuyaCoverAction.CLOSE
+        if action is TuyaCoverAction.CLOSE:
+            return TuyaCoverAction.OPEN
+        return action
+
     @property
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
-        return self._read_wrapper(self._current_position)
+        return self._apply_position_inversion(
+            self._read_wrapper(self._current_position)
+        )
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -284,13 +332,19 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if (position := self.current_cover_position) is not None:
             return position == 0
 
-        return self._read_wrapper(self._current_state_wrapper)
+        if (is_closed := self._read_wrapper(self._current_state_wrapper)) is None:
+            return None
+        if self._is_status_inverted:
+            return not is_closed
+        return is_closed
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._set_position is not None:
             await self._async_send_commands(
-                self._set_position.get_update_commands(self.device, 100)
+                self._set_position.get_update_commands(
+                    self.device, self._apply_position_inversion(100)
+                )
             )
             return
 
@@ -299,14 +353,17 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             and TuyaCoverAction.OPEN in self._instruction_wrapper.options
         ):
             await self._async_send_wrapper_updates(
-                self._instruction_wrapper, TuyaCoverAction.OPEN
+                self._instruction_wrapper,
+                self._apply_action_inversion(TuyaCoverAction.OPEN),
             )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if self._set_position is not None:
             await self._async_send_commands(
-                self._set_position.get_update_commands(self.device, 0)
+                self._set_position.get_update_commands(
+                    self.device, self._apply_position_inversion(0)
+                )
             )
             return
 
@@ -315,13 +372,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             and TuyaCoverAction.CLOSE in self._instruction_wrapper.options
         ):
             await self._async_send_wrapper_updates(
-                self._instruction_wrapper, TuyaCoverAction.CLOSE
+                self._instruction_wrapper,
+                self._apply_action_inversion(TuyaCoverAction.CLOSE),
             )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_send_wrapper_updates(
-            self._set_position, kwargs[ATTR_POSITION]
+            self._set_position, self._apply_position_inversion(kwargs[ATTR_POSITION])
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:

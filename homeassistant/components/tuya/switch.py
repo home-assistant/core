@@ -13,13 +13,23 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, STATE_ON
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import (
+    DOMAIN,
+    TUYA_DISCOVERY_NEW,
+    TUYA_HA_COVER_STATUS_INVERTED,
+    TUYA_HA_SIGNAL_COVER_STATUS_INVERTED,
+    DeviceCategory,
+    DPCode,
+)
+from .cover import COVERS, TuyaCoverEntityDescription
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Boolean data types in the
@@ -905,6 +915,18 @@ SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
 SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
 
+def _cover_unique_id(
+    device: CustomerDevice, description: TuyaCoverEntityDescription
+) -> str:
+    """Return the corresponding cover entity unique ID."""
+    return f"tuya.{device.id}{description.key}"
+
+
+def _cover_status_inverted_signal(unique_id: str) -> str:
+    """Return the signal name for cover status inversion updates."""
+    return TUYA_HA_SIGNAL_COVER_STATUS_INVERTED.format(unique_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -912,11 +934,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
     manager = entry.runtime_data.manager
+    hass.data.setdefault(TUYA_HA_COVER_STATUS_INVERTED, {})
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya sensor."""
-        entities: list[TuyaSwitchEntity] = []
+        entities: list[SwitchEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
@@ -929,6 +952,15 @@ async def async_setup_entry(
                         )
                     )
                 )
+            if descriptions := COVERS.get(device.category):
+                entities.extend(
+                    TuyaCoverStatusInvertedSwitch(device, description)
+                    for description in descriptions
+                    if (
+                        description.key in device.function
+                        or description.key in device.status_range
+                    )
+                )
 
         async_add_entities(entities)
 
@@ -937,6 +969,68 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
+
+
+class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
+    """Local config switch to invert Tuya cover status semantics."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_has_entity_name = True
+    _attr_translation_key = "invert_status"
+
+    def __init__(
+        self, device: CustomerDevice, description: TuyaCoverEntityDescription
+    ) -> None:
+        """Initialize the cover status inversion switch."""
+        self.device = device
+        self._cover_unique_id = _cover_unique_id(device, description)
+        self._attr_unique_id = f"{self._cover_unique_id}_invert_status"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.id)},
+            manufacturer="Tuya",
+            name=self.device.name,
+            model=self.device.product_name,
+            model_id=self.device.product_id,
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether status inversion is enabled."""
+        return self.hass.data[TUYA_HA_COVER_STATUS_INVERTED].get(
+            self._cover_unique_id, False
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last saved state."""
+        await super().async_added_to_hass()
+        self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = False
+        if last_state := await self.async_get_last_state():
+            self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = (
+                last_state.state == STATE_ON
+            )
+        dispatcher_send(
+            self.hass, _cover_status_inverted_signal(self._cover_unique_id)
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable cover status inversion."""
+        self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = True
+        self.async_write_ha_state()
+        dispatcher_send(
+            self.hass, _cover_status_inverted_signal(self._cover_unique_id)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable cover status inversion."""
+        self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = False
+        self.async_write_ha_state()
+        dispatcher_send(
+            self.hass, _cover_status_inverted_signal(self._cover_unique_id)
+        )
 
 
 class TuyaSwitchEntity(TuyaEntity, SwitchEntity):

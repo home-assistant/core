@@ -1026,6 +1026,9 @@
       "reverse": {
         "name": "Reverse"
       },
+      "invert_status": {
+        "name": "Invert status"
+      },
       "siren": {
         "name": "Siren"
       },
