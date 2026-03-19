@@ -154,6 +154,9 @@
       }
     },
     "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
       "primary": {
         "name": "[%key:component::climate::title%]",
         "state_attributes": {
@@ -642,6 +645,9 @@
     },
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
+    },
+    "invalid_cop_temp": {
+      "message": "Cabin overheat protection does not support that temperature"
     },
     "invalid_energy_history_data": {
       "message": "Invalid energy history data."
