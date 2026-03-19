@@ -1105,6 +1105,12 @@ class RxModule:
                     req.icp = ICP(handle=0, result=ErrorCode.ERR_CANCELED)
                     req.signal()
 
+            while self._tx_req_sent_size > 0:
+                req = self._dequeue_sent()
+                if req and not req.cancel:
+                    req.icp = ICP(handle=0, result=ErrorCode.ERR_CANCELED)
+                    req.signal()
+
             cancel_irp = IRP(function=FunctionCode.CANCEL_ALL_IO, params=b"")
             self._write_to_buffer(cancel_irp, "CANCEL_ALL_IO")
 
@@ -1157,7 +1163,7 @@ class RxModule:
     def ping(self, duration: int = 5) -> int:
         """Ping the module."""
         irp = IRP(function=FunctionCode.PING_RCV, params=b"")
-        req = self._create_request(irp, 1, 1, "PING_RCV")
+        req = self._create_request(irp, 1, 3, "PING_RCV")
 
         self._place_request(req)
         if not req.wait(duration):
