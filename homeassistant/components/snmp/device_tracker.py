@@ -5,10 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
+)
 from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,6 +50,17 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     tracked_macs: set[str] = set()
 
+    # Remove legacy states that conflict with our registered entities.
+    # The old known_devices.yaml system creates states outside the entity
+    # registry that block our modern entities from loading.
+    ent_reg = er.async_get(hass)
+    for reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        if hass.states.get(reg_entry.entity_id):
+            _LOGGER.debug(
+                "Removing legacy state %s to avoid conflicts", reg_entry.entity_id
+            )
+            hass.states.async_remove(reg_entry.entity_id)
+
     @callback
     def _handle_coordinator_update() -> None:
         """Handle updated data from the coordinator."""
@@ -53,6 +68,13 @@ async def async_setup_entry(
         if coordinator.data:
             for mac in coordinator.data:
                 if mac not in tracked_macs:
+                    # Remove legacy states (from known_devices.yaml) that would
+                    # block our entity from claiming this entity_id.
+                    entity_slug = mac.replace(":", "_").lower()
+                    legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{entity_slug}"
+                    if not ent_reg.async_get(legacy_id) and hass.states.get(legacy_id):
+                        hass.states.async_remove(legacy_id)
+
                     tracked_macs.add(mac)
                     new_entities.append(SnmpTrackerEntity(coordinator, entry, mac))
         if new_entities:
@@ -91,7 +113,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
     @property
     def name(self) -> str:
         """Return the name of the device (MAC address with underscores)."""
-        # Format MAC address as entity name: 00:11:22:33:44:55 -> 00_11_22_33_44_55
         assert self._attr_mac_address is not None
         return self._attr_mac_address.replace(":", "_")
 
@@ -106,14 +127,9 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the extra state attributes of the device.
-
-        Include the location information from Home Assistant configuration
-        to maintain compatibility with the old integration.
-        """
+        """Return the extra state attributes of the device."""
         attributes: dict[str, Any] = {}
 
-        # Add home location from Home Assistant configuration
         latitude = getattr(self.hass.config, "latitude", None)
         longitude = getattr(self.hass.config, "longitude", None)
         if latitude is not None:
@@ -121,7 +137,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         if longitude is not None:
             attributes["longitude"] = longitude
 
-        # GPS accuracy is always 0 for router-based detection
         attributes["gps_accuracy"] = 0
 
         return attributes
