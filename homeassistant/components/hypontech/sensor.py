@@ -136,7 +136,7 @@ class HypontechOverviewSensor(HypontechEntity, SensorEntity):
         """Return the unit of measurement."""
         if self.entity_description.unit_fn is not None:
             return self.entity_description.unit_fn(self.coordinator.data.overview)
-        return self.entity_description.native_unit_of_measurement
+        return super().native_unit_of_measurement
 
     @property
     def native_value(self) -> float | None:
@@ -165,7 +165,7 @@ class HypontechPlantSensor(HypontechPlantEntity, SensorEntity):
         """Return the unit of measurement."""
         if self.entity_description.unit_fn is not None:
             return self.entity_description.unit_fn(self.plant)
-        return self.entity_description.native_unit_of_measurement
+        return super().native_unit_of_measurement
 
     @property
     def native_value(self) -> float | None:
