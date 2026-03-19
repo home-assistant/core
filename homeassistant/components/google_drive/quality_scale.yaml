@@ -65,9 +65,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: No configuration options.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairs.
