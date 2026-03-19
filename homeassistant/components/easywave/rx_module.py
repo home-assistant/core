@@ -763,23 +763,24 @@ class RxModule:
 
         while not self._shutdown_requested:
             try:
+                now = time.time()
                 # Health check periodically
-                if time.time() - last_health_check > self._health_check_interval:
+                if now - last_health_check > self._health_check_interval:
                     self._check_connection_health()
-                    last_health_check = time.time()
+                    last_health_check = now
 
-                if not self._is_serial_port_valid():
-                    if not self._shutdown_requested:
-                        _LOGGER.error(
-                            "Serial port invalid - USB device may have been removed"
-                        )
-                        with self._protocol_lock:
-                            self._state_good = False
-                            self._connection_healthy = False
-                            self._hardware_error = True
-                            self._connected = False
-                        self._notify_disconnect()
-                    break
+                    if not self._is_serial_port_valid():
+                        if not self._shutdown_requested:
+                            _LOGGER.error(
+                                "Serial port invalid - USB device may have been removed"
+                            )
+                            with self._protocol_lock:
+                                self._state_good = False
+                                self._connection_healthy = False
+                                self._hardware_error = True
+                                self._connected = False
+                            self._notify_disconnect()
+                        break
 
                 # Read available bytes
                 try:
