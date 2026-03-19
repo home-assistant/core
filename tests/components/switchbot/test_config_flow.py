@@ -757,6 +757,53 @@ async def test_user_setup_woencrypted_auth_switchbot_api_down(
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
+async def test_user_setup_woencrypted_auth_unknown_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test the encrypted auth step shows unknown error for unexpected exceptions."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WOLOCK_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
+        )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_auth"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_auth"
+
+    with patch(
+        "switchbot.SwitchbotLock.async_retrieve_encryption_key",
+        side_effect=Exception("Unexpected network failure"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "user@example.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_auth"
+    assert result["errors"] == {"base": "unknown"}
+
+
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
@@ -983,6 +1030,38 @@ async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
     assert result["description_placeholders"] == {"error_detail": "API is down"}
+
+
+@pytest.mark.usefixtures("mock_scanners_all_passive")
+async def test_user_cloud_login_unknown_error(hass: HomeAssistant) -> None:
+    """Test the cloud login step shows unknown error for unexpected exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "cloud_login"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_login"
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+        side_effect=Exception("Unexpected network failure"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_login"
+    assert result["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
