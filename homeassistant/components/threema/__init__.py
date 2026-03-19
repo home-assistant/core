@@ -51,9 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThreemaConfigEntry) -> b
 async def _async_update_listener(
     hass: HomeAssistant, entry: ThreemaConfigEntry
 ) -> None:
-    """Reload platforms when config entry is updated (e.g. subentry added/removed)."""
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    """Reload entry when config is updated (e.g. subentry added/removed)."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThreemaConfigEntry) -> bool:

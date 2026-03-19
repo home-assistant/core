@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .client import (
@@ -43,6 +44,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 2
 
     @classmethod
+    @callback
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -260,9 +262,7 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                         return self.async_abort(reason="already_configured")
 
                 raw_name = user_input.get("name", "").strip()
-                name = (
-                    f"{raw_name} ({recipient_id})" if raw_name else recipient_id
-                )
+                name = f"{raw_name} ({recipient_id})" if raw_name else recipient_id
 
                 return self.async_create_entry(
                     title=name,
