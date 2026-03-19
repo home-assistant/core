@@ -605,8 +605,17 @@
     "invalid_segment_id": {
       "message": "'Segment ID' must be between 1 and 9, got {segment_id}."
     },
-    "invalid_time_format": {
-      "message": "{field_name} must be in HH:MM or HH:MM:SS format."
+    "invalid_time_format_end_time": {
+      "message": "'End time' must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_period_end": {
+      "message": "Period {period} end time must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_period_start": {
+      "message": "Period {period} start time must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_start_time": {
+      "message": "'Start time' must be in HH:MM or HH:MM:SS format."
     },
     "no_devices_configured": {
       "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
