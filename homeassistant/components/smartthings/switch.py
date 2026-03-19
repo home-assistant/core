@@ -101,6 +101,15 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         command=Command.SET_STEAM_CLOSET_AUTO_CYCLE_LINK,
         entity_category=EntityCategory.CONFIG,
     ),
+    Capability.SAMSUNG_CE_MICROFIBER_FILTER_SETTINGS: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_MICROFIBER_FILTER_SETTINGS,
+        translation_key="bypass_mode",
+        status_attribute=Attribute.BYPASS_MODE,
+        entity_category=EntityCategory.CONFIG,
+        on_key="enabled",
+        off_key="disabled",
+        command=Command.SET_BYPASS_MODE,
+    ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
     Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP: SmartThingsSwitchEntityDescription(

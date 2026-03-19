@@ -950,6 +950,9 @@
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "bypass_mode": {
+        "name": "Bypass mode"
+      },
       "display_lighting": {
         "name": "Display lighting"
       },
