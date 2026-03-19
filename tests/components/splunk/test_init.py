@@ -47,13 +47,13 @@ async def test_setup_entry_success(
         (
             ClientConnectionError("Connection failed"),
             ConfigEntryState.SETUP_RETRY,
-            "connection_error",
+            "cannot_connect",
         ),
         (TimeoutError(), ConfigEntryState.SETUP_RETRY, "timeout_connect"),
         (
             Exception("Unexpected error"),
             ConfigEntryState.SETUP_RETRY,
-            "unexpected_error",
+            "unexpected_connect_error",
         ),
         ([True, False], ConfigEntryState.SETUP_ERROR, "invalid_auth"),
     ],
