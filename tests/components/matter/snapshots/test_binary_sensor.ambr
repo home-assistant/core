@@ -1625,8 +1625,9 @@
 # ---
 # name: test_binary_sensors[mock_occupancy_sensor_pir][binary_sensor.mock_pir_occupancy_sensor_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

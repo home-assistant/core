@@ -3149,8 +3149,9 @@
 # ---
 # name: test_buttons[mock_occupancy_sensor_pir][button.mock_pir_occupancy_sensor_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
