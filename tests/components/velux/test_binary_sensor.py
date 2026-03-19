@@ -43,35 +43,35 @@ async def test_rain_sensor_state(
     assert state.state == STATE_OFF
 
     # simulate rain detected (Velux GPU reports 100)
-    mock_window.get_limitation.return_value.min_value = 100
+    mock_window.get_limitation_min.return_value.position_percent = 100
     await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == STATE_ON
 
     # simulate rain detected (most Velux models report 93)
-    mock_window.get_limitation.return_value.min_value = 93
+    mock_window.get_limitation_min.return_value.position_percent = 93
     await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == STATE_ON
 
     # simulate rain detected (other Velux models report 89)
-    mock_window.get_limitation.return_value.min_value = 89
+    mock_window.get_limitation_min.return_value.position_percent = 89
     await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == STATE_ON
 
     # simulate other limits which do not indicate rain detected
-    mock_window.get_limitation.return_value.min_value = 88
+    mock_window.get_limitation_min.return_value.position_percent = 88
     await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == STATE_OFF
 
     # simulate no rain detected again
-    mock_window.get_limitation.return_value.min_value = 0
+    mock_window.get_limitation_min.return_value.position_percent = 0
     await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
@@ -133,7 +133,7 @@ async def test_rain_sensor_unavailability(
     assert state.state != STATE_UNAVAILABLE
 
     # Simulate communication error
-    mock_window.get_limitation.side_effect = PyVLXException("Connection failed")
+    mock_window.get_limitation_min.side_effect = PyVLXException("Connection failed")
     await update_polled_entities(hass, freezer)
 
     # Entity should now be unavailable
@@ -157,8 +157,8 @@ async def test_rain_sensor_unavailability(
     caplog.clear()
 
     # Simulate recovery
-    mock_window.get_limitation.side_effect = None
-    mock_window.get_limitation.return_value.min_value = 0
+    mock_window.get_limitation_min.side_effect = None
+    mock_window.get_limitation_min.return_value.position_percent = 0
     await update_polled_entities(hass, freezer)
 
     # Entity should be available again
