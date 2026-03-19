@@ -29,9 +29,12 @@ Silver. See `quality_scale.yaml` for full status.
 
 ## Roadmap
 
+### Path to Gold (quality scale blockers)
+- **Diagnostics platform** — expose gateway info, credits, configured recipients
+- **Reconfiguration flow** — edit recipient name/Threema ID after creation (subentry reconfigure step). Currently: delete and re-add.
+
+### Future features
 - QR code image entity for gateway identity verification (follow-up PR, branch `feature/threema-qr`)
 - Incoming messages via Gateway callback webhooks
 - Image/file support (requires new platform or service — `NotifyEntity` only supports text + title)
 - Remaining credits sensor
-- Diagnostics platform
-- Reconfiguration flow

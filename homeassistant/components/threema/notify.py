@@ -33,7 +33,6 @@ async def async_setup_entry(
 class ThreemaNotifyEntity(NotifyEntity):
     """Notify entity for sending messages to a Threema recipient."""
 
-    _attr_has_entity_name = True
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     def __init__(

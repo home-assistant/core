@@ -79,9 +79,11 @@
       "step": {
         "user": {
           "data": {
+            "name": "Display name",
             "recipient": "Threema ID"
           },
           "data_description": {
+            "name": "Optional friendly name for this recipient (e.g. 'Dad').",
             "recipient": "The 8-character Threema ID of the recipient."
           },
           "description": "Enter the Threema ID of the person you want to send messages to.",

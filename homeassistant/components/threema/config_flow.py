@@ -259,8 +259,13 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                     if subentry.data.get(CONF_RECIPIENT) == recipient_id:
                         return self.async_abort(reason="already_configured")
 
+                raw_name = user_input.get("name", "").strip()
+                name = (
+                    f"{raw_name} ({recipient_id})" if raw_name else recipient_id
+                )
+
                 return self.async_create_entry(
-                    title=recipient_id,
+                    title=name,
                     data={CONF_RECIPIENT: recipient_id},
                     unique_id=recipient_id,
                 )
@@ -270,6 +275,7 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_RECIPIENT): str,
+                    vol.Optional("name"): str,
                 }
             ),
             errors=errors,
