@@ -227,6 +227,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Clear saved credentials if auth failed
                 self._cloud_username = None
                 self._cloud_password = None
+            except Exception:
+                _LOGGER.exception("Unexpected error retrieving encryption key")
+                errors = {"base": "unknown"}
             else:
                 return await self.async_step_encrypted_key(key_details)
 
@@ -366,6 +369,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}
                 description_placeholders = {"error_detail": str(ex)}
+            except Exception:
+                _LOGGER.exception("Unexpected error during cloud login")
+                errors = {"base": "unknown"}
             else:
                 # Save credentials temporarily for the duration of this flow
                 # to avoid re-prompting if encrypted device auth is needed
