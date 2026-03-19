@@ -19,6 +19,7 @@ from PyViCare.PyViCareAbstractOAuthManager import (
     TOKEN_URL,
 )
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareOAuthManager import REDIRECT_URI
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
@@ -52,6 +53,7 @@ from .const import (
     PLATFORMS,
     UNSUPPORTED_DEVICES,
     VICARE_TOKEN_FILENAME,
+    VIESSMANN_DEVELOPER_PORTAL,
 )
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device_serial, login
@@ -127,6 +129,9 @@ async def async_migrate_entry(
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="update_redirect_uri",
+            translation_placeholders={
+                "viessmann_developer_portal": VIESSMANN_DEVELOPER_PORTAL,
+            },
         )
 
     return True
@@ -200,7 +205,7 @@ def _obtain_token_via_password_grant(
     during migration, so users don't need to re-authenticate.
     """
     scope = [SCOPE_IOT, SCOPE_OFFLINE_ACCESS]
-    redirect_uri = "vicare://oauth-callback/everest"
+    redirect_uri = REDIRECT_URI
     oauth = OAuth2Session(
         client_id,
         redirect_uri=redirect_uri,
