@@ -37,17 +37,17 @@ async def test_async_step_bluetooth_valid_device(
         context={"source": SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
 
     # test valid access token
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
     )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == VICTRON_VEBUS_SERVICE_INFO.name
-    flow_result = result.get("result")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == VICTRON_VEBUS_SERVICE_INFO.name
+    flow_result = result["result"]
     assert flow_result is not None
     assert flow_result.unique_id == VICTRON_VEBUS_SERVICE_INFO.address
     assert flow_result.data == {
@@ -65,25 +65,25 @@ async def test_async_step_bluetooth_invalid_key_retry(
         context={"source": SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
 
     # enter wrong key
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
-    assert result.get("errors") == {"base": "invalid_access_token"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
+    assert result["errors"] == {"base": "invalid_access_token"}
 
     # retry with correct key
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
     )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == VICTRON_VEBUS_SERVICE_INFO.name
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == VICTRON_VEBUS_SERVICE_INFO.name
 
 
 @pytest.mark.parametrize(
@@ -119,8 +119,8 @@ async def test_abort_scenarios(
         context={"source": source},
         data=service_info,
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == expected_reason
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
 async def test_async_step_user_with_devices_found(
@@ -133,31 +133,31 @@ async def test_async_step_user_with_devices_found(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ADDRESS: VICTRON_VEBUS_SERVICE_INFO.address},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
 
     # test invalid access token shows error and allows retry
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN}
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
-    assert result.get("errors") == {"base": "invalid_access_token"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
+    assert result["errors"] == {"base": "invalid_access_token"}
 
     # test retry with valid access token succeeds
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
     )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == VICTRON_VEBUS_SERVICE_INFO.name
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == VICTRON_VEBUS_SERVICE_INFO.name
 
 
 async def test_async_step_user_device_added_between_steps(
@@ -170,8 +170,8 @@ async def test_async_step_user_device_added_between_steps(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     mock_config_entry.add_to_hass(hass)
 
@@ -179,8 +179,8 @@ async def test_async_step_user_device_added_between_steps(
         result["flow_id"],
         user_input={"address": VICTRON_VEBUS_SERVICE_INFO.address},
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_async_step_user_with_found_devices_already_setup(
@@ -193,8 +193,8 @@ async def test_async_step_user_with_found_devices_already_setup(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "no_devices_found"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_async_step_bluetooth_devices_already_setup(
@@ -207,8 +207,8 @@ async def test_async_step_bluetooth_devices_already_setup(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> None:
@@ -218,16 +218,16 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "access_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "access_token"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VICTRON_VEBUS_SERVICE_INFO,
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_in_progress"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
 
 
 async def test_async_step_reauth_valid_key(
