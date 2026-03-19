@@ -1248,6 +1248,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    DeviceCategory.WG2: (*BATTERY_SENSORS,),
     DeviceCategory.WK: (*BATTERY_SENSORS,),
     DeviceCategory.WKCZ: (
         TuyaSensorEntityDescription(
