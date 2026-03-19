@@ -26,7 +26,7 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     ZigbeeFlowStrategy,
 )
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
-from homeassistant.components.usb import USBDevice, scan_serial_ports
+from homeassistant.components.usb import SerialDevice, USBDevice, scan_serial_ports
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_ZEROCONF,
@@ -134,9 +134,9 @@ def _format_backup_choice(
     return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
-async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
+async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice | SerialDevice]:
     """List all serial ports, including the Yellow radio and the multi-PAN addon."""
-    ports: list[USBDevice] = []
+    ports: list[USBDevice | SerialDevice] = []
     ports.extend(await hass.async_add_executor_job(scan_serial_ports))
 
     # Add useful info to the Yellow's serial port selection screen
@@ -147,10 +147,8 @@ async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
     else:
         # PySerial does not properly handle the Yellow's serial port with the CM5
         # so we manually include it
-        port = USBDevice(
+        port = SerialDevice(
             device="/dev/ttyAMA1",
-            vid="ffff",  # This is technically not a USB device
-            pid="ffff",
             serial_number=None,
             manufacturer="Nabu Casa",
             description="Yellow Zigbee module",
@@ -171,10 +169,8 @@ async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
             addon_info = None
 
         if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
-            addon_port = USBDevice(
+            addon_port = SerialDevice(
                 device=silabs_multiprotocol_addon.get_zigbee_socket(),
-                vid="ffff",  # This is technically not a USB device
-                pid="ffff",
                 serial_number=None,
                 manufacturer="Nabu Casa",
                 description="Silicon Labs Multiprotocol add-on",

@@ -32,7 +32,10 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .models import USBDevice
+from .models import (
+    SerialDevice,  # noqa: F401
+    USBDevice,
+)
 from .utils import (
     scan_serial_ports,
     usb_device_from_path,  # noqa: F401
