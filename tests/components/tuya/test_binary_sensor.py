@@ -117,9 +117,7 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == "off"
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == "off"
 
-    await mock_listener.async_send_device_update(
-        hass, mock_device, {"fault": fault_value}
-    )
+    await mock_listener.async_send_device_update(mock_device, {"fault": fault_value})
 
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost
