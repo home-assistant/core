@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -67,8 +67,19 @@ async def async_setup_entry(
 
     # 3. Add entities for all known MACs immediately
     if initial_macs:
+        # Ensure devices exist for all tracked MACs to establish the via_device connection
+        dev_reg = dr.async_get(hass)
+        for mac in initial_macs:
+            dev_reg.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, mac)},
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                name=mac,
+                via_device=(DOMAIN, entry.entry_id),
+            )
+
         async_add_entities(
-            [SnmpTrackerEntity(coordinator, entry, mac) for mac in initial_macs]
+            SnmpTrackerEntity(coordinator, entry, mac) for mac in initial_macs
         )
 
     tracked_macs = set(initial_macs)
@@ -85,6 +96,16 @@ async def async_setup_entry(
                     legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{entity_slug}"
                     if not ent_reg.async_get(legacy_id) and hass.states.get(legacy_id):
                         hass.states.async_remove(legacy_id)
+
+                    # Ensure device exists for the new MAC
+                    dev_reg = dr.async_get(hass)
+                    dev_reg.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        identifiers={(DOMAIN, mac)},
+                        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                        name=mac,
+                        via_device=(DOMAIN, entry.entry_id),
+                    )
 
                     tracked_macs.add(mac)
                     new_entities.append(SnmpTrackerEntity(coordinator, entry, mac))

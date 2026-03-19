@@ -35,7 +35,31 @@ def mock_walk():
         yield mock
 
 
-async def test_device_tracker_setup(hass: HomeAssistant, mock_walk) -> None:
+@pytest.fixture
+def mock_get_cmd():
+    """Mock get_cmd for host info."""
+
+    async def side_effect(*args, **kwargs):
+        return (
+            None,
+            None,
+            None,
+            [
+                ("oid_descr", OctetString("TestManufacturer TestModel")),
+                ("oid_name", OctetString("TestSysName")),
+            ],
+        )
+
+    with patch(
+        "homeassistant.components.snmp.coordinator.get_cmd",
+        side_effect=side_effect,
+    ) as mock:
+        yield mock
+
+
+async def test_device_tracker_setup(
+    hass: HomeAssistant, mock_walk, mock_get_cmd
+) -> None:
     """Test setup of SNMP device tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -74,8 +98,23 @@ async def test_device_tracker_setup(hass: HomeAssistant, mock_walk) -> None:
     assert state.attributes["mac"] == "00:11:22:33:44:55"
     assert state.attributes["ip"] == "192.168.1.1"
 
+    # Verify Device Registry
+    # Host device
+    host_device = dr_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert host_device is not None
+    assert host_device.manufacturer == "TestManufacturer"
+    assert host_device.model == "TestModel"
+    assert host_device.name == "TestSysName"
 
-async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
+    # Client device
+    client_device = dr_reg.async_get_device(identifiers={(DOMAIN, "00:11:22:33:44:55")})
+    assert client_device is not None
+    assert client_device.via_device_id == host_device.id
+
+
+async def test_device_tracker_update(
+    hass: HomeAssistant, mock_walk, mock_get_cmd
+) -> None:
     """Test update of SNMP device tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,

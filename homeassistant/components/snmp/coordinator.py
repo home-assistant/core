@@ -5,7 +5,13 @@ from __future__ import annotations
 import binascii
 import logging
 
-from pysnmp.hlapi.v3arch.asyncio import bulk_walk_cmd, is_end_of_mib
+from pysnmp.hlapi.v3arch.asyncio import (
+    ObjectIdentity,
+    ObjectType,
+    bulk_walk_cmd,
+    get_cmd,
+    is_end_of_mib,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,9 +41,42 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=SCAN_INTERVAL,
         )
         self.request_args = request_args
+        self.manufacturer: str | None = None
+        self.model: str | None = None
+        self.sw_version: str | None = None
+        self.sys_name: str | None = None
+
+    async def _async_fetch_host_info(self) -> None:
+        """Fetch host-specific info for the device registry."""
+        engine, auth_data, target, context_data, _ = self.request_args
+
+        # OID sysDescr.0 (1.3.6.1.2.1.1.1.0) and sysName.0 (1.3.6.1.2.1.1.5.0)
+        get_result = await get_cmd(
+            engine,
+            auth_data,
+            target,
+            context_data,
+            ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
+            ObjectType(ObjectIdentity("1.3.6.1.2.1.1.5.0")),
+        )
+        errindication, errstatus, _, restable = get_result
+
+        if not errindication and not errstatus and len(restable) >= 2:
+            descr = str(restable[0][1])
+            self.sys_name = str(restable[1][1])
+
+            # Try to extract manufacturer/model from sysDescr
+            self.sw_version = descr
+            if " " in descr:
+                self.manufacturer, self.model = descr.split(" ", 1)
+            else:
+                self.model = descr
 
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch the current list of MAC addresses via an SNMP Walk."""
+        if self.model is None:
+            await self._async_fetch_host_info()
+
         devices: dict[str, str] = {}
         engine, auth_data, target, context_data, object_type = self.request_args
 
