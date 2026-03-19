@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[light.ab1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -80,8 +81,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.ab6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -143,8 +145,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.arbeitszimmer_led-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -217,8 +220,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.b2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -280,8 +284,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -339,8 +344,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.blissradia-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -401,8 +407,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.cam_garage_indicator_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -459,8 +466,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.cam_porch_indicator_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -517,8 +525,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.cat_feeder_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -575,8 +584,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.ceiling_fan_light_v2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -652,8 +662,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.ceiling_fan_with_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -729,8 +740,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.ceiling_portal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -798,8 +810,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.cleverio_pf100_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -856,8 +869,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.colorful_pir_night_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -925,8 +939,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.directietkamer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -992,8 +1007,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.dressoir_spot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1059,8 +1075,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.druckerhell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1138,8 +1155,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.entry_stairs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -1195,8 +1213,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.erker_1_gold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1272,8 +1291,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.fakkel_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1351,8 +1371,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.floodlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -1415,8 +1436,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.front_right_lighting_trap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1484,8 +1506,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.garage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1553,8 +1576,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.garage_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -1617,8 +1641,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.garage_light_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -1675,8 +1700,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.gengske-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1744,8 +1770,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.hall-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1811,8 +1838,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.ieskas-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1888,8 +1916,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.jardim_casa-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -1951,8 +1980,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.kattenbak_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -2009,8 +2039,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.l_impara_ati-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2078,8 +2109,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.landing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2147,8 +2179,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.led_keuken_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2226,8 +2259,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.led_porch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2289,8 +2323,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.lsc_party_string_light_rgbic_cct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2352,8 +2387,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.lumy_garage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2421,8 +2457,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.lumy_hall-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2488,8 +2525,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.master_bedroom_tv_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2567,8 +2605,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.mini_split_backlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -2625,8 +2664,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.parker_ceiling_fan_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2688,8 +2728,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.pergola_backlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -2746,8 +2787,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.plafond_bureau-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2825,8 +2867,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.pokerlamp_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2886,8 +2929,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.pokerlamp_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -2947,8 +2991,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.porch_light_e-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -3011,8 +3056,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.portal_casa_carro_jalimy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3074,8 +3120,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.powerasia_r2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3141,8 +3188,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.roller_shutter_living_room_backlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -3199,8 +3247,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.shop_light_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3266,8 +3315,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.sjiethoes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3327,8 +3377,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.slaapkamer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3394,8 +3445,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.smart_bulb_rgbcw-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3463,8 +3515,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.smart_white_noise_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -3535,8 +3588,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.solar_zijpad-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -3592,8 +3646,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.stairs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -3656,8 +3711,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.stoel-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3717,8 +3773,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.strip_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3780,8 +3837,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.study_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3849,8 +3907,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.tapparelle_studio_backlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -3907,8 +3966,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.telecommande_lumieres_zigbee-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -3974,8 +4034,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.tower_fan_ca_407g_smart_backlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -4032,8 +4093,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.wc_d1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
@@ -4093,8 +4155,9 @@
 # ---
 # name: test_platform_setup_and_discovery[light.white_noise_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select_entities[select.12345_freeze_protection_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
