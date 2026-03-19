@@ -24522,9 +24522,6 @@
     'name': None,
     'object_id_base': 'pH',
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': '',
-      }),
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
