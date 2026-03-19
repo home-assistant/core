@@ -15,13 +15,16 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.components.tuya.const import cover_unique_id
+from homeassistant.components.tuya.cover import COVERS
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from . import MockDeviceListener, check_selective_state_update, initialize_entry
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry
 
 
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
@@ -36,7 +39,38 @@ async def test_platform_setup_and_discovery(
     """Test platform setup and discovery."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    invert_entries = [
+        entity_entry
+        for entity_entry in entity_entries
+        if entity_entry.unique_id.endswith("_invert_status")
+    ]
+
+    expected_invert_unique_ids = {
+        f"{cover_unique_id(device.id, description.key)}_invert_status"
+        for device in mock_devices
+        if (descriptions := COVERS.get(device.category))
+        for description in descriptions
+        if description.key in device.function or description.key in device.status_range
+    }
+    assert {entry.unique_id for entry in invert_entries} == expected_invert_unique_ids
+
+    for entity_entry in invert_entries:
+        assert entity_entry.entity_category is EntityCategory.CONFIG
+        state = hass.states.get(entity_entry.entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+    for entity_entry in entity_entries:
+        if entity_entry in invert_entries:
+            continue
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 @pytest.mark.parametrize(

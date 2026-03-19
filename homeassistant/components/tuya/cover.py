@@ -40,6 +40,7 @@ from .const import (
     DeviceCategory,
     DPCode,
     cover_status_inverted_signal,
+    cover_unique_id,
 )
 from .entity import TuyaEntity
 
@@ -249,7 +250,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Init Tuya Cover."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._cover_unique_id = cover_unique_id(device.id, description.key)
+        self._attr_unique_id = self._cover_unique_id
         self._attr_supported_features = CoverEntityFeature(0)
 
         self._current_position = current_position or set_position
@@ -274,11 +276,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        assert self.unique_id is not None
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                cover_status_inverted_signal(self.unique_id),
+                cover_status_inverted_signal(self._cover_unique_id),
                 self.async_write_ha_state,
             )
         )
@@ -286,7 +287,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     @property
     def _is_status_inverted(self) -> bool:
         """Return whether the cover status is locally inverted."""
-        return self.hass.data[TUYA_HA_COVER_STATUS_INVERTED].get(self.unique_id, False)
+        return self.hass.data[TUYA_HA_COVER_STATUS_INVERTED].get(
+            self._cover_unique_id, False
+        )
 
     def _apply_position_inversion(self, position: int | None) -> int | None:
         """Invert a cover position when configured."""

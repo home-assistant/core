@@ -362,12 +362,17 @@ async def test_cover_status_inversion_flips_state_and_position(
 
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    cover_entity_id = "cover.kitchen_blinds_curtain"
+    cover_entity_id = entity_registry.async_get_entity_id(
+        COVER_DOMAIN,
+        "tuya",
+        f"tuya.{mock_device.id}control",
+    )
     switch_entity_id = entity_registry.async_get_entity_id(
         SWITCH_DOMAIN,
         "tuya",
         f"tuya.{mock_device.id}control_invert_status",
     )
+    assert cover_entity_id is not None
     assert switch_entity_id is not None
 
     state = hass.states.get(cover_entity_id)
@@ -381,6 +386,7 @@ async def test_cover_status_inversion_flips_state_and_position(
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(cover_entity_id)
     assert state is not None
@@ -456,6 +462,7 @@ async def test_cover_status_inversion_flips_commands(
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     mock_manager.send_commands.reset_mock()
 
     await hass.services.async_call(
