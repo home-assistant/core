@@ -23,7 +23,6 @@
         },
         "description": "Enter the IP address of Solarman device to integrate with Home Assistant.",
         "title": "Configure Solarman Device"
-
       }
     }
   },
@@ -89,8 +88,8 @@
       "total_act_power": {
         "name": "Total actual power"
       },
-      "total_act_ret_power": {
-        "name": "Total actual returned power"
+      "total_act_ret_energy": {
+        "name": "Total actual returned energy"
       },
       "total_act_ret_energy_lt": {
         "name": "Total actual returned energy low tariff"
@@ -98,8 +97,8 @@
       "total_act_ret_energy_nt": {
         "name": "Total actual returned energy normal tariff"
       },
-      "total_act_ret_energy": {
-        "name": "Total actual returned energy"
+      "total_act_ret_power": {
+        "name": "Total actual returned power"
       },
       "total_gas": {
         "name": "Total gas consumption"
