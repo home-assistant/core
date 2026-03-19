@@ -105,7 +105,7 @@ async def test_identify_button_press_success(
     )
 
     # Verify the wink method was called
-    mock_window.wink.assert_called_once()
+    mock_window.wink.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -134,4 +134,4 @@ async def test_identify_button_press_failure(
         )
 
     # Verify the wink method was called
-    mock_window.wink.assert_called_once()
+    mock_window.wink.assert_awaited_once()
