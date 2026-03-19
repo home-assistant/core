@@ -1721,6 +1721,7 @@ async def test_config_entry_attr(hass: HomeAssistant) -> None:
         "title": "mock title",
         "source": config_entries.SOURCE_BLUETOOTH,
         "disabled_by": config_entries.ConfigEntryDisabler.USER,
+        "pref_disable_polling": True,
     }
     config_entry = MockConfigEntry(**info)
     config_entry.add_to_hass(hass)

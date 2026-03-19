@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "cloud_push",
   "loggers": ["pysmarlaapi", "pysignalr"],
-  "quality_scale": "bronze",
-  "requirements": ["pysmarlaapi==0.9.3"]
+  "quality_scale": "silver",
+  "requirements": ["pysmarlaapi==1.0.2"]
 }

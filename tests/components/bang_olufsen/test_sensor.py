@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import mock_websocket_connection
 from .const import (
     TEST_BATTERY,
-    TEST_BATTERY_A5_SENSOR_ENTITY_ID,
+    TEST_BATTERY_SENSOR_ENTITY_ID,
     TEST_REMOTE_BATTERY_LEVEL_SENSOR_ENTITY_ID,
     TEST_REMOTE_SERIAL,
 )
@@ -34,13 +34,13 @@ async def test_battery_level(
     await hass.config_entries.async_setup(mock_config_entry_a5.entry_id)
     # Deliberately avoid triggering a battery notification
 
-    assert (states := hass.states.get(TEST_BATTERY_A5_SENSOR_ENTITY_ID))
+    assert (states := hass.states.get(TEST_BATTERY_SENSOR_ENTITY_ID))
     assert states.state is STATE_UNKNOWN
 
     # Check sensor reacts as expected to WebSocket events
     await mock_websocket_connection(hass, mock_mozart_client)
 
-    assert (states := hass.states.get(TEST_BATTERY_A5_SENSOR_ENTITY_ID))
+    assert (states := hass.states.get(TEST_BATTERY_SENSOR_ENTITY_ID))
     assert states.state == str(TEST_BATTERY.battery_level)
 
 

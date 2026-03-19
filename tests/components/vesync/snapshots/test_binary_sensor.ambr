@@ -359,8 +359,9 @@
 # name: test_sensor_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -378,6 +379,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -392,8 +394,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -411,6 +414,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -490,8 +494,9 @@
 # name: test_sensor_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -509,6 +514,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -523,8 +529,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -542,6 +549,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -621,8 +629,9 @@
 # name: test_sensor_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -640,6 +649,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -654,8 +664,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -673,6 +684,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,

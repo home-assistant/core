@@ -229,19 +229,6 @@ async def test_filter_color_modes_missing_attributes(
     assert expected_log in caplog.text
     assert expected_fallback_log not in caplog.text
 
-    # Test with deprecated `color_temp` attribute
-    stored_attributes["color_temp"] = 250
-    expected = {"brightness": 180, "color_temp_kelvin": 4000}
-    caplog.clear()
-    await async_reproduce_state(
-        hass,
-        [State("light.entity", "on", {**stored_attributes, "color_mode": color_mode})],
-    )
-
-    assert len(turn_on_calls) == 1
-    assert expected_log in caplog.text
-    assert expected_fallback_log in caplog.text
-
     # Test with correct `color_temp_kelvin` attribute
     expected = {"brightness": 180, "color_temp_kelvin": 4200}
     caplog.clear()

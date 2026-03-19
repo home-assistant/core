@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.ssid_1_regenerate_password-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Regenerate Password',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_port_1_power_cycle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 Power Cycle',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,

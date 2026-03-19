@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[number.downstairs_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -59,8 +61,9 @@
 # ---
 # name: test_states[number.front_door_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -83,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,8 +121,9 @@
 # ---
 # name: test_states[number.front_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -175,8 +181,9 @@
 # ---
 # name: test_states[number.ingress_doorbell_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 8,
@@ -199,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,8 +241,9 @@
 # ---
 # name: test_states[number.ingress_mic_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -257,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mic volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -291,8 +301,9 @@
 # ---
 # name: test_states[number.ingress_voice_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -315,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -349,8 +361,9 @@
 # ---
 # name: test_states[number.internal_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -373,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,

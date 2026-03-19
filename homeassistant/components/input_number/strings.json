@@ -35,11 +35,11 @@
   },
   "services": {
     "decrement": {
-      "description": "Decrements the current value by 1 step.",
+      "description": "Decrements the value of an input number by 1 step.",
       "name": "Decrement"
     },
     "increment": {
-      "description": "Increments the current value by 1 step.",
+      "description": "Increments the value of an input number by 1 step.",
       "name": "Increment"
     },
     "reload": {
@@ -47,7 +47,7 @@
       "name": "[%key:common::action::reload%]"
     },
     "set_value": {
-      "description": "Sets the value.",
+      "description": "Sets the value of an input number.",
       "fields": {
         "value": {
           "description": "The target value.",

@@ -15,8 +15,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_christmas_tree_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -34,6 +35,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Christmas tree pickup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -95,8 +97,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_non_recyclable_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,6 +117,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Non-recyclable waste pickup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -175,8 +179,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_organic_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -194,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Organic waste pickup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -255,8 +261,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_packages_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -274,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Packages waste pickup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -335,8 +343,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_paper_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -354,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Paper waste pickup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,

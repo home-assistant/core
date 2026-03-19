@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[number.aqi_alarm_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60.0,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -60,8 +62,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.blissradia_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -84,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,8 +122,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.9,
@@ -142,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -176,8 +182,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.c9_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10.0,
@@ -200,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -234,8 +242,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_feed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 50.0,
@@ -258,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -292,8 +302,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_voice_times-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5.0,
@@ -316,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice times',
     'options': dict({
     }),
     'original_device_class': None,
@@ -350,8 +362,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cbe_pro_2_battery_backup_reserve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -374,6 +387,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery backup reserve',
     'options': dict({
     }),
     'original_device_class': None,
@@ -408,8 +422,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cbe_pro_2_inverter_output_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100000.0,
@@ -432,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter output power limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER: 'power'>,
@@ -467,8 +483,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cleverio_pf100_feed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 20.0,
@@ -491,6 +508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -525,8 +543,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300.0,
@@ -549,6 +568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -583,8 +603,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300.0,
@@ -607,6 +628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -641,8 +663,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.hot_water_heat_pump_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 75.0,
@@ -665,6 +688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -700,8 +724,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -724,6 +749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm maximum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -758,8 +784,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_alarm_minimum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -782,6 +809,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm minimum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -816,8 +844,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_installation_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.5,
@@ -840,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation height',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -875,8 +905,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_maximum_liquid_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.4,
@@ -899,6 +930,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum liquid depth',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -934,8 +966,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_far_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000.0,
@@ -958,6 +991,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Far detection',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -993,8 +1027,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_near_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000.0,
@@ -1017,6 +1052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Near detection',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -1052,8 +1088,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10.0,
@@ -1076,6 +1113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1110,8 +1148,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1134,6 +1173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 1',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1169,8 +1209,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1193,6 +1234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 2',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1228,8 +1270,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1252,6 +1295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 3',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1287,8 +1331,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1311,6 +1356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 4',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1346,8 +1392,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1370,6 +1417,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 5',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1405,8 +1453,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1429,6 +1478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 6',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1464,8 +1514,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1488,6 +1539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 7',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1523,8 +1575,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1547,6 +1600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 8',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1582,8 +1636,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.kabinet_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.0,
@@ -1606,6 +1661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1640,8 +1696,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.kattenbak_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 600.0,
@@ -1664,6 +1721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delay clean time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1699,8 +1757,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -1723,6 +1782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1757,8 +1817,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 999.0,
@@ -1781,6 +1842,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm delay',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1816,8 +1878,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_arm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 999.0,
@@ -1840,6 +1903,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Arm delay',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1875,8 +1939,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_siren_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 999.0,
@@ -1899,6 +1964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1934,8 +2000,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.poopy_nano_2_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 600.0,
@@ -1958,6 +2025,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delay clean time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1993,8 +2061,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2017,6 +2086,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm maximum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2051,8 +2121,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_minimum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2075,6 +2146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm minimum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2109,8 +2181,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_installation_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.0,
@@ -2133,6 +2206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation height',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -2168,8 +2242,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_maximum_liquid_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.7,
@@ -2192,6 +2267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum liquid depth',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -2227,8 +2303,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.siren_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10.0,
@@ -2251,6 +2328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2285,8 +2363,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.siren_veranda_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 30.0,
@@ -2309,6 +2388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2343,8 +2423,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.smart_thermostats_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.0,
@@ -2367,6 +2448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2401,8 +2483,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2425,6 +2508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2459,8 +2543,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.sous_vide_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 92.5,
@@ -2483,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2517,8 +2603,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5999.0,
@@ -2541,6 +2628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2575,8 +2663,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.v20_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2599,6 +2688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2633,8 +2723,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.white_noise_machine_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2657,6 +2748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2691,8 +2783,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.9,
@@ -2715,6 +2808,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,

@@ -7,7 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.actron_air.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN
+from homeassistant.const import CONF_API_TOKEN, Platform
+from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -62,11 +65,14 @@ def mock_actron_api() -> Generator[AsyncMock]:
         api.state_manager = MagicMock()
         status = api.state_manager.get_status.return_value
         status.master_info.live_temp_c = 22.0
+        status.master_info.live_humidity_pc = 50.0
         status.ac_system.system_name = "Test System"
         status.ac_system.serial_number = "123456"
         status.ac_system.master_wc_model = "Test Model"
         status.ac_system.master_wc_firmware_version = "1.0.0"
+        status.ac_system.set_system_mode = AsyncMock()
         status.remote_zone_info = []
+        status.zones = {}
         status.min_temp = 16
         status.max_temp = 30
         status.aircon_system.mode = "OFF"
@@ -75,18 +81,27 @@ def mock_actron_api() -> Generator[AsyncMock]:
         status.room_temp = 25
         status.is_on = False
 
-        # Mock user_aircon_settings for the switch platform
+        # Mock user_aircon_settings for the switch and climate platforms
         settings = status.user_aircon_settings
         settings.away_mode = False
         settings.continuous_fan_enabled = False
         settings.quiet_mode_enabled = False
         settings.turbo_enabled = False
         settings.turbo_supported = True
+        settings.is_on = False
+        settings.mode = "COOL"
+        settings.base_fan_mode = "LOW"
+        settings.temperature_setpoint_cool_c = 24.0
 
         settings.set_away_mode = AsyncMock()
         settings.set_continuous_mode = AsyncMock()
         settings.set_quiet_mode = AsyncMock()
         settings.set_turbo_mode = AsyncMock()
+        settings.set_temperature = AsyncMock()
+        settings.set_fan_mode = AsyncMock()
+
+        # Mock ac_system methods for climate platform
+        status.ac_system.set_system_mode = AsyncMock()
 
         yield api
 
@@ -103,9 +118,45 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_zone() -> MagicMock:
+    """Return a mocked zone."""
+    zone = MagicMock()
+    zone.exists = True
+    zone.zone_id = 1
+    zone.zone_name = "Test Zone"
+    zone.title = "Living Room"
+    zone.live_temp_c = 22.0
+    zone.temperature_setpoint_cool_c = 24.0
+    zone.is_active = True
+    zone.hvac_mode = "COOL"
+    zone.humidity = 50.0
+    zone.min_temp = 16
+    zone.max_temp = 30
+    zone.set_temperature = AsyncMock()
+    zone.enable = AsyncMock()
+    return zone
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock async_setup_entry."""
     with patch(
         "homeassistant.components.actron_air.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+async def init_integration_with_zone(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_actron_api: AsyncMock,
+    mock_zone: MagicMock,
+) -> None:
+    """Set up the Actron Air integration with zone for testing."""
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.remote_zone_info = [mock_zone]
+    status.zones = {1: mock_zone}
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)

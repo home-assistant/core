@@ -31,7 +31,6 @@ class OpenThermEntity(Entity):
     """Represent an OpenTherm entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
     entity_description: OpenThermEntityDescription
 
     def __init__(
@@ -60,6 +59,8 @@ class OpenThermEntity(Entity):
 
 class OpenThermStatusEntity(OpenThermEntity):
     """Represent an OpenTherm entity that receives status updates."""
+
+    _attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""

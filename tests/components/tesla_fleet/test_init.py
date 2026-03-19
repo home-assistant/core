@@ -41,7 +41,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_platform
 from .conftest import create_config_entry
-from .const import VEHICLE_ASLEEP, VEHICLE_DATA_ALT
+from .const import LIVE_STATUS, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -230,6 +230,52 @@ async def test_vehicle_refresh_ratelimited(
     assert state.state == "unknown"
 
 
+async def test_vehicle_refresh_ratelimited_no_after(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429 without after."""
+
+    await setup_platform(hass, normal_config_entry)
+    # mock_vehicle_data called once during setup
+    assert mock_vehicle_data.call_count == 1
+
+    mock_vehicle_data.side_effect = RateLimited({})
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Called again during refresh, failed with RateLimited
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Called again because skip refresh doesn't change interval
+    assert mock_vehicle_data.call_count == 3
+
+
+async def test_init_invalid_region(
+    hass: HomeAssistant,
+    expires_at: int,
+) -> None:
+    """Test init with an invalid region in the token."""
+
+    # ou_code 'other' should be caught by the region validation and set to None
+    config_entry = create_config_entry(
+        expires_at, [Scope.VEHICLE_DEVICE_DATA], region="other"
+    )
+
+    with patch("homeassistant.components.tesla_fleet.TeslaFleetApi") as mock_api:
+        await setup_platform(hass, config_entry)
+        # Check if TeslaFleetApi was called with region=None
+        mock_api.assert_called()
+        assert mock_api.call_args.kwargs.get("region") is None
+
+
 async def test_vehicle_sleep(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
@@ -304,6 +350,42 @@ async def test_energy_live_refresh_error(
     mock_live_status.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is state
+
+
+async def test_energy_live_refresh_bad_response(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test coordinator refresh with malformed live status payload."""
+    bad_live_status = deepcopy(LIVE_STATUS)
+    bad_live_status["response"] = "site data is unavailable"
+    mock_live_status.side_effect = None
+    mock_live_status.return_value = bad_live_status
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state != "unavailable"
+
+
+async def test_energy_live_refresh_bad_wall_connectors(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test coordinator refresh with malformed wall connector payload."""
+    bad_live_status = deepcopy(LIVE_STATUS)
+    bad_live_status["response"]["wall_connectors"] = "site data is unavailable"
+    mock_live_status.side_effect = None
+    mock_live_status.return_value = bad_live_status
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state != "unavailable"
 
 
 # Test Energy Site Coordinator

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_numbers[printer0][number.octoprint_bed_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bed temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -60,8 +62,9 @@
 # ---
 # name: test_numbers[printer0][number.octoprint_extruder_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300,
@@ -84,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extruder 1 temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -119,8 +123,9 @@
 # ---
 # name: test_numbers[printer0][number.octoprint_extruder_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300,
@@ -143,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extruder temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

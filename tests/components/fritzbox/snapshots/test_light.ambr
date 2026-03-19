@@ -1,14 +1,13 @@
 # serializer version: 1
 # name: test_setup[light.fake_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -29,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -48,7 +48,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 100,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 370,
       'color_temp_kelvin': 2700,
       'friendly_name': 'fake_name',
       'hs_color': tuple(
@@ -56,9 +55,7 @@
         65.723,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         167,
@@ -84,14 +81,13 @@
 # ---
 # name: test_setup_color[light.fake_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -112,6 +108,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -131,7 +128,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 100,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'fake_name',
       'hs_color': tuple(
@@ -139,9 +135,7 @@
         70.0,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
-      'min_mireds': 153,
       'rgb_color': tuple(
         136,
         255,
@@ -167,8 +161,9 @@
 # ---
 # name: test_setup_non_color[light.fake_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -190,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -225,8 +221,9 @@
 # ---
 # name: test_setup_non_color_non_level[light.fake_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -248,6 +245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,

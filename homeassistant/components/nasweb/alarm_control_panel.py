@@ -9,7 +9,7 @@ from webio_api import Zone as NASwebZone
 from webio_api.const import STATE_ZONE_ALARM, STATE_ZONE_ARMED, STATE_ZONE_DISARMED
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as DOMAIN_ALARM_CONTROL_PANEL,
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
@@ -69,7 +69,7 @@ async def async_setup_entry(
         for index in removed:
             unique_id = f"{DOMAIN}.{config.unique_id}.zone.{index}"
             if entity_id := entity_registry.async_get_entity_id(
-                DOMAIN_ALARM_CONTROL_PANEL, DOMAIN, unique_id
+                ALARM_CONTROL_PANEL_DOMAIN, DOMAIN, unique_id
             ):
                 entity_registry.async_remove(entity_id)
                 current_zones.remove(index)

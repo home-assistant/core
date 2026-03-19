@@ -13,6 +13,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -116,6 +117,35 @@
       },
       "stop_program": {
         "name": "Stop program"
+      }
+    },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "active_clean": "Active clean"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
       }
     },
     "light": {
@@ -231,8 +261,10 @@
           "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
           "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
           "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
+          "cooking_oven_program_heating_mode_bread_baking": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bread_baking%]",
           "cooking_oven_program_heating_mode_defrost": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_defrost%]",
           "cooking_oven_program_heating_mode_desiccation": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_desiccation%]",
+          "cooking_oven_program_heating_mode_dough_proving": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_dough_proving%]",
           "cooking_oven_program_heating_mode_frozen_heatup_special": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_frozen_heatup_special%]",
           "cooking_oven_program_heating_mode_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air%]",
           "cooking_oven_program_heating_mode_hot_air_100_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_100_steam%]",
@@ -272,6 +304,7 @@
           "dishcare_dishwasher_program_intensiv_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_45%]",
           "dishcare_dishwasher_program_intensiv_70": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_70%]",
           "dishcare_dishwasher_program_intensiv_power": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_power%]",
+          "dishcare_dishwasher_program_intensive_fixed_zone": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensive_fixed_zone%]",
           "dishcare_dishwasher_program_kurz_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_kurz_60%]",
           "dishcare_dishwasher_program_learning_dishwasher": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_learning_dishwasher%]",
           "dishcare_dishwasher_program_machine_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_machine_care%]",
@@ -584,8 +617,10 @@
           "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
           "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
           "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
+          "cooking_oven_program_heating_mode_bread_baking": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bread_baking%]",
           "cooking_oven_program_heating_mode_defrost": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_defrost%]",
           "cooking_oven_program_heating_mode_desiccation": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_desiccation%]",
+          "cooking_oven_program_heating_mode_dough_proving": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_dough_proving%]",
           "cooking_oven_program_heating_mode_frozen_heatup_special": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_frozen_heatup_special%]",
           "cooking_oven_program_heating_mode_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air%]",
           "cooking_oven_program_heating_mode_hot_air_100_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_100_steam%]",
@@ -626,6 +661,7 @@
           "dishcare_dishwasher_program_intensiv_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_45%]",
           "dishcare_dishwasher_program_intensiv_70": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_70%]",
           "dishcare_dishwasher_program_intensiv_power": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_power%]",
+          "dishcare_dishwasher_program_intensive_fixed_zone": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensive_fixed_zone%]",
           "dishcare_dishwasher_program_kurz_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_kurz_60%]",
           "dishcare_dishwasher_program_learning_dishwasher": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_learning_dishwasher%]",
           "dishcare_dishwasher_program_machine_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_machine_care%]",
@@ -1287,6 +1323,9 @@
     }
   },
   "exceptions": {
+    "appliance_disconnected": {
+      "message": "Appliance {appliance_name} ({ha_id}) is disconnected"
+    },
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },
@@ -1304,6 +1343,12 @@
     },
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
+    },
+    "fetch_program_error": {
+      "message": "Error obtaining the selected or active program: {error}"
+    },
+    "no_program_to_start": {
+      "message": "No program to start"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
@@ -1577,8 +1622,10 @@
         "cooking_common_program_hood_delayed_shut_off": "Delayed shut off",
         "cooking_common_program_hood_venting": "Venting",
         "cooking_oven_program_heating_mode_bottom_heating": "Bottom heating",
+        "cooking_oven_program_heating_mode_bread_baking": "Bread baking",
         "cooking_oven_program_heating_mode_defrost": "Defrost",
         "cooking_oven_program_heating_mode_desiccation": "Desiccation",
+        "cooking_oven_program_heating_mode_dough_proving": "Dough proving",
         "cooking_oven_program_heating_mode_frozen_heatup_special": "Special heat-up for frozen products",
         "cooking_oven_program_heating_mode_hot_air": "Hot air",
         "cooking_oven_program_heating_mode_hot_air_100_steam": "Hot air + 100 RH",
@@ -1619,6 +1666,7 @@
         "dishcare_dishwasher_program_intensiv_45": "Intensive 45ºC",
         "dishcare_dishwasher_program_intensiv_70": "Intensive 70ºC",
         "dishcare_dishwasher_program_intensiv_power": "Intensive power",
+        "dishcare_dishwasher_program_intensive_fixed_zone": "Intensive fixed zone",
         "dishcare_dishwasher_program_kurz_60": "Speed 60ºC",
         "dishcare_dishwasher_program_learning_dishwasher": "Intelligent",
         "dishcare_dishwasher_program_machine_care": "Machine care",
@@ -2036,6 +2084,24 @@
           "name": "Washer options"
         }
       }
+    },
+    "start_selected_program": {
+      "description": "Starts the already selected program. You can update start-only options to start the program with them or modify them on a program that is already active with a delayed start.",
+      "fields": {
+        "b_s_h_common_option_finish_in_relative": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::name%]"
+        },
+        "b_s_h_common_option_start_in_relative": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_start_in_relative::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_start_in_relative::name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]"
+        }
+      },
+      "name": "Start selected program"
     }
   }
 }

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[device_tracker.freebsd_router-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FreeBSD router',
     'options': dict({
     }),
     'original_device_class': None,
@@ -53,8 +55,9 @@
 # ---
 # name: test_all_entities[device_tracker.pc_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -72,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PC_HOME',
     'options': dict({
     }),
     'original_device_class': None,
@@ -105,8 +109,9 @@
 # ---
 # name: test_all_entities[device_tracker.samsung_the_frame_55-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -124,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Samsung The Frame 55',
     'options': dict({
     }),
     'original_device_class': None,

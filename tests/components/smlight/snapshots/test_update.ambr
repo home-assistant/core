@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_update_setup[update.mock_title_core_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -40,7 +42,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
+      'entity_picture': '/api/brands/integration/smlight/icon.png',
       'friendly_name': 'Mock Title Core firmware',
       'in_progress': False,
       'installed_version': 'v2.3.6',
@@ -62,8 +64,9 @@
 # ---
 # name: test_update_setup[update.mock_title_zigbee_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -81,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -101,7 +105,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
+      'entity_picture': '/api/brands/integration/smlight/icon.png',
       'friendly_name': 'Mock Title Zigbee firmware',
       'in_progress': False,
       'installed_version': '20240314',

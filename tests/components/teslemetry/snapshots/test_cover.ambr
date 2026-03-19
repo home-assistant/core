@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover[cover.test_charge_port_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -39,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -51,8 +54,9 @@
 # ---
 # name: test_cover[cover.test_frunk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -89,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -101,8 +107,9 @@
 # ---
 # name: test_cover[cover.test_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -139,6 +147,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -151,8 +160,9 @@
 # ---
 # name: test_cover[cover.test_trunk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -189,6 +200,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -201,8 +213,9 @@
 # ---
 # name: test_cover[cover.test_windows-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -220,6 +233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -239,6 +253,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -251,8 +266,9 @@
 # ---
 # name: test_cover_alt[cover.test_charge_port_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -270,6 +286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -289,6 +306,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -301,8 +319,9 @@
 # ---
 # name: test_cover_alt[cover.test_frunk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -320,6 +339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -339,6 +359,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -351,8 +372,9 @@
 # ---
 # name: test_cover_alt[cover.test_trunk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -370,6 +392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -389,6 +412,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -401,8 +425,9 @@
 # ---
 # name: test_cover_alt[cover.test_windows-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -420,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -439,6 +465,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -451,8 +478,9 @@
 # ---
 # name: test_cover_noscope[cover.test_charge_port_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -470,6 +498,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -489,6 +518,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -501,8 +531,9 @@
 # ---
 # name: test_cover_noscope[cover.test_frunk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -520,6 +551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -539,6 +571,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -551,8 +584,9 @@
 # ---
 # name: test_cover_noscope[cover.test_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -570,6 +604,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -589,6 +624,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -601,8 +637,9 @@
 # ---
 # name: test_cover_noscope[cover.test_trunk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -620,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -639,6 +677,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -651,8 +690,9 @@
 # ---
 # name: test_cover_noscope[cover.test_windows-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -670,6 +710,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -689,6 +730,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -698,40 +740,4 @@
     'last_updated': <ANY>,
     'state': 'closed',
   })
-# ---
-# name: test_cover_streaming[cover.test_charge_port_door-closed]
-  'closed'
-# ---
-# name: test_cover_streaming[cover.test_charge_port_door-open]
-  'closed'
-# ---
-# name: test_cover_streaming[cover.test_charge_port_door-unknown]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_frunk-closed]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_frunk-open]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_frunk-unknown]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_trunk-closed]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_trunk-open]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_trunk-unknown]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_windows-closed]
-  'closed'
-# ---
-# name: test_cover_streaming[cover.test_windows-open]
-  'open'
-# ---
-# name: test_cover_streaming[cover.test_windows-unknown]
-  'open'
 # ---

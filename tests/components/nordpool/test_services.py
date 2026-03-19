@@ -167,7 +167,7 @@ async def test_service_call_config_entry_bad_state(
             blocking=True,
             return_response=True,
         )
-    assert err.value.translation_key == "entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     service_data = TEST_SERVICE_DATA.copy()
     service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
@@ -182,7 +182,7 @@ async def test_service_call_config_entry_bad_state(
             blocking=True,
             return_response=True,
         )
-    assert err.value.translation_key == "entry_not_loaded"
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")

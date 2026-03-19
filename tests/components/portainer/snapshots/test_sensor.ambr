@@ -1,8 +1,479 @@
 # serializer version: 1
+# name: test_all_entities[sensor.dashy_containers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_containers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Containers',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Containers',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_containers_count',
+    'unique_id': 'portainer_test_entry_123_2_stack_containers_count',
+    'unit_of_measurement': 'containers',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_containers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'dashy Containers',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'containers',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_containers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_cpu_usage_total-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CPU usage total',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU usage total',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_cpu_usage_total-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 CPU usage total',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docker.io/lissy93/dashy:latest',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Memory limit',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Memory limit',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_limit',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_limit',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Memory limit',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '67.108864',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Memory usage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Memory usage',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_usage',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Memory usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.537216',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Memory usage percentage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory usage percentage',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Memory usage percentage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.7412109375',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'swarm',
+        'compose',
+        'kubernetes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Type',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_type',
+    'unique_id': 'portainer_test_entry_123_2_stack_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'dashy Type',
+      'options': list([
+        'swarm',
+        'compose',
+        'kubernetes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'swarm',
+  })
+# ---
 # name: test_all_entities[sensor.focused_einstein_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +493,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -56,8 +528,9 @@
 # ---
 # name: test_all_entities[sensor.focused_einstein_image-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -75,6 +548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -104,8 +578,9 @@
 # ---
 # name: test_all_entities[sensor.focused_einstein_memory_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -125,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -163,8 +639,9 @@
 # ---
 # name: test_all_entities[sensor.focused_einstein_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -184,6 +661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -222,8 +700,9 @@
 # ---
 # name: test_all_entities[sensor.focused_einstein_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -243,6 +722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -277,8 +757,9 @@
 # ---
 # name: test_all_entities[sensor.focused_einstein_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -305,6 +786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -343,8 +825,9 @@
 # ---
 # name: test_all_entities[sensor.funny_chatelet_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -364,6 +847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -398,8 +882,9 @@
 # ---
 # name: test_all_entities[sensor.funny_chatelet_image-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -417,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -446,8 +932,9 @@
 # ---
 # name: test_all_entities[sensor.funny_chatelet_memory_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -467,6 +954,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -505,8 +993,9 @@
 # ---
 # name: test_all_entities[sensor.funny_chatelet_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -526,6 +1015,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -564,8 +1054,9 @@
 # ---
 # name: test_all_entities[sensor.funny_chatelet_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -585,6 +1076,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -619,8 +1111,9 @@
 # ---
 # name: test_all_entities[sensor.funny_chatelet_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -647,6 +1140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -685,8 +1179,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_api_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -704,6 +1199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'API version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -733,8 +1229,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_architecture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -752,6 +1249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Architecture',
     'options': dict({
     }),
     'original_device_class': None,
@@ -781,8 +1279,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_container_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -802,6 +1301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Container count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -832,8 +1332,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_containers_paused-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -853,6 +1354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers paused',
     'options': dict({
     }),
     'original_device_class': None,
@@ -883,8 +1385,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_containers_running-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -904,6 +1407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers running',
     'options': dict({
     }),
     'original_device_class': None,
@@ -934,8 +1438,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_containers_stopped-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -955,6 +1460,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers stopped',
     'options': dict({
     }),
     'original_device_class': None,
@@ -985,8 +1491,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_docker_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1004,6 +1511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Docker version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1033,8 +1541,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_image_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1054,6 +1563,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1084,8 +1594,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_kernel_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1103,6 +1614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kernel version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1132,8 +1644,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_operating_system-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1151,6 +1664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1180,8 +1694,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_operating_system_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1199,6 +1714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1228,8 +1744,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_total_cpu-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1249,6 +1766,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total CPU',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1279,8 +1797,9 @@
 # ---
 # name: test_all_entities[sensor.my_environment_total_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1300,6 +1819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1338,8 +1858,9 @@
 # ---
 # name: test_all_entities[sensor.practical_morse_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1359,6 +1880,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1393,8 +1915,9 @@
 # ---
 # name: test_all_entities[sensor.practical_morse_image-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1412,6 +1935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1441,8 +1965,9 @@
 # ---
 # name: test_all_entities[sensor.practical_morse_memory_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1462,6 +1987,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1500,8 +2026,9 @@
 # ---
 # name: test_all_entities[sensor.practical_morse_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1521,6 +2048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1559,8 +2087,9 @@
 # ---
 # name: test_all_entities[sensor.practical_morse_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1580,6 +2109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1614,8 +2144,9 @@
 # ---
 # name: test_all_entities[sensor.practical_morse_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1642,6 +2173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1680,8 +2212,9 @@
 # ---
 # name: test_all_entities[sensor.serene_banach_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1701,6 +2234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1735,8 +2269,9 @@
 # ---
 # name: test_all_entities[sensor.serene_banach_image-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1754,6 +2289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1783,8 +2319,9 @@
 # ---
 # name: test_all_entities[sensor.serene_banach_memory_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1804,6 +2341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1842,8 +2380,9 @@
 # ---
 # name: test_all_entities[sensor.serene_banach_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1863,6 +2402,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1901,8 +2441,9 @@
 # ---
 # name: test_all_entities[sensor.serene_banach_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1922,6 +2463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1956,8 +2498,9 @@
 # ---
 # name: test_all_entities[sensor.serene_banach_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1984,6 +2527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2022,8 +2566,9 @@
 # ---
 # name: test_all_entities[sensor.stoic_turing_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2043,6 +2588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2077,8 +2623,9 @@
 # ---
 # name: test_all_entities[sensor.stoic_turing_image-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2096,6 +2643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2125,8 +2673,9 @@
 # ---
 # name: test_all_entities[sensor.stoic_turing_memory_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2146,6 +2695,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2184,8 +2734,9 @@
 # ---
 # name: test_all_entities[sensor.stoic_turing_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2205,6 +2756,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2243,8 +2795,9 @@
 # ---
 # name: test_all_entities[sensor.stoic_turing_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2264,6 +2817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2298,8 +2852,9 @@
 # ---
 # name: test_all_entities[sensor.stoic_turing_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2326,6 +2881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2360,5 +2916,121 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'running',
+  })
+# ---
+# name: test_all_entities[sensor.webstack_containers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.webstack_containers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Containers',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Containers',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_containers_count',
+    'unique_id': 'portainer_test_entry_123_1_stack_containers_count',
+    'unit_of_measurement': 'containers',
+  })
+# ---
+# name: test_all_entities[sensor.webstack_containers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'webstack Containers',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'containers',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.webstack_containers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.webstack_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'swarm',
+        'compose',
+        'kubernetes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.webstack_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Type',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_type',
+    'unique_id': 'portainer_test_entry_123_1_stack_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.webstack_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'webstack Type',
+      'options': list([
+        'swarm',
+        'compose',
+        'kubernetes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.webstack_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'compose',
   })
 # ---

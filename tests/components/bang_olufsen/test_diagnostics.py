@@ -56,7 +56,6 @@ async def test_async_get_config_entry_diagnostics(
 
 async def test_async_get_config_entry_diagnostics_with_battery(
     hass: HomeAssistant,
-    entity_registry: EntityRegistry,
     hass_client: ClientSessionGenerator,
     mock_config_entry_a5: MockConfigEntry,
     mock_mozart_client: AsyncMock,

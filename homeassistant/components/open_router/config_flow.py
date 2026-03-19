@@ -173,6 +173,12 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             for api in llm.async_get_apis(self.hass)
         ]
 
+        if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
+            valid_api_ids = {api["value"] for api in hass_apis}
+            self.options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in valid_api_ids
+            ]
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(

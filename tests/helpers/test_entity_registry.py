@@ -35,6 +35,83 @@ from tests.common import (
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
 
+@pytest.mark.parametrize(
+    ("aliases", "allow_empty", "expected"),
+    [
+        ([er.COMPUTED_NAME], True, ["My Device My Entity"]),
+        ([er.COMPUTED_NAME, "custom1"], True, ["My Device My Entity", "custom1"]),
+        (["custom1", "  custom2  "], True, ["custom1", "custom2"]),
+        ([], True, []),
+        ([], False, ["My Device My Entity"]),
+        ([er.COMPUTED_NAME], False, ["My Device My Entity"]),
+    ],
+)
+async def test_get_all_entity_aliases(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aliases: list[er.AliasEntry],
+    allow_empty: bool,
+    expected: list[str],
+) -> None:
+    """Test getting all names/aliases for an entity."""
+    mock_config = MockConfigEntry(domain="light")
+    mock_config.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="My Device",
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=mock_config,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="My Entity",
+    )
+    entry = entity_registry.async_update_entity(entry.entity_id, aliases=aliases)
+
+    assert er.async_get_entity_aliases(hass, entry, allow_empty=allow_empty) == (
+        expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("prefix", "entity_name", "expected"),
+    [
+        (None, "Sensor", None),
+        ("My Device", None, None),
+        ("My Device", "My Device temperature", "Temperature"),
+        ("My Device", "My Device Temperature", "Temperature"),
+        ("My Device", "My Device", ""),
+        ("My Device", "My Device-temperature", "Temperature"),
+        ("My Device", "My Device:temperature", "Temperature"),
+        ("My Device", "My Device - Temperature", "Temperature"),
+        ("My Device", "MyDevice temperature", None),
+        ("My Device", "Completely Different", None),
+        ("My Device", "My Dev", None),
+        ("My Device", "My Dev Ice", None),
+        ("Sun", "Sunrise sensor", None),
+        ("Straße", "STRASSE sensor", "Sensor"),
+        ("STRASSE", "straße sensor", "Sensor"),
+        ("İstanbul", "i̇stanbul weather", "Weather"),
+        ("İstanbul", "istanbul weather", None),
+        ("As", "Aß value", None),
+    ],
+)
+def test_strip_prefix_from_entity_name(
+    prefix: str | None,
+    entity_name: str | None,
+    expected: str | None,
+) -> None:
+    """Test stripping device name prefix from entity name."""
+    assert er._async_strip_prefix_from_entity_name(entity_name, prefix) == expected
+
+
 async def test_get(entity_registry: er.EntityRegistry) -> None:
     """Test we can get an item."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
@@ -128,6 +205,7 @@ def test_get_or_create_updates_data(
         entity_id="light.hue_5678",
         unique_id="5678",
         platform="hue",
+        aliases=[er.COMPUTED_NAME],
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
         config_subentry_id=config_subentry_id,
@@ -142,6 +220,7 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=created,
         name=None,
+        object_id_base=None,
         options=None,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
@@ -173,9 +252,11 @@ def test_get_or_create_updates_data(
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=False,
         hidden_by=er.RegistryEntryHider.USER,
+        object_id_base="updated-name",
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
+        suggested_object_id="suggested",
         supported_features=10,
         translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
@@ -185,7 +266,7 @@ def test_get_or_create_updates_data(
         entity_id="light.hue_5678",
         unique_id="5678",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
@@ -201,11 +282,12 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=modified,
         name=None,
+        object_id_base="updated-name",
         options=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
-        suggested_object_id=None,
+        suggested_object_id="suggested",
         supported_features=10,
         translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
@@ -226,9 +308,11 @@ def test_get_or_create_updates_data(
         entity_category=None,
         has_entity_name=None,
         hidden_by=None,
+        object_id_base=None,
         original_device_class=None,
         original_icon=None,
         original_name=None,
+        suggested_object_id=None,
         supported_features=None,
         translation_key=None,
         unit_of_measurement=None,
@@ -238,7 +322,7 @@ def test_get_or_create_updates_data(
         entity_id="light.hue_5678",
         unique_id="5678",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         capabilities=None,
         config_entry_id=None,
@@ -254,6 +338,7 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=modified,
         name=None,
+        object_id_base=None,
         options=None,
         original_device_class=None,
         original_icon=None,
@@ -352,7 +437,7 @@ async def test_loading_saving_data(
     )
     entity_registry.async_update_entity(
         orig_entry2.entity_id,
-        aliases={"initial_alias_1", "initial_alias_2"},
+        aliases=["initial_alias_1", "initial_alias_2"],
         area_id="mock-area-id",
         device_class="user-class",
         name="User Name",
@@ -419,25 +504,25 @@ async def test_loading_saving_data(
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
-def test_generate_entity_considers_registered_entities(
+def test_get_available_entity_id_considers_registered_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that we don't create entity id that are already registered."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entry.entity_id == "light.hue_1234"
     assert (
-        entity_registry.async_generate_entity_id("light", "hue_1234")
+        entity_registry.async_get_available_entity_id("light", "hue_1234")
         == "light.hue_1234_2"
     )
 
 
-def test_generate_entity_considers_existing_entities(
+def test_get_available_entity_id_considers_existing_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that we don't create entity id that currently exists."""
     hass.states.async_set("light.kitchen", "on")
     assert (
-        entity_registry.async_generate_entity_id("light", "kitchen")
+        entity_registry.async_get_available_entity_id("light", "kitchen")
         == "light.kitchen_2"
     )
 
@@ -455,7 +540,7 @@ async def test_filter_on_load(
 ) -> None:
     """Test we transform some data when loading from storage."""
     hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION_MAJOR,
+        "version": 1,
         "minor_version": 1,
         "data": {
             "entities": [
@@ -536,8 +621,8 @@ async def test_load_bad_data(
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
-                    "calculated_object_id": None,
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -555,6 +640,8 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
+                    "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
                     "original_icon": None,
@@ -569,8 +656,8 @@ async def test_load_bad_data(
                 },
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
-                    "calculated_object_id": None,
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -588,6 +675,8 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
+                    "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
                     "original_icon": None,
@@ -604,6 +693,7 @@ async def test_load_bad_data(
             "deleted_entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -620,6 +710,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": None,
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -628,6 +719,7 @@ async def test_load_bad_data(
                 },
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -644,6 +736,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": None,
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -980,6 +1073,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -997,6 +1091,8 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
+                    "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
@@ -1173,6 +1269,7 @@ async def test_migration_1_11(
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1190,6 +1287,8 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
+                    "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
@@ -1207,6 +1306,7 @@ async def test_migration_1_11(
             "deleted_entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -1223,6 +1323,7 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": {},
                     "options_undefined": True,
                     "orphaned_timestamp": None,
@@ -1274,7 +1375,7 @@ async def test_migration_1_18(
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
-                    "original_name": None,
+                    "original_name": "Test Entity",
                     "platform": "super_platform",
                     "previous_unique_id": None,
                     "suggested_object_id": None,
@@ -1337,6 +1438,7 @@ async def test_migration_1_18(
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1354,10 +1456,12 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
+                    "object_id_base": "Test Entity",
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
-                    "original_name": None,
+                    "original_name": "Test Entity",
                     "platform": "super_platform",
                     "previous_unique_id": None,
                     "suggested_object_id": None,
@@ -1371,6 +1475,7 @@ async def test_migration_1_18(
             "deleted_entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -1387,12 +1492,503 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": {},
                     "options_undefined": False,
                     "orphaned_timestamp": None,
                     "platform": "super_duper_platform",
                     "unique_id": "very_very_unique",
                 }
+            ],
+        },
+    }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_20(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.20."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["mock-config-entry"],
+                    "config_entries_subentries": {"mock-config-entry": [None]},
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "device-1",
+                    "identifiers": [["test", "device-1"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "My Device",
+                    "name_by_user": None,
+                    "primary_config_entry": "mock-config-entry",
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+    await dr.async_load(hass)
+
+    # Entity registry data at version 1.20
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 20,
+        "data": {
+            "entities": [
+                {
+                    # Entity with name=None
+                    # name should be preserved
+                    # should add None to aliases
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.entity_name_no_custom",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-1",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-1",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    # Entity with no device_id
+                    # name should be preserved
+                    # should add None to aliases
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.no_device",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-2",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Standalone Sensor",
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-2",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    # Entity with name starting with device name
+                    # name should be stripped to remove device name prefix
+                    # should add None to aliases
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.name_with_device_prefix",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-3",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "My device temperature",
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-3",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    # Entity with custom name not starting with device name
+                    # not exposed to any voice assistant
+                    # name should be preserved
+                    # should add None to aliases
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.custom_name",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-4",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Living Room Light",
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-4",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    # Entity with custom name not starting with device name
+                    # exposed to conversation assistant
+                    # name should be preserved
+                    # should add name to aliases
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.custom_name_exposed",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-5",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Living Room Light",
+                    "object_id_base": "Test entity",
+                    "options": {
+                        "conversation": {"should_expose": True},
+                    },
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-5",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+            ],
+            "deleted_entities": [
+                {
+                    # Deleted entity
+                    # name should be reset to None
+                    # should add None to aliases
+                    "aliases": ["deleted_alias"],
+                    "area_id": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "entity_id": "test.deleted_entity",
+                    "hidden_by": None,
+                    "hidden_by_undefined": False,
+                    "icon": None,
+                    "id": "deleted-1",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Deleted Name",
+                    "options": {},
+                    "options_undefined": False,
+                    "orphaned_timestamp": None,
+                    "platform": "test_platform",
+                    "unique_id": "deleted-unique",
+                }
+            ],
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    # Check migrated data
+    await flush_store(registry._store)
+    migrated_data = hass_storage[er.STORAGE_KEY]
+    assert migrated_data == {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "key": er.STORAGE_KEY,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "aliases_v2": [None],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.entity_name_no_custom",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-1",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "name_v2": None,
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-1",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    "aliases": [],
+                    "aliases_v2": [None],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.no_device",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-2",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Standalone Sensor",
+                    "name_v2": "Standalone Sensor",
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-2",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    "aliases": [],
+                    "aliases_v2": [None],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.name_with_device_prefix",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-3",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "My device temperature",
+                    "name_v2": "Temperature",
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-3",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    "aliases": [],
+                    "aliases_v2": [None],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.custom_name",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-4",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Living Room Light",
+                    "name_v2": "Living Room Light",
+                    "object_id_base": "Test entity",
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-4",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+                {
+                    "aliases": [],
+                    "aliases_v2": ["Living Room Light"],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": "device-1",
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.custom_name_exposed",
+                    "has_entity_name": True,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "entity-5",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Living Room Light",
+                    "name_v2": "Living Room Light",
+                    "object_id_base": "Test entity",
+                    "options": {
+                        "conversation": {"should_expose": True},
+                    },
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Test entity",
+                    "platform": "test_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique-5",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                },
+            ],
+            "deleted_entities": [
+                {
+                    "aliases": ["deleted_alias"],
+                    "aliases_v2": [None, "deleted_alias"],
+                    "area_id": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "entity_id": "test.deleted_entity",
+                    "hidden_by": None,
+                    "hidden_by_undefined": False,
+                    "icon": None,
+                    "id": "deleted-1",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "Deleted Name",
+                    "name_v2": None,
+                    "options": {},
+                    "options_undefined": False,
+                    "orphaned_timestamp": None,
+                    "platform": "test_platform",
+                    "unique_id": "deleted-unique",
+                },
             ],
         },
     }
@@ -1711,6 +2307,7 @@ async def test_update_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -1732,7 +2329,7 @@ async def test_update_entity_disabled_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -1750,6 +2347,7 @@ async def test_update_entity_disabled_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_1",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_1",
         original_icon="original_icon_1",
@@ -1804,6 +2402,7 @@ async def test_update_entity_disabled_by_2(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -1827,7 +2426,7 @@ async def test_update_entity_disabled_by_2(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -1845,6 +2444,7 @@ async def test_update_entity_disabled_by_2(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_1",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_1",
         original_icon="original_icon_1",
@@ -2738,7 +3338,7 @@ async def test_entity_max_length_exceeded(
     )
 
     with pytest.raises(MaxLengthExceeded) as exc_info:
-        entity_registry.async_generate_entity_id(long_domain_name, "sensor")
+        entity_registry.async_get_available_entity_id(long_domain_name, "sensor")
 
     assert exc_info.value.property_name == "domain"
     assert exc_info.value.max_length == 64
@@ -2752,13 +3352,19 @@ async def test_entity_max_length_exceeded(
         "1234567890123456789012345678901234567"
     )
 
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7]
     hass.states.async_reserve(new_id)
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_2"
     hass.states.async_reserve(new_id)
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 
@@ -3195,6 +3801,7 @@ async def test_restore_entity(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3221,7 +3828,7 @@ async def test_restore_entity(
     # Apply user customizations
     entry1 = entity_registry.async_update_entity(
         entry1.entity_id,
-        aliases={"alias1", "alias2"},
+        aliases=["alias1", "alias2"],
         area_id="12345A",
         categories={"scope1": "id", "scope2": "id"},
         device_class="device_class_user",
@@ -3256,6 +3863,7 @@ async def test_restore_entity(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3285,7 +3893,7 @@ async def test_restore_entity(
         entity_id="light.custom_1",
         unique_id="1234",
         platform="hue",
-        aliases={"alias1", "alias2"},
+        aliases=["alias1", "alias2"],
         area_id="12345A",
         categories={"scope1": "id", "scope2": "id"},
         capabilities={"key2": "value2"},
@@ -3303,6 +3911,7 @@ async def test_restore_entity(
         labels={"label1", "label2"},
         modified_at=utcnow(),
         name="Test Friendly Name",
+        object_id_base="original_name_2",
         options={"options_domain": {"key": "value"}, "test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3461,6 +4070,7 @@ async def test_restore_migrated_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3479,7 +4089,7 @@ async def test_restore_migrated_entity_disabled_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -3497,6 +4107,7 @@ async def test_restore_migrated_entity_disabled_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3551,6 +4162,7 @@ async def test_restore_migrated_entity_hidden_by(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3583,6 +4195,7 @@ async def test_restore_migrated_entity_hidden_by(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=entity_hidden_by,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3601,7 +4214,7 @@ async def test_restore_migrated_entity_hidden_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -3619,6 +4232,7 @@ async def test_restore_migrated_entity_hidden_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3664,6 +4278,7 @@ async def test_restore_migrated_entity_initial_options(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3696,6 +4311,7 @@ async def test_restore_migrated_entity_initial_options(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3714,7 +4330,7 @@ async def test_restore_migrated_entity_initial_options(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -3732,6 +4348,7 @@ async def test_restore_migrated_entity_initial_options(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key2": "value2"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3853,6 +4470,7 @@ async def test_restore_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3880,6 +4498,7 @@ async def test_restore_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3898,7 +4517,7 @@ async def test_restore_entity_disabled_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -3916,6 +4535,7 @@ async def test_restore_entity_disabled_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3979,6 +4599,7 @@ async def test_restore_entity_disabled_by_2(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -4006,6 +4627,7 @@ async def test_restore_entity_disabled_by_2(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -4024,7 +4646,7 @@ async def test_restore_entity_disabled_by_2(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -4042,6 +4664,7 @@ async def test_restore_entity_disabled_by_2(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",

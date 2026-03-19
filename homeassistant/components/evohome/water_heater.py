@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import EVOHOME_KEY
+from .const import EVOHOME_DATA
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild
 
@@ -47,8 +47,8 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_KEY].coordinator
-    tcs = hass.data[EVOHOME_KEY].tcs
+    coordinator = hass.data[EVOHOME_DATA].coordinator
+    tcs = hass.data[EVOHOME_DATA].tcs
 
     assert tcs.hotwater is not None  # mypy check
 

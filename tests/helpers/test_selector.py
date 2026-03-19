@@ -297,6 +297,24 @@ def test_device_selector_schema_error(schema) -> None:
             ("light.abc123", "blah.blah", FAKE_UUID),
             (None,),
         ),
+        (
+            {
+                "filter": [
+                    {"unit_of_measurement": "baguette"},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {"unit_of_measurement": ["currywurst", "bratwurst"]},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
     ],
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -319,6 +337,13 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
         # supported_features should be used under the filter key
         {"supported_features": ["light.LightEntityFeature.EFFECT"]},
+        # unit_of_measurement should be used under the filter key
+        {"unit_of_measurement": ["currywurst", "bratwurst"]},
+        # Invalid unit_of_measurement
+        {"filter": [{"unit_of_measurement": 42}]},
+        # reorder can only be used when multiple is true
+        {"reorder": True},
+        {"reorder": True, "multiple": False},
     ],
 )
 def test_entity_selector_schema_error(schema) -> None:
@@ -383,7 +408,7 @@ def test_entity_selector_schema_error(schema) -> None:
             (None,),
         ),
         (
-            {"multiple": True},
+            {"multiple": True, "reorder": True},
             ((["abc123", "def456"],)),
             (None, "abc123", ["abc123", None]),
         ),
@@ -392,6 +417,20 @@ def test_entity_selector_schema_error(schema) -> None:
 def test_area_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test area selector."""
     _test_selector("area", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # reorder can only be used when multiple is true
+        {"reorder": True},
+        {"reorder": True, "multiple": False},
+    ],
+)
+def test_area_selector_schema_error(schema) -> None:
+    """Test area selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"area": schema})
 
 
 @pytest.mark.parametrize(
@@ -485,6 +524,15 @@ def test_number_selector_schema_error(schema) -> None:
 def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test add-on selector."""
     _test_selector("addon", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [({}, ("abc123",), (None,))],
+)
+def test_app_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test app selector."""
+    _test_selector("app", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -832,6 +880,11 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
         ),
         (
             {"hide_states": ["unknown", "unavailable"]},
+            (),
+            (),
+        ),
+        (
+            {"attribute": "best_attribute"},
             (),
             (),
         ),
@@ -1295,21 +1348,23 @@ def test_attribute_selector_schema(
         (
             {},
             (
-                {"seconds": 10},
+                {
+                    "seconds": 10
+                },  # Seconds is allowed also if `enable_second` is not set
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
                 {"milliseconds": 500},
             ),
-            (None, {}),
-        ),
-        (
-            {"enable_day": True, "enable_millisecond": True},
-            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
-            (None, {}),
-        ),
-        (
-            {"allow_negative": False},
-            ({"seconds": 10}, {"days": 10}),
             (None, {}, {"seconds": -1}),
+        ),
+        (
+            {"enable_day": True, "enable_millisecond": True, "enable_second": True},
+            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
+            (None, {}, {"seconds": -1}),
+        ),
+        (
+            {"allow_negative": True},
+            ({"seconds": 10}, {"seconds": -1}),
+            (None, {}),
         ),
     ],
 )

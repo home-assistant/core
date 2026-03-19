@@ -135,8 +135,9 @@
 # ---
 # name: test_entities[calendar.mealie_breakfast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -154,6 +155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Breakfast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -189,8 +191,9 @@
 # ---
 # name: test_entities[calendar.mealie_dessert-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -208,6 +211,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dessert',
     'options': dict({
     }),
     'original_device_class': None,
@@ -243,8 +247,9 @@
 # ---
 # name: test_entities[calendar.mealie_dinner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -262,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dinner',
     'options': dict({
     }),
     'original_device_class': None,
@@ -297,8 +303,9 @@
 # ---
 # name: test_entities[calendar.mealie_drink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -316,6 +323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -351,8 +359,9 @@
 # ---
 # name: test_entities[calendar.mealie_lunch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -370,6 +379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lunch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -405,8 +415,9 @@
 # ---
 # name: test_entities[calendar.mealie_side-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -424,6 +435,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side',
     'options': dict({
     }),
     'original_device_class': None,
@@ -459,8 +471,9 @@
 # ---
 # name: test_entities[calendar.mealie_snack-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -478,6 +491,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snack',
     'options': dict({
     }),
     'original_device_class': None,

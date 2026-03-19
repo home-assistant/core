@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.pool_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_oxydo_reduction_potential-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
     'original_device_class': None,
@@ -106,8 +110,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_ph-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -127,6 +132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -158,8 +164,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_rssi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -179,6 +186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -210,8 +218,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_salt-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -231,6 +240,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,8 +272,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_tds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -283,6 +294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -314,8 +326,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -335,6 +348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -370,8 +384,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -391,6 +406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -423,8 +439,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_oxydo_reduction_potential-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -444,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
     'original_device_class': None,
@@ -475,8 +493,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_ph-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -496,6 +515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -527,8 +547,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_rssi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -548,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -579,8 +601,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_salt-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -600,6 +623,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
     'original_device_class': None,
@@ -631,8 +655,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_tds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -652,6 +677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -683,8 +709,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -704,6 +731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

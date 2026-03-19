@@ -131,6 +131,14 @@
       'entity_id': 'sensor.beosound_a5_44444444_battery',
       'state': '5',
     }),
+    'charging': dict({
+      'attributes': dict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'Living room Balance Charging',
+      }),
+      'entity_id': 'binary_sensor.beosound_a5_44444444_charging',
+      'state': 'off',
+    }),
     'config_entry': dict({
       'data': dict({
         'host': '192.168.0.4',
