@@ -1,4 +1,4 @@
-"""Number platform for Nest thermostats."""
+"""Number platform for Nest."""
 
 from __future__ import annotations
 

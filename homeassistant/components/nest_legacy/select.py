@@ -1,4 +1,4 @@
-"""Select platform for Nest Protect."""
+"""Select platform for Nest."""
 
 from __future__ import annotations
 
