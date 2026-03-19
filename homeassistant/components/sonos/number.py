@@ -337,7 +337,9 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
         # Listen for any speaker activity
         self._unsubscribe_activity = async_dispatcher_connect(
-            self.hass, SONOS_SPEAKER_ACTIVITY, self._on_any_activity
+            self.hass,
+            f"{SONOS_SPEAKER_ACTIVITY}-{self.speaker.uid}",
+            self._on_any_activity,
         )
         self.async_on_remove(self._unsubscribe_activity)
 

@@ -180,7 +180,7 @@ async def test_group_volume_sets_backend_and_updates_state(
     )
     assert soco.group.volume == 33
 
-    async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "test")
+    async_dispatcher_send(hass, f"{SONOS_SPEAKER_ACTIVITY}-{soco.uid}", "test")
     await hass.async_block_till_done()
     await _refresh_group_volume_entity(hass)
 
