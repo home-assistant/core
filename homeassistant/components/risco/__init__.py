@@ -99,7 +99,11 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         if isinstance(error, OperationError):
             message = str(error)
             if CLOCK_TIMEOUT_ERROR_FRAGMENT in message:
-                _LOGGER.warning("Risco keep-alive timeout")
+                _LOGGER.warning(
+                    "Risco keep-alive timeout for entry %s (host: %s)",
+                    entry.title,
+                    data.get(CONF_HOST, "unknown"),
+                )
                 return
 
         _LOGGER.error(
