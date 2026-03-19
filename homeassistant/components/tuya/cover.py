@@ -254,7 +254,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self.entity_description = description
         self._cover_unique_id = cover_unique_id(device.id, description.key)
         self._attr_unique_id = self._cover_unique_id
-        self._static_supported_features = CoverEntityFeature(0)
+        self._attr_supported_features = CoverEntityFeature(0)
 
         self._current_position = current_position or set_position
         self._current_state_wrapper = current_state_wrapper
@@ -264,12 +264,12 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._tilt_position = tilt_position
 
         if instruction_wrapper and TuyaCoverAction.STOP in instruction_wrapper.options:
-            self._static_supported_features |= CoverEntityFeature.STOP
+            self._attr_supported_features |= CoverEntityFeature.STOP
 
         if set_position:
-            self._static_supported_features |= CoverEntityFeature.SET_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
         if tilt_position:
-            self._static_supported_features |= CoverEntityFeature.SET_TILT_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -320,7 +320,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Return the supported features for this cover."""
-        supported_features = self._static_supported_features
+        supported_features = self._attr_supported_features
         if self._supports_action(TuyaCoverAction.OPEN):
             supported_features |= CoverEntityFeature.OPEN
         if self._supports_action(TuyaCoverAction.CLOSE):
@@ -389,12 +389,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if self._set_position is None:
-            return
-        await self._async_send_commands(
-            self._set_position.get_update_commands(
-                self.device, self._invert_position(kwargs[ATTR_POSITION])
-            )
+        await self._async_send_wrapper_updates(
+            self._set_position, self._invert_position(kwargs[ATTR_POSITION])
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
