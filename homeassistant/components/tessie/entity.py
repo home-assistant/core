@@ -86,11 +86,6 @@ class TessieEntity(TessieBaseEntity):
 
         super().__init__(vehicle.data_coordinator, key, data_key)
 
-    @property
-    def _value(self) -> Any:
-        """Return value from coordinator data."""
-        return self.coordinator.data.get(self.data_key)
-
     def set(self, *args: Any) -> None:
         """Set a value in coordinator data."""
         for key, value in args:
