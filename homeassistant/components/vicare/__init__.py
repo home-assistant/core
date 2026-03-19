@@ -147,9 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
             hass, entry
         )
     )
-    oauth_session = config_entry_oauth2_flow.OAuth2Session(
-        hass, entry, implementation
-    )
+    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
         await oauth_session.async_ensure_token_valid()
     except (KeyError, OAuth2TokenRequestError) as err:
@@ -159,16 +157,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         ) from err
     except ClientError as err:
         _LOGGER.debug("OAuth2 token validation failed (transient): %s", err)
-        raise ConfigEntryNotReady(
-            "Unable to reach Viessmann auth server"
-        ) from err
+        raise ConfigEntryNotReady("Unable to reach Viessmann auth server") from err
 
     auth = ConfigEntryAuth(hass, oauth_session)
 
     try:
-        entry.runtime_data = await hass.async_add_executor_job(
-            _setup_vicare_api, auth
-        )
+        entry.runtime_data = await hass.async_add_executor_job(_setup_vicare_api, auth)
     except (
         PyViCareInvalidConfigurationError,
         PyViCareInvalidCredentialsError,
@@ -225,7 +219,7 @@ def _obtain_token_via_password_grant(
             authorization_response=response.headers["Location"],
             code_verifier=code_verifier,
         )
-    except (requests.RequestException, KeyError, ValueError):
+    except requests.RequestException, KeyError, ValueError:
         _LOGGER.warning("Token exchange failed during migration")
         return {}
 
