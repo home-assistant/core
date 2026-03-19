@@ -5,40 +5,17 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysnmp.error import PySnmpError
-from pysnmp.hlapi.v3arch.asyncio import (
-    CommunityData,
-    Udp6TransportTarget,
-    UdpTransportTarget,
-    UsmUserData,
-)
-
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_AUTH_KEY,
-    CONF_BASEOID,
-    CONF_COMMUNITY,
-    CONF_IMPORTED_BY,
-    CONF_PRIV_KEY,
-    DEFAULT_AUTH_PROTOCOL,
-    DEFAULT_COMMUNITY,
-    DEFAULT_PORT,
-    DEFAULT_PRIV_PROTOCOL,
-    DEFAULT_TIMEOUT,
-    DEFAULT_VERSION,
-    DOMAIN,
-    SNMP_VERSIONS,
-)
+from . import SnmpConfigEntry
+from .const import CONF_IMPORTED_BY, DOMAIN
 from .coordinator import SnmpUpdateCoordinator
-from .util import async_create_request_cmd_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,56 +39,11 @@ async def async_setup_scanner(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SnmpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SNMP device tracker from a Config Entry."""
-    host = entry.data[CONF_HOST]
-    community = entry.data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
-    baseoid = entry.data[CONF_BASEOID]
-    authkey = entry.data.get(CONF_AUTH_KEY)
-    privkey = entry.data.get(CONF_PRIV_KEY)
-
-    authproto = DEFAULT_AUTH_PROTOCOL
-    privproto = DEFAULT_PRIV_PROTOCOL
-
-    if authkey is not None or privkey is not None:
-        if not authkey:
-            authproto = "none"
-        if not privkey:
-            privproto = "none"
-
-        auth_data = UsmUserData(
-            community,
-            authKey=authkey or None,
-            privKey=privkey or None,
-            authProtocol=authproto,
-            privProtocol=privproto,
-        )
-    else:
-        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION])
-
-    try:
-        target = await UdpTransportTarget.create(
-            (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
-        )
-    except PySnmpError:
-        try:
-            target = Udp6TransportTarget((host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT)
-        except PySnmpError as err:
-            _LOGGER.error("Invalid SNMP host: %s", err)
-            return
-
-    request_args = await async_create_request_cmd_args(
-        hass,
-        auth_data,
-        target,
-        baseoid,
-    )
-
-    coordinator = SnmpUpdateCoordinator(hass, entry, request_args)
-    await coordinator.async_config_entry_first_refresh()
-
+    coordinator = entry.runtime_data
     tracked_macs: set[str] = set()
 
     @callback
@@ -136,7 +68,7 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
     _attr_should_poll = False
 
     def __init__(
-        self, coordinator: SnmpUpdateCoordinator, entry: ConfigEntry, mac: str
+        self, coordinator: SnmpUpdateCoordinator, entry: SnmpConfigEntry, mac: str
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

@@ -1,43 +1,100 @@
-"""The snmp component.
+"""The snmp component."""
 
-This file handles the high-level setup of the 'snmp' integration.
-When a Config Entry is created or loaded, this is the first place Home Assistant looks.
-"""
+import logging
+
+from pysnmp.error import PySnmpError
+from pysnmp.hlapi.v3arch.asyncio import (
+    CommunityData,
+    Udp6TransportTarget,
+    UdpTransportTarget,
+    UsmUserData,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .util import async_get_snmp_engine
+from .const import (
+    CONF_AUTH_KEY,
+    CONF_BASEOID,
+    CONF_COMMUNITY,
+    CONF_PRIV_KEY,
+    DEFAULT_AUTH_PROTOCOL,
+    DEFAULT_COMMUNITY,
+    DEFAULT_PORT,
+    DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VERSION,
+    SNMP_VERSIONS,
+)
+from .coordinator import SnmpUpdateCoordinator
+from .util import async_create_request_cmd_args, async_get_snmp_engine
 
-# PLATFORMS lists the types of entities this integration supports.
-# In this case, we are only supporting 'device_tracker' for now.
-# Home Assistant will look for a 'device_tracker.py' file in this same directory.
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
-# __all__ defines what is exported when someone does 'from . import *'
+type SnmpConfigEntry = ConfigEntry[SnmpUpdateCoordinator]
+
 __all__ = ["async_get_snmp_engine"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up SNMP from a config entry.
+async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool:
+    """Set up SNMP from a config entry."""
+    host = entry.data[CONF_HOST]
+    community = entry.data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
+    baseoid = entry.data[CONF_BASEOID]
+    authkey = entry.data.get(CONF_AUTH_KEY)
+    privkey = entry.data.get(CONF_PRIV_KEY)
 
-    This function is called by Home Assistant whenever a Config Entry is loaded
-    (e.g., during startup or when the user adds it via the UI).
-    """
-    # This line tells Home Assistant to go and look for the platforms listed in
-    # the PLATFORMS variable (device_tracker.py) and set them up.
+    authproto = DEFAULT_AUTH_PROTOCOL
+    privproto = DEFAULT_PRIV_PROTOCOL
+
+    if authkey is not None or privkey is not None:
+        if not authkey:
+            authproto = "none"
+        if not privkey:
+            privproto = "none"
+
+        auth_data = UsmUserData(
+            community,
+            authKey=authkey or None,
+            privKey=privkey or None,
+            authProtocol=authproto,
+            privProtocol=privproto,
+        )
+    else:
+        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION])
+
+    try:
+        target = await UdpTransportTarget.create(
+            (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
+        )
+    except PySnmpError:
+        try:
+            target = Udp6TransportTarget((host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT)
+        except PySnmpError as err:
+            _LOGGER.error("Invalid SNMP host: %s", err)
+            return False
+
+    request_args = await async_create_request_cmd_args(
+        hass,
+        auth_data,
+        target,
+        baseoid,
+    )
+
+    coordinator = SnmpUpdateCoordinator(hass, entry, request_args)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Return True to indicate that setup was successful.
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry.
-
-    This function is called when a user deletes the integration or disables it.
-    It ensures that all associated entities are removed and resources cleaned up.
-    """
+    """Unload a config entry."""
     # This line shuts down the platforms we started in 'async_setup_entry'.
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

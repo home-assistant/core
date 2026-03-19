@@ -8,7 +8,7 @@ from pysnmp.proto.rfc1902 import OctetString
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.snmp.const import DOMAIN
+from homeassistant.components.snmp.const import CONF_IMPORTED_BY, DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -41,6 +41,7 @@ async def test_device_tracker_setup(hass: HomeAssistant, mock_walk) -> None:
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.3.1.1.2",
             "community": "public",
+            CONF_IMPORTED_BY: "device_tracker",
         },
     )
     entry.add_to_hass(hass)
@@ -52,7 +53,7 @@ async def test_device_tracker_setup(hass: HomeAssistant, mock_walk) -> None:
     )
 
     with patch(
-        "homeassistant.components.snmp.device_tracker.UdpTransportTarget.create",
+        "homeassistant.components.snmp.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -83,6 +84,7 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.3.1.1.2",
             "community": "public",
+            CONF_IMPORTED_BY: "device_tracker",
         },
     )
     entry.add_to_hass(hass)
@@ -108,7 +110,7 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
     mock_walk.side_effect = mock_walk_1
 
     with patch(
-        "homeassistant.components.snmp.device_tracker.UdpTransportTarget.create",
+        "homeassistant.components.snmp.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
