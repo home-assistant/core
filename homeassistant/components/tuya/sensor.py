@@ -358,8 +358,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.PH_CURRENT,
             device_class=SensorDeviceClass.PH,
-            # pH is unitless, but some devices report unit as "pH"
-            suggested_unit_of_measurement="",
+            # pH is unitless; treat any Tuya-reported "pH"/"ph" unit as unitless
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
