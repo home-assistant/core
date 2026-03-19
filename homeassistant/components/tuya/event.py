@@ -183,11 +183,6 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
             return False
 
         event_type, event_attributes = event_data
-        LOGGER.debug(
-            "Raising Tuya %s event for %s with attributes: %s",
-            event_type,
-            self.entity_id,
-            event_attributes,
-        )
+        LOGGER.debug("Tuya entity %s triggered event %s", self.entity_id, event_type)
         self._trigger_event(event_type, event_attributes)
         return True
