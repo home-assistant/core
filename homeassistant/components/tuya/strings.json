@@ -963,6 +963,9 @@
       "indexed_alarm": {
         "name": "Alarm {index}"
       },
+      "indexed_invert_status": {
+        "name": "Invert status {index}"
+      },
       "indexed_socket": {
         "name": "Socket {index}"
       },

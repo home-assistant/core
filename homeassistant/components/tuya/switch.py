@@ -976,6 +976,7 @@ class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
+    _attr_should_poll = False
     _attr_translation_key = "invert_status"
 
     def __init__(
@@ -985,6 +986,9 @@ class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
         self.device = device
         self._cover_unique_id = _cover_unique_id(device, description)
         self._attr_unique_id = f"{self._cover_unique_id}_invert_status"
+        if description.translation_placeholders:
+            self._attr_translation_key = "indexed_invert_status"
+            self._attr_translation_placeholders = description.translation_placeholders
 
     @property
     def device_info(self) -> DeviceInfo:
