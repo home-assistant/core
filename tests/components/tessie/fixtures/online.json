@@ -59,7 +59,7 @@
     "module_temp_min": 22.5,
     "pack_current": -0.6,
     "pack_voltage": 390.1,
-    "phantom_drain_percent": 0.5,
+    "phantom_drain": 0.5,
     "preconditioning_enabled": false,
     "preconditioning_times": "all_week",
     "scheduled_charging_mode": "StartAt",

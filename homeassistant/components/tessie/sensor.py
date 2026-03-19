@@ -144,7 +144,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="phantom_drain_percent",
-        data_key="charge_state_phantom_drain_percent",
+        data_key="charge_state_phantom_drain",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
