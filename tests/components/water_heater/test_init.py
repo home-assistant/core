@@ -32,6 +32,47 @@ from tests.common import (
 )
 
 
+async def async_setup_entry_water_heater(
+    hass: HomeAssistant, water_heater_entity: WaterHeaterEntity
+) -> None:
+    """Set up test config entry and platform."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WATER_HEATER]
+        )
+        return True
+
+    async def async_setup_entry_water_heater_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test water_heater platform via config entry."""
+        async_add_entities([water_heater_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.water_heater",
+        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+
 async def test_set_temp_schema_no_req(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -131,40 +172,7 @@ async def test_operation_mode_validation(
     water_heater_entity._attr_current_operation = None
     water_heater_entity._attr_operation_list = None
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, [Platform.WATER_HEATER]
-        )
-        return True
-
-    async def async_setup_entry_water_heater_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
-    ) -> None:
-        """Set up test water_heater platform via config entry."""
-        async_add_entities([water_heater_entity])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.water_heater",
-        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_entry_water_heater(hass, water_heater_entity)
 
     data = {"entity_id": "water_heater.test", "operation_mode": "test"}
 
@@ -206,3 +214,35 @@ async def test_operation_mode_validation(
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
+
+
+async def test_default_state(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test operation mode validation."""
+    water_heater_entity = MockWaterHeaterEntity()
+    water_heater_entity.hass = hass
+    water_heater_entity._attr_name = "test"
+    water_heater_entity._attr_unique_id = "test"
+    water_heater_entity._attr_supported_features = (
+        WaterHeaterEntityFeature.OPERATION_MODE
+    )
+    water_heater_entity._attr_current_operation = None
+    water_heater_entity._attr_operation_list = None
+
+    await async_setup_entry_water_heater(hass, water_heater_entity)
+
+    state = hass.states.get("water_heater.test")
+    assert state is not None
+    assert state.state == "unknown"
+    assert state.attributes == {
+        "current_temperature": None,
+        "friendly_name": "test",
+        "max_temp": 60.0,
+        "min_temp": 43.3,
+        "operation_list": None,
+        "operation_mode": None,
+        "supported_features": WaterHeaterEntityFeature.OPERATION_MODE,
+        "target_temp_high": None,
+        "target_temp_low": None,
+        "temperature": None,
+        "temperature_unit": UnitOfTemperature.CELSIUS,
+    }

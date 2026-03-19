@@ -73,6 +73,7 @@ ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_TARGET_TEMP_STEP = "target_temp_step"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
+ATTR_TEMPERATURE_UNIT = "temperature_unit"
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 
@@ -245,6 +246,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.temperature_unit,
                 self.precision,
             ),
+            ATTR_TEMPERATURE_UNIT: self.hass.config.units.temperature_unit,
         }
 
         supported_features = self.supported_features
