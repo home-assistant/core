@@ -119,6 +119,10 @@ set_program_and_options:
             - cooking_common_program_hood_automatic
             - cooking_common_program_hood_venting
             - cooking_common_program_hood_delayed_shut_off
+            - cooking_oven_program_heating_mode_3_d_heating
+            - cooking_oven_program_heating_mode_air_fry
+            - cooking_oven_program_heating_mode_grill_large_area
+            - cooking_oven_program_heating_mode_grill_small_area
             - cooking_oven_program_heating_mode_pre_heating
             - cooking_oven_program_heating_mode_hot_air
             - cooking_oven_program_heating_mode_hot_air_eco
