@@ -609,10 +609,10 @@
       "message": "{field_name} must be in HH:MM or HH:MM:SS format."
     },
     "no_devices_configured": {
-      "message": "No {device_type} devices with token authentication are configured. Services require {device_type} devices with V1 API access."
+      "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
     },
     "token_auth_required": {
-      "message": "This service requires token authentication (V1 API)."
+      "message": "This action requires token authentication (V1 API)."
     }
   },
   "selector": {
