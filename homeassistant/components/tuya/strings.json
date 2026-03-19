@@ -972,6 +972,9 @@
       "indexed_usb": {
         "name": "USB {index}"
       },
+      "invert_status": {
+        "name": "Invert status"
+      },
       "ionizer": {
         "name": "Ionizer"
       },
@@ -1025,9 +1028,6 @@
       },
       "reverse": {
         "name": "Reverse"
-      },
-      "invert_status": {
-        "name": "Invert status"
       },
       "siren": {
         "name": "Siren"

@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory, STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -952,10 +952,10 @@ async def async_setup_entry(
                         )
                     )
                 )
-            if descriptions := COVERS.get(device.category):
+            if cover_descriptions := COVERS.get(device.category):
                 entities.extend(
                     TuyaCoverStatusInvertedSwitch(device, description)
-                    for description in descriptions
+                    for description in cover_descriptions
                     if (
                         description.key in device.function
                         or description.key in device.status_range
@@ -1012,25 +1012,19 @@ class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
             self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = (
                 last_state.state == STATE_ON
             )
-        dispatcher_send(
-            self.hass, _cover_status_inverted_signal(self._cover_unique_id)
-        )
+        dispatcher_send(self.hass, _cover_status_inverted_signal(self._cover_unique_id))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable cover status inversion."""
         self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = True
         self.async_write_ha_state()
-        dispatcher_send(
-            self.hass, _cover_status_inverted_signal(self._cover_unique_id)
-        )
+        dispatcher_send(self.hass, _cover_status_inverted_signal(self._cover_unique_id))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable cover status inversion."""
         self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = False
         self.async_write_ha_state()
-        dispatcher_send(
-            self.hass, _cover_status_inverted_signal(self._cover_unique_id)
-        )
+        dispatcher_send(self.hass, _cover_status_inverted_signal(self._cover_unique_id))
 
 
 class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
