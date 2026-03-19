@@ -30,8 +30,8 @@
       },
       "reauth_confirm": {
         "data": {
-          "api_secret": "API secret",
-          "private_key": "Private key (mandatory for E2E encryption)"
+          "api_secret": "[%key:component::threema::config::step::credentials::data::api_secret%]",
+          "private_key": "[%key:component::threema::config::step::credentials::data::private_key%]"
         },
         "data_description": {
           "api_secret": "Enter the new API secret from gateway.threema.ch.",
