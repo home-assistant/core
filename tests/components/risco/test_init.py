@@ -115,6 +115,4 @@ async def test_clock_operation_error_is_downgraded(
 
     reload_mock.assert_not_awaited()
     logger_mock.error.assert_not_called()
-    logger_mock.warning.assert_called_once_with(
-        "Risco keep-alive timeout, waiting for reconnection"
-    )
+    logger_mock.warning.assert_called_once_with("Risco keep-alive timeout")
