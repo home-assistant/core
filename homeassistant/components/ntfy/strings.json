@@ -261,6 +261,11 @@
           "supporter": "Supporter"
         }
       }
+    },
+    "update": {
+      "update": {
+        "name": "ntfy version"
+      }
     }
   },
   "exceptions": {
@@ -302,6 +307,9 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
+    },
+    "update_check_failed": {
+      "message": "Failed to check for latest ntfy update"
     }
   },
   "issues": {
@@ -318,6 +326,50 @@
     }
   },
   "selector": {
+    "actions": {
+      "fields": {
+        "action": {
+          "description": "Select the type of action to add to the notification",
+          "name": "Action type"
+        },
+        "body": {
+          "description": "The body of the HTTP request for `http` actions.",
+          "name": "HTTP body"
+        },
+        "clear": {
+          "description": "Clear notification after action button is tapped",
+          "name": "Clear notification"
+        },
+        "extras": {
+          "description": "Extras to include in the intent as key-value pairs for 'broadcast' actions",
+          "name": "Intent extras"
+        },
+        "headers": {
+          "description": "Additional HTTP headers as key-value pairs for 'http' actions",
+          "name": "HTTP headers"
+        },
+        "intent": {
+          "description": "Android intent to send when the 'broadcast' action is triggered",
+          "name": "Intent"
+        },
+        "label": {
+          "description": "Label of the action button",
+          "name": "Label"
+        },
+        "method": {
+          "description": "HTTP method to use for the 'http' action",
+          "name": "HTTP method"
+        },
+        "url": {
+          "description": "URL to open for the 'view' action or to request for the 'http' action",
+          "name": "URL"
+        },
+        "value": {
+          "description": "Value to copy to clipboard when the 'copy' action is triggered",
+          "name": "Value"
+        }
+      }
+    },
     "priority": {
       "options": {
         "1": "Minimum",
@@ -350,8 +402,12 @@
       "name": "Delete notification"
     },
     "publish": {
-      "description": "Publishes a notification message to a ntfy topic",
+      "description": "Publishes a notification message to a ntfy topic.",
       "fields": {
+        "actions": {
+          "description": "Up to three actions (`view`, `broadcast`, `http`, or `copy`) can be added as buttons below the notification. Actions are executed when the corresponding button is tapped or clicked.",
+          "name": "Action buttons"
+        },
         "attach": {
           "description": "Attach images or other files by URL.",
           "name": "Attachment URL"

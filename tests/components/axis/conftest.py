@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Generator
 from copy import deepcopy
+import re
 from types import MappingProxyType
 from typing import Any, Protocol
 from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
 import pytest
-import respx
+from yarl import URL
 
 from homeassistant.components.axis.const import DOMAIN
 from homeassistant.const import (
@@ -45,6 +46,7 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 type RtspStateType = Callable[[bool], None]
@@ -129,15 +131,15 @@ def fixture_config_entry_options() -> MappingProxyType[str, Any]:
 
 
 @pytest.fixture(autouse=True)
-def reset_mock_requests() -> Generator[None]:
-    """Reset respx mock routes after the test."""
+def reset_mock_requests(aioclient_mock: AiohttpClientMocker) -> Generator[None]:
+    """Reset mocked HTTP routes after the test."""
     yield
-    respx.mock.clear()
+    aioclient_mock.clear_requests()
 
 
 @pytest.fixture(name="mock_requests")
 def fixture_request(
-    respx_mock: respx.MockRouter,
+    aioclient_mock: AiohttpClientMocker,
     port_management_payload: dict[str, Any],
     param_properties_payload: str,
     param_ports_payload: str,
@@ -146,90 +148,91 @@ def fixture_request(
     """Mock default Vapix requests responses."""
 
     def __mock_default_requests(host: str) -> None:
-        respx_mock(base_url=f"http://{host}:80")
+        def _url_pattern(path: str) -> re.Pattern[str]:
+            return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}$")
+
+        def _text_response(url: URL, text: str) -> AiohttpClientMockResponse:
+            return AiohttpClientMockResponse(
+                "post",
+                url,
+                text=text,
+                headers={"Content-Type": "text/plain"},
+            )
+
+        async def _param_cgi_response(
+            _method: str, url: URL, data: dict[str, Any] | None
+        ) -> AiohttpClientMockResponse:
+            group = (data or {}).get("group")
+            if group == "root.Brand":
+                return _text_response(url, BRAND_RESPONSE)
+            if group == "root.Image":
+                return _text_response(url, IMAGE_RESPONSE)
+            if group == "root.Input":
+                return _text_response(url, PORTS_RESPONSE)
+            if group == "root.IOPort":
+                return _text_response(url, param_ports_payload)
+            if group == "root.Output":
+                return _text_response(url, PORTS_RESPONSE)
+            if group == "root.Properties":
+                return _text_response(url, param_properties_payload)
+            if group == "root.PTZ":
+                return _text_response(url, PTZ_RESPONSE)
+            if group == "root.StreamProfile":
+                return _text_response(url, STREAM_PROFILES_RESPONSE)
+            return _text_response(url, "")
 
         if host != DEFAULT_HOST:
-            respx.post("/axis-cgi/apidiscovery.cgi").respond(
+            aioclient_mock.post(
+                _url_pattern("/axis-cgi/apidiscovery.cgi"),
                 json=API_DISCOVERY_RESPONSE,
             )
-        respx.post("/axis-cgi/basicdeviceinfo.cgi").respond(
+        aioclient_mock.post(
+            _url_pattern("/axis-cgi/basicdeviceinfo.cgi"),
             json=BASIC_DEVICE_INFO_RESPONSE,
         )
-        respx.post("/axis-cgi/io/portmanagement.cgi").respond(
+        aioclient_mock.post(
+            _url_pattern("/axis-cgi/io/portmanagement.cgi"),
             json=port_management_payload,
         )
-        respx.post("/axis-cgi/mqtt/client.cgi").respond(
-            json=MQTT_CLIENT_RESPONSE, status_code=mqtt_status_code
+        aioclient_mock.post(
+            _url_pattern("/axis-cgi/mqtt/client.cgi"),
+            json=MQTT_CLIENT_RESPONSE,
+            status=mqtt_status_code,
         )
-        respx.post("/axis-cgi/streamprofile.cgi").respond(
+        aioclient_mock.post(
+            _url_pattern("/axis-cgi/streamprofile.cgi"),
             json=STREAM_PROFILES_RESPONSE,
         )
-        respx.post("/axis-cgi/viewarea/info.cgi").respond(json=VIEW_AREAS_RESPONSE)
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.Brand"},
-        ).respond(
-            text=BRAND_RESPONSE,
-            headers={"Content-Type": "text/plain"},
+        aioclient_mock.post(
+            _url_pattern("/axis-cgi/viewarea/info.cgi"),
+            json=VIEW_AREAS_RESPONSE,
         )
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.Image"},
-        ).respond(
-            text=IMAGE_RESPONSE,
-            headers={"Content-Type": "text/plain"},
+        aioclient_mock.post(
+            _url_pattern("/axis-cgi/param.cgi"),
+            side_effect=_param_cgi_response,
         )
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.Input"},
-        ).respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.IOPort"},
-        ).respond(
-            text=param_ports_payload,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.Output"},
-        ).respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.Properties"},
-        ).respond(
-            text=param_properties_payload,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.PTZ"},
-        ).respond(
-            text=PTZ_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.post(
-            "/axis-cgi/param.cgi",
-            data={"action": "list", "group": "root.StreamProfile"},
-        ).respond(
-            text=STREAM_PROFILES_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.post("/axis-cgi/applications/list.cgi").respond(
+        aioclient_mock.post(
+            _url_pattern("/axis-cgi/applications/list.cgi"),
             text=APPLICATIONS_LIST_RESPONSE,
             headers={"Content-Type": "text/xml"},
         )
-        respx.post("/local/fenceguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
-        respx.post("/local/loiteringguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
-        respx.post("/local/motionguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
-        respx.post("/local/vmd/control.cgi").respond(json=APP_VMD4_RESPONSE)
-        respx.post("/local/objectanalytics/control.cgi").respond(json=APP_AOA_RESPONSE)
+        aioclient_mock.post(
+            _url_pattern("/local/fenceguard/control.cgi"), json=APP_VMD4_RESPONSE
+        )
+        aioclient_mock.post(
+            _url_pattern("/local/loiteringguard/control.cgi"),
+            json=APP_VMD4_RESPONSE,
+        )
+        aioclient_mock.post(
+            _url_pattern("/local/motionguard/control.cgi"), json=APP_VMD4_RESPONSE
+        )
+        aioclient_mock.post(
+            _url_pattern("/local/vmd/control.cgi"), json=APP_VMD4_RESPONSE
+        )
+        aioclient_mock.post(
+            _url_pattern("/local/objectanalytics/control.cgi"),
+            json=APP_AOA_RESPONSE,
+        )
 
     return __mock_default_requests
 
@@ -241,12 +244,20 @@ def api_discovery_items() -> dict[str, Any]:
 
 
 @pytest.fixture(autouse=True)
-def fixture_api_discovery(api_discovery_items: dict[str, Any]) -> None:
+def fixture_api_discovery(
+    aioclient_mock: AiohttpClientMocker,
+    api_discovery_items: dict[str, Any],
+) -> None:
     """Apidiscovery mock response."""
     data = deepcopy(API_DISCOVERY_RESPONSE)
     if api_discovery_items:
         data["data"]["apiList"].append(api_discovery_items)
-    respx.post(f"http://{DEFAULT_HOST}:80/axis-cgi/apidiscovery.cgi").respond(json=data)
+    aioclient_mock.post(
+        re.compile(
+            rf"^https?://{re.escape(DEFAULT_HOST)}(?::\d+)?/axis-cgi/apidiscovery.cgi$"
+        ),
+        json=data,
+    )
 
 
 @pytest.fixture(name="port_management_payload")

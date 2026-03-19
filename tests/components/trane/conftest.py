@@ -1,13 +1,14 @@
 """Fixtures for the Trane Local integration tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from steamloop import FanMode, HoldType, ThermostatState, Zone, ZoneMode
 
+from homeassistant.components.trane import PLATFORMS
 from homeassistant.components.trane.const import CONF_SECRET_KEY, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -31,6 +32,19 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return PLATFORMS
+
+
+@pytest.fixture(autouse=True)
+async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None]:
+    """Fixture to set up platforms for tests."""
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        yield
+
+
 def _make_state() -> ThermostatState:
     """Create a mock thermostat state."""
     return ThermostatState(
@@ -49,6 +63,8 @@ def _make_state() -> ThermostatState:
         supported_modes=[ZoneMode.OFF, ZoneMode.AUTO, ZoneMode.COOL, ZoneMode.HEAT],
         fan_mode=FanMode.AUTO,
         relative_humidity="45",
+        heating_active="0",
+        cooling_active="0",
     )
 
 

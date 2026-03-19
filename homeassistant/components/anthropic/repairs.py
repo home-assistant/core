@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .config_flow import get_model_list
-from .const import CONF_CHAT_MODEL, DEFAULT, DEPRECATED_MODELS, DOMAIN
+from .const import CONF_CHAT_MODEL, DEPRECATED_MODELS, DOMAIN
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
@@ -67,13 +67,23 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             self._model_list_cache[entry.entry_id] = model_list
 
         if "opus" in model:
-            suggested_model = "claude-opus-4-5"
-        elif "haiku" in model:
-            suggested_model = "claude-haiku-4-5"
+            family = "claude-opus"
         elif "sonnet" in model:
-            suggested_model = "claude-sonnet-4-5"
+            family = "claude-sonnet"
         else:
-            suggested_model = cast(str, DEFAULT[CONF_CHAT_MODEL])
+            family = "claude-haiku"
+
+        suggested_model = next(
+            (
+                model_option["value"]
+                for model_option in sorted(
+                    (m for m in model_list if family in m["value"]),
+                    key=lambda x: x["value"],
+                    reverse=True,
+                )
+            ),
+            vol.UNDEFINED,
+        )
 
         schema = vol.Schema(
             {

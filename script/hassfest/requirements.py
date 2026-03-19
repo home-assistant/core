@@ -78,6 +78,7 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
     },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "xiaomi_miio": {
         "python-miio": {"zeroconf"},
     },
@@ -122,7 +123,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
@@ -149,7 +149,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "github": {"aiogithubapi": {"async-timeout"}},
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
         "here-routing": {"async-timeout"},
@@ -211,7 +210,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # travispy > pytest
         "travispy": {"pytest"},
     },
-    "unifiprotect": {"uiprotect": {"async-timeout"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -38,10 +38,7 @@ class PlugwiseClimateExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the text data."""
-        return {
-            "last_active_schedule": self.last_active_schedule,
-            "previous_action_mode": self.previous_action_mode,
-        }
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> PlugwiseClimateExtraStoredData:
@@ -102,7 +99,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 extra_data.as_dict()
             )
             self._last_active_schedule = plugwise_extra_data.last_active_schedule
-            self._previous_action_mode = plugwise_extra_data.previous_action_mode
+            self._previous_action_mode = (
+                plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
+            )
 
     def __init__(
         self,
@@ -202,11 +201,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         if self.coordinator.api.cooling_present:
             if "regulation_modes" in self._gateway_data:
-                selected = self._gateway_data.get("select_regulation_mode")
-                if selected == HVACAction.COOLING.value:
-                    hvac_modes.append(HVACMode.COOL)
-                if selected == HVACAction.HEATING.value:
+                if "heating" in self._gateway_data["regulation_modes"]:
                     hvac_modes.append(HVACMode.HEAT)
+                if "cooling" in self._gateway_data["regulation_modes"]:
+                    hvac_modes.append(HVACMode.COOL)
             else:
                 hvac_modes.append(HVACMode.HEAT_COOL)
         else:
@@ -253,40 +251,75 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         await self.coordinator.api.set_temperature(self._location, data)
 
+    def _regulation_mode_for_hvac(self, hvac_mode: HVACMode) -> str | None:
+        """Return the API regulation value for a manual HVAC mode, or None."""
+        if hvac_mode == HVACMode.HEAT:
+            return HVACAction.HEATING.value
+        if hvac_mode == HVACMode.COOL:
+            return HVACAction.COOLING.value
+        return None
+
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set the hvac mode."""
+        """Set the HVAC mode (off, heat, cool, heat_cool, or auto/schedule)."""
         if hvac_mode == self.hvac_mode:
             return
 
+        api = self.coordinator.api
+        current_schedule = self.device.get("select_schedule")
+
+        # OFF: single API call
         if hvac_mode == HVACMode.OFF:
-            await self.coordinator.api.set_regulation_mode(hvac_mode.value)
-        else:
-            current = self.device.get("select_schedule")
-            desired = current
+            await api.set_regulation_mode(hvac_mode.value)
+            return
 
-            # Capture the last valid schedule
-            if desired and desired != "off":
-                self._last_active_schedule = desired
-            elif desired == "off":
-                desired = self._last_active_schedule
-
-            # Enabling HVACMode.AUTO requires a previously set schedule for saving and restoring
-            if hvac_mode == HVACMode.AUTO and not desired:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key=ERROR_NO_SCHEDULE,
-                )
-
-            await self.coordinator.api.set_schedule_state(
-                self._location,
-                STATE_ON if hvac_mode == HVACMode.AUTO else STATE_OFF,
-                desired,
+        # Manual mode (heat/cool/heat_cool) without a schedule: set regulation only
+        if (
+            current_schedule is None
+            and hvac_mode != HVACMode.AUTO
+            and (
+                regulation := self._regulation_mode_for_hvac(hvac_mode)
+                or self._previous_action_mode
             )
-            if self.hvac_mode == HVACMode.OFF and self._previous_action_mode:
-                await self.coordinator.api.set_regulation_mode(
-                    self._previous_action_mode
+        ):
+            await api.set_regulation_mode(regulation)
+            return
+
+        # Manual mode: ensure regulation and turn off schedule when needed
+        if hvac_mode in (HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL):
+            regulation = self._regulation_mode_for_hvac(hvac_mode) or (
+                self._previous_action_mode
+                if self.hvac_mode in (HVACMode.HEAT_COOL, HVACMode.OFF)
+                else None
+            )
+            if regulation:
+                await api.set_regulation_mode(regulation)
+
+            if (
+                self.hvac_mode == HVACMode.OFF and current_schedule not in (None, "off")
+            ) or (self.hvac_mode == HVACMode.AUTO and current_schedule is not None):
+                await api.set_schedule_state(
+                    self._location, STATE_OFF, current_schedule
                 )
+            return
+
+        # AUTO: restore schedule and regulation
+        desired_schedule = current_schedule
+        if desired_schedule and desired_schedule != "off":
+            self._last_active_schedule = desired_schedule
+        elif desired_schedule == "off":
+            desired_schedule = self._last_active_schedule
+
+        if not desired_schedule:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=ERROR_NO_SCHEDULE,
+            )
+
+        if self._previous_action_mode:
+            if self.hvac_mode == HVACMode.OFF:
+                await api.set_regulation_mode(self._previous_action_mode)
+            await api.set_schedule_state(self._location, STATE_ON, desired_schedule)
 
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
