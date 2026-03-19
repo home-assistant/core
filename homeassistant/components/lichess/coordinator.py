@@ -23,7 +23,6 @@ type LichessConfigEntry = ConfigEntry[LichessCoordinator]
 class LichessData:
     """Data for Lichess."""
 
-    player: str
     stats: LichessStatistics
 
 
@@ -46,12 +45,9 @@ class LichessCoordinator(DataUpdateCoordinator[LichessData]):
     async def _async_update_data(self) -> LichessData:
         """Update data for Lichess."""
         try:
-            player = await self.client.get_username(
-                token=self.config_entry.data[CONF_API_TOKEN]
-            )
             stats = await self.client.get_statistics(
                 token=self.config_entry.data[CONF_API_TOKEN]
             )
         except AioLichessError as err:
             raise UpdateFailed("Error in communicating with Lichess") from err
-        return LichessData(player=player, stats=stats)
+        return LichessData(stats=stats)
