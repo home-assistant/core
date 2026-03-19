@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, INTEGRATION_TITLE
-from .coordinator import WaterFurnaceCoordinator
+from .coordinator import WaterFurnaceCoordinator, WaterFurnaceDeviceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-type WaterFurnaceConfigEntry = ConfigEntry[dict[str, WaterFurnaceCoordinator]]
+type WaterFurnaceConfigEntry = ConfigEntry[dict[str, WaterFurnaceDeviceData]]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -95,7 +95,7 @@ async def _async_setup_coordinator(
     password: str,
     device_index: int,
     entry: WaterFurnaceConfigEntry,
-) -> tuple[str, WaterFurnaceCoordinator]:
+) -> tuple[str, WaterFurnaceDeviceData]:
     """Set up a coordinator for a device."""
 
     device_client = WaterFurnace(username, password, device=device_index)
@@ -107,7 +107,8 @@ async def _async_setup_coordinator(
         raise ConfigEntryNotReady(
             f"Invalid GWID for device at index {device_index}: {device_client.gwid}"
         )
-    return device_client.gwid, coordinator
+
+    return device_client.gwid, WaterFurnaceDeviceData(realtime=coordinator)
 
 
 async def async_setup_entry(
@@ -126,10 +127,12 @@ async def async_setup_entry(
             "Authentication failed. Please update your credentials."
         ) from err
 
+    device_count = len(client.devices) if client.devices else 0
+
     results = await asyncio.gather(
         *[
             _async_setup_coordinator(hass, username, password, index, entry)
-            for index in range(len(client.devices) if client.devices else 0)
+            for index in range(device_count)
         ]
     )
     entry.runtime_data = dict(results)

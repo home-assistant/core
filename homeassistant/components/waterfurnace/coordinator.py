@@ -1,5 +1,8 @@
 """Data update coordinator for WaterFurnace."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
@@ -14,6 +17,13 @@ if TYPE_CHECKING:
     from . import WaterFurnaceConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class WaterFurnaceDeviceData:
+    """Container for per-device coordinators."""
+
+    realtime: WaterFurnaceCoordinator
 
 
 class WaterFurnaceCoordinator(DataUpdateCoordinator[WFReading]):

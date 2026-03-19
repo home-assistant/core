@@ -132,3 +132,19 @@ async def test_reload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_waterfurnace_client.login.call_count == 4
     assert "TEST_GWID_12345" in mock_config_entry.runtime_data
+
+
+async def test_setup_creates_device_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_waterfurnace_client: Mock,
+) -> None:
+    """Test that setup creates WaterFurnaceDeviceData with realtime coordinator."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    device_data = mock_config_entry.runtime_data["TEST_GWID_12345"]
+    assert device_data.realtime is not None
