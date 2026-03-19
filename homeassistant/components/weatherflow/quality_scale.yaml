@@ -1,0 +1,178 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration is local push (iot_class: local_push). Devices emit
+      UDP messages and the integration reacts to them via event subscriptions;
+      there is no polling interval to configure.
+  brands: done
+  common-modules:
+    status: todo
+    comment: |
+      The integration lacks a coordinator module. Device state management and
+      dispatcher wiring are handled inline in __init__.py and the platform
+      files. A coordinator.py (or equivalent) and cleaner separation of
+      concerns would satisfy this rule.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: |
+      The external documentation page does not include removal/uninstall
+      instructions for this integration.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: todo
+    comment: |
+      The integration stores the client in hass.data[DOMAIN][entry.entry_id]
+      (see __init__.py:59, 76, 87) instead of using the typed
+      entry.runtime_data pattern. This should be migrated to a typed
+      ConfigEntry with runtime_data.
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: |
+      The external documentation page does not document configuration
+      parameters in detail. Basic setup is described but no parameter
+      reference table exists.
+  docs-installation-parameters:
+    status: todo
+    comment: |
+      The external documentation page does not include detailed installation
+      parameter documentation.
+  entity-unavailable:
+    status: todo
+    comment: |
+      The integration does not use a DataUpdateCoordinator. Entity availability
+      is set per-entity via _attr_available in _async_update_state(), but there
+      is no mechanism to mark all entities unavailable when the UDP listener
+      fails after initial setup (e.g. network goes away mid-session).
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: |
+      Without a coordinator the integration has no centralised logging when
+      the listener becomes unavailable. Individual entities do not log when
+      they transition to unavailable. A coordinator would satisfy this
+      automatically.
+  parallel-updates:
+    status: todo
+    comment: |
+      Neither sensor.py nor event.py define a PARALLEL_UPDATES constant.
+      Because these are push-based entities that never poll, PARALLEL_UPDATES
+      should be set to 0 in each platform file.
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration uses local UDP discovery and requires no credentials,
+      so reauthentication is not applicable.
+  test-coverage:
+    status: todo
+    comment: |
+      Only config-flow tests exist (tests/components/weatherflow/
+      test_config_flow.py). There are no tests for the sensor or event
+      platform entities, nor for async_setup_entry / async_unload_entry
+      behaviour. Coverage is well below the 95% Silver threshold.
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: |
+      No diagnostics.py module exists. An async_get_config_entry_diagnostics
+      function should be added to aid debugging.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      The integration discovers devices via local UDP broadcast. There is no
+      network-level discovery protocol (Zeroconf, SSDP, DHCP, etc.) that
+      would provide updated device information via the manifest discovery
+      keys, so this rule is not applicable.
+  discovery:
+    status: exempt
+    comment: |
+      WeatherFlow devices broadcast UDP packets on the local network. The
+      integration listens for these packets rather than using HA's discovery
+      infrastructure (Zeroconf, SSDP, DHCP). Discovery happens at the
+      listener level within the integration itself, not via manifest-declared
+      discovery protocols.
+  docs-data-update: done
+  docs-examples:
+    status: todo
+    comment: No automation or dashboard usage examples are present in the docs.
+  docs-known-limitations:
+    status: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: todo
+    comment: No troubleshooting section exists in the external documentation.
+  docs-use-cases:
+    status: todo
+    comment: No practical use-case examples are documented.
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: |
+      The integration does not raise HomeAssistantError or
+      ServiceValidationError with translation keys. Error handling in the
+      config flow uses plain string error keys, not translated exception
+      messages.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      No async_step_reconfigure step is implemented in config_flow.py.
+      Although the integration takes no user-configurable parameters, a
+      reconfiguration step may still be expected at Gold level.
+  repair-issues:
+    status: exempt
+    comment: |
+      There are no identified scenarios in this integration that require
+      directing users to the repair dashboard.
+  stale-devices:
+    status: todo
+    comment: |
+      async_remove_config_entry_device is implemented, allowing manual removal
+      of devices. However, there is no automated mechanism to detect and clean
+      up stale devices (e.g. devices that were seen on a previous run but are
+      no longer broadcasting). Full stale-device handling should be added.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      pyweatherflowudp communicates via raw UDP sockets (asyncio DatagramProtocol),
+      not HTTP. There is no aiohttp.ClientSession involved, so websession
+      injection is not applicable.
+  strict-typing:
+    status: todo
+    comment: |
+      The integration is not listed in .strict-typing and has not been
+      validated under mypy strict mode. Type annotations should be audited
+      and the domain added to .strict-typing.
