@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID, MOCK_SUBENTRY_ID
 
-from tests.common import MockConfigEntry, MockConfigEntrySubentry
+from tests.common import MockConfigEntry
 
 
 async def test_notify_entity_created(
@@ -101,13 +101,13 @@ async def test_send_message_e2e(
         data=mock_config_entry_with_keys.data,
         unique_id=MOCK_GATEWAY_ID,
         subentries_data=[
-            MockConfigEntrySubentry(
-                data={CONF_RECIPIENT: MOCK_RECIPIENT_ID},
-                subentry_id=MOCK_SUBENTRY_ID,
-                subentry_type=SUBENTRY_TYPE_RECIPIENT,
-                title=MOCK_RECIPIENT_ID,
-                unique_id=MOCK_RECIPIENT_ID,
-            ),
+            {
+                "data": {CONF_RECIPIENT: MOCK_RECIPIENT_ID},
+                "subentry_id": MOCK_SUBENTRY_ID,
+                "subentry_type": SUBENTRY_TYPE_RECIPIENT,
+                "title": MOCK_RECIPIENT_ID,
+                "unique_id": MOCK_RECIPIENT_ID,
+            },
         ],
     )
     entry.add_to_hass(hass)

@@ -17,7 +17,7 @@ from homeassistant.components.threema.const import (
     SUBENTRY_TYPE_RECIPIENT,
 )
 
-from tests.common import MockConfigEntry, MockConfigEntrySubentry
+from tests.common import MockConfigEntry
 
 MOCK_GATEWAY_ID = "*TESTGWY"
 MOCK_API_SECRET = "test_secret_key_12345"
@@ -73,13 +73,13 @@ def mock_config_entry_with_subentry() -> MockConfigEntry:
         },
         unique_id=MOCK_GATEWAY_ID,
         subentries_data=[
-            MockConfigEntrySubentry(
-                data={CONF_RECIPIENT: MOCK_RECIPIENT_ID},
-                subentry_id=MOCK_SUBENTRY_ID,
-                subentry_type=SUBENTRY_TYPE_RECIPIENT,
-                title=MOCK_RECIPIENT_ID,
-                unique_id=MOCK_RECIPIENT_ID,
-            ),
+            {
+                "data": {CONF_RECIPIENT: MOCK_RECIPIENT_ID},
+                "subentry_id": MOCK_SUBENTRY_ID,
+                "subentry_type": SUBENTRY_TYPE_RECIPIENT,
+                "title": MOCK_RECIPIENT_ID,
+                "unique_id": MOCK_RECIPIENT_ID,
+            },
         ],
     )
 

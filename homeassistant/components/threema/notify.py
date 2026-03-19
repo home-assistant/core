@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -40,7 +41,7 @@ class ThreemaNotifyEntity(NotifyEntity):
         self,
         entry: ThreemaConfigEntry,
         subentry_id: str,
-        subentry: object,
+        subentry: ConfigSubentry,
     ) -> None:
         """Initialize the notify entity."""
         self._entry = entry
