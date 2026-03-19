@@ -48,18 +48,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SNMP device tracker from a Config Entry."""
     coordinator = entry.runtime_data
-    tracked_macs: set[str] = set()
-
-    # Remove legacy states that conflict with our registered entities.
-    # The old known_devices.yaml system creates states outside the entity
-    # registry that block our modern entities from loading.
     ent_reg = er.async_get(hass)
-    for reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+
+    # 1. Identity all MACs we already know about from the registry for this entry.
+    # This ensures they show up as 'not_home' instead of 'not provided' if missing from the current poll.
+    registry_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+    initial_macs = {e.unique_id for e in registry_entries if e.unique_id}
+
+    # 2. Pre-cleanup: Remove legacy or restored states that conflict with our registered entities.
+    # We do this before adding our own entities to ensure their entity_ids are available.
+    for reg_entry in registry_entries:
         if hass.states.get(reg_entry.entity_id):
             _LOGGER.debug(
-                "Removing legacy state %s to avoid conflicts", reg_entry.entity_id
+                "Removing existing state %s to avoid conflicts during setup",
+                reg_entry.entity_id,
             )
             hass.states.async_remove(reg_entry.entity_id)
+
+    # 3. Add entities for all known MACs immediately
+    if initial_macs:
+        async_add_entities(
+            [SnmpTrackerEntity(coordinator, entry, mac) for mac in initial_macs]
+        )
+
+    tracked_macs = set(initial_macs)
 
     @callback
     def _handle_coordinator_update() -> None:
@@ -68,8 +80,7 @@ async def async_setup_entry(
         if coordinator.data:
             for mac in coordinator.data:
                 if mac not in tracked_macs:
-                    # Remove legacy states (from known_devices.yaml) that would
-                    # block our entity from claiming this entity_id.
+                    # discovery of a brand new device
                     entity_slug = mac.replace(":", "_").lower()
                     legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{entity_slug}"
                     if not ent_reg.async_get(legacy_id) and hass.states.get(legacy_id):
