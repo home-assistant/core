@@ -5,20 +5,37 @@
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "user": {
+      "code": {
         "data": {
-          "code": "[%key:component::satel_integra::common::code%]",
+          "code": "[%key:component::satel_integra::common::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::satel_integra::common::code_input_description%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]",
+          "host": "[%key:component::satel_integra::config::step::user::data_description::host%]",
+          "port": "[%key:component::satel_integra::config::step::user::data_description::port%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
           "host": "The IP address of the alarm panel",
           "port": "The port of the alarm panel"
         }

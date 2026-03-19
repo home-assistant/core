@@ -35,15 +35,17 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("user_input", "entry_data", "entry_options"),
+    ("user_input_connection", "user_input_code", "entry_data", "entry_options"),
     [
         (
-            {**MOCK_CONFIG_DATA, **MOCK_CONFIG_OPTIONS},
+            MOCK_CONFIG_DATA,
+            MOCK_CONFIG_OPTIONS,
             MOCK_CONFIG_DATA,
             MOCK_CONFIG_OPTIONS,
         ),
         (
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST]},
+            {},
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST], CONF_PORT: DEFAULT_PORT},
             {CONF_CODE: None},
         ),
@@ -53,7 +55,8 @@ async def test_setup_flow(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
-    user_input: dict[str, Any],
+    user_input_connection: dict[str, Any],
+    user_input_code: dict[str, Any],
     entry_data: dict[str, Any],
     entry_options: dict[str, Any],
 ) -> None:
@@ -68,7 +71,14 @@ async def test_setup_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input,
+        user_input_connection,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input_code,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
@@ -103,6 +113,14 @@ async def test_setup_connection_failed(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -309,6 +327,80 @@ async def test_cannot_create_same_subentry(
     assert len(mock_config_entry_with_subentries.subentries) == 4
 
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reconfigure updates host/port."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "10.0.0.2",
+            CONF_PORT: 4321,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == {
+        CONF_HOST: "10.0.0.2",
+        CONF_PORT: 4321,
+    }
+
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_connection_failed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Failure path for the reconfigure flow."""
+    mock_satel.connect.return_value = False
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_satel.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 1234,
+    }
 
 
 async def test_same_host_config_disallowed(
