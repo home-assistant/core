@@ -1,0 +1,96 @@
+# 🤖 Dependabot for GitHub Actions & `pnpm/action-setup@v5`
+
+Dependabot can automatically keep your GitHub Actions workflows up‑to‑date by monitoring the versions of actions you use. This includes the popular `pnpm/action-setup` action.
+
+## 📁 Configuring Dependabot for GitHub Actions
+
+Create a file at `.github/dependabot.yml` in your repository with the following content:
+
+```yaml
+version: 2
+updates:
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Optionally, specify which actions to ignore or target
+    # target-branch: "develop"
+    # labels:
+    #   - "dependencies"
+    #   - "github-actions"
+```
+
+This configuration tells Dependabot to check for updates to any GitHub Actions used in your workflows every week.
+
+## 🛠️ Using `pnpm/action-setup@v5` in a Workflow
+
+To use `pnpm/action-setup@v5` in your GitHub Actions workflow, add a step like this:
+
+```yaml
+- name: Install pnpm
+  uses: pnpm/action-setup@v5
+  with:
+    version: 8  # or a specific version like 8.6.0
+```
+
+Dependabot will detect this usage and, when a new version of `pnpm/action-setup` is released (e.g., `v5.1.0` or `v6`), it will open a pull request to update the version tag in your workflow file.
+
+## 🎯 Customising Dependabot for `pnpm/action-setup`
+
+You can fine‑tune how Dependabot handles updates for this specific action by adding `ignore` or `allow` rules. For example, to only receive updates for the `v5` major version (i.e., patch and minor updates, but not major bumps to v6), use:
+
+```yaml
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "pnpm/action-setup"
+        update-types: ["version-update:semver-major"]
+```
+
+This will ignore major version updates (like `v5` → `v6`) but still propose minor and patch updates within `v5`.
+
+## 📦 Example: Complete Workflow with Dependabot
+
+**Workflow file (`.github/workflows/ci.yml`)**:
+```yaml
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm test
+```
+
+**Dependabot config (`.github/dependabot.yml`)**:
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+Now Dependabot will automatically open PRs when new versions of `actions/checkout`, `pnpm/action-setup`, or `actions/setup-node` are released.
+
+## 🔍 Additional Tips
+
+- Dependabot also supports other ecosystems like npm, pip, etc. – add separate entries for those.
+- You can set a custom `target-branch` if you want PRs against a development branch.
+- Review and merge Dependabot PRs to keep your workflows secure and up‑to‑date.
+
+For more details, check the [GitHub Dependabot documentation](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file). 😊
