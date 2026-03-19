@@ -66,8 +66,14 @@
       "images_prune": {
         "name": "Prune unused images"
       },
+      "pause_container": {
+        "name": "Pause container"
+      },
       "restart_container": {
         "name": "Restart container"
+      },
+      "resume_container": {
+        "name": "Resume container"
       }
     },
     "sensor": {
