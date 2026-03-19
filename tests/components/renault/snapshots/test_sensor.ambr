@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -112,8 +114,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -169,8 +172,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -226,8 +230,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -297,8 +302,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -358,8 +364,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -415,8 +422,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -472,8 +480,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -522,8 +531,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -572,8 +582,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -622,8 +633,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -679,8 +691,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -736,8 +749,9 @@
 # ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_plug_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -801,8 +815,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -855,8 +870,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -912,8 +928,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -969,8 +986,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1026,8 +1044,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1097,8 +1116,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1158,8 +1178,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1215,8 +1236,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1272,8 +1294,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1322,8 +1345,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1372,8 +1396,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1422,8 +1447,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1479,8 +1505,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1536,8 +1563,9 @@
 # ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_plug_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1601,8 +1629,9 @@
 # ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_fuel_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1658,8 +1687,9 @@
 # ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_fuel_quantity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1715,8 +1745,9 @@
 # ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1765,8 +1796,9 @@
 # ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1815,8 +1847,9 @@
 # ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1865,8 +1898,9 @@
 # ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1922,8 +1956,9 @@
 # ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1979,8 +2014,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2036,8 +2072,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2090,8 +2127,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2147,8 +2185,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2204,8 +2243,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2261,8 +2301,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2332,8 +2373,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2393,8 +2435,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2450,8 +2493,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_fuel_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2507,8 +2551,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_fuel_quantity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2564,8 +2609,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2614,8 +2660,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2664,8 +2711,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2714,8 +2762,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2764,8 +2813,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2821,8 +2871,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2878,8 +2929,9 @@
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_plug_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2943,8 +2995,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3000,8 +3053,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3054,8 +3108,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3111,8 +3166,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3168,8 +3224,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3225,8 +3282,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_charge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3296,8 +3354,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3357,8 +3416,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3414,8 +3474,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3464,8 +3525,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3514,8 +3576,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3564,8 +3627,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3614,8 +3678,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3671,8 +3736,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3728,8 +3794,9 @@
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_plug_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3793,8 +3860,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3850,8 +3918,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3904,8 +3973,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3961,8 +4031,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4018,8 +4089,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4075,8 +4147,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4146,8 +4219,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4207,8 +4281,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4264,8 +4339,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4314,8 +4390,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4364,8 +4441,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4414,8 +4492,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4464,8 +4543,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4521,8 +4601,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4578,8 +4659,9 @@
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_plug_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4643,8 +4725,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4697,8 +4780,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4754,8 +4838,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4811,8 +4896,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4868,8 +4954,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4939,8 +5026,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5000,8 +5088,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5057,8 +5146,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5114,8 +5204,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5164,8 +5255,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5214,8 +5306,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5264,8 +5357,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5321,8 +5415,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5378,8 +5473,9 @@
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_plug_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5443,8 +5539,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5500,8 +5597,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5554,8 +5652,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5611,8 +5710,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5668,8 +5768,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5725,8 +5826,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charge_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5796,8 +5898,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5857,8 +5960,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5914,8 +6018,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_front_left_tyre_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5971,8 +6076,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_front_right_tyre_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6028,8 +6134,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6078,8 +6185,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6128,8 +6236,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6178,8 +6287,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6228,8 +6338,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6285,8 +6396,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6342,8 +6454,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_plug_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6407,8 +6520,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_rear_left_tyre_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6464,8 +6578,9 @@
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_rear_right_tyre_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
