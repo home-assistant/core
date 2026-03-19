@@ -4,6 +4,7 @@ from collections.abc import Generator
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from pyintelliclima.const import FanMode, FanSpeed
 from pyintelliclima.intelliclima_types import (
     IntelliClimaDevices,
     IntelliClimaECO,
@@ -50,9 +51,9 @@ def single_eco_device() -> IntelliClimaDevices:
         model=IntelliClimaModelType(modello="ECO", tipo="wifi"),
         name="Test VMC",
         houses_id="12345",
-        mode_set="1",
+        mode_set=FanMode.inward,
         mode_state="1",
-        speed_set="3",
+        speed_set=FanSpeed.medium,
         speed_state="3",
         last_online="2025-11-18 10:22:51",
         creation_date="2025-11-18 10:22:51",
