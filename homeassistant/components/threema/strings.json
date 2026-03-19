@@ -96,7 +96,7 @@
   },
   "services": {
     "send_message": {
-      "description": "Send a text message via Threema Gateway.",
+      "description": "Sends a text message via Threema Gateway.",
       "fields": {
         "config_entry_id": {
           "description": "The Threema Gateway config entry to use.",
