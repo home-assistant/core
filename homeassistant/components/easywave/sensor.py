@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -174,7 +174,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         # running.  Coordinator updates can arrive during early startup
         # before EVENT_HOMEASSISTANT_STARTED fires; ignoring them keeps the
         # initial None (unknown) → connected/disconnected transition intact.
-        if self._ha_started or self.hass.is_running:
+        if self._ha_started:
             if new_status != self._last_status:
                 old_status = self._last_status
                 _LOGGER.info("Gateway status: %s -> %s", old_status, new_status)
@@ -217,8 +217,8 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
             self._ha_started = True
             self._handle_coordinator_update()
 
-        if self.hass.is_running:
-            # Added while HA was already running (e.g. via UI config flow).
+        if self.hass.state is CoreState.running:
+            # Added while HA was already fully running (e.g. via UI config flow).
             # Defer by one event-loop tick so the entity is fully registered
             # in the state machine before the write.
             self.hass.loop.call_soon(_on_ha_started)

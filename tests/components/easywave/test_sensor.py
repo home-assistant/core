@@ -19,7 +19,7 @@ from homeassistant.components.easywave.sensor import (
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
@@ -188,6 +188,7 @@ def test_handle_coordinator_update(
     """Test _handle_coordinator_update updates current_status."""
     gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
+    gateway_sensor._ha_started = True
 
     gateway_sensor._handle_coordinator_update()
 
@@ -202,6 +203,7 @@ async def test_handle_coordinator_update_fires_connected_event(
     """Test that transitioning to connected fires EVENT_GATEWAY_CONNECTED."""
     gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
+    gateway_sensor._ha_started = True
     gateway_sensor._last_status = "disconnected"
 
     events: list[str] = []
@@ -226,6 +228,7 @@ async def test_handle_coordinator_update_fires_disconnected_event(
     """Test that transitioning to disconnected fires EVENT_GATEWAY_DISCONNECTED."""
     gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
+    gateway_sensor._ha_started = True
     gateway_sensor._last_status = "connected"
     gateway_sensor.coordinator.is_offline = True
     gateway_sensor.coordinator.transceiver.is_connected = False
@@ -373,9 +376,9 @@ async def test_async_added_to_hass_not_started(
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor.async_on_remove = MagicMock()
 
-    # Simulate HA not yet running
-    with patch.object(hass, "is_running", False):
-        await gateway_sensor.async_added_to_hass()
+    # Simulate HA not yet fully running (still in starting phase)
+    hass.set_state(CoreState.starting)
+    await gateway_sensor.async_added_to_hass()
 
     # _current_status should still be None (waiting for STARTED event)
     assert gateway_sensor._current_status is None
