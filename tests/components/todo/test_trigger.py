@@ -278,6 +278,38 @@ async def test_item_change_triggers(
     )
 
 
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_item_change_triggers_ignore_initial_unavailable(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    todo_lists: tuple[MockTodoListEntity, MockTodoListEntity],
+) -> None:
+    """Test triggers do not fire when items load for the first time."""
+    entity, _ = todo_lists
+    entity._attr_todo_items = None
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    await _setup_automation(hass, {CONF_ENTITY_ID: TODO_ENTITY_ID1})
+
+    entity._attr_todo_items = [
+        TodoItem(
+            summary="loaded_item",
+            uid="loaded_id",
+            status=TodoItemStatus.NEEDS_ACTION,
+        )
+    ]
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+    _assert_service_calls(service_calls, [])
+
+    await _add_item(hass, TODO_ENTITY_ID1, "new_item")
+    _assert_service_calls(
+        service_calls,
+        [{"platform": "todo.item_added", "entity_id": TODO_ENTITY_ID1}],
+    )
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
 @pytest.mark.parametrize(
     "included_target",

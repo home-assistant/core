@@ -22,15 +22,17 @@ class MockTodoListEntity(TodoListEntity):
 
     def __init__(self, items: list[TodoItem] | None = None) -> None:
         """Initialize entity."""
-        self._attr_todo_items = items or []
+        self._attr_todo_items = items
 
     @property
     def items(self) -> list[TodoItem]:
         """Return the items in the To-do list."""
-        return self._attr_todo_items
+        return self._attr_todo_items or []
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
+        if self._attr_todo_items is None:
+            self._attr_todo_items = []
         self._attr_todo_items.append(
             dataclasses.replace(item, uid=item.uid or uuid.uuid4().hex)
         )
@@ -43,6 +45,7 @@ class MockTodoListEntity(TodoListEntity):
         """Update an item in the To-do list."""
         for idx, existing_item in enumerate(self.items):
             if existing_item.uid == item.uid:
+                assert self._attr_todo_items is not None
                 self._attr_todo_items[idx] = item
                 break
 
