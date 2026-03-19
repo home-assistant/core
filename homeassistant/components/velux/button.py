@@ -30,6 +30,7 @@ async def async_setup_entry(
     entities.extend(
         VeluxIdentifyButton(node, config_entry.entry_id)
         for node in config_entry.runtime_data.nodes
+        if isinstance(node, Node)
     )
     async_add_entities(entities)
 

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_snapshot[button.klf_200_gateway_restart-entry]
+# name: test_button_snapshot[mock_window][button.klf_200_gateway_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.klf_200_gateway_restart-state]
+# name: test_button_snapshot[mock_window][button.klf_200_gateway_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
@@ -50,9 +50,10 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_snapshot[button.test_window_identify-entry]
+# name: test_button_snapshot[mock_window][button.test_window_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
+      None,
     ]),
     'area_id': None,
     'capabilities': None,
@@ -86,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.test_window_identify-state]
+# name: test_button_snapshot[mock_window][button.test_window_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',

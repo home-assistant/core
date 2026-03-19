@@ -214,7 +214,6 @@ def mock_pyvlx(
             mock_blind,
             mock_window,
             mock_exterior_heating,
-            mock_cover_type,
         ]
 
     pyvlx.scenes = [mock_scene]
