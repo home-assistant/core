@@ -2,21 +2,21 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_on_wifi": "Device is already connected to WiFi and was discovered via the network.",
+      "already_on_wifi": "Device is already connected to Wi-Fi and was discovered via the network.",
       "another_device": "Reconfiguration was unsuccessful, the IP address/hostname of another Shelly device was used.",
-      "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision WiFi credentials, then add the device when it appears on your network.",
+      "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision Wi-Fi credentials, then add the device when it appears on your network.",
       "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
       "custom_port_not_supported": "[%key:component::shelly::config::error::custom_port_not_supported%]",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
       "invalid_discovery_info": "Invalid Bluetooth discovery information.",
       "ipv6_not_supported": "IPv6 is not supported.",
       "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
-      "no_wifi_networks": "No WiFi networks found during scan.",
+      "no_wifi_networks": "No Wi-Fi networks found during scan.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wifi_provisioned": "WiFi credentials for {ssid} have been provisioned to {name}. The device is connecting to WiFi and will complete setup automatically."
+      "wifi_provisioned": "Wi-Fi credentials for {ssid} have been provisioned to {name}. The device is connecting to Wi-Fi and will complete setup automatically."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -28,20 +28,20 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "provisioning": "Provisioning WiFi credentials and waiting for device to connect"
+      "provisioning": "Provisioning Wi-Fi credentials and waiting for device to connect"
     },
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "disable_ap": "Disable WiFi access point after provisioning",
+          "disable_ap": "Disable Wi-Fi access point after provisioning",
           "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
         },
         "data_description": {
-          "disable_ap": "For improved security, disable the WiFi access point after successfully connecting to your network.",
-          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after WiFi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
+          "disable_ap": "For improved security, disable the Wi-Fi access point after successfully connecting to your network.",
+          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after Wi-Fi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
         },
-        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?",
-        "title": "Provision WiFi via Bluetooth"
+        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to Wi-Fi.\n\nDo you want to provision Wi-Fi credentials to this device?",
+        "title": "Provision Wi-Fi via Bluetooth"
       },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
@@ -103,16 +103,16 @@
       "wifi_scan": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "ssid": "WiFi network"
+          "ssid": "Wi-Fi network"
         },
         "data_description": {
-          "password": "Password for the WiFi network.",
-          "ssid": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+          "password": "Password for the Wi-Fi network.",
+          "ssid": "Select a Wi-Fi network from the list or enter a custom SSID for hidden networks."
         },
-        "description": "Select a WiFi network and enter the password to provision the device."
+        "description": "Select a Wi-Fi network and enter the password to provision the device."
       },
       "wifi_scan_failed": {
-        "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
+        "description": "Failed to scan for Wi-Fi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
       }
     }
   },
@@ -727,16 +727,16 @@
         },
         "step": {
           "init": {
-            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nNote: If you disable the access point, the device may need to restart.",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open Wi-Fi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nNote: If you disable the access point, the device may need to restart.",
             "menu_options": {
-              "confirm": "Disable WiFi access point",
+              "confirm": "Disable Wi-Fi access point",
               "ignore": "Ignore"
             },
             "title": "[%key:component::shelly::issues::open_wifi_ap::title%]"
           }
         }
       },
-      "title": "Open WiFi access point on {device_name}"
+      "title": "Open Wi-Fi access point on {device_name}"
     },
     "outbound_websocket_incorrectly_enabled": {
       "fix_flow": {
