@@ -708,7 +708,7 @@
         },
         "device_id": {
           "description": "The Growatt SPH device to write to.",
-          "name": "Device"
+          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
         },
         "mains_enabled": {
           "description": "Enable AC (mains) charging.",
@@ -758,7 +758,7 @@
       "fields": {
         "device_id": {
           "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::device_id::name%]"
+          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
         },
         "discharge_power": {
           "description": "Discharge power limit (%).",
