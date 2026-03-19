@@ -267,7 +267,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.4.2
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.32.0
+aiohomeconnect==0.33.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -2318,7 +2318,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.30
+pyvlx==0.2.32
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
