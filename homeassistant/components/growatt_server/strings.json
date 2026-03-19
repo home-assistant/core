@@ -639,8 +639,8 @@
       "description": "Reads AC charge time periods from an SPH device.",
       "fields": {
         "device_id": {
-          "description": "The Growatt SPH device to read from.",
-          "name": "Device"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         }
       },
       "name": "Read AC charge times"
@@ -649,8 +649,8 @@
       "description": "Reads AC discharge time periods from an SPH device.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         }
       },
       "name": "Read AC discharge times"
@@ -707,8 +707,8 @@
           "name": "Charge stop SOC"
         },
         "device_id": {
-          "description": "The Growatt SPH device to write to.",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         },
         "mains_enabled": {
           "description": "Enable AC (mains) charging.",
@@ -757,8 +757,8 @@
       "description": "Writes AC discharge time periods to an SPH device.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         },
         "discharge_power": {
           "description": "Discharge power limit (%).",
