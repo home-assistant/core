@@ -52,8 +52,8 @@
 # ---
 # name: test_button_snapshot[button.test_window_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
