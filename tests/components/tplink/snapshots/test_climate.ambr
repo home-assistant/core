@@ -57,6 +57,7 @@
       'min_temp': 5,
       'supported_features': <ClimateEntityFeature: 385>,
       'temperature': 22.2,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',

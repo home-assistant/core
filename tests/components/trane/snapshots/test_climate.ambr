@@ -79,6 +79,7 @@
       'target_temp_low': 68,
       'target_temp_step': 1.0,
       'temperature': None,
+      'temperature_unit': <UnitOfTemperature.FAHRENHEIT: '°F'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',

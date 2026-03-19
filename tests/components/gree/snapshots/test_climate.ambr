@@ -42,6 +42,7 @@
         ]),
         'target_temp_step': 1,
         'temperature': 25,
+        'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'context': <ANY>,
       'entity_id': 'climate.fake_device_1',

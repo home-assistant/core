@@ -51,6 +51,7 @@
       'target_temp_high': 24,
       'target_temp_low': 20,
       'target_temp_step': 1,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.myauto',

@@ -58,6 +58,7 @@
       'supported_features': <ClimateEntityFeature: 385>,
       'target_temp_step': 1,
       'temperature': 80,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.huum_sauna',

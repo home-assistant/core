@@ -68,6 +68,7 @@
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 1,
       'temperature': None,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
       'vicare_programs': list([
         'comfort',
         'eco',
@@ -155,6 +156,7 @@
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 1,
       'temperature': None,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
       'vicare_programs': list([
         'comfort',
         'eco',
