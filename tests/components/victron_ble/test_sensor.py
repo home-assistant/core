@@ -109,12 +109,12 @@ def _inject_bad_advertisement(hass: HomeAssistant, seq: int = 0) -> None:
     """
     info = VICTRON_VEBUS_BAD_KEY_SERVICE_INFO
     # Vary the last byte so each injection is unique
-    raw = bytearray(info.manufacturer_data[0x02E1])
+    raw = bytearray(info.manufacturer_data[VICTRON_IDENTIFIER])
     raw[-1] = seq & 0xFF
     device = generate_ble_device(address=info.address, name=info.name, details={})
     adv = generate_advertisement_data(
         local_name=info.name,
-        manufacturer_data={0x02E1: bytes(raw)},
+        manufacturer_data={VICTRON_IDENTIFIER: bytes(raw)},
         service_data=info.service_data,
         service_uuids=info.service_uuids,
         rssi=-60,
