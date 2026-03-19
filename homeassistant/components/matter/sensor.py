@@ -1594,7 +1594,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             state_class=None,
             options=[x for x in SETPOINT_CHANGE_SOURCE_MAP.values() if x is not None],
-            device_to_ha=lambda x: SETPOINT_CHANGE_SOURCE_MAP[x],
+            device_to_ha=SETPOINT_CHANGE_SOURCE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.SetpointChangeSource,),
