@@ -1,60 +1,98 @@
-"""Test ViCare migration."""
+"""Test ViCare initialization and migration."""
 
 from unittest.mock import patch
 
 from homeassistant.components.vicare.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import ENTRY_CONFIG, MODULE
+from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry
 
 
-async def test_migrate_entry_v1_1_to_v1_2(
+async def test_migrate_entry_v1_1_to_v1_3(
     hass: HomeAssistant,
     mock_setup_entry: None,
 ) -> None:
-    """Test migration of config entry from v1.1 to v1.2 removes heating_type."""
+    """Test migration of config entry from v1.1 through to v1.3."""
+    mock_token = {
+        "access_token": "mock-access-token",
+        "refresh_token": "mock-refresh-token",
+        "expires_at": 9999999999.0,
+        "token_type": "Bearer",
+    }
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
-        data={**ENTRY_CONFIG, "heating_type": "auto"},
+        data={
+            CONF_USERNAME: "foo@bar.com",
+            CONF_PASSWORD: "1234",
+            CONF_CLIENT_ID: "5678",
+            "heating_type": "auto",
+        },
         version=1,
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        f"{MODULE}._obtain_token_via_password_grant",
+        return_value=mock_token,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.version == 1
-    assert config_entry.minor_version == 2
+    assert config_entry.minor_version == 3
     assert "heating_type" not in config_entry.data
+    assert "username" not in config_entry.data
+    assert "password" not in config_entry.data
+    assert "client_id" not in config_entry.data
+    assert config_entry.data["auth_implementation"] == DOMAIN
+    assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
 
 
-async def test_migrate_entry_v1_1_to_v1_2_no_heating_type(
+async def test_migrate_entry_v1_2_to_v1_3(
     hass: HomeAssistant,
     mock_setup_entry: None,
 ) -> None:
-    """Test migration of config entry from v1.1 to v1.2 when heating_type is absent."""
+    """Test migration of config entry from v1.2 to v1.3."""
+    mock_token = {
+        "access_token": "mock-access-token",
+        "refresh_token": "mock-refresh-token",
+        "expires_at": 9999999999.0,
+        "token_type": "Bearer",
+    }
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
-        data=ENTRY_CONFIG,
+        data={
+            CONF_USERNAME: "foo@bar.com",
+            CONF_PASSWORD: "1234",
+            CONF_CLIENT_ID: "5678",
+        },
         version=1,
-        minor_version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        f"{MODULE}._obtain_token_via_password_grant",
+        return_value=mock_token,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.version == 1
-    assert config_entry.minor_version == 2
-    assert "heating_type" not in config_entry.data
+    assert config_entry.minor_version == 3
+    assert "username" not in config_entry.data
+    assert "password" not in config_entry.data
+    assert "client_id" not in config_entry.data
+    assert config_entry.data["auth_implementation"] == DOMAIN
+    assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
 
 
 # Device migration test can be removed in 2025.4.0
@@ -70,7 +108,10 @@ async def test_device_and_entity_migration(
         Fixture({"type:boiler"}, "vicare/dummy-device-no-serial.json"),
     ]
     with (
-        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}._login_oauth", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -149,3 +190,19 @@ async def test_device_and_entity_migration(
         == "gateway1_deviceId1-heating-0"
     )
     assert entity_registry.async_get(entry3.entity_id).unique_id == "gateway2-0"
+
+
+async def test_legacy_password_entry_setup(
+    hass: HomeAssistant,
+    mock_legacy_config_entry: MockConfigEntry,
+) -> None:
+    """Test that legacy password-based config entries are set up correctly."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    with patch(
+        f"{MODULE}._login_legacy",
+        return_value=MockPyViCare(fixtures),
+    ):
+        await setup_integration(hass, mock_legacy_config_entry)
+
+    assert mock_legacy_config_entry.runtime_data is not None
+    assert len(mock_legacy_config_entry.runtime_data.devices) == 1

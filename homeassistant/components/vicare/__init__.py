@@ -1,21 +1,47 @@
 """The ViCare integration."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping
 from contextlib import suppress
 import logging
 import os
+from typing import Any
 
+from aiohttp import ClientError
+from authlib.common.security import generate_token as generate_code_verifier
+from authlib.integrations.requests_client import OAuth2Session
+from PyViCare.PyViCare import PyViCare
+from PyViCare.PyViCareAbstractOAuthManager import (
+    AUTHORIZE_URL,
+    SCOPE_IOT,
+    SCOPE_OFFLINE_ACCESS,
+    TOKEN_URL,
+)
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
 )
+import requests
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2TokenRequestError
 from homeassistant.helpers.storage import STORAGE_DIR
 
+from .api import ConfigEntryAuth
 from .const import (
     DEFAULT_CACHE_DURATION,
     DOMAIN,
@@ -43,18 +69,105 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
         _LOGGER.debug("Migration to version 1.2 successful")
 
+    if config_entry.version == 1 and config_entry.minor_version < 3:
+        _LOGGER.debug("Migrating ViCare config entry from version 1.2 to 1.3")
+        data = {**config_entry.data}
+
+        # Import legacy client_id as application credential
+        if client_id := data.get(CONF_CLIENT_ID):
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(client_id, "", "Imported legacy credential"),
+            )
+            _LOGGER.debug("Imported legacy client_id as application credential")
+
+        # Obtain OAuth2 token with refresh_token using existing credentials
+        token = {}
+        if (
+            client_id
+            and (username := data.get(CONF_USERNAME))
+            and (password := data.get(CONF_PASSWORD))
+        ):
+            token = await hass.async_add_executor_job(
+                _obtain_token_via_password_grant, client_id, username, password
+            )
+
+        # Remove legacy auth fields
+        data.pop(CONF_USERNAME, None)
+        data.pop(CONF_PASSWORD, None)
+        data.pop(CONF_CLIENT_ID, None)
+
+        # Set OAuth2 auth implementation
+        data["auth_implementation"] = DOMAIN
+        data["token"] = token
+
+        # Remove legacy token file
+        token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
+        with suppress(FileNotFoundError):
+            os.remove(token_path)
+
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=3)
+        if token:
+            _LOGGER.debug("Migration to version 1.3 successful (token obtained)")
+        else:
+            _LOGGER.warning(
+                "Migration to version 1.3 complete but token could not be "
+                "obtained — re-authentication will be required"
+            )
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
-    try:
-        entry.runtime_data = await hass.async_add_executor_job(
-            setup_vicare_api, hass, entry
+
+    if "auth_implementation" in entry.data:
+        # OAuth2 path
+        _LOGGER.debug("Using OAuth2 authentication")
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
-        raise ConfigEntryAuthFailed("Authentication failed") from err
+        oauth_session = config_entry_oauth2_flow.OAuth2Session(
+            hass, entry, implementation
+        )
+        try:
+            await oauth_session.async_ensure_token_valid()
+        except ClientError as err:
+            _LOGGER.debug("OAuth2 token validation failed (transient): %s", err)
+            raise ConfigEntryNotReady("Unable to reach Viessmann auth server") from err
+        except (KeyError, OAuth2TokenRequestError) as err:
+            _LOGGER.debug("OAuth2 token validation failed (auth): %s", err)
+            raise ConfigEntryAuthFailed(
+                "OAuth2 token is invalid, please re-authenticate"
+            ) from err
+
+        auth = ConfigEntryAuth(hass, oauth_session)
+
+        try:
+            entry.runtime_data = await hass.async_add_executor_job(
+                _setup_vicare_api, _login_oauth, entry, auth
+            )
+        except (
+            PyViCareInvalidConfigurationError,
+            PyViCareInvalidCredentialsError,
+        ) as err:
+            raise ConfigEntryAuthFailed("Authentication failed") from err
+    else:
+        # Legacy password path (can be removed in 2026.10)
+        _LOGGER.debug("Using legacy password authentication")
+        try:
+            entry.runtime_data = await hass.async_add_executor_job(
+                _setup_vicare_api, _login_legacy, hass, entry.data
+            )
+        except (
+            PyViCareInvalidConfigurationError,
+            PyViCareInvalidCredentialsError,
+        ) as err:
+            raise ConfigEntryAuthFailed("Authentication failed") from err
 
     for device in entry.runtime_data.devices:
         # Migration can be removed in 2025.4.0
@@ -65,9 +178,81 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     return True
 
 
-def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> ViCareData:
+def _obtain_token_via_password_grant(
+    client_id: str, username: str, password: str
+) -> dict[str, Any]:
+    """Obtain an OAuth2 token with refresh_token using password-grant flow.
+
+    Uses the existing credentials to silently obtain a refresh token
+    during migration, so users don't need to re-authenticate.
+    """
+    scope = [SCOPE_IOT, SCOPE_OFFLINE_ACCESS]
+    redirect_uri = "vicare://oauth-callback/everest"
+    oauth = OAuth2Session(
+        client_id,
+        redirect_uri=redirect_uri,
+        scope=scope,
+        code_challenge_method="S256",
+    )
+    code_verifier = generate_code_verifier(48)
+    auth_url, _ = oauth.create_authorization_url(
+        AUTHORIZE_URL, code_verifier=code_verifier
+    )
+
+    try:
+        response = requests.post(
+            auth_url,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            auth=(username, password),
+            allow_redirects=False,
+            timeout=15,
+        )
+    except requests.RequestException:
+        _LOGGER.warning("Failed to reach Viessmann auth server during migration")
+        return {}
+
+    if response.status_code != 302 or "Location" not in response.headers:
+        _LOGGER.warning("Password-grant authentication failed during migration")
+        return {}
+
+    oauth.fetch_token(
+        TOKEN_URL,
+        authorization_response=response.headers["Location"],
+        code_verifier=code_verifier,
+    )
+
+    token = dict(oauth.token)
+    _LOGGER.debug("Obtained OAuth2 token with refresh_token via password grant")
+    return token
+
+
+def _login_oauth(
+    entry: ViCareConfigEntry,
+    auth: ConfigEntryAuth,
+    cache_duration: int = DEFAULT_CACHE_DURATION,
+) -> PyViCare:
+    """Login via OAuth2."""
+    vicare_api = PyViCare()
+    vicare_api.setCacheDuration(cache_duration)
+    vicare_api.initWithExternalOAuth(auth)
+    return vicare_api
+
+
+def _login_legacy(
+    hass: HomeAssistant,
+    entry_data: Mapping[str, Any],
+    cache_duration: int = DEFAULT_CACHE_DURATION,
+) -> PyViCare:
+    """Login via legacy password."""
+    return login(hass, entry_data, cache_duration)
+
+
+def _setup_vicare_api(
+    login_fn: Any,
+    *login_args: Any,
+) -> ViCareData:
     """Set up PyVicare API."""
-    client = login(hass, entry.data)
+    client = login_fn(*login_args)
 
     device_config_list = get_supported_devices(client.devices)
 
@@ -79,12 +264,14 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> ViCareDat
             number_of_devices,
             cache_duration,
         )
-        client = login(hass, entry.data, cache_duration)
+        client = login_fn(*login_args, cache_duration=cache_duration)
         device_config_list = get_supported_devices(client.devices)
 
     for device in device_config_list:
         _LOGGER.debug(
-            "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
+            "Found device: %s (online: %s)",
+            device.getModel(),
+            str(device.isOnline()),
         )
 
     devices = [
@@ -99,10 +286,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> b
     """Unload ViCare config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    with suppress(FileNotFoundError):
-        await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
-        )
+    # Only remove token file for legacy entries
+    if "auth_implementation" not in entry.data:
+        with suppress(FileNotFoundError):
+            await hass.async_add_executor_job(
+                os.remove, hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
+            )
 
     return unload_ok
 
@@ -172,7 +361,8 @@ async def async_migrate_devices_and_entities(
                     entity_new_unique_id,
                 )
                 entity_registry.async_update_entity(
-                    entity_id=entity_entry.entity_id, new_unique_id=entity_new_unique_id
+                    entity_id=entity_entry.entity_id,
+                    new_unique_id=entity_new_unique_id,
                 )
 
 
