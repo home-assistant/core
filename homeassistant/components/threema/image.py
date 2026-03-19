@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from io import BytesIO
+import logging
 
 import qrcode
 
@@ -14,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThreemaConfigEntry
 from .const import CONF_GATEWAY_ID, CONF_PUBLIC_KEY, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -52,7 +55,11 @@ class ThreemaQRCodeImage(ImageEntity):
     async def async_added_to_hass(self) -> None:
         """Generate QR code when entity is added to hass."""
         await super().async_added_to_hass()
-        await self.hass.async_add_executor_job(self._generate_qr_code)
+        try:
+            await self.hass.async_add_executor_job(self._generate_qr_code)
+        except Exception:
+            _LOGGER.exception("Error generating Threema gateway QR code")
+            return
         if self._qr_image_bytes is not None:
             self._attr_image_last_updated = datetime.now(UTC)
 

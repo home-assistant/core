@@ -293,7 +293,10 @@ async def test_send_message_service_multiple_entries(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError):
+    assert entry1.state is ConfigEntryState.LOADED
+    assert entry2.state is ConfigEntryState.LOADED
+
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "send_message",
@@ -303,3 +306,5 @@ async def test_send_message_service_multiple_entries(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "multiple_entries_found"
