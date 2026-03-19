@@ -64,6 +64,32 @@
       }
     }
   },
+  "config_subentries": {
+    "recipient": {
+      "abort": {
+        "already_configured": "This recipient is already configured."
+      },
+      "entry_type": "Recipient",
+      "error": {
+        "invalid_recipient_id": "Threema ID must be exactly 8 alphanumeric characters."
+      },
+      "initiate_flow": {
+        "user": "Add recipient"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "recipient": "Threema ID"
+          },
+          "data_description": {
+            "recipient": "The 8-character Threema ID of the recipient."
+          },
+          "description": "Enter the Threema ID of the person you want to send messages to.",
+          "title": "Add recipient"
+        }
+      }
+    }
+  },
   "entity": {
     "image": {
       "gateway_qr_code": {
@@ -75,43 +101,11 @@
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "entry_not_found": {
-      "message": "Config entry not found."
-    },
-    "entry_not_loaded": {
-      "message": "Config entry is not loaded."
-    },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "multiple_entries_found": {
-      "message": "Multiple Threema integrations configured. Please specify a config_entry_id."
-    },
-    "no_entries_found": {
-      "message": "No Threema integration configured or loaded."
-    },
     "send_error": {
       "message": "Error sending message: {error}"
-    }
-  },
-  "services": {
-    "send_message": {
-      "description": "Sends a text message via Threema Gateway.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The Threema Gateway config entry to use.",
-          "name": "Config entry"
-        },
-        "message": {
-          "description": "The text message to send.",
-          "name": "Message"
-        },
-        "recipient": {
-          "description": "Threema ID of the recipient (8 characters).",
-          "name": "Recipient"
-        }
-      },
-      "name": "Send message"
     }
   }
 }

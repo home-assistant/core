@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register entity actions.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: Integration only sends messages, no polling required.
@@ -11,9 +9,7 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: Integration does not provide entity actions.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -28,9 +24,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration does not register entity actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -73,7 +67,7 @@ rules:
     comment: QR code image entity is a primary security verification feature, no diagnostic or config category applies.
   entity-device-class:
     status: exempt
-    comment: No applicable device class for QR code image entity.
+    comment: No applicable device class for QR code image or notify entities.
   entity-disabled-by-default:
     status: exempt
     comment: QR code entity is used for gateway identity verification and should be visible by default.

@@ -12,11 +12,12 @@ from homeassistant.components.threema.const import (
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
     CONF_PUBLIC_KEY,
+    CONF_RECIPIENT,
     DOMAIN,
+    SUBENTRY_TYPE_RECIPIENT,
 )
-from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockConfigEntrySubentry
 
 MOCK_GATEWAY_ID = "*TESTGWY"
 MOCK_API_SECRET = "test_secret_key_12345"
@@ -26,6 +27,8 @@ MOCK_PRIVATE_KEY = (
 MOCK_PUBLIC_KEY = (
     "public:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
 )
+MOCK_RECIPIENT_ID = "ABCD1234"
+MOCK_SUBENTRY_ID = "mock_subentry_id"
 
 
 @pytest.fixture
@@ -55,6 +58,29 @@ def mock_config_entry_with_keys() -> MockConfigEntry:
             CONF_PUBLIC_KEY: MOCK_PUBLIC_KEY,
         },
         unique_id=MOCK_GATEWAY_ID,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_subentry() -> MockConfigEntry:
+    """Return a mocked config entry with a recipient subentry."""
+    return MockConfigEntry(
+        title=f"Threema {MOCK_GATEWAY_ID}",
+        domain=DOMAIN,
+        data={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+        },
+        unique_id=MOCK_GATEWAY_ID,
+        subentries_data=[
+            MockConfigEntrySubentry(
+                data={CONF_RECIPIENT: MOCK_RECIPIENT_ID},
+                subentry_id=MOCK_SUBENTRY_ID,
+                subentry_type=SUBENTRY_TYPE_RECIPIENT,
+                title=MOCK_RECIPIENT_ID,
+                unique_id=MOCK_RECIPIENT_ID,
+            ),
+        ],
     )
 
 
@@ -92,17 +118,3 @@ def mock_send() -> Generator[MagicMock]:
         simple_mock.return_value = simple_instance
 
         yield MagicMock(e2e=e2e_mock, simple=simple_mock)
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_connection: MagicMock,
-    mock_send: MagicMock,
-) -> MockConfigEntry:
-    """Set up the Threema integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry

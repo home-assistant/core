@@ -8,7 +8,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
+from homeassistant.helpers import config_validation as cv
 
 from .client import (
     ThreemaAPIClient,
@@ -21,7 +28,9 @@ from .const import (
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
     CONF_PUBLIC_KEY,
+    CONF_RECIPIENT,
     DOMAIN,
+    SUBENTRY_TYPE_RECIPIENT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +40,14 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Threema Gateway."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
+
+    @classmethod
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentry types supported by this integration."""
+        return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}
 
     _gateway_id: str | None = None
     _api_secret: str | None = None
@@ -210,6 +226,50 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_API_SECRET): str,
                     vol.Optional(CONF_PRIVATE_KEY): str,
+                }
+            ),
+            errors=errors,
+        )
+
+
+RECIPIENT_SCHEMA = vol.All(
+    cv.string,
+    cv.matches_regex(r"^[0-9A-Za-z]{8}$"),
+    lambda value: value.upper(),
+)
+
+
+class RecipientSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle adding a Threema recipient as a subentry."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle the recipient subentry step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                recipient_id = RECIPIENT_SCHEMA(user_input[CONF_RECIPIENT])
+            except vol.Invalid:
+                errors["base"] = "invalid_recipient_id"
+            else:
+                # Check for duplicate recipients
+                for subentry in self._get_entry().subentries.values():
+                    if subentry.data.get(CONF_RECIPIENT) == recipient_id:
+                        return self.async_abort(reason="already_configured")
+
+                return self.async_create_entry(
+                    title=recipient_id,
+                    data={CONF_RECIPIENT: recipient_id},
+                    unique_id=recipient_id,
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_RECIPIENT): str,
                 }
             ),
             errors=errors,

@@ -13,7 +13,9 @@ from homeassistant.components.threema.const import (
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
     CONF_PUBLIC_KEY,
+    CONF_RECIPIENT,
     DOMAIN,
+    SUBENTRY_TYPE_RECIPIENT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -378,3 +380,89 @@ async def test_reauth_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_subentry_add_recipient(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_send: MagicMock,
+) -> None:
+    """Test adding a recipient via subentry flow."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_RECIPIENT),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_RECIPIENT: "ABCD1234"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ABCD1234"
+    assert result["data"] == {CONF_RECIPIENT: "ABCD1234"}
+
+
+async def test_subentry_invalid_recipient_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_send: MagicMock,
+) -> None:
+    """Test subentry flow rejects invalid Threema ID."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_RECIPIENT),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    # Too short
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_RECIPIENT: "ABC"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_recipient_id"}
+
+    # Special characters
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_RECIPIENT: "ABCD!@#$"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_recipient_id"}
+
+
+async def test_subentry_duplicate_recipient(
+    hass: HomeAssistant,
+    mock_config_entry_with_subentry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_send: MagicMock,
+) -> None:
+    """Test subentry flow rejects duplicate recipient."""
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry_with_subentry.entry_id, SUBENTRY_TYPE_RECIPIENT),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_RECIPIENT: "ABCD1234"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

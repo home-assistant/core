@@ -1,7 +1,2 @@
 {
-  "services": {
-    "send_message": {
-      "service": "mdi:message-text-lock"
-    }
-  }
 }
