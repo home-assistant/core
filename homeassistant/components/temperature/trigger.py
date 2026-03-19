@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import voluptuous as vol
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -20,84 +16,16 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE_UNIT,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
-    CONF_OPTIONS,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
-    ATTR_BEHAVIOR,
-    BEHAVIOR_ANY,
-    BEHAVIOR_FIRST,
-    BEHAVIOR_LAST,
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ENTITY_STATE_TRIGGER_SCHEMA,
-    EntityNumericalStateChangedTriggerBase,
-    EntityNumericalStateCrossedThresholdTriggerBase,
-    EntityNumericalStateTriggerBase,
-    ThresholdType,
+    EntityNumericalStateChangedTriggerWithUnitBase,
+    EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
+    EntityNumericalStateTriggerWithUnitBase,
     Trigger,
-    TriggerConfig,
-    _number_or_entity,
-    _validate_limits_for_threshold_type,
-    _validate_range,
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
-
-CONF_UNIT = "unit"
-
-_UNIT_MAP = {
-    "celsius": UnitOfTemperature.CELSIUS,
-    "fahrenheit": UnitOfTemperature.FAHRENHEIT,
-}
-
-
-def _validate_temperature_unit(value: str) -> str:
-    """Convert temperature unit option to UnitOfTemperature."""
-    if value in _UNIT_MAP:
-        return _UNIT_MAP[value]
-    raise vol.Invalid(f"Unknown temperature unit: {value}")
-
-
-_UNIT_VALIDATOR = _validate_temperature_unit
-
-TEMPERATURE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
-    {
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Optional(CONF_ABOVE): _number_or_entity,
-                vol.Optional(CONF_BELOW): _number_or_entity,
-                vol.Optional(CONF_UNIT): _UNIT_VALIDATOR,
-            },
-            _validate_range(CONF_ABOVE, CONF_BELOW),
-        )
-    }
-)
-
-TEMPERATURE_CROSSED_THRESHOLD_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
-    {
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                ),
-                vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
-                vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
-                vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
-                vol.Optional(CONF_UNIT): _UNIT_VALIDATOR,
-            },
-            _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
-            _validate_limits_for_threshold_type,
-        )
-    }
-)
-
 
 TEMPERATURE_DOMAIN_SPECS = {
     CLIMATE_DOMAIN: NumericalDomainSpec(
@@ -115,17 +43,12 @@ TEMPERATURE_DOMAIN_SPECS = {
 }
 
 
-class _TemperatureTriggerMixin(EntityNumericalStateTriggerBase):
+class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
     """Mixin for temperature triggers providing entity filtering, value extraction, and unit conversion."""
 
+    _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = TEMPERATURE_DOMAIN_SPECS
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the trigger."""
-        super().__init__(hass, config)
-        self._trigger_unit: str = self._options.get(
-            CONF_UNIT, hass.config.units.temperature_unit
-        )
+    _unit_converter = TemperatureConverter
 
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of an entity from its state."""
@@ -133,45 +56,21 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerBase):
         if domain == SENSOR_DOMAIN:
             return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if domain == WEATHER_DOMAIN:
-            return state.attributes.get(
-                ATTR_WEATHER_TEMPERATURE_UNIT,
-                self._hass.config.units.temperature_unit,
-            )
+            return state.attributes.get(ATTR_WEATHER_TEMPERATURE_UNIT)
         # Climate and water_heater: show_temp converts to system unit
         return self._hass.config.units.temperature_unit
 
-    def _get_tracked_value(self, state: State) -> Any:
-        """Get the temperature value converted to the trigger's configured unit."""
-        raw_value = super()._get_tracked_value(state)
-        if raw_value is None:
-            return None
-
-        entity_unit = self._get_entity_unit(state)
-        if entity_unit is None or entity_unit == self._trigger_unit:
-            return raw_value
-
-        try:
-            return TemperatureConverter.convert(
-                float(raw_value), entity_unit, self._trigger_unit
-            )
-        except TypeError, ValueError:
-            return raw_value  # Let the base class converter handle the error
-
 
 class TemperatureChangedTrigger(
-    _TemperatureTriggerMixin, EntityNumericalStateChangedTriggerBase
+    _TemperatureTriggerMixin, EntityNumericalStateChangedTriggerWithUnitBase
 ):
     """Trigger for temperature value changes across multiple domains."""
 
-    _schema = TEMPERATURE_CHANGED_TRIGGER_SCHEMA
-
 
 class TemperatureCrossedThresholdTrigger(
-    _TemperatureTriggerMixin, EntityNumericalStateCrossedThresholdTriggerBase
+    _TemperatureTriggerMixin, EntityNumericalStateCrossedThresholdTriggerWithUnitBase
 ):
     """Trigger for temperature value crossing a threshold across multiple domains."""
-
-    _schema = TEMPERATURE_CROSSED_THRESHOLD_TRIGGER_SCHEMA
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

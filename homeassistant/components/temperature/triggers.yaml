@@ -50,10 +50,8 @@
   selector:
     select:
       options:
-        - celsius
-        - fahrenheit
-      translation_key: trigger_temperature_unit
-
+        - "°C"
+        - "°F"
 .trigger_target: &trigger_target
   entity:
     - domain: sensor

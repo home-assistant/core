@@ -8,6 +8,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
 )
@@ -37,6 +38,14 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+_TEMPERATURE_TRIGGER_OPTIONS = {"unit": UnitOfTemperature.CELSIUS}
+_SENSOR_UNIT_ATTRIBUTES = {
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+}
+_WEATHER_UNIT_ATTRIBUTES = {
+    ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+}
 
 
 @pytest.fixture
@@ -89,10 +98,16 @@ async def test_temperature_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_changed_trigger_states(
-            "temperature.changed", "temperature"
+            "temperature.changed",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_SENSOR_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "temperature.crossed_threshold", "temperature"
+            "temperature.crossed_threshold",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_SENSOR_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -130,7 +145,10 @@ async def test_temperature_trigger_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "temperature.crossed_threshold", "temperature"
+            "temperature.crossed_threshold",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_SENSOR_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -168,7 +186,10 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "temperature.crossed_threshold", "temperature"
+            "temperature.crossed_threshold",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_SENSOR_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -209,12 +230,16 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "temperature.changed", HVACMode.AUTO, CLIMATE_ATTR_CURRENT_TEMPERATURE
+            "temperature.changed",
+            HVACMode.AUTO,
+            CLIMATE_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
     ],
 )
@@ -255,6 +280,7 @@ async def test_temperature_trigger_climate_behavior_any(
             "temperature.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
     ],
 )
@@ -295,6 +321,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
             "temperature.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
     ],
 )
@@ -338,11 +365,13 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
             "temperature.changed",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
     ],
 )
@@ -383,6 +412,7 @@ async def test_temperature_trigger_water_heater_behavior_any(
             "temperature.crossed_threshold",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
     ],
 )
@@ -423,6 +453,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
             "temperature.crossed_threshold",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
         ),
     ],
 )
@@ -463,12 +494,18 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "temperature.changed", "sunny", ATTR_WEATHER_TEMPERATURE
+            "temperature.changed",
+            "sunny",
+            ATTR_WEATHER_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "sunny",
             ATTR_WEATHER_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -509,6 +546,8 @@ async def test_temperature_trigger_weather_behavior_any(
             "temperature.crossed_threshold",
             "sunny",
             ATTR_WEATHER_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -549,6 +588,8 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
             "temperature.crossed_threshold",
             "sunny",
             ATTR_WEATHER_TEMPERATURE,
+            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -597,7 +638,7 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
         ),
         (
             "temperature.crossed_threshold",
-            {"threshold_type": "above", "lower_limit": 10},
+            {"threshold_type": "above", "lower_limit": 10, "unit": "°C"},
             "5",
             "20",
         ),
@@ -615,13 +656,15 @@ async def test_temperature_trigger_excludes_non_temperature_sensor(
     entity_id_temperature = "sensor.test_temperature"
     entity_id_humidity = "sensor.test_humidity"
 
+    temp_attrs = {
+        ATTR_DEVICE_CLASS: "temperature",
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+    }
+    humidity_attrs = {ATTR_DEVICE_CLASS: "humidity"}
+
     # Set initial states
-    hass.states.async_set(
-        entity_id_temperature, sensor_initial, {ATTR_DEVICE_CLASS: "temperature"}
-    )
-    hass.states.async_set(
-        entity_id_humidity, sensor_initial, {ATTR_DEVICE_CLASS: "humidity"}
-    )
+    hass.states.async_set(entity_id_temperature, sensor_initial, temp_attrs)
+    hass.states.async_set(entity_id_humidity, sensor_initial, humidity_attrs)
     await hass.async_block_till_done()
 
     await arm_trigger(
@@ -637,18 +680,14 @@ async def test_temperature_trigger_excludes_non_temperature_sensor(
     )
 
     # Temperature sensor changes - should trigger
-    hass.states.async_set(
-        entity_id_temperature, sensor_target, {ATTR_DEVICE_CLASS: "temperature"}
-    )
+    hass.states.async_set(entity_id_temperature, sensor_target, temp_attrs)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_temperature
     service_calls.clear()
 
     # Humidity sensor changes - should NOT trigger (wrong device class)
-    hass.states.async_set(
-        entity_id_humidity, sensor_target, {ATTR_DEVICE_CLASS: "humidity"}
-    )
+    hass.states.async_set(entity_id_humidity, sensor_target, humidity_attrs)
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
@@ -681,7 +720,7 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
         {
             "threshold_type": "above",
             "lower_limit": 70,
-            "unit": "fahrenheit",
+            "unit": "°F",
         },
         {CONF_ENTITY_ID: [entity_id]},
     )
@@ -737,7 +776,7 @@ async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
         {
             "threshold_type": "above",
             "lower_limit": 25,
-            "unit": "celsius",
+            "unit": "°C",
         },
         {CONF_ENTITY_ID: [entity_id]},
     )
@@ -793,7 +832,7 @@ async def test_temperature_trigger_unit_conversion_changed(
         {
             "above": 68,
             "below": 77,
-            "unit": "fahrenheit",
+            "unit": "°F",
         },
         {CONF_ENTITY_ID: [entity_id]},
     )
@@ -861,7 +900,7 @@ async def test_temperature_trigger_unit_conversion_weather(
         {
             "threshold_type": "above",
             "lower_limit": 25,
-            "unit": "celsius",
+            "unit": "°C",
         },
         {CONF_ENTITY_ID: [entity_id]},
     )

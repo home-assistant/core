@@ -17,12 +17,6 @@
         "last": "Last"
       }
     },
-    "trigger_temperature_unit": {
-      "options": {
-        "celsius": "Celsius (°C)",
-        "fahrenheit": "Fahrenheit (°F)"
-      }
-    },
     "trigger_threshold_type": {
       "options": {
         "above": "Above",
