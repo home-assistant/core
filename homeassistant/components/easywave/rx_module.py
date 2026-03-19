@@ -705,6 +705,9 @@ class RxModule:
                 with self._protocol_lock:
                     self._state_good = False
                     self._connection_healthy = False
+                    self._connected = False
+                    self._hardware_error = True
+                    self._notify_disconnect()
                 return
 
             packet = encode_irp(irp)

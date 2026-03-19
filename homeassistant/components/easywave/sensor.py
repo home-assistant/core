@@ -263,9 +263,15 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes with device details."""
-        attrs = {
-            "device_path": self._entry.data.get(CONF_DEVICE_PATH),
-        }
+        # Prefer the live device path from coordinator data over config entry
+        # data, since the path may change on reconnect.
+        coordinator_data = self.coordinator.data
+        device_path = (
+            coordinator_data.get("device_path")
+            if isinstance(coordinator_data, dict)
+            else None
+        ) or self._entry.data.get(CONF_DEVICE_PATH)
+        attrs: dict[str, Any] = {"device_path": device_path}
 
         # Add serial number if available
         if self._usb_serial_number and self._usb_serial_number != "unknown":

@@ -341,6 +341,16 @@ class RX11Transceiver:
 
         self._notify_disconnect()
 
+        # Schedule full cleanup (stop health check, dispose RxModule) outside
+        # the lock to avoid deadlocks.
+        async def _cleanup_disconnect() -> None:
+            """Perform full cleanup after an RxModule-initiated disconnect."""
+            await self.disconnect()
+
+        self.hass.async_create_background_task(
+            _cleanup_disconnect(), "easywave rxmodule disconnect cleanup"
+        )
+
     def _on_rxmodule_disconnect(self) -> None:
         """Called from RxModule serial handler thread on USB disconnect."""
 
