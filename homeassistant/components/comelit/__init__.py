@@ -5,7 +5,7 @@ from aiocomelit.const import BRIDGE
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_PORT
+from .const import CONF_VEDO_PIN, DEFAULT_PORT
 from .coordinator import (
     ComelitBaseCoordinator,
     ComelitConfigEntry,
@@ -15,6 +15,16 @@ from .coordinator import (
 from .utils import async_client_session
 
 BRIDGE_PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+BRIDGE_AND_VEDO_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.HUMIDIFIER,
@@ -37,15 +47,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> b
     session = await async_client_session(hass)
 
     if entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
+        vedo_pin = entry.data.get(CONF_VEDO_PIN)
         coordinator = ComelitSerialBridge(
             hass,
             entry,
             entry.data[CONF_HOST],
             entry.data.get(CONF_PORT, DEFAULT_PORT),
             entry.data[CONF_PIN],
+            vedo_pin,
             session,
         )
         platforms = BRIDGE_PLATFORMS
+        # Add VEDO platforms if vedo_pin is configured
+        if vedo_pin:
+            platforms = BRIDGE_AND_VEDO_PLATFORMS
     else:
         coordinator = ComelitVedoSystem(
             hass,
@@ -71,6 +86,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> 
 
     if entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         platforms = BRIDGE_PLATFORMS
+        # Add VEDO platforms if vedo_pin was configured
+        if entry.data.get(CONF_VEDO_PIN):
+            platforms = BRIDGE_AND_VEDO_PLATFORMS
     else:
         platforms = VEDO_PLATFORMS
 

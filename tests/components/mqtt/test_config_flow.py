@@ -17,7 +17,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
-from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
+from homeassistant.components.mqtt.config_flow import (
+    PWD_NOT_CHANGED,
+    TRANSLATION_DESCRIPTION_PLACEHOLDERS,
+)
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -57,7 +60,12 @@ from .common import (
     MOCK_SENSOR_SUBENTRY_DATA,
     MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
+    MOCK_SIREN_SUBENTRY_DATA,
     MOCK_SWITCH_SUBENTRY_DATA,
+    MOCK_TEXT_SUBENTRY_DATA,
+    MOCK_VALVE_SUBENTRY_DATA_POSITION,
+    MOCK_VALVE_SUBENTRY_DATA_STATE,
+    MOCK_WATER_HEATER_SUBENTRY_DATA,
 )
 
 from tests.common import MockConfigEntry, MockMqttReasonCode, get_schema_suggested_value
@@ -378,8 +386,8 @@ async def test_user_connection_works(
         "port": 1883,
     }
     # Check we have the latest Config Entry version
-    assert result["result"].version == 1
-    assert result["result"].minor_version == 2
+    assert result["result"].version == 2
+    assert result["result"].minor_version == 1
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
     # Check config entry got setup
@@ -2582,7 +2590,7 @@ async def test_reconfigure_no_changed_password(
     [
         (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}, 1, 2),
         (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 2),
-        (1, 3, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 3),
+        (2, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
     ],
 )
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
@@ -2623,11 +2631,10 @@ async def test_migrate_config_entry(
         "minor_version",
         "data",
         "options",
-        "expected_version",
-        "expected_minor_version",
     ),
     [
-        (2, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
+        (2, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
+        (3, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
     ],
 )
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
@@ -2638,8 +2645,6 @@ async def test_migrate_of_incompatible_config_entry(
     minor_version: int,
     data: dict[str, Any],
     options: dict[str, Any],
-    expected_version: int,
-    expected_minor_version: int,
 ) -> None:
     """Test migrating a config entry."""
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
@@ -2652,8 +2657,6 @@ async def test_migrate_of_incompatible_config_entry(
         minor_version=minor_version,
     )
     await hass.async_block_till_done()
-    assert config_entry.version == expected_version
-    assert config_entry.minor_version == expected_minor_version
 
     # Try to start MQTT with incompatible config entry
     with pytest.raises(AssertionError):
@@ -3653,6 +3656,41 @@ async def test_migrate_of_incompatible_config_entry(
             id="sensor_total",
         ),
         pytest.param(
+            MOCK_SIREN_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Siren"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "optimistic": True,
+                "available_tones": ["Happy hour", "Cooling alarm"],
+                "support_duration": True,
+                "support_volume_set": True,
+                "siren_advanced_settings": {
+                    "command_off_template": "{{ value }}",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Siren",
+            id="siren",
+        ),
+        pytest.param(
             MOCK_SWITCH_SUBENTRY_DATA,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Outlet"},
@@ -3680,6 +3718,209 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier Outlet",
             id="switch",
+        ),
+        pytest.param(
+            MOCK_TEXT_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "MOTD"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+                "text_advanced_settings": {
+                    "min": 0,
+                    "max": 10,
+                    "mode": "password",
+                    "pattern": "^[a-z_]*$",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "text_advanced_settings": {
+                            "min": 20,
+                            "max": 10,
+                            "mode": "password",
+                            "pattern": "^[a-z_]*$",
+                        },
+                    },
+                    {"text_advanced_settings": "max_below_min"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "text_advanced_settings": {
+                            "min": 0,
+                            "max": 10,
+                            "mode": "password",
+                            "pattern": "(",
+                        },
+                    },
+                    {"text_advanced_settings": "invalid_regular_expression"},
+                ),
+            ),
+            "Milk notifier MOTD",
+            id="text",
+        ),
+        pytest.param(
+            MOCK_VALVE_SUBENTRY_DATA_STATE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Ice cream"},
+            {"reports_position": False},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": True,
+                "optimistic": True,
+                "valve_payload_settings": {
+                    "payload_stop": "STOP",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Ice cream",
+            id="valve_state",
+        ),
+        pytest.param(
+            MOCK_VALVE_SUBENTRY_DATA_POSITION,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Ice cream"},
+            {"device_class": "water", "reports_position": True},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "position_closed": 0,
+                "position_open": 100,
+                "retain": True,
+                "optimistic": False,
+                "valve_payload_settings": {
+                    "payload_stop": "STOP",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Ice cream",
+            id="valve_postion",
+        ),
+        pytest.param(
+            MOCK_WATER_HEATER_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Boyler"},
+            {
+                "temperature_unit": "C",
+                "water_heater_feature_current_temperature": True,
+                "water_heater_feature_power": True,
+            },
+            (),
+            {
+                "mode_command_topic": "mode-command-topic",
+                "mode_command_template": "{{ value }}",
+                "mode_state_topic": "mode-state-topic",
+                "mode_state_template": "{{ value_json.mode }}",
+                "modes": ["off", "gas", "electric"],
+                # target temperature
+                "target_temperature_settings": {
+                    "temperature_command_topic": "temperature-command-topic",
+                    "temperature_command_template": "{{ value }}",
+                    "temperature_state_topic": "temperature-state-topic",
+                    "temperature_state_template": "{{ value_json.temperature }}",
+                    "min_temp": 43,
+                    "max_temp": 60,
+                    "precision": "0.1",
+                    "initial": 43,
+                },
+                # power settings
+                "water_heater_power_settings": {
+                    "power_command_topic": "power-command-topic",
+                    "power_command_template": "{{ value }}",
+                    "payload_on": "ON",
+                    "payload_off": "OFF",
+                },
+                # current temperature
+                "current_temperature_settings": {
+                    "current_temperature_topic": "current-temperature-topic",
+                    "current_temperature_template": "{{ value_json.temperature }}",
+                },
+            },
+            (
+                (
+                    {
+                        "modes": ["off", "gas"],
+                        "target_temperature_settings": {
+                            "temperature_command_topic": "test-topic#invalid"
+                        },
+                    },
+                    {"target_temperature_settings": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "modes": [],
+                        "target_temperature_settings": {
+                            "temperature_command_topic": "test-topic"
+                        },
+                    },
+                    {"modes": "empty_list_not_allowed"},
+                ),
+                (
+                    {
+                        "modes": ["off", "gas"],
+                        "target_temperature_settings": {
+                            "temperature_command_topic": "test-topic",
+                            "min_temp": 50.0,
+                            "max_temp": 45.0,
+                        },
+                    },
+                    {
+                        "target_temperature_settings": "max_below_min_temperature",
+                    },
+                ),
+            ),
+            "Milk notifier Boyler",
+            id="water_heater",
         ),
     ],
 )
@@ -3731,6 +3972,10 @@ async def test_subentry_configflow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity"
     assert result["errors"] == {}
+    assert "description_placeholders" in result
+    for placeholder, translation in TRANSLATION_DESCRIPTION_PLACEHOLDERS.items():
+        assert placeholder in result["description_placeholders"]
+        assert result["description_placeholders"][placeholder] == translation
 
     # Process entity flow (initial step)
 
@@ -3757,12 +4002,16 @@ async def test_subentry_configflow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-    assert result["description_placeholders"] == {
-        "mqtt_device": device_name,
-        "platform": component["platform"],
-        "entity": entity_name,
-        "url": learn_more_url(component["platform"]),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": device_name,
+            "platform": component["platform"],
+            "entity": entity_name,
+            "url": learn_more_url(component["platform"]),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process entity details step
     assert result["step_id"] == "entity_platform_config"
@@ -3784,12 +4033,16 @@ async def test_subentry_configflow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-    assert result["description_placeholders"] == {
-        "mqtt_device": device_name,
-        "platform": component["platform"],
-        "entity": entity_name,
-        "url": learn_more_url(component["platform"]),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": device_name,
+            "platform": component["platform"],
+            "entity": entity_name,
+            "url": learn_more_url(component["platform"]),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process mqtt platform config flow
     # Test an invalid mqtt user input case
@@ -5096,12 +5349,16 @@ async def test_subentry_configflow_section_feature(
         user_input={"platform": "fan"},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"] == {
-        "mqtt_device": "Bla",
-        "platform": "fan",
-        "entity": "Bla",
-        "url": learn_more_url("fan"),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": "Bla",
+            "platform": "fan",
+            "entity": "Bla",
+            "url": learn_more_url("fan"),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process entity details step
     assert result["step_id"] == "entity_platform_config"

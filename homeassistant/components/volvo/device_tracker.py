@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from volvocarsapi.models import VolvoCarsApiBaseModel, VolvoCarsLocation
 
-from homeassistant.components.device_tracker.config_entry import (
+from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityDescription,
 )

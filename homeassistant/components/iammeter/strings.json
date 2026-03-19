@@ -1,15 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "voltage_a": {
-        "name": "Voltage A"
-      },
-      "voltage_b": {
-        "name": "Voltage B"
-      },
-      "voltage_c": {
-        "name": "Voltage C"
-      },
       "current_a": {
         "name": "Current A"
       },
@@ -18,24 +9,6 @@
       },
       "current_c": {
         "name": "Current C"
-      },
-      "power_a": {
-        "name": "Power A"
-      },
-      "power_b": {
-        "name": "Power B"
-      },
-      "power_c": {
-        "name": "Power C"
-      },
-      "import_energy_a": {
-        "name": "ImportEnergy A"
-      },
-      "import_energy_b": {
-        "name": "ImportEnergy B"
-      },
-      "import_energy_c": {
-        "name": "ImportEnergy C"
       },
       "export_grid_a": {
         "name": "ExportGrid A"
@@ -55,6 +28,15 @@
       "frequency_c": {
         "name": "Frequency C"
       },
+      "import_energy_a": {
+        "name": "ImportEnergy A"
+      },
+      "import_energy_b": {
+        "name": "ImportEnergy B"
+      },
+      "import_energy_c": {
+        "name": "ImportEnergy C"
+      },
       "pf_a": {
         "name": "PF A"
       },
@@ -63,6 +45,24 @@
       },
       "pf_c": {
         "name": "PF C"
+      },
+      "power_a": {
+        "name": "Power A"
+      },
+      "power_b": {
+        "name": "Power B"
+      },
+      "power_c": {
+        "name": "Power C"
+      },
+      "voltage_a": {
+        "name": "Voltage A"
+      },
+      "voltage_b": {
+        "name": "Voltage B"
+      },
+      "voltage_c": {
+        "name": "Voltage C"
       }
     }
   }

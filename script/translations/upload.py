@@ -4,14 +4,12 @@
 import json
 import os
 import pathlib
-import re
 import subprocess
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
 from .util import get_current_branch, get_lokalise_token, load_json_from_path
 
-FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 LOCAL_FILE = pathlib.Path("build/translations-upload.json").absolute()
 CONTAINER_FILE = "/opt/src/build/translations-upload.json"
 LANG_ISO = "en"
@@ -54,20 +52,11 @@ def run_upload_docker():
 def generate_upload_data():
     """Generate the data for uploading."""
     translations = load_json_from_path(INTEGRATIONS_DIR.parent / "strings.json")
-    translations["component"] = {}
 
-    for path in INTEGRATIONS_DIR.glob(f"*{os.sep}strings*.json"):
-        component = path.parent.name
-        match = FILENAME_FORMAT.search(path.name)
-        platform = match.group("suffix") if match else None
-
-        parent = translations["component"].setdefault(component, {})
-
-        if platform:
-            platforms = parent.setdefault("platform", {})
-            parent = platforms.setdefault(platform, {})
-
-        parent.update(load_json_from_path(path))
+    translations["component"] = {
+        path.parent.name: load_json_from_path(path)
+        for path in INTEGRATIONS_DIR.glob(f"*{os.sep}strings.json")
+    }
 
     return translations
 

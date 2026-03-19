@@ -23,6 +23,9 @@ from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .entity import FritzBoxDeviceEntity
 from .sensor import value_scheduled_preset
 
+# Coordinator handles data updates, so we can allow unlimited parallel updates
+PARALLEL_UPDATES = 0
+
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"
 PRESET_SUMMER = "summer"
@@ -176,7 +179,9 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return PRESET_HOLIDAY
         if self.data.summer_active:
             return PRESET_SUMMER
-        if self.data.target_temperature == ON_API_TEMPERATURE:
+        if self.data.target_temperature == ON_API_TEMPERATURE or getattr(
+            self.data, "boost_active", False
+        ):
             return PRESET_BOOST
         if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT

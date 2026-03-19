@@ -10,6 +10,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -41,6 +42,7 @@ from . import HistoryStatsConfigEntry
 from .const import (
     CONF_DURATION,
     CONF_END,
+    CONF_MIN_STATE_DURATION,
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_COUNT,
@@ -62,6 +64,8 @@ UNITS: dict[str, str] = {
 }
 ICON = "mdi:chart-line"
 
+DEFAULT_MIN_STATE_DURATION = datetime.timedelta(0)
+
 
 def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
@@ -69,6 +73,16 @@ def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
         raise vol.Invalid(
             "You must provide exactly 2 of the following: start, end, duration"
         )
+    return conf
+
+
+def no_ratio_total[_T: dict[str, Any]](conf: _T) -> _T:
+    """Ensure state_class:total_increasing not used with type:ratio."""
+    if (
+        conf.get(CONF_TYPE) == CONF_TYPE_RATIO
+        and conf.get(CONF_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
+    ):
+        raise vol.Invalid("State class total_increasing not to be used with type ratio")
     return conf
 
 
@@ -80,12 +94,21 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_START): cv.template,
             vol.Optional(CONF_END): cv.template,
             vol.Optional(CONF_DURATION): cv.time_period,
+            vol.Optional(
+                CONF_MIN_STATE_DURATION, default=DEFAULT_MIN_STATE_DURATION
+            ): cv.time_period,
             vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(
+                CONF_STATE_CLASS, default=SensorStateClass.MEASUREMENT
+            ): vol.In(
+                [None, SensorStateClass.MEASUREMENT, SensorStateClass.TOTAL_INCREASING]
+            ),
         }
     ),
     exactly_two_period_keys,
+    no_ratio_total,
 )
 
 
@@ -103,11 +126,17 @@ async def async_setup_platform(
     start: Template | None = config.get(CONF_START)
     end: Template | None = config.get(CONF_END)
     duration: datetime.timedelta | None = config.get(CONF_DURATION)
+    min_state_duration: datetime.timedelta = config[CONF_MIN_STATE_DURATION]
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    state_class: SensorStateClass | None = config.get(
+        CONF_STATE_CLASS, SensorStateClass.MEASUREMENT
+    )
 
-    history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
+    history_stats = HistoryStats(
+        hass, entity_id, entity_states, start, end, duration, min_state_duration
+    )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
@@ -121,6 +150,7 @@ async def async_setup_platform(
                 name=name,
                 unique_id=unique_id,
                 source_entity_id=entity_id,
+                state_class=state_class,
             )
         ]
     )
@@ -136,6 +166,7 @@ async def async_setup_entry(
     sensor_type: str = entry.options[CONF_TYPE]
     coordinator = entry.runtime_data
     entity_id: str = entry.options[CONF_ENTITY_ID]
+    state_class: SensorStateClass | None = entry.options.get(CONF_STATE_CLASS)
     async_add_entities(
         [
             HistoryStatsSensor(
@@ -145,6 +176,7 @@ async def async_setup_entry(
                 name=entry.title,
                 unique_id=entry.entry_id,
                 source_entity_id=entity_id,
+                state_class=state_class,
             )
         ]
     )
@@ -185,8 +217,6 @@ class HistoryStatsSensorBase(
 class HistoryStatsSensor(HistoryStatsSensorBase):
     """A HistoryStats sensor."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -196,6 +226,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         name: str,
         unique_id: str | None,
         source_entity_id: str,
+        state_class: SensorStateClass | None,
     ) -> None:
         """Initialize the HistoryStats sensor."""
         super().__init__(coordinator, name)
@@ -204,6 +235,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         ) = None
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
+        self._attr_state_class = state_class
         self._attr_unique_id = unique_id
         if source_entity_id:  # Guard against empty source_entity_id in preview mode
             self.device_entry = async_entity_id_to_device(
@@ -241,7 +273,9 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
 
     async def async_start_preview(
         self,
-        preview_callback: Callable[[Exception | None, str, Mapping[str, Any]], None],
+        preview_callback: Callable[
+            [BaseException | None, str, Mapping[str, Any]], None
+        ],
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 

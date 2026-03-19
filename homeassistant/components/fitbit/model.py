@@ -22,26 +22,6 @@ class FitbitProfile:
 
 
 @dataclass
-class FitbitDevice:
-    """Device from the Fitbit API response."""
-
-    id: str
-    """The device ID."""
-
-    device_version: str
-    """The product name of the device."""
-
-    battery_level: int
-    """The battery level as a percentage."""
-
-    battery: str
-    """Returns the battery level of the device."""
-
-    type: str
-    """The type of the device such as TRACKER or SCALE."""
-
-
-@dataclass
 class FitbitConfig:
     """Information from the fitbit ConfigEntry data."""
 

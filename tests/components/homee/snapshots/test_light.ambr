@@ -1,14 +1,13 @@
 # serializer version: 1
 # name: test_light_snapshot[light.another_test_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -28,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -47,7 +47,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 270,
       'color_temp_kelvin': 3700,
       'friendly_name': 'Another Test Light',
       'hs_color': tuple(
@@ -55,9 +54,7 @@
         40.593,
       ),
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'rgb_color': tuple(
         255,
         198,
@@ -82,14 +79,13 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 500,
-      'max_mireds': 6535,
       'min_color_temp_kelvin': 153,
-      'min_mireds': 2000,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -110,6 +106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -129,7 +126,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Test Light Light 1',
       'hs_color': tuple(
@@ -137,9 +133,7 @@
         52.941,
       ),
       'max_color_temp_kelvin': 500,
-      'max_mireds': 6535,
       'min_color_temp_kelvin': 153,
-      'min_mireds': 2000,
       'rgb_color': tuple(
         255,
         200,
@@ -165,14 +159,13 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 4000,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 250,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -193,6 +186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,14 +206,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Test Light Light 2',
       'hs_color': None,
       'max_color_temp_kelvin': 4000,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 250,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -238,8 +229,9 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -261,6 +253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -296,8 +289,9 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -319,6 +313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 4',
     'options': dict({
     }),
     'original_device_class': None,

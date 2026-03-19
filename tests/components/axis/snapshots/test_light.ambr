@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_lights[api_discovery_items0][light.home_ir_light_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -24,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IR Light 0',
     'options': dict({
     }),
     'original_device_class': None,

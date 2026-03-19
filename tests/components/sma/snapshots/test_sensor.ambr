@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.sma_device_name_battery_capacity_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Capacity A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_capacity_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Capacity B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -99,8 +103,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_capacity_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Capacity C',
     'options': dict({
     }),
     'original_device_class': None,
@@ -148,8 +154,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_capacity_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Capacity Total',
     'options': dict({
     }),
     'original_device_class': None,
@@ -197,8 +205,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_charge_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -218,6 +227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Charge A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -253,8 +263,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_charge_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -274,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Charge B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -309,8 +321,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_charge_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -330,6 +343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Charge C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -365,8 +379,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_charge_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -386,6 +401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Charge Total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -421,8 +437,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_charging_voltage_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -442,6 +459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Charging Voltage A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -477,8 +495,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_charging_voltage_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -498,6 +517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Charging Voltage B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -533,8 +553,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_charging_voltage_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -554,6 +575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Charging Voltage C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -589,8 +611,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_current_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -610,6 +633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Current A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -645,8 +669,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_current_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -666,6 +691,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Current B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -701,8 +727,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_current_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -722,6 +749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Current C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -757,8 +785,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_discharge_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -778,6 +807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Discharge A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -813,8 +843,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_discharge_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -834,6 +865,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Discharge B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -869,8 +901,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_discharge_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -890,6 +923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Discharge C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -925,8 +959,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_discharge_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -946,6 +981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Discharge Total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -981,8 +1017,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_charge_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1002,6 +1039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Charge A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1037,8 +1075,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_charge_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1058,6 +1097,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Charge B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1093,8 +1133,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_charge_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1114,6 +1155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Charge C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1149,8 +1191,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_charge_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1170,6 +1213,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Charge Total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1205,8 +1249,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_discharge_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1226,6 +1271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Discharge A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1261,8 +1307,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_discharge_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1282,6 +1329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Discharge B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1317,8 +1365,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_discharge_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1338,6 +1387,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Discharge C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1373,8 +1423,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_power_discharge_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1394,6 +1445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Power Discharge Total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1429,8 +1481,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_soc_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1450,6 +1503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery SOC A',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1482,8 +1536,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_soc_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1503,6 +1558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery SOC B',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1535,8 +1591,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_soc_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1556,6 +1613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery SOC C',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1588,8 +1646,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_soc_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1609,6 +1668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery SOC Total',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1641,8 +1701,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_status_operating_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1660,6 +1721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Status Operating Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1689,8 +1751,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_temp_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1710,6 +1773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Temp A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1745,8 +1809,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_temp_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1766,6 +1831,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Temp B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1801,8 +1867,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_temp_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1822,6 +1889,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Temp C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1857,8 +1925,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_voltage_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1878,6 +1947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Voltage A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1913,8 +1983,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_voltage_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1934,6 +2005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Voltage B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1969,8 +2041,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_battery_voltage_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1990,6 +2063,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Battery Voltage C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2025,8 +2099,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2046,6 +2121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Current L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2081,8 +2157,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2102,6 +2179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Current L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2137,8 +2215,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2158,6 +2237,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Current L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2193,8 +2273,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_current_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2214,6 +2295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Current Total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2249,8 +2331,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_daily_yield-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2270,6 +2353,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Daily Yield',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2305,8 +2389,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2326,6 +2411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2361,8 +2447,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2382,6 +2469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Apparent Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2417,8 +2505,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_apparent_power_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2438,6 +2527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Apparent Power L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2473,8 +2563,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_apparent_power_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2494,6 +2585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Apparent Power L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2529,8 +2621,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_apparent_power_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2550,6 +2643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Apparent Power L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2585,8 +2679,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_connection_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2604,6 +2699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Connection Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2633,8 +2729,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2654,6 +2751,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2689,8 +2787,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_power_factor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2710,6 +2809,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Power Factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -2741,8 +2841,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_power_factor_excitation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2760,6 +2861,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Power Factor Excitation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2789,8 +2891,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_reactive_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2810,6 +2913,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Reactive Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2845,8 +2949,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_reactive_power_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2866,6 +2971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Reactive Power L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2901,8 +3007,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_reactive_power_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2922,6 +3029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Reactive Power L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2957,8 +3065,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_reactive_power_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2978,6 +3087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Reactive Power L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3013,8 +3123,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_grid_relay_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3032,6 +3143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Grid Relay Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3061,8 +3173,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_insulation_residual_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3082,6 +3195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Insulation Residual Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3117,8 +3231,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_inverter_condition-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3136,6 +3251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Inverter Condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3165,8 +3281,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_inverter_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3186,6 +3303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Inverter Power Limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3221,8 +3339,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_inverter_system_init-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3240,6 +3359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Inverter System Init',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3269,8 +3389,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_active_power_draw_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3290,6 +3411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Active Power Draw L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3325,8 +3447,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_active_power_draw_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3346,6 +3469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Active Power Draw L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3381,8 +3505,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_active_power_draw_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3402,6 +3527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Active Power Draw L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3437,8 +3563,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_active_power_feed_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3458,6 +3585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Active Power Feed L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3493,8 +3621,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_active_power_feed_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3514,6 +3643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Active Power Feed L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3549,8 +3679,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_active_power_feed_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3570,6 +3701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Active Power Feed L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3605,8 +3737,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_current_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3626,6 +3759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Current Consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3661,8 +3795,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3682,6 +3817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Current L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3717,8 +3853,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3738,6 +3875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Current L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3773,8 +3911,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3794,6 +3933,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Current L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3829,8 +3969,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3850,6 +3991,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3885,8 +4027,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_power_absorbed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3906,6 +4049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Power Absorbed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3941,8 +4085,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_power_supplied-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3962,6 +4107,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Power Supplied',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3997,8 +4143,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_total_absorbed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4018,6 +4165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Total Absorbed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4053,8 +4201,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_total_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4074,6 +4223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Total Consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4109,8 +4259,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_total_yield-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4130,6 +4281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Total Yield',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4165,8 +4317,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_voltage_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4186,6 +4339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Voltage L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4221,8 +4375,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_voltage_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4242,6 +4397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Voltage L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4277,8 +4433,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_metering_voltage_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4298,6 +4455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Metering Voltage L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4333,8 +4491,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_operating_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4352,6 +4511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Operating Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4381,8 +4541,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_operating_status_general-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4400,6 +4561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Operating Status General',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4429,8 +4591,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_optimizer_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4450,6 +4613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Optimizer Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4485,8 +4649,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_optimizer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4506,6 +4671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Optimizer Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4541,8 +4707,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_optimizer_temp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4562,6 +4729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Optimizer Temp',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4597,8 +4765,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_optimizer_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4618,6 +4787,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Optimizer Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4653,8 +4823,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_power_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4674,6 +4845,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Power L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4709,8 +4881,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_power_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4730,6 +4903,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Power L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4765,8 +4939,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_power_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4786,6 +4961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Power L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4821,8 +4997,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_current_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4842,6 +5019,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Current A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4877,8 +5055,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_current_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4898,6 +5077,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Current B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4933,8 +5113,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_current_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4954,6 +5135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Current C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4989,8 +5171,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_gen_meter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5010,6 +5193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Gen Meter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5045,8 +5229,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_isolation_resistance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5066,6 +5251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Isolation Resistance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5097,8 +5283,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5118,6 +5305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5153,8 +5341,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_power_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5174,6 +5363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Power A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5209,8 +5399,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_power_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5230,6 +5421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Power B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5265,8 +5457,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_power_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5286,6 +5479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Power C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5321,8 +5515,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_voltage_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5342,6 +5537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Voltage A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5377,8 +5573,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_voltage_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5398,6 +5595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Voltage B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5433,8 +5631,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_pv_voltage_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5454,6 +5653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name PV Voltage C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5489,8 +5689,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_secure_power_supply_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5510,6 +5711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Secure Power Supply Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5545,8 +5747,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_secure_power_supply_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5566,6 +5769,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Secure Power Supply Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5601,8 +5805,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_secure_power_supply_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5622,6 +5827,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Secure Power Supply Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5657,8 +5863,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5676,6 +5883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5705,8 +5913,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_total_yield-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5726,6 +5935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Total Yield',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5761,8 +5971,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_voltage_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5782,6 +5993,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Voltage L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5817,8 +6029,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_voltage_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5838,6 +6051,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Voltage L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5873,8 +6087,9 @@
 # ---
 # name: test_all_entities[sensor.sma_device_name_voltage_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5894,6 +6109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA Device Name Voltage L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

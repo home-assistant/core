@@ -31,11 +31,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     "device_class",
     [
@@ -125,7 +120,7 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert len(conditions) == 56
+    assert len(conditions) == 57
     assert conditions == unordered(expected_conditions)
 
 

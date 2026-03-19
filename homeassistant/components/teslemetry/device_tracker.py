@@ -9,7 +9,7 @@ from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
 
-from homeassistant.components.device_tracker.config_entry import (
+from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityDescription,
 )

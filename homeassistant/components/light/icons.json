@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:lightbulb-off"
+    },
+    "is_on": {
+      "condition": "mdi:lightbulb-on"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:lightbulb",
@@ -24,6 +32,20 @@
     },
     "turn_on": {
       "service": "mdi:lightbulb-on"
+    }
+  },
+  "triggers": {
+    "brightness_changed": {
+      "trigger": "mdi:lightbulb-on-50"
+    },
+    "brightness_crossed_threshold": {
+      "trigger": "mdi:lightbulb-on-50"
+    },
+    "turned_off": {
+      "trigger": "mdi:lightbulb-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:lightbulb-on"
     }
   }
 }

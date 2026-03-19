@@ -77,6 +77,11 @@ class _KnxEntityBase(Entity):
         """Store register state change callback and start device object."""
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
+        if uid := self.unique_id:
+            self._knx_module.add_to_group_address_entities(
+                group_addresses=self._device.group_addresses(),
+                identifier=(self.platform_data.domain, uid),
+            )
         # super call needed to have methods of multi-inherited classes called
         # eg. for restoring state (like _KNXSwitch)
         await super().async_added_to_hass()
@@ -85,6 +90,11 @@ class _KnxEntityBase(Entity):
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_remove(self._device)
+        if uid := self.unique_id:
+            self._knx_module.remove_from_group_address_entities(
+                group_addresses=self._device.group_addresses(),
+                identifier=(self.platform_data.domain, uid),
+            )
 
 
 class KnxYamlEntity(_KnxEntityBase):

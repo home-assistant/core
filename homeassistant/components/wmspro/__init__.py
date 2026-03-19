@@ -20,6 +20,7 @@ PLATFORMS: list[Platform] = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.SCENE,
+    Platform.SWITCH,
 ]
 
 type WebControlProConfigEntry = ConfigEntry[WebControlPro]

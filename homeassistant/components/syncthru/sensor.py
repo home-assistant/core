@@ -73,8 +73,9 @@ def get_input_tray_entity_description(tray: str) -> SyncThruSensorDescription:
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_placeholders=placeholders,
         value_fn=(
-            lambda printer: printer.input_tray_status().get(tray, {}).get("newError")
-            or "Ready"
+            lambda printer: (
+                printer.input_tray_status().get(tray, {}).get("newError") or "Ready"
+            )
         ),
         extra_state_attributes_fn=(
             lambda printer: printer.input_tray_status().get(tray, {})
@@ -90,8 +91,9 @@ def get_output_tray_entity_description(tray: int) -> SyncThruSensorDescription:
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_placeholders={"tray_number": str(tray)},
         value_fn=(
-            lambda printer: printer.output_tray_status().get(tray, {}).get("status")
-            or "Ready"
+            lambda printer: (
+                printer.output_tray_status().get(tray, {}).get("status") or "Ready"
+            )
         ),
         extra_state_attributes_fn=(
             lambda printer: cast(

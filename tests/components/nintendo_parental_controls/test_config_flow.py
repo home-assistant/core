@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from pynintendoparental.exceptions import InvalidSessionTokenException
+from pynintendoauth.exceptions import HttpException, InvalidSessionTokenException
 
 from homeassistant import config_entries
 from homeassistant.components.nintendo_parental_controls.const import (
@@ -22,6 +22,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_nintendo_authenticator: AsyncMock,
+    mock_nintendo_api: AsyncMock,
 ) -> None:
     """Test a full and successful config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -47,6 +48,7 @@ async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nintendo_authenticator: AsyncMock,
+    mock_nintendo_api: AsyncMock,
 ) -> None:
     """Test that the flow aborts if the account is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -68,6 +70,7 @@ async def test_already_configured(
 async def test_invalid_auth(
     hass: HomeAssistant,
     mock_nintendo_authenticator: AsyncMock,
+    mock_nintendo_api: AsyncMock,
 ) -> None:
     """Test handling of invalid authentication."""
     result = await hass.config_entries.flow.async_init(
@@ -79,7 +82,7 @@ async def test_invalid_auth(
     assert "link" in result["description_placeholders"]
 
     # Simulate invalid authentication by raising an exception
-    mock_nintendo_authenticator.complete_login.side_effect = (
+    mock_nintendo_authenticator.async_complete_login.side_effect = (
         InvalidSessionTokenException(status_code=401, message="Test")
     )
 
@@ -92,7 +95,76 @@ async def test_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Now ensure that the flow can be recovered
-    mock_nintendo_authenticator.complete_login.side_effect = None
+    mock_nintendo_authenticator.async_complete_login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCOUNT_ID
+    assert result["data"][CONF_SESSION_TOKEN] == API_TOKEN
+    assert result["result"].unique_id == ACCOUNT_ID
+
+
+async def test_missing_devices(
+    hass: HomeAssistant,
+    mock_nintendo_authenticator: AsyncMock,
+    mock_nintendo_api: AsyncMock,
+) -> None:
+    """Test handling of no devices found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
+
+    mock_nintendo_authenticator.async_complete_login.side_effect = None
+
+    mock_nintendo_api.async_get_account_devices.side_effect = HttpException(
+        status_code=404, message="TEST"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_cannot_connect(
+    hass: HomeAssistant,
+    mock_nintendo_authenticator: AsyncMock,
+    mock_nintendo_api: AsyncMock,
+) -> None:
+    """Test handling of connection errors during device discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
+
+    mock_nintendo_authenticator.async_complete_login.side_effect = None
+
+    mock_nintendo_api.async_get_account_devices.side_effect = HttpException(
+        status_code=500, message="TEST"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Test we can recover from the error
+    mock_nintendo_api.async_get_account_devices.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
@@ -137,7 +209,7 @@ async def test_reauthentication_fail(
     assert result["errors"] == {}
 
     # Simulate invalid authentication by raising an exception
-    mock_nintendo_authenticator.complete_login.side_effect = (
+    mock_nintendo_authenticator.async_complete_login.side_effect = (
         InvalidSessionTokenException(status_code=401, message="Test")
     )
 
@@ -150,7 +222,7 @@ async def test_reauthentication_fail(
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Now ensure that the flow can be recovered
-    mock_nintendo_authenticator.complete_login.side_effect = None
+    mock_nintendo_authenticator.async_complete_login.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}

@@ -1,35 +1,45 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "The email address of your Whisker account.",
-          "password": "The password of your Whisker account."
-        }
-      },
-      "reauth_confirm": {
-        "description": "Please update your password for {username}",
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "[%key:component::litterrobot::config::step::user::data_description::password%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The Whisker account does not match the previously configured account. Please re-authenticate using the same account, or remove this integration and set it up again if you want to use a different account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::litterrobot::config::step::user::data_description::password%]"
+        },
+        "description": "Please update your password for {username}",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::litterrobot::config::step::user::data_description::password%]"
+        }
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of your Whisker account.",
+          "username": "The email address of your Whisker account."
+        }
+      }
     }
   },
   "entity": {
@@ -37,25 +47,57 @@
       "hopper_connected": {
         "name": "Hopper connected"
       },
-      "sleeping": {
-        "name": "Sleeping"
+      "power_status": {
+        "name": "Power status"
       },
       "sleep_mode": {
         "name": "Sleep mode"
       },
-      "power_status": {
-        "name": "Power status"
+      "sleeping": {
+        "name": "Sleeping"
       }
     },
     "button": {
+      "give_snack": {
+        "name": "Give snack"
+      },
       "reset": {
         "name": "Reset"
       },
       "reset_waste_drawer": {
         "name": "Reset waste drawer"
+      }
+    },
+    "select": {
+      "brightness_level": {
+        "name": "Panel brightness",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
       },
-      "give_snack": {
-        "name": "Give snack"
+      "cycle_delay": {
+        "name": "Clean cycle wait time minutes"
+      },
+      "globe_brightness": {
+        "name": "Globe brightness",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "globe_light": {
+        "name": "Globe light",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "meal_insert_size": {
+        "name": "Meal insert size"
       }
     },
     "sensor": {
@@ -69,12 +111,12 @@
       "hopper_status": {
         "name": "Hopper status",
         "state": {
-          "enabled": "[%key:common::state::enabled%]",
           "disabled": "[%key:common::state::disabled%]",
-          "motor_fault_short": "Motor shorted",
-          "motor_ot_amps": "Motor overtorqued",
+          "empty": "[%key:common::state::empty%]",
+          "enabled": "[%key:common::state::enabled%]",
           "motor_disconnected": "Motor disconnected",
-          "empty": "[%key:common::state::empty%]"
+          "motor_fault_short": "Motor shorted",
+          "motor_ot_amps": "Motor overtorqued"
         }
       },
       "last_feeding": {
@@ -140,38 +182,6 @@
         "name": "Waste drawer"
       }
     },
-    "select": {
-      "cycle_delay": {
-        "name": "Clean cycle wait time minutes"
-      },
-      "globe_brightness": {
-        "name": "Globe brightness",
-        "state": {
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "high": "[%key:common::state::high%]"
-        }
-      },
-      "globe_light": {
-        "name": "Globe light",
-        "state": {
-          "auto": "[%key:common::state::auto%]",
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]"
-        }
-      },
-      "meal_insert_size": {
-        "name": "Meal insert size"
-      },
-      "brightness_level": {
-        "name": "Panel brightness",
-        "state": {
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "high": "[%key:common::state::high%]"
-        }
-      }
-    },
     "switch": {
       "gravity_mode": {
         "name": "Gravity mode"
@@ -194,26 +204,34 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to fetch data from the Whisker API: {error}"
+    },
+    "command_failed": {
+      "message": "An error occurred while communicating with the device: {error}"
+    },
+    "firmware_update_failed": {
+      "message": "Unable to start firmware update on {name}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials. Please check your username and password, then try again"
+    }
+  },
   "services": {
     "set_sleep_mode": {
-      "name": "Set sleep mode",
       "description": "Sets the sleep mode and start time.",
       "fields": {
         "enabled": {
-          "name": "[%key:common::state::enabled%]",
-          "description": "Whether sleep mode should be enabled."
+          "description": "Whether sleep mode should be enabled.",
+          "name": "[%key:common::state::enabled%]"
         },
         "start_time": {
-          "name": "Start time",
-          "description": "The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours."
+          "description": "The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours.",
+          "name": "Start time"
         }
-      }
-    }
-  },
-  "issues": {
-    "deprecated_entity": {
-      "title": "{name} is deprecated",
-      "description": "The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+      },
+      "name": "Set sleep mode"
     }
   }
 }

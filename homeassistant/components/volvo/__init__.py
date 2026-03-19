@@ -14,11 +14,14 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .api import VolvoAuth
 from .const import CONF_VIN, DOMAIN, PLATFORMS
@@ -31,6 +34,16 @@ from .coordinator import (
     VolvoSlowIntervalCoordinator,
     VolvoVerySlowIntervalCoordinator,
 )
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Volvo integration."""
+
+    await async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
@@ -65,7 +78,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bo
 async def _async_auth_and_create_api(
     hass: HomeAssistant, entry: VolvoConfigEntry
 ) -> VolvoCarsApi:
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     oauth_session = OAuth2Session(hass, entry, implementation)
     web_session = async_get_clientsession(hass)
     auth = VolvoAuth(web_session, oauth_session)

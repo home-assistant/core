@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
 import logging
 
 from cookidoo_api import (
@@ -16,6 +16,7 @@ from cookidoo_api import (
     CookidooSubscription,
     CookidooUserInfo,
 )
+from cookidoo_api.types import CookidooCalendarDay
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
@@ -37,6 +38,7 @@ class CookidooData:
     ingredient_items: list[CookidooIngredientItem]
     additional_items: list[CookidooAdditionalItem]
     subscription: CookidooSubscription | None
+    week_plan: list[CookidooCalendarDay]
 
 
 class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
@@ -81,6 +83,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
             subscription = await self.cookidoo.get_active_subscription()
+            week_plan = await self.cookidoo.get_recipes_in_calendar_week(date.today())
         except CookidooAuthException:
             try:
                 await self.cookidoo.refresh_token()
@@ -106,4 +109,5 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             ingredient_items=ingredient_items,
             additional_items=additional_items,
             subscription=subscription,
+            week_plan=week_plan,
         )

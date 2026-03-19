@@ -12,6 +12,7 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
+from pyportainer.models.portainer import PortainerSystemStatus
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -32,18 +33,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def _validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> PortainerSystemStatus:
     """Validate the user input allows us to connect."""
 
     client = Portainer(
         api_url=data[CONF_URL],
         api_key=data[CONF_API_TOKEN],
-        session=async_get_clientsession(
-            hass=hass, verify_ssl=data.get(CONF_VERIFY_SSL, True)
-        ),
+        session=async_get_clientsession(hass=hass, verify_ssl=data[CONF_VERIFY_SSL]),
     )
     try:
-        await client.get_endpoints()
+        system_status = await client.portainer_system_status()
     except PortainerAuthenticationError:
         raise InvalidAuth from None
     except PortainerConnectionError as err:
@@ -52,12 +53,13 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         raise PortainerTimeout from err
 
     _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
+    return system_status
 
 
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
-    VERSION = 2
+    VERSION = 5
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -65,9 +67,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
-                await _validate_input(self.hass, user_input)
+                system_status = await _validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -78,7 +79,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_API_TOKEN])
+                await self.async_set_unique_id(system_status.instance_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_URL], data=user_input
@@ -127,6 +128,57 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        suggested_values = {
+            CONF_URL: reconf_entry.data[CONF_URL],
+            CONF_API_TOKEN: reconf_entry.data[CONF_API_TOKEN],
+            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
+        }
+
+        if user_input:
+            try:
+                system_status = await _validate_input(
+                    self.hass,
+                    data={
+                        **reconf_entry.data,
+                        **user_input,
+                    },
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except PortainerTimeout:
+                errors["base"] = "timeout_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(system_status.instance_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_URL: user_input[CONF_URL],
+                        CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values=user_input or suggested_values,
+            ),
             errors=errors,
         )
 

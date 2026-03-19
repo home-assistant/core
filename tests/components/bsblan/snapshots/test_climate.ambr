@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_celsius_fahrenheit[climate.bsb_lan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -32,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -51,6 +53,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 18.6,
       'friendly_name': 'BSB-LAN',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
@@ -76,8 +79,9 @@
 # ---
 # name: test_climate_entity_properties[climate.bsb_lan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -107,6 +111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -126,6 +131,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 18.6,
       'friendly_name': 'BSB-LAN',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,

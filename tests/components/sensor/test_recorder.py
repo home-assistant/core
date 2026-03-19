@@ -263,6 +263,7 @@ async def assert_validation_result(
         ("distance", "mi", "mi", "mi", "distance", 13.050847, -10, 30),
         ("humidity", "%", "%", "%", "unitless", 13.050847, -10, 30),
         ("humidity", None, None, None, "unitless", 13.050847, -10, 30),
+        ("pressure", "mPa", "mPa", "mPa", "pressure", 13.050847, -10, 30),
         ("pressure", "Pa", "Pa", "Pa", "pressure", 13.050847, -10, 30),
         ("pressure", "hPa", "hPa", "hPa", "pressure", 13.050847, -10, 30),
         ("pressure", "mbar", "mbar", "mbar", "pressure", 13.050847, -10, 30),
@@ -272,6 +273,26 @@ async def assert_validation_result(
         ("speed", "mph", "mph", "mph", "speed", 13.050847, -10, 30),
         ("temperature", "°C", "°C", "°C", "temperature", 13.050847, -10, 30),
         ("temperature", "°F", "°F", "°F", "temperature", 13.050847, -10, 30),
+        (
+            "temperature_delta",
+            "°C",
+            "°C",
+            "°C",
+            "temperature_delta",
+            13.050847,
+            -10,
+            30,
+        ),
+        (
+            "temperature_delta",
+            "°F",
+            "°F",
+            "°F",
+            "temperature_delta",
+            13.050847,
+            -10,
+            30,
+        ),
         ("volume", "m³", "m³", "m³", "volume", 13.050847, -10, 30),
         ("volume", "ft³", "ft³", "ft³", "volume", 13.050847, -10, 30),
         ("weight", "g", "g", "g", "mass", 13.050847, -10, 30),
@@ -2240,8 +2261,8 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     last_updated = states["sensor.test1"][6].last_updated.isoformat()
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
-        f"strictly increasing. Triggered by state {state} ({previous_state}) with "
-        f"last_updated set to {last_updated}. Please create a bug report at "
+        f"strictly increasing. Triggered by state {state} (previous state: {previous_state}) "
+        f"with last_updated set to {last_updated}. Please create a bug report at "
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
     statistic_ids = await async_list_statistic_ids(hass)
@@ -2601,6 +2622,7 @@ async def test_compile_hourly_energy_statistics_multiple(
         ("distance", "mi", 30),
         ("humidity", "%", 30),
         ("humidity", None, 30),
+        ("pressure", "mPa", 30),
         ("pressure", "Pa", 30),
         ("pressure", "hPa", 30),
         ("pressure", "mbar", 30),
@@ -2767,6 +2789,7 @@ async def test_compile_hourly_statistics_partially_unavailable(
         ("distance", "mi", 30),
         ("humidity", "%", 30),
         ("humidity", None, 30),
+        ("pressure", "mPa", 30),
         ("pressure", "Pa", 30),
         ("pressure", "hPa", 30),
         ("pressure", "mbar", 30),
@@ -3048,6 +3071,15 @@ async def test_compile_hourly_statistics_fails(
         (
             "measurement",
             "pressure",
+            "mPa",
+            "mPa",
+            "mPa",
+            "pressure",
+            StatisticMeanType.ARITHMETIC,
+        ),
+        (
+            "measurement",
+            "pressure",
             "Pa",
             "Pa",
             "Pa",
@@ -3124,6 +3156,24 @@ async def test_compile_hourly_statistics_fails(
             "°F",
             "°F",
             "temperature",
+            StatisticMeanType.ARITHMETIC,
+        ),
+        (
+            "measurement",
+            "temperature_delta",
+            "°C",
+            "°C",
+            "°C",
+            "temperature_delta",
+            StatisticMeanType.ARITHMETIC,
+        ),
+        (
+            "measurement",
+            "temperature_delta",
+            "°F",
+            "°F",
+            "°F",
+            "temperature_delta",
             StatisticMeanType.ARITHMETIC,
         ),
         (
@@ -3842,6 +3892,21 @@ async def test_compile_hourly_statistics_convert_units_1(
         ),
         (None, "\u00b5g", "\u03bcg", None, "mass", 13.050847, 13.333333, -10, 30),
         (None, "\u00b5s", "\u03bcs", None, "duration", 13.050847, 13.333333, -10, 30),
+        (None, "mVAr", "mvar", None, "reactive_power", 13.050847, 13.333333, -10, 30),
+        (None, "VAr", "var", None, "reactive_power", 13.050847, 13.333333, -10, 30),
+        (None, "kVAr", "kvar", None, "reactive_power", 13.050847, 13.333333, -10, 30),
+        (None, "VArh", "varh", None, "reactive_energy", 13.050847, 13.333333, -10, 30),
+        (
+            None,
+            "kVArh",
+            "kvarh",
+            None,
+            "reactive_energy",
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
     ],
 )
 async def test_compile_hourly_statistics_equivalent_units_1(
@@ -3982,6 +4047,16 @@ async def test_compile_hourly_statistics_equivalent_units_1(
         (SensorDeviceClass.WEIGHT, "\u00b5g", "\u03bcg", None, 13.333333, -10, 30),
         (None, "\u00b5s", "\u03bcs", None, 13.333333, -10, 30),
         (SensorDeviceClass.DURATION, "\u00b5s", "\u03bcs", None, 13.333333, -10, 30),
+        (None, "mVAr", "mvar", None, 13.333333, -10, 30),
+        (None, "VAr", "var", None, 13.333333, -10, 30),
+        (None, "kVAr", "kvar", None, 13.333333, -10, 30),
+        (None, "VArh", "varh", None, 13.333333, -10, 30),
+        (None, "kVArh", "kvarh", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_POWER, "mVAr", "mvar", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_POWER, "VAr", "var", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_POWER, "kVAr", "kvar", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_ENERGY, "VArh", "varh", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_ENERGY, "kVArh", "kvarh", None, 13.333333, -10, 30),
     ],
 )
 async def test_compile_hourly_statistics_equivalent_units_2(
@@ -4062,25 +4137,120 @@ async def test_compile_hourly_statistics_equivalent_units_2(
 @pytest.mark.parametrize(
     (
         "device_class",
-        "state_unit",
-        "statistic_unit",
-        "unit_class",
+        "unit_1",
+        "unit_2",
+        "unit_3",
+        "unit_class_1",
+        "unit_class_2",
+        "factor_2",
+        "factor_3",
         "mean1",
         "mean2",
         "min",
         "max",
     ),
     [
-        ("power", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
+        (
+            "power",
+            "kW",
+            "kW",
+            "kW",
+            "power",
+            "power",
+            1,
+            1,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        (
+            "carbon_monoxide",
+            "ppm",
+            "ppm",
+            "ppm",
+            "unitless",
+            "carbon_monoxide",
+            1,
+            1,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from unitless to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "ppm",
+            "ppm",
+            "mg/m³",
+            "unitless",
+            "carbon_monoxide",
+            1,
+            1.164409,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from unitless to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "ppm",
+            "mg/m³",
+            "mg/m³",
+            "unitless",
+            "carbon_monoxide",
+            1.164409,
+            1.164409,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from concentration to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "mg/m³",
+            "mg/m³",
+            "ppm",
+            "concentration",
+            "carbon_monoxide",
+            1,
+            1 / 1.164409,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from concentration to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "mg/m³",
+            "ppm",
+            "ppm",
+            "concentration",
+            "carbon_monoxide",
+            1 / 1.164409,
+            1 / 1.164409,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
     ],
 )
 async def test_compile_hourly_statistics_changing_device_class_1(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
-    state_unit,
-    statistic_unit,
-    unit_class,
+    unit_1,
+    unit_2,
+    unit_3,
+    unit_class_1,
+    unit_class_2,
+    factor_2,
+    factor_3,
     mean1,
     mean2,
     min,
@@ -4088,7 +4258,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
 ) -> None:
     """Test compiling hourly statistics where device class changes from one hour to the next.
 
-    Device class is ignored, meaning changing device class should not influence the statistics.
+    In this test, the device class is first None, then set to a specific device class.
+
+    Changing device class may influence the unit class.
     """
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
@@ -4098,7 +4270,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     # Record some states for an initial period, the entity has no device class
     attributes = {
         "state_class": "measurement",
-        "unit_of_measurement": state_unit,
+        "unit_of_measurement": unit_1,
     }
     with freeze_time(zero) as freezer:
         four, states = await async_record_states(
@@ -4113,14 +4285,14 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": state_unit,
+            "display_unit_of_measurement": unit_1,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": state_unit,
-            "unit_class": unit_class,
+            "statistics_unit_of_measurement": unit_1,
+            "unit_class": unit_class_1,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -4139,15 +4311,17 @@ async def test_compile_hourly_statistics_changing_device_class_1(
         ]
     }
 
-    # Update device class and record additional states in the original UoM
+    # Update device class and record additional states in a different UoM
     attributes["device_class"] = device_class
+    attributes["unit_of_measurement"] = unit_2
+    seq = [x * factor_2 for x in (-10, 15, 30)]
     with freeze_time(zero) as freezer:
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes, seq
         )
         states["sensor.test1"] += _states["sensor.test1"]
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
@@ -4163,14 +4337,14 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": state_unit,
+            "display_unit_of_measurement": unit_2,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": state_unit,
-            "unit_class": unit_class,
+            "statistics_unit_of_measurement": unit_1,
+            "unit_class": unit_class_2,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -4179,9 +4353,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": pytest.approx(mean1),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean1 * factor_2),
+                "min": pytest.approx(min * factor_2),
+                "max": pytest.approx(max * factor_2),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4189,9 +4363,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
-                "mean": pytest.approx(mean2),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean2 * factor_2),
+                "min": pytest.approx(min * factor_2),
+                "max": pytest.approx(max * factor_2),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4200,14 +4374,15 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     }
 
     # Update device class and record additional states in a different UoM
-    attributes["unit_of_measurement"] = statistic_unit
+    attributes["unit_of_measurement"] = unit_3
+    seq = [x * factor_3 for x in (-10, 15, 30)]
     with freeze_time(zero) as freezer:
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=15), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=15), "sensor.test1", attributes, seq
         )
         states["sensor.test1"] += _states["sensor.test1"]
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=20), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=20), "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
@@ -4223,14 +4398,14 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": state_unit,
+            "display_unit_of_measurement": unit_3,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": state_unit,
-            "unit_class": unit_class,
+            "statistics_unit_of_measurement": unit_1,
+            "unit_class": unit_class_2,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -4239,9 +4414,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": pytest.approx(mean1),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean1 * factor_3),
+                "min": pytest.approx(min * factor_3),
+                "max": pytest.approx(max * factor_3),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4249,9 +4424,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
-                "mean": pytest.approx(mean2),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean2 * factor_3),
+                "min": pytest.approx(min * factor_3),
+                "max": pytest.approx(max * factor_3),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4259,9 +4434,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=20)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=25)).timestamp(),
-                "mean": pytest.approx(mean2),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean2 * factor_3),
+                "min": pytest.approx(min * factor_3),
+                "max": pytest.approx(max * factor_3),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4302,7 +4477,7 @@ async def test_compile_hourly_statistics_changing_device_class_2(
 ) -> None:
     """Test compiling hourly statistics where device class changes from one hour to the next.
 
-    Device class is ignored, meaning changing device class should not influence the statistics.
+    In this test, the device class is first set to a specific device class, then set to None.
     """
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
@@ -5025,7 +5200,7 @@ async def async_record_states(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5033,7 +5208,7 @@ async def async_record_states(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
     ],
 )
@@ -5264,7 +5439,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5272,7 +5447,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5858,6 +6033,11 @@ async def test_validate_statistics_unit_change_no_conversion(
         (NONE_SENSOR_ATTRIBUTES, "\u00b5mol/s⋅m²", "\u03bcmol/s⋅m²"),
         (NONE_SENSOR_ATTRIBUTES, "\u00b5g", "\u03bcg"),
         (NONE_SENSOR_ATTRIBUTES, "\u00b5s", "\u03bcs"),
+        (NONE_SENSOR_ATTRIBUTES, "mVAr", "mvar"),
+        (NONE_SENSOR_ATTRIBUTES, "VAr", "var"),
+        (NONE_SENSOR_ATTRIBUTES, "kVAr", "kvar"),
+        (NONE_SENSOR_ATTRIBUTES, "VArh", "varh"),
+        (NONE_SENSOR_ATTRIBUTES, "kVArh", "kvarh"),
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units(
@@ -5955,6 +6135,11 @@ async def test_validate_statistics_unit_change_equivalent_units(
             "\u00b5s",
             "d, h, min, ms, s, w, \u03bcs",
         ),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_power", "mvar", "mVAr", "kvar, mvar, var"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_power", "var", "VAr", "kvar, mvar, var"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_power", "kvar", "kVAr", "kvar, mvar, var"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_energy", "varh", "VArh", "kvarh, varh"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_energy", "kvarh", "kVArh", "kvarh, varh"),
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units_2(
@@ -6041,8 +6226,8 @@ async def test_validate_statistics_other_domain(
 
     # Create statistics for another domain
     metadata: StatisticMetaData = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": None,
         "source": RECORDER_DOMAIN,
         "statistic_id": "number.test",

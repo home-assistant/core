@@ -9,20 +9,17 @@
               "comfort-1": "mdi:thermometer",
               "comfort-2": "mdi:thermometer-low",
               "drying": "mdi:hair-dryer",
+              "external": "mdi:remote",
               "frost_protection": "mdi:snowflake",
-              "prog": "mdi:clock-outline",
-              "external": "mdi:remote"
+              "prog": "mdi:clock-outline"
             }
           }
         }
       }
     },
     "select": {
-      "open_closed_pedestrian": {
-        "default": "mdi:content-save-cog"
-      },
-      "open_closed_partial": {
-        "default": "mdi:content-save-cog"
+      "active_zones": {
+        "default": "mdi:shield-lock"
       },
       "memorized_simple_volume": {
         "default": "mdi:volume-medium",
@@ -31,15 +28,18 @@
           "standard": "mdi:volume-medium"
         }
       },
+      "open_closed_partial": {
+        "default": "mdi:content-save-cog"
+      },
+      "open_closed_pedestrian": {
+        "default": "mdi:content-save-cog"
+      },
       "operating_mode": {
         "default": "mdi:sun-snowflake",
         "state": {
-          "heating": "mdi:heat-wave",
-          "cooling": "mdi:snowflake"
+          "cooling": "mdi:snowflake",
+          "heating": "mdi:heat-wave"
         }
-      },
-      "active_zones": {
-        "default": "mdi:shield-lock"
       }
     }
   }

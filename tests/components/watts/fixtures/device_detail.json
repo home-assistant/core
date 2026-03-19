@@ -1,0 +1,22 @@
+{
+  "deviceId": "thermostat_123",
+  "deviceName": "Living Room Thermostat",
+  "deviceType": "thermostat",
+  "interface": "homeassistant.components.THERMOSTAT",
+  "roomName": "Living Room",
+  "isOnline": true,
+  "currentTemperature": 21.0,
+  "setpoint": 23.5,
+  "thermostatMode": "Comfort",
+  "minAllowedTemperature": 5.0,
+  "maxAllowedTemperature": 30.0,
+  "temperatureUnit": "C",
+  "availableThermostatModes": [
+    "Program",
+    "Eco",
+    "Comfort",
+    "Off",
+    "Defrost",
+    "Timer"
+  ]
+}

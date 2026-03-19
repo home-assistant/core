@@ -5,9 +5,11 @@ from unittest.mock import Mock, patch
 from aioesphomeapi import (
     APIClient,
     EntityCategory as ESPHomeEntityCategory,
+    EntityInfo,
     SensorInfo,
     SensorState,
 )
+import pytest
 
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.entry_data import RuntimeEntryData
@@ -120,3 +122,74 @@ async def test_discover_zwave() -> None:
                 version=1,
             ),
         )
+
+
+async def test_discover_zwave_without_home_id() -> None:
+    """Test ESPHome does not start Z-Wave discovery without home ID."""
+    hass = Mock()
+    entry_data = RuntimeEntryData(
+        "mock-id",
+        "mock-title",
+        Mock(
+            connected_address="mock-client-address",
+            port=1234,
+            noise_psk=None,
+        ),
+        None,
+    )
+    device_info = Mock(
+        mac_address="mock-device-info-mac",
+        zwave_proxy_feature_flags=1,
+        zwave_home_id=0,  # No home ID (fresh adapter or unplugged)
+    )
+    device_info.name = "mock-device-infoname"
+
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        entry_data.async_on_connect(
+            hass,
+            device_info,
+            None,
+        )
+        # Verify async_create_flow was NOT called when zwave_home_id is 0
+        mock_create_flow.assert_not_called()
+
+
+async def test_unknown_entity_type_skipped(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that unknown entity types are skipped gracefully."""
+
+    class UnknownInfo(EntityInfo):
+        """Mock unknown entity info type."""
+
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+        ),
+        UnknownInfo(
+            object_id="unknown",
+            key=2,
+            name="unknown entity",
+        ),
+    ]
+    states = [SensorState(key=1, state=42)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    assert "UnknownInfo" in caplog.text
+    assert "not supported in this version of Home Assistant" in caplog.text
+
+    # Known entity still works
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "42"

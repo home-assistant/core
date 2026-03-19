@@ -228,7 +228,7 @@ def _entity_history_to_float_and_state(
                 float_state
             ):
                 append((float_state, state))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
     return float_states
 
@@ -280,19 +280,27 @@ def _normalize_states(
     state_unit: str | None = None
     statistics_unit: str | None
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
         statistics_unit = state_unit
-        unit_class = _get_unit_class(
-            fstates[0][1].attributes.get(ATTR_DEVICE_CLASS),
-            state_unit,
-        )
+        unit_class = _get_unit_class(device_class, state_unit)
     else:
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
         unit_class = old_metadata["unit_class"]
+        # Check if the unit class has changed
+        if (
+            (new_unit_class := _get_unit_class(device_class, state_unit)) != unit_class
+            and (new_converter := _get_unit_converter(new_unit_class))
+            and state_unit in new_converter.VALID_UNITS
+            and statistics_unit in new_converter.VALID_UNITS
+        ):
+            # The new unit class supports conversion between the units in metadata
+            # and the unit in the state, so we can use the new unit class
+            unit_class = new_unit_class
 
     if not (converter := _get_unit_converter(unit_class)):
         # The unit used by this sensor doesn't support unit conversion
@@ -386,7 +394,7 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
 def warn_dip(
     hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
 ) -> None:
-    """Log a warning once if a sensor with state_class_total has a decreasing value.
+    """Log a warning once if a sensor with state class TOTAL_INCREASING has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
     rounding issues with databases storing the state as a single precision float, which
@@ -407,12 +415,13 @@ def warn_dip(
             return
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is not"
-                " strictly increasing. Triggered by state %s (%s) with last_updated set"
-                " to %s. Please %s"
+                "Entity %s %shas state class %s, but its state is not"
+                " strictly increasing. Triggered by state %s (previous state: %s) with"
+                " last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             previous_fstate,
             state.last_updated.isoformat(),
@@ -421,7 +430,7 @@ def warn_dip(
 
 
 def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
-    """Log a warning once if a sensor with state_class_total has a negative value."""
+    """Log a warning once if a sensor with state class TOTAL_INCREASING has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
@@ -430,11 +439,12 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         domain = entity_info["domain"] if entity_info else None
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is "
+                "Entity %s %shas state class %s, but its state is "
                 "negative. Triggered by state %s with last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),

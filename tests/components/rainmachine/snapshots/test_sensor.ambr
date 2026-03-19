@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.12345_evening_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_sensors[sensor.12345_flower_box_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower Box Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_sensors[sensor.12345_landscaping_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_sensors[sensor.12345_morning_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -197,8 +205,9 @@
 # ---
 # name: test_sensors[sensor.12345_rain_sensor_rain_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain sensor rain start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -247,8 +257,9 @@
 # ---
 # name: test_sensors[sensor.12345_test_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -266,6 +277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TEST Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -296,8 +308,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_10_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -315,6 +328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -345,8 +359,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_11_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -364,6 +379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -394,8 +410,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_12_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -413,6 +430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -443,8 +461,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_4_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -462,6 +481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -492,8 +512,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_5_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -511,6 +532,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -541,8 +563,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_6_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -560,6 +583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -590,8 +614,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_7_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -609,6 +634,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -639,8 +665,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_8_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -658,6 +685,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -688,8 +716,9 @@
 # ---
 # name: test_sensors[sensor.12345_zone_9_run_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -707,6 +736,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

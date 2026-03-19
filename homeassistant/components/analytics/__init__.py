@@ -4,11 +4,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import labs, websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HassJob, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -20,7 +18,13 @@ from .analytics import (
     EntityAnalyticsModifications,
     async_devices_payload,
 )
-from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
+from .const import (
+    ATTR_ONBOARDED,
+    ATTR_PREFERENCES,
+    ATTR_SNAPSHOTS,
+    DOMAIN,
+    PREFERENCE_SCHEMA,
+)
 from .http import AnalyticsDevicesView
 
 __all__ = [
@@ -31,41 +35,60 @@ __all__ = [
     "async_devices_payload",
 ]
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONF_SNAPSHOTS_URL = "snapshots_url"
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_SNAPSHOTS_URL): vol.Any(str, None),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 DATA_COMPONENT: HassKey[Analytics] = HassKey(DOMAIN)
 
+LABS_SNAPSHOT_FEATURE = "snapshots"
 
-async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the analytics integration."""
-    analytics = Analytics(hass)
+    analytics_config = config.get(DOMAIN, {})
+
+    if CONF_SNAPSHOTS_URL in analytics_config:
+        await labs.async_update_preview_feature(
+            hass, DOMAIN, LABS_SNAPSHOT_FEATURE, enabled=True
+        )
+        snapshots_url = analytics_config[CONF_SNAPSHOTS_URL]
+    else:
+        snapshots_url = None
+
+    analytics = Analytics(hass, snapshots_url)
 
     # Load stored data
     await analytics.load()
 
-    @callback
-    def start_schedule(_event: Event) -> None:
+    started = False
+
+    async def _async_handle_labs_update(
+        event_data: labs.EventLabsUpdatedData,
+    ) -> None:
+        """Handle labs feature toggle."""
+        await analytics.save_preferences({ATTR_SNAPSHOTS: event_data["enabled"]})
+        if started:
+            await analytics.async_schedule()
+
+    async def start_schedule(_event: Event) -> None:
         """Start the send schedule after the started event."""
-        # Wait 15 min after started
-        async_call_later(
-            hass,
-            900,
-            HassJob(
-                analytics.send_analytics,
-                name="analytics schedule",
-                cancel_on_shutdown=True,
-            ),
-        )
+        nonlocal started
+        started = True
+        await analytics.async_schedule()
 
-        # Send every day
-        async_track_time_interval(
-            hass,
-            analytics.send_analytics,
-            INTERVAL,
-            name="analytics daily",
-            cancel_on_shutdown=True,
-        )
-
+    labs.async_subscribe_preview_feature(
+        hass, DOMAIN, LABS_SNAPSHOT_FEATURE, _async_handle_labs_update
+    )
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
 
     websocket_api.async_register_command(hass, websocket_analytics)
@@ -111,7 +134,7 @@ async def websocket_analytics_preferences(
     analytics = hass.data[DATA_COMPONENT]
 
     await analytics.save_preferences(preferences)
-    await analytics.send_analytics()
+    await analytics.async_schedule()
 
     connection.send_result(
         msg["id"],

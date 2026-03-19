@@ -184,7 +184,7 @@ class GoogleWifiAPI:
             self.raw_data = response.json()
             self.data_format()
             self.available = True
-        except (ValueError, requests.exceptions.ConnectionError):
+        except ValueError, requests.exceptions.ConnectionError:
             _LOGGER.warning("Unable to fetch data from Google Wifi")
             self.available = False
             self.raw_data = None

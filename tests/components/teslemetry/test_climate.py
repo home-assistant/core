@@ -321,7 +321,7 @@ async def test_select_streaming(
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "data": {
                 Signal.INSIDE_TEMP: 26,
-                Signal.HVAC_AC_ENABLED: True,
+                Signal.HVAC_POWER: "HvacPowerStateOn",
                 Signal.CLIMATE_KEEPER_MODE: "ClimateKeeperModeOn",
                 Signal.RIGHT_HAND_DRIVE: True,
                 Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22,

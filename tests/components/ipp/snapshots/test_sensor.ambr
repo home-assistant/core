@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.test_ha_1000_series-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -68,8 +70,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_black_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -89,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,8 +127,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_cyan_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -144,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,8 +184,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_magenta_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -199,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,8 +241,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_photo_black_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -254,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photo black ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -288,8 +298,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -307,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -337,8 +349,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_yellow_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -358,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow ink',
     'options': dict({
     }),
     'original_device_class': None,

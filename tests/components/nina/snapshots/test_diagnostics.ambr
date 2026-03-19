@@ -2,7 +2,7 @@
 # name: test_diagnostics
   dict({
     'data': dict({
-      '083350000000': list([
+      '095760000000': list([
         dict({
           'affected_areas': 'Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere.',
           'description': 'Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.',
@@ -25,7 +25,7 @@
           'id': 'biw.BIWAPP-69634',
           'is_valid': False,
           'recommended_actions': '',
-          'sender': '',
+          'sender': None,
           'sent': '1999-08-07T10:59:00+02:00',
           'severity': 'Minor',
           'start': '',
@@ -34,10 +34,16 @@
       ]),
     }),
     'entry_data': dict({
-      'area_filter': '.*',
-      'headline_filter': '.*corona.*',
+      '_a_to_d': list([
+        '095760000000_0',
+        '095760000000_1',
+      ]),
+      'filters': dict({
+        'area_filter': '.*',
+        'headline_filter': '.*corona.*',
+      }),
       'regions': dict({
-        '083350000000': 'Aach, Stadt',
+        '095760000000': 'Aach',
       }),
       'slots': 5,
     }),
