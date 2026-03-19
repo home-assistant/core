@@ -30,12 +30,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -48,6 +43,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.config_entry_oauth2_flow import MY_AUTH_CALLBACK_PATH
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .api import ConfigEntryAuth
@@ -135,6 +131,7 @@ async def async_migrate_entry(
             translation_key="update_redirect_uri",
             translation_placeholders={
                 "viessmann_developer_portal": VIESSMANN_DEVELOPER_PORTAL,
+                "redirect_url": MY_AUTH_CALLBACK_PATH,
             },
         )
 
