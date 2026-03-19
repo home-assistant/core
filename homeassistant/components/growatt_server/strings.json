@@ -579,7 +579,7 @@
       "message": "Growatt API error: {error}"
     },
     "device_not_configured": {
-      "message": "{device_type} device {serial_number} is not configured for services."
+      "message": "{device_type} device {serial_number} is not configured for actions."
     },
     "device_not_found": {
       "message": "Device {device_id} not found in the device registry."
