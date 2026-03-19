@@ -55,7 +55,6 @@ def mock_lichess_client() -> Generator[AsyncMock]:
             play_time=999999,
         )
         client.get_user_id.return_value = "drnykterstien"
-        client.get_username.return_value = "DrNykterstein"
         client.get_statistics.return_value = LichessStatistics(
             blitz_rating=944,
             rapid_rating=1050,
