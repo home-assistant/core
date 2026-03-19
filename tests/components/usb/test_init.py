@@ -1321,6 +1321,35 @@ def test_scan_serial_ports_without_unique_symlinks() -> None:
     assert devices[0].vid == "1234"
 
 
+def test_scan_serial_ports_no_vid_pid() -> None:
+    """Test scan_serial_ports returns devices without VID:PID."""
+    mock_port = MagicMock()
+    mock_port.device = "/dev/ttyAMA1"
+    mock_port.vid = None
+    mock_port.pid = None
+    mock_port.serial_number = None
+    mock_port.manufacturer = None
+    mock_port.description = None
+
+    with (
+        patch("os.path.isdir", return_value=False),
+        patch("os.path.realpath", side_effect=lambda x: x),
+        patch(
+            "homeassistant.components.usb.utils.comports",
+            return_value=[mock_port],
+        ),
+    ):
+        devices = scan_serial_ports()
+
+    assert len(devices) == 1
+    assert devices[0].device == "/dev/ttyAMA1"
+    assert devices[0].vid is None
+    assert devices[0].pid is None
+    assert devices[0].serial_number is None
+    assert devices[0].manufacturer is None
+    assert devices[0].description is None
+
+
 def test_usb_device_from_path_finds_by_symlink() -> None:
     """Test usb_device_from_path finds device by symlink path."""
     scanned_device = USBDevice(
@@ -1563,3 +1592,17 @@ async def test_removal_aborts_discovery_flows(
         final_flows = hass.config_entries.flow.async_progress()
         assert len(final_flows) == 1
         assert final_flows[0]["handler"] == "test2"
+
+
+def test_usb_service_info_from_device_no_vid_pid() -> None:
+    """Test usb_service_info_from_device rejects devices without VID or PID."""
+    device = USBDevice(
+        device="/dev/ttyUSB0",
+        vid=None,
+        pid=None,
+        serial_number="ABC123",
+        manufacturer="Test Manufacturer",
+        description="Test Device",
+    )
+
+    assert usb.usb_service_info_from_device(device) is None
