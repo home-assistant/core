@@ -19,7 +19,6 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 # Tessie library
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
-TEST_VEHICLE_BATTERY = load_json_object_fixture("battery.json", DOMAIN)
 TEST_RESPONSE = {"result": True}
 TEST_RESPONSE_ERROR = {"result": False, "reason": "reason_why"}
 
