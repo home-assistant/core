@@ -282,7 +282,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                _cover_status_inverted_signal(self._attr_unique_id),
+                _cover_status_inverted_signal(self.unique_id),
                 self.async_write_ha_state,
             )
         )
@@ -346,7 +346,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Open the cover."""
         if self._set_position is not None:
             await self._async_send_commands(
-                self._set_position.get_update_commands(self.device, self._invert_position(100))
+                self._set_position.get_update_commands(
+                    self.device, self._invert_position(100)
+                )
             )
             return
 
@@ -363,7 +365,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Close cover."""
         if self._set_position is not None:
             await self._async_send_commands(
-                self._set_position.get_update_commands(self.device, self._invert_position(0))
+                self._set_position.get_update_commands(
+                    self.device, self._invert_position(0)
+                )
             )
             return
 

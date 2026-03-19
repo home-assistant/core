@@ -1013,9 +1013,7 @@ class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
         inverted = self.hass.data.get(TUYA_HA_COVER_STATUS_INVERTED)
         if inverted is not None:
             inverted.pop(self._cover_unique_id, None)
-        dispatcher_send(
-            self.hass, _cover_status_inverted_signal(self._cover_unique_id)
-        )
+        dispatcher_send(self.hass, _cover_status_inverted_signal(self._cover_unique_id))
 
     async def async_added_to_hass(self) -> None:
         """Restore the last saved state."""
