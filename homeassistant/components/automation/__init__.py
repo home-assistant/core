@@ -125,6 +125,8 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "device_tracker",
     "door",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
     "lawn_mower",
     "light",
@@ -133,9 +135,11 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "motion",
     "occupancy",
     "person",
+    "schedule",
     "siren",
     "switch",
     "vacuum",
+    "window",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
@@ -162,6 +166,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "remote",
     "scene",
     "schedule",
+    "select",
     "siren",
     "switch",
     "text",

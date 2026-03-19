@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.58.0
+PyViCare==2.58.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -545,7 +545,7 @@ autoskope_client==1.4.1
 av==16.0.1
 
 # homeassistant.components.axis
-axis==66
+axis==67
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1458,7 +1458,7 @@ objgraph==3.5.0
 odp-amsterdam==6.1.2
 
 # homeassistant.components.ohme
-ohme==1.7.0
+ohme==1.7.1
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -2178,6 +2178,9 @@ python-awair==0.2.5
 
 # homeassistant.components.bsblan
 python-bsblan==5.1.2
+
+# homeassistant.components.dropbox
+python-dropbox-api==0.1.3
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
