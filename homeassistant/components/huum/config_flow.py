@@ -73,12 +73,12 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
+            huum = Huum(
+                reauth_entry.data[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session=async_get_clientsession(self.hass),
+            )
             try:
-                huum = Huum(
-                    reauth_entry.data[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    session=async_get_clientsession(self.hass),
-                )
                 await huum.status()
             except Forbidden, NotAuthenticated:
                 errors["base"] = "invalid_auth"
