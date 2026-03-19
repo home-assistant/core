@@ -8,7 +8,11 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDevice, AmazonMediaState
+from aioamazondevices.structures import (
+    AmazonDevice,
+    AmazonMediaState,
+    AmazonVolumeState,
+)
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,8 +59,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_LOGIN_DATA],
         )
         self.previous_devices: set[str] = set()
-        self._media_state: dict[str, AmazonMediaState] = {}
+        self._volume_states: dict[str, AmazonVolumeState] = {}
+        self._media_states: dict[str, AmazonMediaState] = {}
 
+        self.api.on_volume_state_event.append(self.volume_state_event_handler)
+        self.api.on_volume_state_event.freeze()
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
 
@@ -120,10 +127,22 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self, media_state: dict[str, AmazonMediaState]
     ) -> None:
         """Handle pushed media state changed events."""
-        self._media_state = media_state
+        self._media_states = media_state
         self.async_update_listeners()
 
     @property
-    def media_state(self) -> dict[str, AmazonMediaState]:
+    def media_states(self) -> dict[str, AmazonMediaState]:
         """Media state of devices."""
-        return self._media_state
+        return self._media_states
+
+    async def volume_state_event_handler(
+        self, volume_states: dict[str, AmazonVolumeState]
+    ) -> None:
+        """Handle pushed volume change events."""
+        self._volume_states = volume_states
+        self.async_update_listeners()
+
+    @property
+    def volume_states(self) -> dict[str, AmazonVolumeState]:
+        "Volumes of devices."
+        return self._volume_states

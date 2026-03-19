@@ -12,6 +12,7 @@ from aioamazondevices.structures import (
     AmazonMediaControls,
     AmazonMediaState,
     AmazonMusicSource,
+    AmazonVolumeState,
 )
 
 from homeassistant.components.media_player import (
@@ -123,9 +124,16 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_state(self) -> AmazonMediaState | None:
         """Return the media state relating to device."""
-        if not self.coordinator or not self.coordinator.media_state:
+        if not self.coordinator or not self.coordinator.media_states:
             return None
-        return self.coordinator.media_state.get(self._serial_num)
+        return self.coordinator.media_states.get(self._serial_num)
+
+    @property
+    def volume_state(self) -> AmazonVolumeState | None:
+        """Volume settings for device."""
+        if not self.coordinator or not self.coordinator.volume_states:
+            return None
+        return self.coordinator.volume_states.get(self._serial_num)
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -170,16 +178,16 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Return the volume level (0.0 to 1.0)."""
-        if not self.media_state or self.media_state.volume is None:
+        if not self.volume_state or self.volume_state.volume is None:
             return None
-        return self.media_state.volume / 100
+        return self.volume_state.volume / 100
 
     @property
     def is_volume_muted(self) -> bool | None:
         """Return True if the volume is muted."""
-        if not self.media_state:
+        if not self.volume_state:
             return None
-        return self.media_state.volume == 0
+        return self.volume_state.volume == 0
 
     @property
     def media_title(self) -> str | None:
@@ -285,10 +293,12 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or un-mute the volume."""
-        if not self.media_state or self.media_state.volume is None:
+        # Whilst you can mute a device by asking it there appears to be
+        # no way to do this programmatically so set volume to 0
+        if not self.volume_state or self.volume_state.volume is None:
             return
         if mute:
-            self._prev_volume = self.media_state.volume
+            self._prev_volume = self.volume_state.volume
             target_volume = 0
         else:
             target_volume = self._prev_volume
