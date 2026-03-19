@@ -1,9 +1,39 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted gates.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted gates to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more gates are closed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::gate::common::condition_behavior_description%]",
+          "name": "[%key:component::gate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Gate is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more gates are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::gate::common::condition_behavior_description%]",
+          "name": "[%key:component::gate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Gate is open"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

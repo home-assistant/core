@@ -73,6 +73,9 @@
       "keep_fresh_mode_active": {
         "name": "Keep fresh mode active"
       },
+      "microfiber_filter_blockage": {
+        "name": "Filter blockage"
+      },
       "oven_cavity_status": {
         "name": "Second cavity status"
       },
@@ -90,6 +93,15 @@
       }
     },
     "button": {
+      "cancel": {
+        "name": "Cancel"
+      },
+      "cancel_and_drain": {
+        "name": "Cancel and drain"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
       "reset_hepa_filter": {
         "name": "Reset HEPA filter"
       },
@@ -98,6 +110,12 @@
       },
       "reset_water_filter": {
         "name": "Reset water filter"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "[%key:common::action::start%]"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
@@ -252,6 +270,14 @@
           "area_then_walls": "Area then walls",
           "quick_clean_zigzag_pattern": "Quick clean in a zigzag pattern",
           "walls_first": "Walls first"
+        }
+      },
+      "robot_cleaner_sound_mode": {
+        "name": "Sound mode",
+        "state": {
+          "mute": "Mute",
+          "tone": "Tone",
+          "voice": "Voice"
         }
       },
       "robot_cleaner_water_spray_level": {
@@ -998,6 +1024,9 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "remote_control_status": {
+      "message": "Can only be changed when remote control is enabled"
     }
   },
   "issues": {
