@@ -75,6 +75,16 @@ PLATFORMS = [
 ]
 
 
+def cover_unique_id(device_id: str, key: str) -> str:
+    """Return the unique ID used by Tuya cover entities."""
+    return f"tuya.{device_id}{key}"
+
+
+def cover_status_inverted_signal(unique_id: str) -> str:
+    """Return the signal name for cover status inversion updates."""
+    return TUYA_HA_SIGNAL_COVER_STATUS_INVERTED.format(unique_id)
+
+
 class WorkMode(StrEnum):
     """Work modes."""
 

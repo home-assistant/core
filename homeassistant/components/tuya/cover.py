@@ -37,9 +37,9 @@ from . import TuyaConfigEntry
 from .const import (
     TUYA_DISCOVERY_NEW,
     TUYA_HA_COVER_STATUS_INVERTED,
-    TUYA_HA_SIGNAL_COVER_STATUS_INVERTED,
     DeviceCategory,
     DPCode,
+    cover_status_inverted_signal,
 )
 from .entity import TuyaEntity
 
@@ -174,11 +174,6 @@ def _get_instruction_wrapper(
     )
 
 
-def _cover_status_inverted_signal(unique_id: str) -> str:
-    """Return the signal name for cover status inversion updates."""
-    return TUYA_HA_SIGNAL_COVER_STATUS_INVERTED.format(unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -282,7 +277,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                _cover_status_inverted_signal(self.unique_id),
+                cover_status_inverted_signal(self.unique_id),
                 self.async_write_ha_state,
             )
         )
