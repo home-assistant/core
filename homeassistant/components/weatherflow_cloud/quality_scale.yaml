@@ -27,23 +27,20 @@ rules:
     comment: |
       This integration does not register any service actions.
   docs-high-level-description:
-    status: todo
+    status: done
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository. Needs review
-      to confirm a high-level description of the integration is present.
+      The documentation page describes the integration as providing
+      access to cloud-provided weather forecasts for Tempest Weather
+      Stations, mirroring the mobile app data.
   docs-installation-instructions:
-    status: todo
+    status: done
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository. Needs review
-      to confirm installation instructions are present.
+      Documentation includes a My button for automated setup and
+      manual steps (Settings > Devices & Services > Add Integration).
   docs-removal-instructions:
     status: todo
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository. Needs review
-      to confirm removal instructions are present.
+      The documentation does not include removal instructions.
   entity-event-setup:
     status: done
     comment: |
@@ -81,15 +78,15 @@ rules:
       This integration does not register any service actions.
   config-entry-unloading: done
   docs-configuration-parameters:
-    status: todo
+    status: done
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      The only configuration parameter is the API key, which is
+      mentioned in the documentation.
   docs-installation-parameters:
     status: todo
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      The API key is mentioned as a requirement but the documentation
+      does not explain how to obtain it.
   entity-unavailable:
     status: done
     comment: |
@@ -142,38 +139,38 @@ rules:
   docs-data-update:
     status: todo
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      The documentation notes the IoT class is cloud_polling but does
+      not document the specific refresh interval or update mechanism.
   docs-examples:
     status: todo
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      No practical configuration examples or automation scenarios are
+      provided in the documentation.
   docs-known-limitations:
     status: todo
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      The documentation only notes weather icon mapping differences;
+      other limitations are not documented.
   docs-supported-devices:
-    status: todo
+    status: done
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      The documentation states the integration supports Tempest Weather
+      Stations.
   docs-supported-functions:
-    status: todo
+    status: done
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      The documentation lists supported sensor categories: temperature
+      (7 types), air (4 types), lightning (5 types), and weather
+      forecast with 19 condition mappings.
   docs-troubleshooting:
     status: todo
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      No troubleshooting section exists in the documentation.
   docs-use-cases:
     status: todo
     comment: |
-      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
-      and cannot be verified from the source repository.
+      No explicit use cases are described beyond general weather
+      monitoring.
   dynamic-devices:
     status: exempt
     comment: |
