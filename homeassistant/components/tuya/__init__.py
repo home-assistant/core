@@ -28,6 +28,7 @@ from .const import (
     PLATFORMS,
     TUYA_CLIENT_ID,
     TUYA_DISCOVERY_NEW,
+    TUYA_HA_COVER_STATUS_INVERTED,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 
@@ -137,6 +138,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> boo
         if tuya.manager.mq is not None:
             tuya.manager.mq.stop()
         tuya.manager.remove_device_listener(tuya.listener)
+        if entry_data := hass.data.get(DOMAIN, {}).get(entry.entry_id):
+            entry_data.pop(TUYA_HA_COVER_STATUS_INVERTED, None)
+            if not entry_data:
+                hass.data[DOMAIN].pop(entry.entry_id, None)
+            if not hass.data[DOMAIN]:
+                hass.data.pop(DOMAIN)
     return unload_ok
 
 

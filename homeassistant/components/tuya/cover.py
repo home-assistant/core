@@ -36,9 +36,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import (
     TUYA_DISCOVERY_NEW,
-    TUYA_HA_COVER_STATUS_INVERTED,
     DeviceCategory,
     DPCode,
+    cover_status_inverted_data,
     cover_status_inverted_signal,
     cover_unique_id,
 )
@@ -182,11 +182,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
     manager = entry.runtime_data.manager
-    hass.data.setdefault(TUYA_HA_COVER_STATUS_INVERTED, {})
+    status_inverted = cover_status_inverted_data(hass, entry.entry_id)
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
-        """Discover and add a discovered tuya cover."""
+        """Discover and add Tuya cover entities."""
         entities: list[TuyaCoverEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
@@ -205,6 +205,7 @@ async def async_setup_entry(
                         instruction_wrapper=_get_instruction_wrapper(
                             device, description
                         ),
+                        status_inverted=status_inverted,
                         set_position=description.position_wrapper.find_dpcode(
                             device, description.set_position, prefer_function=True
                         ),
@@ -244,6 +245,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         current_position: DeviceWrapper[int] | None,
         current_state_wrapper: DeviceWrapper[bool] | None,
         instruction_wrapper: DeviceWrapper[TuyaCoverAction] | None,
+        status_inverted: dict[str, bool],
         set_position: DeviceWrapper[int] | None,
         tilt_position: DeviceWrapper[int] | None,
     ) -> None:
@@ -257,6 +259,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._current_position = current_position or set_position
         self._current_state_wrapper = current_state_wrapper
         self._instruction_wrapper = instruction_wrapper
+        self._status_inverted = status_inverted
         self._set_position = set_position
         self._tilt_position = tilt_position
 
@@ -287,9 +290,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     @property
     def _is_status_inverted(self) -> bool:
         """Return whether the cover status is locally inverted."""
-        return self.hass.data[TUYA_HA_COVER_STATUS_INVERTED].get(
-            self._cover_unique_id, False
-        )
+        return self._status_inverted.get(self._cover_unique_id, False)
 
     def _apply_position_inversion(self, position: int | None) -> int | None:
         """Invert a cover position when configured."""

@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
+from homeassistant.core import HomeAssistant
 
 DOMAIN = "tuya"
 LOGGER = logging.getLogger(__package__)
@@ -77,7 +78,16 @@ PLATFORMS = [
 
 def cover_unique_id(device_id: str, key: str) -> str:
     """Return the unique ID used by Tuya cover entities."""
-    return f"tuya.{device_id}{key}"
+    return f"{DOMAIN}.{device_id}{key}"
+
+
+def cover_status_inverted_data(hass: HomeAssistant, entry_id: str) -> dict[str, bool]:
+    """Return the per-entry cover status inversion state."""
+    return (
+        hass.data.setdefault(DOMAIN, {})
+        .setdefault(entry_id, {})
+        .setdefault(TUYA_HA_COVER_STATUS_INVERTED, {})
+    )
 
 
 def cover_status_inverted_signal(unique_id: str) -> str:

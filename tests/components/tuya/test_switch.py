@@ -17,10 +17,15 @@ from homeassistant.components.switch import (
 )
 from homeassistant.components.tuya.const import cover_unique_id
 from homeassistant.components.tuya.cover import COVERS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from . import MockDeviceListener, check_selective_state_update, initialize_entry
 

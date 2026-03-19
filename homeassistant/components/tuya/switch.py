@@ -24,9 +24,9 @@ from . import TuyaConfigEntry
 from .const import (
     DOMAIN,
     TUYA_DISCOVERY_NEW,
-    TUYA_HA_COVER_STATUS_INVERTED,
     DeviceCategory,
     DPCode,
+    cover_status_inverted_data,
     cover_status_inverted_signal,
     cover_unique_id,
 )
@@ -921,13 +921,13 @@ async def async_setup_entry(
     entry: TuyaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up tuya sensors dynamically through tuya discovery."""
+    """Set up Tuya switches and cover inversion switches via Tuya discovery."""
     manager = entry.runtime_data.manager
-    hass.data.setdefault(TUYA_HA_COVER_STATUS_INVERTED, {})
+    status_inverted = cover_status_inverted_data(hass, entry.entry_id)
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
-        """Discover and add a discovered tuya sensor."""
+        """Discover and add Tuya switch entities and cover inversion switches."""
         entities: list[SwitchEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
@@ -943,7 +943,7 @@ async def async_setup_entry(
                 )
             if cover_descriptions := COVERS.get(device.category):
                 entities.extend(
-                    TuyaCoverStatusInvertedSwitch(device, description)
+                    TuyaCoverStatusInvertedSwitch(device, description, status_inverted)
                     for description in cover_descriptions
                     if (
                         description.key in device.function
@@ -969,11 +969,15 @@ class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
     _attr_translation_key = "invert_status"
 
     def __init__(
-        self, device: CustomerDevice, description: TuyaCoverEntityDescription
+        self,
+        device: CustomerDevice,
+        description: TuyaCoverEntityDescription,
+        status_inverted: dict[str, bool],
     ) -> None:
         """Initialize the cover status inversion switch."""
         self.device = device
         self._cover_unique_id = cover_unique_id(device.id, description.key)
+        self._status_inverted = status_inverted
         self._attr_unique_id = f"{self._cover_unique_id}_invert_status"
         if description.translation_placeholders:
             self._attr_translation_key = "indexed_invert_status"
@@ -993,36 +997,30 @@ class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Return whether status inversion is enabled."""
-        return self.hass.data[TUYA_HA_COVER_STATUS_INVERTED].get(
-            self._cover_unique_id, False
-        )
+        return self._status_inverted.get(self._cover_unique_id, False)
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up inversion state when entity is removed."""
-        inverted = self.hass.data.get(TUYA_HA_COVER_STATUS_INVERTED)
-        if inverted is not None:
-            inverted.pop(self._cover_unique_id, None)
+        self._status_inverted.pop(self._cover_unique_id, None)
         dispatcher_send(self.hass, cover_status_inverted_signal(self._cover_unique_id))
 
     async def async_added_to_hass(self) -> None:
         """Restore the last saved state."""
         await super().async_added_to_hass()
-        self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = False
+        self._status_inverted[self._cover_unique_id] = False
         if last_state := await self.async_get_last_state():
-            self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = (
-                last_state.state == STATE_ON
-            )
+            self._status_inverted[self._cover_unique_id] = last_state.state == STATE_ON
         dispatcher_send(self.hass, cover_status_inverted_signal(self._cover_unique_id))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable cover status inversion."""
-        self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = True
+        self._status_inverted[self._cover_unique_id] = True
         self.async_write_ha_state()
         dispatcher_send(self.hass, cover_status_inverted_signal(self._cover_unique_id))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable cover status inversion."""
-        self.hass.data[TUYA_HA_COVER_STATUS_INVERTED][self._cover_unique_id] = False
+        self._status_inverted[self._cover_unique_id] = False
         self.async_write_ha_state()
         dispatcher_send(self.hass, cover_status_inverted_signal(self._cover_unique_id))
 
