@@ -69,10 +69,11 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return True
 
     def _on_transceiver_disconnect(self) -> None:
-        """Called from transceiver when RxModule detects USB disconnect.
+        """Called from transceiver when connection is lost.
 
-        This runs on the serial handler thread, so schedule the state
-        update on the HA event loop for thread safety.
+        May be invoked from the event loop (health-check / RxModule
+        disconnect handler), so use call_soon_threadsafe to guarantee
+        thread safety regardless of the calling context.
         """
         self.hass.loop.call_soon_threadsafe(self._handle_disconnect)
 

@@ -243,7 +243,9 @@ class RX11Transceiver:
             port = await self.hass.async_add_executor_job(_scan)
             if port and port.vid and port.pid:
                 old_serial = self.usb_serial_number
-                self.usb_serial_number = port.serial_number
+                self.usb_serial_number = (
+                    port.serial_number or self.usb_serial_number or "unknown"
+                )
                 self.usb_vid = port.vid
                 self.usb_pid = port.pid
                 if old_serial and old_serial != self.usb_serial_number:
@@ -319,8 +321,7 @@ class RX11Transceiver:
                     # Check if RxModule is still healthy
                     if not self._rxmodule.is_connected or not self._rxmodule.state_good:
                         _LOGGER.warning("RxModule health check failed")
-                        self.is_connected = False
-                        self._notify_disconnect()
+                        await self._handle_rxmodule_disconnect()
                         break
 
                 except asyncio.CancelledError:
