@@ -574,6 +574,47 @@
       }
     }
   },
+  "exceptions": {
+    "api_error": {
+      "message": "Growatt API error: {error}"
+    },
+    "device_not_configured": {
+      "message": "{device_type} device {serial_number} is not configured for services."
+    },
+    "device_not_found": {
+      "message": "Device {device_id} not found in the device registry."
+    },
+    "device_not_growatt": {
+      "message": "Device {device_id} is not a Growatt device."
+    },
+    "invalid_batt_mode": {
+      "message": "{batt_mode} is not a valid battery mode. Allowed values: {allowed_modes}."
+    },
+    "invalid_charge_power": {
+      "message": "charge_power must be between 0 and 100, got {value}."
+    },
+    "invalid_charge_stop_soc": {
+      "message": "charge_stop_soc must be between 0 and 100, got {value}."
+    },
+    "invalid_discharge_power": {
+      "message": "discharge_power must be between 0 and 100, got {value}."
+    },
+    "invalid_discharge_stop_soc": {
+      "message": "discharge_stop_soc must be between 0 and 100, got {value}."
+    },
+    "invalid_segment_id": {
+      "message": "segment_id must be between 1 and 9, got {segment_id}."
+    },
+    "invalid_time_format": {
+      "message": "{field_name} must be in HH:MM or HH:MM:SS format."
+    },
+    "no_devices_configured": {
+      "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
+    },
+    "token_auth_required": {
+      "message": "This action requires token authentication (V1 API)."
+    }
+  },
   "selector": {
     "batt_mode": {
       "options": {

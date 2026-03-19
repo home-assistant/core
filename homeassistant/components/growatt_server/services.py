@@ -46,15 +46,20 @@ def _get_coordinator(
 
     if not coordinators:
         raise ServiceValidationError(
-            f"No {device_type.upper()} devices with token authentication are configured. "
-            f"Services require {device_type.upper()} devices with V1 API access."
+            translation_domain=DOMAIN,
+            translation_key="no_devices_configured",
+            translation_placeholders={"device_type": device_type.upper()},
         )
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
 
     if not device_entry:
-        raise ServiceValidationError(f"Device '{device_id}' not found")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device_id": device_id},
+        )
 
     serial_number = None
     for identifier in device_entry.identifiers:
@@ -63,11 +68,20 @@ def _get_coordinator(
             break
 
     if not serial_number:
-        raise ServiceValidationError(f"Device '{device_id}' is not a Growatt device")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_growatt",
+            translation_placeholders={"device_id": device_id},
+        )
 
     if serial_number not in coordinators:
         raise ServiceValidationError(
-            f"{device_type.upper()} device '{serial_number}' not found or not configured for services"
+            translation_domain=DOMAIN,
+            translation_key="device_not_configured",
+            translation_placeholders={
+                "device_type": device_type.upper(),
+                "serial_number": serial_number,
+            },
         )
 
     return coordinators[serial_number]
@@ -78,13 +92,17 @@ def _parse_time_str(time_str: str, field_name: str) -> time:
     parts = time_str.split(":")
     if len(parts) not in (2, 3):
         raise ServiceValidationError(
-            f"{field_name} must be in HH:MM or HH:MM:SS format"
+            translation_domain=DOMAIN,
+            translation_key="invalid_time_format",
+            translation_placeholders={"field_name": field_name},
         )
     try:
         return datetime.strptime(f"{parts[0]}:{parts[1]}", "%H:%M").time()
     except (ValueError, IndexError) as err:
         raise ServiceValidationError(
-            f"{field_name} must be in HH:MM or HH:MM:SS format"
+            translation_domain=DOMAIN,
+            translation_key="invalid_time_format",
+            translation_placeholders={"field_name": field_name},
         ) from err
 
 
@@ -103,7 +121,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         if not 1 <= segment_id <= 9:
             raise ServiceValidationError(
-                f"segment_id must be between 1 and 9, got {segment_id}"
+                translation_domain=DOMAIN,
+                translation_key="invalid_segment_id",
+                translation_placeholders={"segment_id": str(segment_id)},
             )
 
         valid_modes = {
@@ -113,7 +133,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         }
         if batt_mode_str not in valid_modes:
             raise ServiceValidationError(
-                f"batt_mode must be one of {list(valid_modes.keys())}, got '{batt_mode_str}'"
+                translation_domain=DOMAIN,
+                translation_key="invalid_batt_mode",
+                translation_placeholders={
+                    "batt_mode": batt_mode_str,
+                    "allowed_modes": ", ".join(valid_modes),
+                },
             )
         batt_mode: int = valid_modes[batt_mode_str]
 
@@ -151,11 +176,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         if not 0 <= charge_power <= 100:
             raise ServiceValidationError(
-                f"charge_power must be between 0 and 100, got {charge_power}"
+                translation_domain=DOMAIN,
+                translation_key="invalid_charge_power",
+                translation_placeholders={"value": str(charge_power)},
             )
         if not 0 <= charge_stop_soc <= 100:
             raise ServiceValidationError(
-                f"charge_stop_soc must be between 0 and 100, got {charge_stop_soc}"
+                translation_domain=DOMAIN,
+                translation_key="invalid_charge_stop_soc",
+                translation_placeholders={"value": str(charge_stop_soc)},
             )
 
         periods = []
@@ -193,11 +222,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         if not 0 <= discharge_power <= 100:
             raise ServiceValidationError(
-                f"discharge_power must be between 0 and 100, got {discharge_power}"
+                translation_domain=DOMAIN,
+                translation_key="invalid_discharge_power",
+                translation_placeholders={"value": str(discharge_power)},
             )
         if not 0 <= discharge_stop_soc <= 100:
             raise ServiceValidationError(
-                f"discharge_stop_soc must be between 0 and 100, got {discharge_stop_soc}"
+                translation_domain=DOMAIN,
+                translation_key="invalid_discharge_stop_soc",
+                translation_placeholders={"value": str(discharge_stop_soc)},
             )
 
         periods = []
