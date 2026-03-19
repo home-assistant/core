@@ -661,8 +661,6 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
     def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
         """Get numerical value from float or entity state."""
         if isinstance(entity_or_float, (int, float)):
-            if not self._unit_converter:
-                return entity_or_float
             return self._unit_converter.convert(
                 entity_or_float, self._manual_limit_unit, self._base_unit
             )
@@ -675,9 +673,6 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
         except TypeError, ValueError:
             # Entity state is not a valid number
             return None
-
-        if not self._unit_converter:
-            return value
 
         try:
             return self._unit_converter.convert(
