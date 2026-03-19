@@ -13,7 +13,7 @@ from homeassistant.components.water_heater import (
     ATTR_OPERATION_LIST,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -40,7 +40,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         state
         for entity_states in states.values()
         for state in entity_states
-        if split_entity_id(state.entity_id)[0] == water_heater.DOMAIN
+        if state.domain == water_heater.DOMAIN
     ):
         assert ATTR_OPERATION_LIST not in state.attributes
         assert ATTR_MIN_TEMP not in state.attributes
