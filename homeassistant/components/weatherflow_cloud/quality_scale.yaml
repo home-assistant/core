@@ -1,112 +1,237 @@
 rules:
   # Bronze
   action-setup:
-    status: todo
+    status: exempt
+    comment: |
+      This integration does not register any service actions.
   appropriate-polling:
-    status: todo
-  brands:
-    status: todo
-  common-modules:
-    status: todo
-  config-flow-test-coverage:
-    status: todo
+    status: done
+    comment: |
+      The REST coordinator uses update_interval=timedelta(seconds=60)
+      (coordinator.py:83). Websocket coordinators are push-based and
+      have no polling interval.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow:
     status: todo
-  dependency-transparency:
-    status: todo
+    comment: |
+      The config flow is implemented (config_flow.py) with error
+      handling, but strings.json does not include data_description
+      entries for the api_token field in the user or reauth_confirm
+      steps. These descriptions are required to give users context
+      about what the field is for.
+  dependency-transparency: done
   docs-actions:
-    status: todo
+    status: exempt
+    comment: |
+      This integration does not register any service actions.
   docs-high-level-description:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository. Needs review
+      to confirm a high-level description of the integration is present.
   docs-installation-instructions:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository. Needs review
+      to confirm installation instructions are present.
   docs-removal-instructions:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository. Needs review
+      to confirm removal instructions are present.
   entity-event-setup:
-    status: todo
+    status: done
+    comment: |
+      All entities inherit from CoordinatorEntity, which handles
+      subscription setup in async_added_to_hass and cleanup via
+      async_on_remove automatically (HA core: update_coordinator.py:643).
   entity-unique-id:
-    status: todo
-  has-entity-name:
-    status: todo
+    status: done
+    comment: |
+      WeatherFlowSensorBase sets self._attr_unique_id in __init__
+      (sensor.py:422). WeatherFlowWeatherREST sets
+      self._attr_unique_id = f"weatherflow_forecast_{station_id}"
+      (weather.py:65).
+  has-entity-name: done
   runtime-data:
     status: todo
-  test-before-configure:
-    status: todo
+    comment: |
+      The integration stores coordinator data in
+      hass.data[DOMAIN][entry.entry_id] (__init__.py:99) instead of
+      using entry.runtime_data. All platform files access it the same
+      way (sensor.py, weather.py).
+  test-before-configure: done
   test-before-setup:
     status: todo
-  unique-config-entry:
-    status: todo
-
+    comment: |
+      async_setup_entry calls rest_api.async_get_stations() at
+      __init__.py:46 without a try/except. A network or auth failure
+      here raises an unhandled exception instead of ConfigEntryNotReady
+      or ConfigEntryAuthFailed.
+  unique-config-entry: done
   # Silver
   action-exceptions:
-    status: todo
-  config-entry-unloading:
-    status: todo
+    status: exempt
+    comment: |
+      This integration does not register any service actions.
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   docs-installation-parameters:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   entity-unavailable:
-    status: todo
-  integration-owner:
-    status: todo
+    status: done
+    comment: |
+      CoordinatorEntity automatically marks entities unavailable when
+      the coordinator's last update failed. WeatherFlowSensorBase
+      additionally overrides available (sensor.py:431) to return False
+      for websocket sensors when device data is None.
+  integration-owner: done
   log-when-unavailable:
-    status: todo
+    status: done
+    comment: |
+      DataUpdateCoordinator (the base class) automatically logs when
+      an integration becomes unavailable and when it recovers.
   parallel-updates:
     status: todo
-  reauthentication-flow:
-    status: todo
+    comment: |
+      No PARALLEL_UPDATES constant is defined in sensor.py or weather.py.
+      The REST-polling sensor and weather platforms should declare their
+      concurrency model.
+  reauthentication-flow: done
   test-coverage:
     status: todo
+    comment: |
+      Tests exist for the config flow (4 tests), coordinators (6 tests),
+      sensors (4 tests), and weather (1 test), but full branch coverage
+      of the coordinator and platform code has not been confirmed at
+      >95%. In particular, async_setup_entry error paths and the
+      websocket disconnect handler are not tested.
 
   # Gold
-  devices:
-    status: todo
+  devices: done
   diagnostics:
     status: todo
+    comment: |
+      No diagnostics.py file exists in the integration. An
+      async_get_config_entry_diagnostics function needs to be
+      implemented to allow users to submit diagnostics data.
   discovery-update-info:
-    status: todo
+    status: exempt
+    comment: |
+      This is a cloud-polling integration. Devices are identified by
+      API token, not by local network discovery, so discovery-based
+      address updates are not applicable.
   discovery:
-    status: todo
+    status: exempt
+    comment: |
+      This is a cloud-polling integration (iot_class: cloud_polling).
+      No local network discovery (DHCP, mDNS, SSDP, etc.) is possible
+      for identifying new stations.
   docs-data-update:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   docs-examples:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   docs-known-limitations:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   docs-supported-devices:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   docs-supported-functions:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   docs-troubleshooting:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   docs-use-cases:
     status: todo
+    comment: |
+      Documentation lives at https://www.home-assistant.io/integrations/weatherflow_cloud
+      and cannot be verified from the source repository.
   dynamic-devices:
-    status: todo
-  entity-category:
-    status: todo
-  entity-device-class:
-    status: todo
+    status: exempt
+    comment: |
+      Stations associated with the API token are fetched once at setup
+      time. The integration does not support dynamically adding new
+      stations after initial setup without re-entering the config flow.
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default:
-    status: todo
-  entity-translations:
-    status: todo
+    status: done
+    comment: |
+      The wind_sample_interval sensor sets
+      entity_registry_enabled_default=False (sensor.py:135) as it is a
+      low-value diagnostic sensor.
+  entity-translations: done
   exception-translations:
     status: todo
-  icon-translations:
-    status: todo
+    comment: |
+      coordinator.py raises UpdateFailed with a plain f-string message
+      rather than a translatable string. Exceptions surfaced to users
+      should use translation keys from strings.json's exceptions section.
+  icon-translations: done
   reconfiguration-flow:
     status: todo
+    comment: |
+      No async_step_reconfigure method exists in config_flow.py. Users
+      cannot change the API token via reconfigure; they must delete and
+      re-add the integration (reauth flow exists but reconfigure does not).
   repair-issues:
-    status: todo
+    status: exempt
+    comment: |
+      This is a cloud-polling integration that handles auth errors via
+      the reauthentication flow (ConfigEntryAuthFailed in coordinator.py:94).
+      There are no conditions that require persistent repair issues or
+      user intervention beyond reauthentication.
   stale-devices:
-    status: todo
+    status: exempt
+    comment: |
+      The set of devices is static: stations are determined at setup time
+      by the API token and do not change while the integration is running.
+      No dynamic device removal is needed.
 
   # Platinum
   async-dependency:
-    status: todo
+    status: done
+    comment: |
+      weatherflow4py uses aiohttp>=3.9.1 and websockets>=11.0 as its
+      primary dependencies (verified via PyPI metadata for version 1.4.1),
+      making it a fully async library.
   inject-websession:
     status: todo
+    comment: |
+      async_setup_entry correctly passes async_get_clientsession(hass)
+      to WeatherFlowRestAPI (__init__.py:43). However, config_flow.py
+      instantiates WeatherFlowRestAPI without a session, creating its
+      own aiohttp connection rather than using the HA-managed session.
   strict-typing:
     status: todo
+    comment: |
+      The integration is not listed in the repository's .strict-typing
+      file and has not been verified to pass mypy in strict mode.
