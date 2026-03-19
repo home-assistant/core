@@ -22,6 +22,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLAN config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
@@ -32,6 +33,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username: str | None = None
         self.password: str | None = None
         self._auth_required = True
+        self._bsblan_client: BSBLAN | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -316,7 +318,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     def _async_create_entry(self) -> ConfigFlowResult:
         """Create the config entry."""
         return self.async_create_entry(
-            title=format_mac(self.mac),
+            title="BSB-LAN",
             data={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
@@ -341,6 +343,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         session = async_get_clientsession(self.hass)
         bsblan = BSBLAN(config, session)
+        self._bsblan_client = bsblan
         device = await bsblan.device()
         retrieved_mac = device.MAC
 

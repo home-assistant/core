@@ -144,7 +144,7 @@ async def test_full_user_flow_implementation(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -319,7 +319,7 @@ async def test_zeroconf_discovery(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
@@ -386,7 +386,7 @@ async def test_zeroconf_discovery_no_mac_requires_auth(
 
     _assert_create_entry_result(
         result,
-        "00:80:41:19:69:90",  # MAC from fixture file
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
@@ -418,7 +418,7 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
 
     _assert_create_entry_result(
         result,
-        "00:80:41:19:69:90",  # MAC from fixture file
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
@@ -562,7 +562,7 @@ async def test_zeroconf_discovery_connection_error_recovery(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
@@ -617,7 +617,7 @@ async def test_connection_error_recovery(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
