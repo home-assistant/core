@@ -108,8 +108,7 @@ async def async_migrate_entry(
 
         # Remove legacy token file
         token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
-        with suppress(FileNotFoundError):
-            os.remove(token_path)
+        await hass.async_add_executor_job(_remove_token_file, token_path)
 
         hass.config_entries.async_update_entry(config_entry, data=data, minor_version=3)
         if token:
@@ -229,15 +228,25 @@ def _obtain_token_via_password_grant(
         _LOGGER.warning("Password-grant authentication failed during migration")
         return {}
 
-    oauth.fetch_token(
-        TOKEN_URL,
-        authorization_response=response.headers["Location"],
-        code_verifier=code_verifier,
-    )
+    try:
+        oauth.fetch_token(
+            TOKEN_URL,
+            authorization_response=response.headers["Location"],
+            code_verifier=code_verifier,
+        )
+    except requests.RequestException, KeyError, ValueError:
+        _LOGGER.warning("Token exchange failed during migration")
+        return {}
 
     token = dict(oauth.token)
     _LOGGER.debug("Obtained OAuth2 token with refresh_token via password grant")
     return token
+
+
+def _remove_token_file(token_path: str) -> None:
+    """Remove legacy token file if it exists."""
+    with suppress(FileNotFoundError):
+        os.remove(token_path)
 
 
 def _login_oauth(

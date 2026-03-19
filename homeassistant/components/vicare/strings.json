@@ -13,7 +13,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]"
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
