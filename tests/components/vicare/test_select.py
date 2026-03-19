@@ -30,7 +30,10 @@ async def test_all_entities(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(f"{MODULE}._login_oauth", return_value=MockPyViCare(fixtures)),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
         patch(f"{MODULE}.PLATFORMS", [Platform.SELECT]),
     ):
         await setup_integration(hass, mock_config_entry)

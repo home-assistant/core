@@ -660,8 +660,8 @@
   },
   "issues": {
     "update_redirect_uri": {
-      "title": "Update your API client in the Viessmann Developer Portal",
-      "description": "ViCare has been migrated to OAuth2 authentication. Your existing session will continue to work, but if re-authentication is ever needed, you must first add a redirect URI to your API client.\n\nGo to the [Viessmann developer portal]({viessmann_developer_portal}) and add the following redirect URI to your API client:\n\n`https://my.home-assistant.io/redirect/oauth`\n\nThis is not urgent, but we recommend doing it soon."
+      "description": "ViCare has been migrated to OAuth2 authentication. Your existing session will continue to work, but if re-authentication is ever needed, you must first add a redirect URI to your API client.\n\nGo to the [Viessmann developer portal]({viessmann_developer_portal}) and add the following redirect URI to your API client:\n\n`https://my.home-assistant.io/redirect/oauth`\n\nThis is not urgent, but we recommend doing it soon.",
+      "title": "Update your API client in the Viessmann Developer Portal"
     }
   },
   "services": {

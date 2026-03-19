@@ -7,7 +7,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Pl
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import MODULE, setup_integration
+from . import MODULE
 from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry
@@ -111,7 +111,10 @@ async def test_device_and_entity_migration(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(f"{MODULE}._login_oauth", return_value=MockPyViCare(fixtures)),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -190,19 +193,3 @@ async def test_device_and_entity_migration(
         == "gateway1_deviceId1-heating-0"
     )
     assert entity_registry.async_get(entry3.entity_id).unique_id == "gateway2-0"
-
-
-async def test_legacy_password_entry_setup(
-    hass: HomeAssistant,
-    mock_legacy_config_entry: MockConfigEntry,
-) -> None:
-    """Test that legacy password-based config entries are set up correctly."""
-    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
-    with patch(
-        f"{MODULE}._login_legacy",
-        return_value=MockPyViCare(fixtures),
-    ):
-        await setup_integration(hass, mock_legacy_config_entry)
-
-    assert mock_legacy_config_entry.runtime_data is not None
-    assert len(mock_legacy_config_entry.runtime_data.devices) == 1

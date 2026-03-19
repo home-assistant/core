@@ -14,7 +14,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.vicare.const import DOMAIN
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.vicare.types import ViCareData, ViCareDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -50,6 +50,16 @@ class MockPyViCare:
                     "Online",
                 )
             )
+
+    def as_vicare_data(self) -> ViCareData:
+        """Convert to ViCareData as returned by _setup_vicare_api."""
+        return ViCareData(
+            client=self,
+            devices=[
+                ViCareDevice(config=device, api=device.asAutoDetectDevice())
+                for device in self.devices
+            ],
+        )
 
 
 class MockViCareService:
@@ -108,23 +118,6 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_legacy_config_entry() -> MockConfigEntry:
-    """Return a mocked config entry using legacy username/password auth."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="ViCare",
-        entry_id="1234",
-        version=1,
-        minor_version=3,
-        data={
-            CONF_USERNAME: "user@example.com",
-            CONF_PASSWORD: "secret",
-            CONF_CLIENT_ID: "mock-client-id",
-        },
-    )
-
-
-@pytest.fixture
 async def mock_vicare_gas_boiler(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[MockConfigEntry]:
@@ -135,8 +128,8 @@ async def mock_vicare_gas_boiler(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
         patch(
-            f"{MODULE}._login_oauth",
-            return_value=MockPyViCare(fixtures),
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
         ),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -158,8 +151,8 @@ async def mock_vicare_room_sensors(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
         patch(
-            f"{MODULE}._login_oauth",
-            return_value=MockPyViCare(fixtures),
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
         ),
     ):
         await setup_integration(hass, mock_config_entry)
