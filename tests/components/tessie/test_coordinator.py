@@ -80,51 +80,6 @@ async def test_coordinator_connection(
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
 
 
-async def test_coordinator_battery_update(
-    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
-) -> None:
-    """Tests battery endpoint is no longer polled by sensor updates."""
-
-    await setup_platform(hass, [Platform.SENSOR])
-
-    mock_get_battery.reset_mock()
-    freezer.tick(WAIT)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_get_battery.assert_not_called()
-
-
-async def test_coordinator_battery_auth(
-    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
-) -> None:
-    """Tests battery endpoint auth failures do not affect sensor updates."""
-
-    await setup_platform(hass, [Platform.SENSOR])
-
-    mock_get_battery.reset_mock()
-    mock_get_battery.side_effect = ERROR_AUTH
-    freezer.tick(WAIT)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_get_battery.assert_not_called()
-
-
-async def test_coordinator_battery_error(
-    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
-) -> None:
-    """Tests battery endpoint errors do not affect phantom drain sensor."""
-
-    await setup_platform(hass, [Platform.SENSOR])
-
-    mock_get_battery.reset_mock()
-    mock_get_battery.side_effect = ERROR_UNKNOWN
-    freezer.tick(WAIT)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_get_battery.assert_not_called()
-    assert hass.states.get("sensor.test_phantom_drain").state == "0.5"
-
-
 async def test_coordinator_live_error(
     hass: HomeAssistant, mock_live_status, freezer: FrozenDateTimeFactory
 ) -> None:

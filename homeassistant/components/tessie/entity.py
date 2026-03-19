@@ -12,7 +12,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, TRANSLATED_ERRORS
 from .coordinator import (
-    TessieBatteryHealthCoordinator,
     TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
@@ -24,7 +23,6 @@ from .models import TessieEnergyData, TessieVehicleData
 class TessieBaseEntity(
     CoordinatorEntity[
         TessieStateUpdateCoordinator
-        | TessieBatteryHealthCoordinator
         | TessieEnergySiteInfoCoordinator
         | TessieEnergySiteLiveCoordinator
         | TessieEnergyHistoryCoordinator
@@ -37,7 +35,6 @@ class TessieBaseEntity(
     def __init__(
         self,
         coordinator: TessieStateUpdateCoordinator
-        | TessieBatteryHealthCoordinator
         | TessieEnergySiteInfoCoordinator
         | TessieEnergySiteLiveCoordinator
         | TessieEnergyHistoryCoordinator,
@@ -144,23 +141,6 @@ class TessieEnergyEntity(TessieBaseEntity):
         self._attr_device_info = data.device
 
         super().__init__(coordinator, key, data_key)
-
-
-class TessieBatteryEntity(TessieBaseEntity):
-    """Parent class for Tessie battery health entities."""
-
-    def __init__(
-        self,
-        vehicle: TessieVehicleData,
-        key: str,
-        data_key: str | None = None,
-    ) -> None:
-        """Initialize common aspects of a Tessie battery health entity."""
-        self.vin = vehicle.vin
-        self._attr_unique_id = f"{vehicle.vin}-{key}"
-        self._attr_device_info = vehicle.device
-
-        super().__init__(vehicle.battery_coordinator, key, data_key)
 
 
 class TessieEnergyHistoryEntity(TessieBaseEntity):
