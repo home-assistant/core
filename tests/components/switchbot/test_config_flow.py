@@ -802,6 +802,40 @@ async def test_user_setup_woencrypted_auth_unknown_error(
     assert result["step_id"] == "encrypted_auth"
     assert result["errors"] == {"base": "unknown"}
 
+    # Recover: re-submit with valid credentials and successful key retrieval
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotLock.verify_encryption_key",
+            return_value=True,
+        ),
+        patch(
+            "switchbot.SwitchbotLock.async_retrieve_encryption_key",
+            return_value={
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "user@example.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Lock EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "lock",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
@@ -1062,6 +1096,41 @@ async def test_user_cloud_login_unknown_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud_login"
     assert result["errors"] == {"base": "unknown"}
+
+    # Recover: re-submit with valid credentials and successful cloud login
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bot EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "bot",
+    }
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
