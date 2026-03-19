@@ -45,6 +45,21 @@ async def test_celsius_fahrenheit(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_climate_entity_loads_without_static_values(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the climate entity still loads when static values are unavailable."""
+    mock_bsblan.static_values.side_effect = BSBLANError("General error")
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["current_temperature"] is not None
+
+
 async def test_climate_entity_properties(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
