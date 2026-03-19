@@ -90,13 +90,6 @@
       }
     }
   },
-  "entity": {
-    "image": {
-      "gateway_qr_code": {
-        "name": "Gateway QR code"
-      }
-    }
-  },
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"

@@ -8,7 +8,6 @@ from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThreemaConfigEntry
@@ -50,9 +49,6 @@ class ThreemaNotifyEntity(NotifyEntity):
 
         self._attr_unique_id = f"{gateway_id}_{subentry_id}"
         self._attr_name = subentry.title
-        self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, gateway_id)},
-        )
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to the configured Threema recipient."""

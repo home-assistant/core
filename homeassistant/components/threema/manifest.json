@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/threema",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "loggers": ["qrcode", "threema"],
+  "loggers": ["threema"],
   "quality_scale": "silver",
-  "requirements": ["qrcode==8.2", "threema.gateway==8.0.0"]
+  "requirements": ["threema.gateway==8.0.0"]
 }

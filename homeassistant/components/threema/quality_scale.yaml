@@ -28,19 +28,23 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: exempt
+    comment: Notify entities are stateless send-only, availability is not applicable.
   integration-owner: done
   log-when-unavailable:
     status: exempt
-    comment: Image entity availability is based on local QR code generation, not external service state.
+    comment: Notify entities are stateless send-only.
   parallel-updates:
     status: exempt
-    comment: Image entity is static (generated once), no parallel update concerns.
+    comment: No polling or data updates.
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices: done
+  devices:
+    status: exempt
+    comment: Notify entities do not require a device. Gateway device will be added with QR code image platform in a follow-up.
   diagnostics: todo
   discovery:
     status: exempt
@@ -61,25 +65,25 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: Single static gateway device per config entry.
+    comment: No devices in current scope.
   entity-category:
     status: exempt
-    comment: QR code image entity is a primary security verification feature, no diagnostic or config category applies.
+    comment: Notify entities have no applicable category.
   entity-device-class:
     status: exempt
-    comment: No applicable device class for QR code image or notify entities.
+    comment: No applicable device class for notify entities.
   entity-disabled-by-default:
     status: exempt
-    comment: QR code entity is used for gateway identity verification and should be visible by default.
+    comment: Notify entities should be enabled by default for immediate use.
   entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
-    comment: No custom icons defined. Notify and image entities use default platform icons.
+    comment: Notify entities use default platform icon.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No scenarios requiring repair issues.
   stale-devices:
     status: exempt
-    comment: Single static device per config entry.
+    comment: No devices in current scope.
