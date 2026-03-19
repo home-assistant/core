@@ -10,7 +10,7 @@ def price_enc(country: int, day: int, hour: int, minute: int) -> float:
 
     Format is CCDDhhmm000. Examples:
     -  351 15 01 15 000 for CC=351 (Portugal), DD=15 (day of month), hh=01 (1 am), mm=15.
-    -   34 16 23 00 000 for CC=344 (Spain), DD=16 (day of month), hh=23 (11 pm), mm=00.
+    -   34 16 23 00 000 for CC=34 (Spain), DD=16 (day of month), hh=23 (11 pm), mm=00.
 
     This allows us to make assertions in tests without having
     to look up the expected values in large datasets.

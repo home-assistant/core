@@ -28,7 +28,7 @@ type OMIEConfigEntry = ConfigEntry[OMIECoordinator]
 
 
 class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
-    """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
+    """Coordinator that manages OMIE data for the current CET day."""
 
     def __init__(self, hass: HomeAssistant, config_entry: OMIEConfigEntry) -> None:
         """Initialize OMIE coordinator."""

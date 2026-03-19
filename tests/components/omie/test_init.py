@@ -96,7 +96,7 @@ async def test_update_interval(
     await hass.async_block_till_done()
     mock_pyomie.spot_price.reset_mock()
 
-    # The next update should be scheduled for 12:30:01 (15-minute boundary +1 second)
+    # The next update should be scheduled for 10:30:01Z (11:30:01 CET, 15-minute boundary + 1 second)
     freezer.move_to("2025-11-11T10:30:00.000000Z")
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()

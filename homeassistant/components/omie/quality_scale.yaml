@@ -27,11 +27,7 @@ rules:
     comment: |
       OMIE API is public data service that doesn't require authentication.
       Coordinators handle any connection issues gracefully during runtime.
-  unique-config-entry:
-    status: exempt
-    comment: |
-      Single instance integration that uses _async_current_entries() check.
-      Will be updated when adding multiple country support.
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
