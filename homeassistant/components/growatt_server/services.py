@@ -142,8 +142,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         batt_mode: int = valid_modes[batt_mode_str]
 
-        start_time = _parse_time_str(start_time_str, "start_time")
-        end_time = _parse_time_str(end_time_str, "end_time")
+        start_time = _parse_time_str(start_time_str, "Start time")
+        end_time = _parse_time_str(end_time_str, "End time")
 
         coordinator: GrowattCoordinator = _get_coordinator(hass, device_id, "min")
         await coordinator.update_time_segment(
@@ -192,11 +192,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cached = current["periods"][i - 1]
             start = _parse_time_str(
                 call.data.get(f"period_{i}_start", cached["start_time"]),
-                f"period_{i}_start",
+                f"Period {i} start",
             )
             end = _parse_time_str(
                 call.data.get(f"period_{i}_end", cached["end_time"]),
-                f"period_{i}_end",
+                f"Period {i} end",
             )
             enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
             periods.append({"start_time": start, "end_time": end, "enabled": enabled})
@@ -238,11 +238,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cached = current["periods"][i - 1]
             start = _parse_time_str(
                 call.data.get(f"period_{i}_start", cached["start_time"]),
-                f"period_{i}_start",
+                f"Period {i} start",
             )
             end = _parse_time_str(
                 call.data.get(f"period_{i}_end", cached["end_time"]),
-                f"period_{i}_end",
+                f"Period {i} end",
             )
             enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
             periods.append({"start_time": start, "end_time": end, "enabled": enabled})
