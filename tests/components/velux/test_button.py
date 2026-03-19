@@ -45,7 +45,11 @@ async def test_button_snapshot(
     assert len(entity_entries) == 2
 
     # Check Reboot button
-    reboot_entry = next(e for e in entity_entries if e.entity_id == "button.klf_200_gateway_restart")
+    reboot_entry = next(
+        e
+        for e in entity_entries
+        if e.entity_id == "button.klf_200_gateway_restart"
+    )
     assert reboot_entry.device_id is not None
     device_entry = device_registry.async_get(reboot_entry.device_id)
     assert device_entry is not None
@@ -53,7 +57,11 @@ async def test_button_snapshot(
     assert device_entry.via_device_id is None
 
     # Check Identify button
-    identify_entry = next(e for e in entity_entries if e.entity_id == "button.test_window_identify")
+    identify_entry = next(
+        e
+        for e in entity_entries
+        if e.entity_id == "button.test_window_identify"
+    )
     assert identify_entry.device_id is not None
     device_entry = device_registry.async_get(identify_entry.device_id)
     assert device_entry is not None
