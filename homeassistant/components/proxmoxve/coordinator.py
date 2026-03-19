@@ -204,16 +204,15 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         node: dict[str, Any],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Get vms and containers for a node."""
-        node_name = node[CONF_NODE]
         if node.get("status") != NODE_ONLINE:
             _LOGGER.debug(
                 "Node %s is offline, skipping VM/container fetch",
-                node_name,
+                node[CONF_NODE],
             )
             return [], []
 
-        vms = self.proxmox.nodes(node_name).qemu.get() or []
-        containers = self.proxmox.nodes(node_name).lxc.get() or []
+        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
 
         return vms, containers
 
