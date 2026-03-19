@@ -690,9 +690,6 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             # Entity state is not a valid number
             return None
 
-        if not self._unit_converter:
-            return value
-
         try:
             return self._unit_converter.convert(
                 value,
