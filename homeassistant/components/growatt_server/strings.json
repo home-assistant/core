@@ -591,19 +591,19 @@
       "message": "{batt_mode} is not a valid battery mode. Allowed values: {allowed_modes}."
     },
     "invalid_charge_power": {
-      "message": "Charge power must be between 0 and 100, got {value}."
+      "message": "'Charge power' must be between 0 and 100, got {value}."
     },
     "invalid_charge_stop_soc": {
-      "message": "Charge stop SOC must be between 0 and 100, got {value}."
+      "message": "'Charge stop SOC' must be between 0 and 100, got {value}."
     },
     "invalid_discharge_power": {
-      "message": "Discharge power must be between 0 and 100, got {value}."
+      "message": "'Discharge power' must be between 0 and 100, got {value}."
     },
     "invalid_discharge_stop_soc": {
-      "message": "Discharge stop SOC must be between 0 and 100, got {value}."
+      "message": "'Discharge stop SOC' must be between 0 and 100, got {value}."
     },
     "invalid_segment_id": {
-      "message": "Segment ID must be between 1 and 9, got {segment_id}."
+      "message": "'Segment ID' must be between 1 and 9, got {segment_id}."
     },
     "invalid_time_format": {
       "message": "{field_name} must be in HH:MM or HH:MM:SS format."
