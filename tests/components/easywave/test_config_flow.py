@@ -151,6 +151,39 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "single_instance_allowed"
 
 
+async def test_user_flow_multiple_devices_device_disappeared(
+    hass: HomeAssistant, mock_usb_device: dict[str, Any]
+) -> None:
+    """Test detect step shows error when selected device is no longer available."""
+    device2 = {**mock_usb_device, "device": "/dev/ttyACM1", "serial_number": "54321"}
+
+    with patch(
+        "homeassistant.components.easywave.config_flow._find_easywave_devices",
+        return_value=[mock_usb_device, device2],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "detect"
+
+    # On re-scan two devices remain but the selected one is gone
+    device3 = {**mock_usb_device, "device": "/dev/ttyACM2", "serial_number": "99999"}
+    with patch(
+        "homeassistant.components.easywave.config_flow._find_easywave_devices",
+        return_value=[device2, device3],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "detect"
+    assert result["errors"] == {"base": "device_no_longer_available"}
+
+
 async def test_usb_discovery_flow(
     hass: HomeAssistant, mock_usb_discovery_info: UsbServiceInfo
 ) -> None:
