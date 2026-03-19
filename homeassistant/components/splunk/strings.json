@@ -33,7 +33,7 @@
           "name": "[%key:common::config_flow::data::name%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "token": "HTTP Event Collector token",
+          "token": "[%key:component::splunk::config::step::user::data::token%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
