@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from pyvlx import OpeningDevice, Position, Window
-from pyvlx.exception import PyVLXException
+from pyvlx import OpeningDevice, Position, PyVLXException, Window
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
