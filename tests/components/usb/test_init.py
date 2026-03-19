@@ -1390,9 +1390,8 @@ def test_scan_serial_ports_no_vid_pid() -> None:
         devices = scan_serial_ports()
 
     assert len(devices) == 1
+    assert isinstance(devices[0], SerialDevice)
     assert devices[0].device == "/dev/ttyAMA1"
-    assert devices[0].vid is None
-    assert devices[0].pid is None
     assert devices[0].serial_number is None
     assert devices[0].manufacturer is None
     assert devices[0].description is None
@@ -1640,17 +1639,3 @@ async def test_removal_aborts_discovery_flows(
         final_flows = hass.config_entries.flow.async_progress()
         assert len(final_flows) == 1
         assert final_flows[0]["handler"] == "test2"
-
-
-def test_usb_service_info_from_device_no_vid_pid() -> None:
-    """Test usb_service_info_from_device rejects devices without VID or PID."""
-    device = USBDevice(
-        device="/dev/ttyUSB0",
-        vid=None,
-        pid=None,
-        serial_number="ABC123",
-        manufacturer="Test Manufacturer",
-        description="Test Device",
-    )
-
-    assert usb.usb_service_info_from_device(device) is None
