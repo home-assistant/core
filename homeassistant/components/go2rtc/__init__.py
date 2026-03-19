@@ -397,7 +397,10 @@ class WebRTCProvider(CameraWebRTCProvider):
                 case Orientation.ROTATE_RIGHT:
                     stream_source += "#rotate=90"
 
-        streams = await self._rest_client.streams.list()
+        try:
+            streams = await self._rest_client.streams.list()
+        except Exception:  # noqa: BLE001
+            streams = {}
 
         if (stream := streams.get(camera.entity_id)) is None or not any(
             stream_source == producer.url for producer in stream.producers

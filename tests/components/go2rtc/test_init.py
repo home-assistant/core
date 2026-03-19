@@ -424,6 +424,34 @@ async def test_on_candidate(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_streams_list_error_fallback(
+    rest_client: AsyncMock,
+    ws_client: Mock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test that streams.list() deserialization errors are handled gracefully."""
+    camera = init_test_integration
+    entity_id = camera.entity_id
+
+    # Simulate streams.list() raising (e.g., deserialization error)
+    rest_client.streams.list.side_effect = Go2RtcClientError("deserialization failed")
+    receive_message_callback = Mock(spec_set=WebRTCSendMessage)
+
+    await camera.async_handle_async_webrtc_offer(
+        OFFER_SDP, "session_error", receive_message_callback
+    )
+
+    # Should fall through to adding the stream
+    rest_client.streams.add.assert_called_once_with(
+        entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_close_session(
     ws_client: Mock,
     init_test_integration: MockCamera,
