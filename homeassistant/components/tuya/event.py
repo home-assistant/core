@@ -24,7 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import LOGGER, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
@@ -183,5 +183,11 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
             return False
 
         event_type, event_attributes = event_data
+        LOGGER.debug(
+            "Raising Tuya %s event for %s with attributes: %s",
+            event_type,
+            self.entity_id,
+            event_attributes,
+        )
         self._trigger_event(event_type, event_attributes)
         return True
