@@ -42,9 +42,6 @@ class NumericalDomainSpec(DomainSpec):
     value_converter: Callable[[float], float] | None = None
     """Optional converter for numerical values (e.g. uint8 → percentage)."""
 
-    unit_of_measurement_source: str = "unit_of_measurement"
-    """Attribute name to extract the unit of measurement from."""
-
 
 def filter_by_domain_specs(
     hass: HomeAssistant,
