@@ -818,13 +818,13 @@ class RxModule:
         if not self._state_good:
             return
 
-        self._rx_raw_buffer.append(byte)
-
+        # Handle start-of-packet before buffering to avoid accumulating
+        # stray bytes when not synchronized.
         if byte == SOP:
             if self._rx_sop:
                 _LOGGER.warning(
                     "Unexpected SOP while already in packet (len=%d)",
-                    len(self._rx_raw_buffer) - 1,
+                    len(self._rx_raw_buffer),
                 )
             # Always resynchronize buffer on SOP to discard any stray bytes
             self._rx_raw_buffer = bytearray([SOP])
@@ -832,8 +832,14 @@ class RxModule:
             self._rx_stuffing = False
             return
 
+        # If we have not yet seen SOP, ignore bytes and ensure the buffer
+        # does not grow without bound.
         if not self._rx_sop:
+            self._rx_raw_buffer = bytearray()
             return
+
+        # From here on, we are inside a packet: buffer the byte.
+        self._rx_raw_buffer.append(byte)
 
         if byte == EOP:
             if self._rx_stuffing:
