@@ -32,14 +32,17 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2TokenRequestError
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .api import ConfigEntryAuth
