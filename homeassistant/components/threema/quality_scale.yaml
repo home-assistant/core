@@ -73,7 +73,9 @@ rules:
     comment: QR code entity is used for gateway identity verification and should be visible by default.
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: No custom icons defined. Notify and image entities use default platform icons.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
