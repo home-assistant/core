@@ -2,15 +2,15 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
@@ -103,6 +103,7 @@ async def test_hassio_discovery_startup_done(
     mock_mqtt: type[config_entries.ConfigFlow],
     addon_installed: AsyncMock,
     get_addon_discovery_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
 ) -> None:
     """Test startup and discovery with hass discovery."""
     aioclient_mock.post(
@@ -125,14 +126,11 @@ async def test_hassio_discovery_startup_done(
     ]
     addon_installed.return_value.name = "Mosquitto Test"
 
+    supervisor_root_info.side_effect = SupervisorError()
     with (
         patch(
             "homeassistant.components.hassio.HassIO.update_hass_api",
             return_value={"result": "ok"},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            Mock(side_effect=HassioAPIError()),
         ),
     ):
         await hass.async_start()
