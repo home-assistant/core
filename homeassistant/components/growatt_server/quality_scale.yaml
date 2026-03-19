@@ -45,13 +45,11 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: Replace custom precision field with suggested_display_precision to preserve full data granularity.
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
