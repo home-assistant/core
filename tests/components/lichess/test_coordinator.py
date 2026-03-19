@@ -20,7 +20,7 @@ async def test_coordinator_update_failed(
     """Test coordinator handles update failure."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_lichess_client.get_username.side_effect = AioLichessError
+    mock_lichess_client.get_statistics.side_effect = AioLichessError
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
