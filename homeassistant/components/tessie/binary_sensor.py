@@ -82,6 +82,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on=lambda x: x == "On",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_cabin_overheat_protection_actively_cooling",
