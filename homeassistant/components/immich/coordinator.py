@@ -19,9 +19,16 @@ from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -47,11 +54,16 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
 
     config_entry: ImmichConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ImmichConfigEntry, api: Immich
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ImmichConfigEntry) -> None:
         """Initialize the data update coordinator."""
-        self.api = api
+        self.api = Immich(
+            async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL]),
+            config_entry.data[CONF_API_KEY],
+            config_entry.data[CONF_HOST],
+            config_entry.data[CONF_PORT],
+            config_entry.data[CONF_SSL],
+            "home-assistant",
+        )
         self.is_admin = False
         self.configuration_url = str(
             URL.build(
