@@ -79,10 +79,35 @@
       }
     }
   },
+  "device": {
+    "heating_circuit_1": {
+      "name": "Heating circuit 1"
+    },
+    "heating_circuit_2": {
+      "name": "Heating circuit 2"
+    },
+    "heating_circuit_3": {
+      "name": "Heating circuit 3"
+    },
+    "water_heater": {
+      "name": "Water heater"
+    }
+  },
   "entity": {
     "button": {
       "sync_time": {
         "name": "Sync time"
+      }
+    },
+    "climate": {
+      "heating_circuit_1": {
+        "name": "Heating circuit 1"
+      },
+      "heating_circuit_2": {
+        "name": "Heating circuit 2"
+      },
+      "heating_circuit_3": {
+        "name": "Heating circuit 3"
       }
     },
     "sensor": {
