@@ -273,18 +273,22 @@ def test_connection_status_transceiver_none(
 
 
 def test_update_device_info_no_transceiver(
+    hass: HomeAssistant,
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test _update_gateway_device_info returns early without transceiver."""
+    gateway_sensor.hass = hass
     gateway_sensor.coordinator.transceiver = None
     # Should not raise
     gateway_sensor._update_gateway_device_info()
 
 
 def test_update_device_info_no_change(
+    hass: HomeAssistant,
     gateway_sensor: EasywaveGatewaySensor,
 ) -> None:
     """Test _update_gateway_device_info does nothing when values match."""
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     # Values already match the mock (serial=12345, hw=1.0, fw=2.0)
     gateway_sensor._update_gateway_device_info()
@@ -298,6 +302,7 @@ def test_update_device_info_serial_change(
 ) -> None:
     """Test _update_gateway_device_info updates serial number."""
     mock_config_entry.add_to_hass(hass)
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor.coordinator.transceiver.usb_serial_number = "NEW_SERIAL"
 
@@ -319,6 +324,7 @@ def test_update_device_info_hw_version_change(
 ) -> None:
     """Test _update_gateway_device_info updates hardware version."""
     mock_config_entry.add_to_hass(hass)
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor.coordinator.transceiver.hw_version = "3.5"
 
@@ -336,6 +342,7 @@ def test_update_device_info_fw_version_change(
 ) -> None:
     """Test _update_gateway_device_info updates firmware version."""
     mock_config_entry.add_to_hass(hass)
+    gateway_sensor.hass = hass
     gateway_sensor.async_write_ha_state = MagicMock()
     gateway_sensor.coordinator.transceiver.fw_version = "4.2"
 
