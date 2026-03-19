@@ -43,6 +43,12 @@ _TEMPERATURE_TRIGGER_OPTIONS = {"unit": UnitOfTemperature.CELSIUS}
 _SENSOR_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
+_CLIMATE_UNIT_ATTRIBUTES = {
+    "temperature_unit": UnitOfTemperature.CELSIUS,
+}
+_WATER_HEATER_UNIT_ATTRIBUTES = {
+    "temperature_unit": UnitOfTemperature.CELSIUS,
+}
 _WEATHER_UNIT_ATTRIBUTES = {
     ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
@@ -234,12 +240,14 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -281,6 +289,7 @@ async def test_temperature_trigger_climate_behavior_any(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -322,6 +331,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -366,12 +376,14 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -413,6 +425,7 @@ async def test_temperature_trigger_water_heater_behavior_any(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -454,6 +467,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
         ),
     ],
 )

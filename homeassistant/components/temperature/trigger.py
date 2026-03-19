@@ -17,7 +17,7 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
     EntityNumericalStateChangedTriggerWithUnitBase,
@@ -30,15 +30,19 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 TEMPERATURE_DOMAIN_SPECS = {
     CLIMATE_DOMAIN: NumericalDomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_TEMPERATURE,
+        unit_of_measurement_source="temperature_unit",
     ),
     SENSOR_DOMAIN: NumericalDomainSpec(
         device_class=SensorDeviceClass.TEMPERATURE,
+        unit_of_measurement_source=ATTR_UNIT_OF_MEASUREMENT,
     ),
     WATER_HEATER_DOMAIN: NumericalDomainSpec(
-        value_source=WATER_HEATER_ATTR_CURRENT_TEMPERATURE
+        value_source=WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+        unit_of_measurement_source="temperature_unit",
     ),
     WEATHER_DOMAIN: NumericalDomainSpec(
         value_source=ATTR_WEATHER_TEMPERATURE,
+        unit_of_measurement_source=ATTR_WEATHER_TEMPERATURE_UNIT,
     ),
 }
 
@@ -49,16 +53,6 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
     _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = TEMPERATURE_DOMAIN_SPECS
     _unit_converter = TemperatureConverter
-
-    def _get_entity_unit(self, state: State) -> str | None:
-        """Get the temperature unit of an entity from its state."""
-        domain = split_entity_id(state.entity_id)[0]
-        if domain == SENSOR_DOMAIN:
-            return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if domain == WEATHER_DOMAIN:
-            return state.attributes.get(ATTR_WEATHER_TEMPERATURE_UNIT)
-        # Climate and water_heater: show_temp converts to system unit
-        return self._hass.config.units.temperature_unit
 
 
 class TemperatureChangedTrigger(
