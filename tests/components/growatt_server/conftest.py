@@ -319,7 +319,7 @@ def mock_growatt_classic_api():
 
         # Called during setup to discover devices
         mock_classic_api.device_list.return_value = [
-            {"deviceSn": "MIN123456", "deviceType": "min"}
+            {"deviceSn": "INV123456", "deviceType": "inverter"}
         ]
 
         # Called by total coordinator during refresh for Classic API
