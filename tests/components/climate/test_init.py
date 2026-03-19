@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_HUMIDITY_STEP,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TEMPERATURE_UNIT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -605,6 +606,7 @@ async def test_temperature_validation(
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
     assert state.attributes.get(ATTR_MIN_TEMP) == 7
     assert state.attributes.get(ATTR_MAX_TEMP) == 35
+    assert state.attributes.get(ATTR_TEMPERATURE_UNIT) == UnitOfTemperature.CELSIUS
 
     with pytest.raises(
         ServiceValidationError,
@@ -702,6 +704,7 @@ async def test_target_temp_high_higher_than_low(
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 15
     assert state.attributes.get(ATTR_MIN_TEMP) == 7
     assert state.attributes.get(ATTR_MAX_TEMP) == 35
+    assert state.attributes.get(ATTR_TEMPERATURE_UNIT) == UnitOfTemperature.CELSIUS
 
     with pytest.raises(
         ServiceValidationError,

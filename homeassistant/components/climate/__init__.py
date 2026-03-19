@@ -53,6 +53,7 @@ from .const import (  # noqa: F401
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
+    ATTR_TEMPERATURE_UNIT,
     DOMAIN,
     FAN_AUTO,
     FAN_DIFFUSE,
@@ -357,6 +358,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ATTR_CURRENT_TEMPERATURE: show_temp(
                 hass, self.current_temperature, temperature_unit, precision
             ),
+            ATTR_TEMPERATURE_UNIT: hass.config.units.temperature_unit,
         }
 
         if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
