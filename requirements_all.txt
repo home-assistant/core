@@ -2783,6 +2783,9 @@ qingping-ble==1.1.0
 # homeassistant.components.qnap
 qnapstats==0.4.0
 
+# homeassistant.components.threema
+qrcode==8.2
+
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
 
@@ -3095,6 +3098,9 @@ thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.9
+
+# homeassistant.components.threema
+threema.gateway==8.0.0
 
 # homeassistant.components.tikteck
 tikteck==0.4
