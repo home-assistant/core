@@ -18,7 +18,7 @@ rules:
   entity-event-setup:
     status: exempt
     comment: |
-      Entities of this integration does not explicitly subscribe to events.  
+      Entities of this integration does not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -31,7 +31,7 @@ rules:
     status: exempt
     comment: The integration does not provide additional actions.
   config-entry-unloading: todo
-  docs-configuration-parameters: 
+  docs-configuration-parameters:
     status: exempt
     comment: |
       This integration does not have an options flow.
@@ -63,7 +63,7 @@ rules:
     comment: The integration connects to a single device.
   entity-category: todo
   entity-device-class: todo
-  entity-disabled-by-default: 
+  entity-disabled-by-default:
     status: exempt
     comment: |
       No noisy entities.
@@ -75,7 +75,7 @@ rules:
     status: exempt
     comment: |
       No repairs/issues.
-  stale-devices: 
+  stale-devices:
     status: exempt
     comment: |
       Device type integration.
