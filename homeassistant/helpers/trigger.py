@@ -522,7 +522,7 @@ def _validate_range[_T: dict[str, Any]](
 ) -> Callable[[_T], _T]:
     """Generate range validator."""
 
-    def _validate_range(value: _T) -> _T:
+    def _validate_range_impl(value: _T) -> _T:
         above = value.get(lower_limit)
         below = value.get(upper_limit)
 
@@ -542,7 +542,7 @@ def _validate_range[_T: dict[str, Any]](
 
         return value
 
-    return _validate_range
+    return _validate_range_impl
 
 
 CONF_UNIT: Final = "unit"
@@ -553,7 +553,7 @@ def _validate_unit_set_if_range_numerical[_T: dict[str, Any]](
 ) -> Callable[[_T], _T]:
     """Validate that unit is set if upper or lower limit is numerical."""
 
-    def _validate_unit_set_if_range_numerical(options: _T) -> _T:
+    def _validate_unit_set_if_range_numerical_impl(options: _T) -> _T:
         if (
             any(
                 opt in options and not isinstance(options[opt], str)
@@ -563,7 +563,7 @@ def _validate_unit_set_if_range_numerical[_T: dict[str, Any]](
             raise vol.Invalid("Unit must be specified when using numerical thresholds.")
         return options
 
-    return _validate_unit_set_if_range_numerical
+    return _validate_unit_set_if_range_numerical_impl
 
 
 _NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
