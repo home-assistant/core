@@ -52,9 +52,10 @@ async def test_cover_invert_switches_snapshot(
     assert {entry.unique_id for entry in invert_entries} == expected_invert_unique_ids
 
     assert {
-        entity_entry.entity_id: {
-            "entry": entity_entry,
-            "state": hass.states.get(entity_entry.entity_id),
+        entity_entry.unique_id: {
+            "entity_category": entity_entry.entity_category,
+            "state": hass.states.get(entity_entry.entity_id).state,
+            "translation_key": entity_entry.translation_key,
         }
         for entity_entry in invert_entries
     } == snapshot
