@@ -31,7 +31,7 @@ Silver. See `quality_scale.yaml` for full status. Gold blockers: `diagnostics` a
 ## Roadmap
 
 - Incoming messages via Gateway callback webhooks
-- Image/file support
+- Image/file support via notify entity `data` parameter (camera entity snapshots, URLs, local files → Threema SDK `ImageMessage`)
 - Remaining credits sensor
 - Diagnostics platform
 - Reconfiguration flow
