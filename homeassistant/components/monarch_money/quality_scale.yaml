@@ -1,0 +1,167 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow:
+    status: todo
+    comment: |
+      The config flow step is missing data_description translations for: email,
+      password, mfa_code, mfa_secret.
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: |
+      The documentation page does not include a section describing how to remove
+      the integration.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities use CoordinatorEntity and do not subscribe to any additional events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not provide service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: |
+      The documentation page does not describe the configuration parameters
+      (email, password, MFA code) in detail.
+  docs-installation-parameters:
+    status: todo
+    comment: |
+      The documentation page does not describe each installation parameter
+      individually (email, password, MFA secret/code).
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: |
+      The sensor platform does not define a PARALLEL_UPDATES constant.
+  reauthentication-flow:
+    status: todo
+    comment: |
+      The config flow does not implement async_step_reauth to handle expired or
+      revoked tokens without requiring the user to delete and re-add the entry.
+  test-coverage:
+    status: todo
+    comment: |
+      Only a single snapshot test exists for the sensor platform. Overall test
+      coverage has not been verified to exceed 95%.
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: |
+      No diagnostics.py file exists for this integration.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This is a cloud service integration; network-level discovery is not applicable.
+  discovery:
+    status: exempt
+    comment: |
+      This is a cloud service integration; DHCP/SSDP/Zeroconf/USB discovery is not
+      applicable.
+  docs-data-update:
+    status: todo
+    comment: |
+      The documentation does not describe the 4-hour polling interval or how data
+      is fetched and updated.
+  docs-examples:
+    status: todo
+    comment: |
+      The documentation does not include any usage examples (e.g. automation or
+      dashboard snippets).
+  docs-known-limitations:
+    status: todo
+    comment: |
+      The documentation does not include a known limitations section.
+  docs-supported-devices:
+    status: todo
+    comment: |
+      The documentation does not enumerate the supported Monarch Money account
+      types and subtypes.
+  docs-supported-functions:
+    status: todo
+    comment: |
+      The documentation does not fully describe all available sensors (cashflow
+      income, expense, savings, savings rate, balance, value, age).
+  docs-troubleshooting:
+    status: todo
+    comment: |
+      The documentation does not include a troubleshooting section.
+  docs-use-cases:
+    status: todo
+    comment: |
+      The documentation does not include a use-cases section describing what users
+      can accomplish with this integration.
+  dynamic-devices:
+    status: todo
+    comment: |
+      Entities are created once at setup. There is no mechanism to discover and add
+      new devices (Monarch Money accounts) that are created after the initial setup,
+      or to remove devices whose accounts have been closed.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: todo
+    comment: |
+      Less important sensors such as the account age/timestamp diagnostic sensor
+      are not disabled by default.
+  entity-translations: todo
+  exception-translations:
+    status: todo
+    comment: |
+      Exceptions raised in the config flow (e.g. invalid auth, connection errors)
+      do not use translated messages via HomeAssistantError or similar.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      The config flow does not implement async_step_reconfigure.
+  repair-issues:
+    status: todo
+    comment: |
+      No repair issues are raised. With no reauthentication flow, token expiry
+      has no user-facing repair path.
+  stale-devices:
+    status: todo
+    comment: |
+      The integration does not remove device registry entries when Monarch Money
+      accounts are deleted or become unavailable.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: |
+      TypedMonarchMoney does not accept an aiohttp.ClientSession parameter;
+      the integration cannot inject HA's managed session.
+  strict-typing:
+    status: todo
+    comment: |
+      No .strict-typing marker file exists and the integration has not been
+      verified to pass mypy --strict.
