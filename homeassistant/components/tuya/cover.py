@@ -254,7 +254,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self.entity_description = description
         self._cover_unique_id = cover_unique_id(device.id, description.key)
         self._attr_unique_id = self._cover_unique_id
-        self._attr_supported_features = CoverEntityFeature(0)
+        self._static_supported_features = CoverEntityFeature(0)
 
         self._current_position = current_position or set_position
         self._current_state_wrapper = current_state_wrapper
@@ -263,18 +263,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._set_position = set_position
         self._tilt_position = tilt_position
 
-        if instruction_wrapper:
-            if TuyaCoverAction.OPEN in instruction_wrapper.options:
-                self._attr_supported_features |= CoverEntityFeature.OPEN
-            if TuyaCoverAction.CLOSE in instruction_wrapper.options:
-                self._attr_supported_features |= CoverEntityFeature.CLOSE
-            if TuyaCoverAction.STOP in instruction_wrapper.options:
-                self._attr_supported_features |= CoverEntityFeature.STOP
+        if instruction_wrapper and TuyaCoverAction.STOP in instruction_wrapper.options:
+            self._static_supported_features |= CoverEntityFeature.STOP
 
         if set_position:
-            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+            self._static_supported_features |= CoverEntityFeature.SET_POSITION
         if tilt_position:
-            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
+            self._static_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -314,6 +309,24 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return TuyaCoverAction.OPEN
         return action
 
+    def _supports_action(self, action: TuyaCoverAction) -> bool:
+        """Return whether the effective device action is supported."""
+        return (
+            self._instruction_wrapper is not None
+            and self._apply_action_inversion(action)
+            in self._instruction_wrapper.options
+        )
+
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Return the supported features for this cover."""
+        supported_features = self._static_supported_features
+        if self._supports_action(TuyaCoverAction.OPEN):
+            supported_features |= CoverEntityFeature.OPEN
+        if self._supports_action(TuyaCoverAction.CLOSE):
+            supported_features |= CoverEntityFeature.CLOSE
+        return supported_features
+
     @property
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
@@ -352,10 +365,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             )
             return
 
-        if (
-            self._instruction_wrapper
-            and TuyaCoverAction.OPEN in self._instruction_wrapper.options
-        ):
+        if self._instruction_wrapper and self._supports_action(TuyaCoverAction.OPEN):
             await self._async_send_wrapper_updates(
                 self._instruction_wrapper,
                 self._apply_action_inversion(TuyaCoverAction.OPEN),
@@ -371,10 +381,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             )
             return
 
-        if (
-            self._instruction_wrapper
-            and TuyaCoverAction.CLOSE in self._instruction_wrapper.options
-        ):
+        if self._instruction_wrapper and self._supports_action(TuyaCoverAction.CLOSE):
             await self._async_send_wrapper_updates(
                 self._instruction_wrapper,
                 self._apply_action_inversion(TuyaCoverAction.CLOSE),

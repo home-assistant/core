@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tuya_device_handlers.helpers.homeassistant import TuyaCoverAction
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -19,8 +20,13 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    CoverEntityFeature,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
+from homeassistant.components.tuya.cover import (
+    TuyaCoverEntity,
+    TuyaCoverEntityDescription,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_CLOSED,
@@ -478,3 +484,53 @@ async def test_cover_status_inversion_flips_commands(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, expected_commands
     )
+
+
+async def test_cover_status_inversion_updates_supported_actions() -> None:
+    """Test supported actions and dispatch use the effective inverted action."""
+    device = MagicMock()
+    device.id = "device-id"
+    device.name = "Curtain"
+    device.product_name = "Curtain"
+    device.product_id = "product-id"
+
+    instruction_wrapper = MagicMock()
+    instruction_wrapper.options = {TuyaCoverAction.CLOSE, TuyaCoverAction.STOP}
+
+    status_inverted: dict[str, bool] = {}
+    entity = TuyaCoverEntity(
+        device,
+        MagicMock(),
+        TuyaCoverEntityDescription(key="control"),
+        current_position=None,
+        current_state_wrapper=None,
+        instruction_wrapper=instruction_wrapper,
+        status_inverted=status_inverted,
+        set_position=None,
+        tilt_position=None,
+    )
+    entity._async_send_wrapper_updates = AsyncMock()
+
+    assert entity.supported_features == (
+        CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+
+    await entity.async_open_cover()
+    entity._async_send_wrapper_updates.assert_not_called()
+
+    status_inverted["tuya.device-idcontrol"] = True
+
+    assert entity.supported_features == (
+        CoverEntityFeature.OPEN | CoverEntityFeature.STOP
+    )
+
+    await entity.async_open_cover()
+    entity._async_send_wrapper_updates.assert_awaited_once_with(
+        instruction_wrapper,
+        TuyaCoverAction.CLOSE,
+    )
+
+    entity._async_send_wrapper_updates.reset_mock()
+
+    await entity.async_close_cover()
+    entity._async_send_wrapper_updates.assert_not_called()
