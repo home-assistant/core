@@ -356,10 +356,14 @@ class AppleTvMediaPlayer(
             media_type == MediaType.MUSIC or await is_streamable(media_id)
         ):
             extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+            metadata_extra = extra.get("metadata") or {}
+            if not isinstance(metadata_extra, dict):
+                metadata_extra = {}
+            title = extra.get("title") or metadata_extra.get("title") or None
             metadata = MediaMetadata(
-                title=extra.get("title") or None,
-                artist=extra.get("metadata", {}).get("artist") or None,
-                album=extra.get("metadata", {}).get("album") or None,
+                title=title,
+                artist=metadata_extra.get("artist") or None,
+                album=metadata_extra.get("album") or None,
             )
             _LOGGER.debug("Streaming %s via RAOP", media_id)
             await self.atv.stream.stream_file(media_id, metadata=metadata)
