@@ -9,6 +9,6 @@
   "loggers": ["aioamazondevices"],
   "quality_scale": "platinum",
   "requirements": [
-    "aioamazondevices@git+https://github.com/chemelli74/aioamazondevices.git@18e32fab0cf1755fc19a1a06cfb7bc44ba4eeae2#aioamazondevices==13.1.1"
+    "aioamazondevices@git+https://github.com/chemelli74/aioamazondevices.git@da7c0bc571a5f582216e5635588547524a028116#aioamazondevices==13.1.1"
   ]
 }
