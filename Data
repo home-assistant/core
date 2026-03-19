@@ -1,0 +1,299 @@
+# 🚀 Lanjutan: Padanan Pangkalan Data dengan Teknologi Anda
+
+Berikut adalah penambahan maklumat terperinci untuk melengkapkan pemahaman tentang bagaimana pangkalan data berintegrasi dengan setiap teknologi yang anda senaraikan. Kandungan ini merangkumi aspek praktikal, contoh kod, alat sokongan, dan senario penggunaan.
+
+---
+
+## 1. Integrasi Mendalam dengan Rangka Kerja Tertentu
+
+### A. Django (Python) + Pangkalan Data SQL
+
+**PostgreSQL (disyorkan)**
+- **Driver:** `psycopg2` atau `psycopg3`
+- **Konfigurasi dalam `settings.py`:**
+  ```python
+  DATABASES = {
+      'default': {
+          'ENGINE': 'django.db.backends.postgresql',
+          'NAME': 'mydb',
+          'USER': 'myuser',
+          'PASSWORD': 'mypassword',
+          'HOST': 'database-1.xxxxxx.rds.amazonaws.com',  # endpoint AWS RDS
+          'PORT': '5432',
+      }
+  }
+  ```
+- **Ciri Eksklusif PostgreSQL:**  
+  - Medan `ArrayField`, `JSONField`, `HStoreField`  
+  - Sokongan penuh untuk transaksi dan kekangan  
+  - Prestasi baik untuk beban tulis tinggi
+
+**MySQL/MariaDB**
+- **Driver:** `mysqlclient` atau `PyMySQL`
+- **Konfigurasi serupa, tukar ENGINE ke `django.db.backends.mysql`**
+- **Perbezaan:**  
+  - MySQL lebih cepat untuk baca mudah, tetapi kurang ciri lanjutan berbanding PostgreSQL  
+  - Gunakan untuk aplikasi tradisional atau migrasi dari sistem sedia ada
+
+**MongoDB (melalui Djongo)**
+- **Pasang:** `pip install djongo`
+- **Konfigurasi:**
+  ```python
+  DATABASES = {
+      'default': {
+          'ENGINE': 'djongo',
+          'NAME': 'mydb',
+          'ENFORCE_SCHEMA': False,
+          'CLIENT': {
+              'host': 'mongodb+srv://user:pass@cluster.mongodb.net/'
+          }
+      }
+  }
+  ```
+- **Had:** Tidak semua ciri ORM Django berfungsi; sesuai untuk projek yang perlu fleksibiliti skema.
+
+### B. Node.js + Pangkalan Data
+
+**MongoDB + Mongoose**
+```javascript
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/mydb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+const UserSchema = new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true }
+});
+const User = mongoose.model('User', UserSchema);
+```
+
+**PostgreSQL + Sequelize (ORM)**
+```javascript
+const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = new Sequelize('postgres://user:pass@localhost:5432/mydb');
+
+const User = sequelize.define('User', {
+  name: DataTypes.STRING,
+  email: { type: DataTypes.STRING, unique: true }
+});
+
+(async () => {
+  await sequelize.sync();
+})();
+```
+
+**Redis + ioredis**
+```javascript
+const Redis = require('ioredis');
+const redis = new Redis(); // localhost:6379
+
+// set data
+await redis.set('key', 'value');
+// get data
+const val = await redis.get('key');
+```
+
+### C. React + Firebase
+
+- **Pasang Firebase SDK:** `npm install firebase`
+- **Inisialisasi dalam komponen:**
+  ```javascript
+  import { initializeApp } from 'firebase/app';
+  import { getFirestore, collection, getDocs } from 'firebase/firestore';
+
+  const firebaseConfig = {
+    apiKey: "...",
+    authDomain: "...",
+    projectId: "...",
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Baca data
+  const querySnapshot = await getDocs(collection(db, 'users'));
+  querySnapshot.forEach((doc) => {
+    console.log(doc.id, ' => ', doc.data());
+  });
+  ```
+- **Kelebihan:** Realtime updates dengan `onSnapshot`, autentikasi terbina dalam, hosting percuma.
+
+---
+
+## 2. Alat Migrasi dan Versioning Pangkalan Data
+
+### A. Untuk SQL
+| Alat | Teknologi | Penerangan | Integrasi CI/CD |
+|------|-----------|------------|-----------------|
+| **Django Migrations** | Python/Django | Berasaskan model, menjana fail migrasi secara automatik. | Boleh dijalankan dalam GitHub Actions dengan `python manage.py migrate`. |
+| **Alembic** | Python (SQLAlchemy) | Migrasi manual/automatik untuk projek Flask/FastAPI. | Digunakan dengan `alembic upgrade head` dalam pipeline. |
+| **Flyway** | Java, Node.js, Python (CLI) | Migrasi berasaskan skrip SQL versi. | Imej Docker flyway boleh dijalankan dalam CI. |
+| **Liquibase** | Java, CLI | Menyokong format XML, YAML, JSON, SQL. | Plugin untuk Jenkins, GitHub Actions. |
+
+### B. Untuk NoSQL
+- **MongoDB:** Gunakan perubahan skema dalam kod aplikasi; alat seperti `migrate-mongo` untuk Node.js.
+- **Firebase:** Tiada migrasi skema formal; struktur data dikawal melalui kod klien.
+
+---
+
+## 3. Pangkalan Data Lain yang Relevan
+
+### A. Graph Databases
+| Pangkalan Data | Kegunaan | Integrasi |
+|----------------|----------|-----------|
+| **Neo4j** | Rangkaian sosial, enjin cadangan, pengesanan penipuan. | Python: `neo4j-driver`, `py2neo`; Node.js: `neo4j-driver`. Boleh dihos di AuraDB (awan) atau sendiri. |
+| **Amazon Neptune** | Graph terurus di AWS, sokong Gremlin dan SPARQL. | Sambung melalui driver Gremlin dari Python/Node.js. |
+
+### B. Time-Series Databases
+| Pangkalan Data | Kegunaan | Integrasi |
+|----------------|----------|-----------|
+| **InfluxDB** | IoT, metrik server, analitik masa nyata. | Python: `influxdb-client`; Node.js: `@influxdata/influxdb-client`. |
+| **TimescaleDB** | Ekstensi PostgreSQL untuk data siri masa. | Gunakan driver PostgreSQL biasa; sesuai untuk data hibrid (relasional + time-series). |
+| **AWS Timestream** | Perkhidmatan siri masa terurus. | SDK AWS untuk Python/Node.js. |
+
+### C. Data Warehousing & Analytics
+| Pangkalan Data | Penerangan | Integrasi |
+|----------------|------------|-----------|
+| **Amazon Redshift** | Data warehousing berasaskan kolumnar untuk analitik besar. | Sambung melalui SQL (psycopg2, pg8000) atau SDK. Boleh muat data dari S3. |
+| **Google BigQuery** | Analitik tanpa pelayan di Google Cloud. | Python: `google-cloud-bigquery`; Node.js: `@google-cloud/bigquery`. |
+| **Snowflake** | Data cloud multi-awan. | Driver SQL (ODBC/JDBC) dan API. |
+
+---
+
+## 4. Corak Reka Bentuk Pangkalan Data dan Kes Penggunaan
+
+| Corak | Penerangan | Pangkalan Data Sesuai | Contoh Aplikasi |
+|-------|------------|------------------------|-----------------|
+| **Relational (ACID)** | Data berstruktur dengan hubungan, transaksi ketat. | PostgreSQL, MySQL, SQL Server | E-dagang, sistem kewangan, HRM |
+| **Document Store** | Data semi-berstruktur, skema fleksibel. | MongoDB, Firestore, CouchDB | CMS, katalog produk, profil pengguna |
+| **Key-Value Store** | Capaian pantas berdasarkan kunci. | Redis, DynamoDB (mode KV), Riak | Caching, sesi pengguna, carian ID |
+| **Wide Column** | Data tabular besar dengan baris dan lajur dinamik. | Cassandra, HBase | Log peristiwa, IoT, analitik masa nyata |
+| **Graph** | Hubungan kompleks antara entiti. | Neo4j, Amazon Neptune | Rangkaian sosial, enjin cadangan, pengesanan fraud |
+| **Time-Series** | Data berurutan masa untuk analisis tren. | InfluxDB, TimescaleDB, Prometheus | Pemantauan infrastruktur, metrik kewangan |
+| **Search Engine** | Carian teks penuh dan analitik. | Elasticsearch, OpenSearch | Logging, carian produk, analitik teks |
+
+---
+
+## 5. Integrasi Awan Spesifik
+
+### AWS
+- **RDS Proxy:** Meningkatkan kebolehskalaan sambungan ke RDS untuk aplikasi tanpa pelayan (Lambda) atau kontena.
+- **DynamoDB Accelerator (DAX):** Cache dalam-memori untuk DynamoDB, mengurangkan latensi baca.
+- **Aurora Serverless:** Pangkalan data SQL auto-skala (PostgreSQL/MySQL) tanpa pengurusan kapasiti.
+- **Database Migration Service (DMS):** Migrasi pangkalan data ke AWS dengan masa henti minimum.
+
+### Azure
+- **Azure SQL DB Serverless:** Auto-pause dan skala berdasarkan penggunaan.
+- **Cosmos DB Autopilot:** Pengurukan throughput dan storan secara automatik.
+- **Azure Cache for Redis:** Integrasi mudah dengan aplikasi Azure Functions, App Service.
+- **Azure Database for PostgreSQL Flexible Server:** Kawalan konfigurasi lebih terperinci, zon ketersediaan tinggi.
+
+---
+
+## 6. CI/CD dengan GitHub/GitLab untuk Pangkalan Data
+
+### Contoh Pipeline GitLab CI untuk Ujian dengan PostgreSQL
+```yaml
+test:
+  stage: test
+  image: python:3.10
+  services:
+    - postgres:13
+  variables:
+    POSTGRES_DB: test_db
+    POSTGRES_USER: tester
+    POSTGRES_PASSWORD: "testpass"
+    DATABASE_URL: "postgresql://tester:testpass@postgres/test_db"
+  before_script:
+    - pip install -r requirements.txt
+  script:
+    - pytest
+```
+
+### Contoh GitHub Actions untuk Migrasi Django
+```yaml
+name: Run Migrations
+on:
+  push:
+    branches: [ main ]
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/postgres
+        run: python manage.py migrate
+```
+
+---
+
+## 7. Sandaran, Pemulihan dan Bencana (DR)
+
+### AWS
+- **RDS:** Sandaran automatik harian, snapshot manual, point-in-time recovery.
+- **DynamoDB:** Sandaran atas permintaan dan berterusan (point-in-time recovery).
+- **Cross-Region Replication:** Untuk RDS (Read Replica di rantau berbeza) dan DynamoDB (global tables).
+
+### Azure
+- **Azure SQL:** Sandaran automatik dikekalkan 7-35 hari, geo-redundant backup.
+- **Cosmos DB:** Replikasi multi-rantau, failover automatik.
+- **Azure Database for PostgreSQL:** Sandaran geo-redundan pilihan.
+
+### Firebase
+- **Firestore:** Sandaran automatik (perlu didayakan dalam konsol) dan eksport data secara manual.
+
+---
+
+## 8. Pemantauan dan Pemerhatian (Observability)
+
+| Alat | Pangkalan Data Disokong | Integrasi dengan Teknologi |
+|------|------------------------|----------------------------|
+| **Prometheus + Grafana** | PostgreSQL (exporter), MongoDB (exporter), Redis (exporter), MySQL (exporter) | Boleh dijalankan dalam Docker/Kubernetes. Grafana untuk visualisasi. |
+| **AWS CloudWatch** | RDS, DynamoDB, ElastiCache | Metrik prestasi, log audit, pemberitahuan. |
+| **Azure Monitor** | Azure SQL, Cosmos DB, Azure Cache for Redis | Analitik prestasi, insight kueri. |
+| **Datadog** | Pelbagai pangkalan data | Integrasi mudah dengan ejen dipasang di hos. |
+
+---
+
+## 9. Keselamatan Pangkalan Data
+
+- **Enkripsi:** Semua perkhidmatan awam menyokong enkripsi data dalam transit (TLS) dan dalam keadaan rehat (KMS, BYOK).
+- **Kawalan Akses:** Gunakan peranan IAM (AWS) atau RBAC (Azure) untuk akses pengguna dan aplikasi.
+- **Rahsia (Secrets):** Simpan kredential pangkalan data di GitHub Secrets, GitLab CI Variables, atau AWS Secrets Manager/Azure Key Vault.
+- **Audit:** Aktifkan log audit untuk mengesan akses dan perubahan.
+
+---
+
+## 10. Contoh Gabungan Lengkap dalam Resume
+
+> **Senior Full Stack Developer**  
+> - **Projek:** Sistem Pengurusan Inventori Masa Nyata  
+>   - **Frontend:** React + Firebase Firestore untuk paparan langsung stok gudang.  
+>   - **Backend:** Django dengan PostgreSQL di AWS RDS untuk urus niaga pesanan dan invois.  
+>   - **Caching:** Redis dalam Docker untuk mempercepatkan carian produk popular.  
+>   - **CI/CD:** GitLab CI dengan ujian integrasi menggunakan kontena PostgreSQL dan MongoDB.  
+>   - **Deployment:** Aplikasi dikontenerkan dengan Docker dan dijalankan di AWS ECS, dengan pangkalan data terurus RDS dan ElastiCache.  
+>   - **Keselamatan:** Semua sambungan menggunakan TLS, kredential disimpan di AWS Secrets Manager.  
+>   - **Pemantauan:** Grafana + Prometheus untuk metrik prestasi pangkalan data.  
+> - **Kemahiran:** Python, JavaScript, React, Django, Node.js, PostgreSQL, MongoDB, Redis, Firebase, AWS (RDS, DynamoDB, ECS), Docker, GitLab CI.
+
+---
+
+Dengan penambahan ini, anda kini mempunyai rujukan komprehensif untuk memadankan pangkalan data dengan setiap teknologi yang anda senaraikan, serta panduan praktikal untuk integrasi, penggunaan, dan amalan terbaik. Sekiranya anda memerlukan butiran lanjut tentang mana-mana topik, sila nyatakan!
