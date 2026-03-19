@@ -1238,7 +1238,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.6.0
+homematicip==2.7.0
 
 # homeassistant.components.homevolt
 homevolt==0.5.0
@@ -3293,6 +3293,9 @@ whois==0.9.27
 
 # homeassistant.components.wiffi
 wiffi==1.1.2
+
+# homeassistant.components.wiim
+wiim==0.1.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1

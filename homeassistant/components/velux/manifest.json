@@ -1,7 +1,7 @@
 {
   "domain": "velux",
   "name": "Velux",
-  "codeowners": ["@Julius2342", "@DeerMaximum", "@pawlizio", "@wollew"],
+  "codeowners": ["@Julius2342", "@pawlizio", "@wollew"],
   "config_flow": true,
   "dhcp": [
     {
