@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2TokenRequestError
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -115,6 +116,16 @@ async def async_migrate_entry(
                 "Migration to version 1.3 complete but token could not be "
                 "obtained — re-authentication will be required"
             )
+
+        # Inform user to update redirect URI for future re-authentication
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "update_redirect_uri",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="update_redirect_uri",
+        )
 
     return True
 
