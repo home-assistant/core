@@ -65,7 +65,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         try:
             await self.api.login.login_mode_stored_data()
             data = await self.api.get_devices_data()
-            await self.sync_media_state()
         except CannotConnect as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

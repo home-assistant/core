@@ -34,6 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
 
+    await coordinator.sync_media_state()
+    await coordinator.api.start_http2_thread()
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
