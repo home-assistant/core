@@ -875,11 +875,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
         if (_attribute_value := self._get_tracked_value(state)) is None:
             return False
 
-        try:
-            current_value = self._get_converter(state)(_attribute_value)
-        except TypeError, ValueError:
-            # Value is not a valid number, don't trigger
-            return False
+        current_value = self._get_converter(state)(_attribute_value)
 
         # Note: We do not need to check for lower_limit/upper_limit being None here
         # because of the validation done in the schema.
