@@ -39,6 +39,23 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_dual_circuit() -> MockConfigEntry:
+    """Return a mocked config entry with dual heating circuits."""
+    return MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
@@ -82,5 +99,7 @@ def mock_bsblan() -> Generator[MagicMock]:
         )
         # mock get_temperature_unit property
         bsblan.get_temperature_unit = "°C"
+        # Default: single circuit
+        bsblan.get_available_circuits.return_value = [1]
 
         yield bsblan
