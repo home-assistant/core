@@ -1294,12 +1294,13 @@ def _make_with_unit_changed_trigger_class() -> type[
         EntityNumericalStateChangedTriggerWithUnitBase,
     ):
         _base_unit = UnitOfTemperature.CELSIUS
-        _domain_specs = {"test": NumericalDomainSpec(value_source="test_attribute")}
+        _domain_specs = {
+            "test": NumericalDomainSpec(
+                value_source="test_attribute",
+                unit_of_measurement_source="unit_of_measurement",
+            ),
+        }
         _unit_converter = TemperatureConverter
-
-        def _get_entity_unit(self, state: State) -> str | None:
-            """Get the temperature unit of an entity from its state."""
-            return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     return _TestChangedTrigger
 
@@ -2045,12 +2046,13 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
         EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     ):
         _base_unit = UnitOfTemperature.CELSIUS
-        _domain_specs = {"test": NumericalDomainSpec(value_source="test_attribute")}
+        _domain_specs = {
+            "test": NumericalDomainSpec(
+                value_source="test_attribute",
+                unit_of_measurement_source="unit_of_measurement",
+            ),
+        }
         _unit_converter = TemperatureConverter
-
-        def _get_entity_unit(self, state: State) -> str | None:
-            """Get the temperature unit of an entity from its state."""
-            return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     return _TestCrossedThresholdTrigger
 

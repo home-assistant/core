@@ -618,7 +618,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
 
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
-        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
             raw_value = state.state
@@ -633,7 +633,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
 
     def _get_converter(self, state: State) -> Callable[[float], float]:
         """Get the value converter for an entity."""
-        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        domain_spec = self._domain_specs[state.domain]
         if domain_spec.value_converter is not None:
             return domain_spec.value_converter
         return lambda x: x
@@ -651,9 +651,11 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
         super().__init__(hass, config)
         self._manual_limit_unit = self._options.get(CONF_UNIT)
 
-    @abc.abstractmethod
-    def _get_entity_unit(self, state: State) -> str | None:
+    def _get_entity_unit(
+        self, domain_spec: NumericalDomainSpec, state: State
+    ) -> str | None:
         """Get the unit of an entity from its state."""
+        return state.attributes.get(domain_spec.unit_of_measurement_source)
 
     def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
         """Get numerical value from float or entity state."""
@@ -681,7 +683,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
-        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
             raw_value = state.state
@@ -696,7 +698,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
         try:
             return self._unit_converter.convert(
-                value, self._get_entity_unit(state), self._base_unit
+                value, self._get_entity_unit(domain_spec, state), self._base_unit
             )
         except HomeAssistantError:
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
