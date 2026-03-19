@@ -45,7 +45,6 @@ rules:
     comment: |
       No authentication required.
   test-coverage: todo
-
   # Gold
   devices: done
   diagnostics: todo
