@@ -145,6 +145,11 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
+        except ResourceException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_nodes_found",
+            ) from err
         except requests.exceptions.ConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
