@@ -112,13 +112,13 @@ async def test_selective_state_update(
 
     # Device goes offline
     freezer.tick(10)
-    await mock_listener.async_mock_offline(hass, mock_device)
+    await mock_listener.async_mock_offline(mock_device)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # Device comes back online - state should go back to last known value,
     # not new datetime since no new data update has come in
     freezer.tick(10)
-    await mock_listener.async_mock_online(hass, mock_device)
+    await mock_listener.async_mock_online(mock_device)
     assert hass.states.get(entity_id).state == "2024-01-01T00:00:10.000+00:00"
 
     # Device receives a new data update - event gets triggered and state gets updated
