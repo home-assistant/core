@@ -1841,7 +1841,6 @@ async def test_reconfigure_host(hass: HomeAssistant) -> None:
             {CONF_HOST: "new-host"},
         )
 
-    await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     assert entry.data[CONF_HOST] == "10.10.12.77"
@@ -1854,20 +1853,33 @@ async def test_reconfigure_host_invalid(hass: HomeAssistant) -> None:
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
         side_effect=socket.gaierror("invalid host"),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "bad-host"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == config_entries.SOURCE_RECONFIGURE
-    assert result2["errors"] == {"base": "invalid_host"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+    assert result["errors"] == {"base": "invalid_host"}
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="10.10.12.77",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new-host"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "10.10.12.77"
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
