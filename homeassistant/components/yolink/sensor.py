@@ -202,10 +202,10 @@ def parse_data_humidity(device: YoLinkDevice, data: dict) -> int | None:
 
 def parse_data_temperature(device: YoLinkDevice, data: dict) -> float | None:
     """Parse temperature data."""
-    if device.device_type in [
+    if device.device_type in (
         ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
         ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
-    ]:
+    ):
         return (
             state.get("temperature")
             if (state := data.get("state")) is not None
