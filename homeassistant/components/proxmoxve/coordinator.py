@@ -24,7 +24,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import sanitize_userid
-from .const import CONF_NODE, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import CONF_NODE, DEFAULT_VERIFY_SSL, DOMAIN, NODE_ONLINE
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
 
@@ -145,11 +145,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except ResourceException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="no_nodes_found",
-            ) from err
         except requests.exceptions.ConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -209,8 +204,17 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         node: dict[str, Any],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Get vms and containers for a node."""
-        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
-        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
+        node_name = node[CONF_NODE]
+        if node.get("status") != NODE_ONLINE:
+            _LOGGER.debug(
+                "Node %s is offline, skipping VM/container fetch",
+                node_name,
+            )
+            return [], []
+
+        vms = self.proxmox.nodes(node_name).qemu.get() or []
+        containers = self.proxmox.nodes(node_name).lxc.get() or []
+
         return vms, containers
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:

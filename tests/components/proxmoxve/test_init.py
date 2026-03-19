@@ -229,3 +229,22 @@ async def test_migration_v1_to_v2(
 
     assert vm_entity_after.unique_id == f"{entry.entry_id}_100_status"
     assert container_entity_after.unique_id == f"{entry.entry_id}_200_status"
+
+
+async def test_offline_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an offline node doesn't cause the entire update to fail."""
+    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data is not None
+    assert coordinator.data["pve1"].node["status"] == "online"
+    assert coordinator.data["pve3"].node["status"] == "offline"
+    assert coordinator.data["pve3"].vms == {}
+    assert coordinator.data["pve3"].containers == {}
