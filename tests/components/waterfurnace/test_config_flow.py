@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from waterfurnace.waterfurnace import WFCredentialError, WFException
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.waterfurnace.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -15,7 +16,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -51,6 +55,7 @@ async def test_user_flow_success(
     ],
 )
 async def test_user_flow_exceptions(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_setup_entry: AsyncMock,
@@ -85,7 +90,10 @@ async def test_user_flow_exceptions(
 
 
 async def test_user_flow_no_devices(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user flow with no devices."""
     mock_waterfurnace_client.devices = []
@@ -120,7 +128,10 @@ async def test_user_flow_no_devices(
 
 
 async def test_user_flow_account_id_none(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user flow when account_id is None."""
     mock_waterfurnace_client.account_id = None
@@ -139,6 +150,7 @@ async def test_user_flow_account_id_none(
 
 
 async def test_user_flow_already_configured(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
@@ -164,7 +176,10 @@ async def test_user_flow_already_configured(
 
 
 async def test_import_flow_success(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful import flow from YAML."""
     result = await hass.config_entries.flow.async_init(
@@ -183,6 +198,7 @@ async def test_import_flow_success(
 
 
 async def test_import_flow_already_configured(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
@@ -209,6 +225,7 @@ async def test_import_flow_already_configured(
     ],
 )
 async def test_import_flow_exceptions(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     exception: Exception,
@@ -228,7 +245,9 @@ async def test_import_flow_exceptions(
 
 
 async def test_import_flow_account_id_none(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
 ) -> None:
     """Test import flow when account_id is None."""
     mock_waterfurnace_client.account_id = None
@@ -244,7 +263,9 @@ async def test_import_flow_account_id_none(
 
 
 async def test_import_flow_no_devices(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
 ) -> None:
     """Test import flow with no devices."""
     mock_waterfurnace_client.devices = []
@@ -260,6 +281,7 @@ async def test_import_flow_no_devices(
 
 
 async def test_reauth_flow_success(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
@@ -293,6 +315,7 @@ async def test_reauth_flow_success(
     ],
 )
 async def test_reauth_flow_exceptions(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
@@ -327,6 +350,7 @@ async def test_reauth_flow_exceptions(
 
 
 async def test_reauth_flow_wrong_account(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
@@ -349,6 +373,7 @@ async def test_reauth_flow_wrong_account(
 
 
 async def test_reauth_flow_no_account_id(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,

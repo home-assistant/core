@@ -17,7 +17,11 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, INTEGRATION_TITLE
-from .coordinator import WaterFurnaceCoordinator, WaterFurnaceDeviceData
+from .coordinator import (
+    WaterFurnaceCoordinator,
+    WaterFurnaceDeviceData,
+    WaterFurnaceEnergyCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +112,17 @@ async def _async_setup_coordinator(
             f"Invalid GWID for device at index {device_index}: {device_client.gwid}"
         )
 
-    return device_client.gwid, WaterFurnaceDeviceData(realtime=coordinator)
+    energy_coordinator = WaterFurnaceEnergyCoordinator(
+        hass, device_client, entry, device_client.gwid
+    )
+    # Use async_refresh() instead of async_config_entry_first_refresh() so that
+    # energy data failures (e.g. WFNoDataError for new accounts) don't block
+    # the integration from loading. Realtime sensor data is the primary concern.
+    await energy_coordinator.async_refresh()
+
+    return device_client.gwid, WaterFurnaceDeviceData(
+        realtime=coordinator, energy=energy_coordinator
+    )
 
 
 async def async_setup_entry(
