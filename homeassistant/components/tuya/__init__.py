@@ -138,12 +138,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> boo
         if tuya.manager.mq is not None:
             tuya.manager.mq.stop()
         tuya.manager.remove_device_listener(tuya.listener)
-        if entry_data := hass.data.get(DOMAIN, {}).get(entry.entry_id):
-            entry_data.pop(TUYA_HA_COVER_STATUS_INVERTED, None)
-            if not entry_data:
-                hass.data[DOMAIN].pop(entry.entry_id, None)
-            if not hass.data[DOMAIN]:
-                hass.data.pop(DOMAIN)
+        domain_data = hass.data.get(DOMAIN)
+        if domain_data is not None:
+            entry_data = domain_data.get(entry.entry_id)
+            if entry_data:
+                entry_data.pop(TUYA_HA_COVER_STATUS_INVERTED, None)
+                if not entry_data:
+                    domain_data.pop(entry.entry_id, None)
+                if not domain_data:
+                    hass.data.pop(DOMAIN, None)
     return unload_ok
 
 

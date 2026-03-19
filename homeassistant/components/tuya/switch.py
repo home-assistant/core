@@ -15,14 +15,12 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TuyaConfigEntry
 from .const import (
-    DOMAIN,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
@@ -943,7 +941,9 @@ async def async_setup_entry(
                 )
             if cover_descriptions := COVERS.get(device.category):
                 entities.extend(
-                    TuyaCoverStatusInvertedSwitch(device, description, status_inverted)
+                    TuyaCoverStatusInvertedSwitch(
+                        device, manager, description, status_inverted
+                    )
                     for description in cover_descriptions
                     if (
                         description.key in device.function
@@ -960,7 +960,7 @@ async def async_setup_entry(
     )
 
 
-class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
+class TuyaCoverStatusInvertedSwitch(TuyaEntity, SwitchEntity, RestoreEntity):
     """Local config switch to invert Tuya cover status semantics."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -971,28 +971,18 @@ class TuyaCoverStatusInvertedSwitch(SwitchEntity, RestoreEntity):
     def __init__(
         self,
         device: CustomerDevice,
+        device_manager: Manager,
         description: TuyaCoverEntityDescription,
         status_inverted: dict[str, bool],
     ) -> None:
         """Initialize the cover status inversion switch."""
-        self.device = device
+        super().__init__(device, device_manager)
         self._cover_unique_id = cover_unique_id(device.id, description.key)
         self._status_inverted = status_inverted
         self._attr_unique_id = f"{self._cover_unique_id}_invert_status"
         if description.translation_placeholders:
             self._attr_translation_key = "indexed_invert_status"
             self._attr_translation_placeholders = description.translation_placeholders
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.id)},
-            manufacturer="Tuya",
-            name=self.device.name,
-            model=self.device.product_name,
-            model_id=self.device.product_id,
-        )
 
     @property
     def is_on(self) -> bool:

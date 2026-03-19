@@ -254,7 +254,6 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self.entity_description = description
         self._cover_unique_id = cover_unique_id(device.id, description.key)
         self._attr_unique_id = self._cover_unique_id
-        self._attr_supported_features = CoverEntityFeature(0)
         self._base_supported_features = CoverEntityFeature(0)
 
         self._current_position = current_position or set_position
