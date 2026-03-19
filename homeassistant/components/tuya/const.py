@@ -17,6 +17,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -1169,6 +1170,20 @@ UNITS = (
         unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
+    ),
+    UnitOfMeasurement(
+        unit="",
+        aliases={"ph"},
+        device_classes={
+            SensorDeviceClass.PH,
+        },
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfConductivity.MICROSIEMENS_PER_CM,
+        aliases={"us"},
+        device_classes={
+            SensorDeviceClass.CONDUCTIVITY,
+        },
     ),
 )
 

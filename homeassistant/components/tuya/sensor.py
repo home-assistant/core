@@ -320,7 +320,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.EC_CURRENT,
-            translation_key="ec_current",
+            device_class=SensorDeviceClass.CONDUCTIVITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
@@ -352,12 +352,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ORP_CURRENT,
-            translation_key="orp_current",
+            translation_key="oxydo_reduction_potential",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PH_CURRENT,
-            translation_key="ph_current",
+            device_class=SensorDeviceClass.PH,
+            # pH is unitless, but some devices report unit as "pH"
+            suggested_unit_of_measurement="",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
