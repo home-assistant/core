@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
@@ -25,6 +26,7 @@ from .const import (
     CONF_AUTH_KEY,
     CONF_BASEOID,
     CONF_COMMUNITY,
+    CONF_IMPORTED_BY,
     CONF_PRIV_KEY,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
@@ -120,7 +122,7 @@ async def async_setup_entry(
             for mac in coordinator.data:
                 if mac not in tracked_macs:
                     tracked_macs.add(mac)
-                    new_entities.append(SnmpTrackerEntity(coordinator, mac))
+                    new_entities.append(SnmpTrackerEntity(coordinator, entry, mac))
         if new_entities:
             async_add_entities(new_entities)
 
@@ -133,10 +135,13 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
 
     _attr_should_poll = False
 
-    def __init__(self, coordinator: SnmpUpdateCoordinator, mac: str) -> None:
+    def __init__(
+        self, coordinator: SnmpUpdateCoordinator, entry: ConfigEntry, mac: str
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac
+        self._entry = entry
 
     @property
     def is_connected(self) -> bool:
@@ -144,3 +149,47 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         if not self.coordinator.data:
             return False
         return self._attr_mac_address in self.coordinator.data
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID for this entity (just the MAC address)."""
+        assert self._attr_mac_address is not None
+        return self._attr_mac_address
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device (MAC address with underscores)."""
+        # Format MAC address as entity name: 00:11:22:33:44:55 -> 00_11_22_33_44_55
+        assert self._attr_mac_address is not None
+        return self._attr_mac_address.replace(":", "_")
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default.
+
+        Entities are enabled by default if they were imported from YAML configuration,
+        to avoid breaking existing automations.
+        """
+        return CONF_IMPORTED_BY in self._entry.data
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the extra state attributes of the device.
+
+        Include the location information from Home Assistant configuration
+        to maintain compatibility with the old integration.
+        """
+        attributes: dict[str, Any] = {}
+
+        # Add home location from Home Assistant configuration
+        latitude = getattr(self.hass.config, "latitude", None)
+        longitude = getattr(self.hass.config, "longitude", None)
+        if latitude is not None:
+            attributes["latitude"] = latitude
+        if longitude is not None:
+            attributes["longitude"] = longitude
+
+        # GPS accuracy is always 0 for router-based detection
+        attributes["gps_accuracy"] = 0
+
+        return attributes
