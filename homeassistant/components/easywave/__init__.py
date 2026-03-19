@@ -88,6 +88,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     if not await coordinator.async_setup():
         raise ConfigEntryNotReady("Failed to initialize coordinator")
 
+    # Perform initial refresh so coordinator.data is populated and
+    # reconnect polling starts before platforms are set up.
+    await coordinator.async_config_entry_first_refresh()
+
     # Set runtime data for the integration
     entry.runtime_data = EasywaveRuntimeData(
         coordinator=coordinator,
