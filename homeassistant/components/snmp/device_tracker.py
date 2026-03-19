@@ -141,6 +141,13 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         """Return the extra state attributes of the device."""
         attributes: dict[str, Any] = {}
 
+        if (
+            self.coordinator.data
+            and self._attr_mac_address is not None
+            and (ip := self.coordinator.data.get(self._attr_mac_address))
+        ):
+            attributes["ip"] = ip
+
         latitude = getattr(self.hass.config, "latitude", None)
         longitude = getattr(self.hass.config, "longitude", None)
         if latitude is not None:

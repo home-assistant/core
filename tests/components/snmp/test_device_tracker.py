@@ -24,7 +24,9 @@ def mock_walk():
     async def side_effect(*args, **kwargs):
         # Return a list of MAC addresses
         mac1 = binascii.unhexlify("001122334455")
-        yield None, None, None, [("oid1", OctetString(mac1))]
+        oid1 = Mock()
+        oid1.asTuple.return_value = (1, 192, 168, 1, 1)
+        yield None, None, None, [(oid1, OctetString(mac1))]
 
     with patch(
         "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
@@ -39,7 +41,7 @@ async def test_device_tracker_setup(hass: HomeAssistant, mock_walk) -> None:
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.3.1.1.2",
+            "baseoid": "1.3.6.1.2.1.4.22.1.6",
             "community": "public",
             CONF_IMPORTED_BY: "device_tracker",
         },
@@ -63,10 +65,6 @@ async def test_device_tracker_setup(hass: HomeAssistant, mock_walk) -> None:
     entity_id = ent_reg.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
-    if entity_id is None:
-        entity_id = ent_reg.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, "001122334455"
-        )
 
     assert entity_id is not None
 
@@ -74,6 +72,7 @@ async def test_device_tracker_setup(hass: HomeAssistant, mock_walk) -> None:
     assert state is not None
     assert state.state == STATE_HOME
     assert state.attributes["mac"] == "00:11:22:33:44:55"
+    assert state.attributes["ip"] == "192.168.1.1"
 
 
 async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
@@ -82,7 +81,7 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
         domain=DOMAIN,
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.3.1.1.2",
+            "baseoid": "1.3.6.1.2.1.4.22.1.6",
             "community": "public",
             CONF_IMPORTED_BY: "device_tracker",
         },
@@ -101,11 +100,16 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
             connections={(dr.CONNECTION_NETWORK_MAC, m_str)},
         )
 
+    oid1 = Mock()
+    oid1.asTuple.return_value = (1, 192, 168, 1, 1)
+    oid2 = Mock()
+    oid2.asTuple.return_value = (1, 192, 168, 1, 22)
+
     async def mock_walk_1(*args, **kwargs):
-        yield None, None, None, [("oid1", OctetString(mac1))]
+        yield None, None, None, [(oid1, OctetString(mac1))]
 
     async def mock_walk_2(*args, **kwargs):
-        yield None, None, None, [("oid2", OctetString(mac2))]
+        yield None, None, None, [(oid2, OctetString(mac2))]
 
     mock_walk.side_effect = mock_walk_1
 
@@ -120,6 +124,7 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
     entity_id_1 = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str)
     assert entity_id_1 is not None
     assert hass.states.get(entity_id_1).state == STATE_HOME
+    assert hass.states.get(entity_id_1).attributes["ip"] == "192.168.1.1"
 
     mock_walk.side_effect = mock_walk_2
 
@@ -131,3 +136,4 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
 
     assert hass.states.get(entity_id_1).state == STATE_NOT_HOME
     assert hass.states.get(entity_id_2).state == STATE_HOME
+    assert hass.states.get(entity_id_2).attributes["ip"] == "192.168.1.22"

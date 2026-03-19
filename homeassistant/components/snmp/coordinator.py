@@ -17,7 +17,7 @@ from .util import RequestArgsType
 _LOGGER = logging.getLogger(__name__)
 
 
-class SnmpUpdateCoordinator(DataUpdateCoordinator[list[str]]):
+class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Class to manage fetching the list of MAC addresses from the router."""
 
     def __init__(
@@ -36,9 +36,9 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[list[str]]):
         )
         self.request_args = request_args
 
-    async def _async_update_data(self) -> list[str]:
+    async def _async_update_data(self) -> dict[str, str]:
         """Fetch the current list of MAC addresses via an SNMP Walk."""
-        devices = []
+        devices: dict[str, str] = {}
         engine, auth_data, target, context_data, object_type = self.request_args
 
         walker = bulk_walk_cmd(
@@ -58,13 +58,29 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[list[str]]):
                 err_msg = f"SNMP error: {errstatus.prettyPrint()} at {(errindex and res[int(errindex) - 1][0]) or '?'}"
                 raise UpdateFailed(err_msg)
 
-            for _oid, value in res:
+            for oid, value in res:
                 if not is_end_of_mib(res):
                     try:
-                        mac = binascii.hexlify(value.asOctets()).decode("utf-8")
-                    except AttributeError:
+                        octets = value.asOctets()
+                        if len(octets) == 6:
+                            mac = binascii.hexlify(octets).decode("utf-8")
+                        else:
+                            mac = octets.decode("utf-8", "ignore")
+
+                        # Normalize: remove non-hex chars, lowercase, and re-format
+                        mac = "".join(c for c in mac if c.isalnum()).lower()
+                        if len(mac) != 12:
+                            continue
+                        mac = ":".join([mac[i : i + 2] for i in range(0, 12, 2)])
+                    except AttributeError, UnicodeDecodeError:
                         continue
-                    mac = ":".join([mac[i : i + 2] for i in range(0, len(mac), 2)])
-                    devices.append(mac)
+
+                    # Extract IP address from OID suffix (last 4 parts)
+                    ip = "0.0.0.0"
+                    if hasattr(oid, "asTuple"):
+                        oid_tuple = oid.asTuple()
+                        if len(oid_tuple) >= 4:
+                            ip = ".".join(map(str, oid_tuple[-4:]))
+                    devices[mac] = ip
 
         return devices
