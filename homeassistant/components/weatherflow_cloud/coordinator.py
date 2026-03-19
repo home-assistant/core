@@ -92,7 +92,9 @@ class WeatherFlowCloudUpdateCoordinatorREST(
         except ClientResponseError as err:
             if err.status == 401:
                 raise ConfigEntryAuthFailed(err) from err
-            raise UpdateFailed(f"Update failed: {err}") from err
+            raise UpdateFailed(
+                translation_key="update_failed", translation_domain=DOMAIN
+            ) from err
 
     def get_station(self, station_id: int) -> WeatherFlowDataREST:
         """Return station for id."""

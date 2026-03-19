@@ -1,5 +1,7 @@
 """Test the WeatherflowCloud config flow."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from homeassistant import config_entries
@@ -12,7 +14,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_config(hass: HomeAssistant, mock_get_stations) -> None:
+async def test_config(
+    hass: HomeAssistant, mock_get_stations: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test the config flow for the ideal case."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -30,7 +34,9 @@ async def test_config(hass: HomeAssistant, mock_get_stations) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_config_flow_abort(hass: HomeAssistant, mock_get_stations) -> None:
+async def test_config_flow_abort(
+    hass: HomeAssistant, mock_get_stations: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test an abort case."""
 
     entry = MockConfigEntry(
@@ -67,7 +73,8 @@ async def test_config_errors(
     request: pytest.FixtureRequest,
     expected_error: str,
     mock_fixture: str,
-    mock_get_stations,
+    mock_get_stations: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the config flow for various error scenarios."""
     mock_get_stations_bad = request.getfixturevalue(mock_fixture)
@@ -97,7 +104,32 @@ async def test_config_errors(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
+async def test_reconfigure(
+    hass: HomeAssistant, mock_get_stations: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the reconfigure flow updates the API token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_TOKEN: "old_token"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "new_token"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_API_TOKEN] == "new_token"
+
+
+async def test_reauth(
+    hass: HomeAssistant, mock_get_stations_401_error: AsyncMock
+) -> None:
     """Test a reauth_flow."""
 
     entry = MockConfigEntry(

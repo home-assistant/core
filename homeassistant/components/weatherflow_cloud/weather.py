@@ -9,7 +9,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -19,18 +18,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
-from .const import DOMAIN, STATE_MAP
+from . import WeatherFlowCloudConfigEntry, WeatherFlowCloudUpdateCoordinatorREST
+from .const import STATE_MAP
 from .entity import WeatherFlowCloudEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WeatherFlowCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][config_entry.entry_id]
+    coordinators = config_entry.runtime_data
 
     async_add_entities(
         [
