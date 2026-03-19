@@ -21,6 +21,11 @@ from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 from .entity import HypontechEntity, HypontechPlantEntity
 
 
+def _to_watts(data: OverviewData | PlantData) -> float:
+    """Return power in watts, converting from kW if needed."""
+    return data.power * 1000 if data.company == "KW" else data.power
+
+
 @dataclass(frozen=True, kw_only=True)
 class HypontechSensorDescription(SensorEntityDescription):
     """Describes Hypontech overview sensor entity."""
@@ -41,7 +46,7 @@ OVERVIEW_SENSORS: tuple[HypontechSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda c: c.power,
+        value_fn=_to_watts,
     ),
     HypontechSensorDescription(
         key="lifetime_energy",
@@ -67,7 +72,7 @@ PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda c: c.power,
+        value_fn=_to_watts,
     ),
     HypontechPlantSensorDescription(
         key="lifetime_energy",

@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '123',
   })
 # ---
 # name: test_sensors[sensor.balcon_today_energy-entry]
@@ -286,7 +286,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '123',
   })
 # ---
 # name: test_sensors[sensor.overview_today_energy-entry]
