@@ -17,8 +17,8 @@
           "net_id": "Sub-Net ID"
         },
         "data_description": {
-          "client_id": "[%key:component::yolink_local::config::step::user::data::client_id%]",
-          "client_secret": "[%key:component::yolink_local::config::step::user::data::client_secret%]",
+          "client_id": "Client ID",
+          "client_secret": "Client Secret",
           "host": "The hostname or IP address of your Local Hub.",
           "net_id": "The sub-net id of your Local Hub."
         }

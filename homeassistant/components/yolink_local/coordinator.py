@@ -92,7 +92,6 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
                 yl_client_err,
             )
             raise UpdateFailed from yl_client_err
-        return None
 
     async def call_device(self, request: ClientRequest) -> dict[str, Any]:
         """Call device api."""

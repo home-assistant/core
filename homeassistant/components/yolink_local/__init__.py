@@ -56,19 +56,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkLocalConfigEntry) 
     coordinators = {}
 
     for device in devices:
-        paried_device: YoLinkDevice | None = None
+        paired_device: YoLinkDevice | None = None
         if (
-            paried_device_id := device_pairing_mapping.get(device.device_id)
+            paired_device_id := device_pairing_mapping.get(device.device_id)
         ) is not None:
-            paried_device = next(
+            paired_device = next(
                 (
                     _device
                     for _device in devices
-                    if _device.device_id == paried_device_id
+                    if _device.device_id == paired_device_id
                 ),
                 None,
             )
-        coordinator = YoLinkLocalCoordinator(hass, entry, device, paried_device)
+        coordinator = YoLinkLocalCoordinator(hass, entry, device, paired_device)
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:

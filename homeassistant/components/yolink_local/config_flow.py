@@ -35,7 +35,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     session = aiohttp_client.async_create_clientsession(hass)
-    localHubClient = YoLinkLocalHubClient(
+    local_hub_client = YoLinkLocalHubClient(
         session,
         data[CONF_HOST],
         data[CONF_NET_ID],
@@ -43,7 +43,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_CLIENT_SECRET],
     )
     try:
-        if not await localHubClient.authenticate():
+        if not await local_hub_client.authenticate():
             raise InvalidAuth
     except ClientError as err:
         raise CannotConnect from err
@@ -54,6 +54,7 @@ class YoLinkLocalHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for YoLink Local Hub."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -100,7 +100,11 @@ async def async_setup_entry(
         coordinator
         for coordinator in coordinators.values()
         if coordinator.device.device_type
-        in [ATTR_DEVICE_LEAK_SENSOR, ATTR_DEVICE_MOTION_SENSOR]
+        in [
+            ATTR_DEVICE_LEAK_SENSOR,
+            ATTR_DEVICE_MOTION_SENSOR,
+            ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
+        ]
     ]
     async_add_entities(
         YoLinkBinarySensorEntity(config_entry, binary_sensor_coordinator, description)
