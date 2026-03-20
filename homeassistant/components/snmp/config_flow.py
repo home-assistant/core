@@ -175,8 +175,11 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or getattr(self, "_user_data", None)
+            ),
             errors=errors,
+            last_step=False,
         )
 
     async def async_step_v1_v2c(
@@ -204,7 +207,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="v1_v2c",
-            data_schema=STEP_V1_V2C_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_V1_V2C_DATA_SCHEMA, user_input
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -238,7 +243,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="v3",
-            data_schema=STEP_V3_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_V3_DATA_SCHEMA, user_input
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
