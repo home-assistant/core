@@ -130,6 +130,8 @@ async def test_errors(hass: HomeAssistant) -> None:
         )
     mock_set.assert_called_once()
     assert error.value.__cause__ == ERROR_UNKNOWN
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "cannot_connect"
 
     # Test setting climate with child presence detection error
     with (

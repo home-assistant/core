@@ -83,9 +83,11 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from e
-            raise
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
         return flatten(vehicle)
-
 
 class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the Tessie API."""
@@ -123,7 +125,10 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, MissingToken) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
@@ -159,7 +164,10 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, MissingToken) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         return flatten(data)
 
@@ -197,7 +205,10 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="auth_failed",
             ) from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         if (
             not data

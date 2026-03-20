@@ -104,7 +104,10 @@ class TessieEntity(TessieBaseEntity):
                 **kargs,
             )
         except ClientResponseError as e:
-            raise HomeAssistantError from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
         if response["result"] is False:
             name: str = getattr(self, "name", self.entity_id)
             reason: str = response.get("reason", "unknown")
