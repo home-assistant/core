@@ -8,10 +8,12 @@ from typing import Any
 from solarman_opendata.solarman import Solarman
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DEFAULT_PORT, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +25,7 @@ class SolarmanDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     config_entry: SolarmanConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: SolarmanConfigEntry, client: Solarman
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SolarmanConfigEntry) -> None:
         """Initialize the Solarman device coordinator."""
 
         super().__init__(
@@ -36,8 +36,9 @@ class SolarmanDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=UPDATE_INTERVAL,
         )
 
-        # Initialize the API client for communicating with the Solarman device.
-        self.api = client
+        self.api = Solarman(
+            async_get_clientsession(hass), config_entry.data[CONF_HOST], DEFAULT_PORT
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch and update device data."""

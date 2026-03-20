@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import SolarmanConfigEntry, SolarmanDeviceUpdateCoordinator
 from .entity import SolarmanEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 SENSORS: Final = (

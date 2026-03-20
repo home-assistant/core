@@ -30,16 +30,16 @@ rules:
   action-exceptions:
     status: exempt
     comment: The integration does not provide additional actions.
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: |
       This integration does not have an options flow.
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: todo
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
@@ -61,12 +61,12 @@ rules:
     status: exempt
     comment: The integration connects to a single device.
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: |
       No noisy entities.
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
@@ -80,6 +80,6 @@ rules:
       Device type integration.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo

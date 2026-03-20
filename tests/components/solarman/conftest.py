@@ -44,7 +44,7 @@ def mock_solarman(device_fixture: str) -> Generator[AsyncMock]:
     """Mock a solarman client."""
     with (
         patch(
-            "homeassistant.components.solarman.Solarman",
+            "homeassistant.components.solarman.coordinator.Solarman",
             autospec=True,
         ) as mock_client,
         patch(
