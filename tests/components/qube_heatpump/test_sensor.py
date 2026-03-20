@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -42,7 +43,7 @@ async def test_sensor_unavailable_on_coordinator_error(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    freezer,
+    freezer: FrozenDateTimeFactory,
     side_effect: Exception | None,
     return_value: None,
 ) -> None:
