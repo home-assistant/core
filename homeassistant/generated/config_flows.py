@@ -804,6 +804,7 @@ FLOWS = {
         "whirlpool",
         "whois",
         "wiffi",
+        "wiim",
         "wilight",
         "withings",
         "wiz",
