@@ -211,6 +211,16 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
 
+        if user_input is not None:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                {
+                    key: value
+                    for key, value in user_input.items()
+                    if key not in (CONF_PASSWORD, CONF_TOKEN)
+                },
+            )
+
         return self.async_show_form(
             step_id=step_id,
             data_schema=data_schema,
