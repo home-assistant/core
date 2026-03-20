@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[cover.slide_bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -42,6 +43,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'slide bedroom',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

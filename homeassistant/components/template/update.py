@@ -266,7 +266,7 @@ class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
             # The default picture for update entities would use `self.platform.platform_name` in
             # place of `template`.  This does not work when creating an entity preview because
             # the platform does not exist for that entity, therefore this is hardcoded as `template`.
-            return "https://brands.home-assistant.io/_/template/icon.png"
+            return "/api/brands/integration/template/icon.png"
         return self._attr_entity_picture
 
 

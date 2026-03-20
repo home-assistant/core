@@ -8,6 +8,7 @@ from yarl import URL
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -36,6 +37,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
     def __init__(
         self,
         coordinator: ProxmoxCoordinator,
+        entity_description: EntityDescription,
         node_data: ProxmoxNodeData,
     ) -> None:
         """Initialize the Proxmox node entity."""
@@ -43,6 +45,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
         self._node_data = node_data
         self.device_id = node_data.node["id"]
         self.device_name = node_data.node["node"]
+        self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_node_{self.device_id}")
@@ -53,6 +56,8 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
                 f"v1:0:=node/{node_data.node['node']}"
             ),
         )
+
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
 
     @property
     def available(self) -> bool:
@@ -66,11 +71,13 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
     def __init__(
         self,
         coordinator: ProxmoxCoordinator,
+        entity_description: EntityDescription,
         vm_data: dict[str, Any],
         node_data: ProxmoxNodeData,
     ) -> None:
         """Initialize the Proxmox VM entity."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._vm_data = vm_data
         self._node_name = node_data.node["node"]
         self.device_id = vm_data["vmid"]
@@ -90,6 +97,8 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
             ),
         )
+
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
     def available(self) -> bool:
@@ -112,11 +121,13 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
     def __init__(
         self,
         coordinator: ProxmoxCoordinator,
+        entity_description: EntityDescription,
         container_data: dict[str, Any],
         node_data: ProxmoxNodeData,
     ) -> None:
         """Initialize the Proxmox Container entity."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._container_data = container_data
         self._node_name = node_data.node["node"]
         self.device_id = container_data["vmid"]
@@ -139,6 +150,8 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
             ),
         )
+
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
     def available(self) -> bool:

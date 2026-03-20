@@ -63,6 +63,7 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
+    _attr_operation_list = list(HA_TO_BSBLAN_OPERATION_MODE.keys())
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -73,7 +74,6 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         """Initialize BSBLAN water heater."""
         super().__init__(data.fast_coordinator, data.slow_coordinator, data)
         self._attr_unique_id = format_mac(data.device.MAC)
-        self._attr_operation_list = list(HA_TO_BSBLAN_OPERATION_MODE.keys())
 
         # Set temperature unit
         self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
@@ -110,12 +110,11 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation."""
-        if (operating_mode := self.coordinator.data.dhw.operating_mode) is None:
+        if (
+            operating_mode := self.coordinator.data.dhw.operating_mode
+        ) is None or operating_mode.value is None:
             return None
-        # The operating_mode.value is an integer (0=Off, 1=On, 2=Eco)
-        if isinstance(operating_mode.value, int):
-            return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
-        return None
+        return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
 
     @property
     def current_temperature(self) -> float | None:

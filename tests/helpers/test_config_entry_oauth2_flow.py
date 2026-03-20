@@ -471,35 +471,32 @@ async def test_abort_discovered_multiple(
 
 
 @pytest.mark.parametrize(
-    ("status_code", "error_body", "error_reason", "error_log"),
+    ("status_code", "error_body", "error_reason", "expected_detail"),
     [
+        (HTTPStatus.UNAUTHORIZED, {}, "oauth_unauthorized", "unknown error"),
+        (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized", "unknown error"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed", "unknown error"),
         (
             HTTPStatus.UNAUTHORIZED,
-            {},
+            {"error_description": "The token has expired."},
             "oauth_unauthorized",
-            "Token request for oauth2_test failed (unknown): unknown",
-        ),
-        (
-            HTTPStatus.NOT_FOUND,
-            {},
-            "oauth_unauthorized",
-            "Token request for oauth2_test failed (unknown): unknown",
-        ),
-        (
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            {},
-            "oauth_failed",
-            "Token request for oauth2_test failed (unknown): unknown",
+            "unknown error: The token has expired.",
         ),
         (
             HTTPStatus.BAD_REQUEST,
             {
                 "error": "invalid_request",
                 "error_description": "Request was missing the 'redirect_uri' parameter.",
-                "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
+                "error_uri": "Sensible URI: https://authorization-server.com/docs/access_token",
             },
             "oauth_unauthorized",
-            "Token request for oauth2_test failed (invalid_request): Request was missing the",
+            "invalid_request: Request was missing the 'redirect_uri' parameter.",
+        ),
+        (
+            HTTPStatus.BAD_REQUEST,
+            "some error which is not formatted",
+            "oauth_unauthorized",
+            '"some error which is not formatted"',
         ),
     ],
 )
@@ -513,7 +510,7 @@ async def test_abort_if_oauth_token_error(
     status_code: HTTPStatus,
     error_body: dict[str, Any],
     error_reason: str,
-    error_log: str,
+    expected_detail: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Check error when obtaining an oauth token."""
@@ -560,11 +557,15 @@ async def test_abort_if_oauth_token_error(
         json=error_body,
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with caplog.at_level(logging.DEBUG):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert (
+        f"Token request for {TEST_DOMAIN} failed ({status_code}): {expected_detail}"
+        in caplog.text
+    )
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == error_reason
-    assert error_log in caplog.text
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -622,7 +623,7 @@ async def test_abort_if_oauth_token_closing_error(
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert "Token request for oauth2_test failed (unknown): unknown" in caplog.text
+    assert "Token request for oauth2_test failed (401): unknown" in caplog.text
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_unauthorized"
@@ -1039,7 +1040,7 @@ async def test_oauth_session_refresh_failure_exceptions(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with (
-        caplog.at_level(logging.WARNING),
+        caplog.at_level(logging.DEBUG),
         pytest.raises(expected_exception) as err,
     ):
         await session.async_request("post", "https://example.com")

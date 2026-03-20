@@ -4,6 +4,7 @@
   "codeowners": ["@Ernst79", "@dontinelli"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solarlog",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["solarlog_cli"],
   "quality_scale": "platinum",

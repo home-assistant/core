@@ -32,6 +32,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def patch_debounce() -> Generator[None]:
+    """Override coordinator debounce time."""
+    with patch(
+        "homeassistant.components.satel_integra.coordinator.PARTITION_UPDATE_DEBOUNCE_DELAY",
+        0,
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_satel() -> Generator[AsyncMock]:
     """Override the satel test."""
     with (

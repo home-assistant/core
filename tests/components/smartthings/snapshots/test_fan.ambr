@@ -1,8 +1,143 @@
 # serializer version: 1
+# name: test_all_entities[da_ac_air_000001][fan.air_purifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'sleep',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.air_purifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 56>,
+    'translation_key': None,
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][fan.air_purifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air purifier',
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'sleep',
+      ]),
+      'supported_features': <FanEntityFeature: 56>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.air_purifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][fan.air_filter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'sleep',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.air_filter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 56>,
+    'translation_key': None,
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][fan.air_filter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air filter',
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'sleep',
+      ]),
+      'supported_features': <FanEntityFeature: 56>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.air_filter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ks_hood_01001][fan.range_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -61,8 +196,9 @@
 # ---
 # name: test_all_entities[fake_fan][fan.fake_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -129,8 +265,9 @@
 # ---
 # name: test_all_entities[generic_fan_3_speed][fan.bedroom_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,

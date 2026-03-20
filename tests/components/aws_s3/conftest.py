@@ -6,23 +6,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.aws_s3.backup import (
-    MULTIPART_MIN_PART_SIZE_BYTES,
-    suggested_filenames,
-)
+from homeassistant.components.aws_s3.backup import suggested_filenames
 from homeassistant.components.aws_s3.const import DOMAIN
 from homeassistant.components.backup import AgentBackup
 
-from .const import USER_INPUT
+from .const import CONFIG_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(
-    params=[2**20, MULTIPART_MIN_PART_SIZE_BYTES],
-    ids=["small", "large"],
-)
-def test_backup(request: pytest.FixtureRequest) -> None:
+@pytest.fixture
+def backup_size() -> int:
+    """Backup size, override in tests to change defaults."""
+    return 2**20
+
+
+@pytest.fixture
+def mock_agent_backup(backup_size: int) -> AgentBackup:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
@@ -35,12 +35,12 @@ def test_backup(request: pytest.FixtureRequest) -> None:
         homeassistant_version="2024.12.0.dev0",
         name="Core 2024.12.0.dev0",
         protected=False,
-        size=request.param,
+        size=backup_size,
     )
 
 
 @pytest.fixture(autouse=True)
-def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
+def mock_client(mock_agent_backup: AgentBackup) -> Generator[AsyncMock]:
     """Mock the S3 client."""
     with patch(
         "aiobotocore.session.AioSession.create_client",
@@ -49,7 +49,7 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
     ) as create_client:
         client = create_client.return_value
 
-        tar_file, metadata_file = suggested_filenames(test_backup)
+        tar_file, metadata_file = suggested_filenames(mock_agent_backup)
 
         # Mock the paginator for list_objects_v2
         client.get_paginator = MagicMock()
@@ -66,7 +66,7 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
                 yield b"backup data"
 
             async def read(self) -> bytes:
-                return json.dumps(test_backup.as_dict()).encode()
+                return json.dumps(mock_agent_backup.as_dict()).encode()
 
         client.get_object.return_value = {"Body": MockStream()}
         client.head_bucket.return_value = {}
@@ -76,11 +76,17 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def config_entry_extra_data() -> dict:
+    """Extra config entry data, override in tests to change defaults."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(config_entry_extra_data: dict) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         entry_id="test",
         title="test",
         domain=DOMAIN,
-        data=USER_INPUT,
+        data=CONFIG_ENTRY_DATA | config_entry_extra_data,
     )
