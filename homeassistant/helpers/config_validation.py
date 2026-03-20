@@ -872,13 +872,12 @@ def url(
 
     if parsed.scheme not in _schema_list:
         raise vol.Invalid("invalid url")
-    
+
     try:
         parsed.port  # noqa: B018
     except ValueError as err:
         raise vol.Invalid("invalid url") from err
     return cast(str, vol.Schema(vol.Url())(url_in))
-
 
 
 def configuration_url(value: Any) -> str:
