@@ -137,6 +137,7 @@ homeassistant.components.calendar.*
 homeassistant.components.cambridge_audio.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
+homeassistant.components.casper_glow.*
 homeassistant.components.cert_expiry.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
