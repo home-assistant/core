@@ -9,11 +9,13 @@ from pysnmp.error import PySnmpError
 import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
+    ObjectIdentity,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
     get_cmd,
 )
+from pysnmp.smi.error import WrongValueError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -94,14 +96,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     try:
         target = await UdpTransportTarget.create((host, port))
-    except PySnmpError:
+    except PySnmpError as err1:
         try:
-            target = Udp6TransportTarget((host, port))
-        except PySnmpError:
-            raise CannotConnect from None
-    except Exception:  # pylint: disable=broad-except
+            target = await Udp6TransportTarget.create((host, port))
+        except PySnmpError as err2:
+            raise CannotConnect(f"{err1} / {err2}") from None
+    except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected error during SNMP target creation")
-        raise CannotConnect from None
+        raise CannotConnect(str(err)) from None
 
     if version == "3":
         if not authkey:
@@ -127,10 +129,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         hass, auth_data, target, test_oid, context_name
     )
 
-    err_indication, err_status, _, _ = await get_cmd(*request_args)
+    try:
+        err_indication, err_status, _, _ = await get_cmd(*request_args)
+    except WrongValueError:
+        # pysnmp raises WrongValueError when v3 credentials/keys match the wrong protocol
+        raise InvalidAuth("Invalid authentication credentials or protocols") from None
+    except PySnmpError as err:
+        # Handle other pysnmp errors like StatusInformation/SerializationError
+        raise CannotConnect(str(err)) from None
 
     if err_indication:
-        raise CannotConnect(err_indication) from None
+        raise CannotConnect(str(err_indication)) from None
 
     # In v1/v2c, getting ANY response (even noSuchName in err_status)
     # means the community string is correct. Silence means auth failure (v1/v2c).
@@ -152,15 +161,22 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            self._user_data = user_input
-            if user_input[CONF_VERSION] == "3":
-                return await self.async_step_v3()
-            return await self.async_step_v1_v2c()
+            try:
+                ObjectIdentity(user_input[CONF_BASEOID])
+            except Exception:  # pylint: disable=broad-except # noqa: BLE001
+                errors["baseoid"] = "invalid_oid"
+            else:
+                self._user_data = user_input
+                if user_input[CONF_VERSION] == "3":
+                    return await self.async_step_v3()
+                return await self.async_step_v1_v2c()
 
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
 
     async def async_step_v1_v2c(
@@ -168,17 +184,21 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle V1/V2c authentication."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             data = {**self._user_data, **user_input}
             try:
                 await validate_input(self.hass, data)
-            except CannotConnect:
+            except CannotConnect as err:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                description_placeholders["error"] = str(err)
+            except InvalidAuth as err:
                 errors["base"] = "invalid_auth"
-            except Exception:
+                description_placeholders["error"] = str(err)
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+                description_placeholders["error"] = str(err)
             else:
                 return self.async_create_entry(title=data[CONF_HOST], data=data)
 
@@ -186,6 +206,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="v1_v2c",
             data_schema=STEP_V1_V2C_DATA_SCHEMA,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_v3(
@@ -193,6 +214,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle V3 authentication."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             if user_input.get(CONF_PRIV_KEY) and not user_input.get(CONF_AUTH_KEY):
                 errors["base"] = "auth_key_required_for_priv"
@@ -201,13 +223,16 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 data = {**self._user_data, **user_input}
                 try:
                     await validate_input(self.hass, data)
-                except CannotConnect:
+                except CannotConnect as err:
                     errors["base"] = "cannot_connect"
-                except InvalidAuth:
+                    description_placeholders["error"] = str(err)
+                except InvalidAuth as err:
                     errors["base"] = "invalid_auth"
-                except Exception:
+                    description_placeholders["error"] = str(err)
+                except Exception as err:  # pylint: disable=broad-except
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
+                    description_placeholders["error"] = str(err)
                 else:
                     return self.async_create_entry(title=data[CONF_HOST], data=data)
 
@@ -215,6 +240,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="v3",
             data_schema=STEP_V3_DATA_SCHEMA,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:

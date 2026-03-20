@@ -10,6 +10,7 @@ from pysnmp.hlapi.v3arch.asyncio import (
     UdpTransportTarget,
     UsmUserData,
 )
+from pysnmp.smi.error import WrongValueError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_USERNAME, Platform
@@ -83,10 +84,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
         )
     except PySnmpError:
         try:
-            target = Udp6TransportTarget((host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT)
+            target = await Udp6TransportTarget.create(
+                (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
+            )
         except PySnmpError as err:
             _LOGGER.error("Invalid SNMP host: %s", err)
             return False
+    except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+        _LOGGER.error("Unexpected error during SNMP target creation: %s", err)
+        return False
 
     request_args = await async_create_request_cmd_args(
         hass,
@@ -97,7 +103,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
     )
 
     coordinator = SnmpUpdateCoordinator(hass, entry, request_args)
-    await coordinator.async_config_entry_first_refresh()
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except (WrongValueError, PySnmpError) as err:
+        _LOGGER.error("Invalid authentication credentials or protocols: %s", err)
+        return False
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
