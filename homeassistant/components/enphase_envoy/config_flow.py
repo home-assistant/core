@@ -7,7 +7,8 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
-from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
+import jwt
+from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError, EnvoyTokenAuth
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -27,8 +28,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    ACCESS_TOKEN_LOGIN_URL,
+    CONF_MANUAL_TOKEN,
     DOMAIN,
     INVALID_AUTH_ERRORS,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
@@ -46,12 +50,26 @@ CONF_SERIAL = "serial"
 
 INSTALLER_AUTH_USERNAME = "installer"
 
-AVOID_REFLECT_KEYS = {CONF_PASSWORD, CONF_TOKEN}
+
+def token_lifetime(token: str) -> int:
+    """Return token lifetime in days."""
+    try:
+        jwt_payload = jwt.decode(token, options={"verify_signature": False})
+        days_Left = int(
+            (int(jwt_payload["exp"]) - dt_util.utcnow().timestamp()) / 86400
+        )
+    except jwt.exceptions.DecodeError:
+        days_Left = 0
+    return days_Left
 
 
-def without_avoid_reflect_keys(dictionary: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a dictionary without AVOID_REFLECT_KEYS."""
-    return {k: v for k, v in dictionary.items() if k not in AVOID_REFLECT_KEYS}
+def descriptions(serial: str, token: str = "") -> dict[str, str]:
+    """Build description placeholders."""
+    return {
+        CONF_SERIAL: serial,
+        "enphase_url": ACCESS_TOKEN_LOGIN_URL,
+        "token_life": str(token_lifetime(token)) if token else "?",
+    }
 
 
 async def validate_input(
@@ -59,6 +77,7 @@ async def validate_input(
     host: str,
     username: str,
     password: str,
+    token: str | None,
     errors: dict[str, str],
     description_placeholders: dict[str, str],
 ) -> Envoy:
@@ -66,7 +85,7 @@ async def validate_input(
     envoy = Envoy(host, async_get_clientsession(hass, verify_ssl=False))
     try:
         await envoy.setup()
-        await envoy.authenticate(username=username, password=password)
+        await envoy.authenticate(username=username, password=password, token=token)
     except INVALID_AUTH_ERRORS as e:
         errors["base"] = "invalid_auth"
         description_placeholders["reason"] = str(e)
@@ -90,6 +109,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self.ip_address: str | None = None
         self.username = None
         self.protovers: str | None = None
+        self.manual_token: bool = False
 
     @staticmethod
     @callback
@@ -119,10 +139,18 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             default_username = INSTALLER_AUTH_USERNAME
 
-        schema[
-            vol.Optional(CONF_USERNAME, default=self.username or default_username)
-        ] = str
-        schema[vol.Optional(CONF_PASSWORD, default="")] = str
+        if self.manual_token:
+            # in manual token entry mode show token input field
+            schema[vol.Optional(CONF_TOKEN, default="")] = str
+        else:
+            # in automatic token mode show username and password inputs
+            schema[
+                vol.Optional(CONF_USERNAME, default=self.username or default_username)
+            ] = str
+            schema[vol.Optional(CONF_PASSWORD, default="")] = str
+
+        # option to switch between automatic and manual token entry modes
+        schema[vol.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
 
         return vol.Schema(schema)
 
@@ -195,19 +223,35 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
-        if user_input is not None:
-            await validate_input(
+        if user_input is None:
+            # remember current manual_token setting to detect switch between modes
+            self.manual_token = reauth_entry.data.get(CONF_MANUAL_TOKEN, False)
+            token = reauth_entry.data.get(CONF_TOKEN, "")
+        elif user_input.get(CONF_MANUAL_TOKEN) != self.manual_token:
+            # user is switching between manual and automatic token entry mode
+            # display the form in the other mode, no configuration update yet
+            self.manual_token = user_input[CONF_MANUAL_TOKEN]
+            token = user_input.get(CONF_TOKEN, "")
+        else:
+            envoy = await validate_input(
                 self.hass,
                 reauth_entry.data[CONF_HOST],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
+                user_input.get(CONF_USERNAME, ""),
+                user_input.get(CONF_PASSWORD, ""),
+                token := user_input.get(CONF_TOKEN, ""),
                 errors,
                 description_placeholders,
             )
             if not errors:
+                # successful authentication, update config
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates=user_input,
+                    data_updates=user_input
+                    | (
+                        {CONF_TOKEN: envoy.auth.token}
+                        if isinstance(envoy.auth, EnvoyTokenAuth)
+                        else {}
+                    ),
                 )
 
         serial = reauth_entry.unique_id or "-"
@@ -215,12 +259,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: serial,
             CONF_HOST: reauth_entry.data[CONF_HOST],
         }
-        description_placeholders["serial"] = serial
+        description_placeholders.update(descriptions(serial, token))
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 self._async_generate_schema(),
-                without_avoid_reflect_keys(user_input or reauth_entry.data),
+                user_input or reauth_entry.data,
             ),
             description_placeholders=description_placeholders,
             errors=errors,
@@ -238,48 +282,68 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
 
+        token = ""
         if user_input is not None:
-            envoy = await validate_input(
-                self.hass,
-                host,
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                errors,
-                description_placeholders,
-            )
-            if not errors:
-                name = self._async_envoy_name()
-
-                if not self.unique_id:
-                    await self.async_set_unique_id(envoy.serial_number)
+            if (
+                manual_mode := user_input.get(CONF_MANUAL_TOKEN, False)
+            ) != self.manual_token:
+                # for new config self.manual_token starts default as false
+                # user is switching between manual and automatic token entry mode
+                # show form again in other mode, no configuration update yet
+                self.manual_token = manual_mode
+                token = user_input.get(CONF_TOKEN, "")
+            else:
+                envoy = await validate_input(
+                    self.hass,
+                    host,
+                    user_input.get(CONF_USERNAME, ""),
+                    user_input.get(CONF_PASSWORD, ""),
+                    token := user_input.get(CONF_TOKEN, ""),
+                    errors,
+                    description_placeholders,
+                )
+                if not errors:
                     name = self._async_envoy_name()
-
-                if self.unique_id:
-                    # If envoy exists in configuration update fields and exit
-                    self._abort_if_unique_id_configured(
-                        {
-                            CONF_HOST: host,
-                            CONF_USERNAME: user_input[CONF_USERNAME],
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        },
-                        error="reauth_successful",
+                    # successful authentication, store token in config
+                    token_update = (
+                        {CONF_TOKEN: envoy.auth.token}
+                        if isinstance(envoy.auth, EnvoyTokenAuth)
+                        else {}
                     )
 
-                # CONF_NAME is still set for legacy backwards compatibility
-                return self.async_create_entry(
-                    title=name, data={CONF_HOST: host, CONF_NAME: name} | user_input
-                )
+                    if not self.unique_id:
+                        await self.async_set_unique_id(envoy.serial_number)
+                        name = self._async_envoy_name()
+
+                    if self.unique_id:
+                        # If envoy exists in configuration update fields and exit
+                        self._abort_if_unique_id_configured(
+                            {
+                                CONF_HOST: host,
+                                CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
+                                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
+                                CONF_MANUAL_TOKEN: self.manual_token,
+                            }
+                            | token_update,
+                            error="reauth_successful",
+                        )
+
+                    # CONF_NAME is still set for legacy backwards compatibility
+                    return self.async_create_entry(
+                        title=name, data={CONF_NAME: name} | user_input | token_update
+                    )
 
         if self.unique_id:
             self.context["title_placeholders"] = {
                 CONF_SERIAL: self.unique_id,
                 CONF_HOST: host,
             }
+        description_placeholders.update(descriptions("", token))
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 self._async_generate_schema(),
-                without_avoid_reflect_keys(user_input or {}),
+                user_input or {},
             ),
             description_placeholders=description_placeholders,
             errors=errors,
@@ -293,19 +357,27 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
-        if user_input is not None:
-            host: str = user_input[CONF_HOST]
-            username: str = user_input[CONF_USERNAME]
-            password: str = user_input[CONF_PASSWORD]
+        if user_input is None:
+            # remember current manual_token setting to detect switch between modes
+            self.manual_token = reconfigure_entry.data.get(CONF_MANUAL_TOKEN, False)
+            token = reconfigure_entry.data.get(CONF_TOKEN, "")
+        elif user_input.get(CONF_MANUAL_TOKEN) != self.manual_token:
+            # user switches between manual and automatic token entry mode
+            # show form again on other mode, no configuration update yet
+            self.manual_token = user_input[CONF_MANUAL_TOKEN]
+            token = user_input.get(CONF_TOKEN, "")
+        else:
             envoy = await validate_input(
                 self.hass,
-                host,
-                username,
-                password,
+                host := user_input[CONF_HOST],
+                username := user_input.get(CONF_USERNAME, ""),
+                password := user_input.get(CONF_PASSWORD, ""),
+                token := user_input.get(CONF_TOKEN, ""),
                 errors,
                 description_placeholders,
             )
             if not errors:
+                # successful authentication, store token in config
                 await self.async_set_unique_id(envoy.serial_number)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
@@ -314,7 +386,13 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: host,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
-                    },
+                        CONF_MANUAL_TOKEN: self.manual_token,
+                    }
+                    | (
+                        {CONF_TOKEN: envoy.auth.token}
+                        if isinstance(envoy.auth, EnvoyTokenAuth)
+                        else {}
+                    ),
                 )
 
         serial = reconfigure_entry.unique_id or "-"
@@ -322,13 +400,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: serial,
             CONF_HOST: reconfigure_entry.data[CONF_HOST],
         }
-        description_placeholders["serial"] = serial
-
+        description_placeholders.update(descriptions(serial, token))
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 self._async_generate_schema(),
-                without_avoid_reflect_keys(user_input or reconfigure_entry.data),
+                user_input or reconfigure_entry.data,
             ),
             description_placeholders=description_placeholders,
             errors=errors,

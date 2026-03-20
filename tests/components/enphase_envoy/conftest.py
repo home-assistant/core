@@ -29,8 +29,17 @@ from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.enphase_envoy.const import CONF_MANUAL_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
+
+from . import envoy_token
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -47,15 +56,40 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(
-    hass: HomeAssistant, config: dict[str, str]
+    hass: HomeAssistant,
+    config: dict[str, str],
+    request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
+    if not hasattr(request, "param"):
+        data = config
+    elif request.param == "auto":
+        # config contains token from automatic retrieval
+        data = {
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: envoy_token(),
+            CONF_MANUAL_TOKEN: False,
+        }
+    elif request.param == "manual":
+        # config contains token from manual entry
+        data = {
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_TOKEN: envoy_token(),
+            CONF_MANUAL_TOKEN: True,
+        }
+
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
         title="Envoy 1234",
         unique_id="1234",
-        data=config,
+        data=data,
     )
 
 

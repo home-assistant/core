@@ -49,8 +49,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
         entry_data = entry.data
-        self.username = entry_data[CONF_USERNAME]
-        self.password = entry_data[CONF_PASSWORD]
+        self.username = entry_data.get(CONF_USERNAME)
+        self.password = entry_data.get(CONF_PASSWORD)
         self._setup_complete = False
         self.envoy_firmware = ""
         self.interface = None

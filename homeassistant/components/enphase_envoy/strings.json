@@ -16,10 +16,14 @@
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data::use_manual_token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data_description::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data_description::use_manual_token%]",
           "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]"
         },
         "description": "[%key:component::enphase_envoy::config::step::user::description%]"
@@ -28,11 +32,15 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data::use_manual_token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]",
           "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data_description::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data_description::use_manual_token%]",
           "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]"
         },
         "description": "[%key:component::enphase_envoy::config::step::user::description%]"
@@ -41,11 +49,15 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "token": "Envoy access token",
+          "use_manual_token": "I want to enter the Envoy access token manually",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway.",
           "password": "Blank or Enphase Cloud password",
+          "token": "Use this link: [Enphase login]({enphase_url}) to get a new token. Current token lifetime: {token_life} days.",
+          "use_manual_token": "Check or uncheck this option and click submit if you want to enable or disable entering a token manually. If your Enphase Cloud account has multi-factor authentication enabled use this to add or update your token.",
           "username": "Installer or Enphase Cloud username"
         },
         "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models, enter username `installer` without a password."
