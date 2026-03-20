@@ -20,6 +20,10 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 When writing or modifying tests, ensure all test function parameters have type annotations.
 Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
 
+## Pull Requests
+
+Always use `.github/PULL_REQUEST_TEMPLATE.md` as the body structure when creating PRs with `gh pr create`. Do not invent a custom format.
+
 ## Good practices
 
 Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
