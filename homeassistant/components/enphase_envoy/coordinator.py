@@ -11,6 +11,7 @@ from typing import Any
 from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
 from pyenphase.models.home import EnvoyInterfaceInformation
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -20,13 +21,13 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, INVALID_AUTH_ERRORS
+from .const import CONF_MANUAL_TOKEN, DOMAIN, INVALID_AUTH_ERRORS
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
-STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
-NOTIFICATION_ID = "enphase_envoy_notification"
+STALE_TOKEN_THRESHOLD = 30  # days
+NOTIFICATION_ID = "enphase_envoy_token_notification"
 FIRMWARE_REFRESH_INTERVAL = timedelta(hours=4)
 MAC_VERIFICATION_DELAY = timedelta(seconds=34)
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +43,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     envoy_firmware: str
     config_entry: EnphaseConfigEntry
     interface: EnvoyInterfaceInformation | None
+    token_lifetime: int  # days of token life left
 
     def __init__(
         self, hass: HomeAssistant, envoy: Envoy, entry: EnphaseConfigEntry
@@ -51,12 +53,14 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         entry_data = entry.data
         self.username = entry_data.get(CONF_USERNAME)
         self.password = entry_data.get(CONF_PASSWORD)
+        self.manual_token = entry_data.get(CONF_MANUAL_TOKEN, False)
         self._setup_complete = False
         self.envoy_firmware = ""
         self.interface = None
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
         self._cancel_firmware_refresh: CALLBACK_TYPE | None = None
         self._cancel_mac_verification: CALLBACK_TYPE | None = None
+        self.token_lifetime = 0
         super().__init__(
             hass,
             _LOGGER,
@@ -66,19 +70,46 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
 
+    def _track_token_lifetime(self) -> bool:
+        """Update tokenlifetime and return if still fresh."""
+        assert isinstance(self.envoy.auth, EnvoyTokenAuth)
+        self.token_lifetime = int(
+            (self.envoy.auth.expire_timestamp - dt_util.utcnow().timestamp()) / 86400
+        )
+        return self.token_lifetime > STALE_TOKEN_THRESHOLD
+
     @callback
     def _async_refresh_token_if_needed(self, now: datetime.datetime) -> None:
         """Proactively refresh token if its stale in case cloud services goes down."""
         assert isinstance(self.envoy.auth, EnvoyTokenAuth)
-        expire_time = self.envoy.auth.expire_timestamp
-        remain = expire_time - now.timestamp()
-        fresh = remain > STALE_TOKEN_THRESHOLD
+        fresh = self._track_token_lifetime()
         name = self.name
-        _LOGGER.debug("%s: %s seconds remaining on token fresh=%s", name, remain, fresh)
+        _LOGGER.debug(
+            "%s: %s days remaining on token, fresh=%s, manual token mode=%s",
+            name,
+            self.token_lifetime,
+            fresh,
+            self.manual_token,
+        )
         if not fresh:
-            self.hass.async_create_background_task(
-                self._async_try_refresh_token(), "{name} token refresh"
+            if not self.manual_token:
+                self.hass.async_create_background_task(
+                    self._async_try_refresh_token(), "{name} token refresh"
+                )
+                return
+            # create persistent notification to warn user that manual token needs refresh
+            persistent_notification.async_create(
+                self.hass,
+                f"The envoy token is expiring in {self.token_lifetime} days, to refresh the token, use reconfigure for {self.name} in the Enphase envoy integration.",
+                title=f"Envoy token expiring in {self.token_lifetime} days",
+                notification_id=f"{NOTIFICATION_ID}_{self.envoy_serial_number}",
             )
+        if not self.manual_token:
+            return
+        # remove persistent notification that warned user to refresh manual token
+        persistent_notification.async_dismiss(
+            self.hass, f"{NOTIFICATION_ID}_{self.envoy_serial_number}"
+        )
 
     async def _async_try_refresh_token(self) -> None:
         """Try to refresh token."""
@@ -252,6 +283,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # startup without hitting the Cloud API
         # as long as the token is valid
         _LOGGER.debug("%s: Updating token in config entry from auth", self.name)
+        self._track_token_lifetime()
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             data={

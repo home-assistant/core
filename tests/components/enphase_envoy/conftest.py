@@ -61,26 +61,35 @@ def config_entry_fixture(
     request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
-    if not hasattr(request, "param"):
+    token_mode = "none"
+    token_life = 365
+    if hasattr(request, "param"):
+        if isinstance(request.param, list):
+            token_mode = request.param[0]
+            if len(request.param) > 1:
+                token_life = request.param[1]
+        else:
+            token_mode = request.param
+    if token_mode == "none":
         data = config
-    elif request.param == "auto":
+    elif token_mode == "auto":
         # config contains token from automatic retrieval
         data = {
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Envoy 1234",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            CONF_TOKEN: envoy_token(),
+            CONF_TOKEN: envoy_token(token_life),
             CONF_MANUAL_TOKEN: False,
         }
-    elif request.param == "manual":
+    elif token_mode == "manual":
         # config contains token from manual entry
         data = {
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Envoy 1234",
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
-            CONF_TOKEN: envoy_token(),
+            CONF_TOKEN: envoy_token(token_life),
             CONF_MANUAL_TOKEN: True,
         }
 
