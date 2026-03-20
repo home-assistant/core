@@ -853,3 +853,29 @@ async def test_websocket_subscribe_event_fetch_error(
     assert msg["id"] == subscription_id
     assert msg["type"] == "event"
     assert msg["event"]["events"] is None
+
+
+async def test_websocket_subscribe_invalid_timespan(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test subscribing with start after end returns an error."""
+    client = await hass_ws_client(hass)
+
+    now = dt_util.now()
+    start = now + timedelta(days=1)
+    end = now
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert "Start must be before end" in msg["error"]["message"]

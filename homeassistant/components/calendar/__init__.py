@@ -17,6 +17,7 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
 from homeassistant.components.websocket_api import (
+    ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ActiveConnection,
@@ -681,10 +682,20 @@ class CalendarEntity(Entity):
             return
 
         for start_date, end_date, listener in self._event_listeners:
-            # Schedule the async event fetching
-            self.hass.async_create_task(
-                self._async_update_listener(start_date, end_date, listener)
-            )
+            self.async_update_single_event_listener(start_date, end_date, listener)
+
+    @final
+    @callback
+    def async_update_single_event_listener(
+        self,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        listener: Callable[[list[JsonValueType] | None], None],
+    ) -> None:
+        """Schedule an event fetch and push to a single listener."""
+        self.hass.async_create_task(
+            self._async_update_listener(start_date, end_date, listener)
+        )
 
     async def _async_update_listener(
         self,
@@ -969,6 +980,14 @@ async def handle_calendar_event_subscribe(
     start_date = dt_util.as_local(msg["start"])
     end_date = dt_util.as_local(msg["end"])
 
+    if start_date >= end_date:
+        connection.send_error(
+            msg["id"],
+            ERR_INVALID_FORMAT,
+            "Start must be before end",
+        )
+        return
+
     @callback
     def event_listener(events: list[JsonValueType] | None) -> None:
         """Push updated calendar events to websocket."""
@@ -986,8 +1005,8 @@ async def handle_calendar_event_subscribe(
     )
     connection.send_result(msg["id"])
 
-    # Push an initial event list update
-    entity.async_update_event_listeners()
+    # Push initial events only to the new subscriber
+    entity.async_update_single_event_listener(start_date, end_date, event_listener)
 
 
 def _validate_timespan(
