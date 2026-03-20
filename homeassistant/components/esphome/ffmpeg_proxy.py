@@ -260,7 +260,7 @@ class FFmpegConvertResponse(web.StreamResponse):
             if not stderr_task.done():
                 try:
                     await asyncio.wait_for(stderr_task, timeout=1)
-                except (TimeoutError, asyncio.CancelledError):
+                except TimeoutError, asyncio.CancelledError:
                     stderr_task.cancel()
 
             if proc.returncode != 0:
