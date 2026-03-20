@@ -169,19 +169,6 @@
   })
 # ---
 # name: test_reconfigure_password_success[https://openapi-us.growatt.com/-user_input1-north_america]
-  FlowResultSnapshot({
-    'description_placeholders': None,
-    'errors': dict({
-    }),
-    'flow_id': <ANY>,
-    'handler': 'growatt_server',
-    'last_step': None,
-    'preview': None,
-    'step_id': 'reconfigure',
-    'type': <FlowResultType.FORM: 'form'>,
-  })
-# ---
-# name: test_reconfigure_password_success[https://openapi-us.growatt.com/-user_input1-north_america].1
   dict({
     'auth_type': 'password',
     'name': 'Test Plant',
@@ -192,19 +179,6 @@
   })
 # ---
 # name: test_reconfigure_password_success[https://openapi.growatt.com/-user_input0-other_regions]
-  FlowResultSnapshot({
-    'description_placeholders': None,
-    'errors': dict({
-    }),
-    'flow_id': <ANY>,
-    'handler': 'growatt_server',
-    'last_step': None,
-    'preview': None,
-    'step_id': 'reconfigure',
-    'type': <FlowResultType.FORM: 'form'>,
-  })
-# ---
-# name: test_reconfigure_password_success[https://openapi.growatt.com/-user_input0-other_regions].1
   dict({
     'auth_type': 'password',
     'name': 'Test Plant',

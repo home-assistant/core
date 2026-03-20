@@ -1,6 +1,8 @@
 """Tests for the Growatt server config flow."""
 
+from collections.abc import Callable
 from copy import deepcopy
+from typing import Any
 from unittest.mock import MagicMock
 
 import growattServer
@@ -719,7 +721,7 @@ async def test_password_auth_plant_list_invalid_format(
 )
 async def test_reauth_password_success(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     snapshot: SnapshotAssertion,
     stored_url: str,
     user_input: dict,
@@ -734,7 +736,7 @@ async def test_reauth_password_success(
             CONF_PASSWORD: "test_password",
             CONF_URL: stored_url,
             CONF_PLANT_ID: "123456",
-            "name": "Test Plant",
+            CONF_NAME: "Test Plant",
         },
         unique_id="123456",
     )
@@ -777,7 +779,7 @@ async def test_reauth_password_success(
 )
 async def test_reauth_password_error_then_recovery(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
     snapshot: SnapshotAssertion,
     login_side_effect: Exception | None,
@@ -815,7 +817,7 @@ async def test_reauth_password_error_then_recovery(
 
 async def test_reauth_token_success(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -853,7 +855,7 @@ def _make_no_privilege_error() -> growattServer.GrowattV1ApiError:
 )
 async def test_reauth_token_error_then_recovery(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     plant_list_side_effect: Exception,
@@ -888,7 +890,7 @@ async def test_reauth_token_error_then_recovery(
 
 async def test_reauth_token_non_auth_api_error(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth token with non-auth V1 API error (e.g. rate limit) shows cannot_connect."""
@@ -913,7 +915,7 @@ async def test_reauth_token_non_auth_api_error(
 
 async def test_reauth_password_invalid_response(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
 ) -> None:
     """Test reauth password flow with non-dict login response, then recovery."""
@@ -941,7 +943,7 @@ async def test_reauth_password_invalid_response(
 
 async def test_reauth_password_non_auth_login_failure(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -974,7 +976,7 @@ async def test_reauth_password_non_auth_login_failure(
 
 async def test_reauth_password_exception(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1005,7 +1007,7 @@ async def test_reauth_password_exception(
 
 async def test_reauth_token_exception(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1040,8 +1042,8 @@ async def test_reauth_unknown_auth_type(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={
             CONF_AUTH_TYPE: "unknown_type",
-            "plant_id": "123456",
-            "name": "Test Plant",
+            CONF_PLANT_ID: "123456",
+            CONF_NAME: "Test Plant",
         },
         unique_id="123456",
     )
@@ -1093,7 +1095,7 @@ async def test_reconfigure_password_success(
             CONF_PASSWORD: "test_password",
             CONF_URL: stored_url,
             CONF_PLANT_ID: "123456",
-            "name": "Test Plant",
+            CONF_NAME: "Test Plant",
         },
         unique_id="123456",
     )
@@ -1103,7 +1105,6 @@ async def test_reconfigure_password_success(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result == snapshot(exclude=props("data_schema"))
     region_key = next(
         k
         for k in result["data_schema"].schema
@@ -1122,15 +1123,15 @@ async def test_reconfigure_password_success(
 
 
 @pytest.mark.parametrize(
-    ("login_side_effect", "login_return_value"),
+    ("login_side_effect", "expected_error"),
     [
         (
-            None,
-            {"msg": LOGIN_INVALID_AUTH_CODE, "success": False},
+            lambda *args, **kwargs: {"msg": LOGIN_INVALID_AUTH_CODE, "success": False},
+            ERROR_INVALID_AUTH,
         ),
         (
             requests.exceptions.ConnectionError("Connection failed"),
-            None,
+            ERROR_CANNOT_CONNECT,
         ),
     ],
 )
@@ -1138,8 +1139,8 @@ async def test_reconfigure_password_error_then_recovery(
     hass: HomeAssistant,
     mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
-    login_side_effect: Exception | None,
-    login_return_value: dict | None,
+    login_side_effect: Exception | Callable[..., Any],
+    expected_error: str,
 ) -> None:
     """Test password reconfigure shows error then allows recovery."""
     mock_config_entry_classic.add_to_hass(hass)
@@ -1150,17 +1151,12 @@ async def test_reconfigure_password_error_then_recovery(
     assert result["step_id"] == "reconfigure"
 
     mock_growatt_classic_api.login.side_effect = login_side_effect
-    if login_return_value is not None:
-        mock_growatt_classic_api.login.return_value = login_return_value
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    expected_error = (
-        ERROR_INVALID_AUTH if login_side_effect is None else ERROR_CANNOT_CONNECT
-    )
     assert result["errors"] == {"base": expected_error}
 
     # Recover with correct credentials
@@ -1251,8 +1247,8 @@ async def test_reconfigure_unknown_auth_type(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={
             CONF_AUTH_TYPE: "unknown_type",
-            "plant_id": "123456",
-            "name": "Test Plant",
+            CONF_PLANT_ID: "123456",
+            CONF_NAME: "Test Plant",
         },
         unique_id="123456",
     )
