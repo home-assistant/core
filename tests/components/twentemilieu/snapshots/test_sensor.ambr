@@ -15,8 +15,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_christmas_tree_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -96,8 +97,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_non_recyclable_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -177,8 +179,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_organic_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -258,8 +261,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_packages_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -339,8 +343,9 @@
 # ---
 # name: test_sensors[sensor.twente_milieu_paper_waste_pickup].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
