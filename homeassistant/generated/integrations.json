@@ -973,6 +973,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "casper_glow": {
+      "name": "Casper Glow",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ccm15": {
       "name": "Midea ccm15 AC Controller",
       "integration_type": "hub",
@@ -1472,6 +1478,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "dropbox": {
+      "name": "Dropbox",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "droplet": {
       "name": "Droplet",
@@ -3676,6 +3688,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "lichess": {
+      "name": "Lichess",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "lidarr": {
       "name": "Lidarr",
@@ -7767,6 +7785,12 @@
     },
     "wiffi": {
       "name": "Wiffi",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "wiim": {
+      "name": "WiiM",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"

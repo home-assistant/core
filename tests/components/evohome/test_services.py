@@ -139,6 +139,27 @@ async def test_clear_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
+async def test_clear_zone_override_legacy(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test Evohome's clear_zone_override service with the legacy entity_id."""
+
+    # EvoZoneMode.FOLLOW_SCHEDULE
+    with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.CLEAR_ZONE_OVERRIDE,
+            {
+                ATTR_ENTITY_ID: zone_id,
+            },
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
 async def test_set_zone_override(
     hass: HomeAssistant,
     zone_id: str,
@@ -172,6 +193,48 @@ async def test_set_zone_override(
                 ATTR_DURATION: {"minutes": 135},
             },
             target={ATTR_ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(
+            19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
+        )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_legacy(
+    hass: HomeAssistant,
+    zone_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_zone_override service with the legacy entity_id."""
+
+    freezer.move_to("2024-07-10T12:00:00+00:00")
+
+    # EvoZoneMode.PERMANENT_OVERRIDE
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                ATTR_ENTITY_ID: zone_id,
+                ATTR_SETPOINT: 19.5,
+            },
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(19.5, until=None)
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                ATTR_ENTITY_ID: zone_id,
+                ATTR_SETPOINT: 19.5,
+                ATTR_DURATION: {"minutes": 135},
+            },
             blocking=True,
         )
 
