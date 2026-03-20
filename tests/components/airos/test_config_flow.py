@@ -213,6 +213,7 @@ async def test_reauth_flow_scenario(
     ap_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful reauthentication."""
     mock_config_entry.add_to_hass(hass)
@@ -220,11 +221,15 @@ async def test_reauth_flow_scenario(
     mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    flow = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    with patch(
+        "homeassistant.components.airos.config_flow.async_get_firmware_data",
+        side_effect=AirOSConnectionAuthenticationError,
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+            data=mock_config_entry.data,
+        )
 
     assert flow["type"] == FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
@@ -236,20 +241,22 @@ async def test_reauth_flow_scenario(
         hostname=ap_fixture.host.hostname,
     )
 
+    mock_firmware = AsyncMock(return_value=valid_data)
     with (
         patch(
             "homeassistant.components.airos.config_flow.async_get_firmware_data",
-            new=AsyncMock(return_value=valid_data),
+            new=mock_firmware,
         ),
         patch(
             "homeassistant.components.airos.async_get_firmware_data",
-            new=AsyncMock(return_value=valid_data),
+            new=mock_firmware,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             user_input={CONF_PASSWORD: NEW_PASSWORD},
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Always test resolution
     assert result["type"] is FlowResultType.ABORT

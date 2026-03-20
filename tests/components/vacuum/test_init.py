@@ -24,6 +24,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import (
@@ -277,6 +278,41 @@ async def test_clean_area_service(
 
 
 @pytest.mark.usefixtures("config_flow_fixture")
+async def test_clean_area_not_configured(hass: HomeAssistant) -> None:
+    """Test clean_area raises when area mapping is not configured."""
+    mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": ["area_1"]},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "area_mapping_not_configured"
+    assert exc_info.value.translation_placeholders == {
+        "entity_id": mock_vacuum.entity_id
+    }
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
 @pytest.mark.parametrize(
     ("area_mapping", "targeted_areas"),
     [
@@ -307,13 +343,6 @@ async def test_clean_area_no_segments(
     setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": targeted_areas},
-        blocking=True,
-    )
 
     entity_registry.async_update_entity_options(
         mock_vacuum.entity_id,
@@ -485,80 +514,6 @@ async def test_segments_changed_issue(
     await hass.async_block_till_done()
 
     assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
-
-
-@pytest.mark.usefixtures("config_flow_fixture")
-@pytest.mark.parametrize("area_mapping", [{"area_1": ["seg_1"]}, {}])
-async def test_segments_mapping_not_configured_issue(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    area_mapping: dict[str, list[str]],
-) -> None:
-    """Test segments_mapping_not_configured issue."""
-    mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=help_async_setup_entry_init,
-            async_unload_entry=help_async_unload_entry,
-        ),
-    )
-    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_entry = entity_registry.async_get(mock_vacuum.entity_id)
-
-    issue_id = f"segments_mapping_not_configured_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.translation_key == "segments_mapping_not_configured"
-
-    entity_registry.async_update_entity_options(
-        mock_vacuum.entity_id,
-        DOMAIN,
-        {
-            "area_mapping": area_mapping,
-            "last_seen_segments": [asdict(segment) for segment in mock_vacuum.segments],
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
-
-
-@pytest.mark.usefixtures("config_flow_fixture")
-async def test_no_segments_mapping_issue_without_clean_area(
-    hass: HomeAssistant,
-) -> None:
-    """Test no repair issue is created when CLEAN_AREA is not supported."""
-    mock_vacuum = MockVacuum(name="Testing", entity_id="vacuum.testing")
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=help_async_setup_entry_init,
-            async_unload_entry=help_async_unload_entry,
-        ),
-    )
-    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    issues = ir.async_get(hass).issues
-    assert not any(
-        issue_id[1].startswith("segments_mapping_not_configured") for issue_id in issues
-    )
 
 
 @pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
