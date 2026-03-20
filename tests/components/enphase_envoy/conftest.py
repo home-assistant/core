@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-import jwt
 import multidict
 from pyenphase import (
     EnvoyACBPower,
@@ -118,11 +117,7 @@ async def mock_envoy(
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[AsyncMock]:
     """Define a mocked Envoy fixture."""
-    new_token = jwt.encode(
-        payload={"name": "envoy", "exp": 2007837780},
-        key="secret",
-        algorithm="HS256",
-    )
+    new_token = envoy_token()
     with (
         patch(
             "homeassistant.components.enphase_envoy.config_flow.Envoy",
@@ -139,11 +134,7 @@ async def mock_envoy(
     ):
         mock_envoy = mock_client.return_value
         # Add the fixtures specified
-        token = jwt.encode(
-            payload={"name": "envoy", "exp": 1907837780},
-            key="secret",
-            algorithm="HS256",
-        )
+        token = envoy_token(200)
         mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
         mock_envoy.serial_number = "1234"
         mock = Mock()

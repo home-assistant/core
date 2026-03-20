@@ -63,6 +63,7 @@ _LOGGER = logging.getLogger(__name__)
 
 INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
+TOKEN_LIFETIME = "token_lifetime"
 
 PARALLEL_UPDATES = 0
 
@@ -624,6 +625,26 @@ CT_PHASE_SENSORS = {
 
 
 @dataclass(frozen=True, kw_only=True)
+class EnvoyCoordinatorSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy coordinator sensor entity."""
+
+    value_fn: Callable[[EnphaseUpdateCoordinator], str | float | int]
+
+
+ENVOY_COORDINATOR_SENSORS = (
+    EnvoyCoordinatorSensorEntityDescription(
+        key=TOKEN_LIFETIME,
+        translation_key=TOKEN_LIFETIME,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter(TOKEN_LIFETIME),
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
 class EnvoyEnchargeSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Encharge sensor entity."""
 
@@ -1025,6 +1046,10 @@ async def async_setup_entry(
         entities.extend(
             EnvoyC6CCEntity(coordinator, description) for description in C6CC_SENSORS
         )
+    entities.extend(
+        EnvoyCoordinatorSensorEntity(coordinator, description)
+        for description in ENVOY_COORDINATOR_SENSORS
+    )
 
     async_add_entities(entities)
 
@@ -1170,6 +1195,19 @@ class EnvoyCTEntity(EnvoySystemSensorEntity):
         if (cttype := self.entity_description.cttype) not in self.data.ctmeters:
             return None
         return self.entity_description.value_fn(self.data.ctmeters[cttype])
+
+
+class EnvoyCoordinatorSensorEntity(EnvoySystemSensorEntity):
+    """Envoy Coordinator entity."""
+
+    entity_description: EnvoyCoordinatorSensorEntityDescription
+
+    @property
+    def native_value(
+        self,
+    ) -> int | float | str | None:
+        """Return the coordinator data."""
+        return self.entity_description.value_fn(self.coordinator)
 
 
 class EnvoyCTPhaseEntity(EnvoySystemSensorEntity):

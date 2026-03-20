@@ -661,6 +661,9 @@
       "storage_ct_voltage_phase": {
         "name": "Voltage storage CT {phase_name}"
       },
+      "token_lifetime": {
+        "name": "Token lifetime"
+      },
       "total_consumption_ct_current": {
         "name": "Total consumption CT current"
       },
