@@ -306,7 +306,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.lichess
-aiolichess==1.1.0
+aiolichess==1.2.0
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2

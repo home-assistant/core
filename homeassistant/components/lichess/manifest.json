@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["aiolichess==1.1.0"]
+  "requirements": ["aiolichess==1.2.0"]
 }
