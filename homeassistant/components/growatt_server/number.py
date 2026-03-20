@@ -9,9 +9,10 @@ from growattServer import GrowattV1ApiError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -90,6 +91,17 @@ MIN_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
 )
 
 
+def _create_numbers_for_device(
+    coordinator: GrowattCoordinator,
+) -> list[GrowattNumber]:
+    """Create number entities for a device coordinator."""
+    if coordinator.device_type == "min" and coordinator.api_version == "v1":
+        return [
+            GrowattNumber(coordinator, description) for description in MIN_NUMBER_TYPES
+        ]
+    return []
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GrowattConfigEntry,
@@ -98,15 +110,29 @@ async def async_setup_entry(
     """Set up Growatt number entities."""
     runtime_data = entry.runtime_data
 
-    # Add number entities for each MIN device (only supported with V1 API)
     async_add_entities(
-        GrowattNumber(device_coordinator, description)
-        for device_coordinator in runtime_data.devices.values()
-        if (
-            device_coordinator.device_type == "min"
-            and device_coordinator.api_version == "v1"
+        entity
+        for coordinator in runtime_data.devices.values()
+        for entity in _create_numbers_for_device(coordinator)
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[GrowattCoordinator]) -> None:
+        """Add number entities for new devices."""
+        new_entities = [
+            entity
+            for coordinator in coordinators
+            for entity in _create_numbers_for_device(coordinator)
+        ]
+        if new_entities:
+            async_add_entities(new_entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_new_device_{entry.entry_id}",
+            _async_new_device,
         )
-        for description in MIN_NUMBER_TYPES
     )
 
 

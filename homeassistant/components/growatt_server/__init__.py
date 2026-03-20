@@ -25,6 +25,7 @@ Error handling pattern for reauth:
 """
 
 from collections.abc import Mapping
+import datetime
 from json import JSONDecodeError
 import logging
 
@@ -34,7 +35,9 @@ from requests import RequestException
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -46,6 +49,7 @@ from .const import (
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DEPRECATED_URLS,
+    DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
@@ -368,6 +372,103 @@ async def async_setup_entry(
 
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
+        """Scan for new or removed devices and update HA accordingly."""
+        try:
+            if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
+                scan_api = growattServer.OpenApiV1(token=config[CONF_TOKEN])
+                scan_api.server_url = url
+                current_devices, _ = await hass.async_add_executor_job(
+                    get_device_list_v1, scan_api, config
+                )
+            elif config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
+                scan_api, _ = await _create_api_and_login(
+                    hass,
+                    config[CONF_USERNAME],
+                    config[CONF_PASSWORD],
+                    url,
+                )
+                current_devices = await hass.async_add_executor_job(
+                    scan_api.device_list, plant_id
+                )
+            else:
+                return
+        except (
+            ConfigEntryAuthFailed,
+            ConfigEntryError,
+            RequestException,
+            JSONDecodeError,
+        ):
+            _LOGGER.debug("Failed to scan for new/removed devices")
+            return
+        except Exception:
+            _LOGGER.exception("Unexpected error scanning for new devices")
+            return
+
+        runtime_data = config_entry.runtime_data
+        current_device_sns = {device["deviceSn"] for device in current_devices}
+
+        # Remove stale devices
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        ):
+            device_domain_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if not device_domain_ids:
+                continue
+            # Skip the plant "total" device
+            if plant_id in device_domain_ids:
+                continue
+            if device_domain_ids.isdisjoint(current_device_sns):
+                for device_sn in device_domain_ids:
+                    if coordinator := runtime_data.devices.pop(device_sn, None):
+                        await coordinator.async_shutdown()
+                device_registry.async_update_device(
+                    device_entry.id,
+                    remove_config_entry_id=config_entry.entry_id,
+                )
+
+        # Add new devices
+        new_coordinators: list[GrowattCoordinator] = []
+        for device in current_devices:
+            device_sn = device["deviceSn"]
+            device_type = device["deviceType"]
+            if device_sn in runtime_data.devices:
+                continue
+            if device_type not in ["inverter", "tlx", "storage", "mix", "min", "sph"]:
+                _LOGGER.debug(
+                    "New device %s with type %s is not supported, skipping",
+                    device_sn,
+                    device_type,
+                )
+                continue
+            coordinator = GrowattCoordinator(
+                hass, config_entry, device_sn, device_type, plant_id
+            )
+            await coordinator.async_refresh()
+            if not coordinator.last_update_success:
+                _LOGGER.debug("Failed to refresh new device %s, skipping", device_sn)
+                continue
+            runtime_data.devices[device_sn] = coordinator
+            new_coordinators.append(coordinator)
+
+        if new_coordinators:
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_new_device_{config_entry.entry_id}",
+                new_coordinators,
+            )
+
+    config_entry.async_on_unload(
+        async_track_time_interval(
+            hass, _async_scan_for_new_devices, DEVICE_SCAN_INTERVAL
+        )
+    )
 
     return True
 

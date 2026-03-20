@@ -1,6 +1,10 @@
 """Define constants for the Growatt Server component."""
 
+from datetime import timedelta
+
 from homeassistant.const import Platform
+
+DEVICE_SCAN_INTERVAL = timedelta(minutes=10)
 
 CONF_PLANT_ID = "plant_id"
 CONF_REGION = "region"

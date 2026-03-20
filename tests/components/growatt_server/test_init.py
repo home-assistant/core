@@ -17,6 +17,7 @@ from homeassistant.components.growatt_server.const import (
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
+    DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     V1_API_ERROR_NO_PRIVILEGE,
@@ -802,3 +803,103 @@ async def test_migrate_already_migrated(
 
     # Plant ID should remain unchanged
     assert mock_config_entry.data[CONF_PLANT_ID] == "specific_plant_123"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_dynamic_device_added(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that new devices are dynamically added when discovered during a scan."""
+    # Initially only MIN123456 device exists
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")}) is None
+
+    # Mock a new device appearing in the device list
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [
+            {"device_sn": "MIN123456", "type": 7},
+            {"device_sn": "NEW456789", "type": 7},
+        ]
+    }
+    mock_growatt_v1_api.min_detail.return_value = {
+        "deviceSn": "NEW456789",
+        "acChargeEnable": 0,
+    }
+
+    # Trigger the periodic device scan
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # New device should now be in the device registry
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")})
+        is not None
+    )
+    # New device should be in runtime_data
+    assert "NEW456789" in mock_config_entry.runtime_data.devices
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_stale_device_removed(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that stale devices are removed from the device registry during a scan."""
+    # Initially MIN123456 device exists
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
+
+    # Mock the device disappearing from the API
+    mock_growatt_v1_api.device_list.return_value = {"devices": []}
+
+    # Trigger the periodic device scan
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The device should be removed from HA
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")}) is None
+    # The coordinator should be removed from runtime_data
+    assert "MIN123456" not in mock_config_entry.runtime_data.devices
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_scan_error_is_silent(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that errors during device scan are handled gracefully without crashing."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Simulate a scan failure
+    mock_growatt_v1_api.device_list.side_effect = growattServer.GrowattV1ApiError(
+        "Temporary error"
+    )
+
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Integration should remain loaded - scan errors are non-fatal
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Existing device should still be present
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
