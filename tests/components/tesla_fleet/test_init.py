@@ -141,20 +141,18 @@ async def test_invalidate_access_token_updates_when_not_expired(
     normal_config_entry: MockConfigEntry,
 ) -> None:
     """Test invalidating token updates entry when token is not expired."""
-
-    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
-        _invalidate_access_token(hass, normal_config_entry)
-
-    mock_update_entry.assert_called_once_with(
-        normal_config_entry,
-        data={
-            **normal_config_entry.data,
-            CONF_TOKEN: {
-                **normal_config_entry.data[CONF_TOKEN],
-                "expires_at": 0,
-            },
+    normal_config_entry.add_to_hass(hass)
+    expected_data = {
+        **dict(normal_config_entry.data),
+        CONF_TOKEN: {
+            **normal_config_entry.data[CONF_TOKEN],
+            "expires_at": 0,
         },
-    )
+    }
+
+    _invalidate_access_token(hass, normal_config_entry)
+
+    assert dict(normal_config_entry.data) == expected_data
 
 
 async def test_invalidate_access_token_noop_when_already_expired(
@@ -162,12 +160,13 @@ async def test_invalidate_access_token_noop_when_already_expired(
     normal_config_entry: MockConfigEntry,
 ) -> None:
     """Test invalidating token does not update an already expired token."""
-
+    normal_config_entry.add_to_hass(hass)
     normal_config_entry.data[CONF_TOKEN]["expires_at"] = 0
-    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
-        _invalidate_access_token(hass, normal_config_entry)
+    before_data = dict(normal_config_entry.data)
 
-    mock_update_entry.assert_not_called()
+    _invalidate_access_token(hass, normal_config_entry)
+
+    assert dict(normal_config_entry.data) == before_data
 
 
 async def test_invalidate_access_token_noop_when_token_missing(
@@ -179,11 +178,12 @@ async def test_invalidate_access_token_noop_when_token_missing(
         domain=DOMAIN,
         data={"auth_implementation": DOMAIN},
     )
+    missing_token_entry.add_to_hass(hass)
+    before_data = dict(missing_token_entry.data)
 
-    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
-        _invalidate_access_token(hass, missing_token_entry)
+    _invalidate_access_token(hass, missing_token_entry)
 
-    mock_update_entry.assert_not_called()
+    assert dict(missing_token_entry.data) == before_data
 
 
 # Test devices
