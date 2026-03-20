@@ -15,6 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN
 from .hap import AsyncHome, HomematicipHAP
@@ -198,8 +199,20 @@ class HomematicipGenericEntity(Entity):
         )
 
     @property
-    def name(self) -> str:
-        """Return the name of the generic entity."""
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the generic entity.
+
+        Entities with has_entity_name delegate to HA's standard naming
+        machinery (translation_key, entity_description, device_class).
+        Legacy entities use the original naming logic.
+        """
+        if self.has_entity_name:
+            if not self.platform_data:
+                return self._name_internal(None, {})
+            return self._name_internal(
+                self._device_class_name,
+                self.platform_data.platform_translations,
+            )
 
         name = ""
         # Try to get a label from a channel.

@@ -37,6 +37,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "rain": {
+        "name": "Raining"
+      }
+    },
     "light": {
       "optical_signal_light": {
         "state_attributes": {
