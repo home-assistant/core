@@ -395,7 +395,7 @@ async def async_setup_entry(
                     current_url,
                 )
                 current_devices = await hass.async_add_executor_job(
-                    scan_api.device_list, plant_id
+                    scan_api.device_list, current_config[CONF_PLANT_ID]
                 )
             else:
                 return
@@ -458,6 +458,7 @@ async def async_setup_entry(
             await coordinator.async_refresh()
             if not coordinator.last_update_success:
                 _LOGGER.debug("Failed to refresh new device %s, skipping", device_sn)
+                await coordinator.async_shutdown()
                 continue
             runtime_data.devices[device_sn] = coordinator
             new_coordinators.append(coordinator)
