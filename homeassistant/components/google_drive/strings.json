@@ -68,7 +68,7 @@
       "message": "Authentication failed"
     },
     "authentication_not_valid": {
-      "message": "OAuth session is not valid, reauth required"
+      "message": "OAuth session is not valid, reauthentication required"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
