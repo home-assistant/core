@@ -27,6 +27,8 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
 
+            self._async_abort_entries_match({CONF_HOST: host})
+
             # Connect and verify it's a Qube by reading software version
             client = QubeClient(host, DEFAULT_PORT)
             try:
@@ -43,8 +45,6 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.close()
 
             if not errors:
-                self._async_abort_entries_match({CONF_HOST: host})
-
                 return self.async_create_entry(
                     title="Qube Heat Pump",
                     data={

@@ -80,8 +80,6 @@ async def test_sensor_with_none_status_code(
 
     await setup_integration(hass, mock_config_entry)
 
-    # Find the status sensor
-    states = hass.states.async_all("sensor")
-    status_states = [s for s in states if "status" in s.entity_id]
-    assert len(status_states) == 1
-    assert status_states[0].state == "unknown"
+    state = hass.states.get("sensor.qube_heat_pump_heat_pump_status")
+    assert state is not None
+    assert state.state == "unknown"
