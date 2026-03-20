@@ -67,10 +67,13 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
+    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
+    ATTR_PUSH_TOKEN,
+    ATTR_PUSH_URL,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_DISABLED,
@@ -99,6 +102,7 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
@@ -797,4 +801,88 @@ async def webhook_scan_tag(
         hass.data[DOMAIN][DATA_DEVICES][config_entry.data[CONF_WEBHOOK_ID]].id,
         registration_context(config_entry.data),
     )
+    return empty_okay_response()
+
+
+@WEBHOOK_COMMANDS.register("update_live_activity_token")
+@validate_schema(
+    {
+        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
+        vol.Required(ATTR_PUSH_TOKEN): cv.string,
+        vol.Required(ATTR_PUSH_URL): cv.url,
+        vol.Optional("apns_environment", default="production"): vol.In(
+            ["sandbox", "production"]
+        ),
+    }
+)
+async def webhook_update_live_activity_token(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
+) -> Response:
+    """Handle a Live Activity token update from the iOS companion app.
+
+    When the iOS app creates a Live Activity locally, ActivityKit provides
+    a per-activity APNs push token. The app sends this token (along with
+    the relay server URL and APNs environment) so HA can later push updates
+    to that specific activity via the relay server's Live Activity endpoint.
+    """
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
+
+    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
+        ATTR_PUSH_TOKEN: data[ATTR_PUSH_TOKEN],
+        ATTR_PUSH_URL: data[ATTR_PUSH_URL],
+        "apns_environment": data["apns_environment"],
+    }
+
+    device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+    hass.bus.async_fire(
+        f"{DOMAIN}_live_activity_token_updated",
+        {
+            ATTR_LIVE_ACTIVITY_TAG: activity_tag,
+            "device_id": device.id,
+            "webhook_id": webhook_id,
+        },
+        context=registration_context(config_entry.data),
+    )
+
+    return empty_okay_response()
+
+
+@WEBHOOK_COMMANDS.register("live_activity_dismissed")
+@validate_schema(
+    {
+        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
+    }
+)
+async def webhook_live_activity_dismissed(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
+) -> Response:
+    """Handle a Live Activity dismissal from the iOS companion app.
+
+    When a Live Activity ends on the device (user dismissal, expiration,
+    or an explicit end event), the app notifies HA so the stored push
+    token for that activity can be cleaned up.
+    """
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
+
+    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    if webhook_id in live_activity_tokens:
+        live_activity_tokens[webhook_id].pop(activity_tag, None)
+        # Clean up the device key if no activities remain.
+        if not live_activity_tokens[webhook_id]:
+            del live_activity_tokens[webhook_id]
+
+    device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+    hass.bus.async_fire(
+        f"{DOMAIN}_live_activity_dismissed",
+        {
+            ATTR_LIVE_ACTIVITY_TAG: activity_tag,
+            "device_id": device.id,
+            "webhook_id": webhook_id,
+        },
+        context=registration_context(config_entry.data),
+    )
+
     return empty_okay_response()

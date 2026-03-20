@@ -1303,3 +1303,153 @@ async def test_sending_sensor_state(
     state = hass.states.get("sensor.test_1_battery_health")
     assert state is not None
     assert state.state == "okay-ish"
+
+
+async def test_webhook_update_live_activity_token(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that we can store a Live Activity push token."""
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
+    assert device is not None
+
+    events = async_capture_events(hass, f"{DOMAIN}_live_activity_token_updated")
+
+    webhook_id = create_registrations[1]["webhook_id"]
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "update_live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "push_url": "http://localhost/mock-push/iOS/liveActivity/v1",
+                "apns_environment": "sandbox",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    result = await resp.json()
+    assert result == {}
+
+    # Verify token was stored in hass.data
+    tokens = hass.data[DOMAIN]["live_activity_tokens"]
+    assert webhook_id in tokens
+    assert tokens[webhook_id]["washer_cycle"]["push_token"] == (
+        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    )
+    assert tokens[webhook_id]["washer_cycle"]["push_url"] == (
+        "http://localhost/mock-push/iOS/liveActivity/v1"
+    )
+    assert tokens[webhook_id]["washer_cycle"]["apns_environment"] == "sandbox"
+
+    # Verify event was fired
+    assert len(events) == 1
+    assert events[0].data["tag"] == "washer_cycle"
+    assert events[0].data["device_id"] == device.id
+    assert events[0].data["webhook_id"] == webhook_id
+
+
+async def test_webhook_update_live_activity_token_defaults_production(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that apns_environment defaults to production."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "update_live_activity_token",
+            "data": {
+                "tag": "ev_charge",
+                "push_token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                "push_url": "http://localhost/mock-push/iOS/liveActivity/v1",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    tokens = hass.data[DOMAIN]["live_activity_tokens"]
+    assert tokens[webhook_id]["ev_charge"]["apns_environment"] == "production"
+
+
+async def test_webhook_live_activity_dismissed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that we can dismiss a Live Activity and clean up its token."""
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
+    assert device is not None
+
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    # First register a token
+    await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "update_live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "push_url": "http://localhost/mock-push/iOS/liveActivity/v1",
+            },
+        },
+    )
+
+    # Verify token is stored
+    tokens = hass.data[DOMAIN]["live_activity_tokens"]
+    assert webhook_id in tokens
+    assert "washer_cycle" in tokens[webhook_id]
+
+    # Now dismiss it
+    events = async_capture_events(hass, f"{DOMAIN}_live_activity_dismissed")
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_dismissed",
+            "data": {
+                "tag": "washer_cycle",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    result = await resp.json()
+    assert result == {}
+
+    # Verify token was removed — webhook_id key also cleaned up since no activities remain
+    assert webhook_id not in tokens
+
+    # Verify event was fired
+    assert len(events) == 1
+    assert events[0].data["tag"] == "washer_cycle"
+    assert events[0].data["device_id"] == device.id
+
+
+async def test_webhook_live_activity_dismissed_nonexistent_tag(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that dismissing a nonexistent tag does not error."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_dismissed",
+            "data": {
+                "tag": "nonexistent_activity",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
