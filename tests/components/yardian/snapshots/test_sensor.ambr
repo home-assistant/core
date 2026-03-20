@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_entities[sensor.yardian_smart_sprinkler_active_zones-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_sensor_entities[sensor.yardian_smart_sprinkler_rain_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -111,8 +113,9 @@
 # ---
 # name: test_sensor_entities[sensor.yardian_smart_sprinkler_water_hammer_reduction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -165,8 +168,9 @@
 # ---
 # name: test_sensor_entities[sensor.yardian_smart_sprinkler_zone_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

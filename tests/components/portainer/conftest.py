@@ -9,7 +9,7 @@ from pyportainer.models.docker import (
     DockerSystemDF,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
-from pyportainer.models.portainer import Endpoint
+from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
 from pyportainer.models.stacks import Stack
 import pytest
 
@@ -29,6 +29,7 @@ MOCK_TEST_CONFIG = {
 }
 
 TEST_ENTRY = "portainer_test_entry_123"
+TEST_INSTANCE_ID = "299ab403-70a8-4c05-92f7-bf7a994d50df"
 
 
 @pytest.fixture
@@ -77,6 +78,9 @@ def mock_portainer_client() -> Generator[AsyncMock]:
             Stack.from_dict(stack)
             for stack in load_json_array_fixture("stacks.json", DOMAIN)
         ]
+        client.portainer_system_status.return_value = PortainerSystemStatus.from_dict(
+            load_json_value_fixture("portainer_system_status.json", DOMAIN)
+        )
 
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
@@ -95,7 +99,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Portainer test",
         data=MOCK_TEST_CONFIG,
-        unique_id=MOCK_TEST_CONFIG[CONF_API_TOKEN],
+        unique_id=TEST_INSTANCE_ID,
         entry_id=TEST_ENTRY,
-        version=2,
+        version=5,
     )
