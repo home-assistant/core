@@ -91,15 +91,11 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
         host_str = str(host)
         try:
             device = await self._discover_device_by_ip(host_str)
-            if device is None:
-                errors = {"base": "device_not_found"}
-                return self.async_show_form(
-                    step_id="manual", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-                )
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors = {"base": "device_not_found"}
-        else:
+
+        if device:
             await self.async_set_unique_id(device.system_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
@@ -119,13 +115,14 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors = {"base": "cannot_connect"}
-        else:
-            await self.async_set_unique_id(host_str)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=host_str, data={CONF_HOST: host_str})
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+            return self.async_show_form(
+                step_id="manual",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors=errors,
+            )
+        await self.async_set_unique_id(host_str)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=host_str, data={CONF_HOST: host_str})
 
     async def _discovery(self) -> list[AirtouchDevice]:
         """Discover Airtouch devices on the network."""
