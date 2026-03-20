@@ -29,9 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) ->
             await hass.async_add_executor_job(py_touchline.get_number_of_devices)
         )
     except (OSError, ConnectionError, TimeoutError) as err:
-        _LOGGER.warning(
-            "Error while connecting to Touchline controller at %s", host, exc_info=True
-        )
         raise ConfigEntryNotReady(
             f"Error while connecting to Touchline controller at {host}"
         ) from err
