@@ -845,6 +845,8 @@ async def test_dynamic_device_added(
     )
     # New device should be in runtime_data
     assert "NEW456789" in mock_config_entry.runtime_data.devices
+    # Entities for the new device should have been created via the dispatcher
+    assert hass.states.get("switch.new456789_charge_from_grid") is not None
 
 
 @pytest.mark.usefixtures("init_integration")
