@@ -68,12 +68,23 @@ async def _validate_input(
     description_placeholders: dict[str, str],
 ) -> bool:
     try:
-        if user_input.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get("enable_custom_laqi"):
+        custom_options = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS) or {}
+        enable_custom_laqi = custom_options.get("enable_custom_laqi")
+
+        if enable_custom_laqi:
+            country = custom_options.get("country")
+            custom_laqi = custom_options.get("custom_laqi")
+
+            # When custom LAQI is enabled, both country and custom_laqi must be provided
+            if not country or not custom_laqi:
+                errors[CUSTOM_LOCAL_AQI_OPTIONS] = "missing_custom_laqi_options"
+                return False
+
             await api.async_get_current_conditions(
                 lat=user_input[CONF_LOCATION][CONF_LATITUDE],
                 lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
-                region_code=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["country"],
-                custom_local_aqi=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["custom_laqi"],
+                region_code=country,
+                custom_local_aqi=custom_laqi,
             )
         else:
             await api.async_get_current_conditions(
@@ -234,7 +245,6 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             "air_quality_coverage_url": AIR_QUALITY_COVERAGE_URL
         }
         if user_input is not None:
-            _LOGGER.debug("User input: %s", user_input)
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
                 errors["base"] = "location_already_configured"
             if _is_location_name_already_configured(self.hass, user_input[CONF_NAME]):
