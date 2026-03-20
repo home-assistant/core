@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import InelnetConfigEntry
-from .const import DOMAIN, Action
+from .const import CONF_CHANNELS, DOMAIN, Action
 
 # Button kinds: (unique_id_suffix, action) – name from entity translation key
 BUTTON_UP_SHORT = ("short_up", Action.UP_SHORT)
@@ -22,8 +22,9 @@ BUTTON_PROGRAM = ("program", Action.PROGRAM)
 
 def _device_info(entry: ConfigEntry, channel: int) -> DeviceInfo:
     """Build DeviceInfo for a channel (same as cover so entities share one device)."""
+    unique_base = entry.unique_id or entry.entry_id
     return DeviceInfo(
-        identifiers={(DOMAIN, f"{entry.entry_id}-ch{channel}")},
+        identifiers={(DOMAIN, f"{unique_base}-ch{channel}")},
         manufacturer="INELNET",
         model="Blinds controller",
         translation_key="channel",
@@ -39,9 +40,10 @@ async def async_setup_entry(
     """Set up three buttons per channel. Each channel is one device."""
     data = entry.runtime_data
     clients = data.clients
+    channels = entry.data[CONF_CHANNELS]
 
     entities: list[InelnetButtonEntity] = []
-    for channel in data.channels:
+    for channel in channels:
         client = clients[channel]
         for translation_key, act_code in (
             BUTTON_UP_SHORT,
@@ -79,7 +81,8 @@ class InelnetButtonEntity(ButtonEntity):
         self._client = client
         self._action = action
         ch = client.channel
-        self._attr_unique_id = f"{entry.entry_id}-ch{ch}-{unique_id_suffix}"
+        unique_base = entry.unique_id or entry.entry_id
+        self._attr_unique_id = f"{unique_base}-ch{ch}-{unique_id_suffix}"
         self._attr_translation_key = translation_key
         self._attr_device_info = _device_info(entry, ch)
 

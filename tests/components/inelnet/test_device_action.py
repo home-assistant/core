@@ -45,8 +45,6 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={"host": "192.168.1.67", "channels": [1]},
     )
     entry.runtime_data = InelnetRuntimeData(
-        host="192.168.1.67",
-        channels=[1],
         clients={1: _mock_client(1)},
     )
     entry.add_to_hass(hass)
@@ -241,8 +239,6 @@ async def test_get_actions_returns_empty_when_identifier_has_no_ch_suffix(
         data={"host": "192.168.1.1", "channels": [1]},
     )
     entry.runtime_data = InelnetRuntimeData(
-        host="192.168.1.1",
-        channels=[1],
         clients={1: _mock_client(1)},
     )
     entry.add_to_hass(hass)
@@ -266,8 +262,6 @@ async def test_get_actions_returns_empty_when_channel_parse_fails(
         data={"host": "192.168.1.1", "channels": [1]},
     )
     entry.runtime_data = InelnetRuntimeData(
-        host="192.168.1.1",
-        channels=[1],
         clients={1: _mock_client(1)},
     )
     entry.add_to_hass(hass)
@@ -321,25 +315,44 @@ async def test_get_actions_returns_empty_when_entry_has_no_runtime_data(
     assert actions == []
 
 
-async def test_get_actions_returns_empty_when_runtime_data_has_no_host(
+async def test_get_actions_returns_empty_when_entry_data_has_no_host(
     hass: HomeAssistant,
 ) -> None:
-    """Test entry with runtime_data host empty returns no actions."""
+    """Test entry with empty host in config entry data returns no actions."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        entry_id="inelnet-no-host",
-        data={"host": "192.168.1.1", "channels": [1]},
+        entry_id="inelnet-empty-host",
+        data={"host": "", "channels": [1]},
     )
     entry.runtime_data = InelnetRuntimeData(
-        host="",
-        channels=[1],
         clients={},
     )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "inelnet-no-host-ch1")},
+        identifiers={(DOMAIN, "inelnet-empty-host-ch1")},
+        name="INELNET channel 1",
+    )
+    actions = await async_get_actions(hass, device.id)
+    assert actions == []
+
+
+async def test_get_actions_returns_empty_when_runtime_data_is_none(
+    hass: HomeAssistant,
+) -> None:
+    """Test entry with runtime_data explicitly set to None returns no actions."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="inelnet-runtime-none",
+        data={"host": "192.168.1.1", "channels": [1]},
+    )
+    entry.runtime_data = None
+    entry.add_to_hass(hass)
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "inelnet-runtime-none-ch1")},
         name="INELNET channel 1",
     )
     actions = await async_get_actions(hass, device.id)
@@ -356,8 +369,6 @@ async def test_get_actions_uses_fallback_when_channel_in_configured_but_not_in_c
         data={"host": "192.168.1.99", "channels": [1]},
     )
     entry.runtime_data = InelnetRuntimeData(
-        host="192.168.1.99",
-        channels=[1],
         clients={},
     )
     entry.add_to_hass(hass)
@@ -381,8 +392,6 @@ async def test_get_actions_returns_empty_when_channel_not_in_configured_channels
         data={"host": "192.168.1.1", "channels": [1]},
     )
     entry.runtime_data = InelnetRuntimeData(
-        host="192.168.1.1",
-        channels=[1],
         clients={1: _mock_client(1)},
     )
     entry.add_to_hass(hass)

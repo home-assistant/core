@@ -36,7 +36,6 @@ async def test_cover_async_setup_entry_adds_entities(
         1: MagicMock(channel=1),
         2: MagicMock(channel=2),
     }
-    cover_config_entry.runtime_data.channels = [1, 2]
     added: list = []
 
     def add_entities(entities):
@@ -63,7 +62,7 @@ def test_cover_entity_attributes(cover_config_entry: MockConfigEntry) -> None:
     identifiers = getattr(
         entity.device_info, "identifiers", entity.device_info.get("identifiers")
     )
-    assert identifiers == {(DOMAIN, "test-cover-entry-ch1")}
+    assert identifiers == {(DOMAIN, "192.168.1.67-ch1")}
     assert (
         getattr(
             entity.device_info,

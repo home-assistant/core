@@ -19,8 +19,6 @@ from .const import CONF_CHANNELS
 class InelnetRuntimeData:
     """Runtime data for INELNET config entry. One client per channel."""
 
-    host: str
-    channels: list[int]
     clients: dict[int, InelnetChannel]
 
 
@@ -48,9 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelnetConfigEntry) -> b
     except (TimeoutError, OSError) as err:
         raise ConfigEntryNotReady(f"Cannot connect to controller at {host}") from err
 
-    entry.runtime_data = InelnetRuntimeData(
-        host=host, channels=channels, clients=clients
-    )
+    entry.runtime_data = InelnetRuntimeData(clients=clients)
 
     await hass.config_entries.async_forward_entry_setups(
         entry, [Platform.COVER, Platform.BUTTON]

@@ -7,14 +7,21 @@ from typing import Any, cast
 from inelnet_api import InelnetChannel
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_HOST, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import InelnetConfigEntry
-from .const import ACTION_DOWN_SHORT, ACTION_PROGRAM, ACTION_UP_SHORT, DOMAIN, Action
+from .const import (
+    ACTION_DOWN_SHORT,
+    ACTION_PROGRAM,
+    ACTION_UP_SHORT,
+    CONF_CHANNELS,
+    DOMAIN,
+    Action,
+)
 
 ACTION_TYPES = {
     ACTION_UP_SHORT,
@@ -24,7 +31,7 @@ ACTION_TYPES = {
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required("type"): vol.In(ACTION_TYPES),
+        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
     }
 )
 
@@ -59,13 +66,17 @@ def _device_to_client_and_channel(
             if not entry or entry.domain != DOMAIN:
                 continue
             typed_entry = cast(InelnetConfigEntry, entry)
-            data = getattr(typed_entry, "runtime_data", None)
-            if data is None:
+            if not hasattr(typed_entry, "runtime_data"):
                 continue
-            if data.clients and channel in data.clients:
-                return data.clients[channel], channel
-            if data.host and data.channels and channel in data.channels:
-                return InelnetChannel(data.host, channel), channel
+            runtime_data = typed_entry.runtime_data
+            if runtime_data is None:
+                continue
+            if runtime_data.clients and channel in runtime_data.clients:
+                return runtime_data.clients[channel], channel
+            host = typed_entry.data.get(CONF_HOST)
+            channels = typed_entry.data.get(CONF_CHANNELS)
+            if host and isinstance(channels, list) and channel in channels:
+                return InelnetChannel(host, channel), channel
     return None, None
 
 
@@ -78,9 +89,9 @@ async def async_get_actions(
         return []
 
     return [
-        {"domain": DOMAIN, "device_id": device_id, "type": ACTION_UP_SHORT},
-        {"domain": DOMAIN, "device_id": device_id, "type": ACTION_DOWN_SHORT},
-        {"domain": DOMAIN, "device_id": device_id, "type": ACTION_PROGRAM},
+        {CONF_DOMAIN: DOMAIN, CONF_DEVICE_ID: device_id, CONF_TYPE: ACTION_UP_SHORT},
+        {CONF_DOMAIN: DOMAIN, CONF_DEVICE_ID: device_id, CONF_TYPE: ACTION_DOWN_SHORT},
+        {CONF_DOMAIN: DOMAIN, CONF_DEVICE_ID: device_id, CONF_TYPE: ACTION_PROGRAM},
     ]
 
 
@@ -101,7 +112,7 @@ async def async_call_action_from_config(
     client, _ = _device_to_client_and_channel(hass, config[CONF_DEVICE_ID])
     if client is None:
         return
-    action_type = config.get("type")
+    action_type = config.get(CONF_TYPE)
     if action_type not in ACTION_TYPES:
         return
     code = _action_code(action_type)

@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import InelnetConfigEntry
-from .const import DOMAIN
+from .const import CONF_CHANNELS, DOMAIN
 
 
 async def async_setup_entry(
@@ -29,8 +29,8 @@ async def async_setup_entry(
     """Set up one cover per channel. Each channel is one device; no group control."""
     data = entry.runtime_data
     clients = data.clients
-
-    entities = [InelnetCoverEntity(entry, clients[ch]) for ch in data.channels]
+    channels = entry.data[CONF_CHANNELS]
+    entities = [InelnetCoverEntity(entry, clients[ch]) for ch in channels]
     async_add_entities(entities)
 
 
@@ -50,9 +50,10 @@ class InelnetCoverEntity(CoverEntity):
         self._entry = entry
         self._client = client
         ch = client.channel
+        unique_base = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{entry.entry_id}-ch{ch}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}-ch{ch}")},
+            identifiers={(DOMAIN, f"{unique_base}-ch{ch}")},
             manufacturer="INELNET",
             model="Blinds controller",
             translation_key="channel",

@@ -54,8 +54,6 @@ async def test_setup_entry_stores_runtime_data(
 
     assert result is True
     assert mock_config_entry.runtime_data is not None
-    assert mock_config_entry.runtime_data.host == "192.168.1.67"
-    assert mock_config_entry.runtime_data.channels == [1, 2]
     clients = mock_config_entry.runtime_data.clients
     assert len(clients) == 2
     assert clients[1] is not clients[2]
@@ -113,8 +111,6 @@ async def test_unload_entry(
 ) -> None:
     """Test async_unload_entry unloads platforms and returns True."""
     mock_config_entry.runtime_data = InelnetRuntimeData(
-        host="192.168.1.67",
-        channels=[1, 2],
         clients={1: MagicMock(), 2: MagicMock()},
     )
     with patch(

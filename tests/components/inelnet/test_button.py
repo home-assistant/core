@@ -40,13 +40,13 @@ def test_button_entity_attributes(button_config_entry: MockConfigEntry) -> None:
         action=Action.UP_SHORT,
         translation_key="short_up",
     )
-    assert entity.unique_id == "test-button-entry-ch2-short_up"
+    assert entity.unique_id == "192.168.1.67-ch2-short_up"
     assert entity.translation_key == "short_up"
     assert entity.device_info is not None
     identifiers = getattr(
         entity.device_info, "identifiers", entity.device_info.get("identifiers")
     )
-    assert identifiers == {(DOMAIN, "test-button-entry-ch2")}
+    assert identifiers == {(DOMAIN, "192.168.1.67-ch2")}
     assert entity.entity_registry_enabled_default is False
 
 
@@ -111,7 +111,6 @@ async def test_button_async_setup_entry_adds_entities(
     """Test async_setup_entry creates three buttons per channel."""
     button_config_entry.runtime_data = MagicMock()
     button_config_entry.runtime_data.clients = {1: MagicMock(), 2: MagicMock()}
-    button_config_entry.runtime_data.channels = [1, 2]
     added: list = []
 
     def add_entities(entities):
