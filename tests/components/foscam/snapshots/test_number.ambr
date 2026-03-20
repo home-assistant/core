@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entities[number.mock_title_device_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -59,8 +60,9 @@
 # ---
 # name: test_number_entities[number.mock_title_speak_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
