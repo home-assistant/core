@@ -58,8 +58,30 @@ def mock_api() -> Generator[MagicMock]:
             f"gpe_price_{hour:02d}_tomorrow": 25.0 + (hour * 1.0) for hour in range(24)
         }
 
-        # Combine all prices
-        all_prices = {**today_prices, **tomorrow_prices}
+        # 15-minute resolution data for today and tomorrow.
+        # Each quarter-hour slot within an hour carries a slight offset so tests
+        # can distinguish individual slots:
+        #   HH:00 → base + 0.0, HH:15 → base + 0.1, HH:30 → base + 0.2, HH:45 → base + 0.3
+        today_quarter_prices = {
+            f"gpe_price_{hour:02d}_{minute:02d}": round(20.0 + hour + minute / 100, 2)
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+        tomorrow_quarter_prices = {
+            f"gpe_price_{hour:02d}_{minute:02d}_tomorrow": round(
+                25.0 + hour + minute / 100, 2
+            )
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+
+        # Combine all prices — 15-min keys take priority but hourly keys are also present.
+        all_prices = {
+            **today_prices,
+            **tomorrow_prices,
+            **today_quarter_prices,
+            **tomorrow_quarter_prices,
+        }
 
         # Make get_electricity_prices async since coordinator uses it
         mock_api_instance.get_electricity_prices = AsyncMock(return_value=all_prices)

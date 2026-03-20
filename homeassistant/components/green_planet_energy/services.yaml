@@ -2,6 +2,16 @@
 
 get_cheapest_duration:
   fields:
+    mode:
+      required: false
+      default: "cheapest_window"
+      selector:
+        select:
+          options:
+            - label: Cheapest window
+              value: "cheapest_window"
+            - label: Price schedule
+              value: "price_schedule"
     duration:
       required: true
       example: 2.5

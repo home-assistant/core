@@ -58,11 +58,15 @@
   },
   "services": {
     "get_cheapest_duration": {
-      "description": "Find the cheapest time window for a specific duration based on electricity prices.",
+      "description": "Retrieve electricity price data. Use `cheapest_window` to find the cheapest consecutive time window for a given duration, or `price_schedule` to get the full list of hourly prices for a time range.",
       "fields": {
         "duration": {
           "description": "Duration in hours for which to find the cheapest time window.",
           "name": "Duration"
+        },
+        "mode": {
+          "description": "Result mode: `cheapest_window` returns the optimal start time and average price for a given duration; `price_schedule` returns the raw per-hour prices within that cheapest window.",
+          "name": "Mode"
         },
         "time_range": {
           "description": "Time range to search within.",
