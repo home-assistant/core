@@ -94,7 +94,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not fresh:
             if not self.manual_token:
                 self.hass.async_create_background_task(
-                    self._async_try_refresh_token(), "{name} token refresh"
+                    self._async_try_refresh_token(), f"{name} token refresh"
                 )
                 return
             # create persistent notification to warn user that manual token needs refresh
