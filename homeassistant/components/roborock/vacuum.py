@@ -592,14 +592,16 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
-        if (fan_level := YXFanLevel.from_value(fan_speed)) is None:
+        try:
+            fan_level = YXFanLevel.from_value(fan_speed)
+        except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_fan_speed",
                 translation_placeholders={
                     "fan_speed": fan_speed,
                 },
-            )
+            ) from err
         try:
             await self.coordinator.api.vacuum.set_fan_level(fan_level)
         except RoborockException as err:
