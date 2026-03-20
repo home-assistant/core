@@ -388,6 +388,7 @@ FLOWS = {
         "lg_soundbar",
         "lg_thinq",
         "libre_hardware_monitor",
+        "lichess",
         "lidarr",
         "liebherr",
         "lifx",

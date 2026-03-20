@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The Lichess API token of the player."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "blitz_games": {
+        "name": "Blitz games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "blitz_rating": {
+        "name": "Blitz rating"
+      },
+      "bullet_games": {
+        "name": "Bullet games",
+        "unit_of_measurement": "games"
+      },
+      "bullet_rating": {
+        "name": "Bullet rating"
+      },
+      "classical_games": {
+        "name": "Classical games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "classical_rating": {
+        "name": "Classical rating"
+      },
+      "rapid_games": {
+        "name": "Rapid games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "rapid_rating": {
+        "name": "Rapid rating"
+      }
+    }
+  }
+}
