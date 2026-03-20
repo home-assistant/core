@@ -7,7 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CONF_OPTIONS
+from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, split_entity_id
 
 from .entity import get_device_class_or_undefined
@@ -41,9 +41,6 @@ class NumericalDomainSpec(DomainSpec):
 
     value_converter: Callable[[float], float] | None = None
     """Optional converter for numerical values (e.g. uint8 → percentage)."""
-
-    unit_of_measurement_source: str = ATTR_UNIT_OF_MEASUREMENT
-    """Attribute name to extract the unit of measurement from."""
 
 
 def filter_by_domain_specs(

@@ -651,11 +651,9 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
         super().__init__(hass, config)
         self._manual_limit_unit = self._options.get(CONF_UNIT)
 
-    def _get_entity_unit(
-        self, domain_spec: NumericalDomainSpec, state: State
-    ) -> str | None:
+    def _get_entity_unit(self, state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return state.attributes.get(domain_spec.unit_of_measurement_source)
+        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
         """Get numerical value from float or entity state."""
@@ -698,7 +696,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
         try:
             return self._unit_converter.convert(
-                value, self._get_entity_unit(domain_spec, state), self._base_unit
+                value, self._get_entity_unit(state), self._base_unit
             )
         except HomeAssistantError:
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
