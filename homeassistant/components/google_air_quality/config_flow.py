@@ -40,6 +40,7 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_REFERRER,
+    CUSTOM_LAQI,
     CUSTOM_LOCAL_AQI_OPTIONS,
     DOMAIN,
     SECTION_API_KEY_OPTIONS,
@@ -73,7 +74,7 @@ async def _validate_input(
 
         if enable_custom_laqi:
             country = custom_options.get("country")
-            custom_laqi = custom_options.get("custom_laqi")
+            custom_laqi = custom_options.get(CUSTOM_LAQI)
 
             # When custom LAQI is enabled, both country and custom_laqi must be provided
             if not country or not custom_laqi:
@@ -121,7 +122,7 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
                         vol.Optional(
                             "country", default=hass.config.country
                         ): CountrySelector(),
-                        vol.Optional("custom_laqi"): SelectSelector(
+                        vol.Optional(CUSTOM_LAQI): SelectSelector(
                             SelectSelectorConfig(
                                 options=sorted(
                                     AQICategoryMapping.get_all_laq_indices()
