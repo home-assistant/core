@@ -160,12 +160,6 @@ class LGDevice(MediaPlayerEntity):
 
     def _update_playinfo(self, data: dict[str, Any]) -> None:
         """Update the player info."""
-        if "i_play_ctrl" in data:
-            if self._device_on and self._stream_type != 0:
-                if data["i_play_ctrl"] == 0:
-                    self._attr_state = MediaPlayerState.PLAYING
-                else:
-                    self._attr_state = MediaPlayerState.PAUSED
         if "i_stream_type" in data:
             if self._stream_type != data["i_stream_type"]:
                 self._stream_type = data["i_stream_type"]
@@ -182,6 +176,12 @@ class LGDevice(MediaPlayerEntity):
                     self._attr_state = MediaPlayerState.ON
                 else:
                     self._attr_state = MediaPlayerState.OFF
+        if "i_play_ctrl" in data:
+            if self._device_on and self._stream_type != 0:
+                if data["i_play_ctrl"] == 0:
+                    self._attr_state = MediaPlayerState.PLAYING
+                else:
+                    self._attr_state = MediaPlayerState.PAUSED
         if "s_albumart" in data:
             self._attr_media_image_url = data["s_albumart"].strip() or None
         if "s_artist" in data:
