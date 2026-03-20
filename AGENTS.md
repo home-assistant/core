@@ -22,7 +22,7 @@ Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) ov
 
 ## Pull Requests
 
-Always use `.github/PULL_REQUEST_TEMPLATE.md` as the body structure when creating PRs with `gh pr create`. Do not invent a custom format.
+When creating PRs with `gh pr create`, always read `.github/PULL_REQUEST_TEMPLATE.md` and use its full content as the `--body`. Keep ALL HTML comments and metadata intact — the template explicitly says "DO NOT DELETE ANY TEXT from this template!". Only fill in the relevant sections and check the appropriate boxes.
 
 ## Good practices
 
