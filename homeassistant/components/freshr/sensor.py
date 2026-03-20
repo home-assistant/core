@@ -172,11 +172,6 @@ class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.coordinator.data is not None
-
-    @property
     def native_value(self) -> StateType:
         """Return the value from coordinator data."""
         return self.entity_description.value_fn(self.coordinator.data)

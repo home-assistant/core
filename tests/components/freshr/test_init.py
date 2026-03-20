@@ -91,7 +91,13 @@ async def test_stale_device_removed(
     await hass.async_block_till_done()
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)}) is None
-    assert DEVICE_ID not in mock_config_entry.runtime_data.readings
+
+    call_count = mock_freshr_client.fetch_device_current.call_count
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_freshr_client.fetch_device_current.call_count == call_count
 
     call_count = mock_freshr_client.fetch_device_current.call_count
     freezer.tick(READINGS_SCAN_INTERVAL)
