@@ -609,15 +609,11 @@
       "message": "'End time' must be in HH:MM or HH:MM:SS format."
     },
     "invalid_time_format_period_end": {
-      "message": "Period {period} end time must be in HH:MM or HH:MM:SS format."
-    },
-    "invalid_time_format_period_start": {
-      "message": "Period {period} start time must be in HH:MM or HH:MM:SS format."
-    "invalid_time_format_period_end": {
       "message": "'Period {period} end' must be in HH:MM or HH:MM:SS format."
     },
     "invalid_time_format_period_start": {
       "message": "'Period {period} start' must be in HH:MM or HH:MM:SS format."
+    },
     "invalid_time_format_start_time": {
       "message": "'Start time' must be in HH:MM or HH:MM:SS format."
     },
