@@ -5,6 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
+import re
 import secrets
 from typing import Final
 
@@ -23,6 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 _MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
 _MAX_STDERR_LINES: Final[int] = 64
+_SENSITIVE_QUERY_PARAMS: Final[re.Pattern[str]] = re.compile(
+    r"(authSig|token|key|password|secret)=[^&\s]+", re.IGNORECASE
+)
 
 
 @callback
@@ -245,18 +249,29 @@ class FFmpegConvertResponse(web.StreamResponse):
             # Allow conversion info to be removed
             self.convert_info.is_finished = True
 
-            # stop collecting ffmpeg stderr task
-            stderr_task.cancel()
-
             # Terminate hangs, so kill is used
             if proc.returncode is None:
                 proc.kill()
-            elif proc.returncode != 0:
+
+            # Wait for process to exit so returncode is set
+            await proc.wait()
+
+            # Let stderr collector finish draining
+            if not stderr_task.done():
+                try:
+                    await asyncio.wait_for(stderr_task, timeout=1)
+                except (TimeoutError, asyncio.CancelledError):
+                    stderr_task.cancel()
+
+            if proc.returncode != 0:
                 _LOGGER.error(
                     "FFmpeg conversion failed for device %s (return code %s):\n%s",
                     self.device_id,
                     proc.returncode,
-                    "\n".join(stderr_lines),
+                    "\n".join(
+                        _SENSITIVE_QUERY_PARAMS.sub(r"\1=REDACTED", line)
+                        for line in stderr_lines
+                    ),
                 )
 
             # Close connection by writing EOF unless already closing
