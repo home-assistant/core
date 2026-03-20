@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PAJ GPS tracker entities from a config entry."""
-    coordinator: PajGpsCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     known_device_ids: set[int] = set()
 
