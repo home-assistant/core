@@ -15,6 +15,7 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to the Google Air Quality API:\n\n{error_message}",
+      "missing_custom_laqi_options": "Please proovide both local AQI options",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -67,6 +68,7 @@
       "error": {
         "location_already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
         "location_name_already_configured": "Location name already configured.",
+        "missing_custom_laqi_options": "[%key:component::google_air_quality::config::error::missing_custom_laqi_options%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {

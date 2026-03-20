@@ -110,11 +110,7 @@ def mock_config_entry_with_custom_laqi(
 
 @pytest.fixture(name="mock_api")
 def mock_client_api(request: pytest.FixtureRequest) -> Generator[Mock]:
-    """Set up fake Google Air Quality API responses from fixtures.
-
-    If a test parametrizes this fixture (indirect), the param is treated as
-    the fixture filename under tests/fixtures/<DOMAIN>/.
-    """
+    """Set up fake Google Air Quality API responses from fixtures."""
     filename = request.param if hasattr(request, "param") else "air_quality_data.json"
     responses = load_json_object_fixture(filename, DOMAIN)
 

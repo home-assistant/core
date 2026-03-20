@@ -123,7 +123,9 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
                         ): CountrySelector(),
                         vol.Optional("custom_laqi"): SelectSelector(
                             SelectSelectorConfig(
-                                options=list(AQICategoryMapping.get_all_laq_indices()),
+                                options=sorted(
+                                    AQICategoryMapping.get_all_laq_indices()
+                                ),
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
                         ),
