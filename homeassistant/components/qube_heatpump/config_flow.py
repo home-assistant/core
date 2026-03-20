@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from python_qube_heatpump import QubeClient, async_get_mac_address
+from python_qube_heatpump import QubeClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -43,14 +43,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.close()
 
             if not errors:
-                # Get MAC address for unique ID
-                mac = await async_get_mac_address(host)
-                if mac is None:
-                    errors["base"] = "mac_not_found"
-
-            if not errors:
-                await self.async_set_unique_id(mac)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_HOST: host})
 
                 return self.async_create_entry(
                     title="Qube Heat Pump",

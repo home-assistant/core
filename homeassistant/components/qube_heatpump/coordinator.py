@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import math
 from typing import TYPE_CHECKING
 
 from python_qube_heatpump import QubeClient
@@ -20,8 +19,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-MONOTONIC_KEYS = frozenset({"energy_total_electric", "energy_total_thermic"})
-
 
 class QubeCoordinator(DataUpdateCoordinator[QubeState]):
     """Qube Heat Pump data coordinator."""
@@ -31,7 +28,6 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
-        self._previous_values: dict[str, float] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -52,17 +48,4 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
         if data is None:
             raise UpdateFailed("No data received from Qube heat pump")
 
-        self._apply_monotonic_clamping(data)
         return data
-
-    def _apply_monotonic_clamping(self, data: QubeState) -> None:
-        """Prevent total_increasing sensors from decreasing due to glitches."""
-        for key in MONOTONIC_KEYS:
-            current = getattr(data, key, None)
-            if current is None or not math.isfinite(current):
-                continue
-            previous = self._previous_values.get(key)
-            if previous is not None and current < previous:
-                setattr(data, key, previous)
-            else:
-                self._previous_values[key] = current

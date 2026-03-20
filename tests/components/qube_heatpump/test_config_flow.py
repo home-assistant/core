@@ -1,147 +1,104 @@
 """Test the Qube Heat Pump config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.qube_heatpump.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MOCK_MAC = "00:0a:5c:94:83:15"
 
-
-@pytest.fixture
-def mock_qube_setup():
-    """Mock QubeClient and MAC lookup for config flow tests."""
-    with (
-        patch(
-            "homeassistant.components.qube_heatpump.config_flow.QubeClient",
-            autospec=True,
-        ) as mock_client_cls,
-        patch(
-            "homeassistant.components.qube_heatpump.config_flow.async_get_mac_address",
-            return_value=MOCK_MAC,
-        ) as mock_mac,
-    ):
-        client = mock_client_cls.return_value
-        client.connect = AsyncMock(return_value=True)
-        client.async_get_software_version = AsyncMock(return_value="2.15")
-        client.close = AsyncMock()
-        yield {"client_cls": mock_client_cls, "client": client, "mac": mock_mac}
-
-
-async def test_form(
-    hass: HomeAssistant, mock_setup_entry: MagicMock, mock_qube_setup: dict
+async def test_full_flow(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert not result["errors"]
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "qube.local"},
     )
-    await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Qube Heat Pump"
-    assert result2["data"] == {CONF_HOST: "qube.local", CONF_PORT: 502}
-    assert result2["result"].unique_id == MOCK_MAC
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Qube Heat Pump"
+    assert result["data"] == {CONF_HOST: "qube.local", CONF_PORT: 502}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_qube_setup: dict) -> None:
-    """Test we handle cannot connect error."""
-    mock_qube_setup["client"].connect.return_value = False
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "1.1.1.1"},
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_connect_exception(
-    hass: HomeAssistant, mock_qube_setup: dict
+@pytest.mark.parametrize(
+    ("connect_side_effect", "connect_result", "version_result", "error"),
+    [
+        (None, False, "2.15", "cannot_connect"),
+        (OSError, None, "2.15", "cannot_connect"),
+        (None, True, None, "not_qube_device"),
+    ],
+)
+async def test_flow_errors(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    connect_side_effect: type[Exception] | None,
+    connect_result: bool | None,
+    version_result: str | None,
+    error: str,
 ) -> None:
-    """Test we handle connection exception."""
-    mock_qube_setup["client"].connect.side_effect = OSError
+    """Test flow error handling with recovery."""
+    mock_qube_client.connect = AsyncMock(
+        side_effect=connect_side_effect, return_value=connect_result
+    )
+    mock_qube_client.async_get_software_version = AsyncMock(return_value=version_result)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "1.1.1.1"},
+        {CONF_HOST: "1.2.3.4"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
+    # Reset mocks for successful retry
+    mock_qube_client.connect = AsyncMock(return_value=True)
+    mock_qube_client.async_get_software_version = AsyncMock(return_value="2.15")
 
-async def test_form_not_qube_device(hass: HomeAssistant, mock_qube_setup: dict) -> None:
-    """Test we handle device that isn't a Qube."""
-    mock_qube_setup["client"].async_get_software_version.return_value = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "1.1.1.1"},
+        {CONF_HOST: "1.2.3.4"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "not_qube_device"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_mac_not_found(hass: HomeAssistant, mock_qube_setup: dict) -> None:
-    """Test we handle MAC address not found."""
-    mock_qube_setup["mac"].return_value = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "qube.local"},
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "mac_not_found"}
-
-
-async def test_form_already_configured(
-    hass: HomeAssistant, mock_setup_entry: MagicMock, mock_qube_setup: dict
+async def test_already_configured(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort when device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
-        unique_id=MOCK_MAC,
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "qube.local"},
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

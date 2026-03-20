@@ -5,7 +5,6 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "mac_not_found": "Could not determine device identity. Ensure the heat pump is on the same network.",
       "not_qube_device": "Could not verify this is a Qube heat pump. Check the host address."
     },
     "step": {

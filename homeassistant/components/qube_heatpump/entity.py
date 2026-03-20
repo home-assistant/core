@@ -22,9 +22,8 @@ class QubeEntity(CoordinatorEntity[QubeCoordinator]):
     ) -> None:
         """Initialize the base entity."""
         super().__init__(coordinator)
-        assert entry.unique_id is not None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Qube",
             model="Heat Pump",
             sw_version=entry.runtime_data.sw_version,

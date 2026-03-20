@@ -272,7 +272,7 @@ class QubeSensor(QubeEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}-{description.key}"
 
     @property
     def native_value(self) -> StateType:
