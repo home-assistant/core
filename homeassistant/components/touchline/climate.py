@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -94,19 +94,19 @@ async def async_setup_platform(
             f"deprecated_yaml_import_issue_{result.get('reason')}",
             breaks_in_ha_version="2026.10.0",
             is_fixable=False,
-            is_persistent=True,
+            is_persistent=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
             translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "Touchline",
+                "integration_title": "Roth Touchline",
             },
         )
         return
     ir.async_create_issue(
         hass,
-        DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
         breaks_in_ha_version="2026.10.0",
         is_fixable=False,
@@ -114,7 +114,10 @@ async def async_setup_platform(
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
-        translation_placeholders={"domain": DOMAIN, "integration_title": "Touchline"},
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Roth Touchline",
+        },
     )
 
 
