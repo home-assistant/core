@@ -42,7 +42,13 @@ rules:
       ConfigEntry with runtime_data.
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry: done
+  unique-config-entry:
+    status: todo
+    comment: |
+      The integration does not prevent duplicate setup. Neither
+      single_config_entry nor _async_abort_entries_match /
+      async_set_unique_id / _abort_if_unique_id_configured are used in
+      config_flow.py.
 
   # Silver
   action-exceptions:
