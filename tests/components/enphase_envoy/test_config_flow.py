@@ -997,8 +997,8 @@ async def test_reauth_switch_to_manual_token(
     await hass.async_block_till_done()
     # no config update only form mode switch
     assert result2["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {}
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {}
 
     # user enters token
     token = envoy_token()
