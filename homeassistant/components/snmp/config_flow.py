@@ -105,21 +105,24 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         _LOGGER.exception("Unexpected error during SNMP target creation")
         raise CannotConnect(str(err)) from None
 
-    if version == "3":
-        if not authkey:
-            authproto = "none"
-        if not privkey:
-            privproto = "none"
+    try:
+        if version == "3":
+            if not authkey:
+                authproto = "none"
+            if not privkey:
+                privproto = "none"
 
-        auth_data = UsmUserData(
-            username,
-            authKey=authkey or None,
-            privKey=privkey or None,
-            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-        )
-    else:
-        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+            auth_data = UsmUserData(
+                username,
+                authKey=authkey or None,
+                privKey=privkey or None,
+                authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
+                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
+            )
+        else:
+            auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+    except PySnmpError as err:
+        raise InvalidAuth(str(err)) from None
 
     # Use sysDescr.0 to verify connectivity and authentication.
     # This OID is standard and responds to GET on almost all devices.
