@@ -447,7 +447,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             EventAreaRegistryUpdatedData(action="reorder", area_id=None),
         )
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the area registry."""
         self._async_setup_cleanup()
 
@@ -549,10 +549,10 @@ def async_get(hass: HomeAssistant) -> AreaRegistry:
     return AreaRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

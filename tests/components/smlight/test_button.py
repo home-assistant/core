@@ -145,3 +145,31 @@ async def test_remove_router_reconnect(
 
     entity = entity_registry.async_get("button.mock_title_reconnect_zigbee_router")
     assert entity is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_router_button_with_3_radios(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test creation of router buttons for device with 3 radios."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        radios=[
+            Radio(zb_type=0, chip_index=0),
+            Radio(zb_type=1, chip_index=1),
+            Radio(zb_type=0, chip_index=2),
+        ],
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 4
+
+    entity = entity_registry.async_get("button.mock_title_reconnect_zigbee_router")
+    assert entity is not None

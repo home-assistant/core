@@ -1220,7 +1220,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
-    "temperature_0": RpcSensorDescription(
+    "temperature_tc": RpcSensorDescription(
         key="temperature",
         sub_key="tC",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -1249,7 +1249,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
-    "humidity_0": RpcSensorDescription(
+    "humidity_rh": RpcSensorDescription(
         key="humidity",
         sub_key="rh",
         native_unit_of_measurement=PERCENTAGE,

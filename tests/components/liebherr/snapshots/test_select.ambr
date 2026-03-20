@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_selects[select.test_fridge_bottom_zone_icemaker-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -61,8 +62,9 @@
 # ---
 # name: test_selects[select.test_fridge_top_zone_biofresh_plus-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -123,8 +125,9 @@
 # ---
 # name: test_selects[select.test_fridge_top_zone_hydrobreeze-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -185,8 +188,9 @@
 # ---
 # name: test_single_zone_select[select.single_zone_fridge_hydrobreeze-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -247,8 +251,9 @@
 # ---
 # name: test_single_zone_select[select.single_zone_fridge_icemaker-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

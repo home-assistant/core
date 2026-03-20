@@ -245,25 +245,10 @@
     "change_setting": {
       "service": "mdi:cog"
     },
-    "pause_program": {
-      "service": "mdi:pause"
-    },
-    "resume_program": {
-      "service": "mdi:play-pause"
-    },
-    "select_program": {
-      "service": "mdi:form-select"
-    },
-    "set_option_active": {
-      "service": "mdi:gesture-tap"
-    },
-    "set_option_selected": {
-      "service": "mdi:gesture-tap"
-    },
     "set_program_and_options": {
       "service": "mdi:form-select"
     },
-    "start_program": {
+    "start_selected_program": {
       "service": "mdi:play"
     }
   }

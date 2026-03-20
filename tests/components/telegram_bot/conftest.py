@@ -12,6 +12,7 @@ from telegram import (
     Chat,
     ChatFullInfo,
     Message,
+    Update,
     User,
     WebhookInfo,
 )
@@ -105,9 +106,9 @@ def mock_external_calls() -> Generator[None]:
         type="PRIVATE",
         max_reaction_count=100,
         accent_color_id=0,
-        accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
+        accepted_gift_types=AcceptedGiftTypes(True, True, True, True, True),
     )
-    test_user = User(123456, "Testbot", True, "mock last name", "mock username")
+    test_user = User(123456, "Testbot", True, "mock last name", "mock_bot")
     message = Message(
         message_id=12345,
         date=datetime.now(),
@@ -150,6 +151,24 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "send_animation", return_value=message),
         patch.object(BotMock, "send_location", return_value=message),
         patch.object(BotMock, "send_poll", return_value=message),
+        patch.object(
+            BotMock,
+            "get_updates",
+            return_value=(
+                Update(
+                    1,
+                    Message(
+                        1,
+                        datetime.now(),
+                        Chat(
+                            id=123456,
+                            type=ChatType.PRIVATE,
+                            first_name="mock first_name",
+                        ),
+                    ),
+                ),
+            ),
+        ),
         patch.object(BotMock, "log_out", return_value=True),
         patch("telegram.ext.Updater._bootstrap"),
     ):

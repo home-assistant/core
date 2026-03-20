@@ -18,6 +18,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
@@ -106,6 +107,7 @@ class CloudBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.

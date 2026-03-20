@@ -889,7 +889,6 @@ edit_message:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -942,7 +941,6 @@ edit_message_media:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -1021,7 +1019,6 @@ edit_caption:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -1059,7 +1056,6 @@ edit_replymarkup:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -1114,7 +1110,6 @@ delete_message:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -1141,7 +1136,6 @@ leave_chat:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -1163,7 +1157,6 @@ set_message_reaction:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: 54321
