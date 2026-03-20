@@ -2245,9 +2245,10 @@ class ConfigEntries:
         self._entries = entries
         self.async_update_issues()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
-        )
+        if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
+            )
 
     async def _async_scan_orphan_ignored_entries(
         self, event: Event[NoEventData]
