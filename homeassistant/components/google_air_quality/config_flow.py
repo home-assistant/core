@@ -264,9 +264,6 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             if await _validate_input(user_input, api, errors, description_placeholders):
                 data = dict(user_input[CONF_LOCATION])
-                custom_opts = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS)
-                if custom_opts and custom_opts.get("enable_custom_laqi"):
-                    data[CUSTOM_LOCAL_AQI_OPTIONS] = custom_opts
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=data,
