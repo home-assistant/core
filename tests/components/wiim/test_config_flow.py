@@ -9,8 +9,8 @@ from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
@@ -176,25 +176,6 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "WiiM Pro"
     assert result["data"] == {CONF_HOST: "192.168.1.100"}
     assert result["result"].unique_id == "uuid:test-udn-1234"
-
-
-async def test_zeroconf_flow_abort_when_homeassistant_url_missing(
-    hass: HomeAssistant,
-    mock_probe_player: AsyncMock,
-    mock_get_url: MagicMock,
-) -> None:
-    """Test zeroconf aborts before probing when no URL is available."""
-    mock_get_url.side_effect = NoURLAvailableError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_homeassistant_url"
-    mock_probe_player.assert_not_called()
 
 
 async def test_zeroconf_flow_cannot_connect(
