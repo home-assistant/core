@@ -101,7 +101,9 @@ def _parse_time_str(
             translation_placeholders=translation_placeholders or {},
         )
     try:
-        return datetime.strptime(f"{parts[0]}:{parts[1]}", "%H:%M").time()
+        if len(parts) == 2:
+            return datetime.strptime(time_str, "%H:%M").time()
+        return datetime.strptime(time_str, "%H:%M:%S").time()
     except (ValueError, IndexError) as err:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
