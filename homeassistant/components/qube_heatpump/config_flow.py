@@ -55,7 +55,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default="qube.local"): str,
+                vol.Required(CONF_HOST): str,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
