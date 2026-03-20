@@ -61,7 +61,10 @@ class GoogleAirQualityUpdateCoordinator(
         """Fetch air quality data for this coordinate."""
         try:
             return await self.client.async_get_current_conditions(
-                self.lat, self.long, self.region_code, self.custom_local_aqi
+                lat=self.lat,
+                lon=self.long,
+                region_code=self.region_code,
+                custom_local_aqi=self.custom_local_aqi,
             )
         except GoogleAirQualityApiError as ex:
             _LOGGER.debug("Cannot fetch air quality data: %s", str(ex))

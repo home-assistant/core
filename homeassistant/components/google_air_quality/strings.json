@@ -44,7 +44,7 @@
             "data": {
               "country": "[%key:common::config_flow::data::country%]",
               "custom_laqi": "Custom local AQI",
-              "enable_custom_laqi": "Enable custom local AQI."
+              "enable_custom_laqi": "Enable custom local AQI"
             },
             "data_description": {
               "country": "Country of the location.",
