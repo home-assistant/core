@@ -12,6 +12,7 @@ from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
     EntityTriggerBase,
     Trigger,
+    _is_integer_state,
 )
 
 from . import CONF_INITIAL, DOMAIN
@@ -31,11 +32,7 @@ class CounterDecrementedTrigger(EntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state attribute is valid."""
-        try:
-            int(state.state)
-        except TypeError, ValueError:
-            return False
-        return True
+        return _is_integer_state(state)
 
 
 class CounterIncrementedTrigger(EntityTriggerBase):
@@ -52,11 +49,7 @@ class CounterIncrementedTrigger(EntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state attribute is valid."""
-        try:
-            int(state.state)
-        except TypeError, ValueError:
-            return False
-        return True
+        return _is_integer_state(state)
 
 
 class CounterMaxReachedTrigger(EntityTriggerBase):
