@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,6 +25,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
+from .data import TouchlineConfigEntry
 
 
 class PresetMode(NamedTuple):
@@ -53,16 +54,15 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.st
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TouchlineConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Touchline devices from a config entry."""
     host = entry.data[CONF_HOST]
 
-    number_of_devices = entry.runtime_data["number_of_devices"]
     devices = [
         Touchline(PyTouchline(id=device_id, url=host))
-        for device_id in range(number_of_devices)
+        for device_id in range(entry.runtime_data.number_of_devices)
     ]
     async_add_entities(devices, True)
 
