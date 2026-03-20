@@ -254,7 +254,7 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
         and flow["context"]["entry_id"] == mock_config_entry_classic.entry_id
         for flow in flows
     )
-    assert hass.states.get("sensor.tlx123456_ac_frequency").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
 
 
 async def test_classic_api_setup(

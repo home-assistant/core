@@ -165,8 +165,21 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("supported_features"): [
             vol.All(cv.ensure_list, [str], _validate_supported_features)
         ],
+        # Unit of measurement of the entity
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.ensure_list, [str]),
     }
 )
+
+
+class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
+    """Class for legacy entity filter support in EntitySelectorConfig.
+
+    Provided for backwards compatibility and remains feature frozen.
+    """
+
+    integration: str
+    domain: str | list[str]
+    device_class: str | list[str]
 
 
 # Legacy entity selector config schema used directly under entity selectors
@@ -190,6 +203,7 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     domain: str | list[str]
     device_class: str | list[str]
     supported_features: list[str]
+    unit_of_measurement: str | list[str]
 
 
 DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
@@ -888,8 +902,14 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total=False):
+class EntitySelectorConfig(
+    BaseSelectorConfig, _LegacyEntityFilterSelectorConfig, total=False
+):
     """Class to represent an entity selector config."""
+
+    # Note: The class inherits _LegacyEntityFilterSelectorConfig to keep
+    # support for legacy entity filter at top level for backwards compatibility,
+    # new entity filter options should be added under the `filter` key instead.
 
     exclude_entities: list[str]
     include_entities: list[str]
@@ -1508,6 +1528,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
 
     entity_id: str
     hide_states: list[str]
+    attribute: str
     multiple: bool
 
 
@@ -1530,11 +1551,7 @@ class StateSelector(Selector[StateSelectorConfig]):
         {
             vol.Optional("entity_id"): cv.entity_id,
             vol.Optional("hide_states"): [str],
-            # The attribute to filter on, is currently deliberately not
-            # configurable/exposed. We are considering separating state
-            # selectors into two types: one for state and one for attribute.
-            # Limiting the public use, prevents breaking changes in the future.
-            # vol.Optional("attribute"): str,
+            vol.Optional("attribute"): str,
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
