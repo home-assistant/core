@@ -118,10 +118,15 @@ SCHEMA_APP_DATA = vol.Schema(
         # without requiring one to already be running.
         vol.Optional(ATTR_SUPPORTS_LIVE_ACTIVITIES): cv.boolean,
         vol.Optional(ATTR_SUPPORTS_LIVE_ACTIVITIES_FREQUENT_UPDATES): cv.boolean,
-        vol.Optional(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN): cv.string,
-        vol.Optional(ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT): vol.In(
-            ["sandbox", "production"]
-        ),
+        # push-to-start token and environment must be provided together — a token
+        # without an environment is ambiguous (sandbox tokens fail on production).
+        vol.Inclusive(
+            ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN, "live_activity_push_to_start"
+        ): cv.string,
+        vol.Inclusive(
+            ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT,
+            "live_activity_push_to_start",
+        ): vol.In(["sandbox", "production"]),
     },
     extra=vol.ALLOW_EXTRA,
 )

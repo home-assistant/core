@@ -233,6 +233,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     webhook_unregister(hass, webhook_id)
     del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
     del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
     await hass_notify.async_reload(hass, DOMAIN)
 
     return True
