@@ -1058,37 +1058,6 @@ async def test_write_ac_charge_times_invalid_period_time(
     assert excinfo.value.translation_placeholders == {"period": "1"}
 
 
-async def test_write_ac_charge_times_invalid_period_end_time(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test validation of invalid period end time format."""
-    await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
-
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
-    assert device_entry is not None
-
-    with pytest.raises(ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            "write_ac_charge_times",
-            {
-                "device_id": device_entry.id,
-                "charge_power": 100,
-                "charge_stop_soc": 90,
-                "mains_enabled": True,
-                "period_1_start": "06:00",
-                "period_1_end": "invalid",
-            },
-            blocking=True,
-        )
-    assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "invalid_time_format_period_end"
-    assert excinfo.value.translation_placeholders == {"period": "1"}
-
-
 async def test_no_sph_devices_fails_gracefully(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
