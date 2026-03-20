@@ -6464,7 +6464,7 @@
       "iot_class": "local_polling"
     },
     "solarman": {
-      "name": "SOLARMAN",
+      "name": "Solarman",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
