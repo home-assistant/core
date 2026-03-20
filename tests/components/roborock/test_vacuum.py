@@ -478,16 +478,6 @@ async def test_segments_changed_issue(
     assert issue.translation_key == "segments_changed"
 
 
-# Tests for RoborockQ7Vacuum
-
-
-@pytest.fixture
-def fake_q7_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
-    """Get the fake Q7 vacuum device."""
-    # The Q7 is the fourth device in the list (index 3) based on HOME_DATA
-    return fake_devices[3]
-
-
 @pytest.fixture(name="q7_vacuum_api", autouse=False)
 def fake_q7_vacuum_api_fixture(
     fake_q7_vacuum: FakeDevice,
@@ -695,12 +685,6 @@ async def test_q7_activity_none_status(
     assert vacuum.state == "unknown"
 
 
-@pytest.fixture
-def fake_q10_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
-    """Get the fake Q10 vacuum device."""
-    return fake_devices[4]
-
-
 @pytest.fixture(name="q10_vacuum_api", autouse=False)
 def fake_q10_vacuum_api_fixture(
     fake_q10_vacuum: FakeDevice,
@@ -811,7 +795,7 @@ async def test_q10_set_invalid_fan_speed(
     setup_entry: MockConfigEntry,
     q10_vacuum_api: Mock,
 ) -> None:
-    """Test that setting an invalid fan speed raises HomeAssistantError."""
+    """Test that setting an invalid fan speed raises an error."""
     vacuum = hass.states.get(Q10_ENTITY_ID)
     assert vacuum
 

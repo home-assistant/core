@@ -453,10 +453,28 @@ def fake_devices_fixture() -> list[FakeDevice]:
     return devices
 
 
+# These fixtures are brittle since they rely on HOME_DATA.device_products ordering,
+# but we can improve this setup in the future by flipping around how
+# fake_devices is built.
+
+
 @pytest.fixture(name="fake_vacuum")
 def fake_vacuum_fixture(fake_devices: list[FakeDevice]) -> FakeDevice:
     """Get the fake vacuum device."""
     return fake_devices[0]
+
+
+@pytest.fixture
+def fake_q7_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Q7 vacuum device."""
+    # The Q7 is the fourth device in the list (index 3) based on HOME_DATA
+    return fake_devices[3]
+
+
+@pytest.fixture
+def fake_q10_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Q10 vacuum device."""
+    return fake_devices[4]
 
 
 @pytest.fixture(name="send_message_exception")
