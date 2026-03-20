@@ -7,7 +7,7 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyliebherrhomeapi"],
-  "quality_scale": "silver",
+  "quality_scale": "gold",
   "requirements": ["pyliebherrhomeapi==0.4.0"],
   "zeroconf": [
     {

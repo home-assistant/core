@@ -15,6 +15,7 @@ from pyliebherrhomeapi.exceptions import (
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -83,6 +84,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
             _LOGGER.exception("Unexpected error scanning for new devices")
             return
 
+        # Remove stale devices no longer returned by the API
+        current_device_ids = {device.device_id for device in devices}
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if device_ids - current_device_ids:
+                # Shut down coordinator if one exists
+                for device_id in device_ids:
+                    if coordinator := data.coordinators.pop(device_id, None):
+                        await coordinator.async_shutdown()
+                device_registry.async_update_device(
+                    device_id=device_entry.id,
+                    remove_config_entry_id=entry.entry_id,
+                )
+
+        # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []
         for device in devices:
             if device.device_id not in data.coordinators:
