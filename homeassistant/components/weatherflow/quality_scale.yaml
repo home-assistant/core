@@ -45,10 +45,10 @@ rules:
   unique-config-entry:
     status: todo
     comment: |
-      The integration does not prevent duplicate setup. Neither
-      single_config_entry nor _async_abort_entries_match /
-      async_set_unique_id / _abort_if_unique_id_configured are used in
-      config_flow.py.
+      The integration uses _async_current_entries() to abort duplicate
+      setup (config_flow.py:58), but hassfest requires either
+      single_config_entry: true in the manifest or the modern
+      _async_abort_entries_match / async_set_unique_id pattern.
 
   # Silver
   action-exceptions:
