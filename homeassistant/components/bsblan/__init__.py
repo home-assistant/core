@@ -116,7 +116,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         # Discover available heating circuits from device
         try:
             circuits = await bsblan.get_available_circuits()
-        except BSBLANError:
+        except BSBLANError as err:
+            LOGGER.debug(
+                "Circuit discovery not available for %s, defaulting to single circuit: %s",
+                entry.data[CONF_HOST],
+                err,
+            )
             circuits = [1]
 
         # Fetch required device metadata in parallel for faster startup
