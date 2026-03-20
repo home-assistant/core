@@ -7,7 +7,7 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import TeslaEnergyPeriod
 from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
 from tesla_fleet_api.tessie import EnergySite
@@ -87,7 +87,13 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from e
+        except ClientError as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
         return flatten(vehicle)
+
 
 class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the Tessie API."""

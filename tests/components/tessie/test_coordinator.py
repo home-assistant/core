@@ -78,12 +78,17 @@ async def test_coordinator_connection(
     """Tests that the coordinator handles connection errors."""
 
     mock_get_state.side_effect = ERROR_CONNECTION
-    await setup_platform(hass, [Platform.BINARY_SENSOR])
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    coordinator = entry.runtime_data.vehicles[0].data_coordinator
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_get_state.assert_called_once()
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "cannot_connect"
+
 
 async def test_coordinator_live_error(
     hass: HomeAssistant, mock_live_status, freezer: FrozenDateTimeFactory
