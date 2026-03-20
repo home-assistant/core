@@ -10,12 +10,13 @@ from wiim.models import WiimProbeResult
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER, UPNP_PORT
+from .util import InvalidHomeAssistantURLError, get_homeassistant_local_host
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -44,10 +45,22 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_info: WiimProbeResult | None = None
 
+    @callback
+    def _async_abort_if_homeassistant_url_invalid(self) -> ConfigFlowResult | None:
+        """Abort if Home Assistant does not expose a usable URL for WiiM."""
+        try:
+            get_homeassistant_local_host(self.hass)
+        except InvalidHomeAssistantURLError:
+            return self.async_abort(reason="missing_homeassistant_url")
+        return None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step when user adds integration manually."""
+        if invalid_url_result := self._async_abort_if_homeassistant_url_invalid():
+            return invalid_url_result
+
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -77,6 +90,9 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
+        if invalid_url_result := self._async_abort_if_homeassistant_url_invalid():
+            return invalid_url_result
+
         LOGGER.debug(
             "Zeroconf discovery received: Name: %s, Host: %s, Port: %s, Properties: %s",
             discovery_info.name,
