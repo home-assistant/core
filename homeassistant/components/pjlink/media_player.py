@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
@@ -12,51 +14,31 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PORT, default=4352): cv.port,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the PJLink platform."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME)
-    encoding = config.get(CONF_ENCODING)
-    password = config.get(CONF_PASSWORD)
-
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    hass_data = hass.data[DOMAIN]
-
-    device_label = f"{host}:{port}"
-    if device_label in hass_data:
-        return
-
-    device = PjLinkDevice(host, port, name, encoding, password)
-    hass_data[device_label] = device
-    add_entities([device], True)
+    """Set up PJLink media player."""
+    async_add_entities([PjLinkDevice(entry)])
 
 
 def format_input_source(input_source_name, input_source_number):
@@ -74,20 +56,20 @@ class PjLinkDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, host, port, name, encoding, password):
+    def __init__(self, entry: ConfigEntry) -> None:
         """Iinitialize the PJLink device."""
-        self._host = host
-        self._port = port
-        self._password = password
-        self._encoding = encoding
-        self._source_name_mapping = {}
+        self._host = entry.data[CONF_HOST]
+        self._port = entry.data[CONF_PORT]
+        self._password = entry.data.get(CONF_PASSWORD)
+        self._source_name_mapping: dict[str, Any] = {}
 
-        self._attr_name = name
+        self._attr_name = entry.title
         self._attr_is_volume_muted = False
         self._attr_state = MediaPlayerState.OFF
         self._attr_source = None
         self._attr_source_list = []
         self._attr_available = False
+        self._attr_unique_id = entry.entry_id
 
     def _force_off(self):
         self._attr_state = MediaPlayerState.OFF

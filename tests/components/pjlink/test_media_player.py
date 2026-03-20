@@ -12,10 +12,9 @@ import pytest
 from homeassistant.components import media_player
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="projector_from_address")
@@ -48,66 +47,60 @@ def mocked_projector(projector_from_address):
         yield mocked_instance
 
 
+async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up PJLink integration via config entry."""
+    entry = MockConfigEntry(
+        domain="pjlink",
+        data={"host": "127.0.0.1", "port": 4352},
+        title="test",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Manually trigger an update to ensure state is set
+    entity_id = "media_player.test"
+    entity = hass.data["entity_components"]["media_player"].get_entity(entity_id)
+    await entity.async_update_ha_state(force_refresh=True)
+
+    return entry
+
+
 @pytest.mark.parametrize("side_effect", [socket.timeout, OSError])
 async def test_offline_initialization(
     projector_from_address, hass: HomeAssistant, side_effect
 ) -> None:
     """Test initialization of a device that is offline."""
 
-    with assert_setup_component(1, media_player.DOMAIN):
-        projector_from_address.side_effect = side_effect
+    projector_from_address.side_effect = side_effect
 
-        assert await async_setup_component(
-            hass,
-            media_player.DOMAIN,
-            {
-                media_player.DOMAIN: {
-                    "platform": "pjlink",
-                    "name": "test_offline",
-                    "host": "127.0.0.1",
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    await setup_pjlink_entry(hass)
 
-        state = hass.states.get("media_player.test_offline")
-        assert state.state == "unavailable"
+    state = hass.states.get("media_player.test")
+    assert state.state == "unavailable"
 
 
 async def test_initialization(projector_from_address, hass: HomeAssistant) -> None:
     """Test a device that is available."""
 
-    with assert_setup_component(1, media_player.DOMAIN):
-        instance = projector_from_address.return_value
+    instance = projector_from_address.return_value
 
-        with instance as mocked_instance:
-            mocked_instance.get_name.return_value = "Test"
-            mocked_instance.get_inputs.return_value = (
-                ("HDMI", 1),
-                ("HDMI", 2),
-                ("VGA", 1),
-            )
-
-        assert await async_setup_component(
-            hass,
-            media_player.DOMAIN,
-            {
-                media_player.DOMAIN: {
-                    "platform": "pjlink",
-                    "host": "127.0.0.1",
-                }
-            },
+    with instance as mocked_instance:
+        mocked_instance.get_name.return_value = "Test"
+        mocked_instance.get_inputs.return_value = (
+            ("HDMI", 1),
+            ("HDMI", 2),
+            ("VGA", 1),
         )
+    await setup_pjlink_entry(hass)
 
-        await hass.async_block_till_done()
+    state = hass.states.get("media_player.test")
+    assert state.state == "off"
 
-        state = hass.states.get("media_player.test")
-        assert state.state == "off"
+    assert "source_list" in state.attributes
+    source_list = state.attributes["source_list"]
 
-        assert "source_list" in state.attributes
-        source_list = state.attributes["source_list"]
-
-        assert set(source_list) == {"HDMI 1", "HDMI 2", "VGA 1"}
+    assert set(source_list) == {"HDMI 1", "HDMI 2", "VGA 1"}
 
 
 @pytest.mark.parametrize("power_state", ["on", "warm-up"])
@@ -116,119 +109,72 @@ async def test_on_state_init(
 ) -> None:
     """Test a device that is available."""
 
-    with assert_setup_component(1, media_player.DOMAIN):
-        instance = projector_from_address.return_value
+    instance = projector_from_address.return_value
 
-        with instance as mocked_instance:
-            mocked_instance.get_name.return_value = "Test"
-            mocked_instance.get_power.return_value = power_state
-            mocked_instance.get_inputs.return_value = (("HDMI", 1),)
-            mocked_instance.get_input.return_value = ("HDMI", 1)
+    with instance as mocked_instance:
+        mocked_instance.get_name.return_value = "Test"
+        mocked_instance.get_power.return_value = power_state
+        mocked_instance.get_inputs.return_value = (("HDMI", 1),)
+        mocked_instance.get_input.return_value = ("HDMI", 1)
 
-        assert await async_setup_component(
-            hass,
-            media_player.DOMAIN,
-            {
-                media_player.DOMAIN: {
-                    "platform": "pjlink",
-                    "host": "127.0.0.1",
-                }
-            },
-        )
+    await setup_pjlink_entry(hass)
 
-        await hass.async_block_till_done()
+    state = hass.states.get("media_player.test")
+    assert state.state == "on"
 
-        state = hass.states.get("media_player.test")
-        assert state.state == "on"
-
-        assert state.attributes["source"] == "HDMI 1"
+    assert state.attributes["source"] == "HDMI 1"
 
 
 async def test_api_error(projector_from_address, hass: HomeAssistant) -> None:
     """Test invalid api responses."""
 
-    with assert_setup_component(1, media_player.DOMAIN):
-        instance = projector_from_address.return_value
+    instance = projector_from_address.return_value
 
-        with instance as mocked_instance:
-            mocked_instance.get_name.return_value = "Test"
-            mocked_instance.get_inputs.return_value = (
-                ("HDMI", 1),
-                ("HDMI", 2),
-                ("VGA", 1),
-            )
-            mocked_instance.get_power.side_effect = KeyError("OK")
-
-        assert await async_setup_component(
-            hass,
-            media_player.DOMAIN,
-            {
-                media_player.DOMAIN: {
-                    "platform": "pjlink",
-                    "host": "127.0.0.1",
-                }
-            },
+    with instance as mocked_instance:
+        mocked_instance.get_name.return_value = "Test"
+        mocked_instance.get_inputs.return_value = (
+            ("HDMI", 1),
+            ("HDMI", 2),
+            ("VGA", 1),
         )
+        mocked_instance.get_power.side_effect = KeyError("OK")
 
-        await hass.async_block_till_done()
+    await setup_pjlink_entry(hass)
 
-        state = hass.states.get("media_player.test")
-        assert state.state == "off"
+    state = hass.states.get("media_player.test")
+    assert state.state == "off"
 
 
 async def test_update_unavailable(projector_from_address, hass: HomeAssistant) -> None:
     """Test update to a device that is unavailable."""
 
-    with assert_setup_component(1, media_player.DOMAIN):
-        instance = projector_from_address.return_value
+    instance = projector_from_address.return_value
 
-        with instance as mocked_instance:
-            mocked_instance.get_name.return_value = "Test"
-            mocked_instance.get_inputs.return_value = (
-                ("HDMI", 1),
-                ("HDMI", 2),
-                ("VGA", 1),
-            )
-
-        assert await async_setup_component(
-            hass,
-            media_player.DOMAIN,
-            {
-                media_player.DOMAIN: {
-                    "platform": "pjlink",
-                    "host": "127.0.0.1",
-                }
-            },
+    with instance as mocked_instance:
+        mocked_instance.get_name.return_value = "Test"
+        mocked_instance.get_inputs.return_value = (
+            ("HDMI", 1),
+            ("HDMI", 2),
+            ("VGA", 1),
         )
 
-        await hass.async_block_till_done()
+    await setup_pjlink_entry(hass)
 
-        state = hass.states.get("media_player.test")
-        assert state.state == "off"
+    state = hass.states.get("media_player.test")
+    assert state.state == "off"
 
-        projector_from_address.side_effect = socket.timeout
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
-        await hass.async_block_till_done(wait_background_tasks=True)
+    projector_from_address.side_effect = socket.timeout
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-        state = hass.states.get("media_player.test")
-        assert state.state == "unavailable"
+    state = hass.states.get("media_player.test")
+    assert state.state == "unavailable"
 
 
 async def test_unavailable_time(mocked_projector, hass: HomeAssistant) -> None:
     """Test unavailable time projector error."""
 
-    assert await async_setup_component(
-        hass,
-        media_player.DOMAIN,
-        {
-            media_player.DOMAIN: {
-                "platform": "pjlink",
-                "host": "127.0.0.1",
-            }
-        },
-    )
-
-    await hass.async_block_till_done()
+    await setup_pjlink_entry(hass)
 
     state = hass.states.get("media_player.test")
     assert state.state == "on"
@@ -248,18 +194,8 @@ async def test_unavailable_time(mocked_projector, hass: HomeAssistant) -> None:
 async def test_turn_off(mocked_projector, hass: HomeAssistant) -> None:
     """Test turning off beamer."""
 
-    assert await async_setup_component(
-        hass,
-        media_player.DOMAIN,
-        {
-            media_player.DOMAIN: {
-                "platform": "pjlink",
-                "host": "127.0.0.1",
-            }
-        },
-    )
+    await setup_pjlink_entry(hass)
 
-    await hass.async_block_till_done()
     await hass.services.async_call(
         domain=media_player.DOMAIN,
         service="turn_off",
@@ -273,18 +209,8 @@ async def test_turn_off(mocked_projector, hass: HomeAssistant) -> None:
 async def test_turn_on(mocked_projector, hass: HomeAssistant) -> None:
     """Test turning on beamer."""
 
-    assert await async_setup_component(
-        hass,
-        media_player.DOMAIN,
-        {
-            media_player.DOMAIN: {
-                "platform": "pjlink",
-                "host": "127.0.0.1",
-            }
-        },
-    )
+    await setup_pjlink_entry(hass)
 
-    await hass.async_block_till_done()
     await hass.services.async_call(
         domain=media_player.DOMAIN,
         service="turn_on",
@@ -298,18 +224,8 @@ async def test_turn_on(mocked_projector, hass: HomeAssistant) -> None:
 async def test_mute(mocked_projector, hass: HomeAssistant) -> None:
     """Test muting beamer."""
 
-    assert await async_setup_component(
-        hass,
-        media_player.DOMAIN,
-        {
-            media_player.DOMAIN: {
-                "platform": "pjlink",
-                "host": "127.0.0.1",
-            }
-        },
-    )
+    await setup_pjlink_entry(hass)
 
-    await hass.async_block_till_done()
     await hass.services.async_call(
         domain=media_player.DOMAIN,
         service="volume_mute",
@@ -323,18 +239,8 @@ async def test_mute(mocked_projector, hass: HomeAssistant) -> None:
 async def test_unmute(mocked_projector, hass: HomeAssistant) -> None:
     """Test unmuting beamer."""
 
-    assert await async_setup_component(
-        hass,
-        media_player.DOMAIN,
-        {
-            media_player.DOMAIN: {
-                "platform": "pjlink",
-                "host": "127.0.0.1",
-            }
-        },
-    )
+    await setup_pjlink_entry(hass)
 
-    await hass.async_block_till_done()
     await hass.services.async_call(
         domain=media_player.DOMAIN,
         service="volume_mute",
@@ -348,18 +254,8 @@ async def test_unmute(mocked_projector, hass: HomeAssistant) -> None:
 async def test_select_source(mocked_projector, hass: HomeAssistant) -> None:
     """Test selecting source."""
 
-    assert await async_setup_component(
-        hass,
-        media_player.DOMAIN,
-        {
-            media_player.DOMAIN: {
-                "platform": "pjlink",
-                "host": "127.0.0.1",
-            }
-        },
-    )
+    await setup_pjlink_entry(hass)
 
-    await hass.async_block_till_done()
     await hass.services.async_call(
         domain=media_player.DOMAIN,
         service="select_source",
