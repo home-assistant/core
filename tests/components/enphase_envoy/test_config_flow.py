@@ -892,9 +892,24 @@ async def test_form_configure_manual_token(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    # in manual token mode user enters host, token and leaves manual_token on
+    # in manual token mode user enters host, token with error and leaves manual_token on
     token = envoy_token()
+    wrong_token = "wrongtoken"
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1", token=wrong_token, envoy_serial="1234"
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_MANUAL_TOKEN: True, CONF_TOKEN: wrong_token},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # user input to update manual token
     mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    mock_envoy.authenticate.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "1.1.1.1", CONF_TOKEN: token, CONF_MANUAL_TOKEN: True},
@@ -1037,9 +1052,24 @@ async def test_reauth_manual_token(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
-    # user updates manual token
+    # user input to update manual token with token error
     next_token = envoy_token(300)
+    wrong_token = "wrongtoken"
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1", token=wrong_token, envoy_serial="1234"
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MANUAL_TOKEN: True, CONF_TOKEN: wrong_token},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # user input to update manual token
     mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=next_token, envoy_serial="1234")
+    mock_envoy.authenticate.side_effect = None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
