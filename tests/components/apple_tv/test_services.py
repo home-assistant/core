@@ -17,9 +17,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_atv() -> MagicMock:
+def mock_atv() -> AsyncMock:
     """Create a mock Apple TV interface with keyboard support."""
-    atv = MagicMock()
+    atv = AsyncMock()
     atv.keyboard = AsyncMock()
     atv.keyboard.text_focus_state = KeyboardFocusState.Focused
     atv.device_info.model = DeviceModel.Gen4K
@@ -33,7 +33,7 @@ def mock_atv() -> MagicMock:
 async def mock_config_entry(
     hass: HomeAssistant,
     mock_async_zeroconf: MagicMock,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> MockConfigEntry:
     """Set up Apple TV integration with mocked pyatv."""
     entry = MockConfigEntry(
@@ -64,7 +64,7 @@ async def mock_config_entry(
 async def test_set_keyboard_text(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """Test setting keyboard text."""
     await hass.services.async_call(
@@ -79,7 +79,7 @@ async def test_set_keyboard_text(
 async def test_append_keyboard_text(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """Test appending keyboard text."""
     await hass.services.async_call(
@@ -97,7 +97,7 @@ async def test_append_keyboard_text(
 async def test_clear_keyboard_text(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """Test clearing keyboard text."""
     await hass.services.async_call(
@@ -112,7 +112,7 @@ async def test_clear_keyboard_text(
 async def test_set_keyboard_text_not_connected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """Test error when device is not connected."""
     mock_config_entry.runtime_data.atv = None
@@ -128,7 +128,7 @@ async def test_set_keyboard_text_not_connected(
 async def test_set_keyboard_text_not_focused(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """Test error when keyboard is not focused."""
     mock_atv.keyboard.text_focus_state = KeyboardFocusState.Unfocused
@@ -144,7 +144,7 @@ async def test_set_keyboard_text_not_focused(
 async def test_set_keyboard_text_not_supported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """Test error when keyboard is not supported by device."""
     with (
@@ -153,6 +153,7 @@ async def test_set_keyboard_text_not_supported(
             "text_focus_state",
             new_callable=PropertyMock,
             side_effect=NotSupportedError("text_focus_state is not supported"),
+            create=True,
         ),
         pytest.raises(ServiceValidationError),
     ):
@@ -167,7 +168,7 @@ async def test_set_keyboard_text_not_supported(
 async def test_set_keyboard_text_protocol_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_atv: MagicMock,
+    mock_atv: AsyncMock,
 ) -> None:
     """Test error when text_set raises a protocol error."""
     mock_atv.keyboard.text_set.side_effect = ProtocolError("send failed")
