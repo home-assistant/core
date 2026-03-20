@@ -58,28 +58,6 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
 
 
 @pytest.fixture
-def mock_subentries_with_custom_laqi() -> list[ConfigSubentryDataWithId]:
-    """Fixture for subentries."""
-    return [
-        ConfigSubentryDataWithId(
-            data={
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
-                "custom_local_aqi_options": {
-                    "country": "DE",
-                    "custom_laqi": "deu_lubw",
-                    "enable_custom_laqi": True,
-                },
-            },
-            subentry_type="location",
-            title="Home",
-            subentry_id="home-subentry-id",
-            unique_id=None,
-        )
-    ]
-
-
-@pytest.fixture
 def mock_config_entry(
     hass: HomeAssistant, mock_subentries: list[ConfigSubentryDataWithId]
 ) -> MockConfigEntry:
@@ -90,21 +68,6 @@ def mock_config_entry(
         data={CONF_API_KEY: "test-api-key", CONF_REFERRER: None},
         entry_id="123456789",
         subentries_data=mock_subentries,
-    )
-
-
-@pytest.fixture
-def mock_config_entry_with_custom_laqi(
-    hass: HomeAssistant,
-    mock_subentries_with_custom_laqi: list[ConfigSubentryDataWithId],
-) -> MockConfigEntry:
-    """Fixture for a config and a subentry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title=DOMAIN,
-        data={CONF_API_KEY: "test-api-key", CONF_REFERRER: None},
-        entry_id="123456789",
-        subentries_data=[*mock_subentries_with_custom_laqi],
     )
 
 

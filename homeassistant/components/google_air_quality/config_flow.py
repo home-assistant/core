@@ -190,7 +190,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
             auth = Auth(session, user_input[CONF_API_KEY], referrer=referrer)
             api = GoogleAirQualityApi(auth)
             if await _validate_input(user_input, api, errors, description_placeholders):
-                subentry_data = user_input[CONF_LOCATION]
+                subentry_data = dict(user_input[CONF_LOCATION])
                 custom_opts = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS)
                 if custom_opts and custom_opts.get("enable_custom_laqi"):
                     subentry_data[CUSTOM_LOCAL_AQI_OPTIONS] = custom_opts
