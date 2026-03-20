@@ -18,7 +18,7 @@
           "channels": "Channel numbers comma-separated (positive integers).",
           "host": "e.g. 192.168.1.67 or my-controller.local"
         },
-        "description": "Define all channels in this step. Enter the controller IP address or hostname and all channel numbers as a comma-separated list (e.g. 1 or 1,2,3). One device with cover and action buttons will be created per channel.",
+        "description": "Define all channels in this step. Enter the controller IP address or hostname and all channel numbers as a comma-separated list (e.g. 1 or 1,2,3). One cover device will be created per channel.",
         "title": "Configure INELNET"
       }
     }
@@ -26,26 +26,6 @@
   "device": {
     "channel": {
       "name": "INELNET Blinds channel {channel}"
-    }
-  },
-  "device_automation": {
-    "action_type": {
-      "down_short": "Short move down",
-      "program": "Programming mode (pair remote)",
-      "up_short": "Short move up"
-    }
-  },
-  "entity": {
-    "button": {
-      "program": {
-        "name": "Programming mode (pair remote)"
-      },
-      "short_down": {
-        "name": "Short move down"
-      },
-      "short_up": {
-        "name": "Short move up"
-      }
     }
   },
   "options": {
@@ -60,7 +40,7 @@
         "data_description": {
           "channels": "Channel numbers comma-separated (e.g. 1,2,3)."
         },
-        "description": "Add or remove channels for this controller. One device (cover + buttons) is created per channel.",
+        "description": "Add or remove channels for this controller. One cover device is created per channel.",
         "title": "INELNET channels"
       }
     }

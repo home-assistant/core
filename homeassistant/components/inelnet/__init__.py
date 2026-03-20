@@ -48,15 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelnetConfigEntry) -> b
 
     entry.runtime_data = InelnetRuntimeData(clients=clients)
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [Platform.COVER, Platform.BUTTON]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.COVER])
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: InelnetConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
-        entry, [Platform.COVER, Platform.BUTTON]
-    )
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.COVER])
