@@ -45,7 +45,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import FakeDevice, set_trait_attributes
 from .mock_data import STATUS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
@@ -78,6 +78,16 @@ async def test_registry_entries(
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert device_entry is not None
     assert device_entry.model_id == "roborock.vacuum.a27"
+
+
+async def test_vacuum_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test state values are correctly set."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
 
 
 @pytest.mark.parametrize(
