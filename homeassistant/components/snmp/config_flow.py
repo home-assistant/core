@@ -26,6 +26,7 @@ from .const import (
     CONF_AUTH_PROTOCOL,
     CONF_BASEOID,
     CONF_COMMUNITY,
+    CONF_CONTEXT_NAME,
     CONF_IMPORTED_BY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
@@ -73,6 +74,7 @@ STEP_V3_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             list(MAP_PRIV_PROTOCOLS)
         ),
+        vol.Optional(CONF_CONTEXT_NAME): str,
     }
 )
 
@@ -88,6 +90,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     authproto = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
     privkey = data.get(CONF_PRIV_KEY)
     privproto = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
+    context_name = data.get(CONF_CONTEXT_NAME)
 
     try:
         target = await UdpTransportTarget.create((host, port))
@@ -121,7 +124,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     # This avoids false InvalidAuth errors if baseoid is a table or node.
     test_oid = "1.3.6.1.2.1.1.1.0"
     request_args = await async_create_request_cmd_args(
-        hass, auth_data, target, test_oid
+        hass, auth_data, target, test_oid, context_name
     )
 
     err_indication, err_status, _, _ = await get_cmd(*request_args)
@@ -230,6 +233,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PORT,
             CONF_BASEOID,
             CONF_COMMUNITY,
+            CONF_CONTEXT_NAME,
             CONF_VERSION,
             CONF_USERNAME,
             CONF_AUTH_KEY,

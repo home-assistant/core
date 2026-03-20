@@ -26,6 +26,7 @@
         "data": {
           "auth_key": "Authentication Key",
           "auth_protocol": "Authentication Protocol",
+          "context_name": "Context Name",
           "priv_key": "Privacy Key",
           "priv_protocol": "Privacy Protocol",
           "username": "Username"

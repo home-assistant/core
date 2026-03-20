@@ -46,13 +46,19 @@ async def async_create_command_cmd_args(
     hass: HomeAssistant,
     auth_data: UsmUserData | CommunityData,
     target: UdpTransportTarget | Udp6TransportTarget,
+    context_name: str | None = None,
 ) -> CommandArgsType:
     """Create command arguments.
 
     The ObjectType needs to be created dynamically by the caller.
     """
     engine = await async_get_snmp_engine(hass)
-    return (engine, auth_data, target, ContextData())
+    context_data = (
+        ContextData(contextName=context_name.encode())
+        if context_name
+        else ContextData()
+    )
+    return (engine, auth_data, target, context_data)
 
 
 async def async_create_request_cmd_args(
@@ -60,13 +66,14 @@ async def async_create_request_cmd_args(
     auth_data: UsmUserData | CommunityData,
     target: UdpTransportTarget | Udp6TransportTarget,
     object_id: str,
+    context_name: str | None = None,
 ) -> RequestArgsType:
     """Create request arguments.
 
     The same ObjectType is used for all requests.
     """
     engine, auth_data, target, context_data = await async_create_command_cmd_args(
-        hass, auth_data, target
+        hass, auth_data, target, context_name
     )
     object_type = ObjectType(ObjectIdentity(object_id))
     return (engine, auth_data, target, context_data, object_type)

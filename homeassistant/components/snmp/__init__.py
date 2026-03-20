@@ -3,6 +3,7 @@
 import logging
 
 from pysnmp.error import PySnmpError
+import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     Udp6TransportTarget,
@@ -11,15 +12,19 @@ from pysnmp.hlapi.v3arch.asyncio import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_AUTH_KEY,
+    CONF_AUTH_PROTOCOL,
     CONF_BASEOID,
     CONF_COMMUNITY,
+    CONF_CONTEXT_NAME,
     CONF_PRIV_KEY,
+    CONF_PRIV_PROTOCOL,
+    CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
@@ -27,6 +32,8 @@ from .const import (
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
     DOMAIN,
+    MAP_AUTH_PROTOCOLS,
+    MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
 from .coordinator import SnmpUpdateCoordinator
@@ -46,27 +53,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
     host = entry.data[CONF_HOST]
     community = entry.data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
     baseoid = entry.data[CONF_BASEOID]
+    version = entry.data.get(CONF_VERSION, DEFAULT_VERSION)
+    username = entry.data.get(CONF_USERNAME)
     authkey = entry.data.get(CONF_AUTH_KEY)
+    authproto = entry.data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
     privkey = entry.data.get(CONF_PRIV_KEY)
+    privproto = entry.data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
+    context_name = entry.data.get(CONF_CONTEXT_NAME)
 
-    authproto = DEFAULT_AUTH_PROTOCOL
-    privproto = DEFAULT_PRIV_PROTOCOL
-
-    if authkey is not None or privkey is not None:
+    if version == "3":
         if not authkey:
             authproto = "none"
         if not privkey:
             privproto = "none"
 
         auth_data = UsmUserData(
-            community,
+            username,
             authKey=authkey or None,
             privKey=privkey or None,
-            authProtocol=authproto,
-            privProtocol=privproto,
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
         )
     else:
-        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION])
+        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     try:
         target = await UdpTransportTarget.create(
@@ -84,6 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
         auth_data,
         target,
         baseoid,
+        context_name,
     )
 
     coordinator = SnmpUpdateCoordinator(hass, entry, request_args)
