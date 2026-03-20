@@ -36,10 +36,7 @@ ATTR_PUSH_WEBSOCKET_CHANNEL = "push_websocket_channel"
 ATTR_PUSH_TOKEN = "push_token"
 ATTR_PUSH_URL = "push_url"
 
-ATTR_SUPPORTS_LIVE_ACTIVITIES = "supports_live_activities"
-ATTR_SUPPORTS_LIVE_ACTIVITIES_FREQUENT_UPDATES = (
-    "supports_live_activities_frequent_updates"
-)
+ATTR_LIVE_UPDATE = "live_update"
 ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
 ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT = (
     "live_activity_push_to_start_apns_environment"

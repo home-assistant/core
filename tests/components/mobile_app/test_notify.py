@@ -10,7 +10,7 @@ from aiohttp import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.mobile_app.const import DOMAIN
+from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -835,3 +835,151 @@ async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
     assert err.value.translation_placeholders == {
         "device_name": "websocket push test entry"
     }
+
+
+async def test_notify_live_activity_uses_stored_token(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+) -> None:
+    """Test that live_update notifications route through a stored per-activity APNs token."""
+    push_url = "https://mobile-push.home-assistant.dev/push"
+
+    # Simulate the iOS app having registered a per-activity token via webhook.
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
+        "washer_cycle": "LIVE_ACTIVITY_TOKEN_HEX"
+    }
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_test",
+        {
+            "message": "45 minutes remaining",
+            "target": ["mock-webhook_id"],
+            "data": {"live_update": True, "tag": "washer_cycle", "progress": 2700},
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call_json = aioclient_mock.mock_calls[0][2]
+    # Should use the stored Live Activity token, not the FCM token.
+    assert call_json["push_token"] == "LIVE_ACTIVITY_TOKEN_HEX"
+    assert call_json["data"]["live_update"] is True
+    assert call_json["data"]["tag"] == "washer_cycle"
+
+
+async def test_notify_live_activity_falls_back_to_push_to_start(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that live_update without a stored token falls back to the push-to-start token."""
+    push_url = "https://mobile-push.home-assistant.dev/push"
+    now = datetime.now() + timedelta(hours=24)
+    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "successful": 1,
+                "errors": 0,
+                "maximum": 150,
+                "resetsAt": iso_time,
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "FCM_TOKEN",
+                "push_url": push_url,
+                "live_activity_push_to_start_token": "PUSH_TO_START_HEX_TOKEN",
+                "live_activity_push_to_start_apns_environment": "production",
+            },
+            "app_id": "io.robbie.HomeAssistant",
+            "app_name": "Home Assistant",
+            "app_version": "2024.1",
+            "device_id": "ios-device-1",
+            "device_name": "iPhone",
+            "manufacturer": "Apple",
+            "model": "iPhone 15",
+            "os_name": "iOS",
+            "os_version": "17.2",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "ios-webhook-1",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="iPhone entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "Laundry started",
+            "target": ["ios-webhook-1"],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call_json = aioclient_mock.mock_calls[0][2]
+    # Should use push-to-start token since no per-activity token is stored.
+    assert call_json["push_token"] == "PUSH_TO_START_HEX_TOKEN"
+    assert call_json["registration_info"]["apns_environment"] == "production"
+
+
+async def test_notify_live_activity_without_tag_uses_fcm(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+) -> None:
+    """Test that live_update without a tag falls through to normal FCM push."""
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_test",
+        {
+            "message": "No tag here",
+            "target": ["mock-webhook_id"],
+            "data": {"live_update": True},
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call_json = aioclient_mock.mock_calls[0][2]
+    # Should use normal FCM token since there is no tag.
+    assert call_json["push_token"] == "PUSH_TOKEN"
+    assert "apns_environment" not in call_json["registration_info"]
+
+
+async def test_notify_normal_notification_ignores_live_activity_tokens(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+) -> None:
+    """Test that normal notifications don't route through live activity tokens."""
+    # Store a live activity token — it should be ignored for non-live-activity pushes.
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
+        "some_tag": "SHOULD_NOT_USE_THIS"
+    }
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_test",
+        {
+            "message": "Normal notification",
+            "target": ["mock-webhook_id"],
+            "data": {"tag": "some_tag"},
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call_json = aioclient_mock.mock_calls[0][2]
+    # Should use normal FCM token — live_update flag not set.
+    assert call_json["push_token"] == "PUSH_TOKEN"
