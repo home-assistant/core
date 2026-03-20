@@ -132,4 +132,4 @@ async def test_cannot_connect(
         await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] == {"base": "Device not found during setup"}
+    assert result3["errors"] == {"base": "device_not_found"}
