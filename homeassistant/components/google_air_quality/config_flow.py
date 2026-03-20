@@ -75,7 +75,7 @@ async def _validate_input(
                 region_code=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["country"],
                 custom_local_aqi=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["custom_laqi"],
             )
-        if not user_input.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get("enable_custom_laqi"):
+        else:
             await api.async_get_current_conditions(
                 lat=user_input[CONF_LOCATION][CONF_LATITUDE],
                 lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
@@ -177,6 +177,10 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
             auth = Auth(session, user_input[CONF_API_KEY], referrer=referrer)
             api = GoogleAirQualityApi(auth)
             if await _validate_input(user_input, api, errors, description_placeholders):
+                subentry_data = user_input[CONF_LOCATION]
+                custom_opts = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS)
+                if custom_opts and custom_opts.get("enable_custom_laqi"):
+                    subentry_data[CUSTOM_LOCAL_AQI_OPTIONS] = custom_opts
                 return self.async_create_entry(
                     title="Google Air Quality",
                     data={
@@ -186,7 +190,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
                     subentries=[
                         {
                             "subentry_type": "location",
-                            "data": user_input[CONF_LOCATION],
+                            "data": subentry_data,
                             "title": user_input[CONF_NAME],
                             "unique_id": None,
                         },
@@ -246,7 +250,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                     description_placeholders=description_placeholders,
                 )
             if await _validate_input(user_input, api, errors, description_placeholders):
-                data = user_input[CONF_LOCATION]
+                data = dict(user_input[CONF_LOCATION])
                 custom_opts = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS)
                 if custom_opts and custom_opts.get("enable_custom_laqi"):
                     data[CUSTOM_LOCAL_AQI_OPTIONS] = custom_opts

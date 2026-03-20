@@ -49,8 +49,8 @@ class GoogleAirQualityUpdateCoordinator(
         subentry = config_entry.subentries[subentry_id]
         self.lat = subentry.data[CONF_LATITUDE]
         self.long = subentry.data[CONF_LONGITUDE]
-        self.custom_local_aqi = None
-        self.region_code = None
+        self.custom_local_aqi: str | None = None
+        self.region_code: str | None = None
         if subentry.data.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get("enable_custom_laqi"):
             self.custom_local_aqi = subentry.data[CUSTOM_LOCAL_AQI_OPTIONS][
                 "custom_laqi"
