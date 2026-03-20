@@ -624,10 +624,10 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         The command string can be an enum name (e.g. "SEEK"), a DP string
         value (e.g. "dpSeek"), or an integer code (e.g. "11").
         """
-        if (dp_command := _resolve_q10_dp(command)) is None:
-            raise HomeAssistantError(
+        if (dp_command := B01_Q10_DP.from_any_optional(command)) is None:
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="command_failed",
+                translation_key="invalid_command",
                 translation_placeholders={
                     "command": command,
                 },
@@ -642,27 +642,3 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
-
-
-def _resolve_q10_dp(command: str) -> B01_Q10_DP | None:
-    """Resolve a command string to a B01_Q10_DP enum member.
-
-    Tries lookup by enum name, then DP string value, then integer code.
-    Returns None if no match is found.
-    """
-    # Try enum name lookup (e.g. "SEEK")
-    try:
-        return B01_Q10_DP.from_name(command)
-    except ValueError:
-        pass
-    # Try DP string value lookup (e.g. "dpSeek")
-    try:
-        return B01_Q10_DP.from_value(command)
-    except ValueError:
-        pass
-    # Try integer code lookup (e.g. "11")
-    try:
-        return B01_Q10_DP.from_code(int(command))
-    except ValueError, TypeError:
-        pass
-    return None

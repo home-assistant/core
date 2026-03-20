@@ -615,6 +615,9 @@
     "home_data_fail": {
       "message": "Failed to get Roborock home data"
     },
+    "invalid_command": {
+      "message": "Invalid command {command}"
+    },
     "invalid_credentials": {
       "message": "Invalid credentials."
     },

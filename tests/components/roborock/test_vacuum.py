@@ -845,7 +845,7 @@ async def test_q10_send_command_invalid(
     vacuum = hass.states.get(Q10_ENTITY_ID)
     assert vacuum
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             VACUUM_DOMAIN,
             SERVICE_SEND_COMMAND,
