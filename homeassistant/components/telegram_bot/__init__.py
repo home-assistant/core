@@ -246,7 +246,7 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
                         vol.Optional(ATTR_USERNAME): cv.string,
                         vol.Optional(ATTR_PASSWORD): cv.string,
                         vol.Optional(ATTR_AUTHENTICATION): cv.string,
-                        vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+                        vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
                     }
                 )
             ],

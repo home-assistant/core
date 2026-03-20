@@ -558,11 +558,7 @@ class TelegramNotificationService:
                 username=entry.get(ATTR_USERNAME, ""),
                 password=entry.get(ATTR_PASSWORD, ""),
                 authentication=entry.get(ATTR_AUTHENTICATION),
-                verify_ssl=(
-                    get_default_context()
-                    if entry.get(ATTR_VERIFY_SSL, False)
-                    else get_default_no_verify_context()
-                ),
+                verify_ssl=entry[ATTR_VERIFY_SSL],
             )
             _LOGGER.debug("downloaded: %s", entry[ATTR_URL])
 
