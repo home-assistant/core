@@ -22,6 +22,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 _MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
+_MAX_STDERR_LINES: Final[int] = 64
 
 
 @callback
@@ -215,8 +216,10 @@ class FFmpegConvertResponse(web.StreamResponse):
         assert proc.stdout is not None
         assert proc.stderr is not None
 
+        stderr_lines: list[str] = []
         stderr_task = self.hass.async_create_background_task(
-            self._dump_ffmpeg_stderr(proc), "ESPHome media proxy dump stderr"
+            self._collect_ffmpeg_stderr(proc, stderr_lines),
+            "ESPHome media proxy dump stderr",
         )
 
         try:
@@ -242,26 +245,37 @@ class FFmpegConvertResponse(web.StreamResponse):
             # Allow conversion info to be removed
             self.convert_info.is_finished = True
 
-            # stop dumping ffmpeg stderr task
+            # stop collecting ffmpeg stderr task
             stderr_task.cancel()
 
             # Terminate hangs, so kill is used
             if proc.returncode is None:
                 proc.kill()
+            elif proc.returncode != 0:
+                _LOGGER.error(
+                    "FFmpeg conversion failed for device %s (return code %s):\n%s",
+                    self.device_id,
+                    proc.returncode,
+                    "\n".join(stderr_lines),
+                )
 
             # Close connection by writing EOF unless already closing
             if request.transport and not request.transport.is_closing():
                 await writer.write_eof()
 
-    async def _dump_ffmpeg_stderr(
+    async def _collect_ffmpeg_stderr(
         self,
         proc: asyncio.subprocess.Process,
+        stderr_lines: list[str],
     ) -> None:
-        assert proc.stdout is not None
+        """Collect stderr output from ffmpeg for error reporting."""
         assert proc.stderr is not None
 
         while self.hass.is_running and (chunk := await proc.stderr.readline()):
-            _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, chunk.decode().rstrip())
+            line = chunk.decode().rstrip()
+            if len(stderr_lines) < _MAX_STDERR_LINES:
+                stderr_lines.append(line)
+            _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, line)
 
 
 class FFmpegProxyView(HomeAssistantView):

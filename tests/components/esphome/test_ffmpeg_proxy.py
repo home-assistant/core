@@ -3,9 +3,10 @@
 from collections.abc import Generator
 from http import HTTPStatus
 import io
+import logging
 import os
 import tempfile
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from urllib.request import pathname2url
 import wave
 
@@ -14,7 +15,10 @@ import mutagen
 import pytest
 
 from homeassistant.components import esphome
-from homeassistant.components.esphome.ffmpeg_proxy import async_create_proxy_url
+from homeassistant.components.esphome.ffmpeg_proxy import (
+    _MAX_STDERR_LINES,
+    async_create_proxy_url,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -119,6 +123,7 @@ async def test_proxy_view(
 async def test_ffmpeg_file_doesnt_exist(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ffmpeg conversion with a file that doesn't exist."""
     device_id = "1234"
@@ -135,6 +140,57 @@ async def test_ffmpeg_file_doesnt_exist(
     assert req.status == HTTPStatus.OK
     mp3_data = await req.content.read()
     assert not mp3_data
+
+    # ffmpeg failure should be logged at error level
+    assert "FFmpeg conversion failed for device" in caplog.text
+    assert device_id in caplog.text
+
+
+async def test_ffmpeg_error_stderr_truncated(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that ffmpeg stderr output is truncated in error logs."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    total_lines = _MAX_STDERR_LINES + 50
+    stderr_lines_data = [f"stderr line {i}\n".encode() for i in range(total_lines)] + [
+        b""
+    ]
+
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = AsyncMock(return_value=b"")
+    mock_proc.stderr.readline = AsyncMock(side_effect=stderr_lines_data)
+    mock_proc.returncode = 1
+
+    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        await req.content.read()
+
+    # Should log an error with stderr content
+    assert "FFmpeg conversion failed for device" in caplog.text
+
+    # Find the error message to verify truncation.
+    # We can't just check caplog.text because lines beyond the limit
+    # are still present at debug level from _collect_ffmpeg_stderr.
+    error_message = next(
+        r.message
+        for r in caplog.records
+        if r.levelno >= logging.ERROR and "FFmpeg conversion failed" in r.message
+    )
+
+    # All lines up to the limit should be present
+    for i in range(_MAX_STDERR_LINES):
+        assert f"stderr line {i}" in error_message
+
+    # Lines beyond the limit should not be in the error log
+    assert f"stderr line {_MAX_STDERR_LINES}" not in error_message
 
 
 async def test_lingering_process(
