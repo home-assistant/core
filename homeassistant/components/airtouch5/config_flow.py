@@ -92,13 +92,13 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             device = await self._discover_device_by_ip(host_str)
             if device is None:
-                errors = {"base": "Device not found during setup"}
+                errors = {"base": "device_not_found"}
                 return self.async_show_form(
                     step_id="manual", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
                 )
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            errors = {"base": "Device not found during setup"}
+            errors = {"base": "device_not_found"}
         else:
             await self.async_set_unique_id(device.system_id)
             self._abort_if_unique_id_configured()
