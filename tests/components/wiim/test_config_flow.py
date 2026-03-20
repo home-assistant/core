@@ -1,7 +1,7 @@
 """Tests for the WiiM config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,6 +9,7 @@ from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -29,13 +30,12 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def mock_get_url() -> MagicMock:
-    """Mock Home Assistant URL discovery."""
-    with patch(
-        "homeassistant.components.wiim.util.get_url",
-        return_value="http://192.168.1.10:8123",
-    ) as mock_get_url:
-        yield mock_get_url
+async def setup_internal_url(hass: HomeAssistant) -> None:
+    """Make sure internal url configured."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://192.168.1.10:8123"},
+    )
 
 
 @pytest.mark.usefixtures("mock_probe_player", "mock_setup_entry")
@@ -62,14 +62,15 @@ async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
 async def test_user_flow_abort_when_homeassistant_url_missing(
     hass: HomeAssistant,
     mock_probe_player: AsyncMock,
-    mock_get_url: MagicMock,
 ) -> None:
     """Test the user flow aborts before probing when no URL is available."""
-    mock_get_url.side_effect = NoURLAvailableError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.wiim.util.get_url",
+        side_effect=NoURLAvailableError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_homeassistant_url"
