@@ -28,22 +28,11 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        try:
-            AirtouchDiscovery_instance = AirtouchDiscovery()
-            await AirtouchDiscovery_instance.establish_server()
-            devices = await AirtouchDiscovery_instance.discover()
-            _LOGGER.info("Finished waiting for airtouch device")
-
-            options = {
-                f"{device.system_id:}": f"{device.name} - {device.ip}"
-                for device in devices
-            }
-            options["manual"] = "Manual Entry"  # Placeholder option
-        except Exception:
-            _LOGGER.exception("Unexpected exception during discovery")
-        finally:
-            await AirtouchDiscovery_instance.close()
-
+        devices = await self._discovery()
+        options = {
+            f"{device.system_id:}": f"{device.name} - {device.ip}" for device in devices
+        }
+        options["manual"] = "Manual Entry"  # Placeholder option
         self.devices = devices
 
         schema = vol.Schema({vol.Required("Select Device"): vol.In(options)})
@@ -100,14 +89,13 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         host_str = str(host)
-        client = Airtouch5SimpleClient(host_str)
         try:
-            AirtouchDiscovery_instance = AirtouchDiscovery()
-            await AirtouchDiscovery_instance.establish_server()
-            device = await AirtouchDiscovery_instance.discover_by_ip(host_str)
-            _LOGGER.info("Finished waiting for airtouch device")
-            assert device is not None, "Device not found during setup"
-
+            device = await self._discover_device_by_ip(host_str)
+            if device is None:
+                errors = {"base": "Device not found during setup"}
+                return self.async_show_form(
+                    step_id="manual", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                )
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors = {"base": "Device not found during setup"}
@@ -124,8 +112,8 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
                     "name": device.name,
                 },
             )
-        finally:
-            await AirtouchDiscovery_instance.close()
+
+        client = Airtouch5SimpleClient(host_str)
         try:
             await client.test_connection()
         except Exception:
@@ -138,3 +126,29 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def _discovery(self) -> list[AirtouchDevice]:
+        """Discover Airtouch devices on the network."""
+        devices: list[AirtouchDevice] = []
+        try:
+            AirtouchDiscovery_instance = AirtouchDiscovery()
+            await AirtouchDiscovery_instance.establish_server()
+            devices = await AirtouchDiscovery_instance.discover()
+            _LOGGER.info("Finished waiting for airtouch device")
+        except Exception:
+            _LOGGER.exception("Unexpected exception during discovery")
+        finally:
+            await AirtouchDiscovery_instance.close()
+        return devices
+
+    async def _discover_device_by_ip(self, host: str) -> AirtouchDevice | None:
+        """Discover a single Airtouch device by IP."""
+        host_str = str(host)
+        AirtouchDiscovery_instance = AirtouchDiscovery()
+        try:
+            await AirtouchDiscovery_instance.establish_server()
+            device = await AirtouchDiscovery_instance.discover_by_ip(host_str)
+            _LOGGER.info("Finished waiting for airtouch device")
+            return device
+        finally:
+            await AirtouchDiscovery_instance.close()

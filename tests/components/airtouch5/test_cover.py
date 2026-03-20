@@ -36,6 +36,7 @@ async def test_all_entities(
     mock_airtouch5_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_airtouch_discovery: AsyncMock,
 ) -> None:
     """Test all entities."""
 
@@ -49,6 +50,7 @@ async def test_cover_actions(
     hass: HomeAssistant,
     mock_airtouch5_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_airtouch_discovery: AsyncMock,
 ) -> None:
     """Test the actions of the Airtouch5 covers."""
 
@@ -86,6 +88,7 @@ async def test_cover_callbacks(
     hass: HomeAssistant,
     mock_airtouch5_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_airtouch_discovery: AsyncMock,
 ) -> None:
     """Test the callbacks of the Airtouch5 covers."""
 

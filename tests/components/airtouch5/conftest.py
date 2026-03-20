@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from airtouch5py.data_packet_factory import DataPacketFactory
+from airtouch5py.discovery import AirtouchDevice
 from airtouch5py.packets.ac_ability import AcAbility
 from airtouch5py.packets.ac_status import AcFanSpeed, AcMode, AcPowerState, AcStatus
 from airtouch5py.packets.zone_name import ZoneName
@@ -131,3 +132,24 @@ def mock_airtouch5_client() -> Generator[AsyncMock]:
         client.ac_status_callbacks = []
 
         yield client
+
+
+@pytest.fixture
+def mock_airtouch_discovery():
+    """Mock Airtouch discovery."""
+    mock_device = AirtouchDevice(
+        ip="1.1.1.1",
+        console_id="ABC123",
+        model="AirTouch5",
+        system_id="123456",
+        name="Test AC",
+    )
+
+    with patch("homeassistant.components.airtouch5.AirtouchDiscovery") as mock_class:
+        instance = mock_class.return_value
+
+        instance.discover_by_ip = AsyncMock(return_value=mock_device)
+        instance.establish_server = AsyncMock()
+        instance.close = AsyncMock()
+
+        yield instance
