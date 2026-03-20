@@ -60,6 +60,7 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     ATTR_ALTITUDE,
+    ATTR_APNS_ENVIRONMENT,
     ATTR_APP_DATA,
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
@@ -109,6 +110,8 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
+    EVENT_LIVE_ACTIVITY_DISMISSED,
+    EVENT_LIVE_ACTIVITY_TOKEN_UPDATED,
     SCHEMA_APP_DATA,
     SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
@@ -810,7 +813,7 @@ async def webhook_scan_tag(
         vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
         vol.Required(ATTR_PUSH_TOKEN): cv.string,
         vol.Required(ATTR_PUSH_URL): cv.url,
-        vol.Optional("apns_environment", default="production"): vol.In(
+        vol.Optional(ATTR_APNS_ENVIRONMENT, default="production"): vol.In(
             ["sandbox", "production"]
         ),
     }
@@ -832,17 +835,18 @@ async def webhook_update_live_activity_token(
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         ATTR_PUSH_TOKEN: data[ATTR_PUSH_TOKEN],
         ATTR_PUSH_URL: data[ATTR_PUSH_URL],
-        "apns_environment": data["apns_environment"],
+        ATTR_APNS_ENVIRONMENT: data[ATTR_APNS_ENVIRONMENT],
     }
 
     device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
     hass.bus.async_fire(
-        f"{DOMAIN}_live_activity_token_updated",
+        EVENT_LIVE_ACTIVITY_TOKEN_UPDATED,
         {
             ATTR_LIVE_ACTIVITY_TAG: activity_tag,
             "device_id": device.id,
             "webhook_id": webhook_id,
         },
+        EventOrigin.remote,
         context=registration_context(config_entry.data),
     )
 
@@ -876,12 +880,13 @@ async def webhook_live_activity_dismissed(
 
     device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
     hass.bus.async_fire(
-        f"{DOMAIN}_live_activity_dismissed",
+        EVENT_LIVE_ACTIVITY_DISMISSED,
         {
             ATTR_LIVE_ACTIVITY_TAG: activity_tag,
             "device_id": device.id,
             "webhook_id": webhook_id,
         },
+        EventOrigin.remote,
         context=registration_context(config_entry.data),
     )
 

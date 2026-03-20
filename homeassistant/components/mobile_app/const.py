@@ -48,10 +48,14 @@ ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT = (
 # Tag identifying a specific Live Activity instance — matches the `tag` field used by
 # the iOS companion app's ActivityKit integration.
 ATTR_LIVE_ACTIVITY_TAG = "tag"
+ATTR_APNS_ENVIRONMENT = "apns_environment"
 
 # In-memory store for per-device Live Activity push tokens, keyed by webhook_id → tag.
 # Populated by update_live_activity_token and cleared by live_activity_dismissed webhooks.
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
+
+EVENT_LIVE_ACTIVITY_TOKEN_UPDATED = f"{DOMAIN}_live_activity_token_updated"
+EVENT_LIVE_ACTIVITY_DISMISSED = f"{DOMAIN}_live_activity_dismissed"
 ATTR_PUSH_RATE_LIMITS = "rateLimits"
 ATTR_PUSH_RATE_LIMITS_ERRORS = "errors"
 ATTR_PUSH_RATE_LIMITS_MAXIMUM = "maximum"

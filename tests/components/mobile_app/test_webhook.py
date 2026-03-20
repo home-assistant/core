@@ -13,7 +13,14 @@ from nacl.secret import SecretBox
 import pytest
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.mobile_app.const import CONF_SECRET, DATA_DEVICES, DOMAIN
+from homeassistant.components.mobile_app.const import (
+    CONF_SECRET,
+    DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DOMAIN,
+    EVENT_LIVE_ACTIVITY_DISMISSED,
+    EVENT_LIVE_ACTIVITY_TOKEN_UPDATED,
+)
 from homeassistant.components.tag import EVENT_TAG_SCANNED
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
@@ -1315,7 +1322,7 @@ async def test_webhook_update_live_activity_token(
     device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
     assert device is not None
 
-    events = async_capture_events(hass, f"{DOMAIN}_live_activity_token_updated")
+    events = async_capture_events(hass, EVENT_LIVE_ACTIVITY_TOKEN_UPDATED)
 
     webhook_id = create_registrations[1]["webhook_id"]
     resp = await webhook_client.post(
@@ -1336,7 +1343,7 @@ async def test_webhook_update_live_activity_token(
     assert result == {}
 
     # Verify token was stored in hass.data
-    tokens = hass.data[DOMAIN]["live_activity_tokens"]
+    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     assert webhook_id in tokens
     assert tokens[webhook_id]["washer_cycle"]["push_token"] == (
         "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
@@ -1374,7 +1381,7 @@ async def test_webhook_update_live_activity_token_defaults_production(
 
     assert resp.status == HTTPStatus.OK
 
-    tokens = hass.data[DOMAIN]["live_activity_tokens"]
+    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     assert tokens[webhook_id]["ev_charge"]["apns_environment"] == "production"
 
 
@@ -1404,12 +1411,12 @@ async def test_webhook_live_activity_dismissed(
     )
 
     # Verify token is stored
-    tokens = hass.data[DOMAIN]["live_activity_tokens"]
+    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     assert webhook_id in tokens
     assert "washer_cycle" in tokens[webhook_id]
 
     # Now dismiss it
-    events = async_capture_events(hass, f"{DOMAIN}_live_activity_dismissed")
+    events = async_capture_events(hass, EVENT_LIVE_ACTIVITY_DISMISSED)
 
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
