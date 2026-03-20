@@ -99,19 +99,6 @@ Q10_STATE_CODE_TO_STATE = {
     YXDeviceState.ROBOT_WAIT_CHARGE: VacuumActivity.DOCKED,
 }
 
-# Map Q10 Fan Levels to V1 fan_speed state values. These also match
-# the translation names for how they appear in the Roborock app.
-Q10_FAN_LEVEL_TO_FAN_SPEED = {
-    YXFanLevel.CLOSE: "off",
-    YXFanLevel.QUIET: "quiet",
-    YXFanLevel.NORMAL: "balanced",
-    YXFanLevel.STRONG: "turbo",
-    YXFanLevel.MAX: "max",
-    YXFanLevel.SUPER: "max_plus",
-}
-
-Q10_FAN_SPEED_TO_LEVEL = {v: k for k, v in Q10_FAN_LEVEL_TO_FAN_SPEED.items()}
-
 PARALLEL_UPDATES = 0
 
 
@@ -501,7 +488,9 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
-    _attr_fan_speed_list = list(Q10_FAN_SPEED_TO_LEVEL)
+    _attr_fan_speed_list = [
+        str(YXFanLevel) for fan_speed in YXFanLevel if fan_speed != YXFanLevel.UNKNOWN
+    ]
 
     def __init__(
         self,
@@ -533,7 +522,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         if (fan_level := self.coordinator.api.status.fan_level) is not None:
-            return Q10_FAN_LEVEL_TO_FAN_SPEED.get(fan_level)
+            return fan_level.value
         return None
 
     async def async_start(self) -> None:
@@ -603,7 +592,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
-        if (fan_level := Q10_FAN_SPEED_TO_LEVEL.get(fan_speed)) is None:
+        if (fan_level := YXFanLevel.from_value(fan_speed)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_fan_speed",
@@ -672,6 +661,6 @@ def _resolve_q10_dp(command: str) -> B01_Q10_DP | None:
     # Try integer code lookup (e.g. "11")
     try:
         return B01_Q10_DP.from_code(int(command))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
     return None
