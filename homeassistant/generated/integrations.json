@@ -5160,12 +5160,6 @@
       "integration_type": "virtual",
       "supported_by": "home_connect"
     },
-    "pjlink": {
-      "name": "PJLink",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "plaato": {
       "name": "Plaato",
       "integration_type": "hub",

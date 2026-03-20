@@ -42,6 +42,7 @@ psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
 pyOpenSSL==25.3.0
+pypjlink2==1.2.1
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0

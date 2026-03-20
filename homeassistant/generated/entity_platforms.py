@@ -35,6 +35,7 @@ class EntityPlatforms(StrEnum):
     MEDIA_PLAYER = "media_player"
     NOTIFY = "notify"
     NUMBER = "number"
+    PJLINK = "pjlink"
     REMOTE = "remote"
     SCENE = "scene"
     SELECT = "select"
