@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.3.2"
+version = "2026.3.3"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -64,7 +64,7 @@ dependencies = [
   "cryptography==46.0.5",
   "Pillow==12.1.1",
   "propcache==0.4.1",
-  "pyOpenSSL==25.3.0",
+  "pyOpenSSL==26.0.0",
   "orjson==3.11.7",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",

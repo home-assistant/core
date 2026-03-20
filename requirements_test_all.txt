@@ -545,7 +545,7 @@ automower-ble==0.2.8
 av==16.0.1
 
 # homeassistant.components.axis
-axis==66
+axis==67
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1114,7 +1114,7 @@ huum==0.8.1
 hyperion-py==0.7.6
 
 # homeassistant.components.hypontech
-hyponcloud==0.3.0
+hyponcloud==0.9.0
 
 # homeassistant.components.iaqualink
 iaqualink==0.6.0
@@ -1491,7 +1491,7 @@ openrgb-python==0.3.6
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.17.0
+opower==0.17.1
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -2102,7 +2102,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
-pysmartthings==3.7.0
+pysmartthings==3.7.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2114,7 +2114,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.16
+pysmlight==0.3.1
 
 # homeassistant.components.snmp
 pysnmp==7.1.22

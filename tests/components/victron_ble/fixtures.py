@@ -94,6 +94,26 @@ VICTRON_INVERTER_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+# SmartLithium (8-cell, 24V)
+
+VICTRON_SMART_LITHIUM_SERVICE_INFO = BluetoothServiceInfo(
+    name="Smart Lithium",
+    address="01:02:03:04:05:13",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex(
+            "100000a3057856aadf9983c6e47496d1bce1003992e56ba4"
+            "bab0cf5f4d013b8cfd21b3bd353fba2216ceb2aae268ebca"
+            "3f8ed9bfcd1965ba"
+        )
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_SMART_LITHIUM_TOKEN = "aaaa000000000000000000000000bbbb"
+
 # Solar charger
 
 VICTRON_SOLAR_CHARGER_SERVICE_INFO = BluetoothServiceInfo(
