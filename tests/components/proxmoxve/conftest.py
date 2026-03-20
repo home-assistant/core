@@ -75,7 +75,7 @@ def mock_proxmox_client():
             "access_ticket.json", DOMAIN
         )
 
-        # Default to PVEUser privileges
+        # Default privileges as defined
         mock_instance.access.permissions.get.return_value = MERGED_PERMISSIONS
 
         # Make a separate mock for the qemu and lxc endpoints
