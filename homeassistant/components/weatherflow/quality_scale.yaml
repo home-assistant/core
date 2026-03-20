@@ -126,8 +126,7 @@ rules:
   docs-examples:
     status: todo
     comment: No automation or dashboard usage examples are present in the docs.
-  docs-known-limitations:
-    status: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting:
