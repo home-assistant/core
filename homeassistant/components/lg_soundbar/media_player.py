@@ -183,20 +183,11 @@ class LGDevice(MediaPlayerEntity):
                 else:
                     self._attr_state = MediaPlayerState.OFF
         if "s_albumart" in data:
-            if data["s_albumart"].strip():
-                self._attr_media_image_url = data["s_albumart"]
-            else:
-                self._attr_media_image_url = None
+            self._attr_media_image_url = data["s_albumart"].strip() or None
         if "s_artist" in data:
-            if data["s_artist"].strip():
-                self._attr_media_artist = data["s_artist"]
-            else:
-                self._attr_media_artist = None
+            self._attr_media_artist = data["s_artist"].strip() or None
         if "s_title" in data:
-            if data["s_title"].strip():
-                self._attr_media_title = data["s_title"]
-            else:
-                self._attr_media_title = None
+            self._attr_media_title = data["s_title"].strip() or None
         if "b_support_play_ctrl" in data:
             self._support_play_control = data["b_support_play_ctrl"]
 
