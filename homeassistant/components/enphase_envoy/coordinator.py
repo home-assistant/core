@@ -104,6 +104,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 title=f"Envoy token expiring in {self.token_lifetime} days",
                 notification_id=f"{NOTIFICATION_ID}_{self.envoy_serial_number}",
             )
+            return
         if not self.manual_token:
             return
         # remove persistent notification that warned user to refresh manual token
