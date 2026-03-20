@@ -1221,6 +1221,24 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.SAMSUNG_CE_MICROFIBER_FILTER_OPERATING_STATE: {
+        Attribute.MICROFIBER_FILTER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MICROFIBER_FILTER_JOB_STATE,
+                translation_key="microfiber_filter_job_state",
+                device_class=SensorDeviceClass.ENUM,
+                options_attribute=Attribute.SUPPORTED_JOB_STATES,
+            )
+        ],
+        Attribute.OPERATING_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OPERATING_STATE,
+                translation_key="microfiber_filter_operating_state",
+                device_class=SensorDeviceClass.ENUM,
+                options_attribute=Attribute.SUPPORTED_OPERATING_STATES,
+            )
+        ],
+    },
 }
 
 
