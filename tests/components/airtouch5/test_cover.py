@@ -121,7 +121,7 @@ async def test_cover_callbacks(
     # And call it to effectively launch the callback as the server would do
 
     # Partly open
-    await _call_zone_status_callback(0.7)
+    await _call_zone_status_callback(0.5)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.state == CoverState.OPEN
