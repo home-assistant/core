@@ -290,6 +290,9 @@ aiokafka==0.10.0
 # homeassistant.components.rehlko
 aiokem==1.0.1
 
+# homeassistant.components.lichess
+aiolichess==1.2.0
+
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
 
