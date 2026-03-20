@@ -53,14 +53,15 @@ INSTALLER_AUTH_USERNAME = "installer"
 
 def token_lifetime(token: str) -> int:
     """Return token lifetime in days."""
+    days_left = 0
     try:
         jwt_payload = jwt.decode(token, options={"verify_signature": False})
-        days_Left = int(
-            (int(jwt_payload["exp"]) - dt_util.utcnow().timestamp()) / 86400
-        )
-    except jwt.exceptions.DecodeError:
-        days_Left = 0
-    return days_Left
+        exp = jwt_payload.get("exp")
+        if exp is not None:
+            days_left = int((int(exp) - dt_util.utcnow().timestamp()) / 86400)
+    except jwt.PyJWTError, KeyError, TypeError, ValueError:
+        days_left = 0
+    return days_left
 
 
 def descriptions(serial: str, token: str = "") -> dict[str, str]:
