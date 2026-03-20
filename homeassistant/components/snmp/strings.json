@@ -9,17 +9,28 @@
     "step": {
       "user": {
         "data": {
-          "auth_key": "Authentication Key (v3)",
-          "auth_protocol": "Authentication Protocol (v3)",
           "baseoid": "Base OID",
-          "community": "Community String (v1/v2c)",
           "host": "Host",
           "port": "Port",
-          "priv_key": "Privacy Key (v3)",
-          "priv_protocol": "Privacy Protocol (v3)",
-          "username": "Username (v3)",
           "version": "SNMP Version"
-        }
+        },
+        "title": "SNMP Configuration"
+      },
+      "v1_v2c": {
+        "data": {
+          "community": "Community String"
+        },
+        "title": "v1/v2c Authentication"
+      },
+      "v3": {
+        "data": {
+          "auth_key": "Authentication Key",
+          "auth_protocol": "Authentication Protocol",
+          "priv_key": "Privacy Key",
+          "priv_protocol": "Privacy Protocol",
+          "username": "Username"
+        },
+        "title": "v3 Authentication"
       }
     }
   }

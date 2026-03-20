@@ -13,13 +13,26 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(hass: HomeAssistant) -> None:
-    """Test successful user setup flow."""
+    """Test successful user setup flow (v1/v2c)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    # Step 1: Basic info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+            "version": "1",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v1_v2c"
+
+    # Step 2: V1/V2c Auth
     with (
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
@@ -37,8 +50,6 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "192.168.1.1",
-                "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
                 "community": "public",
             },
         )
@@ -52,9 +63,58 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         "community": "public",
         "port": 161,
         "version": "1",
-        "auth_protocol": "none",
-        "priv_protocol": "none",
     }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_flow_v3_success(hass: HomeAssistant) -> None:
+    """Test successful user setup flow (v3)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Step 1: Basic info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+            "version": "3",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
+
+    # Step 2: V3 Auth
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            return_value=(None, None, None, [[OctetString("98F")]]),
+        ),
+        patch(
+            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            return_value="mock_target",
+        ),
+        patch(
+            "homeassistant.components.snmp.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "auth_user",
+                "auth_key": "auth_password",
+                "auth_protocol": "hmac-sha",
+                "priv_key": "priv_password",
+                "priv_protocol": "aes-cfb-128",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["version"] == "3"
+    assert result["data"]["username"] == "auth_user"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -64,6 +124,17 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Step 1
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+            "version": "1",
+        },
+    )
+
+    # Step 2
     with (
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
@@ -77,8 +148,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "192.168.1.1",
-                "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+                "community": "public",
             },
         )
 

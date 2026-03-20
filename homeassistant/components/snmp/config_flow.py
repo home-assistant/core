@@ -50,11 +50,21 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=int(DEFAULT_PORT)): cv.port,
         vol.Required(CONF_BASEOID): str,
-        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(
             list(SNMP_VERSIONS)
         ),
-        vol.Optional(CONF_USERNAME): str,
+    }
+)
+
+STEP_V1_V2C_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+    }
+)
+
+STEP_V3_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
         vol.Optional(CONF_AUTH_KEY): str,
         vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
             list(MAP_AUTH_PROTOCOLS)
@@ -68,15 +78,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     host = data[CONF_HOST]
     port = int(data.get(CONF_PORT, DEFAULT_PORT))
     community = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
     version = data.get(CONF_VERSION, DEFAULT_VERSION)
-    baseoid = data[CONF_BASEOID]
     username = data.get(CONF_USERNAME)
     authkey = data.get(CONF_AUTH_KEY)
     authproto = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
@@ -90,6 +96,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             target = Udp6TransportTarget((host, port))
         except PySnmpError:
             raise CannotConnect from None
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected error during SNMP target creation")
+        raise CannotConnect from None
 
     if version == "3":
         if not authkey:
@@ -107,12 +116,25 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     else:
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
-    request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
+    # Use sysDescr.0 to verify connectivity and authentication.
+    # This OID is standard and responds to GET on almost all devices.
+    # This avoids false InvalidAuth errors if baseoid is a table or node.
+    test_oid = "1.3.6.1.2.1.1.1.0"
+    request_args = await async_create_request_cmd_args(
+        hass, auth_data, target, test_oid
+    )
 
     err_indication, err_status, _, _ = await get_cmd(*request_args)
 
     if err_indication:
         raise CannotConnect(err_indication) from None
+
+    # In v1/v2c, getting ANY response (even noSuchName in err_status)
+    # means the community string is correct. Silence means auth failure (v1/v2c).
+    # In v3, err_status indicates the success of the get_cmd itself.
+    if version != "3":
+        return
+
     if err_status:
         raise InvalidAuth(err_status.prettyPrint()) from None
 
@@ -121,20 +143,61 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SNMP."""
 
     VERSION = 1
+    _user_data: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._user_data = user_input
+            if user_input[CONF_VERSION] == "3":
+                return await self.async_step_v3()
+            return await self.async_step_v1_v2c()
 
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+        )
+
+    async def async_step_v1_v2c(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle V1/V2c authentication."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = {**self._user_data, **user_input}
+            try:
+                await validate_input(self.hass, data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=data[CONF_HOST], data=data)
+
+        return self.async_show_form(
+            step_id="v1_v2c",
+            data_schema=STEP_V1_V2C_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_v3(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle V3 authentication."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input.get(CONF_PRIV_KEY) and not user_input.get(CONF_AUTH_KEY):
                 errors["base"] = "auth_key_required_for_priv"
 
             if not errors:
+                data = {**self._user_data, **user_input}
                 try:
-                    await validate_input(self.hass, user_input)
+                    await validate_input(self.hass, data)
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
                 except InvalidAuth:
@@ -143,13 +206,11 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    return self.async_create_entry(
-                        title=user_input[CONF_HOST], data=user_input
-                    )
+                    return self.async_create_entry(title=data[CONF_HOST], data=data)
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            step_id="v3",
+            data_schema=STEP_V3_DATA_SCHEMA,
             errors=errors,
         )
 
