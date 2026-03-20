@@ -2,7 +2,7 @@
 # name: test_entry_diagnostics
   dict({
     'config_entry': dict({
-      'created_at': '2026-03-20T11:10:48.218455+00:00',
+      'created_at': '2025-01-01T00:00:00+00:00',
       'data': dict({
         'ip_address': '**REDACTED**',
         'password': '**REDACTED**',
@@ -11,9 +11,9 @@
       'discovery_keys': dict({
       }),
       'domain': 'airq',
-      'entry_id': '01KM5F1MWTJ31AJGSNG4D2YM2G',
+      'entry_id': '01JGFJJZ008DNE3BKJ7ZE14YFE',
       'minor_version': 1,
-      'modified_at': '2026-03-20T11:10:48.218459+00:00',
+      'modified_at': '2025-01-01T00:00:00+00:00',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
