@@ -1,4 +1,4 @@
-"""Support for SLZB-06 buttons."""
+"""Support for SLZB buttons."""
 
 from __future__ import annotations
 
@@ -35,24 +35,25 @@ class SmButtonDescription(ButtonEntityDescription):
     press_fn: Callable[[CmdWrapper, int], Awaitable[None]]
 
 
-BUTTONS: list[SmButtonDescription] = [
-    SmButtonDescription(
-        key="core_restart",
-        translation_key="core_restart",
-        device_class=ButtonDeviceClass.RESTART,
-        press_fn=lambda cmd, idx: cmd.reboot(),
-    ),
+CORE_BUTTON = SmButtonDescription(
+    key="core_restart",
+    translation_key="core_restart",
+    device_class=ButtonDeviceClass.RESTART,
+    press_fn=lambda cmd, idx: cmd.reboot(),
+)
+
+RADIO_BUTTONS: list[SmButtonDescription] = [
     SmButtonDescription(
         key="zigbee_restart",
         translation_key="zigbee_restart",
         device_class=ButtonDeviceClass.RESTART,
-        press_fn=lambda cmd, idx: cmd.zb_restart(),
+        press_fn=lambda cmd, idx: cmd.zb_restart(idx=idx),
     ),
     SmButtonDescription(
         key="zigbee_flash_mode",
         translation_key="zigbee_flash_mode",
         entity_registry_enabled_default=False,
-        press_fn=lambda cmd, idx: cmd.zb_bootloader(),
+        press_fn=lambda cmd, idx: cmd.zb_bootloader(idx=idx),
     ),
 ]
 
@@ -73,7 +74,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.data
     radios = coordinator.data.info.radios
 
-    async_add_entities(SmButton(coordinator, button) for button in BUTTONS)
+    entities = [SmButton(coordinator, CORE_BUTTON)]
+    count = len(radios) if coordinator.data.info.u_device else 1
+
+    for idx in range(count):
+        entities.extend(SmButton(coordinator, button, idx) for button in RADIO_BUTTONS)
+
+    async_add_entities(entities)
     entity_created = [False] * len(radios)
 
     @callback
@@ -103,7 +110,7 @@ async def async_setup_entry(
 
 
 class SmButton(SmEntity, ButtonEntity):
-    """Defines a SLZB-06 button."""
+    """Defines a SLZB button."""
 
     coordinator: SmDataUpdateCoordinator
     entity_description: SmButtonDescription
@@ -115,7 +122,7 @@ class SmButton(SmEntity, ButtonEntity):
         description: SmButtonDescription,
         idx: int = 0,
     ) -> None:
-        """Initialize SLZB-06 button entity."""
+        """Initialize SLZB button entity."""
         super().__init__(coordinator)
 
         self.entity_description = description
