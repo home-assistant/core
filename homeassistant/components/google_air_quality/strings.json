@@ -51,6 +51,7 @@
       },
       "entry_type": "Air quality location",
       "error": {
+        "cannot_connect": "[%key:component::google_air_quality::config::error::cannot_connect%]",
         "location_already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
         "location_name_already_configured": "Location name already configured.",
         "unknown": "[%key:common::config_flow::error::unknown%]"
