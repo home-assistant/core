@@ -40,10 +40,14 @@ rules:
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: The integration does not use discovery
+  discovery:
+    status: exempt
+    comment: The integration does not use discovery
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -52,7 +56,7 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
+  entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: todo
@@ -63,6 +67,6 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo

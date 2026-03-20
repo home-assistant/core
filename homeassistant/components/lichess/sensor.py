@@ -1,7 +1,9 @@
-"""Sensor platform from Lichess integration."""
+"""Sensor platform for Lichess integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
+
+from aiolichess.models import LichessStatistics
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -13,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LichessConfigEntry
-from .coordinator import LichessCoordinator, LichessData
+from .coordinator import LichessCoordinator
 from .entity import LichessEntity
 
 
@@ -21,7 +23,7 @@ from .entity import LichessEntity
 class LichessEntityDescription(SensorEntityDescription):
     """Sensor description for Lichess player."""
 
-    value_fn: Callable[[LichessData], int | None]
+    value_fn: Callable[[LichessStatistics], int | None]
 
 
 SENSORS: tuple[LichessEntityDescription, ...] = (
@@ -29,53 +31,53 @@ SENSORS: tuple[LichessEntityDescription, ...] = (
         key="bullet_rating",
         translation_key="bullet_rating",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda state: state.stats.bullet_rating,
+        value_fn=lambda state: state.bullet_rating,
     ),
     LichessEntityDescription(
         key="bullet_games",
         translation_key="bullet_games",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: state.stats.bullet_games,
+        value_fn=lambda state: state.bullet_games,
     ),
     LichessEntityDescription(
         key="blitz_rating",
         translation_key="blitz_rating",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda state: state.stats.blitz_rating,
+        value_fn=lambda state: state.blitz_rating,
     ),
     LichessEntityDescription(
         key="blitz_games",
         translation_key="blitz_games",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: state.stats.blitz_games,
+        value_fn=lambda state: state.blitz_games,
     ),
     LichessEntityDescription(
         key="rapid_rating",
         translation_key="rapid_rating",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda state: state.stats.rapid_rating,
+        value_fn=lambda state: state.rapid_rating,
     ),
     LichessEntityDescription(
         key="rapid_games",
         translation_key="rapid_games",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: state.stats.rapid_games,
+        value_fn=lambda state: state.rapid_games,
     ),
     LichessEntityDescription(
         key="classical_rating",
         translation_key="classical_rating",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda state: state.stats.classical_rating,
+        value_fn=lambda state: state.classical_rating,
     ),
     LichessEntityDescription(
         key="classical_games",
         translation_key="classical_games",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: state.stats.classical_games,
+        value_fn=lambda state: state.classical_games,
     ),
 )
 

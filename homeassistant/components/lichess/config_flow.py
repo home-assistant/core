@@ -31,8 +31,6 @@ class LichessConfigFlow(ConfigFlow, domain=DOMAIN):
             client = AioLichess(session=session)
             try:
                 user = await client.get_all(token=user_input[CONF_API_TOKEN])
-                username = user.username
-                player_id = user.id
             except AuthError:
                 errors["base"] = "invalid_auth"
             except AioLichessError:
@@ -41,6 +39,8 @@ class LichessConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                username = user.username
+                player_id = user.id
                 await self.async_set_unique_id(player_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=username, data=user_input)

@@ -1,6 +1,5 @@
 """Coordinator for Lichess."""
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -19,14 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 type LichessConfigEntry = ConfigEntry[LichessCoordinator]
 
 
-@dataclass
-class LichessData:
-    """Data for Lichess."""
-
-    stats: LichessStatistics
-
-
-class LichessCoordinator(DataUpdateCoordinator[LichessData]):
+class LichessCoordinator(DataUpdateCoordinator[LichessStatistics]):
     """Coordinator for Lichess."""
 
     config_entry: LichessConfigEntry
@@ -42,12 +34,11 @@ class LichessCoordinator(DataUpdateCoordinator[LichessData]):
         )
         self.client = AioLichess(session=async_get_clientsession(hass))
 
-    async def _async_update_data(self) -> LichessData:
+    async def _async_update_data(self) -> LichessStatistics:
         """Update data for Lichess."""
         try:
-            stats = await self.client.get_statistics(
+            return await self.client.get_statistics(
                 token=self.config_entry.data[CONF_API_TOKEN]
             )
         except AioLichessError as err:
             raise UpdateFailed("Error in communicating with Lichess") from err
-        return LichessData(stats=stats)
