@@ -15,7 +15,7 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to the Google Air Quality API:\n\n{error_message}",
-      "missing_custom_laqi_options": "Please proovide both local AQI options",
+      "missing_custom_laqi_options": "Please provide both country and custom local AQI when custom local AQI is enabled.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
