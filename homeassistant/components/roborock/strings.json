@@ -615,8 +615,14 @@
     "home_data_fail": {
       "message": "Failed to get Roborock home data"
     },
+    "invalid_command": {
+      "message": "Invalid command {command}"
+    },
     "invalid_credentials": {
       "message": "Invalid credentials."
+    },
+    "invalid_fan_speed": {
+      "message": "Invalid fan speed: {fan_speed}"
     },
     "invalid_user_agreement": {
       "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
@@ -635,6 +641,9 @@
     },
     "position_not_found": {
       "message": "Robot position not found"
+    },
+    "request_fail": {
+      "message": "Failed to request data"
     },
     "segment_id_parse_error": {
       "message": "Invalid segment ID format: {segment_id}"

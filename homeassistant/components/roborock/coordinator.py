@@ -12,7 +12,7 @@ from roborock import B01Props
 from roborock.data import HomeDataScene
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
-from roborock.devices.traits.b01 import Q7PropertiesApi
+from roborock.devices.traits.b01 import Q7PropertiesApi, Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockDeviceBusy, RoborockException
 from roborock.roborock_message import (
@@ -40,6 +40,7 @@ from .const import (
     A01_UPDATE_INTERVAL,
     DOMAIN,
     IMAGE_CACHE_INTERVAL,
+    Q10_UPDATE_INTERVAL,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
     V1_LOCAL_IN_CLEANING_INTERVAL,
@@ -65,6 +66,7 @@ class RoborockCoordinators:
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
     b01_q7: list[RoborockB01Q7UpdateCoordinator]
+    b01_q10: list[RoborockB01Q10UpdateCoordinator]
 
     def values(
         self,
@@ -72,9 +74,10 @@ class RoborockCoordinators:
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator
     ]:
         """Return all coordinators."""
-        return self.v1 + self.a01 + self.b01_q7
+        return self.v1 + self.a01 + self.b01_q7 + self.b01_q10
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
@@ -566,3 +569,67 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_key="update_data_fail",
             )
         return data
+
+
+class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
+    """Coordinator for B01 Q10 devices.
+
+    The Q10 uses push-based MQTT status updates. The `refresh()` call sends a
+    REQUEST_DPS command (fire-and-forget) to solicit a status push from the
+    device; the response arrives asynchronously through the MQTT subscribe loop.
+
+    Entities manage their own state updates through listening to individual
+    traits on the Q10PropertiesApi. Each trait has its own update listener
+    that will notify the entity of changes.
+    """
+
+    config_entry: RoborockConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
+        device: RoborockDevice,
+        api: Q10PropertiesApi,
+    ) -> None:
+        """Initialize RoborockB01Q10UpdateCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=Q10_UPDATE_INTERVAL,
+        )
+        self._device = device
+        self.api = api
+        self.device_info = get_device_info(device)
+
+    async def _async_update_data(self) -> None:
+        """Request a status push from the device.
+
+        This sends a fire-and-forget REQUEST_DPS command. The actual data
+        update will arrive asynchronously via the push listener.
+        """
+        try:
+            await self.api.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to request Q10 data: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_fail",
+            ) from ex
+
+    @cached_property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self._device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
+
+    @property
+    def device(self) -> RoborockDevice:
+        """Get the RoborockDevice."""
+        return self._device

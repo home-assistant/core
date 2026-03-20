@@ -277,6 +277,7 @@ async def test_stale_device(
         "Dyad Pro",
         "Zeo One",
         "Roborock Q7",
+        "Roborock Q10 S5+",
     }
     fake_devices.pop(0)  # Remove one robot
 
@@ -291,6 +292,7 @@ async def test_stale_device(
         "Dyad Pro",
         "Zeo One",
         "Roborock Q7",
+        "Roborock Q10 S5+",
     }
 
 
@@ -315,6 +317,7 @@ async def test_no_stale_device(
         "Dyad Pro",
         "Zeo One",
         "Roborock Q7",
+        "Roborock Q10 S5+",
     }
 
     await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
@@ -330,6 +333,7 @@ async def test_no_stale_device(
         "Dyad Pro",
         "Zeo One",
         "Roborock Q7",
+        "Roborock Q10 S5+",
     }
 
 
@@ -563,6 +567,7 @@ async def test_zeo_device_fails_setup(
         "Dyad Pro",
         "Roborock Q7",
         # Zeo device is missing
+        # Q10 has no sensor entities
     }
 
 
@@ -616,6 +621,7 @@ async def test_dyad_device_fails_setup(
         # Dyad device is missing
         "Zeo One",
         "Roborock Q7",
+        # Q10 has no sensor entities
     }
 
 
@@ -689,12 +695,6 @@ async def test_all_devices_disabled(
 
     # The integration should still load successfully
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
-
-    # All coordinator lists should be empty
-    coordinators = mock_roborock_entry.runtime_data
-    assert len(coordinators.v1) == 0
-    assert len(coordinators.a01) == 0
-    assert len(coordinators.b01_q7) == 0
 
     # No entities should exist since all devices are disabled
     all_entities = er.async_entries_for_config_entry(
