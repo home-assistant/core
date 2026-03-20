@@ -146,7 +146,7 @@ async def test_config_entry_setup_errors(
 
     assert mock_config_entry.state is expected_state
     if assert_static_fallback:
-        assert mock_config_entry.runtime_data.static is None
+        assert mock_config_entry.runtime_data.static == {1: None}
 
 
 async def test_coordinator_dhw_config_update_error(
