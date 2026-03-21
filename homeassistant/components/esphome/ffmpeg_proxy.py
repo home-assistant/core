@@ -278,6 +278,8 @@ class FFmpegConvertResponse(web.StreamResponse):
                     self.device_id,
                 )
                 stderr_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await stderr_task
             except asyncio.CancelledError:
                 # Kill the process if we were interrupted
                 if proc.returncode is None:

@@ -317,13 +317,14 @@ async def test_ffmpeg_proc_wait_timeout(
     mock_proc = AsyncMock()
     mock_proc.stdout.read = _stdout_read
     mock_proc.stderr.readline = AsyncMock(return_value=b"")
-    mock_proc.returncode = 1
+    mock_proc.returncode = None
     mock_proc.kill = MagicMock()
     mock_proc.wait = _proc_wait
 
     with (
         patch("asyncio.create_subprocess_exec", return_value=mock_proc),
         patch(f"{FFMPEG_PROXY}._PROC_WAIT_TIMEOUT", 0),
+        patch(f"{FFMPEG_PROXY}._STDERR_DRAIN_TIMEOUT", 0),
     ):
         url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
         req = await client.get(url)
