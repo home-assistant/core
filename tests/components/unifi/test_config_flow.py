@@ -371,7 +371,7 @@ async def test_advanced_option_flow(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "client_selection"
+    assert result["step_id"] == "configure_entity_sources"
     assert not result["last_step"]
     assert list(result["data_schema"].schema[CONF_CLIENT_SOURCE].options.keys()) == [
         "00:00:00:00:00:01"
@@ -397,8 +397,7 @@ async def test_advanced_option_flow(
         user_input={
             CONF_TRACK_DEVICES: False,
             CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
-            CONF_DETECTION_TIME: 120,
-            CONF_IGNORE_WIRED_BUG: True,
+            CONF_DETECTION_TIME: 100,
         },
     )
 
@@ -430,8 +429,8 @@ async def test_advanced_option_flow(
         CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
         CONF_TRACK_DEVICES: False,
         CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
-        CONF_DETECTION_TIME: 120,
-        CONF_IGNORE_WIRED_BUG: True,
+        CONF_DETECTION_TIME: 100,
+        CONF_IGNORE_WIRED_BUG: False,
         CONF_DPI_RESTRICTIONS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
@@ -457,9 +456,7 @@ async def test_simple_option_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_CLIENT_SOURCE: [CLIENTS[0]["mac"]],
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: False,
+            CONF_TRACK_DEVICES: False,
             CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         },
     )
@@ -467,104 +464,9 @@ async def test_simple_option_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_CLIENT_SOURCE: [CLIENTS[0]["mac"]],
+        CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-        CONF_ALLOW_BANDWIDTH_SENSORS: True,
-        CONF_ALLOW_UPTIME_SENSORS: False,
     }
-
-
-@pytest.mark.parametrize("client_payload", [CLIENTS])
-@pytest.mark.parametrize(
-    "config_entry_options", [{CONF_BLOCK_CLIENT: ["00:00:00:00:00:02"]}]
-)
-async def test_simple_option_flow_preserves_offline_blocked_client(
-    hass: HomeAssistant, config_entry_setup: MockConfigEntry
-) -> None:
-    """Test simple options preserve blocked clients that are currently offline."""
-    config_entry = config_entry_setup
-
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": False}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "simple_options"
-    assert list(result["data_schema"].schema[CONF_BLOCK_CLIENT].options.keys()) == [
-        "00:00:00:00:00:01",
-        "00:00:00:00:00:02",
-    ]
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_BLOCK_CLIENT: ["00:00:00:00:00:02"]}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLOCK_CLIENT] == ["00:00:00:00:00:02"]
-
-
-@pytest.mark.parametrize("client_payload", [CLIENTS])
-@pytest.mark.parametrize("device_payload", [DEVICES])
-@pytest.mark.parametrize("wlan_payload", [WLANS])
-@pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
-@pytest.mark.parametrize(
-    "config_entry_options", [{CONF_BLOCK_CLIENT: ["00:00:00:00:00:02"]}]
-)
-async def test_advanced_option_flow_preserves_offline_blocked_client(
-    hass: HomeAssistant, config_entry_setup: MockConfigEntry
-) -> None:
-    """Test advanced options preserve blocked clients that are currently offline."""
-    config_entry = config_entry_setup
-
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": True}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "client_selection"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CLIENT_SOURCE: []}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "device_tracker"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_DETECTION_TIME: 120,
-            CONF_IGNORE_WIRED_BUG: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "client_control"
-    assert list(result["data_schema"].schema[CONF_BLOCK_CLIENT].options.keys()) == [
-        "00:00:00:00:00:01",
-        "00:00:00:00:00:02",
-    ]
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLOCK_CLIENT: ["00:00:00:00:00:02"],
-            CONF_DPI_RESTRICTIONS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "statistics_sensors"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_ALLOW_BANDWIDTH_SENSORS: False,
-            CONF_ALLOW_UPTIME_SENSORS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLOCK_CLIENT] == ["00:00:00:00:00:02"]
 
 
 async def test_form_ssdp(hass: HomeAssistant) -> None:
