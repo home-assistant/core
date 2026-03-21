@@ -115,7 +115,10 @@
       "cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
+          "both_work": "Vacuum and mop",
           "mop": "Mop only",
+          "only_mop": "Mop only",
+          "only_sweep": "Vacuum only",
           "vac_and_mop": "Vacuum and mop",
           "vacuum": "Vacuum only"
         }
