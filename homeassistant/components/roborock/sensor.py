@@ -555,11 +555,9 @@ async def async_setup_entry(
         for description in Q7_B01_SENSOR_DESCRIPTIONS
         if description.value_fn(coordinator.data) is not None
     )
-    # The Q10 coordinator waits for the first MQTT push during its initial
-    # refresh, so status fields are populated by setup time. However, a timeout
-    # (e.g. device offline) could leave them as None, so we skip the filter and
-    # register all sensors unconditionally — the entity will report unavailable
-    # until the device responds.
+    # Q10 status is push-based and values may arrive asynchronously after setup.
+    # Register all sensors unconditionally and let each entity become available
+    # as trait updates are received.
     entities.extend(
         RoborockSensorEntityB01Q10(coordinator, description)
         for coordinator in coordinators.b01_q10
