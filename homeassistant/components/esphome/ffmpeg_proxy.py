@@ -1,7 +1,7 @@
 """HTTP view that converts audio from a URL to a preferred format."""
 
 import asyncio
-from collections import defaultdict
+from collections import defaultdict, deque
 import contextlib
 from dataclasses import dataclass, field
 from http import HTTPStatus
@@ -223,7 +223,7 @@ class FFmpegConvertResponse(web.StreamResponse):
         assert proc.stdout is not None
         assert proc.stderr is not None
 
-        stderr_lines: list[str] = []
+        stderr_lines: deque[str] = deque(maxlen=_MAX_STDERR_LINES)
         stderr_task = self.hass.async_create_background_task(
             self._collect_ffmpeg_stderr(proc, stderr_lines),
             "ESPHome media proxy dump stderr",
@@ -304,15 +304,14 @@ class FFmpegConvertResponse(web.StreamResponse):
     async def _collect_ffmpeg_stderr(
         self,
         proc: asyncio.subprocess.Process,
-        stderr_lines: list[str],
+        stderr_lines: deque[str],
     ) -> None:
         """Collect stderr output from ffmpeg for error reporting."""
         assert proc.stderr is not None
 
         while self.hass.is_running and (chunk := await proc.stderr.readline()):
             line = chunk.decode(errors="replace").rstrip()
-            if len(stderr_lines) < _MAX_STDERR_LINES:
-                stderr_lines.append(line)
+            stderr_lines.append(line)
             _LOGGER.debug(
                 "ffmpeg[%s] output: %s",
                 proc.pid,

@@ -193,12 +193,14 @@ async def test_ffmpeg_error_stderr_truncated(
         if r.levelno >= logging.ERROR and "FFmpeg conversion failed" in r.message
     )
 
-    # All lines up to the limit should be present
-    for i in range(_MAX_STDERR_LINES):
+    total_lines = _MAX_STDERR_LINES + 50
+
+    # The last _MAX_STDERR_LINES lines should be present
+    for i in range(total_lines - _MAX_STDERR_LINES, total_lines):
         assert f"stderr line {i}" in error_message
 
-    # Lines beyond the limit should not be in the error log
-    assert f"stderr line {_MAX_STDERR_LINES}" not in error_message
+    # Early lines that were evicted should not be in the error log
+    assert "stderr line 0" not in error_message
 
 
 async def test_ffmpeg_error_redacts_sensitive_urls(
