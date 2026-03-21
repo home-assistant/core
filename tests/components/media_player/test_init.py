@@ -475,6 +475,7 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "media_player.group"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("media_player.group")
     assert state.state == STATE_OFF

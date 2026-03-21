@@ -14,13 +14,7 @@ import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -29,7 +23,8 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_NODE, CONF_REALM, DEFAULT_VERIFY_SSL, DOMAIN
+from .common import sanitize_userid
+from .const import CONF_NODE, DEFAULT_VERIFY_SSL, DOMAIN
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
 
@@ -177,16 +172,10 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
 
     def _init_proxmox(self) -> None:
         """Initialize ProxmoxAPI instance."""
-        user_id = (
-            self.config_entry.data[CONF_USERNAME]
-            if "@" in self.config_entry.data[CONF_USERNAME]
-            else f"{self.config_entry.data[CONF_USERNAME]}@{self.config_entry.data[CONF_REALM]}"
-        )
-
         self.proxmox = ProxmoxAPI(
             host=self.config_entry.data[CONF_HOST],
             port=self.config_entry.data[CONF_PORT],
-            user=user_id,
+            user=sanitize_userid(dict(self.config_entry.data)),
             password=self.config_entry.data[CONF_PASSWORD],
             verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
