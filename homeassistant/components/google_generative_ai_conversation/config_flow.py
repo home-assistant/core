@@ -27,6 +27,7 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -465,7 +466,7 @@ async def google_generative_ai_config_option_schema(
                     default=RECOMMENDED_THINKING_BUDGET,
                 ): vol.All(
                     NumberSelector(
-                        NumberSelectorConfig(min=-1, max=24576, step=1, mode="box")
+                        NumberSelectorConfig(min=-1, max=24576, step=1, mode=NumberSelectorMode.BOX)
                     ),
                     vol.Coerce(int),
                 ),
