@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -603,15 +604,36 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self._device = device
         self.api = api
         self.device_info = get_device_info(device)
+        self._first_refresh_done = False
 
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
 
-        This sends a fire-and-forget REQUEST_DPS command. The actual data
-        update will arrive asynchronously via the push listener.
+        On the first call, waits for the device to respond so that status
+        fields are populated before async_setup_entry proceeds. Subsequent
+        calls remain fire-and-forget because entities receive updates through
+        their own push listeners.
         """
         try:
-            await self.api.refresh()
+            if not self._first_refresh_done:
+                # Wait for the first push response so that sensor value_fn
+                # filters work correctly at setup time (same behaviour as V1/Q7
+                # coordinators which fetch data synchronously).
+                received = asyncio.Event()
+                unsubscribe = self.api.status.add_update_listener(received.set)
+                try:
+                    await self.api.refresh()
+                    async with asyncio.timeout(10):
+                        await received.wait()
+                except TimeoutError:
+                    _LOGGER.debug(
+                        "Q10 device did not respond in time during first refresh"
+                    )
+                finally:
+                    unsubscribe()
+                self._first_refresh_done = True
+            else:
+                await self.api.refresh()
         except RoborockException as ex:
             _LOGGER.debug("Failed to request Q10 data: %s", ex)
             raise UpdateFailed(

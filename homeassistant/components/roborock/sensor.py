@@ -452,8 +452,61 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
         key="total_cleaning_count",
         translation_key="total_cleaning_count",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.clean_count,
+        value_fn=lambda data: data.total_clean_count,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionQ10(
+        key="total_cleaning_area",
+        translation_key="total_cleaning_area",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.total_clean_area,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+    ),
+    RoborockSensorDescriptionQ10(
+        key="total_cleaning_time",
+        translation_key="total_cleaning_time",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.total_clean_time,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    RoborockSensorDescriptionQ10(
+        key="main_brush_life",
+        translation_key="main_brush_life",
+        value_fn=lambda data: data.main_brush_life,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    RoborockSensorDescriptionQ10(
+        key="side_brush_life",
+        translation_key="side_brush_life",
+        value_fn=lambda data: data.side_brush_life,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    RoborockSensorDescriptionQ10(
+        key="filter_life",
+        translation_key="filter_life",
+        value_fn=lambda data: data.filter_life,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    RoborockSensorDescriptionQ10(
+        key="sensor_life",
+        translation_key="sensor_life",
+        value_fn=lambda data: data.sensor_life,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    RoborockSensorDescriptionQ10(
+        key="clean_percent",
+        translation_key="clean_percent",
+        value_fn=lambda data: data.cleaning_progress,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
     ),
 ]
 
@@ -502,11 +555,15 @@ async def async_setup_entry(
         for description in Q7_B01_SENSOR_DESCRIPTIONS
         if description.value_fn(coordinator.data) is not None
     )
+    # The Q10 coordinator waits for the first MQTT push during its initial
+    # refresh, so status fields are populated by setup time. However, a timeout
+    # (e.g. device offline) could leave them as None, so we skip the filter and
+    # register all sensors unconditionally — the entity will report unavailable
+    # until the device responds.
     entities.extend(
         RoborockSensorEntityB01Q10(coordinator, description)
         for coordinator in coordinators.b01_q10
         for description in Q10_B01_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.api.status) is not None
     )
     async_add_entities(entities)
 

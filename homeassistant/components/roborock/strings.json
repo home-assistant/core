@@ -365,6 +365,9 @@
           "water_empty": "Water empty"
         }
       },
+      "filter_life": {
+        "name": "Filter remaining life"
+      },
       "filter_time_left": {
         "name": "Filter time left"
       },
@@ -373,6 +376,9 @@
       },
       "last_clean_start": {
         "name": "Last clean begin"
+      },
+      "main_brush_life": {
+        "name": "Main brush remaining life"
       },
       "main_brush_time_left": {
         "name": "Main brush time left"
@@ -399,8 +405,14 @@
           "waiting_for_orders": "Waiting for orders"
         }
       },
+      "sensor_life": {
+        "name": "Sensor remaining life"
+      },
       "sensor_time_left": {
         "name": "Sensor time left"
+      },
+      "side_brush_life": {
+        "name": "Side brush remaining life"
       },
       "side_brush_time_left": {
         "name": "Side brush time left"
