@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_FAN_SPEED_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -29,6 +30,8 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -2370,6 +2373,205 @@ async def test_thermostat_with_fan_modes_with_off(
     assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_OFF
 
+
+async def test_thermostat_with_fan_speed_modes_empty_override(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test explicit empty fan speed modes override disables rotation speed."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+            ATTR_FAN_SPEED_MODES: [],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [
+                HVACMode.HEAT,
+                HVACMode.HEAT_COOL,
+                HVACMode.FAN_ONLY,
+                HVACMode.COOL,
+                HVACMode.OFF,
+                HVACMode.AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.ordered_fan_speeds == []
+    assert CHAR_ROTATION_SPEED not in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE not in acc.fan_chars
+
+
+async def test_thermostat_infers_fan_speed_modes_from_fan_modes(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test fan speed modes are inferred by subtracting non-speed fan modes."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [
+                FAN_AUTO,
+                FAN_DIFFUSE,
+                "custom_low",
+                FAN_FOCUS,
+                "custom_high",
+            ],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: "custom_high",
+            ATTR_HVAC_MODES: [
+                HVACMode.HEAT,
+                HVACMode.HEAT_COOL,
+                HVACMode.FAN_ONLY,
+                HVACMode.COOL,
+                HVACMode.OFF,
+                HVACMode.AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.ordered_fan_speeds == ["custom_low", "custom_high"]
+    assert CHAR_ROTATION_SPEED in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE in acc.fan_chars
+    assert acc.char_speed.value == 100
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    char_rotation_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 50,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 1
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "custom_low"
+
+
+async def test_thermostat_infers_no_fan_speed_modes_from_non_speed_fan_modes(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test only non-speed fan modes do not expose rotation speed."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_ON, FAN_OFF, FAN_FOCUS, FAN_DIFFUSE],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [
+                HVACMode.HEAT,
+                HVACMode.HEAT_COOL,
+                HVACMode.FAN_ONLY,
+                HVACMode.COOL,
+                HVACMode.OFF,
+                HVACMode.AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.ordered_fan_speeds == []
+    assert CHAR_ROTATION_SPEED not in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE not in acc.fan_chars
+
+
+async def test_thermostat_with_explicit_fan_speed_modes(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test explicit fan speed modes override controls rotation speed behavior."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, "circulate", "custom_low", "custom_high"],
+            ATTR_FAN_SPEED_MODES: ["custom_low", "custom_high"],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: "custom_high",
+            ATTR_HVAC_MODES: [
+                HVACMode.HEAT,
+                HVACMode.HEAT_COOL,
+                HVACMode.FAN_ONLY,
+                HVACMode.COOL,
+                HVACMode.OFF,
+                HVACMode.AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.ordered_fan_speeds == ["custom_low", "custom_high"]
+    assert CHAR_ROTATION_SPEED in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE in acc.fan_chars
+    assert acc.char_speed.value == 100
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    char_rotation_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 50,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 1
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "custom_low"
 
 async def test_thermostat_with_fan_modes_set_to_none(
     hass: HomeAssistant, hk_driver
