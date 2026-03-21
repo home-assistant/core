@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import Any, Literal
 
@@ -14,23 +13,16 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_LOCATION,
-    CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_STATISTICS_ONLY,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-    VERSION_6_RESPONSE_TO_5_ERROR,
-)
+from .const import CONF_STATISTICS_ONLY, DOMAIN
+from .coordinator import PiHoleConfigEntry, PiHoleData, PiHoleUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,21 +34,9 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-type PiHoleConfigEntry = ConfigEntry[PiHoleData]
-
-
-@dataclass
-class PiHoleData:
-    """Runtime data definition."""
-
-    api: Hole
-    coordinator: DataUpdateCoordinator[None]
-    api_version: int
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bool:
     """Set up Pi-hole entry."""
-    name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
@@ -106,48 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     # Once API version 5 is deprecated we should instantiate Hole directly
     api = api_by_version(hass, dict(entry.data), version)
 
-    async def async_update_data() -> None:
-        """Fetch data from API endpoint."""
-        try:
-            await api.get_data()
-            await api.get_versions()
-            if "error" in (response := api.data):
-                match response["error"]:
-                    case {
-                        "key": key,
-                        "message": message,
-                        "hint": hint,
-                    } if (
-                        key == VERSION_6_RESPONSE_TO_5_ERROR["key"]
-                        and message == VERSION_6_RESPONSE_TO_5_ERROR["message"]
-                        and hint.startswith("The API is hosted at ")
-                        and "/admin/api" in hint
-                    ):
-                        _LOGGER.warning(
-                            "Pi-hole API v6 returned an error that is expected when using v5 endpoints please re-configure your authentication"
-                        )
-                        raise ConfigEntryAuthFailed
-        except HoleError as err:
-            if str(err) == "Authentication failed: Invalid password":
-                raise ConfigEntryAuthFailed(
-                    f"Pi-hole {name} at host {host}, reported an invalid password"
-                ) from err
-            raise UpdateFailed(
-                f"Pi-hole {name} at host {host}, update failed with HoleError: {err}"
-            ) from err
-        if not isinstance(api.data, dict):
-            raise ConfigEntryAuthFailed(
-                f"Pi-hole {name} at host {host}, returned an unexpected response: {api.data}, assuming authentication failed"
-            )
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=name,
-        update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
-    )
+    coordinator = PiHoleUpdateCoordinator(hass, api, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

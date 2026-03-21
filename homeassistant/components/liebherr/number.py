@@ -16,9 +16,11 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import LiebherrZoneEntity
 
@@ -53,22 +55,41 @@ NUMBER_TYPES: tuple[LiebherrNumberEntityDescription, ...] = (
 )
 
 
+def _create_number_entities(
+    coordinators: list[LiebherrCoordinator],
+) -> list[LiebherrNumber]:
+    """Create number entities for the given coordinators."""
+    return [
+        LiebherrNumber(
+            coordinator=coordinator,
+            zone_id=temp_control.zone_id,
+            description=description,
+        )
+        for coordinator in coordinators
+        for temp_control in coordinator.data.get_temperature_controls().values()
+        for description in NUMBER_TYPES
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LiebherrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Liebherr number entities."""
-    coordinators = entry.runtime_data
     async_add_entities(
-        LiebherrNumber(
-            coordinator=coordinator,
-            zone_id=temp_control.zone_id,
-            description=description,
+        _create_number_entities(list(entry.runtime_data.coordinators.values()))
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[LiebherrCoordinator]) -> None:
+        """Add number entities for new devices."""
+        async_add_entities(_create_number_entities(coordinators))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_device_{entry.entry_id}", _async_new_device
         )
-        for coordinator in coordinators.values()
-        for temp_control in coordinator.data.get_temperature_controls().values()
-        for description in NUMBER_TYPES
     )
 
 

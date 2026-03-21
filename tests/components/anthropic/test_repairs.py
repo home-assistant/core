@@ -114,8 +114,8 @@ async def test_repair_flow_iterates_subentries(
 
     model_options: list[dict[str, str]] = [
         {"label": "Claude Haiku 4.5", "value": "claude-haiku-4-5"},
-        {"label": "Claude Sonnet 4.5", "value": "claude-sonnet-4-5"},
-        {"label": "Claude Opus 4.5", "value": "claude-opus-4-5"},
+        {"label": "Claude Sonnet 4.6", "value": "claude-sonnet-4-6"},
+        {"label": "Claude Opus 4.6", "value": "claude-opus-4-6"},
     ]
 
     with patch(
@@ -152,12 +152,12 @@ async def test_repair_flow_iterates_subentries(
         result = await process_repair_fix_flow(
             client,
             flow_id,
-            json={CONF_CHAT_MODEL: "claude-sonnet-4-5"},
+            json={CONF_CHAT_MODEL: "claude-sonnet-4-6"},
         )
         assert result["type"] == FlowResultType.FORM
         assert (
             _get_subentry(entry_one, "ai_task_data").data[CONF_CHAT_MODEL]
-            == "claude-sonnet-4-5"
+            == "claude-sonnet-4-6"
         )
         assert (
             _get_subentry(entry_one, "conversation").data[CONF_CHAT_MODEL]
@@ -172,12 +172,12 @@ async def test_repair_flow_iterates_subentries(
         result = await process_repair_fix_flow(
             client,
             flow_id,
-            json={CONF_CHAT_MODEL: "claude-opus-4-5"},
+            json={CONF_CHAT_MODEL: "claude-opus-4-6"},
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert (
             _get_subentry(entry_two, "conversation").data[CONF_CHAT_MODEL]
-            == "claude-opus-4-5"
+            == "claude-opus-4-6"
         )
 
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None

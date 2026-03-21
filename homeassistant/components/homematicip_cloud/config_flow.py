@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -70,6 +71,11 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
             authtoken = await self.auth.async_register()
             if authtoken:
                 _LOGGER.debug("Write config entry for HomematicIP Cloud")
+                if self.source == "reauth":
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={HMIPC_AUTHTOKEN: authtoken},
+                    )
                 return self.async_create_entry(
                     title=self.auth.config[HMIPC_HAPID],
                     data={
@@ -78,10 +84,49 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
                         HMIPC_NAME: self.auth.config.get(HMIPC_NAME),
                     },
                 )
-            return self.async_abort(reason="connection_aborted")
-        errors["base"] = "press_the_button"
+            if self.source == "reauth":
+                errors["base"] = "connection_aborted"
+            else:
+                return self.async_abort(reason="connection_aborted")
+        else:
+            errors["base"] = "press_the_button"
 
         return self.async_show_form(step_id="link", errors=errors)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the auth token becomes invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation and start link process."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            config = {
+                HMIPC_HAPID: reauth_entry.data[HMIPC_HAPID],
+                HMIPC_PIN: user_input.get(HMIPC_PIN),
+                HMIPC_NAME: reauth_entry.data.get(HMIPC_NAME),
+            }
+            self.auth = HomematicipAuth(self.hass, config)
+            connected = await self.auth.async_setup()
+            if connected:
+                return await self.async_step_link()
+            errors["base"] = "invalid_sgtin_or_pin"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(HMIPC_PIN): str,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_import(self, import_data: dict[str, str]) -> ConfigFlowResult:
         """Import a new access point as a config entry."""
