@@ -4,9 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import create_mocked_hub
 
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -19,7 +22,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def init_integration(hass: HomeAssistant, mock_config_entry):
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> tuple[VictronVenusHub, MockConfigEntry]:
     """Set up the Victron GX MQTT integration for testing."""
     mock_config_entry.add_to_hass(hass)
 

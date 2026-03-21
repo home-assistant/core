@@ -85,7 +85,11 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(device, metric, device_info)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(metric.metric_nature)
+        # Enum sensors must not have a state class
+        if self._attr_device_class != SensorDeviceClass.ENUM:
+            self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(
+                metric.metric_nature
+            )
         # Only set native_unit_of_measurement when a device_class is present.
         # Entities without a device_class get their display unit from
         # the translation files instead.

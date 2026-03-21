@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -54,7 +55,7 @@ def mock_config_entry(basic_config):
 
 async def test_victron_battery_sensor(
     hass: HomeAssistant,
-    init_integration,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
 ) -> None:
     """Test SENSOR MetricKind - battery current sensor is created and updated."""
     victron_hub, mock_config_entry = init_integration
@@ -97,7 +98,7 @@ async def test_victron_battery_sensor(
 
 async def test_victron_enum_sensor(
     hass: HomeAssistant,
-    init_integration,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
 ) -> None:
     """Test sensor with VictronEnum value normalizes to enum id."""
     victron_hub, _mock_config_entry = init_integration

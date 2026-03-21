@@ -1,6 +1,6 @@
 """Test the Victron GX MQTT Hub class."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from victron_mqtt import (
@@ -49,7 +49,7 @@ def basic_config():
 
 
 @pytest.fixture
-def mock_config_entry(basic_config):
+def mock_config_entry(basic_config: dict[str, object]) -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -58,22 +58,10 @@ def mock_config_entry(basic_config):
     )
 
 
-@pytest.fixture
-def mock_victron_hub():
-    """Create a mock VictronVenusHub."""
-    with patch(
-        "homeassistant.components.victron_gx.hub.VictronVenusHub"
-    ) as mock_hub_class:
-        mock_hub = MagicMock(spec=VictronVenusHub)
-        mock_hub.connect = AsyncMock()
-        mock_hub.disconnect = AsyncMock()
-        mock_hub.publish = MagicMock()
-        mock_hub.installation_id = "123"
-        mock_hub_class.return_value = mock_hub
-        yield mock_hub
-
-
-async def test_hub_start_success(hass: HomeAssistant, init_integration) -> None:
+async def test_hub_start_success(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
     """Test successful hub start."""
     victron_hub, mock_config_entry = init_integration
 
@@ -83,7 +71,7 @@ async def test_hub_start_success(hass: HomeAssistant, init_integration) -> None:
 
 
 async def test_hub_start_authentication_error(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test hub start with authentication error."""
     mock_config_entry.add_to_hass(hass)
@@ -100,7 +88,10 @@ async def test_hub_start_authentication_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_hub_stop(hass: HomeAssistant, init_integration) -> None:
+async def test_hub_stop(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
     """Test hub stop."""
     _, mock_config_entry = init_integration
 
@@ -158,7 +149,8 @@ async def test_map_device_info_no_manufacturer() -> None:
 
 
 async def test_unregister_add_entities_callback(
-    hass: HomeAssistant, init_integration
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
 ) -> None:
     """Test unregistering add entities callback."""
     victron_hub, mock_config_entry = init_integration

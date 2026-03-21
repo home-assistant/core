@@ -219,10 +219,9 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self._set_confirm_only()
-        assert self.friendly_name is not None
         return self.async_show_form(
             step_id="ssdp_confirm",
-            description_placeholders={"name": self.friendly_name},
+            description_placeholders={"name": self.friendly_name or self.hostname},
         )
 
     async def async_step_ssdp_auth(
