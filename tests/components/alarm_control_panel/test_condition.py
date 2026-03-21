@@ -13,14 +13,13 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
-    create_target_condition,
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -79,7 +78,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
         ),
@@ -87,7 +86,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
         ),
@@ -95,7 +94,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
         ),
@@ -103,7 +102,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
         ),
@@ -171,7 +170,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
         ),
@@ -179,7 +178,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
         ),
@@ -187,7 +186,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
         ),
@@ -195,7 +194,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
         ),
@@ -222,29 +221,13 @@ async def test_alarm_control_panel_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the alarm_control_panel state condition with the 'all' behavior."""
-    other_entity_ids = set(target_alarm_control_panels["included"]) - {entity_id}
-
-    # Set all alarm_control_panels, including the tested alarm_control_panel, to the initial state
-    for eid in target_alarm_control_panels["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_all(
         hass,
+        target_entities=target_alarm_control_panels,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="all",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included"]
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
-
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-
-        assert condition(hass) == state["condition_true"]
