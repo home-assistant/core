@@ -182,8 +182,8 @@ def create_b01_q10_trait() -> Mock:
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
-    # Simulate a device push: notify status listeners when refresh is called,
-    # so the coordinator's first-refresh wait resolves immediately in tests.
+    # Simulate a device push in tests: notify status listeners whenever
+    # refresh() is called so they see updated state immediately.
     q10_trait.refresh = AsyncMock(side_effect=status._notify_update)
     return q10_trait
 
