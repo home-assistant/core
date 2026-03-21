@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from enocean_async import EURID, EntityType, Gateway, Observable, Observation
 from enocean_async.semantics.value_kind import ValueKind
 
@@ -31,6 +33,7 @@ _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
     Observable.GAS_VOLUME: SensorDeviceClass.GAS,
     Observable.WATER_VOLUME: SensorDeviceClass.WATER,
     Observable.RSSI: SensorDeviceClass.SIGNAL_STRENGTH,
+    Observable.LAST_SEEN: SensorDeviceClass.TIMESTAMP,
 }
 
 _SCALAR_STATE_CLASS: SensorStateClass = SensorStateClass.MEASUREMENT
@@ -43,13 +46,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    version_info = await gateway.version_info
-    gateway_eurid: EURID = version_info.eurid
+    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
         for entity in spec.entities:
-            if entity.entity_type != EntityType.SENSOR:
+            if entity.entity_type not in (EntityType.SENSOR, EntityType.METADATA):
                 continue
             # Create one HA sensor per scalar/enum observable in the entity.
             for observable in entity.observables:
@@ -113,5 +115,8 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         ):
             return
 
-        self._attr_native_value = observation.values[self._observable]
+        value = observation.values[self._observable]
+        if self._observable is Observable.LAST_SEEN:
+            value = datetime.fromtimestamp(value, tz=UTC)
+        self._attr_native_value = value
         self.schedule_update_ha_state()

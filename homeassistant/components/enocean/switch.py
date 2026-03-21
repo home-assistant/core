@@ -26,8 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    version_info = await gateway.version_info
-    gateway_eurid: EURID = version_info.eurid
+    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():

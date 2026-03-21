@@ -43,8 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    version_info = await gateway.version_info
-    gateway_eurid: EURID = version_info.eurid
+    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
@@ -79,6 +78,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             gateway=gateway,
             gateway_eurid=gateway_eurid,
         )
+        self._attr_is_closed: bool | None = None
         gateway.add_observation_callback(self._on_observation)
 
     async def async_added_to_hass(self) -> None:

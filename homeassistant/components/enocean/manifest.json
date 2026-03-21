@@ -1,7 +1,7 @@
 {
   "domain": "enocean",
   "name": "EnOcean",
-  "codeowners": ["@henningkerstan"],
+  "codeowners": [],
   "config_flow": true,
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/enocean",
