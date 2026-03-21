@@ -196,7 +196,7 @@ def mock_withings():
 
 @pytest.fixture(name="disable_webhook_delay", autouse=True)
 def disable_webhook_delay():
-    """Disable webhook delays and mock preflight check."""
+    """Disable webhook delays for faster tests."""
     with (
         patch(
             "homeassistant.components.withings.SUBSCRIBE_DELAY",

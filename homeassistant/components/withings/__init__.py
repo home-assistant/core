@@ -224,17 +224,16 @@ async def async_subscribe_webhooks(client: WithingsClient, webhook_url: str) -> 
 class WithingsWebhookManager:
     """Manager that manages the Withings webhooks."""
 
-    _webhooks_registered = False
-    _webhook_url_invalid = False
-    _ha_webhook_registered = False
-    _register_lock = asyncio.Lock()
-
     def __init__(self, hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
         """Initialize webhook manager."""
         self.hass = hass
         self.entry = entry
         self._subscribe_attempt: int = 0
         self._webhook_url: str | None = None
+        self._webhooks_registered: bool = False
+        self._webhook_url_invalid: bool = False
+        self._ha_webhook_registered: bool = False
+        self._register_lock = asyncio.Lock()
 
     @property
     def withings_data(self) -> WithingsData:
@@ -349,7 +348,7 @@ class WithingsWebhookManager:
                 )
                 return
             except WithingsTooManyRequestsError as err:
-                delay = 300 * (self._subscribe_attempt + 1)
+                delay = min(300 * (self._subscribe_attempt + 1), 1800)
                 LOGGER.warning(
                     "Rate limited by Withings API (attempt %d): %s. "
                     "Retrying in %d seconds",
@@ -358,7 +357,7 @@ class WithingsWebhookManager:
                     delay,
                 )
             except WithingsError as err:
-                delay = base_delay * (2**self._subscribe_attempt)
+                delay = min(base_delay * (2**self._subscribe_attempt), 1800)
                 LOGGER.warning(
                     "Failed to subscribe to Withings webhooks "
                     "(attempt %d): %s. Retrying in %d seconds",
