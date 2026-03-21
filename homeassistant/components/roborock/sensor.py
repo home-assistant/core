@@ -508,6 +508,12 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
+    RoborockSensorDescriptionQ10(
+        key="vacuum_error",
+        translation_key="vacuum_error",
+        value_fn=lambda data: getattr(data, "fault", None),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 
