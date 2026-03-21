@@ -2511,7 +2511,8 @@ async def test_thermostat_infers_no_fan_speed_modes_from_non_speed_fan_modes(
 
     assert acc.ordered_fan_speeds == []
     assert CHAR_ROTATION_SPEED not in acc.fan_chars
-    assert CHAR_TARGET_FAN_STATE not in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE in acc.fan_chars
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
 
 
 async def test_thermostat_with_explicit_fan_speed_modes(
