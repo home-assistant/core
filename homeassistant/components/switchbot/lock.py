@@ -42,14 +42,14 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
         if self._device.is_night_latch_enabled() or force_nightlatch:
             self._attr_supported_features = LockEntityFeature.OPEN
         self._async_update_attrs()
-        
+
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         status = self._device.get_lock_status()
         if self._attr_supported_features & (LockEntityFeature.OPEN):
             self._attr_is_open = status is LockStatus.UNLOCKED
         else:
-            self._attr_is_open = False
+            self._attr_is_open = None
         self._attr_is_locked = status in {
             LockStatus.LOCKED,
             LockStatus.HALF_LOCKED,
