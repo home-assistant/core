@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
 from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.coordinator import Device
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -445,9 +446,16 @@ async def test_switch_turn_on_off(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    with patch(
-        f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}",
-    ) as mock_set_action:
+    with (
+        patch(
+            f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}",
+        ) as mock_set_action,
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper._async_get_wan_access",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -459,9 +467,16 @@ async def test_switch_turn_on_off(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
-    with patch(
-        f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}",
-    ) as mock_set_action_2:
+    with (
+        patch(
+            f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}",
+        ) as mock_set_action_2,
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper._async_get_wan_access",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -606,3 +621,149 @@ def test_wifi_naming_helper(
 ) -> None:
     """Test Wi-Fi naming helper covers supported and fallback branches."""
     assert fritz_switch._wifi_naming({}, wifi_index, wifi_count) == expected_name
+
+
+async def test_profile_switch_verify_after_toggle(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test that internet access switch verifies state via GetWANAccessByIP after toggle."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    fc_class_mock.return_value = FritzConnectionMock(
+        MOCK_FB_SERVICES | MOCK_CALL_DEFLECTION_DATA
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "switch.printer_internet_access"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    # Toggle OFF — _async_get_wan_access confirms the block succeeded
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper.async_set_allow_wan_access",
+        ),
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper._async_get_wan_access",
+            new_callable=AsyncMock,
+            return_value=False,
+        ) as mock_verify,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_verify.assert_called_once()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
+async def test_profile_switch_verify_fallback_on_error(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test that switch falls back to requested value if verification fails."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    fc_class_mock.return_value = FritzConnectionMock(
+        MOCK_FB_SERVICES | MOCK_CALL_DEFLECTION_DATA
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "switch.printer_internet_access"
+
+    # Toggle OFF — _async_get_wan_access returns None (error), fallback to requested value
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper.async_set_allow_wan_access",
+        ),
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper._async_get_wan_access",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
+async def test_profile_switch_skip_stale_poll(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test that stale polled data does not overwrite a recently toggled state."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    mock_conn = FritzConnectionMock(MOCK_FB_SERVICES | MOCK_CALL_DEFLECTION_DATA)
+    fc_class_mock.return_value = mock_conn
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "switch.printer_internet_access"
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # Toggle OFF with verified state
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper.async_set_allow_wan_access",
+        ),
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper._async_get_wan_access",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # Simulate a poll refresh with stale data (wan_access=True, i.e. "granted")
+    coordinator = entry.runtime_data
+    device = coordinator.devices["AA:BB:CC:00:11:22"]
+
+    stale_info = Device(
+        name=device.hostname,
+        connected=True,
+        connected_to="",
+        connection_type="",
+        ip_address=device.ip_address,
+        ssid=None,
+        wan_access=True,  # stale!
+    )
+    device.update(stale_info, 0)
+
+    # The stale wan_access=True should be ignored during the skip window
+    assert device.wan_access is False

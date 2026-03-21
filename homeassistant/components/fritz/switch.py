@@ -599,7 +599,16 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
         await self.coordinator.async_set_allow_wan_access(
             self._device.ip_address, turn_on
         )
-        self._device.wan_access = turn_on
+        # Clear cached Get results so the verification read below fetches
+        # the actual state from the FritzBox, not a stale cached value.
+        self.coordinator.connection.clear_cache()
+        # Verify the actual state using GetWANAccessByIP which reflects
+        # changes immediately, unlike get_hosts_attributes which can be
+        # stale for up to ~10s after a change.
+        wan_access = await self.coordinator._async_get_wan_access(  # noqa: SLF001
+            self._device.ip_address
+        )
+        self._device.wan_access = wan_access if wan_access is not None else turn_on
         self.async_write_ha_state()
 
 
