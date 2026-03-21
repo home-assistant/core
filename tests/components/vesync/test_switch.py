@@ -142,6 +142,19 @@ async def test_turn_on_off_display_raises_error(
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
         ),
+        # child_lock switch for humidifier
+        (
+            "Humidifier 6000s",
+            "switch.humidifier_6000s_child_lock",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_child_lock",
+        ),
+        (
+            "Humidifier 6000s",
+            "switch.humidifier_6000s_child_lock",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_child_lock",
+        ),
         # drying_mode_power_off switch for humidifier with drying mode
         (
             "Humidifier 6000s",
