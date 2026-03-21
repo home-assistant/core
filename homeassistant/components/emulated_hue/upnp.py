@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 BROADCAST_PORT = 1900
 BROADCAST_ADDR = "239.255.255.250"
 
+HUE_DEVICE_TYPE = "urn:schemas-upnp-org:device:Basic:1"
+
 
 class DescriptionXmlView(HomeAssistantView):
     """Handles requests for the description.xml file."""
@@ -44,7 +46,7 @@ class DescriptionXmlView(HomeAssistantView):
 </specVersion>
 <URLBase>http://{self.config.advertise_ip}:{self.config.advertise_port}/</URLBase>
 <device>
-<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
+<deviceType>{HUE_DEVICE_TYPE}</deviceType>
 <friendlyName>Home Assistant Bridge ({self.config.advertise_ip})</friendlyName>
 <manufacturer>Royal Philips Electronics</manufacturer>
 <manufacturerURL>http://www.philips.com</manufacturerURL>
@@ -81,7 +83,7 @@ class UPNPResponderProtocol(asyncio.Protocol):
             "upnp:rootdevice", f"uuid:{HUE_UUID}::upnp:rootdevice"
         )
         self._upnp_device_response = self._prepare_response(
-            "urn:schemas-upnp-org:device:basic:1", f"uuid:{HUE_UUID}"
+            HUE_DEVICE_TYPE, f"uuid:{HUE_UUID}::{HUE_DEVICE_TYPE}"
         )
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
