@@ -11,8 +11,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import STATE_IDLE, UnitOfDataRate
+from homeassistant.const import STATE_IDLE, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -38,6 +39,53 @@ class TransmissionSensorEntityDescription(SensorEntityDescription):
 
     val_func: Callable[[TransmissionDataUpdateCoordinator], StateType]
     extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
+
+
+def _bytes_to_gb(value: int | None) -> float | None:
+    """Convert bytes to gigabytes, return None if value is unavailable."""
+    if value is None:
+        return None
+    return round(value / 1_073_741_824, 3)
+
+
+def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None:
+    """Compute upload/download ratio.
+
+    Returns None when data is unavailable or downloaded == 0.
+    """
+    if uploaded is None or downloaded is None:
+        return None
+    if downloaded == 0:
+        return None
+    return round(uploaded / downloaded, 3)
+
+
+def _get_current_stats_field(
+    coordinator: TransmissionDataUpdateCoordinator, field: str
+) -> int | None:
+    """Safely get a field from current_stats without raising KeyError."""
+    try:
+        raw = coordinator.data.fields.get("current-stats")
+        if raw is None:
+            return None
+        value = raw.get(field)
+        return int(value) if isinstance(value, (int, float)) else None
+    except AttributeError, TypeError:
+        return None
+
+
+def _get_cumulative_stats_field(
+    coordinator: TransmissionDataUpdateCoordinator, field: str
+) -> int | None:
+    """Safely get a field from cumulative_stats without raising KeyError."""
+    try:
+        raw = coordinator.data.fields.get("cumulative-stats")
+        if raw is None:
+            return None
+        value = raw.get(field)
+        return int(value) if isinstance(value, (int, float)) else None
+    except AttributeError, TypeError:
+        return None
 
 
 SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
@@ -112,6 +160,70 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
             coordinator=coordinator, key="started"
         ),
     ),
+    TransmissionSensorEntityDescription(
+        key="session_download",
+        translation_key="session_download",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _bytes_to_gb(
+            _get_current_stats_field(coordinator, "downloadedBytes")
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="session_upload",
+        translation_key="session_upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _bytes_to_gb(
+            _get_current_stats_field(coordinator, "uploadedBytes")
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_download",
+        translation_key="total_download",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _bytes_to_gb(
+            _get_cumulative_stats_field(coordinator, "downloadedBytes")
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_upload",
+        translation_key="total_upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _bytes_to_gb(
+            _get_cumulative_stats_field(coordinator, "uploadedBytes")
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="session_ratio",
+        translation_key="session_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _compute_ratio(
+            _get_current_stats_field(coordinator, "uploadedBytes"),
+            _get_current_stats_field(coordinator, "downloadedBytes"),
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_ratio",
+        translation_key="total_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _compute_ratio(
+            _get_cumulative_stats_field(coordinator, "uploadedBytes"),
+            _get_cumulative_stats_field(coordinator, "downloadedBytes"),
+        ),
+    ),
 )
 
 
@@ -121,7 +233,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Transmission sensors."""
-
     coordinator = config_entry.runtime_data
 
     async_add_entities(
