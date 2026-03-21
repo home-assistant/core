@@ -20,7 +20,7 @@ from roborock.data import (
     ZeoSpin,
     ZeoTemperature,
 )
-from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
+from roborock.data.b01_q10.b01_q10_code_mappings import YXCleanType
 from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
