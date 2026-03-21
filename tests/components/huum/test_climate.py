@@ -62,7 +62,7 @@ async def test_set_hvac_mode(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
 
-    mock_huum_client.turn_on.assert_called_once()
+    mock_huum_client.turn_on.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -82,7 +82,7 @@ async def test_set_temperature(
         blocking=True,
     )
 
-    mock_huum_client.turn_on.assert_called_once_with(60)
+    mock_huum_client.turn_on.assert_awaited_once_with(60)
 
 
 @pytest.mark.usefixtures("init_integration")

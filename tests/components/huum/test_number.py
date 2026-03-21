@@ -54,7 +54,7 @@ async def test_set_humidity(
         blocking=True,
     )
 
-    mock_huum_client.turn_on.assert_called_once_with(temperature=80, humidity=5)
+    mock_huum_client.turn_on.assert_awaited_once_with(temperature=80, humidity=5)
 
 
 @pytest.mark.usefixtures("init_integration")

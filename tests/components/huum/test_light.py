@@ -54,7 +54,7 @@ async def test_light_turn_off(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    mock_huum_client.toggle_light.assert_called_once()
+    mock_huum_client.toggle_light.assert_awaited_once()
 
 
 async def test_light_turn_on(
@@ -67,7 +67,7 @@ async def test_light_turn_on(
 
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.huum.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -79,4 +79,4 @@ async def test_light_turn_on(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    mock_huum_client.toggle_light.assert_called_once()
+    mock_huum_client.toggle_light.assert_awaited_once()

@@ -96,7 +96,7 @@ async def init_integration(
     mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.huum.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     return mock_config_entry
