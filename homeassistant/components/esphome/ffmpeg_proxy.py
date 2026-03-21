@@ -287,7 +287,7 @@ class FFmpegConvertResponse(web.StreamResponse):
                 stderr_task.cancel()
                 raise
 
-            if proc.returncode is not None and proc.returncode != 0:
+            if proc.returncode is not None and proc.returncode > 0:
                 _LOGGER.error(
                     "FFmpeg conversion failed for device %s (return code %s):\n%s",
                     self.device_id,
