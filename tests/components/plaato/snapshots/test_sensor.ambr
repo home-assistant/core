@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_alcohol_by_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_batch_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +102,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -150,8 +153,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles_per_minute-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -200,8 +204,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_co2_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -249,8 +254,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_original_gravity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -299,8 +305,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_specific_gravity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -349,8 +356,9 @@
 # ---
 # name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -398,8 +406,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_beer_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -450,8 +459,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_last_pour_amount-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -503,8 +513,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_percent_beer_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -556,8 +567,9 @@
 # ---
 # name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
