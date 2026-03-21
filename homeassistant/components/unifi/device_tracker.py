@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
-from .const import DOMAIN, UNIFI_WIRELESS_CLIENTS
+from .const import DOMAIN
 from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_fn
 from .hub import UnifiHub
 
