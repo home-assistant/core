@@ -1,7 +1,9 @@
 """NINA common entity."""
 
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import NINADataUpdateCoordinator, NinaWarningData
 
 
@@ -20,6 +22,7 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
 
         self._region: str = region
         self._warning_index: int = slot_id - 1
+        self._region_name: str = region_name
 
         self._attr_translation_placeholders = {
             "slot_id": str(slot_id),
@@ -31,10 +34,18 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
         return len(self.coordinator.data[self._region])
 
         self._attr_translation_placeholders = {
-            "region_name": region_name,
             "slot_id": str(slot_id),
         }
-        self._attr_device_info = coordinator.device_info
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._region}")},
+            manufacturer="NINA",
+            name=self._region_name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     def _get_warning_data(self) -> NinaWarningData:
         """Return warning data."""

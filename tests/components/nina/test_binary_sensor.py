@@ -48,7 +48,7 @@ async def test_binary_sensors_without_corona_filter(
         nina_warnings,
     )
 
-    state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
+    state_w1 = hass.states.get("binary_sensor.aach_stadt_warning_1")
 
     assert state_w1.state == STATE_ON
     assert (
@@ -56,20 +56,20 @@ async def test_binary_sensors_without_corona_filter(
         == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
     )
 
-    state_w2 = hass.states.get("binary_sensor.nina_warning_aach_stadt_2")
+    state_w2 = hass.states.get("binary_sensor.aach_stadt_warning_2")
 
     assert state_w2.state == STATE_ON
     assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
 
-    state_w3 = hass.states.get("binary_sensor.nina_warning_aach_stadt_3")
+    state_w3 = hass.states.get("binary_sensor.aach_stadt_warning_3")
 
     assert state_w3.state == STATE_OFF  # Warning expired
 
-    state_w4 = hass.states.get("binary_sensor.nina_warning_aach_stadt_4")
+    state_w4 = hass.states.get("binary_sensor.aach_stadt_warning_4")
 
     assert state_w4.state == STATE_OFF
 
-    state_w5 = hass.states.get("binary_sensor.nina_warning_aach_stadt_5")
+    state_w5 = hass.states.get("binary_sensor.aach_stadt_warning_5")
 
     assert state_w5.state == STATE_OFF
 
@@ -91,23 +91,23 @@ async def test_binary_sensors_with_area_filter(
         nina_warnings,
     )
 
-    state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
+    state_w1 = hass.states.get("binary_sensor.aach_stadt_warning_1")
 
     assert state_w1.state == STATE_ON
     assert state_w1.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
 
-    state_w2 = hass.states.get("binary_sensor.nina_warning_aach_stadt_2")
+    state_w2 = hass.states.get("binary_sensor.aach_stadt_warning_2")
 
     assert state_w2.state == STATE_OFF
 
-    state_w3 = hass.states.get("binary_sensor.nina_warning_aach_stadt_3")
+    state_w3 = hass.states.get("binary_sensor.aach_stadt_warning_3")
 
     assert state_w3.state == STATE_OFF
 
-    state_w4 = hass.states.get("binary_sensor.nina_warning_aach_stadt_4")
+    state_w4 = hass.states.get("binary_sensor.aach_stadt_warning_4")
 
     assert state_w4.state == STATE_OFF
 
-    state_w5 = hass.states.get("binary_sensor.nina_warning_aach_stadt_5")
+    state_w5 = hass.states.get("binary_sensor.aach_stadt_warning_5")
 
     assert state_w5.state == STATE_OFF

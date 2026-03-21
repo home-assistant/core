@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.nina_affected_areas_aach_1-entry]
+# name: test_sensors[sensor.aach_affected_areas_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_affected_areas_aach_1',
+    'entity_id': 'sensor.aach_affected_areas_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Affected areas: Aach 1',
+    'object_id_base': 'Affected areas 1',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Affected areas: Aach 1',
+    'original_name': 'Affected areas 1',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_1-state]
+# name: test_sensors[sensor.aach_affected_areas_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Affected areas: Aach 1',
+      'friendly_name': 'Aach Affected areas 1',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_affected_areas_aach_1',
+    'entity_id': 'sensor.aach_affected_areas_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Lieb...',
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_2-entry]
+# name: test_sensors[sensor.aach_affected_areas_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_affected_areas_aach_2',
+    'entity_id': 'sensor.aach_affected_areas_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,12 +71,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Affected areas: Aach 2',
+    'object_id_base': 'Affected areas 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Affected areas: Aach 2',
+    'original_name': 'Affected areas 2',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -86,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_2-state]
+# name: test_sensors[sensor.aach_affected_areas_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Affected areas: Aach 2',
+      'friendly_name': 'Aach Affected areas 2',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_affected_areas_aach_2',
+    'entity_id': 'sensor.aach_affected_areas_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_3-entry]
+# name: test_sensors[sensor.aach_affected_areas_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_affected_areas_aach_3',
+    'entity_id': 'sensor.aach_affected_areas_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -121,12 +121,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Affected areas: Aach 3',
+    'object_id_base': 'Affected areas 3',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Affected areas: Aach 3',
+    'original_name': 'Affected areas 3',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,20 +136,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_3-state]
+# name: test_sensors[sensor.aach_affected_areas_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Affected areas: Aach 3',
+      'friendly_name': 'Aach Affected areas 3',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_affected_areas_aach_3',
+    'entity_id': 'sensor.aach_affected_areas_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_4-entry]
+# name: test_sensors[sensor.aach_affected_areas_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -163,7 +163,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_affected_areas_aach_4',
+    'entity_id': 'sensor.aach_affected_areas_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -171,12 +171,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Affected areas: Aach 4',
+    'object_id_base': 'Affected areas 4',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Affected areas: Aach 4',
+    'original_name': 'Affected areas 4',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -186,20 +186,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_4-state]
+# name: test_sensors[sensor.aach_affected_areas_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Affected areas: Aach 4',
+      'friendly_name': 'Aach Affected areas 4',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_affected_areas_aach_4',
+    'entity_id': 'sensor.aach_affected_areas_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_5-entry]
+# name: test_sensors[sensor.aach_affected_areas_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -213,7 +213,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_affected_areas_aach_5',
+    'entity_id': 'sensor.aach_affected_areas_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -221,12 +221,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Affected areas: Aach 5',
+    'object_id_base': 'Affected areas 5',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Affected areas: Aach 5',
+    'original_name': 'Affected areas 5',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -236,20 +236,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_affected_areas_aach_5-state]
+# name: test_sensors[sensor.aach_affected_areas_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Affected areas: Aach 5',
+      'friendly_name': 'Aach Affected areas 5',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_affected_areas_aach_5',
+    'entity_id': 'sensor.aach_affected_areas_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_1-entry]
+# name: test_sensors[sensor.aach_headline_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -263,7 +263,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_headline_aach_1',
+    'entity_id': 'sensor.aach_headline_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -271,12 +271,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Headline: Aach 1',
+    'object_id_base': 'Headline 1',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Headline: Aach 1',
+    'original_name': 'Headline 1',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -286,20 +286,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_1-state]
+# name: test_sensors[sensor.aach_headline_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Headline: Aach 1',
+      'friendly_name': 'Aach Headline 1',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_headline_aach_1',
+    'entity_id': 'sensor.aach_headline_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Ausfall Notruf 112',
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_2-entry]
+# name: test_sensors[sensor.aach_headline_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -313,7 +313,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_headline_aach_2',
+    'entity_id': 'sensor.aach_headline_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -321,12 +321,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Headline: Aach 2',
+    'object_id_base': 'Headline 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Headline: Aach 2',
+    'original_name': 'Headline 2',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -336,20 +336,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_2-state]
+# name: test_sensors[sensor.aach_headline_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Headline: Aach 2',
+      'friendly_name': 'Aach Headline 2',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_headline_aach_2',
+    'entity_id': 'sensor.aach_headline_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_3-entry]
+# name: test_sensors[sensor.aach_headline_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -363,7 +363,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_headline_aach_3',
+    'entity_id': 'sensor.aach_headline_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -371,12 +371,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Headline: Aach 3',
+    'object_id_base': 'Headline 3',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Headline: Aach 3',
+    'original_name': 'Headline 3',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -386,20 +386,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_3-state]
+# name: test_sensors[sensor.aach_headline_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Headline: Aach 3',
+      'friendly_name': 'Aach Headline 3',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_headline_aach_3',
+    'entity_id': 'sensor.aach_headline_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_4-entry]
+# name: test_sensors[sensor.aach_headline_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -413,7 +413,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_headline_aach_4',
+    'entity_id': 'sensor.aach_headline_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -421,12 +421,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Headline: Aach 4',
+    'object_id_base': 'Headline 4',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Headline: Aach 4',
+    'original_name': 'Headline 4',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -436,20 +436,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_4-state]
+# name: test_sensors[sensor.aach_headline_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Headline: Aach 4',
+      'friendly_name': 'Aach Headline 4',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_headline_aach_4',
+    'entity_id': 'sensor.aach_headline_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_5-entry]
+# name: test_sensors[sensor.aach_headline_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -463,7 +463,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_headline_aach_5',
+    'entity_id': 'sensor.aach_headline_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -471,12 +471,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Headline: Aach 5',
+    'object_id_base': 'Headline 5',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Headline: Aach 5',
+    'original_name': 'Headline 5',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -486,20 +486,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_headline_aach_5-state]
+# name: test_sensors[sensor.aach_headline_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Headline: Aach 5',
+      'friendly_name': 'Aach Headline 5',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_headline_aach_5',
+    'entity_id': 'sensor.aach_headline_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_1-entry]
+# name: test_sensors[sensor.aach_more_information_url_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -513,7 +513,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_more_information_url_aach_1',
+    'entity_id': 'sensor.aach_more_information_url_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -521,12 +521,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'More information URL: Aach 1',
+    'object_id_base': 'More information URL 1',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'More information URL: Aach 1',
+    'original_name': 'More information URL 1',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -536,20 +536,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_1-state]
+# name: test_sensors[sensor.aach_more_information_url_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA More information URL: Aach 1',
+      'friendly_name': 'Aach More information URL 1',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_more_information_url_aach_1',
+    'entity_id': 'sensor.aach_more_information_url_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'https://www.wettergefahren.de',
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_2-entry]
+# name: test_sensors[sensor.aach_more_information_url_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -563,7 +563,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_more_information_url_aach_2',
+    'entity_id': 'sensor.aach_more_information_url_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -571,12 +571,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'More information URL: Aach 2',
+    'object_id_base': 'More information URL 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'More information URL: Aach 2',
+    'original_name': 'More information URL 2',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -586,20 +586,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_2-state]
+# name: test_sensors[sensor.aach_more_information_url_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA More information URL: Aach 2',
+      'friendly_name': 'Aach More information URL 2',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_more_information_url_aach_2',
+    'entity_id': 'sensor.aach_more_information_url_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_3-entry]
+# name: test_sensors[sensor.aach_more_information_url_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -613,7 +613,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_more_information_url_aach_3',
+    'entity_id': 'sensor.aach_more_information_url_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -621,12 +621,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'More information URL: Aach 3',
+    'object_id_base': 'More information URL 3',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'More information URL: Aach 3',
+    'original_name': 'More information URL 3',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -636,20 +636,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_3-state]
+# name: test_sensors[sensor.aach_more_information_url_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA More information URL: Aach 3',
+      'friendly_name': 'Aach More information URL 3',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_more_information_url_aach_3',
+    'entity_id': 'sensor.aach_more_information_url_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_4-entry]
+# name: test_sensors[sensor.aach_more_information_url_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -663,7 +663,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_more_information_url_aach_4',
+    'entity_id': 'sensor.aach_more_information_url_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -671,12 +671,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'More information URL: Aach 4',
+    'object_id_base': 'More information URL 4',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'More information URL: Aach 4',
+    'original_name': 'More information URL 4',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -686,20 +686,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_4-state]
+# name: test_sensors[sensor.aach_more_information_url_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA More information URL: Aach 4',
+      'friendly_name': 'Aach More information URL 4',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_more_information_url_aach_4',
+    'entity_id': 'sensor.aach_more_information_url_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_5-entry]
+# name: test_sensors[sensor.aach_more_information_url_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -713,7 +713,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_more_information_url_aach_5',
+    'entity_id': 'sensor.aach_more_information_url_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -721,12 +721,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'More information URL: Aach 5',
+    'object_id_base': 'More information URL 5',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'More information URL: Aach 5',
+    'original_name': 'More information URL 5',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -736,20 +736,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_more_information_url_aach_5-state]
+# name: test_sensors[sensor.aach_more_information_url_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA More information URL: Aach 5',
+      'friendly_name': 'Aach More information URL 5',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_more_information_url_aach_5',
+    'entity_id': 'sensor.aach_more_information_url_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_1-entry]
+# name: test_sensors[sensor.aach_sender_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -763,7 +763,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_sender_aach_1',
+    'entity_id': 'sensor.aach_sender_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -771,12 +771,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sender: Aach 1',
+    'object_id_base': 'Sender 1',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sender: Aach 1',
+    'original_name': 'Sender 1',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -786,20 +786,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_1-state]
+# name: test_sensors[sensor.aach_sender_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Sender: Aach 1',
+      'friendly_name': 'Aach Sender 1',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_sender_aach_1',
+    'entity_id': 'sensor.aach_sender_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Deutscher Wetterdienst',
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_2-entry]
+# name: test_sensors[sensor.aach_sender_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -813,7 +813,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_sender_aach_2',
+    'entity_id': 'sensor.aach_sender_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -821,12 +821,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sender: Aach 2',
+    'object_id_base': 'Sender 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sender: Aach 2',
+    'original_name': 'Sender 2',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -836,20 +836,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_2-state]
+# name: test_sensors[sensor.aach_sender_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Sender: Aach 2',
+      'friendly_name': 'Aach Sender 2',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_sender_aach_2',
+    'entity_id': 'sensor.aach_sender_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_3-entry]
+# name: test_sensors[sensor.aach_sender_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -863,7 +863,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_sender_aach_3',
+    'entity_id': 'sensor.aach_sender_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -871,12 +871,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sender: Aach 3',
+    'object_id_base': 'Sender 3',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sender: Aach 3',
+    'original_name': 'Sender 3',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -886,20 +886,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_3-state]
+# name: test_sensors[sensor.aach_sender_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Sender: Aach 3',
+      'friendly_name': 'Aach Sender 3',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_sender_aach_3',
+    'entity_id': 'sensor.aach_sender_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_4-entry]
+# name: test_sensors[sensor.aach_sender_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -913,7 +913,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_sender_aach_4',
+    'entity_id': 'sensor.aach_sender_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -921,12 +921,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sender: Aach 4',
+    'object_id_base': 'Sender 4',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sender: Aach 4',
+    'original_name': 'Sender 4',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -936,20 +936,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_4-state]
+# name: test_sensors[sensor.aach_sender_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Sender: Aach 4',
+      'friendly_name': 'Aach Sender 4',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_sender_aach_4',
+    'entity_id': 'sensor.aach_sender_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_5-entry]
+# name: test_sensors[sensor.aach_sender_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -963,7 +963,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_sender_aach_5',
+    'entity_id': 'sensor.aach_sender_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -971,12 +971,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sender: Aach 5',
+    'object_id_base': 'Sender 5',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sender: Aach 5',
+    'original_name': 'Sender 5',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -986,20 +986,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_sender_aach_5-state]
+# name: test_sensors[sensor.aach_sender_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NINA Sender: Aach 5',
+      'friendly_name': 'Aach Sender 5',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_sender_aach_5',
+    'entity_id': 'sensor.aach_sender_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_1-entry]
+# name: test_sensors[sensor.aach_severity_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1021,7 +1021,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_severity_aach_1',
+    'entity_id': 'sensor.aach_severity_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1029,12 +1029,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Severity: Aach 1',
+    'object_id_base': 'Severity 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Severity: Aach 1',
+    'original_name': 'Severity 1',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1044,11 +1044,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_1-state]
+# name: test_sensors[sensor.aach_severity_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'NINA Severity: Aach 1',
+      'friendly_name': 'Aach Severity 1',
       'options': list([
         'extreme',
         'severe',
@@ -1058,14 +1058,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_severity_aach_1',
+    'entity_id': 'sensor.aach_severity_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'minor',
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_2-entry]
+# name: test_sensors[sensor.aach_severity_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1087,7 +1087,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_severity_aach_2',
+    'entity_id': 'sensor.aach_severity_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1095,12 +1095,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Severity: Aach 2',
+    'object_id_base': 'Severity 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Severity: Aach 2',
+    'original_name': 'Severity 2',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1110,11 +1110,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_2-state]
+# name: test_sensors[sensor.aach_severity_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'NINA Severity: Aach 2',
+      'friendly_name': 'Aach Severity 2',
       'options': list([
         'extreme',
         'severe',
@@ -1124,14 +1124,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_severity_aach_2',
+    'entity_id': 'sensor.aach_severity_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_3-entry]
+# name: test_sensors[sensor.aach_severity_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1153,7 +1153,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_severity_aach_3',
+    'entity_id': 'sensor.aach_severity_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1161,12 +1161,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Severity: Aach 3',
+    'object_id_base': 'Severity 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Severity: Aach 3',
+    'original_name': 'Severity 3',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1176,11 +1176,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_3-state]
+# name: test_sensors[sensor.aach_severity_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'NINA Severity: Aach 3',
+      'friendly_name': 'Aach Severity 3',
       'options': list([
         'extreme',
         'severe',
@@ -1190,14 +1190,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_severity_aach_3',
+    'entity_id': 'sensor.aach_severity_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_4-entry]
+# name: test_sensors[sensor.aach_severity_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1219,7 +1219,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_severity_aach_4',
+    'entity_id': 'sensor.aach_severity_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1227,12 +1227,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Severity: Aach 4',
+    'object_id_base': 'Severity 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Severity: Aach 4',
+    'original_name': 'Severity 4',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1242,11 +1242,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_4-state]
+# name: test_sensors[sensor.aach_severity_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'NINA Severity: Aach 4',
+      'friendly_name': 'Aach Severity 4',
       'options': list([
         'extreme',
         'severe',
@@ -1256,14 +1256,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_severity_aach_4',
+    'entity_id': 'sensor.aach_severity_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_5-entry]
+# name: test_sensors[sensor.aach_severity_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1285,7 +1285,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nina_severity_aach_5',
+    'entity_id': 'sensor.aach_severity_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1293,12 +1293,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Severity: Aach 5',
+    'object_id_base': 'Severity 5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Severity: Aach 5',
+    'original_name': 'Severity 5',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1308,11 +1308,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.nina_severity_aach_5-state]
+# name: test_sensors[sensor.aach_severity_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'NINA Severity: Aach 5',
+      'friendly_name': 'Aach Severity 5',
       'options': list([
         'extreme',
         'severe',
@@ -1322,7 +1322,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nina_severity_aach_5',
+    'entity_id': 'sensor.aach_severity_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
