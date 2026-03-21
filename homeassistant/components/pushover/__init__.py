@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_USER_KEY, DATA_HASS_CONFIG, DOMAIN
+from .const import CONF_USER_KEY, DATA_HASS_CONFIG, DOMAIN, SERVICE_CANCEL
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -60,5 +60,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DATA_HASS_CONFIG],
         )
     )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a pushover config entry."""
+    # Remove this entry's service instance from the cancel service registry.
+    services: dict = hass.data.get(DOMAIN, {}).get("services", {})
+    services.pop(entry.entry_id, None)
+
+    # When the last entry is removed, unregister the cancel service too.
+    if not services and hass.services.has_service(DOMAIN, SERVICE_CANCEL):
+        hass.services.async_remove(DOMAIN, SERVICE_CANCEL)
+
+    hass.data[DOMAIN].pop(entry.entry_id, None)
 
     return True
