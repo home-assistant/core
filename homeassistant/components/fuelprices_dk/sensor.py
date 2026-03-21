@@ -26,7 +26,7 @@ SENSORS = [
         key="price",
         name="Fuel Price",
         native_unit_of_measurement="DKK/L",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gas-station",
     ),
 ]
