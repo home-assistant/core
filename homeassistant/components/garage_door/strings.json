@@ -1,9 +1,39 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted garage doors.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted garage doors to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more garage doors are closed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::garage_door::common::condition_behavior_description%]",
+          "name": "[%key:component::garage_door::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Garage door is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more garage doors are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::garage_door::common::condition_behavior_description%]",
+          "name": "[%key:component::garage_door::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Garage door is open"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

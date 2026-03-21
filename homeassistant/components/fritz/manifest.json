@@ -8,7 +8,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["fritzconnection"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["fritzconnection[qr]==1.15.1", "xmltodict==1.0.2"],
   "ssdp": [
     {
