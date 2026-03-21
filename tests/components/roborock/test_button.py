@@ -314,7 +314,7 @@ async def test_press_q10_empty_dustbin_button_failure(
     )
 
     assert hass.states.get(entity_id) is not None
-    with pytest.raises(HomeAssistantError, match="empty_dustbin"):
+    with pytest.raises(HomeAssistantError, match="Error while calling empty_dustbin"):
         await hass.services.async_call(
             "button",
             SERVICE_PRESS,
