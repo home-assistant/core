@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
@@ -27,6 +29,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import AirthingsConfigEntry
 from .const import DOMAIN
@@ -149,15 +152,23 @@ async def async_setup_entry(
     """Set up the Airthings sensor."""
 
     coordinator = entry.runtime_data
+    sensors = SENSORS.copy()
+    if hass.config.units is not METRIC_SYSTEM:
+        sensors["radonShortTermAvg"] = dataclasses.replace(
+            sensors["radonShortTermAvg"],
+            native_unit_of_measurement="pCi/L",
+            suggested_display_precision=1,
+        )
+
     entities = [
         AirthingsDeviceSensor(
             coordinator,
             airthings_device,
-            SENSORS[sensor_types],
+            sensors[sensor_types],
         )
         for airthings_device in coordinator.data.values()
         for sensor_types in airthings_device.sensor_types
-        if sensor_types in SENSORS
+        if sensor_types in sensors
     ]
     async_add_entities(entities)
 
