@@ -88,6 +88,11 @@
           "reset": "Reset rule"
         }
       }
+    },
+    "number": {
+      "door_lock_rule_interval": {
+        "name": "Rule Interval (min)"
+      }
     }
   },
   "exceptions": {
