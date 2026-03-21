@@ -2256,7 +2256,7 @@ python-pooldose==0.8.6
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.26.1
+python-roborock==4.26.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2801,7 +2801,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.6.0
+xiaomi-ble==1.10.0
 
 # homeassistant.components.knx
 xknx==3.15.0
