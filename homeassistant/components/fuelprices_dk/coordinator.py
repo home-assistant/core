@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class APIClient(DataUpdateCoordinator[None]):
-    """DataUpdateCoordinator for Braendstofpriser."""
+    """Data update coordinator for the Fuelprices.dk integration."""
 
     def __init__(
         self,
