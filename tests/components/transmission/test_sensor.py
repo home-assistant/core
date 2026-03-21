@@ -1,11 +1,24 @@
 """Tests for the Transmission sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from transmission_rpc.session import SessionStats
 
-from homeassistant.const import Platform
+from homeassistant.components.transmission.const import (
+    STATE_DOWNLOADING,
+    STATE_SEEDING,
+    STATE_UP_DOWN,
+)
+from homeassistant.components.transmission.sensor import (
+    _bytes_to_gb,
+    _compute_ratio,
+    _get_cumulative_stats_field,
+    _get_current_stats_field,
+    get_state,
+)
+from homeassistant.const import STATE_IDLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -66,3 +79,74 @@ async def test_stats_sensors(
     state = hass.states.get("sensor.transmission_total_ratio")
     assert state is not None
     assert float(state.state) == pytest.approx(0.8, rel=1e-3)
+
+
+async def test_stats_sensors_none_when_missing(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stats sensors return unknown when stats fields are missing."""
+    client = mock_transmission_client.return_value
+
+    client.session_stats.return_value = SessionStats(
+        fields={
+            "uploadSpeed": 0,
+            "downloadSpeed": 0,
+            "activeTorrentCount": 0,
+            "pausedTorrentCount": 0,
+            "torrentCount": 0,
+        }
+    )
+    with patch("homeassistant.components.transmission.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.transmission_session_download")
+    assert state is not None
+    assert state.state == "unknown"
+
+    state = hass.states.get("sensor.transmission_session_ratio")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_get_state_combinations(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test get_state with all upload/download combinations."""
+
+    assert get_state(1, 1) == STATE_UP_DOWN
+    assert get_state(1, 0) == STATE_SEEDING
+    assert get_state(0, 1) == STATE_DOWNLOADING
+    assert get_state(0, 0) == STATE_IDLE
+
+
+def test_helper_functions() -> None:
+    """Test helper functions directly."""
+
+    # _bytes_to_gb
+    assert _bytes_to_gb(None) is None
+    assert _bytes_to_gb(0) == 0.0
+    assert _bytes_to_gb(1_073_741_824) == 1.0
+
+    # _compute_ratio - zero download
+    assert _compute_ratio(100, 0) is None
+
+    # _compute_ratio - None values
+    assert _compute_ratio(None, 100) is None
+    assert _compute_ratio(100, None) is None
+
+    # _compute_ratio - normal
+    assert _compute_ratio(500, 1000) == 0.5
+
+
+def test_get_stats_field_exception() -> None:
+    """Test _get_current/cumulative_stats_field with AttributeError."""
+
+    coordinator = MagicMock()
+    coordinator.data.fields = None  # triggers AttributeError on .get()
+
+    assert _get_current_stats_field(coordinator, "downloadedBytes") is None
+    assert _get_cumulative_stats_field(coordinator, "downloadedBytes") is None
