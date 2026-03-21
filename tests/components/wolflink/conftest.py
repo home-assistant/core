@@ -109,12 +109,6 @@ def mock_wolflink() -> Generator[MagicMock]:
             FlowParameter(
                 1100280001, "Flow Parameter", "Heating", 11005200000, 8000, True
             ),
-            HoursParameter(
-                7002800000, "Hours Parameter", "Heating", 7005200000, 1000, True
-            ),
-            SimpleParameter(
-                1002800000, "Simple Parameter", "DHW", 1005200000, 1000, True
-            ),
         ]
 
         wolflink.fetch_value.return_value = [
