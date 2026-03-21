@@ -62,7 +62,7 @@ async def test_yaml_entity_naming(
     knx: KNXTestKit,
     config: dict[str, Any],
     expected_entity_id: str,
-    expected_friendly_name: str,
+    expected_friendly_name: str | None,
 ) -> None:
     """Test KNX entity id and name setting from YAML configuration."""
     await knx.setup_integration({Platform.SWITCH: config})
