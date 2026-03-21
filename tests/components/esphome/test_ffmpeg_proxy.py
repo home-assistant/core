@@ -20,12 +20,12 @@ from homeassistant.components.esphome.ffmpeg_proxy import (
     _MAX_STDERR_LINES,
     async_create_proxy_url,
 )
-
-FFMPEG_PROXY = "homeassistant.components.esphome.ffmpeg_proxy"
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
+
+FFMPEG_PROXY = "homeassistant.components.esphome.ffmpeg_proxy"
 
 
 @pytest.fixture(name="wav_file_length")
@@ -434,12 +434,8 @@ async def test_max_conversions_kills_running_process(
         "asyncio.create_subprocess_exec",
         side_effect=_make_mock_proc,
     ):
-        url1 = async_create_proxy_url(
-            hass, device_id, "url1", media_format="mp3"
-        )
-        url2 = async_create_proxy_url(
-            hass, device_id, "url2", media_format="mp3"
-        )
+        url1 = async_create_proxy_url(hass, device_id, "url1", media_format="mp3")
+        url2 = async_create_proxy_url(hass, device_id, "url2", media_format="mp3")
 
         # Start both HTTP requests — each spawns an ffmpeg process that blocks
         task1 = hass.async_create_task(client.get(url1))
@@ -450,9 +446,7 @@ async def test_max_conversions_kills_running_process(
         assert len(mock_kills) == 2
 
         # Creating a third conversion should kill the oldest running process
-        async_create_proxy_url(
-            hass, device_id, "url3", media_format="mp3"
-        )
+        async_create_proxy_url(hass, device_id, "url3", media_format="mp3")
         assert "Stopping existing ffmpeg process" in caplog.text
         mock_kills[0].assert_called_once()
 
