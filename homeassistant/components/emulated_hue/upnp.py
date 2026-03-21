@@ -81,7 +81,7 @@ class UPNPResponderProtocol(asyncio.Protocol):
             "upnp:rootdevice", f"uuid:{HUE_UUID}::upnp:rootdevice"
         )
         self._upnp_device_response = self._prepare_response(
-            "urn:schemas-upnp-org:device:basic:1", f"uuid:{HUE_UUID}"
+            "urn:schemas-upnp-org:device:Basic:1", f"uuid:{HUE_UUID}::urn:schemas-upnp-org:device:Basic:1"
         )
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
