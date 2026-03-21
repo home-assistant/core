@@ -16,7 +16,7 @@ _DEFAULT_DATA = {CONF_HOST: "1.1.1.1", CONF_PORT: 4352, CONF_PASSWORD: "test-pas
 
 @pytest.fixture(autouse=True)
 def mock_projector() -> Generator[AsyncMock]:
-    """Override EltakoGateway."""
+    """Mock the PJLink Projector in the config flow."""
     with patch(
         "homeassistant.components.pjlink.config_flow.Projector",
         autospec=True,
