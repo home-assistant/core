@@ -2023,7 +2023,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_stick_cleaner_status-entry]
+# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_stick_cleaner_in_station-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2037,7 +2037,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.stick_vacuum_stick_cleaner_status',
+    'entity_id': 'binary_sensor.stick_vacuum_stick_cleaner_in_station',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2045,12 +2045,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Stick cleaner status',
+    'object_id_base': 'Stick cleaner in station',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stick cleaner status',
+    'original_name': 'Stick cleaner in station',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2060,13 +2060,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_stick_cleaner_status-state]
+# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_stick_cleaner_in_station-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Stick vacuum Stick cleaner status',
+      'friendly_name': 'Stick vacuum Stick cleaner in station',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.stick_vacuum_stick_cleaner_status',
+    'entity_id': 'binary_sensor.stick_vacuum_stick_cleaner_in_station',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
