@@ -13,6 +13,7 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_CLIENT_SOURCE,
     CONF_SITE_ID,
+    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DOMAIN,
@@ -111,6 +112,35 @@ async def test_migrate_legacy_entry_preserves_explicit_track_clients_false_as_em
     assert config_entry.minor_version == 2
     assert config_entry.options[CONF_CLIENT_SOURCE] == []
     assert CONF_TRACK_CLIENTS not in config_entry.options
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_TRACK_DEVICES: False, CONF_SSID_FILTER: ["ssid"]}],
+)
+async def test_migrate_legacy_entry_preserves_track_devices_and_ssid_filter(
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
+) -> None:
+    """Legacy entries keep device and SSID tracking options after migration."""
+    config_entry = await config_entry_factory()
+
+    assert config_entry.minor_version == 2
+    assert config_entry.options[CONF_CLIENT_SOURCE] == ["00:00:00:00:00:01"]
+    assert config_entry.options[CONF_TRACK_DEVICES] is False
+    assert config_entry.options[CONF_SSID_FILTER] == ["ssid"]
 
 
 @pytest.mark.parametrize(

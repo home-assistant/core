@@ -18,7 +18,6 @@ from .const import (
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
-    CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN,
@@ -58,9 +57,7 @@ async def async_migrate_entry(
         tracked_clients = await _async_get_tracked_clients(hass, config_entry, options)
         options[CONF_CLIENT_SOURCE] = sorted(tracked_clients)
         options.pop(CONF_TRACK_CLIENTS, None)
-        options.pop(CONF_TRACK_DEVICES, None)
         options.pop(CONF_TRACK_WIRED_CLIENTS, None)
-        options.pop(CONF_SSID_FILTER, None)
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=2
         )

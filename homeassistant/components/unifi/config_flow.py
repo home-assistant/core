@@ -51,6 +51,8 @@ from .const import (
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
+    CONF_SSID_FILTER,
+    CONF_TRACK_DEVICES,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
 )
@@ -365,10 +367,43 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_client_control()
 
+        ssids = (
+            {wlan.name for wlan in self.hub.api.wlans.values()}
+            | {
+                f"{wlan.name}{wlan.name_combine_suffix}"
+                for wlan in self.hub.api.wlans.values()
+                if not wlan.name_combine_enabled
+                and wlan.name_combine_suffix is not None
+            }
+            | {
+                wlan["name"]
+                for ap in self.hub.api.devices.values()
+                for wlan in ap.wlan_overrides
+                if "name" in wlan
+            }
+        )
+        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
+
+        selected_ssids_to_filter = [
+            ssid for ssid in self.hub.config.option_ssid_filter if ssid in ssid_filter
+        ]
+
         return self.async_show_form(
             step_id="device_tracker",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_TRACK_DEVICES,
+                        default=self.options.get(
+                            CONF_TRACK_DEVICES, self.hub.config.option_track_devices
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_SSID_FILTER,
+                        default=self.options.get(
+                            CONF_SSID_FILTER, selected_ssids_to_filter
+                        ),
+                    ): cv.multi_select(ssid_filter),
                     vol.Optional(
                         CONF_DETECTION_TIME,
                         default=self.options.get(

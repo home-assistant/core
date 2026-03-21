@@ -15,6 +15,7 @@ from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_IGNORE_WIRED_BUG,
+    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DEFAULT_DETECTION_TIME,
@@ -332,18 +333,14 @@ async def test_hub_state_change(
     assert hass.states.get("device_tracker.switch_1").state == STATE_HOME
 
 
-@pytest.mark.parametrize(
-    "config_entry_options",
-    [{CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]}],
-)
 @pytest.mark.usefixtures("mock_device_registry")
-async def test_option_client_selection_ignores_ssid_changes(
+async def test_option_ssid_filter(
     hass: HomeAssistant,
     mock_websocket_message,
     config_entry_factory: ConfigEntryFactoryType,
     client_payload: list[dict[str, Any]],
 ) -> None:
-    """Test selected clients stay tracked regardless of SSID changes."""
+    """Test the SSID filter works with selected clients."""
     client_payload += [
         WIRELESS_CLIENT_1 | {"last_seen": dt_util.as_timestamp(dt_util.utcnow())},
         {
@@ -356,11 +353,22 @@ async def test_option_client_selection_ignores_ssid_changes(
     ]
     config_entry = await config_entry_factory()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
+
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+            CONF_SSID_FILTER: ["ssid"],
+        },
+    )
+    await hass.async_block_till_done()
+
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
     assert not hass.states.get("device_tracker.client_on_ssid2")
 
-    # Roaming to a different SSID should not affect a selected client.
     ws_client_1 = client_payload[0] | {"essid": "other_ssid"}
     mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
 
@@ -380,7 +388,10 @@ async def test_option_client_selection_ignores_ssid_changes(
 
     hass.config_entries.async_update_entry(
         config_entry,
-        options={CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"]},
+        options={
+            CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+            CONF_SSID_FILTER: [],
+        },
     )
     await hass.async_block_till_done()
 
@@ -401,6 +412,23 @@ async def test_option_client_selection_ignores_ssid_changes(
         await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
+
+    client_on_ssid2["last_seen"] += 1
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_HOME
+
+    client_on_ssid2["last_seen"] += 1
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
+    await hass.async_block_till_done()
+
+    new_time += timedelta(seconds=DEFAULT_DETECTION_TIME)
+    with freeze_time(new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
 
 
 @pytest.mark.usefixtures("mock_device_registry")
@@ -699,12 +727,12 @@ class TestConfigEntryOptionTracking:
             }
         ],
     )
-    async def test_legacy_track_devices_option_is_ignored(
+    async def test_track_devices_option_disables_unifi_devices(
         self,
         hass: HomeAssistant,
         config_entry_setup: MockConfigEntry,
     ) -> None:
-        """Test stale device tracking options no longer disable UniFi devices."""
+        """Test the track devices option disables UniFi devices."""
         await _assert_option_transition(
             hass,
             config_entry_setup,
@@ -720,6 +748,5 @@ class TestConfigEntryOptionTracking:
             {
                 "device_tracker.ws_client_1",
                 "device_tracker.wd_client_1",
-                "device_tracker.switch_1",
             },
         )

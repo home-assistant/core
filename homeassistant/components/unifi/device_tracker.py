@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, UNIFI_WIRELESS_CLIENTS
 from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_fn
 from .hub import UnifiHub
 
@@ -82,7 +82,20 @@ WIRELESS_DISCONNECTION = (
 @callback
 def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    return obj_id in hub.config.option_tracked_clients
+    if obj_id not in hub.config.option_tracked_clients:
+        return False
+
+    client = hub.api.clients[obj_id]
+    wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
+    if (
+        client.mac in wireless_clients
+        and client.essid
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
+    ):
+        return False
+
+    return True
 
 
 @callback
@@ -93,6 +106,14 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     if hub.entity_loader.wireless_clients.is_wireless(client) and client.is_wired:
         if not hub.config.option_ignore_wired_bug:
             return False  # Wired bug in action
+
+    if (
+        not client.is_wired
+        and client.essid
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
+    ):
+        return False
 
     if (
         dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
@@ -145,7 +166,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
-        allowed_fn=lambda hub, _: True,
+        allowed_fn=lambda hub, _: hub.config.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=lambda api, obj_id: None,

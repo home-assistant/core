@@ -88,7 +88,9 @@
       "device_tracker": {
         "data": {
           "detection_time": "Time in seconds from last seen until considered away",
-          "ignore_wired_bug": "Disable UniFi Network wired bug logic"
+          "ignore_wired_bug": "Disable UniFi Network wired bug logic",
+          "ssid_filter": "Select SSIDs to track wireless clients on",
+          "track_devices": "Track network devices (Ubiquiti devices)"
         },
         "description": "Configure device tracking behavior",
         "title": "UniFi Network options 2/4"
