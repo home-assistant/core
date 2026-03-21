@@ -2573,6 +2573,7 @@ async def test_thermostat_with_explicit_fan_speed_modes(
     assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "custom_low"
 
+
 async def test_thermostat_with_fan_modes_set_to_none(
     hass: HomeAssistant, hk_driver
 ) -> None:
