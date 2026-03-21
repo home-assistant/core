@@ -21,11 +21,13 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("expected_store", [False, True])
 async def test_generate_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
+    expected_store: bool,
 ) -> None:
     """Test AI Task data generation."""
     entity_id = "ai_task.openai_ai_task"
@@ -39,6 +41,12 @@ async def test_generate_data(
             if entry.subentry_type == "ai_task_data"
         )
     )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        ai_task_entry,
+        data={**ai_task_entry.data, CONF_STORE_RESPONSES: expected_store},
+    )
+    await hass.async_block_till_done()
     assert entity_entry is not None
     assert entity_entry.config_entry_id == mock_config_entry.entry_id
     assert entity_entry.config_subentry_id == ai_task_entry.subentry_id
@@ -56,6 +64,8 @@ async def test_generate_data(
     )
 
     assert result.data == "The test data"
+    assert mock_create_stream.call_args is not None
+    assert mock_create_stream.call_args.kwargs["store"] is expected_store
 
 
 @pytest.mark.usefixtures("mock_init_component")
