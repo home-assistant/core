@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -167,7 +168,7 @@ async def test_time_sync_button(
                 clusters.TimeSynchronization.Structs.DSTOffsetStruct(
                     offset=dst_offset,
                     validStarting=0,
-                    validUntil=expected_utc_us + (365 * 24 * 3600 * 1_000_000),
+                    validUntil=NullValue,
                 )
             ]
         ),

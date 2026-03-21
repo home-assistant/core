@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -87,14 +88,13 @@ class MatterTimeSyncButton(MatterEntity, ButtonEntity):
         )
 
         # 2. Set DST offset
-        far_future_us = utc_us + (365 * 24 * 3600 * 1_000_000)
         await self.send_device_command(
             clusters.TimeSynchronization.Commands.SetDSTOffset(
                 DSTOffset=[
                     clusters.TimeSynchronization.Structs.DSTOffsetStruct(
                         offset=dst_offset,
                         validStarting=0,
-                        validUntil=far_future_us,
+                        validUntil=NullValue,
                     )
                 ]
             )
