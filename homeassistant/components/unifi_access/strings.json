@@ -59,6 +59,23 @@
       "lockdown": {
         "name": "Lockdown"
       }
+    },
+    "sensor": {
+      "door_lock_rule": {
+        "name": "Door Lock Rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Locked",
+          "keep_unlock": "Unlocked",
+          "lock_early": "Lock Early",
+          "lock_now": "Lock Now",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      },
+      "door_lock_rule_ended_time": {
+        "name": "Rule End Time"
+      }
     }
   },
   "exceptions": {

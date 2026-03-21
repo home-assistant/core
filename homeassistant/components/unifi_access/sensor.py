@@ -1,0 +1,82 @@
+"""Sensor platform for the UniFi Access integration."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from unifi_access_api import Door, DoorLockRuleType
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
+from .entity import UnifiAccessEntity
+
+PARALLEL_UPDATES = 0
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: UnifiAccessConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up UniFi Access sensor entities."""
+    coordinator = entry.runtime_data
+    if coordinator.data.supports_lock_rules:
+        async_add_entities(
+            sensor_class(coordinator, door)
+            for door in coordinator.data.doors.values()
+            for sensor_class in (
+                UnifiAccessDoorLockRuleSensor,
+                UnifiAccessDoorLockRuleEndTimeSensor,
+            )
+        )
+
+
+class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
+    """Sensor reporting the current lock rule for a UniFi Access door."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "door_lock_rule"
+
+    def __init__(
+        self,
+        coordinator: UnifiAccessCoordinator,
+        door: Door,
+    ) -> None:
+        """Initialize the lock rule sensor."""
+        super().__init__(coordinator, door, "lock_rule")
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the active lock rule type, or None if no rule is active."""
+        rule_type = self._door.lock_rule_status.type
+        if rule_type is DoorLockRuleType.NONE:
+            return None
+        return rule_type.value
+
+
+class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
+    """Sensor reporting when the current lock rule expires."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "door_lock_rule_ended_time"
+
+    def __init__(
+        self,
+        coordinator: UnifiAccessCoordinator,
+        door: Door,
+    ) -> None:
+        """Initialize the lock rule end time sensor."""
+        super().__init__(coordinator, door, "lock_rule_ended_time")
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the time when the lock rule expires, or None if no rule is active."""
+        ended_time = self._door.lock_rule_status.ended_time
+        if ended_time == 0:
+            return None
+        return datetime.fromtimestamp(ended_time, tz=UTC)

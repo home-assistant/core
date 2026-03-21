@@ -9,6 +9,7 @@ import pytest
 from unifi_access_api import (
     Door,
     DoorLockRelayStatus,
+    DoorLockRuleStatus,
     DoorPositionStatus,
     EmergencyStatus,
 )
@@ -99,6 +100,7 @@ def mock_client() -> Generator[MagicMock]:
         client.get_emergency_status = AsyncMock(
             return_value=EmergencyStatus(evacuation=False, lockdown=False)
         )
+        client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
         client.set_emergency_status = AsyncMock()
         client.unlock_door = AsyncMock()
         client.close = AsyncMock()

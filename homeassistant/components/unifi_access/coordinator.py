@@ -12,7 +12,9 @@ from unifi_access_api import (
     ApiAuthError,
     ApiConnectionError,
     ApiError,
+    ApiNotFoundError,
     Door,
+    DoorLockRuleStatus,
     EmergencyStatus,
     UnifiAccessApiClient,
     WsMessageHandler,
@@ -55,6 +57,7 @@ class UnifiAccessData:
 
     doors: dict[str, Door]
     emergency: EmergencyStatus
+    supports_lock_rules: bool = True
 
 
 class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
@@ -123,9 +126,26 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except TimeoutError as err:
             raise UpdateFailed("Timeout communicating with UniFi Access API") from err
+
+        supports_lock_rules = True
+        try:
+            async with asyncio.timeout(10):
+                lock_rules = await asyncio.gather(
+                    *(self.client.get_door_lock_rule(door.id) for door in doors)
+                )
+            doors = [
+                door.with_updates(lock_rule_status=rule)
+                for door, rule in zip(doors, lock_rules)
+            ]
+        except ApiNotFoundError:
+            supports_lock_rules = False
+        except (ApiAuthError, ApiConnectionError, ApiError, TimeoutError) as err:
+            _LOGGER.debug("Could not fetch door lock rules: %s", err)
+
         return UnifiAccessData(
             doors={door.id: door for door in doors},
             emergency=emergency,
+            supports_lock_rules=supports_lock_rules,
         )
 
     def _on_ws_connect(self) -> None:
@@ -173,6 +193,22 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             updates["door_lock_relay_status"] = "lock"
         elif ws_state.lock == "unlocked":
             updates["door_lock_relay_status"] = "unlock"
+
+        if ws_state.remain_lock is not None:
+            new_lock_rule = DoorLockRuleStatus(
+                type=ws_state.remain_lock.type,
+                ended_time=ws_state.remain_lock.until,
+            )
+        elif ws_state.remain_unlock is not None:
+            new_lock_rule = DoorLockRuleStatus(
+                type=ws_state.remain_unlock.type,
+                ended_time=ws_state.remain_unlock.until,
+            )
+        else:
+            new_lock_rule = DoorLockRuleStatus()
+        if new_lock_rule != current_door.lock_rule_status:
+            updates["lock_rule_status"] = new_lock_rule
+
         if not updates:
             return
         updated_door = current_door.with_updates(**updates)
@@ -180,6 +216,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             UnifiAccessData(
                 doors={**self.data.doors, door_id: updated_door},
                 emergency=self.data.emergency,
+                supports_lock_rules=self.data.supports_lock_rules,
             )
         )
 
@@ -195,6 +232,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     evacuation=update.data.evacuation,
                     lockdown=update.data.lockdown,
                 ),
+                supports_lock_rules=self.data.supports_lock_rules,
             )
         )
 
