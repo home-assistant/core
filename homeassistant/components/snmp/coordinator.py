@@ -5,6 +5,7 @@ from __future__ import annotations
 import binascii
 import logging
 
+from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
     ObjectIdentity,
     ObjectType,
@@ -51,14 +52,20 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         engine, auth_data, target, context_data, _ = self.request_args
 
         # OID sysDescr.0 (1.3.6.1.2.1.1.1.0) and sysName.0 (1.3.6.1.2.1.1.5.0)
-        get_result = await get_cmd(
-            engine,
-            auth_data,
-            target,
-            context_data,
-            ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
-            ObjectType(ObjectIdentity("1.3.6.1.2.1.1.5.0")),
-        )
+        try:
+            get_result = await get_cmd(
+                engine,
+                auth_data,
+                target,
+                context_data,
+                ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
+                ObjectType(ObjectIdentity("1.3.6.1.2.1.1.5.0")),
+            )
+        except PySnmpError as err:
+            _LOGGER.warning("Failed to fetch host info: %s", err)
+            self.model = ""  # Prevent re-fetching
+            return
+
         errindication, errstatus, _, restable = get_result
 
         if not errindication and not errstatus and len(restable) >= 2:
@@ -90,36 +97,41 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             object_type,
             lexicographicMode=False,
         )
-        async for errindication, errstatus, errindex, res in walker:
-            if errindication:
-                raise UpdateFailed(f"SNMPLIB error: {errindication}") from errindication
-            if errstatus:
-                err_msg = f"SNMP error: {errstatus.prettyPrint()} at {(errindex and res[int(errindex) - 1][0]) or '?'}"
-                raise UpdateFailed(err_msg)
+        try:
+            async for errindication, errstatus, errindex, res in walker:
+                if errindication:
+                    raise UpdateFailed(
+                        f"SNMPLIB error: {errindication}"
+                    ) from errindication
+                if errstatus:
+                    err_msg = f"SNMP error: {errstatus.prettyPrint()} at {(errindex and res[int(errindex) - 1][0]) or '?'}"
+                    raise UpdateFailed(err_msg)
 
-            for oid, value in res:
-                if not is_end_of_mib(res):
-                    try:
-                        octets = value.asOctets()
-                        if len(octets) == 6:
-                            mac = binascii.hexlify(octets).decode("utf-8")
-                        else:
-                            mac = octets.decode("utf-8", "ignore")
+                for oid, value in res:
+                    if not is_end_of_mib(res):
+                        try:
+                            octets = value.asOctets()
+                            if len(octets) == 6:
+                                mac = binascii.hexlify(octets).decode("utf-8")
+                            else:
+                                mac = octets.decode("utf-8", "ignore")
 
-                        # Normalize: remove non-hex chars, lowercase, and re-format
-                        mac = "".join(c for c in mac if c.isalnum()).lower()
-                        if len(mac) != 12:
+                            # Normalize: remove non-hex chars, lowercase, and re-format
+                            mac = "".join(c for c in mac if c.isalnum()).lower()
+                            if len(mac) != 12:
+                                continue
+                            mac = ":".join([mac[i : i + 2] for i in range(0, 12, 2)])
+                        except AttributeError, UnicodeDecodeError:
                             continue
-                        mac = ":".join([mac[i : i + 2] for i in range(0, 12, 2)])
-                    except AttributeError, UnicodeDecodeError:
-                        continue
 
-                    # Extract IP address from OID suffix (last 4 parts)
-                    ip = "0.0.0.0"
-                    if hasattr(oid, "asTuple"):
-                        oid_tuple = oid.asTuple()
-                        if len(oid_tuple) >= 4:
-                            ip = ".".join(map(str, oid_tuple[-4:]))
-                    devices[mac] = ip
+                        # Extract IP address from OID suffix (last 4 parts)
+                        ip = "0.0.0.0"
+                        if hasattr(oid, "asTuple"):
+                            oid_tuple = oid.asTuple()
+                            if len(oid_tuple) >= 4:
+                                ip = ".".join(map(str, oid_tuple[-4:]))
+                        devices[mac] = ip
+        except PySnmpError as err:
+            raise UpdateFailed(f"SNMP error during walk: {err}") from err
 
         return devices

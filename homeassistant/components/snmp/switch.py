@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pysnmp.error import PySnmpError
 import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
@@ -262,7 +263,13 @@ class SnmpSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state."""
-        get_result = await get_cmd(*self._request_args)
+        try:
+            get_result = await get_cmd(*self._request_args)
+        except PySnmpError as err:
+            _LOGGER.error("SNMP error during update: %s", err)
+            self._state = None
+            return
+
         errindication, errstatus, errindex, restable = get_result
 
         if errindication:
@@ -298,6 +305,9 @@ class SnmpSwitch(SwitchEntity):
 
     async def _set(self, value: Any) -> None:
         """Set the state of the switch."""
-        await set_cmd(
-            *self._command_args, ObjectType(ObjectIdentity(self._commandoid), value)
-        )
+        try:
+            await set_cmd(
+                *self._command_args, ObjectType(ObjectIdentity(self._commandoid), value)
+            )
+        except PySnmpError as err:
+            _LOGGER.error("SNMP error during set: %s", err)

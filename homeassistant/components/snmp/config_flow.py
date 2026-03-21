@@ -144,6 +144,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     if err_indication:
         raise CannotConnect(str(err_indication)) from None
 
+    if version == "3" and err_status:
+        raise InvalidAuth(err_status.prettyPrint()) from None
+
+    # Also verify that the user-provided baseoid is serializable and valid.
+    # This catches errors like "Short OID 1" during the config flow.
+    base_oid = data[CONF_BASEOID]
+    base_request_args = await async_create_request_cmd_args(
+        hass, auth_data, target, base_oid, context_name
+    )
+    try:
+        # We don't necessarily care about the result, just that it serializes and sends.
+        await get_cmd(*base_request_args)
+    except (PySnmpError, WrongValueError) as err:
+        raise CannotConnect(f"Invalid OID '{base_oid}': {err}") from None
+
     # In v1/v2c, getting ANY response (even noSuchName in err_status)
     # means the community string is correct. Silence means auth failure (v1/v2c).
     # In v3, err_status indicates the success of the get_cmd itself.

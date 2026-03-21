@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pysnmp.error import PySnmpError
 from pysnmp.proto.rfc1902 import OctetString
 
 from homeassistant import config_entries
@@ -201,3 +202,47 @@ async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
+    """Test user setup flow failure - OID too short (serialization error)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Step 1: Basic info with OID "1"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "192.168.1.1",
+            "baseoid": "1",
+            "version": "1",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v1_v2c"
+
+    # Step 2: V1 Auth fails during validation of baseoid "1"
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            side_effect=[
+                (None, None, None, [[OctetString("98F")]]),  # sysDescr.0 succeeds
+                PySnmpError("Short OID 1"),  # baseoid "1" fails
+            ],
+        ),
+        patch(
+            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            return_value="mock_target",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "community": "public",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert "Short OID 1" in result["description_placeholders"]["error"]
