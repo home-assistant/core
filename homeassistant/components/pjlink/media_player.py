@@ -57,7 +57,7 @@ class PjLinkDevice(MediaPlayerEntity):
     )
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Iinitialize the PJLink device."""
+        """Initialize the PJLink device."""
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
         self._password = entry.data.get(CONF_PASSWORD)
