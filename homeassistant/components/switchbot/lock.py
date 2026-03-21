@@ -48,12 +48,8 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
         status = self._device.get_lock_status()
         if self._attr_supported_features & (LockEntityFeature.OPEN):
             self._attr_is_open = status is LockStatus.UNLOCKED
-            self._attr_is_unlocked = status is LockStatus.NOT_FULLY_LOCKED
         else:
-            self._attr_is_unlocked = status in {
-                LockStatus.UNLOCKED,
-                LockStatus.NOT_FULLY_LOCKED,
-            }
+            self._attr_is_open = False
         self._attr_is_locked = status in {
             LockStatus.LOCKED,
             LockStatus.HALF_LOCKED,
