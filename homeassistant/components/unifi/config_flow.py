@@ -315,7 +315,6 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             for mac in self.options.get(CONF_CLIENT_SOURCE, [])
             if mac not in clients
         }
-        clients = dict(sorted(clients.items(), key=operator.itemgetter(1)))
 
         return self.async_show_form(
             step_id="configure_entity_sources",
