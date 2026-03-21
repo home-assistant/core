@@ -475,6 +475,16 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         return str(current_value)
 
 
+def _map_q10_clean_mode_to_state_key(mode: YXCleanType) -> str:
+    """Map Q10 clean mode to HA state key (matching Q7 keys)."""
+    mapping = {
+        YXCleanType.BOTH_WORK: "vac_and_mop",
+        YXCleanType.ONLY_SWEEP: "vacuum",
+        YXCleanType.ONLY_MOP: "mop",
+    }
+    return mapping.get(mode, "unknown")
+
+
 def _get_q10_cleaning_mode(data: Any) -> str | None:
     """Get cleaning mode from Q10 data."""
     if isinstance(data, dict):
@@ -484,11 +494,11 @@ def _get_q10_cleaning_mode(data: Any) -> str | None:
             if isinstance(clean_mode_value, int):
                 try:
                     mode_enum = YXCleanType.from_code(clean_mode_value)
-                    return mode_enum.name.lower()
+                    return _map_q10_clean_mode_to_state_key(mode_enum)
                 except ValueError, AttributeError:
                     return None
             if isinstance(clean_mode_value, YXCleanType):
-                return clean_mode_value.name.lower()
+                return _map_q10_clean_mode_to_state_key(clean_mode_value)
         return None
     # B01Props-like object
     if hasattr(data, "mode") and data.mode:
@@ -517,7 +527,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
     def options(self) -> list[str]:
         """Return available cleaning modes."""
         return [
-            option.name.lower()
+            _map_q10_clean_mode_to_state_key(option)
             for option in YXCleanType
             if option != YXCleanType.UNKNOWN
         ]
@@ -532,7 +542,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
         try:
             mode = None
             for clean_mode in YXCleanType:
-                if clean_mode.name.lower() == option:
+                if _map_q10_clean_mode_to_state_key(clean_mode) == option:
                     mode = clean_mode
                     break
             if mode is None:

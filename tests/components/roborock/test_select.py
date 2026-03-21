@@ -419,7 +419,7 @@ async def test_q10_cleaning_mode_select_update_success(
     await hass.services.async_call(
         "select",
         SERVICE_SELECT_OPTION,
-        service_data={"option": "both_work"},
+        service_data={"option": "vac_and_mop"},
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -445,7 +445,7 @@ async def test_q10_cleaning_mode_select_update_failure(
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
-            service_data={"option": "both_work"},
+            service_data={"option": "vac_and_mop"},
             blocking=True,
             target={"entity_id": entity_id},
         )
