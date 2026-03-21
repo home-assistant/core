@@ -79,7 +79,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
     def update_cache(
         self,
         soco: SoCo,
-        update_id: str | None = None,
+        update_id: int | None = None,
     ) -> bool:
         """Update cache of known alarms and return whether any were seen."""
         try:

@@ -348,11 +348,14 @@ async def test_alarm_update_exception_logs_warning(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test household mismatch logs warning and prevents speaker setup."""
-    soco.alarmClock.ListAlarms.side_effect = SoCoException(
-        "Alarm list UID RINCON_0001234567890:31 does not match RINCON_000E987654321:0"
-    )
-    await async_setup_sonos()
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.sonos.alarms.Alarms.update",
+        side_effect=SoCoException(
+            "Alarm list UID RINCON_0001234567890:31 does not match RINCON_000E987654321:0"
+        ),
+    ):
+        await async_setup_sonos()
+        await hass.async_block_till_done()
 
     # Speaker should not be set up due to household mismatch
     assert "switch.sonos_alarm_14" not in entity_registry.entities
