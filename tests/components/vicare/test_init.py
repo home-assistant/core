@@ -2,10 +2,21 @@
 
 from unittest.mock import patch
 
+from aiohttp import ClientError
+from PyViCare.PyViCareUtils import (
+    PyViCareInvalidConfigurationError,
+    PyViCareInvalidCredentialsError,
+)
+
 from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import MODULE
 from .conftest import Fixture, MockPyViCare
@@ -93,6 +104,153 @@ async def test_migrate_entry_v1_2_to_v1_3(
     assert "client_id" not in config_entry.data
     assert config_entry.data["auth_implementation"] == DOMAIN
     assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
+
+
+async def test_migrate_entry_token_failure(
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+) -> None:
+    """Test migration completes even when token cannot be obtained."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ViCare",
+        data={
+            CONF_USERNAME: "foo@bar.com",
+            CONF_PASSWORD: "1234",
+            CONF_CLIENT_ID: "5678",
+        },
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        f"{MODULE}._obtain_token_via_password_grant",
+        return_value={},
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 3
+    assert "username" not in config_entry.data
+    assert "password" not in config_entry.data
+    assert "client_id" not in config_entry.data
+    assert config_entry.data["auth_implementation"] == DOMAIN
+    assert config_entry.data["token"] == {}
+
+
+async def test_migrate_entry_creates_repair_issue(
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+) -> None:
+    """Test migration creates a repair issue for redirect URI update."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ViCare",
+        data={
+            CONF_USERNAME: "foo@bar.com",
+            CONF_PASSWORD: "1234",
+            CONF_CLIENT_ID: "5678",
+        },
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        f"{MODULE}._obtain_token_via_password_grant",
+        return_value={
+            "access_token": "a",
+            "refresh_token": "r",
+            "expires_at": 9999999999.0,
+            "token_type": "Bearer",
+        },
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, "update_redirect_uri")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_setup_entry_token_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryAuthFailed on invalid token."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=KeyError("token"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_transient_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryNotReady on transient auth error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientError("connection failed"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_invalid_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryAuthFailed on PyViCare credentials error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            side_effect=PyViCareInvalidCredentialsError,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_invalid_configuration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup raises ConfigEntryAuthFailed on PyViCare config error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            side_effect=PyViCareInvalidConfigurationError,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 # Device migration test can be removed in 2025.4.0
