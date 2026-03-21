@@ -298,16 +298,11 @@ async def test_ffmpeg_cleanup_on_cancellation(
     await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
     client = await hass_client()
 
-    wait_called = asyncio.Event()
-    original_cancelled = False
-
     async def _stdout_read(_size: int = -1) -> bytes:
         await asyncio.sleep(0)
         return b""
 
     async def _proc_wait() -> None:
-        nonlocal original_cancelled
-        wait_called.set()
         # Simulate cancellation during proc.wait()
         raise asyncio.CancelledError
 
@@ -360,31 +355,74 @@ async def test_ffmpeg_unexpected_exception(
 
 async def test_max_conversions_kills_running_process(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that exceeding max conversions kills a running ffmpeg process."""
-    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
-
     device_id = "1234"
 
-    # Create max conversions
-    url1 = async_create_proxy_url(hass, device_id, "url1", media_format="mp3")
-    url2 = async_create_proxy_url(hass, device_id, "url2", media_format="mp3")
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
 
-    # Simulate a running process on the first conversion
-    from homeassistant.components.esphome.ffmpeg_proxy import DATA_FFMPEG_PROXY
+    stdout_futures: list[asyncio.Future[bytes]] = []
+    mock_kills: list[MagicMock] = []
+    procs_started = asyncio.Event()
+    proc_count = 0
 
-    proxy_data = hass.data[DATA_FFMPEG_PROXY]
-    device_conversions = proxy_data.conversions[device_id]
-    mock_kill = MagicMock()
-    mock_proc = MagicMock()
-    mock_proc.returncode = None
-    mock_proc.kill = mock_kill
-    device_conversions[0].proc = mock_proc
+    def _make_mock_proc() -> AsyncMock:
+        """Create a mock ffmpeg process that blocks on stdout read."""
+        nonlocal proc_count
+        future: asyncio.Future[bytes] = hass.loop.create_future()
+        stdout_futures.append(future)
+        kill = MagicMock()
+        mock_kills.append(kill)
 
-    # Adding a third conversion should kill the oldest running process
-    async_create_proxy_url(hass, device_id, "url3", media_format="mp3")
+        async def _stdout_read(_size: int = -1) -> bytes:
+            return await future
 
-    mock_kill.assert_called_once()
+        mock = AsyncMock()
+        mock.stdout.read = _stdout_read
+        mock.stderr.readline = AsyncMock(return_value=b"")
+        mock.returncode = None
+        mock.kill = kill
+        proc_count += 1
+        if proc_count >= 2:
+            procs_started.set()
+        return mock
+
+    with patch(
+        "asyncio.create_subprocess_exec",
+        side_effect=lambda *a, **kw: _make_mock_proc(),
+    ):
+        url1 = async_create_proxy_url(
+            hass, device_id, "url1", media_format="mp3"
+        )
+        url2 = async_create_proxy_url(
+            hass, device_id, "url2", media_format="mp3"
+        )
+
+        # Start both HTTP requests — each spawns an ffmpeg process that blocks
+        task1 = hass.async_create_task(client.get(url1))
+        task2 = hass.async_create_task(client.get(url2))
+
+        # Wait until both ffmpeg processes have been created
+        await procs_started.wait()
+        assert len(mock_kills) == 2
+
+        # Creating a third conversion should kill the oldest running process
+        async_create_proxy_url(
+            hass, device_id, "url3", media_format="mp3"
+        )
+        assert "Stopping existing ffmpeg process" in caplog.text
+        mock_kills[0].assert_called_once()
+
+        # Unblock stdout reads so background tasks can finish
+        for future in stdout_futures:
+            if not future.done():
+                future.set_result(b"")
+
+        await task1
+        await task2
 
 
 async def test_lingering_process(

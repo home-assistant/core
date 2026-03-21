@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 _MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
 _MAX_STDERR_LINES: Final[int] = 64
 _SENSITIVE_QUERY_PARAMS: Final[re.Pattern[str]] = re.compile(
-    r"(authSig|token|key|password|secret)=[^&\s]+", re.IGNORECASE
+    r"(?<=[?&])(authSig|token|key|password|secret)=[^&\s]+", re.IGNORECASE
 )
 
 
