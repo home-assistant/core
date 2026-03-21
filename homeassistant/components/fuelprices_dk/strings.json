@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Integration is already configured, only one instance allowed.",
+      "already_configured": "This API key is already configured.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "Invalid API key provided",
       "rate_limit_exceeded": "Too many requests to the API. Please try again later.",
