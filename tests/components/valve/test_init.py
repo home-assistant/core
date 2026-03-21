@@ -6,6 +6,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
+    ATTR_CURRENT_POSITION,
+    ATTR_IS_CLOSED,
     DOMAIN,
     ValveDeviceClass,
     ValveEntity,
@@ -60,6 +62,7 @@ class MockValveEntity(ValveEntity):
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
         self._attr_current_valve_position = current_position
+        self._attr_is_closed = self._attr_current_valve_position == 0
         if reports_position is not None:
             self._attr_reports_position = reports_position
         if device_class is not None:
@@ -74,6 +77,7 @@ class MockValveEntity(ValveEntity):
             self._attr_is_closing = True
             self._attr_is_opening = False
         self._target_valve_position = position
+        self._attr_is_closed = self._attr_current_valve_position == 0
         self.schedule_update_ha_state()
 
     def stop_valve(self) -> None:
@@ -90,6 +94,7 @@ class MockValveEntity(ValveEntity):
         self._attr_current_valve_position = self._target_valve_position
         self._attr_is_closing = False
         self._attr_is_opening = False
+        self._attr_is_closed = self._attr_current_valve_position == 0
         self.async_write_ha_state()
 
 
@@ -234,7 +239,7 @@ async def test_services(
 
     # Test init all valves should be open
     assert is_open(hass, ent1)
-    assert is_open(hass, ent2)
+    assert is_open(hass, ent2, 50)
 
     # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
@@ -243,9 +248,9 @@ async def test_services(
 
     # entities without stop should be closed and with stop should be closing
     assert is_closed(hass, ent1)
-    assert is_closing(hass, ent2)
+    assert is_closing(hass, ent2, 50)
     ent2.finish_movement()
-    assert is_closed(hass, ent2)
+    assert is_closed(hass, ent2, 0)
 
     # call basic toggle services and set different valve position states
     await call_service(hass, SERVICE_TOGGLE, ent1)
@@ -254,7 +259,9 @@ async def test_services(
 
     # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
     assert is_open(hass, ent1)
-    assert is_opening(hass, ent2)
+    assert is_opening(hass, ent2, 0, True)
+    ent2.finish_movement()
+    assert is_open(hass, ent2, 100)
 
     # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
@@ -264,12 +271,16 @@ async def test_services(
     # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
     assert is_closed(hass, ent1)
     assert not is_opening(hass, ent2)
-    assert not is_closing(hass, ent2)
-    assert is_closed(hass, ent2)
+    assert not is_closed(hass, ent2, 100)
+    assert is_closing(hass, ent2, 100)
+    ent2.finish_movement()
+    assert is_closed(hass, ent2, 0)
 
     await call_service(hass, SERVICE_SET_VALVE_POSITION, ent2, 50)
     await hass.async_block_till_done()
-    assert is_opening(hass, ent2)
+    assert is_opening(hass, ent2, 0, True)
+    ent2.finish_movement()
+    assert is_open(hass, ent2, 50)
 
 
 async def test_valve_device_class(hass: HomeAssistant) -> None:
@@ -347,21 +358,69 @@ def set_valve_position(ent, position) -> None:
     ent._values["current_valve_position"] = position
 
 
-def is_open(hass: HomeAssistant, ent: ValveEntity) -> bool:
+def _check_state(
+    hass: HomeAssistant,
+    ent: ValveEntity,
+    expected_state: str,
+    expected_position: int | None,
+    expected_is_closed: bool,
+) -> bool:
+    """Check if the state of a valve is as expected."""
+    state = hass.states.get(ent.entity_id)
+    correct_state = state.state == expected_state
+    correct_is_closed = state.attributes.get(ATTR_IS_CLOSED) == expected_is_closed
+    correct_position = state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+    return all([correct_state, correct_is_closed, correct_position])
+
+
+def is_open(hass: HomeAssistant, ent: ValveEntity, position: int | None = None) -> bool:
+    """Return if the valve is open based on the statemachine."""
+    return _check_state(
+        hass,
+        ent,
+        expected_state=ValveState.OPEN,
+        expected_position=position,
+        expected_is_closed=False,
+    )
+
+
+def is_opening(
+    hass: HomeAssistant,
+    ent: ValveEntity,
+    position: int | None = None,
+    closed: bool = False,
+) -> bool:
+    """Return if the valve is opening based on the statemachine."""
+    return _check_state(
+        hass,
+        ent,
+        expected_state=ValveState.OPENING,
+        expected_position=position,
+        expected_is_closed=closed,
+    )
+
+
+def is_closed(
+    hass: HomeAssistant, ent: ValveEntity, position: int | None = None
+) -> bool:
     """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, ValveState.OPEN)
+    return _check_state(
+        hass,
+        ent,
+        expected_state=ValveState.CLOSED,
+        expected_position=position,
+        expected_is_closed=True,
+    )
 
 
-def is_opening(hass: HomeAssistant, ent: ValveEntity) -> bool:
-    """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, ValveState.OPENING)
-
-
-def is_closed(hass: HomeAssistant, ent: ValveEntity) -> bool:
-    """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, ValveState.CLOSED)
-
-
-def is_closing(hass: HomeAssistant, ent: ValveEntity) -> bool:
-    """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, ValveState.CLOSING)
+def is_closing(
+    hass: HomeAssistant, ent: ValveEntity, position: int | None = None
+) -> bool:
+    """Return if the valve is closing based on the statemachine."""
+    return _check_state(
+        hass,
+        ent,
+        expected_state=ValveState.CLOSING,
+        expected_position=position,
+        expected_is_closed=False,
+    )

@@ -19,7 +19,7 @@
     'attributes': ReadOnlyDict({
       'current_position': 50,
       'friendly_name': 'Valve',
-      'is_closed': None,
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 15>,
     }),
     'context': <ANY>,
