@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -100,7 +100,12 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(18:00-06:00)"},
         value_fn=lambda api, data: (
-            dt_util.start_of_local_day().replace(hour=hour)
+            # Hours 0-5 are early morning of the *next* day; use tomorrow's date
+            (
+                dt_util.start_of_local_day() + timedelta(days=1)
+                if hour < 6
+                else dt_util.start_of_local_day()
+            ).replace(hour=hour)
             if (hour := api.get_lowest_price_night_with_hour(data)[1]) is not None
             else None
         ),
