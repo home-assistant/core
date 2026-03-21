@@ -98,8 +98,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
             self._attr_image_last_updated = self.coordinator.last_home_update
-
-        super()._handle_coordinator_update()
+            super()._handle_coordinator_update()
 
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
