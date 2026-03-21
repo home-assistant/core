@@ -904,10 +904,10 @@ def test_create_thinking_config_gemini25_pro_automatic() -> None:
 
 
 @pytest.mark.parametrize(
-    ("model",),
+    "model",
     [
-        ("models/gemini-2.5-flash",),
-        ("gemini-2.5-flash-preview-04-17",),
+        "models/gemini-2.5-flash",
+        "gemini-2.5-flash-preview-04-17",
     ],
 )
 def test_create_thinking_config_gemini25_flash_disable(model: str) -> None:
