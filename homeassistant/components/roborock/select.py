@@ -475,35 +475,14 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         return str(current_value)
 
 
-def _map_q10_clean_mode_to_state_key(mode: YXCleanType) -> str:
-    """Map Q10 clean mode to HA state key (matching Q7 keys)."""
+def _map_q10_clean_mode_to_state_key(mode_code: int) -> str | None:
+    """Map Q10 clean mode code to HA state key (matching Q7 keys)."""
     mapping = {
-        YXCleanType.BOTH_WORK: "vac_and_mop",
-        YXCleanType.ONLY_SWEEP: "vacuum",
-        YXCleanType.ONLY_MOP: "mop",
+        1: "vac_and_mop",
+        2: "vacuum",
+        3: "mop",
     }
-    return mapping.get(mode, "unknown")
-
-
-def _get_q10_cleaning_mode(data: Any) -> str | None:
-    """Get cleaning mode from Q10 data."""
-    if isinstance(data, dict):
-        # Q10 dict data - check for CLEAN_MODE key
-        if B01_Q10_DP.CLEAN_MODE in data:
-            clean_mode_value = data[B01_Q10_DP.CLEAN_MODE]
-            if isinstance(clean_mode_value, int):
-                try:
-                    mode_enum = YXCleanType.from_code(clean_mode_value)
-                    return _map_q10_clean_mode_to_state_key(mode_enum)
-                except ValueError, AttributeError:
-                    return None
-            if isinstance(clean_mode_value, YXCleanType):
-                return _map_q10_clean_mode_to_state_key(clean_mode_value)
-        return None
-    # B01Props-like object
-    if hasattr(data, "mode") and data.mode:
-        return data.mode.value
-    return None
+    return mapping.get(mode_code)
 
 
 class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEntity):
@@ -523,26 +502,37 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
             coordinator,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Register trait listener for push-based status updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.api.status.add_update_listener(self.async_write_ha_state)
+        )
+
     @property
     def options(self) -> list[str]:
         """Return available cleaning modes."""
         return [
-            _map_q10_clean_mode_to_state_key(option)
+            state_key
             for option in YXCleanType
+            if (state_key := _map_q10_clean_mode_to_state_key(option.code)) is not None
             if option != YXCleanType.UNKNOWN
         ]
 
     @property
     def current_option(self) -> str | None:
         """Get the current cleaning mode."""
-        return _get_q10_cleaning_mode(self.coordinator.data)
+        clean_mode = self.coordinator.api.status.clean_mode
+        if clean_mode is None:
+            return None
+        return _map_q10_clean_mode_to_state_key(clean_mode.code)
 
     async def async_select_option(self, option: str) -> None:
         """Set the cleaning mode."""
         try:
             mode = None
             for clean_mode in YXCleanType:
-                if _map_q10_clean_mode_to_state_key(clean_mode) == option:
+                if _map_q10_clean_mode_to_state_key(clean_mode.code) == option:
                     mode = clean_mode
                     break
             if mode is None:
