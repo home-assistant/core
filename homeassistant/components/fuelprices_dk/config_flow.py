@@ -1,9 +1,8 @@
-"""Config flow for dk_fuelprices integration."""
+"""Config flow for the Fuelprices.dk integration."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
@@ -22,11 +21,18 @@ from homeassistant.core import callback
 
 from .const import CONF_COMPANY, CONF_STATION, DOMAIN, WEBSITE_URL
 
-_LOGGER = logging.getLogger(__name__)
+
+def _get_api_error_key(exc: ClientResponseError) -> str:
+    """Map API errors to config flow errors."""
+    if exc.status == 401:
+        return "invalid_api_key"
+    if exc.status == 429:
+        return "rate_limit_exceeded"
+    return "cannot_connect"
 
 
 class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for dk_fuelprices."""
+    """Handle a config flow for Fuelprices.dk."""
 
     VERSION = 1
 
@@ -46,30 +52,67 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         self.company_name = ""
         self.user_input: dict[str, Any] = {}
 
+    async def _async_validate_api_key(
+        self, api_key: str
+    ) -> tuple[Braendstofpriser | None, list[dict[str, Any]], str | None]:
+        """Validate the API key and fetch available companies."""
+        api = Braendstofpriser(api_key)
+        try:
+            companies = await api.list_companies()
+        except ClientResponseError as exc:
+            return None, [], _get_api_error_key(exc)
+
+        if not companies:
+            return None, [], "cannot_connect"
+
+        return api, companies, None
+
+    async def _async_fetch_stations(self, company_name: str) -> tuple[Any, str | None]:
+        """Fetch stations for a company."""
+        try:
+            stations = await self.api.list_stations(company_name=company_name)
+        except ClientResponseError as exc:
+            return None, _get_api_error_key(exc)
+
+        if not stations:
+            return None, "cannot_connect"
+
+        return stations, None
+
+    def _show_company_selection_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the company selection form."""
+        return self.async_show_form(
+            step_id="company_selection",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_COMPANY, default=self.company_name): vol.In(
+                        [c["company"] for c in self.companies]
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step - Enter API key."""
-        self._async_abort_entries_match()
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Test API key
-            try:
-                # Initialize API
-                self.api = Braendstofpriser(user_input[CONF_API_KEY])
-                self.companies = await self.api.list_companies()
-            except ClientResponseError as exc:
-                if exc.status == 401:
-                    return self.async_abort(reason="invalid_api_key")
-                if exc.status == 429:
-                    return self.async_abort(reason="rate_limit_exceeded")
-                return self.async_abort(reason="cannot_connect")
+            self._async_abort_entries_match(user_input)
+            api, companies, error = await self._async_validate_api_key(
+                user_input[CONF_API_KEY]
+            )
+            if error is None:
+                assert api is not None
+                self.api = api
+                self.companies = companies
+                self.user_input = dict(user_input)
+                return await self.async_step_company_selection()
 
-            # Proceed to company selection
-            self.user_input.update(user_input)
-            return await self.async_step_company_selection()
+            errors["base"] = error
 
-        # Show the form to the user
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -77,7 +120,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): str,
                 }
             ),
-            errors={},
+            errors=errors,
             description_placeholders={"website_url": WEBSITE_URL},
         )
 
@@ -86,32 +129,24 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the company selection step."""
         if user_input is not None:
-            # Process the user input and show next selection form
             self.company_name = user_input[CONF_COMPANY]
             self.user_input.update(user_input)
+            self.stations = {}
             return await self.async_step_station_selection()
 
-        if len(self.companies) == 0:
-            return self.async_abort(reason="rate_limit_exceeded")
-
-        # Show the form to the user
-        return self.async_show_form(
-            step_id="company_selection",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_COMPANY): vol.In(
-                        [c["company"] for c in self.companies]
-                    ),
-                }
-            ),
-        )
+        return self._show_company_selection_form({})
 
     async def async_step_station_selection(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the station selection step."""
+        if not self.stations:
+            stations, error = await self._async_fetch_stations(self.company_name)
+            if error is not None:
+                return self._show_company_selection_form({"base": error})
+            self.stations = stations
+
         if user_input is not None:
-            # Match station name to station ID
             user_input[CONF_STATION] = self.stations.find(
                 "name", user_input[CONF_STATION]
             )
@@ -141,11 +176,8 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                 ],
             )
 
-        # Get station list, sort it and make a list with only names
-        self.stations = await self.api.list_stations(company_name=self.company_name)
         stations = [s["name"] for s in self.stations]
 
-        # Show the form to the user
         return self.async_show_form(
             step_id="station_selection",
             data_schema=vol.Schema(
@@ -168,16 +200,11 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            api = Braendstofpriser(user_input[CONF_API_KEY])
             try:
-                api = Braendstofpriser(user_input[CONF_API_KEY])
                 await api.list_companies()
-            except ClientResponseError as exc:  # pylint: disable=broad-except
-                if exc.status == 401:
-                    errors["base"] = "invalid_api_key"
-                elif exc.status == 429:
-                    errors["base"] = "rate_limit_exceeded"
-                else:
-                    errors["base"] = "cannot_connect"
+            except ClientResponseError as exc:
+                errors["base"] = _get_api_error_key(exc)
 
             if not errors:
                 entry = self.hass.config_entries.async_get_entry(
@@ -199,7 +226,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
-    """Handle station subentries for dk_fuelprices."""
+    """Handle station subentries for Fuelprices.dk."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -209,6 +236,39 @@ class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
         self.company_name = ""
         self._errors: dict[str, str] = {}
         self.user_input: dict[str, Any] = {}
+
+    async def _async_fetch_stations(self, company_name: str) -> tuple[Any, str | None]:
+        """Fetch stations for a company."""
+        try:
+            stations = await self.api.list_stations(company_name=company_name)
+        except ClientResponseError as exc:
+            return None, _get_api_error_key(exc)
+
+        if not stations:
+            return None, "cannot_connect"
+
+        return stations, None
+
+    def _show_company_selection_form(
+        self, errors: dict[str, str] | None = None
+    ) -> SubentryFlowResult:
+        """Show the company selection form."""
+        default_company = self.user_input.get(CONF_COMPANY)
+        company_field = (
+            vol.Required(CONF_COMPANY, default=default_company)
+            if default_company
+            else vol.Required(CONF_COMPANY)
+        )
+
+        return self.async_show_form(
+            step_id="company_selection",
+            data_schema=vol.Schema(
+                {
+                    company_field: vol.In([c["company"] for c in self.companies]),
+                }
+            ),
+            errors=errors or {},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -220,21 +280,16 @@ class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
     async def _async_init_api(self) -> None:
         """Initialize API client and fetch companies."""
         entry = self._get_entry()
-        api_key = entry.data.get(CONF_API_KEY)
-        if not api_key:
-            self._errors["base"] = "invalid_api_key"
+        api_key = entry.data[CONF_API_KEY]
+        self.api = Braendstofpriser(api_key)
+        try:
+            self.companies = await self.api.list_companies()
+        except ClientResponseError as exc:
+            self._errors["base"] = _get_api_error_key(exc)
             return
 
-        try:
-            self.api = Braendstofpriser(api_key)
-            self.companies = await self.api.list_companies()
-        except ClientResponseError as exc:  # pylint: disable=broad-except
-            if exc.status == 401:
-                self._errors["base"] = "invalid_api_key"
-            elif exc.status == 429:
-                self._errors["base"] = "rate_limit_exceeded"
-            else:
-                self._errors["base"] = "cannot_connect"
+        if not self.companies:
+            self._errors["base"] = "cannot_connect"
 
     async def async_step_company_selection(
         self, user_input: dict[str, Any] | None = None
@@ -244,38 +299,25 @@ class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
             return self.async_abort(reason=self._errors["base"])
 
         if user_input is not None:
-            # Process the user input and show next selection form
             self.company_name = user_input[CONF_COMPANY]
             self.user_input.update(user_input)
+            self.stations = {}
             return await self.async_step_station_selection()
 
-        if len(self.companies) == 0:
-            return self.async_abort(reason="rate_limit_exceeded")
-
-        default_company = self.user_input.get(CONF_COMPANY)
-        company_field = (
-            vol.Required(CONF_COMPANY, default=default_company)
-            if default_company
-            else vol.Required(CONF_COMPANY)
-        )
-
-        # Show the form to the user
-        return self.async_show_form(
-            step_id="company_selection",
-            data_schema=vol.Schema(
-                {
-                    company_field: vol.In([c["company"] for c in self.companies]),
-                }
-            ),
-            errors=self._errors,
-        )
+        return self._show_company_selection_form()
 
     async def async_step_station_selection(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle the station selection step."""
+        if not self.stations:
+            stations, error = await self._async_fetch_stations(self.company_name)
+            if error is not None:
+                self.user_input[CONF_COMPANY] = self.company_name
+                return self._show_company_selection_form({"base": error})
+            self.stations = stations
+
         if user_input is not None:
-            # Match station name to station ID
             user_input[CONF_STATION] = self.stations.find(
                 "name", user_input[CONF_STATION]
             )
@@ -293,11 +335,8 @@ class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
             self.user_input.update(user_input)
             return await self._async_create_or_update_subentry()
 
-        # Get station list, sort it and make a list with only names
-        self.stations = await self.api.list_stations(company_name=self.company_name)
         stations = [s["name"] for s in self.stations]
 
-        # Show the form to the user
         return self.async_show_form(
             step_id="station_selection",
             data_schema=vol.Schema(
