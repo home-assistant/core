@@ -82,7 +82,7 @@
       "main_brush_time_left": {
         "default": "mdi:brush"
       },
-      "mop_clean_remaining": {
+      "mop_drying_remaining_time": {
         "default": "mdi:clock-outline"
       },
       "mop_life_time_left": {
