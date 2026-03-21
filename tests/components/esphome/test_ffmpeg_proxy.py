@@ -280,7 +280,10 @@ async def test_ffmpeg_stderr_drain_timeout(
     mock_proc.stderr.readline = _slow_stderr_readline
     mock_proc.returncode = 1
 
-    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+    with (
+        patch("asyncio.create_subprocess_exec", return_value=mock_proc),
+        patch(f"{FFMPEG_PROXY}._STDERR_DRAIN_TIMEOUT", 0),
+    ):
         url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
         req = await client.get(url)
         assert req.status == HTTPStatus.OK
@@ -358,7 +361,8 @@ async def test_ffmpeg_cleanup_on_cancellation(
         url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
         req = await client.get(url)
         assert req.status == HTTPStatus.OK
-        await req.content.read()
+        with pytest.raises(client_exceptions.ClientPayloadError):
+            await req.content.read()
 
     # proc.kill should have been called (once in the initial check, once in the
     # CancelledError handler)

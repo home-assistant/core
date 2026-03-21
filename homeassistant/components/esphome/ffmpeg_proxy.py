@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 _MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
 _MAX_STDERR_LINES: Final[int] = 64
 _PROC_WAIT_TIMEOUT: Final[int] = 5
+_STDERR_DRAIN_TIMEOUT: Final[int] = 1
 _SENSITIVE_QUERY_PARAMS: Final[re.Pattern[str]] = re.compile(
     r"(?<=[?&])(authSig|token|key|password|secret)=[^&\s]+", re.IGNORECASE
 )
@@ -264,7 +265,9 @@ class FFmpegConvertResponse(web.StreamResponse):
                 # Let stderr collector finish draining
                 if not stderr_task.done():
                     try:
-                        await asyncio.wait_for(stderr_task, timeout=1)
+                        await asyncio.wait_for(
+                            stderr_task, timeout=_STDERR_DRAIN_TIMEOUT
+                        )
                     except TimeoutError:
                         stderr_task.cancel()
                         with contextlib.suppress(asyncio.CancelledError):
@@ -280,6 +283,7 @@ class FFmpegConvertResponse(web.StreamResponse):
                 if proc.returncode is None:
                     proc.kill()
                 stderr_task.cancel()
+                raise
 
             if proc.returncode is not None and proc.returncode != 0:
                 _LOGGER.error(
@@ -294,7 +298,7 @@ class FFmpegConvertResponse(web.StreamResponse):
 
             # Close connection by writing EOF unless already closing
             if request.transport and not request.transport.is_closing():
-                with contextlib.suppress(Exception):
+                with contextlib.suppress(ConnectionResetError, RuntimeError, OSError):
                     await writer.write_eof()
 
     async def _collect_ffmpeg_stderr(
