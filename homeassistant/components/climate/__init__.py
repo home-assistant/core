@@ -227,6 +227,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "preset_modes",
     "fan_mode",
     "fan_modes",
+    "fan_speed_modes",
     "swing_mode",
     "swing_modes",
     "swing_horizontal_mode",
