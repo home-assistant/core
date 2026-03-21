@@ -197,6 +197,11 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_ssdp_auth()
             except CannotConnectError:
                 return self.async_abort(reason="cannot_connect")
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error validating SSDP discovery for Victron GX"
+                )
+                return self.async_abort(reason="unknown")
 
             return self.async_create_entry(
                 title=ENTRY_TITLE_FORMAT.format(
