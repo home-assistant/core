@@ -131,6 +131,41 @@ async def test_subentry_options(
     }
 
 
+async def test_subentry_options_num_ctx_above_old_max(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that num_ctx values above the old MAX_NUM_CTX (131072) are accepted."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+
+    with patch(
+        "ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+
+        assert options_flow["type"] is FlowResultType.FORM
+
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {
+                ollama.CONF_MODEL: TEST_MODEL,
+                ollama.CONF_PROMPT: "test prompt",
+                ollama.CONF_MAX_HISTORY: 100,
+                ollama.CONF_NUM_CTX: 262144,
+                ollama.CONF_THINK: False,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data[ollama.CONF_NUM_CTX] == 262144.0
+
+
 async def test_creating_new_conversation_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
