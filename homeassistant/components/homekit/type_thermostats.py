@@ -324,7 +324,10 @@ class Thermostat(HomeAccessory):
                 fan_mode.lower(): fan_mode
                 for fan_mode in attributes.get(ATTR_FAN_MODES) or []
             }
-            if fan_speed_modes := attributes.get(ATTR_FAN_SPEED_MODES):
+            if (
+                ATTR_FAN_SPEED_MODES in attributes
+                and (fan_speed_modes := attributes[ATTR_FAN_SPEED_MODES]) is not None
+            ):
                 self.ordered_fan_speeds = [
                     fan_mode.lower()
                     for fan_mode in fan_speed_modes
