@@ -4,8 +4,11 @@ from airthings import Airthings
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfRadiationConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_conversion import RadiationConcentrationConverter
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -31,21 +34,23 @@ async def test_all_device_types(
 
 @pytest.mark.parametrize("airthings_fixture", ["view_plus", "wave_plus"])
 @pytest.mark.parametrize(
-    ("unit_system", "expected_unit"),
+    ("unit_system", "expected_unit", "expected_precision"),
     [
-        (METRIC_SYSTEM, "Bq/m³"),
-        (US_CUSTOMARY_SYSTEM, "pCi/L"),
+        (METRIC_SYSTEM, UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER, 0),
+        (US_CUSTOMARY_SYSTEM, UnitOfRadiationConcentration.PICOCURIES_PER_LITER, 1),
     ],
 )
 async def test_radon_unit_matches_unit_system(
     hass: HomeAssistant,
+    airthings_fixture: str,
     unit_system: UnitSystem,
-    expected_unit: str,
+    expected_unit: UnitOfRadiationConcentration,
+    expected_precision: int,
     mock_config_entry: MockConfigEntry,
     mock_airthings_client: Airthings,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test radon units follow the configured Home Assistant unit system."""
+    """Test radon sensors use the core radon device class conversion path."""
     hass.config.units = unit_system
 
     await setup_integration(hass, mock_config_entry)
@@ -60,4 +65,20 @@ async def test_radon_unit_matches_unit_system(
     state = hass.states.get(radon_entity.entity_id)
 
     assert state is not None
+    assert state.attributes["device_class"] == SensorDeviceClass.RADON
     assert state.attributes["unit_of_measurement"] == expected_unit
+    assert (
+        radon_entity.options["sensor"]["suggested_display_precision"]
+        == expected_precision
+    )
+
+    raw_state = mock_airthings_client.update_devices.return_value[
+        radon_entity.unique_id.removesuffix("_radonShortTermAvg")
+    ].sensors["radonShortTermAvg"]
+    expected_state = RadiationConcentrationConverter.convert(
+        raw_state,
+        UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        expected_unit,
+    )
+
+    assert float(state.state) == pytest.approx(expected_state)

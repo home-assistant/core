@@ -2,8 +2,6 @@
 
 from typing import override
 
-import dataclasses
-
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
@@ -18,6 +16,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfDensity,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
@@ -27,7 +26,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import AirthingsConfigEntry
 from .const import DOMAIN
@@ -36,8 +34,11 @@ from .coordinator import AirthingsDataUpdateCoordinator
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(
         key="radonShortTermAvg",
-        native_unit_of_measurement="Bq/m³",
-        translation_key="radon",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=(
+            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+        ),
+        state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     "temp": SensorEntityDescription(
@@ -148,25 +149,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings sensor."""
-
     coordinator = entry.runtime_data
-    sensors = SENSORS.copy()
-    if hass.config.units is not METRIC_SYSTEM:
-        sensors["radonShortTermAvg"] = dataclasses.replace(
-            sensors["radonShortTermAvg"],
-            native_unit_of_measurement="pCi/L",
-            suggested_display_precision=1,
-        )
 
     entities = [
         AirthingsDeviceSensor(
             coordinator,
             airthings_device,
-            sensors[sensor_types],
+            SENSORS[sensor_types],
         )
         for airthings_device in coordinator.data.values()
         for sensor_types in airthings_device.sensor_types
-        if sensor_types in sensors
+        if sensor_types in SENSORS
     ]
     async_add_entities(entities)
 
