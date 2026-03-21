@@ -407,7 +407,7 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
-aiotedee==0.2.25
+aiotedee==0.2.27
 
 # homeassistant.components.tractive
 aiotractive==1.0.0
