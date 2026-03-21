@@ -265,7 +265,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
-    _attr_fan_speed_modes: list[str] | None
+    _attr_fan_speed_modes: list[str] | None = None
     _attr_hvac_action: HVACAction | None = None
     _attr_hvac_mode: HVACMode | None
     _attr_hvac_modes: list[HVACMode]
