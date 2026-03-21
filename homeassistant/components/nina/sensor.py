@@ -42,7 +42,7 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
         options=SEVERITY_VALUES,
         device_class=SensorDeviceClass.ENUM,
         translation_key="severity",
-        value_fn=lambda data: data.severity,
+        value_fn=lambda data: data.severity.lower(),
     ),
     NinaSensorEntityDescription(
         key="affected_areas",
