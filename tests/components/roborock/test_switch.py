@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 import roborock
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.roborock_message import RoborockZeoProtocol
 from syrupy.assertion import SnapshotAssertion
 
@@ -131,6 +132,89 @@ async def test_update_failed(
         )
 
     assert len(expected_call.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "dp_code"),
+    [
+        ("switch.roborock_q10_s5_child_lock", B01_Q10_DP.CHILD_LOCK),
+        ("switch.roborock_q10_s5_do_not_disturb", B01_Q10_DP.NOT_DISTURB),
+    ],
+)
+async def test_q10_switch_success(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+    dp_code: B01_Q10_DP,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test turning Q10 switch entities on and off."""
+    assert fake_q10_vacuum.b01_q10_properties is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        "switch",
+        SERVICE_TURN_ON,
+        service_data=None,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    assert fake_q10_vacuum.b01_q10_properties.command.send.call_args_list[-1].args == (
+        dp_code,
+        1,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        SERVICE_TURN_OFF,
+        service_data=None,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    assert fake_q10_vacuum.b01_q10_properties.command.send.call_args_list[-1].args == (
+        dp_code,
+        0,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service"),
+    [
+        ("switch.roborock_q10_s5_child_lock", SERVICE_TURN_ON),
+        ("switch.roborock_q10_s5_do_not_disturb", SERVICE_TURN_OFF),
+    ],
+)
+async def test_q10_switch_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+    service: str,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test a failure while updating a Q10 switch."""
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.command.send.side_effect = (
+        roborock.exceptions.RoborockTimeout
+    )
+
+    assert hass.states.get(entity_id) is not None
+    with pytest.raises(HomeAssistantError, match="Failed to update Roborock options"):
+        await hass.services.async_call(
+            "switch",
+            service,
+            service_data=None,
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
 
 
 @pytest.mark.parametrize(

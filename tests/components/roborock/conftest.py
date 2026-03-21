@@ -33,6 +33,7 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
@@ -171,6 +172,8 @@ def create_b01_q10_trait() -> Mock:
     update_from_dps work without manual mocking.
     """
     q10_trait = AsyncMock()
+    q10_trait._child_lock = 0
+    q10_trait._not_disturb = 0
 
     # Use the real StatusTrait so listeners and update_from_dps work natively
     status = Q10StatusTrait()
@@ -182,7 +185,30 @@ def create_b01_q10_trait() -> Mock:
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
-    q10_trait.refresh = AsyncMock()
+
+    async def command_send_side_effect(
+        dp_code: B01_Q10_DP,
+        value: Any | None = None,
+        **kwargs: Any,
+    ) -> None:
+        if dp_code == B01_Q10_DP.CHILD_LOCK:
+            q10_trait._child_lock = int(bool(value))
+            status.update_from_dps({B01_Q10_DP.CHILD_LOCK: q10_trait._child_lock})
+        elif dp_code == B01_Q10_DP.NOT_DISTURB:
+            q10_trait._not_disturb = int(bool(value))
+            status.update_from_dps({B01_Q10_DP.NOT_DISTURB: q10_trait._not_disturb})
+
+    q10_trait.command.send = AsyncMock(side_effect=command_send_side_effect)
+
+    async def refresh_side_effect() -> None:
+        status.update_from_dps(
+            {
+                B01_Q10_DP.CHILD_LOCK: q10_trait._child_lock,
+                B01_Q10_DP.NOT_DISTURB: q10_trait._not_disturb,
+            }
+        )
+
+    q10_trait.refresh = AsyncMock(side_effect=refresh_side_effect)
     return q10_trait
 
 

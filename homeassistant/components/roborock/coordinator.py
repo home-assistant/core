@@ -10,6 +10,7 @@ from typing import Any, TypeVar
 from propcache.api import cached_property
 from roborock import B01Props
 from roborock.data import HomeDataScene
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.b01 import Q7PropertiesApi, Q10PropertiesApi
@@ -571,7 +572,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         return data
 
 
-class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
+class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any]]):
     """Coordinator for B01 Q10 devices.
 
     The Q10 uses push-based MQTT status updates. The `refresh()` call sends a
@@ -603,8 +604,27 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self._device = device
         self.api = api
         self.device_info = get_device_info(device)
+        self._wrap_status_updates()
 
-    async def _async_update_data(self) -> None:
+    def _wrap_status_updates(self) -> None:
+        """Capture raw Q10 DPS updates for entities that need them."""
+        original_update_from_dps = self.api.status.update_from_dps
+
+        def update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
+            """Cache raw DPS updates before forwarding them to the status trait."""
+            if decoded_dps:
+                data = dict(self.data) if self.data is not None else {}
+                data.update(decoded_dps)
+                self.async_set_updated_data(data)
+            original_update_from_dps(decoded_dps)
+
+        setattr(self.api.status, "update_from_dps", update_from_dps)
+
+    async def _async_setup(self) -> None:
+        """Start the Q10 push subscription before the first refresh."""
+        await self.api.start()
+
+    async def _async_update_data(self) -> dict[B01_Q10_DP, Any]:
         """Request a status push from the device.
 
         This sends a fire-and-forget REQUEST_DPS command. The actual data
@@ -618,6 +638,13 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN,
                 translation_key="request_fail",
             ) from ex
+        return dict(self.data) if self.data is not None else {}
+
+    def async_set_dp_value(self, dp_code: B01_Q10_DP, value: Any) -> None:
+        """Optimistically update a raw DPS value."""
+        data = dict(self.data) if self.data is not None else {}
+        data[dp_code] = value
+        self.async_set_updated_data(data)
 
     @cached_property
     def duid(self) -> str:
