@@ -250,23 +250,31 @@ class FFmpegConvertResponse(web.StreamResponse):
             # Allow conversion info to be removed
             self.convert_info.is_finished = True
 
-            # Terminate hangs, so kill is used
-            if proc.returncode is None:
-                proc.kill()
+            # Ensure subprocess and stderr cleanup run even if this task
+            # is cancelled (e.g., during shutdown)
+            try:
+                # Terminate hangs, so kill is used
+                if proc.returncode is None:
+                    proc.kill()
 
-            # Wait for process to exit so returncode is set
-            await proc.wait()
+                # Wait for process to exit so returncode is set
+                await proc.wait()
 
-            # Let stderr collector finish draining
-            if not stderr_task.done():
-                try:
-                    await asyncio.wait_for(stderr_task, timeout=1)
-                except TimeoutError:
-                    stderr_task.cancel()
-                    with contextlib.suppress(asyncio.CancelledError):
-                        await stderr_task
+                # Let stderr collector finish draining
+                if not stderr_task.done():
+                    try:
+                        await asyncio.wait_for(stderr_task, timeout=1)
+                    except TimeoutError:
+                        stderr_task.cancel()
+                        with contextlib.suppress(asyncio.CancelledError):
+                            await stderr_task
+            except asyncio.CancelledError:
+                # Kill the process if we were interrupted
+                if proc.returncode is None:
+                    proc.kill()
+                stderr_task.cancel()
 
-            if proc.returncode != 0:
+            if proc.returncode is not None and proc.returncode != 0:
                 _LOGGER.error(
                     "FFmpeg conversion failed for device %s (return code %s):\n%s",
                     self.device_id,
@@ -293,7 +301,11 @@ class FFmpegConvertResponse(web.StreamResponse):
             line = chunk.decode(errors="replace").rstrip()
             if len(stderr_lines) < _MAX_STDERR_LINES:
                 stderr_lines.append(line)
-            _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, line)
+            _LOGGER.debug(
+                "ffmpeg[%s] output: %s",
+                proc.pid,
+                _SENSITIVE_QUERY_PARAMS.sub(r"\1=REDACTED", line),
+            )
 
 
 class FFmpegProxyView(HomeAssistantView):
