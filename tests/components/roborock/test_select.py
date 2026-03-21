@@ -386,17 +386,10 @@ async def test_update_failure_zeo_invalid_option() -> None:
     coordinator.api.set_value.assert_not_called()
 
 
-@pytest.fixture
-def q10_device(fake_devices: list[FakeDevice]) -> FakeDevice:
-    """Get the fake Q10 vacuum device."""
-    # The Q10 is the fifth device in the list (index 4) based on HOME_DATA
-    return fake_devices[4]
-
-
 async def test_q10_cleaning_mode_select_current_option(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
-    q10_device: FakeDevice,
+    fake_q10_vacuum: FakeDevice,
 ) -> None:
     """Test Q10 cleaning mode select entity current option."""
     entity_id = "select.roborock_q10_s5_cleaning_mode"
@@ -405,8 +398,10 @@ async def test_q10_cleaning_mode_select_current_option(
     options = state.attributes.get("options")
     assert options is not None
 
-    assert q10_device.b01_q10_properties
-    q10_device.b01_q10_properties.status.update_from_dps({B01_Q10_DP.CLEAN_MODE: 1})
+    assert fake_q10_vacuum.b01_q10_properties
+    fake_q10_vacuum.b01_q10_properties.status.update_from_dps(
+        {B01_Q10_DP.CLEAN_MODE: 1}
+    )
     await hass.async_block_till_done()
 
     updated_state = hass.states.get(entity_id)
@@ -418,7 +413,7 @@ async def test_q10_cleaning_mode_select_current_option(
 async def test_q10_cleaning_mode_select_update_success(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
-    q10_device: FakeDevice,
+    fake_q10_vacuum: FakeDevice,
 ) -> None:
     """Test setting Q10 cleaning mode select option."""
     entity_id = "select.roborock_q10_s5_cleaning_mode"
@@ -433,9 +428,9 @@ async def test_q10_cleaning_mode_select_update_success(
         target={"entity_id": entity_id},
     )
 
-    assert q10_device.b01_q10_properties
-    assert q10_device.b01_q10_properties.vacuum.set_clean_mode.call_count == 1
-    q10_device.b01_q10_properties.vacuum.set_clean_mode.assert_called_once_with(
+    assert fake_q10_vacuum.b01_q10_properties
+    assert fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.call_count == 1
+    fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.assert_called_once_with(
         YXCleanType.BOTH_WORK
     )
 
@@ -443,11 +438,13 @@ async def test_q10_cleaning_mode_select_update_success(
 async def test_q10_cleaning_mode_select_update_failure(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
-    q10_device: FakeDevice,
+    fake_q10_vacuum: FakeDevice,
 ) -> None:
     """Test failure when setting Q10 cleaning mode."""
-    assert q10_device.b01_q10_properties
-    q10_device.b01_q10_properties.vacuum.set_clean_mode.side_effect = RoborockException
+    assert fake_q10_vacuum.b01_q10_properties
+    fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.side_effect = (
+        RoborockException
+    )
     entity_id = "select.roborock_q10_s5_cleaning_mode"
     assert hass.states.get(entity_id) is not None
 
