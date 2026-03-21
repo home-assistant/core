@@ -35,6 +35,8 @@ from . import AirthingsConfigEntry
 from .const import DOMAIN
 from .coordinator import AirthingsDataUpdateCoordinator
 
+RADON_BQ_PER_PCI = 37.0
+
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(
         key="radonShortTermAvg",
@@ -207,7 +209,15 @@ class AirthingsDeviceSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self._id].sensors[self.entity_description.key]  # type: ignore[no-any-return]
+        value = self.coordinator.data[self._id].sensors[self.entity_description.key]
+
+        if (
+            self.entity_description.key == "radonShortTermAvg"
+            and self.entity_description.native_unit_of_measurement == "pCi/L"
+        ):
+            return value / RADON_BQ_PER_PCI  # type: ignore[no-any-return]
+
+        return value  # type: ignore[no-any-return]
 
     @property
     def available(self) -> bool:

@@ -31,16 +31,18 @@ async def test_all_device_types(
 
 @pytest.mark.parametrize("airthings_fixture", ["view_plus", "wave_plus"])
 @pytest.mark.parametrize(
-    ("unit_system", "expected_unit"),
+    ("unit_system", "expected_unit", "expected_state"),
     [
-        (METRIC_SYSTEM, "Bq/m³"),
-        (US_CUSTOMARY_SYSTEM, "pCi/L"),
+        (METRIC_SYSTEM, "Bq/m³", None),
+        (US_CUSTOMARY_SYSTEM, "pCi/L", {"view_plus": 7.7 / 37, "wave_plus": 5.5 / 37}),
     ],
 )
 async def test_radon_unit_matches_unit_system(
     hass: HomeAssistant,
+    airthings_fixture: str,
     unit_system: UnitSystem,
     expected_unit: str,
+    expected_state: dict[str, float] | None,
     mock_config_entry: MockConfigEntry,
     mock_airthings_client: Airthings,
     entity_registry: er.EntityRegistry,
@@ -61,3 +63,5 @@ async def test_radon_unit_matches_unit_system(
 
     assert state is not None
     assert state.attributes["unit_of_measurement"] == expected_unit
+    if expected_state is not None:
+        assert float(state.state) == pytest.approx(expected_state[airthings_fixture])
