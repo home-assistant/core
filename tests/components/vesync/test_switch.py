@@ -101,57 +101,57 @@ async def test_turn_on_off_display_raises_error(
 
 
 @pytest.mark.parametrize(
-    ("device_name", "switch_key", "action", "command"),
+    ("device_name", "entity_id", "action", "command"),
     [
         # device_status switch for outlet
         (
             "Outlet",
-            "device_status",
+            "switch.outlet",
             SERVICE_TURN_ON,
             "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_on",
         ),
         (
             "Outlet",
-            "device_status",
+            "switch.outlet",
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_off",
         ),
         # display switch for humidifier
         (
             "Humidifier 200s",
-            "display",
+            "switch.humidifier_200s_display",
             SERVICE_TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
         ),
         (
             "Humidifier 200s",
-            "display",
+            "switch.humidifier_200s_display",
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
         ),
         # auto_off_config switch for humidifier
         (
             "Humidifier 200s",
-            "auto_off_config",
+            "switch.humidifier_200s_auto_off",
             SERVICE_TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
         ),
         (
             "Humidifier 200s",
-            "auto_off_config",
+            "switch.humidifier_200s_auto_off",
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
         ),
         # drying_mode_power_off switch for humidifier with drying mode
         (
             "Humidifier 6000s",
-            "drying_mode_power_off",
+            "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
             SERVICE_TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
         ),
         (
             "Humidifier 6000s",
-            "drying_mode_power_off",
+            "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
         ),
@@ -162,7 +162,7 @@ async def test_switch_operations(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     device_name: str,
-    switch_key: str,
+    entity_id: str,
     action: str,
     command: str,
 ) -> None:
@@ -174,17 +174,6 @@ async def test_switch_operations(
     # Setup platform
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # Find the switch entity for the specific switch key
-    switch_entity_id = None
-    for entity in er.async_entries_for_config_entry(
-        er.async_get(hass), config_entry.entry_id
-    ):
-        if entity.domain == SWITCH_DOMAIN and entity.unique_id.endswith(switch_key):
-            switch_entity_id = entity.entity_id
-            break
-
-    assert switch_entity_id is not None, f"No switch entity found for key {switch_key}"
 
     with (
         patch(
@@ -198,7 +187,7 @@ async def test_switch_operations(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             action,
-            {ATTR_ENTITY_ID: switch_entity_id},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
