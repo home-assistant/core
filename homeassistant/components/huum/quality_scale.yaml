@@ -39,10 +39,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      PLANNED: Use freezer-based time advancement instead of directly calling async_refresh().
+  test-coverage: todo
 
   # Gold
   devices: done
