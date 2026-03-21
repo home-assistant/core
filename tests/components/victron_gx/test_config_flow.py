@@ -59,6 +59,21 @@ def mock_victron_hub():
         yield mock_hub
 
 
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock a config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_INSTALLATION_ID,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+        },
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
 @pytest.mark.usefixtures("mock_victron_hub")
 async def test_user_flow_full_config(hass: HomeAssistant) -> None:
     """Test the full user flow with all configuration options."""
@@ -173,21 +188,12 @@ async def test_user_flow_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_INSTALLATION_ID
 
 
-@pytest.mark.usefixtures("mock_victron_hub")
+@pytest.mark.usefixtures("mock_victron_hub", "mock_config_entry")
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     """Test configuration flow aborts when device is already configured."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_INSTALLATION_ID,
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -297,19 +303,9 @@ async def test_ssdp_confirm_error(
     assert result["reason"] == reason
 
 
-@pytest.mark.usefixtures("mock_victron_hub")
+@pytest.mark.usefixtures("mock_victron_hub", "mock_config_entry")
 async def test_ssdp_flow_already_configured(hass: HomeAssistant) -> None:
     """Test SSDP discovery flow aborts when device is already configured."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_INSTALLATION_ID,
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
     discovery_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="upnp:rootdevice",
