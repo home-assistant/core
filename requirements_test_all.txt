@@ -2547,7 +2547,7 @@ srpenergy==1.3.6
 starline==0.1.5
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.3
+starlink-grpc-core==1.2.4
 
 # homeassistant.components.statsd
 statsd==3.2.1
