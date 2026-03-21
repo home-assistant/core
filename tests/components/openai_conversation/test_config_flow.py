@@ -958,8 +958,12 @@ async def test_subentry_switching(
     assert subentry.data == expected_options
 
 
+@pytest.mark.parametrize("store_responses", [False, True])
 async def test_subentry_web_search_user_location(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    store_responses: bool,
 ) -> None:
     """Test fetching user location."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -975,6 +979,7 @@ async def test_subentry_web_search_user_location(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
+            CONF_STORE_RESPONSES: store_responses,
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
@@ -1042,6 +1047,7 @@ async def test_subentry_web_search_user_location(
         mock_create.call_args.kwargs["input"][0]["content"] == "Where are the following"
         " coordinates located: (37.7749, -122.4194)?"
     )
+    assert mock_create.call_args.kwargs["store"] is store_responses
     assert subentry_flow["type"] is FlowResultType.ABORT
     assert subentry_flow["reason"] == "reconfigure_successful"
     assert subentry.data == {
@@ -1052,7 +1058,7 @@ async def test_subentry_web_search_user_location(
         CONF_TOP_P: RECOMMENDED_TOP_P,
         CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
         CONF_SERVICE_TIER: "auto",
-        CONF_STORE_RESPONSES: False,
+        CONF_STORE_RESPONSES: store_responses,
         CONF_WEB_SEARCH: True,
         CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
         CONF_WEB_SEARCH_USER_LOCATION: True,
