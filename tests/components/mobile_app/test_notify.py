@@ -840,9 +840,7 @@ async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
 async def test_notify_live_activity_uses_stored_token(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
-    """Test that live_update notifications route through a stored per-activity APNs token."""
-    push_url = "https://mobile-push.home-assistant.dev/push"
-
+    """Test that live_update notifications include live_activity_token in the relay payload."""
     # Simulate the iOS app having registered a per-activity token via webhook.
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "washer_cycle": "LIVE_ACTIVITY_TOKEN_HEX"
@@ -861,8 +859,9 @@ async def test_notify_live_activity_uses_stored_token(
 
     assert len(aioclient_mock.mock_calls) == 1
     call_json = aioclient_mock.mock_calls[0][2]
-    # Should use the stored Live Activity token, not the FCM token.
-    assert call_json["push_token"] == "LIVE_ACTIVITY_TOKEN_HEX"
+    # FCM token stays as push_token; live activity APNs token is a separate field.
+    assert call_json["push_token"] == "PUSH_TOKEN"
+    assert call_json["live_activity_token"] == "LIVE_ACTIVITY_TOKEN_HEX"
     assert call_json["data"]["live_update"] is True
     assert call_json["data"]["tag"] == "washer_cycle"
 
@@ -932,9 +931,9 @@ async def test_notify_live_activity_falls_back_to_push_to_start(
 
     assert len(aioclient_mock.mock_calls) == 1
     call_json = aioclient_mock.mock_calls[0][2]
-    # Should use push-to-start token since no per-activity token is stored.
-    assert call_json["push_token"] == "PUSH_TO_START_HEX_TOKEN"
-    assert call_json["registration_info"]["apns_environment"] == "production"
+    # FCM token stays as push_token; push-to-start token is live_activity_token.
+    assert call_json["push_token"] == "FCM_TOKEN"
+    assert call_json["live_activity_token"] == "PUSH_TO_START_HEX_TOKEN"
 
 
 async def test_notify_live_activity_without_tag_uses_fcm(
@@ -956,7 +955,7 @@ async def test_notify_live_activity_without_tag_uses_fcm(
     call_json = aioclient_mock.mock_calls[0][2]
     # Should use normal FCM token since there is no tag.
     assert call_json["push_token"] == "PUSH_TOKEN"
-    assert "apns_environment" not in call_json["registration_info"]
+    assert "live_activity_token" not in call_json
 
 
 async def test_notify_normal_notification_ignores_live_activity_tokens(
@@ -983,3 +982,4 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     call_json = aioclient_mock.mock_calls[0][2]
     # Should use normal FCM token — live_update flag not set.
     assert call_json["push_token"] == "PUSH_TOKEN"
+    assert "live_activity_token" not in call_json

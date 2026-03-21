@@ -60,7 +60,6 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     ATTR_ALTITUDE,
-    ATTR_APNS_ENVIRONMENT,
     ATTR_APP_DATA,
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
@@ -74,7 +73,6 @@ from .const import (
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_PUSH_TOKEN,
-    ATTR_PUSH_URL,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_DISABLED,
@@ -812,10 +810,6 @@ async def webhook_scan_tag(
     {
         vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
         vol.Required(ATTR_PUSH_TOKEN): cv.string,
-        vol.Required(ATTR_PUSH_URL): cv.url,
-        vol.Optional(ATTR_APNS_ENVIRONMENT, default="production"): vol.In(
-            ["sandbox", "production"]
-        ),
     }
 )
 async def webhook_update_live_activity_token(
@@ -824,9 +818,10 @@ async def webhook_update_live_activity_token(
     """Handle a Live Activity token update from the iOS companion app.
 
     When the iOS app creates a Live Activity locally, ActivityKit provides
-    a per-activity APNs push token. The app sends this token (along with
-    the relay server URL and APNs environment) so HA can later push updates
-    to that specific activity via the relay server's Live Activity endpoint.
+    a per-activity APNs push token. The app sends this token so HA can
+    later include it as live_activity_token in the push relay request.
+    The relay server places it in the FCM message's apns.liveActivityToken
+    field, and FCM handles APNs delivery automatically.
     """
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
@@ -834,8 +829,6 @@ async def webhook_update_live_activity_token(
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         ATTR_PUSH_TOKEN: data[ATTR_PUSH_TOKEN],
-        ATTR_PUSH_URL: data[ATTR_PUSH_URL],
-        ATTR_APNS_ENVIRONMENT: data[ATTR_APNS_ENVIRONMENT],
     }
 
     device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]

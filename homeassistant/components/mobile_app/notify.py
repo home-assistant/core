@@ -35,9 +35,7 @@ from .const import (
     ATTR_APP_DATA,
     ATTR_APP_ID,
     ATTR_APP_VERSION,
-    ATTR_APNS_ENVIRONMENT,
     ATTR_DEVICE_NAME,
-    ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT,
     ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN,
     ATTR_LIVE_ACTIVITY_TAG,
     ATTR_LIVE_UPDATE,
@@ -220,13 +218,17 @@ class MobileAppNotificationService(BaseNotificationService):
 
     def _get_live_activity_token(
         self, entry: ConfigEntry, data: dict[str, Any]
-    ) -> dict[str, str] | None:
-        """Return Live Activity token info if this notification targets one.
+    ) -> str | None:
+        """Return the Live Activity APNs token if this notification targets one.
 
-        Checks whether the notification payload contains live_update: true and a
-        tag. If a per-activity APNs token is stored for that tag it is returned.
-        Otherwise, if the device has a push-to-start token, that is returned so
-        the relay server can start a new activity remotely.
+        Checks whether the payload contains live_update: true and a tag. If a
+        per-activity APNs token is stored for that tag it is returned. Otherwise,
+        if the device has a push-to-start token, that is returned so the relay
+        server can start a new activity remotely.
+
+        The token is sent alongside the regular FCM push_token as live_activity_token.
+        The relay places it in the FCM payload's apns.liveActivityToken field, and FCM
+        handles apns-push-type: liveactivity and APNs routing automatically.
 
         Returns None if this is a normal notification (not a Live Activity).
         """
@@ -243,15 +245,12 @@ class MobileAppNotificationService(BaseNotificationService):
         live_activity_tokens = self.hass.data[DOMAIN].get(DATA_LIVE_ACTIVITY_TOKENS, {})
         device_tokens = live_activity_tokens.get(webhook_id, {})
         if tag in device_tokens:
-            return {ATTR_PUSH_TOKEN: device_tokens[tag]}
+            return device_tokens[tag]
 
         # Push-to-start token — start a new activity remotely (iOS 17.2+).
         app_data = entry.data[ATTR_APP_DATA]
         if token := app_data.get(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN):
-            result: dict[str, str] = {ATTR_PUSH_TOKEN: token}
-            if env := app_data.get(ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT):
-                result[ATTR_APNS_ENVIRONMENT] = env
-            return result
+            return token
 
         return None
 
@@ -259,13 +258,12 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
-        live_activity_info = self._get_live_activity_token(entry, data)
         try:
             await _send_message(
                 async_get_clientsession(self.hass),
                 entry,
                 data,
-                live_activity_info=live_activity_info,
+                live_activity_token=self._get_live_activity_token(entry, data),
             )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
@@ -279,7 +277,7 @@ async def _send_message(
     entry: ConfigEntry,
     data: dict[str, Any],
     *,
-    live_activity_info: dict[str, str] | None = None,
+    live_activity_token: str | None = None,
 ) -> None:
     """Shared internal helper to send messages via cloud push notification services."""
     reg_info = {
@@ -289,24 +287,23 @@ async def _send_message(
     }
     if ATTR_OS_VERSION in entry.data:
         reg_info[ATTR_OS_VERSION] = entry.data[ATTR_OS_VERSION]
-    if live_activity_info and ATTR_APNS_ENVIRONMENT in live_activity_info:
-        reg_info[ATTR_APNS_ENVIRONMENT] = live_activity_info[ATTR_APNS_ENVIRONMENT]
 
-    push_token = (
-        live_activity_info[ATTR_PUSH_TOKEN]
-        if live_activity_info
-        else entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN]
-    )
+    payload: dict[str, Any] = {
+        **data,
+        ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
+        "registration_info": reg_info,
+    }
+    # If this is a Live Activity notification, include the APNs token so the relay
+    # server can set apns.liveActivityToken in the FCM payload. FCM then handles
+    # apns-push-type: liveactivity and APNs routing automatically.
+    if live_activity_token:
+        payload["live_activity_token"] = live_activity_token
 
     try:
         async with asyncio.timeout(10):
             response = await session.post(
                 entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
-                json={
-                    **data,
-                    ATTR_PUSH_TOKEN: push_token,
-                    "registration_info": reg_info,
-                },
+                json=payload,
             )
             result: dict[str, Any] = await response.json()
 

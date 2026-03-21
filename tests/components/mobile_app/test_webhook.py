@@ -1332,8 +1332,6 @@ async def test_webhook_update_live_activity_token(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
-                "push_url": "http://localhost/mock-push/iOS/liveActivity/v1",
-                "apns_environment": "sandbox",
             },
         },
     )
@@ -1348,10 +1346,6 @@ async def test_webhook_update_live_activity_token(
     assert tokens[webhook_id]["washer_cycle"]["push_token"] == (
         "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
     )
-    assert tokens[webhook_id]["washer_cycle"]["push_url"] == (
-        "http://localhost/mock-push/iOS/liveActivity/v1"
-    )
-    assert tokens[webhook_id]["washer_cycle"]["apns_environment"] == "sandbox"
 
     # Verify event was fired
     assert len(events) == 1
@@ -1360,12 +1354,12 @@ async def test_webhook_update_live_activity_token(
     assert events[0].data["webhook_id"] == webhook_id
 
 
-async def test_webhook_update_live_activity_token_defaults_production(
+async def test_webhook_update_live_activity_token_stores_only_push_token(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that apns_environment defaults to production."""
+    """Test that stored token data contains only push_token (FCM handles routing)."""
     webhook_id = create_registrations[1]["webhook_id"]
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -1374,7 +1368,6 @@ async def test_webhook_update_live_activity_token_defaults_production(
             "data": {
                 "tag": "ev_charge",
                 "push_token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                "push_url": "http://localhost/mock-push/iOS/liveActivity/v1",
             },
         },
     )
@@ -1382,7 +1375,10 @@ async def test_webhook_update_live_activity_token_defaults_production(
     assert resp.status == HTTPStatus.OK
 
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    assert tokens[webhook_id]["ev_charge"]["apns_environment"] == "production"
+    stored = tokens[webhook_id]["ev_charge"]
+    assert stored == {
+        "push_token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    }
 
 
 async def test_webhook_live_activity_dismissed(
@@ -1405,7 +1401,6 @@ async def test_webhook_live_activity_dismissed(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
-                "push_url": "http://localhost/mock-push/iOS/liveActivity/v1",
             },
         },
     )
