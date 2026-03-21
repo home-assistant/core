@@ -324,7 +324,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                     vol.Optional(
                         CONF_CLIENT_SOURCE,
                         default=self.options.get(CONF_CLIENT_SOURCE, []),
-                    ): cv.multi_select(clients),
+                    ): cv.multi_select(
+                        dict(sorted(clients.items(), key=operator.itemgetter(1)))
+                    ),
                 }
             ),
             last_step=False,
