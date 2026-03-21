@@ -22,7 +22,7 @@ from homeassistant.components.unifi.errors import AuthenticationRequired, Cannot
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -112,6 +112,42 @@ async def test_migrate_legacy_entry_preserves_explicit_track_clients_false_as_em
     assert config_entry.minor_version == 2
     assert config_entry.options[CONF_CLIENT_SOURCE] == []
     assert CONF_TRACK_CLIENTS not in config_entry.options
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: False}])
+async def test_migrate_legacy_entry_preserves_entity_registry_clients(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Legacy migration keeps client trackers already present in entity registry."""
+    entity_registry.async_get_or_create(
+        TRACKER_DOMAIN,
+        DOMAIN,
+        "site_id-00:00:00:00:00:01",
+        suggested_object_id="client_1",
+        config_entry=config_entry,
+    )
+
+    migrated_entry = await config_entry_factory()
+
+    assert migrated_entry.minor_version == 2
+    assert migrated_entry.options[CONF_CLIENT_SOURCE] == ["00:00:00:00:00:01"]
+    assert CONF_TRACK_CLIENTS not in migrated_entry.options
 
 
 @pytest.mark.parametrize(

@@ -166,7 +166,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
-        allowed_fn=lambda hub, _: hub.config.option_track_devices,
+        allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=lambda api, obj_id: None,
