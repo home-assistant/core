@@ -103,6 +103,15 @@ ZEO_BUTTON_DESCRIPTIONS = [
 ]
 
 
+Q10_BUTTON_DESCRIPTIONS = [
+    ButtonEntityDescription(
+        key="empty_dustbin",
+        translation_key="empty_dustbin",
+        entity_category=EntityCategory.CONFIG,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -146,9 +155,13 @@ async def async_setup_entry(
                 for description in ZEO_BUTTON_DESCRIPTIONS
             ),
             (
-                RoborockQ10EmptyDustbinButtonEntity(coordinator)
+                RoborockQ10EmptyDustbinButtonEntity(
+                    coordinator,
+                    description,
+                )
                 for coordinator in config_entry.runtime_data.b01_q10
                 if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+                for description in Q10_BUTTON_DESCRIPTIONS
             ),
         )
     )
@@ -251,18 +264,18 @@ class RoborockQ10EmptyDustbinButtonEntity(
 ):
     """A class to define Q10 empty dustbin button entity."""
 
-    _attr_name = None
-    _attr_translation_key = "empty_dustbin"
-    _attr_entity_category = EntityCategory.CONFIG
+    entity_description: ButtonEntityDescription
     coordinator: RoborockB01Q10UpdateCoordinator
 
     def __init__(
         self,
         coordinator: RoborockB01Q10UpdateCoordinator,
+        entity_description: ButtonEntityDescription,
     ) -> None:
         """Create a Q10 empty dustbin button entity."""
+        self.entity_description = entity_description
         super().__init__(
-            f"empty_dustbin_{coordinator.duid_slug}",
+            f"{entity_description.key}_{coordinator.duid_slug}",
             coordinator,
         )
 
