@@ -276,10 +276,9 @@ async def test_capability_attributes_fan_speed_modes(hass: HomeAssistant) -> Non
     climate_entity_with_fan_speed_modes.hass = hass
     climate_entity_with_fan_speed_modes._attr_fan_speed_modes = ["low"]
 
-    assert (
-        climate_entity_with_fan_speed_modes.capability_attributes[ATTR_FAN_SPEED_MODES]
-        == ["low"]
-    )
+    assert climate_entity_with_fan_speed_modes.capability_attributes[
+        ATTR_FAN_SPEED_MODES
+    ] == ["low"]
 
 
 async def test_mode_validation(
