@@ -220,8 +220,8 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
             _tilt > self.CLOSED_UP_THRESHOLD
         )
-        self._attr_is_opening = self.parsed_data["motionDirection"]["opening"]
-        self._attr_is_closing = self.parsed_data["motionDirection"]["closing"]
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
 
