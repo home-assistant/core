@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_valve_snapshot[valve.test_valve_valve_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

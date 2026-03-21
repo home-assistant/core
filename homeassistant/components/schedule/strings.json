@@ -1,7 +1,31 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted schedules.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted schedules to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more schedule blocks are currently not active.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::schedule::common::condition_behavior_description%]",
+          "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Schedule is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more schedule blocks are currently active.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::schedule::common::condition_behavior_description%]",
+          "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Schedule is on"
+    }
   },
   "entity_component": {
     "_": {
@@ -25,6 +49,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

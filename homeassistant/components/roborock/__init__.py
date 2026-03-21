@@ -39,6 +39,7 @@ from .const import (
 )
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockCoordinators,
     RoborockDataUpdateCoordinator,
@@ -164,13 +165,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         for coord in coordinators
         if isinstance(coord, RoborockB01Q7UpdateCoordinator)
     ]
-    if len(v1_coords) + len(a01_coords) + len(b01_q7_coords) == 0 and enabled_devices:
+    b01_q10_coords = [
+        coord
+        for coord in coordinators
+        if isinstance(coord, RoborockB01Q10UpdateCoordinator)
+    ]
+    if (
+        len(v1_coords) + len(a01_coords) + len(b01_q7_coords) + len(b01_q10_coords) == 0
+        and enabled_devices
+    ):
         raise ConfigEntryNotReady(
             "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
-    entry.runtime_data = RoborockCoordinators(v1_coords, a01_coords, b01_q7_coords)
+    entry.runtime_data = RoborockCoordinators(
+        v1_coords, a01_coords, b01_q7_coords, b01_q10_coords
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -253,6 +264,7 @@ def build_setup_functions(
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q10UpdateCoordinator
         | None,
     ]
 ]:
@@ -261,6 +273,7 @@ def build_setup_functions(
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q10UpdateCoordinator
     ] = []
     for device in devices:
         _LOGGER.debug("Creating device %s: %s", device.name, device)
@@ -282,6 +295,12 @@ def build_setup_functions(
                     hass, entry, device, device.b01_q7_properties
                 )
             )
+        elif device.b01_q10_properties is not None:
+            coordinators.append(
+                RoborockB01Q10UpdateCoordinator(
+                    hass, entry, device, device.b01_q10_properties
+                )
+            )
         else:
             _LOGGER.warning(
                 "Not adding device %s because its protocol version %s or category %s is not supported",
@@ -296,11 +315,13 @@ def build_setup_functions(
 async def setup_coordinator(
     coordinator: RoborockDataUpdateCoordinator
     | RoborockDataUpdateCoordinatorA01
-    | RoborockDataUpdateCoordinatorB01,
+    | RoborockDataUpdateCoordinatorB01
+    | RoborockB01Q10UpdateCoordinator,
 ) -> (
     RoborockDataUpdateCoordinator
     | RoborockDataUpdateCoordinatorA01
     | RoborockDataUpdateCoordinatorB01
+    | RoborockB01Q10UpdateCoordinator
     | None
 ):
     """Set up a single coordinator."""
