@@ -20,18 +20,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
-    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
     RoborockWashingMachineUpdateCoordinator,
 )
-from .entity import (
-    RoborockCoordinatedEntityA01,
-    RoborockCoordinatedEntityB01Q10,
-    RoborockEntity,
-    RoborockEntityV1,
-)
+from .entity import RoborockCoordinatedEntityA01, RoborockEntity, RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,11 +139,6 @@ async def async_setup_entry(
                 if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
                 for description in ZEO_BUTTON_DESCRIPTIONS
             ),
-            (
-                RoborockQ10EmptyDustbinButtonEntity(coordinator)
-                for coordinator in config_entry.runtime_data.b01_q10
-                if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-            ),
         )
     )
 
@@ -244,36 +233,3 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
             ) from err
         finally:
             await self.coordinator.async_request_refresh()
-
-
-class RoborockQ10EmptyDustbinButtonEntity(
-    RoborockCoordinatedEntityB01Q10, ButtonEntity
-):
-    """A class to define Q10 empty dustbin button entity."""
-
-    _attr_name = "Empty dustbin"
-    _attr_entity_category = EntityCategory.CONFIG
-    coordinator: RoborockB01Q10UpdateCoordinator
-
-    def __init__(
-        self,
-        coordinator: RoborockB01Q10UpdateCoordinator,
-    ) -> None:
-        """Create a Q10 empty dustbin button entity."""
-        super().__init__(
-            f"empty_dustbin_{coordinator.duid_slug}",
-            coordinator,
-        )
-
-    async def async_press(self, **kwargs: Any) -> None:
-        """Press the button to empty dustbin."""
-        try:
-            await self.coordinator.api.vacuum.empty_dustbin()
-        except RoborockException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={
-                    "command": "empty_dustbin",
-                },
-            ) from err
