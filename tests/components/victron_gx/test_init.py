@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from victron_mqtt import CannotConnectError, MetricKind
+from victron_mqtt import AuthenticationError, CannotConnectError, MetricKind
 
 from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
 from homeassistant.components.victron_gx.const import CONF_INSTALLATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -142,17 +141,16 @@ async def test_stop_on_homeassistant_stop(hass: HomeAssistant) -> None:
     hub_disconnect.assert_awaited_once()
 
 
-@pytest.mark.usefixtures("mock_victron_hub_library")
 @pytest.mark.parametrize(
-    ("start_exception", "expected_state"),
+    ("connect_exception", "expected_state"),
     [
-        (ConfigEntryNotReady, ConfigEntryState.SETUP_RETRY),
-        (ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR),
+        (CannotConnectError("Connection failed"), ConfigEntryState.SETUP_RETRY),
+        (AuthenticationError("Auth failed"), ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
     hass: HomeAssistant,
-    start_exception: Exception,
+    connect_exception: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup cleanup when hub start fails after platform forwarding."""
@@ -169,8 +167,8 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.victron_gx.Hub.start",
-        side_effect=start_exception,
+        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
+        side_effect=connect_exception,
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
