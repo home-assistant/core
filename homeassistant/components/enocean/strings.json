@@ -33,6 +33,20 @@
   },
   "entity": {
     "binary_sensor": {
+      "contact_state": {
+        "name": "Contact"
+      },
+      "day_night": {
+        "name": "Day/Night"
+      },
+      "motion": {
+        "name": "Motion"
+      },
+      "occupancy_button": {
+        "name": "Occupancy"
+      }
+    },
+    "event": {
       "a0": {
         "name": "A0"
       },
@@ -56,56 +70,103 @@
       },
       "b1": {
         "name": "B1"
-      },
-      "learning": {
-        "name": "Learning mode active"
-      }
-    },
-    "button": {
-      "query_state": {
-        "name": "Query state"
-      },
-      "toggle_learning": {
-        "name": "Learning start/stop"
-      }
-    },
-    "number": {
-      "max_brightness": {
-        "name": "Max. brightness"
-      },
-      "min_brightness": {
-        "name": "Min. brightness"
-      },
-      "ramping_time": {
-        "name": "Ramping time"
-      }
-    },
-    "select": {
-      "sender_id": {
-        "name": "Learning sender ID"
       }
     },
     "sensor": {
-      "base_id": {
-        "name": "Base ID"
+      "angle": {
+        "name": "Angle"
       },
-      "device_brightness": {
-        "name": "Brightness"
+      "counter": {
+        "name": "Counter"
       },
-      "dimming_range": {
-        "name": "Dimming range"
+      "counter_rate": {
+        "name": "Counter rate"
+      },
+      "cover_state": {
+        "name": "Cover state",
+        "state": {
+          "closed": "Closed",
+          "closing": "Closing",
+          "open": "Open",
+          "opening": "Opening",
+          "stopped": "Stopped"
+        }
+      },
+      "energy": {
+        "name": "Energy"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "gas_flow": {
+        "name": "Gas flow"
+      },
+      "gas_volume": {
+        "name": "Gas volume"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "illumination": {
+        "name": "Illuminance"
       },
       "last_seen": {
         "name": "Last seen"
       },
-      "learning_countdown": {
-        "name": "Learning seconds remaining"
+      "output_value": {
+        "name": "Output value"
       },
-      "supply_voltage": {
-        "name": "Supply voltage"
+      "pilot_wire_mode": {
+        "name": "Pilot wire mode",
+        "state": {
+          "comfort": "Comfort",
+          "comfort_minus_1": "Comfort -1",
+          "comfort_minus_2": "Comfort -2",
+          "eco": "Economy",
+          "frost_protection": "Frost protection",
+          "off": "Off"
+        }
       },
-      "telegrams_received": {
-        "name": "Telegrams received"
+      "position": {
+        "name": "Position"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "rssi": {
+        "name": "Signal strength"
+      },
+      "set_point": {
+        "name": "Set point"
+      },
+      "telegram_count": {
+        "name": "Telegram count"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "temperature_setpoint": {
+        "name": "Temperature setpoint"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "water_flow": {
+        "name": "Water flow"
+      },
+      "water_volume": {
+        "name": "Water volume"
+      },
+      "window_state": {
+        "name": "Window state",
+        "state": {
+          "closed": "Closed",
+          "open": "Open",
+          "tilted": "Tilted"
+        }
       }
     },
     "switch": {

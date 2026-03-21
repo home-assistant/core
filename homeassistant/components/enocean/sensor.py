@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -63,7 +64,12 @@ async def async_setup_entry(
                 )
                 entities.append(
                     EnOceanSensor(
-                        entity_id, gateway, gateway_eurid, observable, entity.id
+                        entity_id,
+                        gateway,
+                        gateway_eurid,
+                        observable,
+                        entity.id,
+                        entity.entity_type,
                     )
                 )
 
@@ -80,6 +86,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         gateway_eurid: EURID,
         observable: Observable,
         eep_entity_id: str,
+        entity_type: EntityType,
     ) -> None:
         """Initialize the EnOcean sensor."""
         super().__init__(
@@ -89,6 +96,11 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         )
         self._observable = observable
         self._entity_part = eep_entity_id
+        # Use the observable's own value string as the translation key (e.g. "temperature",
+        # "last_seen") rather than the full unique_id which contains a dot.
+        self._attr_translation_key = observable.value
+        if entity_type == EntityType.METADATA:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_device_class = _OBSERVABLE_TO_DEVICE_CLASS.get(observable)
         self._attr_native_unit_of_measurement = _UNIT_OVERRIDE.get(
             observable, observable.unit
