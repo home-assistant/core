@@ -10,14 +10,13 @@ from roborock.data import (
     WaterLevelMapping,
     ZeoProgram,
 )
-from roborock.data.b01_q10.b01_q10_code_mappings import YXCleanType
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.select import (
     A01_SELECT_DESCRIPTIONS,
-    RoborockQ10CleanModeSelectEntity,
     RoborockSelectEntityA01,
 )
 from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
@@ -386,6 +385,7 @@ async def test_update_failure_zeo_invalid_option() -> None:
 
     coordinator.api.set_value.assert_not_called()
 
+
 @pytest.fixture
 def q10_device(fake_devices: list[FakeDevice]) -> FakeDevice:
     """Get the fake Q10 vacuum device."""
@@ -402,8 +402,17 @@ async def test_q10_cleaning_mode_select_current_option(
     entity_id = "select.roborock_q10_s5_cleaning_mode"
     state = hass.states.get(entity_id)
     assert state is not None
-    # Verify the entity exists and has valid options
-    assert state.attributes.get("options") is not None
+    options = state.attributes.get("options")
+    assert options is not None
+
+    assert q10_device.b01_q10_properties
+    q10_device.b01_q10_properties.status.update_from_dps({B01_Q10_DP.CLEAN_MODE: 1})
+    await hass.async_block_till_done()
+
+    updated_state = hass.states.get(entity_id)
+    assert updated_state is not None
+    assert updated_state.state is not STATE_UNKNOWN
+    assert updated_state.state in options
 
 
 async def test_q10_cleaning_mode_select_update_success(
@@ -435,9 +444,7 @@ async def test_q10_cleaning_mode_select_update_failure(
 ) -> None:
     """Test failure when setting Q10 cleaning mode."""
     assert q10_device.b01_q10_properties
-    q10_device.b01_q10_properties.vacuum.set_clean_mode.side_effect = (
-        RoborockException
-    )
+    q10_device.b01_q10_properties.vacuum.set_clean_mode.side_effect = RoborockException
     entity_id = "select.roborock_q10_s5_cleaning_mode"
     assert hass.states.get(entity_id) is not None
 
