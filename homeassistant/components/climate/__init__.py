@@ -35,6 +35,7 @@ from .const import (  # noqa: F401
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_FAN_SPEED_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -246,6 +247,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         {
             ATTR_HVAC_MODES,
             ATTR_FAN_MODES,
+            ATTR_FAN_SPEED_MODES,
             ATTR_SWING_MODES,
             ATTR_MIN_TEMP,
             ATTR_MAX_TEMP,
@@ -262,6 +264,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
+    _attr_fan_speed_modes: list[str] | None
     _attr_hvac_action: HVACAction | None = None
     _attr_hvac_mode: HVACMode | None
     _attr_hvac_modes: list[HVACMode]
@@ -332,6 +335,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODES] = self.fan_modes
+            if self.fan_speed_modes is not None:
+                data[ATTR_FAN_SPEED_MODES] = self.fan_speed_modes
 
         if ClimateEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODES] = self.preset_modes
@@ -490,6 +495,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Requires ClimateEntityFeature.FAN_MODE.
         """
         return self._attr_fan_modes
+
+    @cached_property
+    def fan_speed_modes(self) -> list[str] | None:
+        """Return the list of fan modes that should be treated as speed modes.
+
+        Requires ClimateEntityFeature.FAN_MODE.
+        """
+        return self._attr_fan_speed_modes
 
     @cached_property
     def swing_mode(self) -> str | None:

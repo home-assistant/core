@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_FAN_SPEED_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -206,6 +207,7 @@ class Thermostat(HomeAccessory):
                 ATTR_MAX_TEMP,
                 ATTR_MIN_TEMP,
                 ATTR_FAN_MODES,
+                ATTR_FAN_SPEED_MODES,
                 ATTR_HVAC_MODES,
             )
         )
@@ -322,11 +324,18 @@ class Thermostat(HomeAccessory):
                 fan_mode.lower(): fan_mode
                 for fan_mode in attributes.get(ATTR_FAN_MODES) or []
             }
-            self.ordered_fan_speeds = [
-                fan_mode
-                for fan_mode in fan_modes
-                if fan_mode not in NON_SPEED_FAN_MODES
-            ]
+            if fan_speed_modes := attributes.get(ATTR_FAN_SPEED_MODES):
+                self.ordered_fan_speeds = [
+                    fan_mode.lower()
+                    for fan_mode in fan_speed_modes
+                    if fan_mode.lower() in fan_modes
+                ]
+            else:
+                self.ordered_fan_speeds = [
+                    fan_mode
+                    for fan_mode in fan_modes
+                    if fan_mode not in NON_SPEED_FAN_MODES
+                ]
             if self.ordered_fan_speeds:
                 self.fan_chars.append(CHAR_ROTATION_SPEED)
 
