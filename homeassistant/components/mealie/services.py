@@ -23,6 +23,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import (
     ATTR_END_DATE,
@@ -36,6 +37,7 @@ from .const import (
     ATTR_START_DATE,
     ATTR_URL,
     DOMAIN,
+    MEALIE_IMAGE_PROXY_PATH,
 )
 from .coordinator import MealieConfigEntry
 
@@ -111,6 +113,22 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
 )
 
 
+def _get_image_base_url(hass: HomeAssistant) -> str:
+    """Return the external base URL for building image proxy URLs."""
+    try:
+        return get_url(hass, allow_internal=False)
+    except NoURLAvailableError:
+        return ""
+
+
+def _inject_recipe_image_url(base_url: str, entry_id: str, recipe: dict) -> None:
+    """Replace the raw image field with the HA proxy URL."""
+    if recipe.get("image") and recipe.get("recipe_id"):
+        recipe["image"] = (
+            f"{base_url}{MEALIE_IMAGE_PROXY_PATH}/{entry_id}/{recipe['recipe_id']}"
+        )
+
+
 def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
     """Validate mealplan entry type, if prior to 3.7.0."""
 
@@ -175,7 +193,11 @@ async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
             translation_key="recipe_not_found",
             translation_placeholders={"recipe_id": recipe_id},
         ) from err
-    return {"recipe": asdict(recipe)}
+    recipe_dict = asdict(recipe)
+    _inject_recipe_image_url(
+        _get_image_base_url(call.hass), entry.entry_id, recipe_dict
+    )
+    return {"recipe": recipe_dict}
 
 
 async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
@@ -198,7 +220,11 @@ async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="no_recipes_found",
         ) from err
-    return {"recipes": asdict(recipes)}
+    recipes_dict = asdict(recipes)
+    base_url = _get_image_base_url(call.hass)
+    for recipe in recipes_dict.get("items", []):
+        _inject_recipe_image_url(base_url, entry.entry_id, recipe)
+    return {"recipes": recipes_dict}
 
 
 async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
@@ -222,7 +248,11 @@ async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
             translation_key="connection_error",
         ) from err
     if call.return_response:
-        return {"recipe": asdict(recipe)}
+        recipe_dict = asdict(recipe)
+        _inject_recipe_image_url(
+            _get_image_base_url(call.hass), entry.entry_id, recipe_dict
+        )
+        return {"recipe": recipe_dict}
     return None
 
 
