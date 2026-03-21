@@ -1,4 +1,4 @@
-"""Test API client for dk_fuelprices."""
+"""Test API client for Fuelprices.dk."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from aiohttp import ClientResponseError
 from pybraendstofpriser.exceptions import ProductNotFoundError
 import pytest
 
-from homeassistant.components.dk_fuelprices.const import DOMAIN
-from homeassistant.components.dk_fuelprices.coordinator import APIClient
+from homeassistant.components.fuelprices_dk.const import DOMAIN
+from homeassistant.components.fuelprices_dk.coordinator import APIClient
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.util import dt as dt_util
@@ -28,7 +28,6 @@ def _create_client(hass: HomeAssistant) -> APIClient:
         TEST_API_KEY,
         TEST_COMPANY,
         TEST_STATION,
-        {"Blyfri95": True, "Diesel": False},
         "station_1",
         config_entry,
     )
@@ -87,18 +86,6 @@ async def test_api_client_update_last_update_none(
     await client._async_update_data()
 
     assert client.updated_at is None
-
-
-async def test_api_client_setup_populates_products(
-    hass: HomeAssistant, mock_braendstofpriser
-) -> None:
-    """Test _async_setup does not populate products before first update."""
-    client = _create_client(hass)
-    client.products = {}
-
-    await client._async_setup()
-
-    assert client.products == {}
 
 
 async def test_api_client_update_populates_all_available_products(

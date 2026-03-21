@@ -1,4 +1,4 @@
-"""Test the dk_fuelprices config flow."""
+"""Test the Fuelprices.dk config flow."""
 
 from unittest.mock import AsyncMock, Mock
 
@@ -28,7 +28,7 @@ def _client_error(status: int) -> ClientResponseError:
 async def test_user_form(hass: HomeAssistant) -> None:
     """Test the initial user form is shown."""
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -42,7 +42,7 @@ async def test_full_user_flow(
 ) -> None:
     """Test a full successful config flow."""
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -84,73 +84,114 @@ async def test_user_flow_invalid_api_key(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
 ) -> None:
-    """Test flow aborts when API key is invalid."""
+    """Test flow shows an invalid API key error."""
     mock_braendstofpriser.list_companies.side_effect = _client_error(401)
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: TEST_API_KEY},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_api_key"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_api_key"}
 
 
 async def test_user_flow_rate_limit(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
 ) -> None:
-    """Test flow aborts when API rate limit is exceeded."""
+    """Test flow shows a rate limit error."""
     mock_braendstofpriser.list_companies.side_effect = _client_error(429)
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "rate_limit_exceeded"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "rate_limit_exceeded"}
 
 
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
 ) -> None:
-    """Test flow aborts on generic connection error."""
+    """Test flow shows a cannot connect error."""
     mock_braendstofpriser.list_companies.side_effect = _client_error(500)
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_company_selection_aborts_without_companies(
+async def test_user_flow_shows_error_without_companies(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
 ) -> None:
-    """Test company selection aborts if API returns no companies."""
+    """Test flow shows an error if the API returns no companies."""
     mock_braendstofpriser.list_companies.return_value = []
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_duplicate_api_key_aborts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test flow aborts when the same API key is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "rate_limit_exceeded"
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_allows_different_api_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_braendstofpriser: AsyncMock,
+) -> None:
+    """Test flow allows a different API key."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "fuelprices_dk", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "other-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "company_selection"
 
 
 async def test_reauth_success(
@@ -259,25 +300,6 @@ async def test_subentry_flow_duplicate_station(
     assert result["reason"] == "station_already_configured"
 
 
-async def test_subentry_flow_api_init_error_no_api_key(hass: HomeAssistant) -> None:
-    """Test subentry flow aborts when config entry has no API key."""
-    config_entry = MockConfigEntry(
-        domain="dk_fuelprices",
-        title="Fuelprices.dk",
-        version=1,
-        data={},
-        subentries_data=[],
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "station"),
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_api_key"
-
-
 async def test_subentry_flow_api_init_error_statuses(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
@@ -313,4 +335,48 @@ async def test_subentry_flow_company_selection_without_companies(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "rate_limit_exceeded"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_subentry_flow_station_error_returns_to_company_selection(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test station loading errors return the user to company selection."""
+    mock_braendstofpriser.list_stations.side_effect = _client_error(500)
+
+    result = await hass.config_entries.subentries.async_init(
+        (init_integration.entry_id, "station"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"company": TEST_COMPANY},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "company_selection"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_subentry_flow_empty_station_list_returns_to_company_selection(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test empty station lists return the user to company selection."""
+    mock_braendstofpriser.list_stations.return_value = MockStations([])
+
+    result = await hass.config_entries.subentries.async_init(
+        (init_integration.entry_id, "station"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"company": TEST_COMPANY},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "company_selection"
+    assert result["errors"] == {"base": "cannot_connect"}
