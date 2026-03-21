@@ -40,9 +40,6 @@
       }
     },
     "sensor": {
-      "battery": {
-        "default": "mdi:battery"
-      },
       "brush_remaining": {
         "default": "mdi:brush"
       },
