@@ -3,9 +3,11 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import FakeDevice
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -24,3 +26,25 @@ async def test_sensors(
 ) -> None:
     """Test sensors and check test values are correctly set."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
+
+
+async def test_q10_vacuum_error_updates_from_push(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test Q10 vacuum error sensor updates when status trait pushes updates."""
+    entity_id = "sensor.roborock_q10_s5_vacuum_error"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.status.fault = "main_brush_jammed"
+
+    await fake_q10_vacuum.b01_q10_properties.refresh()
+    await hass.async_block_till_done()
+
+    updated_state = hass.states.get(entity_id)
+    assert updated_state is not None
+    assert updated_state.state == "main_brush_jammed"
