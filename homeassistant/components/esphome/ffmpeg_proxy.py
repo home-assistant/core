@@ -1,6 +1,7 @@
 """HTTP view that converts audio from a URL to a preferred format."""
 
 import asyncio
+import contextlib
 from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
@@ -260,8 +261,10 @@ class FFmpegConvertResponse(web.StreamResponse):
             if not stderr_task.done():
                 try:
                     await asyncio.wait_for(stderr_task, timeout=1)
-                except TimeoutError, asyncio.CancelledError:
+                except TimeoutError:
                     stderr_task.cancel()
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await stderr_task
 
             if proc.returncode != 0:
                 _LOGGER.error(
@@ -287,7 +290,7 @@ class FFmpegConvertResponse(web.StreamResponse):
         assert proc.stderr is not None
 
         while self.hass.is_running and (chunk := await proc.stderr.readline()):
-            line = chunk.decode().rstrip()
+            line = chunk.decode(errors="replace").rstrip()
             if len(stderr_lines) < _MAX_STDERR_LINES:
                 stderr_lines.append(line)
             _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, line)
