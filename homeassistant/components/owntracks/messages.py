@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import SourceType
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.util import decorator, slugify
 
+from .const import ATTR_ALTITUDE
 from .helper import supports_encryption
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,6 +71,8 @@ def _parse_see_args(message, subscribe_topic):
         kwargs["gps_accuracy"] = message["acc"]
     if "batt" in message:
         kwargs["battery"] = message["batt"]
+    if "alt" in message:
+        kwargs[ATTR_ALTITUDE] = message["alt"]
     if "vel" in message:
         kwargs["attributes"]["velocity"] = message["vel"]
     if "tid" in message:
