@@ -89,7 +89,7 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         _LOGGER.warning(
             "Configuration of the PJLink integration in YAML is deprecated and "
-            "will be removed a future version of Home Assistant; "
+            "will be removed in a future version of Home Assistant; "
             "Your existing configuration has been imported into the UI automatically "
             "and can be safely removed from your configuration.yaml file"
         )

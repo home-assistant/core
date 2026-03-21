@@ -1,6 +1,7 @@
 """Test the PJLink config flow."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -92,7 +93,7 @@ async def test_form_invalid_inputs(
     [_DEFAULT_DATA, _DEFAULT_DATA_WO_PORT],
 )
 async def test_import_creates_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, import_data: dict[str, str]
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, import_data: dict[str, Any]
 ) -> None:
     """Test importing a YAML config creates an entry."""
     result = await hass.config_entries.flow.async_init(
