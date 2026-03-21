@@ -40,12 +40,10 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="unique",
         version=2,
         domain=DOMAIN,
-        data={
-            CONF_LATITUDE: 52.42,
-            CONF_LONGITUDE: 4.42,
-        },
         options={
             CONF_API_KEY: "abcdef12345",
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
             CONF_DECLINATION: 30,
             CONF_AZIMUTH: 190,
             CONF_MODULES_POWER: 5100,

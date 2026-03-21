@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -22,15 +22,29 @@ async def async_migrate_entry(
     """Migrate old config entry."""
 
     if entry.version == 1:
+        # v1 -> v2: rename "modules power" key and split single damping value
+        # into separate morning/evening values.
+        damping = entry.options.get(CONF_DAMPING, 0.0)
         new_options = entry.options.copy()
+        new_options.pop(CONF_DAMPING)
         new_options |= {
             CONF_MODULES_POWER: new_options.pop("modules power"),
-            CONF_DAMPING_MORNING: new_options.get(CONF_DAMPING, 0.0),
-            CONF_DAMPING_EVENING: new_options.pop(CONF_DAMPING, 0.0),
+            CONF_DAMPING_MORNING: damping,
+            CONF_DAMPING_EVENING: damping,
         }
+        hass.config_entries.async_update_entry(entry, options=new_options, version=2)
 
+    if entry.version == 2:
+        # v2 -> v3: location is now always stored in options.
+        # Previously, entries using the home location stored a flag in entry.data
+        # and omitted lat/lon from options entirely. Backfill from hass.config.
+        new_options = entry.options.copy()
+        if CONF_LATITUDE not in new_options:
+            new_options[CONF_LATITUDE] = hass.config.latitude
+        if CONF_LONGITUDE not in new_options:
+            new_options[CONF_LONGITUDE] = hass.config.longitude
         hass.config_entries.async_update_entry(
-            entry, data=entry.data, options=new_options, version=2
+            entry, options=new_options, data={}, version=3
         )
 
     return True
