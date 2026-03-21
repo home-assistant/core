@@ -1,8 +1,9 @@
 """Test the pjlink media player platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
 import socket
-from unittest.mock import create_autospec, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
 import pypjlink
 from pypjlink import MUTE_AUDIO
@@ -28,7 +29,7 @@ def projector_from_address():
 
 
 @pytest.fixture(name="mocked_projector")
-def mocked_projector(projector_from_address):
+def mocked_projector(projector_from_address: MagicMock) -> Generator[MagicMock]:
     """Create pjlink Projector instance mock."""
 
     instance = projector_from_address.return_value
@@ -68,7 +69,7 @@ async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.mark.parametrize("side_effect", [socket.timeout, OSError])
 async def test_offline_initialization(
-    projector_from_address, hass: HomeAssistant, side_effect
+    projector_from_address: MagicMock, hass: HomeAssistant, side_effect: Exception
 ) -> None:
     """Test initialization of a device that is offline."""
 
@@ -80,7 +81,9 @@ async def test_offline_initialization(
     assert state.state == "unavailable"
 
 
-async def test_initialization(projector_from_address, hass: HomeAssistant) -> None:
+async def test_initialization(
+    projector_from_address: MagicMock, hass: HomeAssistant
+) -> None:
     """Test a device that is available."""
 
     instance = projector_from_address.return_value
@@ -105,7 +108,7 @@ async def test_initialization(projector_from_address, hass: HomeAssistant) -> No
 
 @pytest.mark.parametrize("power_state", ["on", "warm-up"])
 async def test_on_state_init(
-    projector_from_address, hass: HomeAssistant, power_state
+    projector_from_address: MagicMock, hass: HomeAssistant, power_state: str
 ) -> None:
     """Test a device that is available."""
 
@@ -125,7 +128,9 @@ async def test_on_state_init(
     assert state.attributes["source"] == "HDMI 1"
 
 
-async def test_api_error(projector_from_address, hass: HomeAssistant) -> None:
+async def test_api_error(
+    projector_from_address: MagicMock, hass: HomeAssistant
+) -> None:
     """Test invalid api responses."""
 
     instance = projector_from_address.return_value
@@ -145,7 +150,9 @@ async def test_api_error(projector_from_address, hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
-async def test_update_unavailable(projector_from_address, hass: HomeAssistant) -> None:
+async def test_update_unavailable(
+    projector_from_address: MagicMock, hass: HomeAssistant
+) -> None:
     """Test update to a device that is unavailable."""
 
     instance = projector_from_address.return_value
@@ -171,7 +178,9 @@ async def test_update_unavailable(projector_from_address, hass: HomeAssistant) -
     assert state.state == "unavailable"
 
 
-async def test_unavailable_time(mocked_projector, hass: HomeAssistant) -> None:
+async def test_unavailable_time(
+    mocked_projector: MagicMock, hass: HomeAssistant
+) -> None:
     """Test unavailable time projector error."""
 
     await setup_pjlink_entry(hass)
@@ -191,7 +200,7 @@ async def test_unavailable_time(mocked_projector, hass: HomeAssistant) -> None:
     assert "is_volume_muted" not in state.attributes
 
 
-async def test_turn_off(mocked_projector, hass: HomeAssistant) -> None:
+async def test_turn_off(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
     """Test turning off beamer."""
 
     await setup_pjlink_entry(hass)
@@ -206,7 +215,7 @@ async def test_turn_off(mocked_projector, hass: HomeAssistant) -> None:
     mocked_projector.set_power.assert_called_with("off")
 
 
-async def test_turn_on(mocked_projector, hass: HomeAssistant) -> None:
+async def test_turn_on(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
     """Test turning on beamer."""
 
     await setup_pjlink_entry(hass)
@@ -221,7 +230,7 @@ async def test_turn_on(mocked_projector, hass: HomeAssistant) -> None:
     mocked_projector.set_power.assert_called_with("on")
 
 
-async def test_mute(mocked_projector, hass: HomeAssistant) -> None:
+async def test_mute(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
     """Test muting beamer."""
 
     await setup_pjlink_entry(hass)
@@ -236,7 +245,7 @@ async def test_mute(mocked_projector, hass: HomeAssistant) -> None:
     mocked_projector.set_mute.assert_called_with(MUTE_AUDIO, True)
 
 
-async def test_unmute(mocked_projector, hass: HomeAssistant) -> None:
+async def test_unmute(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
     """Test unmuting beamer."""
 
     await setup_pjlink_entry(hass)
@@ -251,7 +260,7 @@ async def test_unmute(mocked_projector, hass: HomeAssistant) -> None:
     mocked_projector.set_mute.assert_called_with(MUTE_AUDIO, False)
 
 
-async def test_select_source(mocked_projector, hass: HomeAssistant) -> None:
+async def test_select_source(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
     """Test selecting source."""
 
     await setup_pjlink_entry(hass)
