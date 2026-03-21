@@ -40,7 +40,7 @@ async def test_q10_vacuum_error_updates_from_push(
     assert state.state == STATE_UNKNOWN
 
     assert fake_q10_vacuum.b01_q10_properties is not None
-    fake_q10_vacuum.b01_q10_properties.status.fault = "main_brush_jammed"
+    fake_q10_vacuum.b01_q10_properties.status.fault = 5
 
     await fake_q10_vacuum.b01_q10_properties.refresh()
     await hass.async_block_till_done()

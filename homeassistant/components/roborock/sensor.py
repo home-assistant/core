@@ -88,6 +88,15 @@ class RoborockSensorDescriptionQ10(SensorEntityDescription):
     value_fn: Callable[[Q10StatusTrait], StateType]
 
 
+def _q10_error_value_fn(status: Q10StatusTrait) -> str | None:
+    fault = getattr(status, "fault", None)
+    if fault is None:
+        return None
+    if isinstance(fault, str):
+        return fault
+    return RoborockErrorCode(fault).name
+
+
 def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
         status := state.status.dock_error_status
@@ -511,7 +520,9 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
     RoborockSensorDescriptionQ10(
         key="vacuum_error",
         translation_key="vacuum_error",
-        value_fn=lambda data: getattr(data, "fault", None),
+        value_fn=_q10_error_value_fn,
+        device_class=SensorDeviceClass.ENUM,
+        options=RoborockErrorCode.keys(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]

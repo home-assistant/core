@@ -488,10 +488,14 @@
       "vacuum_error": {
         "name": "Vacuum error",
         "state": {
+          "audio_error": "Audio error",
           "battery_error": "Battery error",
           "bumper_stuck": "Bumper stuck",
           "cannot_cross_carpet": "Cannot cross carpet",
           "charging_error": "Charging error",
+          "check_clean_carouse": "Check the cleaning carousel",
+          "clean_carousel_exception": "Cleaning carousel error",
+          "clean_carousel_water_full": "Cleaning carousel water full",
           "clear_brush_exception": "Check that the water filter has been correctly installed",
           "clear_brush_exception_2": "Positioning button error",
           "clear_water_box_exception": "Clean water tank empty",
@@ -503,6 +507,7 @@
           "dirty_water_box_hoare": "Check the dirty water tank",
           "dock": "Dock not connected to power",
           "dock_locator_error": "Dock locator error",
+          "drain_water_exception": "Drain water exception",
           "fan_error": "Fan error",
           "filter_blocked": "Filter blocked",
           "filter_screen_exception": "Clean the dock water filter",
@@ -518,6 +523,7 @@
           "no_dustbin": "No dustbin",
           "nogo_zone_detected": "No-go zone detected",
           "none": "None",
+          "optical_flow_sensor_dirt": "Optical flow sensor dirty",
           "return_to_dock_fail": "Return to dock fail",
           "robot_on_carpet": "Robot on carpet",
           "robot_tilted": "Robot tilted",
@@ -527,10 +533,12 @@
           "sink_strainer_hoare": "Reinstall the water filter",
           "strainer_error": "Filter is wet or blocked",
           "temperature_protection": "Unit temperature protection",
+          "up_water_exception": "Water supply exception",
           "vertical_bumper_pressed": "Vertical bumper pressed",
           "vibrarise_jammed": "VibraRise jammed",
           "visual_sensor": "Camera error",
           "wall_sensor_dirty": "Wall sensor dirty",
+          "water_carriage_drop": "Water carriage dropped",
           "wheels_jammed": "Wheels jammed",
           "wheels_suspended": "Wheels suspended"
         }
