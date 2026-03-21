@@ -144,7 +144,7 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (CannotConnectError, "cannot_connect"),
+        (CannotConnectError("Cannot connect"), "cannot_connect"),
         (Exception("Unexpected error"), "unknown"),
         (AuthenticationError("Invalid credentials"), "invalid_auth"),
     ],
@@ -258,7 +258,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
-        (CannotConnectError, "cannot_connect"),
+        (CannotConnectError("Cannot connect"), "cannot_connect"),
         (Exception("Unexpected error"), "unknown"),
     ],
 )
@@ -479,7 +479,7 @@ async def test_ssdp_auth_invalid_credentials(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (CannotConnectError, "cannot_connect"),
+        (CannotConnectError("Cannot connect"), "cannot_connect"),
         (Exception("Unknown error"), "unknown"),
     ],
 )
