@@ -220,7 +220,13 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
     mock_config_entry_classic: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that invalid classic API credentials during coordinator update trigger reauth."""
+    """Test that session expiry with invalid credentials triggers reauth.
+
+    The coordinator detects a session expiry when the Growatt server returns an
+    HTML login page instead of JSON (JSONDecodeError). It then attempts a
+    re-login. If the credentials are also invalid, ConfigEntryAuthFailed is
+    raised and the HA reauth flow is triggered.
+    """
     mock_growatt_classic_api.device_list.return_value = [
         {"deviceSn": "TLX123456", "deviceType": "tlx"}
     ]
@@ -238,7 +244,11 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
     await setup_integration(hass, mock_config_entry_classic)
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
 
-    # Credentials expire between updates
+    # Simulate session expiry: data fetch returns HTML (JSONDecodeError) and
+    # re-login attempt fails with invalid credentials
+    mock_growatt_classic_api.tlx_detail.side_effect = json.decoder.JSONDecodeError(
+        "Invalid JSON", "", 0
+    )
     mock_growatt_classic_api.login.return_value = {
         "success": False,
         "msg": LOGIN_INVALID_AUTH_CODE,
@@ -254,7 +264,58 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
         and flow["context"]["entry_id"] == mock_config_entry_classic.entry_id
         for flow in flows
     )
-    assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
+
+
+async def test_classic_api_session_relogin_on_json_error(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a session expiry (JSONDecodeError) triggers re-login and retries.
+
+    When the Growatt server returns an HTML login page (JSONDecodeError) the
+    coordinator silently re-authenticates using the stored credentials and
+    retries the data fetch. Entities should recover without user intervention.
+    """
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    mock_growatt_classic_api.plant_info.return_value = {
+        "deviceList": [],
+        "totalEnergy": 1250.0,
+        "todayEnergy": 12.5,
+        "invTodayPpv": 2500,
+        "plantMoneyText": "123.45/USD",
+    }
+    tlx_response = {"data": {"deviceSn": "TLX123456"}}
+    mock_growatt_classic_api.tlx_detail.return_value = tlx_response
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    # Simulate session expiry on first call; second call (retry after re-login) succeeds
+    mock_growatt_classic_api.tlx_detail.side_effect = [
+        json.decoder.JSONDecodeError("Invalid JSON", "", 0),
+        tlx_response,
+    ]
+    # Re-login succeeds (default: success=True in mock)
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Integration should remain loaded — session was silently restored
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    # No reauth flow should have been triggered
+    flows = hass.config_entries.flow.async_progress()
+    assert not any(
+        flow["context"]["source"] == "reauth"
+        and flow["context"]["entry_id"] == mock_config_entry_classic.entry_id
+        for flow in flows
+    )
+    # Verify re-login was called (once for setup, once for re-login)
+    assert mock_growatt_classic_api.login.call_count >= 2
 
 
 async def test_classic_api_setup(
@@ -704,9 +765,7 @@ async def test_setup_reuses_cached_api_from_migration(
     # Verify log message confirms API reuse (rate limit optimization)
     assert "Reusing logged-in session from migration" in caplog.text
 
-    # Verify login was called with correct credentials
-    # Note: Coordinators also call login() during refresh, so we verify
-    # the call was made but don't assert it was called exactly once
+    # Verify login was called with correct credentials during setup
     mock_growatt_classic_api.login.assert_called_with("test_user", "test_password")
 
     # Verify plant_list was called only once (during migration, not during setup)

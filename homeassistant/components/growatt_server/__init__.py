@@ -341,13 +341,13 @@ async def async_setup_entry(
 
     # Create a coordinator for the total sensors
     total_coordinator = GrowattCoordinator(
-        hass, config_entry, plant_id, "total", plant_id
+        hass, config_entry, plant_id, "total", plant_id, api
     )
 
     # Create coordinators for each device
     device_coordinators = {
         device["deviceSn"]: GrowattCoordinator(
-            hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
+            hass, config_entry, device["deviceSn"], device["deviceType"], plant_id, api
         )
         for device in devices
         if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min", "sph"]
