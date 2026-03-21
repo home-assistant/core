@@ -85,9 +85,12 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
     ),
     "battery_charging": SwitchbotBinarySensorEntityDescription(
         key="battery_charging",
-        translation_key="battery_charging",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    ),
+    "tamper_alarm": SwitchbotBinarySensorEntityDescription(
+        key="tamper_alarm",
+        device_class=BinarySensorDeviceClass.TAMPER,
     ),
 }
 

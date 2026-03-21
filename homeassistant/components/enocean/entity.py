@@ -1,17 +1,49 @@
 """Representation of an EnOcean device."""
 
-from homeassistant_enocean.entity_id import EnOceanEntityID
-from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
+from enocean_async import EURID, Gateway
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+
+class EnOceanEntityID:
+    """An EnOcean entity is uniquely identified by its device's EnOcean Unique Radio Identifier (EURID) and a unique ID string for the entity."""
+
+    def __init__(self, device_address: EURID, unique_id: str | None = None) -> None:
+        """Construct an EnOcean entity ID."""
+        self.__device_address = device_address
+        self.__unique_id: str | None = unique_id
+
+    @property
+    def device_address(self) -> EURID:
+        """Return the device address part of the entity ID."""
+        return self.__device_address
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique ID part of the entity ID."""
+        return self.__unique_id
+
+    def __str__(self) -> str:
+        """Return a string representation of the entity."""
+        if self.__unique_id:
+            return f"{self.__device_address!s}.{self.__unique_id}"
+        return f"{self.__device_address!s}"
+
+    def __hash__(self) -> int:
+        """Return the hash of the entity ID."""
+        return hash((self.__device_address.to_number(), self.unique_id))
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality with another entity ID."""
+        if not isinstance(other, EnOceanEntityID):
+            return NotImplemented
+        return (self.__device_address.to_number(), self.unique_id) == (
+            other.device_address.to_number(),
+            other.unique_id,
+        )
 
 
 class EnOceanEntity(Entity):
@@ -20,39 +52,28 @@ class EnOceanEntity(Entity):
     def __init__(
         self,
         enocean_entity_id: EnOceanEntityID,
-        gateway: EnOceanHomeAssistantGateway,
-        device_class: SensorDeviceClass
-        | BinarySensorDeviceClass
-        | SwitchDeviceClass
-        | CoverDeviceClass
-        | None = None,
-        entity_category: str | None = None,
+        gateway: Gateway,
+        gateway_eurid: EURID,
     ) -> None:
         """Initialize the entity."""
         super().__init__()
 
-        # set base class attributes
+        self._attr_has_entity_name = True
+        self._attr_should_poll = False
+
         if enocean_entity_id.unique_id:
             self._attr_translation_key = enocean_entity_id.unique_id
         else:
             self._attr_name = None
 
-        self._attr_has_entity_name = True
-        self._attr_should_poll = False
-        self._attr_device_class = device_class
-        self._attr_entity_category = (
-            EntityCategory(entity_category) if entity_category else None
-        )
-
-        # define EnOcean-specific attributes
         self.__enocean_entity_id: EnOceanEntityID = enocean_entity_id
-        self.__gateway: EnOceanHomeAssistantGateway = gateway
+        self.__gateway: Gateway = gateway
+        self.__gateway_eurid: EURID = gateway_eurid
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this entity."""
-        uid: str = self.__enocean_entity_id.to_string()
-        return uid
+        return str(self.__enocean_entity_id)
 
     @property
     def enocean_entity_id(self) -> EnOceanEntityID:
@@ -60,42 +81,26 @@ class EnOceanEntity(Entity):
         return self.__enocean_entity_id
 
     @property
-    def gateway(self) -> EnOceanHomeAssistantGateway:
+    def gateway(self) -> Gateway:
         """Return the gateway instance."""
         return self.__gateway
 
     @property
     def device_info(self) -> DeviceInfo | None:
         """Get device info."""
-        device_properties = self.gateway.get_device_properties(
-            self.enocean_entity_id.device_address
-        )
+        address = self.__enocean_entity_id.device_address
+        spec = self.__gateway.device_spec(address)
+        if spec is None:
+            return None
 
-        if self.gateway.chip_id == self.enocean_entity_id.device_address:
-            return DeviceInfo(
-                {
-                    "identifiers": {
-                        (DOMAIN, self.enocean_entity_id.device_address.to_string())
-                    },
-                    "manufacturer": device_properties.device_type.manufacturer,
-                    "model": device_properties.device_type.model,
-                    "serial_number": self.enocean_entity_id.device_address.to_string(),
-                    "sw_version": self.gateway.sw_version,
-                    "hw_version": self.gateway.chip_version,
-                }
-            )
+        dt = spec.device_type
+        manufacturer = str(dt.manufacturer) if dt.manufacturer is not None else None
 
         return DeviceInfo(
-            {
-                "identifiers": {
-                    (DOMAIN, self.enocean_entity_id.device_address.to_string())
-                },
-                "manufacturer": device_properties.device_type.manufacturer,
-                "model": device_properties.device_type.model,
-                "serial_number": self.enocean_entity_id.device_address.to_string(),
-                "sw_version": None,
-                "hw_version": None,
-                "model_id": "EEP " + device_properties.device_type.eep.to_string(),
-                "via_device": (DOMAIN, self.gateway.chip_id.to_string()),
-            }
+            identifiers={(DOMAIN, str(address))},
+            manufacturer=manufacturer,
+            model=dt.model,
+            model_id=f"EEP {dt.eep}",
+            serial_number=str(address),
+            via_device=(DOMAIN, str(self.__gateway_eurid)),
         )

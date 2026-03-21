@@ -4,11 +4,13 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import MagicMock
 
-from aiohomeconnect.model import HomeAppliance, SettingKey
+from aiohomeconnect.model import HomeAppliance, ProgramKey, SettingKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -194,35 +196,6 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
-@pytest.mark.parametrize(
-    "service_call",
-    SERVICE_KV_CALL_PARAMS,
-)
-async def test_services_exception_device_id(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    client_with_exception: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-    service_call: dict[str, Any],
-) -> None:
-    """Raise a HomeAssistantError when there is an API error."""
-    assert await integration_setup(client_with_exception)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance.ha_id)},
-    )
-
-    service_call["service_data"]["device_id"] = device_entry.id
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(**service_call)
-
-
 async def test_services_appliance_not_found(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -295,3 +268,34 @@ async def test_services_exception(
         match=SERVICE_VALIDATION_ERROR_MAPPING[service_name],
     ):
         await hass.services.async_call(**service_call)
+
+
+async def test_not_possible_to_use_favorite_program(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Raise a MultipleInvalid when trying to use a favorite program."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "HA_ID")},
+    )
+
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_program_and_options",
+            {
+                "device_id": device_entry.id,
+                "affects_to": "selected_program",
+                "program": bsh_key_to_translation_key(
+                    ProgramKey.BSH_COMMON_FAVORITE_001.value
+                ),
+            },
+            blocking=True,
+        )

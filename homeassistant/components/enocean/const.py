@@ -6,11 +6,9 @@ from homeassistant.const import Platform
 
 DOMAIN = "enocean"
 
+MANUFACTURER = "EnOcean"
+
 ERROR_INVALID_DONGLE_PATH = "invalid_dongle_path"
-
-SIGNAL_RECEIVE_MESSAGE = "enocean.receive_message"
-SIGNAL_SEND_MESSAGE = "enocean.send_message"
-
 
 # config
 CONF_ENOCEAN_DEVICES = "devices"
@@ -47,11 +45,9 @@ LOGGER = logging.getLogger(__package__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
-    Platform.NUMBER,
-    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

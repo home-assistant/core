@@ -1044,6 +1044,173 @@ async def test_update_core_with_backup(
     )
 
 
+async def test_update_core_sets_progress_immediately(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test core update sets in_progress immediately when install starts."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.home_assistant_core_update")
+    assert state.attributes.get("in_progress") is False
+
+    # Mock update_core to verify in_progress is set before it's called
+    async def check_progress(
+        hass: HomeAssistant, version: str | None, backup: bool
+    ) -> None:
+        assert (
+            hass.states.get("update.home_assistant_core_update").attributes.get(
+                "in_progress"
+            )
+            is True
+        )
+
+    with patch(
+        "homeassistant.components.hassio.update.update_core",
+        side_effect=check_progress,
+    ) as mock_update:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_core_update", "backup": True},
+            blocking=True,
+        )
+
+    mock_update.assert_called_once()
+
+
+async def test_update_core_resets_progress_on_error(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test core update resets in_progress to False when update fails."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.home_assistant_core_update")
+    assert state.attributes.get("in_progress") is False
+
+    with (
+        patch(
+            "homeassistant.components.hassio.update.update_core",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_core_update", "backup": True},
+            blocking=True,
+        )
+
+    state = hass.states.get("update.home_assistant_core_update")
+    assert state.attributes.get("in_progress") is False, (
+        "in_progress should be reset to False after error"
+    )
+
+
+async def test_update_addon_sets_progress_immediately(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test addon update sets in_progress immediately when install starts."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.attributes.get("in_progress") is False
+
+    # Mock update_addon to verify in_progress is set before it's called
+    async def check_progress(
+        hass: HomeAssistant,
+        addon: str,
+        backup: bool,
+        addon_name: str | None,
+        installed_version: str | None,
+    ) -> None:
+        assert (
+            hass.states.get("update.test_update").attributes.get("in_progress") is True
+        )
+
+    with patch(
+        "homeassistant.components.hassio.update.update_addon",
+        side_effect=check_progress,
+    ) as mock_update:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update", "backup": True},
+            blocking=True,
+        )
+
+    mock_update.assert_called_once()
+
+
+async def test_update_addon_resets_progress_on_error(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test addon update resets in_progress to False when update fails."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.attributes.get("in_progress") is False
+
+    with (
+        patch(
+            "homeassistant.components.hassio.update.update_addon",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update", "backup": True},
+            blocking=True,
+        )
+
+    state = hass.states.get("update.test_update")
+    assert state.attributes.get("in_progress") is False, (
+        "in_progress should be reset to False after error"
+    )
+
+
 async def test_update_supervisor(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:

@@ -5,15 +5,17 @@ from unittest.mock import Mock
 import pytest
 from roborock import RoborockException
 from roborock.exceptions import RoborockTimeout
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -26,6 +28,17 @@ def get_scenes_failure_fixture(fake_vacuum: FakeDevice) -> None:
 def platforms() -> list[Platform]:
     """Fixture to set platforms used in the test."""
     return [Platform.BUTTON]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_buttons(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test buttons and check test values are correctly set."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
 
 
 @pytest.fixture(name="consumeables_trait", autouse=True)
@@ -178,4 +191,84 @@ async def test_press_routine_button_failure(
     fake_vacuum.v1_properties.routines.execute_routine.assert_called_once_with(
         routine_id
     )
+    assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "data_protocol"),
+    [
+        ("button.zeo_one_start", "START"),
+        ("button.zeo_one_pause", "PAUSE"),
+        ("button.zeo_one_shutdown", "SHUTDOWN"),
+    ],
+)
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_press_a01_button_success(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+    data_protocol: str,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test pressing A01 button entities."""
+    # Get the washing machine (A01) device
+    washing_machine = next(
+        device
+        for device in fake_devices
+        if hasattr(device, "zeo") and device.zeo is not None
+    )
+
+    # Ensure entity exists
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    # Verify the set_value was called with correct protocol and value
+    washing_machine.zeo.set_value.assert_called_once()
+    assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("entity_id"),
+    [
+        ("button.zeo_one_start"),
+    ],
+)
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_press_a01_button_failure(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test failure while pressing A01 button entity."""
+    # Get the washing machine (A01) device
+    washing_machine = next(
+        device
+        for device in fake_devices
+        if hasattr(device, "zeo") and device.zeo is not None
+    )
+    washing_machine.zeo.set_value.side_effect = RoborockException
+
+    # Ensure entity exists
+    assert hass.states.get(entity_id) is not None
+
+    with pytest.raises(HomeAssistantError, match="Failed to press button"):
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+
+    washing_machine.zeo.set_value.assert_called_once()
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"

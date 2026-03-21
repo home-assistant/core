@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
+from .const import API_MODE_CLOUD, API_MODE_LOCAL
 from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
@@ -66,6 +67,22 @@ def _uptime_to_timestamp(
 
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
+    IntellifireSensorEntityDescription(
+        key="read_mode",
+        translation_key="read_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[API_MODE_LOCAL, API_MODE_CLOUD],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.fireplace.read_mode.value,
+    ),
+    IntellifireSensorEntityDescription(
+        key="control_mode",
+        translation_key="control_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[API_MODE_LOCAL, API_MODE_CLOUD],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.fireplace.control_mode.value,
+    ),
     IntellifireSensorEntityDescription(
         key="flame_height",
         translation_key="flame_height",

@@ -122,7 +122,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
@@ -149,7 +148,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "github": {"aiogithubapi": {"async-timeout"}},
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
         "here-routing": {"async-timeout"},
@@ -203,11 +201,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
-    "tami4": {
-        # https://github.com/SeleniumHQ/selenium/issues/16943
-        # tami4 > selenium > types*
-        "selenium": {"types-certifi", "types-urllib3"},
-    },
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
@@ -216,7 +209,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # travispy > pytest
         "travispy": {"pytest"},
     },
-    "unifiprotect": {"uiprotect": {"async-timeout"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},

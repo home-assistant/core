@@ -6,7 +6,7 @@
       'controllable_name': 'rts:RollerShutterRTSComponent',
       'device_url': 'rts://****-****-6867/16756006',
       'firmware': None,
-      'model': 'UpDownRollerShutter',
+      'model': 'RollerShutter',
     }),
     'execution_history': list([
     ]),

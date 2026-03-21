@@ -49,6 +49,8 @@ class LGDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -76,6 +78,7 @@ class LGDevice(MediaPlayerEntity):
         self._bass = 0
         self._treble = 0
         self._device = None
+        self._support_play_control = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)}, name=host
         )
@@ -136,6 +139,8 @@ class LGDevice(MediaPlayerEntity):
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
                 self._attr_name = data["s_user_name"]
+        elif response["msg"] == "PLAY_INFO":
+            self._update_playinfo(data)
 
         self.schedule_update_ha_state()
 
@@ -150,12 +155,29 @@ class LGDevice(MediaPlayerEntity):
         if "i_curr_eq" in data:
             self._equaliser = data["i_curr_eq"]
 
+    def _update_playinfo(self, data: dict[str, Any]) -> None:
+        """Update the player info."""
+        if "i_play_ctrl" in data:
+            if data["i_play_ctrl"] == 0:
+                self._attr_state = MediaPlayerState.PLAYING
+            else:
+                self._attr_state = MediaPlayerState.PAUSED
+        if "s_albumart" in data:
+            self._attr_media_image_url = data["s_albumart"]
+        if "s_artist" in data:
+            self._attr_media_artist = data["s_artist"]
+        if "s_title" in data:
+            self._attr_media_title = data["s_title"]
+        if "b_support_play_ctrl" in data:
+            self._support_play_control = data["b_support_play_ctrl"]
+
     def update(self) -> None:
         """Trigger updates from the device."""
         self._device.get_eq()
         self._device.get_info()
         self._device.get_func()
         self._device.get_settings()
+        self._device.get_play()
 
     @property
     def volume_level(self):
@@ -225,6 +247,27 @@ class LGDevice(MediaPlayerEntity):
     def turn_off(self) -> None:
         """Turn the media player off."""
         self._set_power(False)
+
+    def media_play(self) -> None:
+        """Send play command."""
+        if self._support_play_control:
+            self._device.send_packet(
+                {"cmd": "set", "data": {"i_play_ctrl": 0}, "msg": "PLAY_INFO"}
+            )
+
+    def media_pause(self) -> None:
+        """Send pause command."""
+        if self._support_play_control:
+            self._device.send_packet(
+                {"cmd": "set", "data": {"i_play_ctrl": 1}, "msg": "PLAY_INFO"}
+            )
+
+    def media_play_pause(self) -> None:
+        """Send play/pause command."""
+        if self.state == MediaPlayerState.PLAYING:
+            self.media_pause()
+        else:
+            self.media_play()
 
     def _set_power(self, status: bool) -> None:
         """Set the media player state."""

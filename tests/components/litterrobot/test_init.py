@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import CONFIG, DOMAIN, VACUUM_ENTITY_ID
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
@@ -58,6 +58,9 @@ async def test_entry_not_setup(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -67,6 +70,118 @@ async def test_entry_not_setup(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is expected_state
+
+
+async def test_unique_id_migration(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that legacy entries get unique_id set during migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    assert entry.unique_id is None
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.litterrobot.Account",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.coordinator.Account",
+            return_value=mock_account,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id == ACCOUNT_USER_ID
+    assert entry.minor_version == 2
+    mock_account.disconnect.assert_called_once()
+
+
+async def test_unique_id_migration_unsupported_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migration fails for entries with version > 1."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_unique_id_migration_conflict(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that migration skips unique_id when another entry owns it."""
+    # First entry already has the unique_id
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+    ).add_to_hass(hass)
+
+    # Second entry is legacy (no unique_id)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    assert entry.unique_id is None
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.litterrobot.Account",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.coordinator.Account",
+            return_value=mock_account,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id is None
+    assert entry.minor_version == 2
+
+
+async def test_unique_id_migration_connection_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migration fails when the API is unreachable during unique_id backfill."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.litterrobot.Account.connect",
+        side_effect=LitterRobotException,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id is None
+    assert entry.minor_version == 1
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_device_remove_devices(

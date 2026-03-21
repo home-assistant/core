@@ -105,9 +105,9 @@ class MeteoFranceWeather(
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
-        self._city_name = self.coordinator.data.position["name"]
+        self._attr_name = self.coordinator.data.position["name"]
         self._mode = mode
-        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        self._attr_unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -117,16 +117,6 @@ class MeteoFranceWeather(
         self.platform.config_entry.async_create_task(
             self.hass, self.async_update_listeners(("daily", "hourly"))
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._city_name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -141,39 +131,39 @@ class MeteoFranceWeather(
         )
 
     @property
-    def condition(self):
+    def condition(self) -> str:
         """Return the current condition."""
         return format_condition(
             self.coordinator.data.current_forecast["weather"]["desc"]
         )
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float:
         """Return the temperature."""
         return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float:
         """Return the pressure."""
         return self.coordinator.data.current_forecast["sea_level"]
 
     @property
-    def humidity(self):
+    def humidity(self) -> float:
         """Return the humidity."""
         return self.coordinator.data.current_forecast["humidity"]
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self.coordinator.data.current_forecast["wind"]["speed"]
 
     @property
-    def native_wind_gust_speed(self):
+    def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
         return self.coordinator.data.current_forecast["wind"].get("gust")
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
         if wind_bearing != -1:

@@ -15,6 +15,7 @@ from . import (
     conditions,
     config_flow,
     config_schema,
+    core_files,
     dependencies,
     dhcp,
     docker,
@@ -62,6 +63,7 @@ INTEGRATION_PLUGINS = [
     config_flow,  # This needs to run last, after translations are processed
 ]
 HASS_PLUGINS = [
+    core_files,
     docker,
     mypy_config,
     metadata,

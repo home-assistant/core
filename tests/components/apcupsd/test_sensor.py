@@ -9,6 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import automation, script
 from homeassistant.components.apcupsd.const import DEPRECATED_SENSORS, DOMAIN
 from homeassistant.components.apcupsd.coordinator import REQUEST_REFRESH_COOLDOWN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
@@ -101,7 +105,7 @@ async def test_manual_update_entity(
     assert state.state == "14.0"
 
     # Setup HASS for calling the update_entity service.
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_request_status.return_value = MOCK_STATUS | {
         "LOADPCT": "15.0 Percent",
@@ -113,8 +117,8 @@ async def test_manual_update_entity(
     future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
     async_fire_time_changed(hass, future)
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             ATTR_ENTITY_ID: [
                 f"sensor.{device_slug}_load",

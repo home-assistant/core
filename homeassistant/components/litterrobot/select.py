@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Robot
 from pylitterbot.robot.litterrobot4 import BrightnessLevel, NightLightMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -15,7 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+
+PARALLEL_UPDATES = 1
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
@@ -32,9 +34,11 @@ class RobotSelectEntityDescription(
     select_fn: Callable[[_WhiskerEntityT, str], Coroutine[Any, Any, bool]]
 
 
-ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = {
+ROBOT_SELECT_MAP: dict[
+    type[Robot] | tuple[type[Robot], ...], tuple[RobotSelectEntityDescription, ...]
+] = {
     LitterRobot: (
-        RobotSelectEntityDescription[LitterRobot, int](  # type: ignore[type-abstract]  # only used for isinstance check
+        RobotSelectEntityDescription[LitterRobot, int](
             key="cycle_delay",
             translation_key="cycle_delay",
             unit_of_measurement=UnitOfTime.MINUTES,
@@ -43,8 +47,8 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
             select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
         ),
     ),
-    LitterRobot4: (
-        RobotSelectEntityDescription[LitterRobot4, str](
+    (LitterRobot4, LitterRobot5): (
+        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
             key="globe_brightness",
             translation_key="globe_brightness",
             current_fn=(
@@ -61,7 +65,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4, str](
+        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
             key="globe_light",
             translation_key="globe_light",
             current_fn=(
@@ -78,7 +82,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4, str](
+        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
             key="panel_brightness",
             translation_key="brightness_level",
             current_fn=(
@@ -152,6 +156,7 @@ class LitterRobotSelectEntity(
         """Return the selected entity option to represent the entity state."""
         return str(self.entity_description.current_fn(self.robot))
 
+    @whisker_command
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.robot, option)

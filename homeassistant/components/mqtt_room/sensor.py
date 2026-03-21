@@ -173,7 +173,7 @@ class MQTTRoomSensor(SensorEntity):
         return self._name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {ATTR_DISTANCE: self._distance}
 

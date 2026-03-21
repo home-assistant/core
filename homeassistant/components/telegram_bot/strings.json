@@ -87,7 +87,8 @@
   "config_subentries": {
     "allowed_chat_ids": {
       "abort": {
-        "already_configured": "Chat already configured"
+        "already_configured": "Chat already configured",
+        "entry_not_loaded": "[%key:component::telegram_bot::exceptions::entry_not_loaded::message%]"
       },
       "entry_type": "Allowed chat ID",
       "error": {
@@ -104,7 +105,7 @@
           "data_description": {
             "chat_id": "ID representing the user or group chat to which messages can be sent."
           },
-          "description": "To get your chat ID, follow these steps:\n\n1. Open Telegram and start a chat with [{getidsbot_username}]({getidsbot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `id` field of the bot's response.",
+          "description": "Before you proceed, send any message to your bot: [{bot_username}]({bot_url}). This is required because Telegram prevents bots from initiating chats with users.\n\nThen follow these steps to get your chat ID:\n\n1. Open Telegram and start a chat with [{id_bot_username}]({id_bot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `ID` field of the bot's response.",
           "title": "Add chat"
         }
       }
@@ -186,6 +187,9 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
+    "entry_not_loaded": {
+      "message": "{telegram_bot} is not loaded"
+    },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"
     },
@@ -203,9 +207,6 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
-    },
-    "missing_config_entry": {
-      "message": "No config entries found or setup failed. Please set up the Telegram Bot first."
     },
     "missing_input": {
       "message": "{field} is required."

@@ -1,11 +1,19 @@
 """Support for EnOcean roller shutters."""
 
-import asyncio
-import logging
 from typing import Any
 
-from homeassistant_enocean.entity_id import EnOceanEntityID
-from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
+from enocean_async import (
+    EURID,
+    CoverClose,
+    CoverOpen,
+    CoverQueryPositionAndAngle,
+    CoverSetPositionAndAngle,
+    CoverStop,
+    EntityType,
+    Gateway,
+    Observable,
+    Observation,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -16,15 +24,16 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .config_entry import EnOceanConfigEntry
-from .entity import EnOceanEntity
+from . import EnOceanConfigEntry
+from .entity import EnOceanEntity, EnOceanEntityID
 
-_LOGGER = logging.getLogger(__name__)
-
-# Constants for the 'movement stop' watchdog, probably to be refined in the future as user-definable options
-WATCHDOG_TIMEOUT = 1
-WATCHDOG_INTERVAL = 0.2
-WATCHDOG_MAX_QUERIES = 10
+_COVER_STATE_TO_HA = {
+    "open": (False, False),
+    "opening": (True, False),
+    "closed": (False, False),
+    "closing": (False, True),
+    "stopped": (False, False),
+}
 
 
 async def async_setup_entry(
@@ -33,195 +42,103 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    gateway = config_entry.runtime_data.gateway
+    gateway: Gateway = config_entry.runtime_data
+    version_info = await gateway.version_info
+    gateway_eurid: EURID = version_info.eurid
 
-    for entity_id in gateway.cover_entities:
-        async_add_entities(
-            [
-                EnOceanCover(
-                    entity_id,
-                    gateway=gateway,
-                    device_class=gateway.cover_entities[entity_id].device_class,
-                ),
-            ]
-        )
+    entities = []
+    for eurid, spec in gateway.device_specs.items():
+        for entity in spec.entities:
+            if entity.entity_type == EntityType.COVER:
+                entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
+                entities.append(EnOceanCover(entity_id, gateway, gateway_eurid))
+
+    async_add_entities(entities)
 
 
 class EnOceanCover(EnOceanEntity, CoverEntity):
     """Representation of an EnOcean cover."""
 
+    _attr_device_class = CoverDeviceClass.BLIND
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
+
     def __init__(
         self,
         enocean_entity_id: EnOceanEntityID,
-        gateway: EnOceanHomeAssistantGateway,
-        device_class: CoverDeviceClass | None = None,
+        gateway: Gateway,
+        gateway_eurid: EURID,
     ) -> None:
         """Initialize the EnOcean cover."""
         super().__init__(
             enocean_entity_id=enocean_entity_id,
             gateway=gateway,
+            gateway_eurid=gateway_eurid,
         )
-        self.gateway.register_cover_callback(enocean_entity_id, self.update)
-
-        # set base class attributes
-        self._attr_device_class = device_class or CoverDeviceClass.BLIND
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.SET_POSITION
-        )
-
-        self._attr_is_closed: bool | None = None
-        """Flag to indicate whether the cover is closed."""
-
-        self.__stop_suspected = False
-        """Flag to indicate that a stop of the cover movement is suspected."""
-
-        self.__watchdog_enabled = False
-        """Flag to indicate that the movement stop watchdog is enabled."""
-
-        self.__watchdog_seconds_remaining: float = 0
-        """Remaining seconds for the movement stop watchdog."""
-
-        self.__watchdog_queries_remaining: int = 5
-        """Remaining queries for the movement stop watchdog."""
+        gateway.add_observation_callback(self._on_observation)
 
     async def async_added_to_hass(self) -> None:
-        """Query status after Home Assistant (re)start."""
+        """Query current position after Home Assistant (re)start."""
         await super().async_added_to_hass()
-        self.restart_watchdog()
+        await self.gateway.send_command(
+            self.enocean_entity_id.device_address,
+            CoverQueryPositionAndAngle(entity_id=self.enocean_entity_id.unique_id),
+        )
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def _on_observation(self, observation: Observation) -> None:
+        """Handle an incoming observation."""
+        if (
+            observation.device != self.enocean_entity_id.device_address
+            or observation.entity != self.enocean_entity_id.unique_id
+        ):
+            return
+
+        if Observable.COVER_STATE in observation.values:
+            state = observation.values[Observable.COVER_STATE]
+            is_opening, is_closing = _COVER_STATE_TO_HA.get(state, (False, False))
+            self._attr_is_opening = is_opening
+            self._attr_is_closing = is_closing
+            self._attr_is_closed = state == "closed"
+
+        if Observable.POSITION in observation.values:
+            self._attr_current_cover_position = observation.values[Observable.POSITION]
+            self._attr_is_closed = self._attr_current_cover_position == 0
+
+        self.schedule_update_ha_state()
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._attr_is_opening = True
-        self._attr_is_closing = False
-        self.gateway.set_cover_position(self.enocean_entity_id, 100)
-        self.restart_watchdog()
-        self.schedule_update_ha_state()
+        await self.gateway.send_command(
+            self.enocean_entity_id.device_address,
+            CoverOpen(entity_id=self.enocean_entity_id.unique_id),
+        )
 
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self._attr_is_opening = False
-        self._attr_is_closing = True
-        self.gateway.set_cover_position(self.enocean_entity_id, 0)
-        self.restart_watchdog()
-        self.schedule_update_ha_state()
+        await self.gateway.send_command(
+            self.enocean_entity_id.device_address,
+            CoverClose(entity_id=self.enocean_entity_id.unique_id),
+        )
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         if ATTR_POSITION not in kwargs:
             return
+        await self.gateway.send_command(
+            self.enocean_entity_id.device_address,
+            CoverSetPositionAndAngle(
+                position=kwargs[ATTR_POSITION],
+                entity_id=self.enocean_entity_id.unique_id,
+            ),
+        )
 
-        # determine opening/closing state
-        if self._attr_current_cover_position is None:
-            self._attr_is_opening = None
-            self._attr_is_closing = None
-        elif kwargs[ATTR_POSITION] == self._attr_current_cover_position:
-            self._attr_is_opening = False
-            self._attr_is_closing = False
-        elif kwargs[ATTR_POSITION] > self._attr_current_cover_position:
-            self._attr_is_opening = True
-            self._attr_is_closing = False
-        elif kwargs[ATTR_POSITION] < self._attr_current_cover_position:
-            self._attr_is_opening = False
-            self._attr_is_closing = True
-
-        self.gateway.set_cover_position(self.enocean_entity_id, kwargs[ATTR_POSITION])
-        self.restart_watchdog()
-        self.schedule_update_ha_state()
-
-    def stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop any cover movement."""
-        self.stop_watchdog()
-        self._attr_is_opening = False
-        self._attr_is_closing = False
-        self.gateway.stop_cover(self.enocean_entity_id)
-        self.schedule_update_ha_state()
-
-    def update(self, new_position: int) -> None:
-        """Update the cover state."""
-        # upon receiving fully open/closed position, we assume the cover has stopped (without further querying)
-        if new_position in (0, 100):
-            self._attr_is_opening = False
-            self._attr_is_closing = False
-            self.stop_watchdog()
-
-        elif self._attr_current_cover_position is not None:
-            # upon receiving the same position as known, we suspect the cover has stopped and verify this by querying the status again (via watchdog)
-            # upon receiving the same position again, we confirm the stop
-            if new_position == self._attr_current_cover_position:
-                if self.__stop_suspected:
-                    self.__stop_suspected = False
-                    self._attr_is_opening = False
-                    self._attr_is_closing = False
-                    self.stop_watchdog()
-                else:
-                    self.restart_watchdog()
-                    self.__stop_suspected = True
-                    return
-
-            # depending on the known and new position, we set opening/closing state and restart the watchdog
-            elif new_position > self._attr_current_cover_position:
-                self._attr_is_opening = True
-                self._attr_is_closing = False
-                self.restart_watchdog()
-            elif new_position < self._attr_current_cover_position:
-                self._attr_is_opening = False
-                self._attr_is_closing = True
-                self.restart_watchdog()
-
-        self._attr_current_cover_position = new_position
-
-        # determine is_closed state
-        if self._attr_current_cover_position == 0:
-            self._attr_is_closed = True
-        else:
-            self._attr_is_closed = False
-
-        self.schedule_update_ha_state()
-
-    def restart_watchdog(self) -> None:
-        """(Re)start the 'movement stop' watchdog."""
-        self.__watchdog_seconds_remaining = WATCHDOG_TIMEOUT
-        self.__watchdog_queries_remaining = WATCHDOG_MAX_QUERIES
-
-        if self.__watchdog_enabled:
-            return
-
-        self.__watchdog_enabled = True
-        self.hass.create_task(self.watchdog())
-
-    def stop_watchdog(self) -> None:
-        """Stop the 'movement stop' watchdog."""
-        self.__watchdog_enabled = False
-
-    async def watchdog(self) -> None:
-        """Watchdog to check if the cover movement stopped.
-
-        After watchdog time expired, the watchdog queries the current status.
-        """
-
-        while 1:
-            await asyncio.sleep(WATCHDOG_INTERVAL)
-
-            if not self.__watchdog_enabled:
-                return
-
-            if self.__watchdog_seconds_remaining <= 0:
-                self.gateway.query_cover_position(self.enocean_entity_id)
-                self.__watchdog_seconds_remaining = WATCHDOG_TIMEOUT
-                self.__watchdog_queries_remaining -= 1
-
-                if self.__watchdog_queries_remaining == 0:
-                    _LOGGER.debug(
-                        "'Movement stop' watchdog max query limit reached. Disabling watchdog and setting state to 'unknown'"
-                    )
-                    self._attr_current_cover_position = None
-                    self._attr_is_closed = None
-                    self._attr_is_opening = False
-                    self._attr_is_closing = False
-                    return
-                continue
-
-            self.__watchdog_seconds_remaining -= WATCHDOG_INTERVAL
+        await self.gateway.send_command(
+            self.enocean_entity_id.device_address,
+            CoverStop(entity_id=self.enocean_entity_id.unique_id),
+        )

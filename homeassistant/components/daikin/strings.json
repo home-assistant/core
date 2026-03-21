@@ -57,5 +57,28 @@
         "name": "Power"
       }
     }
+  },
+  "exceptions": {
+    "zone_hvac_mode_unsupported": {
+      "message": "Zone temperature can only be changed when the main climate mode is heat or cool."
+    },
+    "zone_hvac_read_only": {
+      "message": "Zone HVAC mode is controlled by the main climate entity."
+    },
+    "zone_inactive": {
+      "message": "Zone {zone_id} is not active. Enable the zone on your Daikin device first."
+    },
+    "zone_missing": {
+      "message": "Zone {zone_id} does not exist. Available zones are 0-{max_zone}."
+    },
+    "zone_parameters_unavailable": {
+      "message": "This device does not expose the required zone temperature parameters."
+    },
+    "zone_set_failed": {
+      "message": "Failed to set zone temperature. The device may not support this operation."
+    },
+    "zone_temperature_missing": {
+      "message": "Provide a temperature value when adjusting a zone."
+    }
   }
 }

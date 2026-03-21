@@ -24,6 +24,9 @@
     {
       "hostname": "hub*",
       "macaddress": "286D97*"
+    },
+    {
+      "hostname": "samsung-*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
@@ -31,5 +34,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
   "quality_scale": "bronze",
-  "requirements": ["pysmartthings==3.5.1"]
+  "requirements": ["pysmartthings==3.7.0"]
 }

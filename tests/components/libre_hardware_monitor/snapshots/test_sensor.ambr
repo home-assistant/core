@@ -1298,24 +1298,24 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test_entry_id_gpu-nvidia-0-throughput-1',
-    'unit_of_measurement': 'MB/s',
+    'unit_of_measurement': 'KB/s',
   })
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-      'max_value': '2422.8',
+      'max_value': '366210.0',
       'min_value': '0.0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'MB/s',
+      'unit_of_measurement': 'KB/s',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '166.1',
+    'state': '285302.0',
   })
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_video_engine_load-entry]
@@ -1737,17 +1737,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-        'max_value': '2422.8',
+        'max_value': '366210.0',
         'min_value': '0.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'MB/s',
+        'unit_of_measurement': 'KB/s',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '166.1',
+      'state': '285302.0',
     }),
   ])
 # ---
@@ -2115,17 +2115,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-        'max_value': '2422.8',
+        'max_value': '366210.0',
         'min_value': '0.0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'MB/s',
+        'unit_of_measurement': 'KB/s',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '166.1',
+      'state': '285302.0',
     }),
   ])
 # ---

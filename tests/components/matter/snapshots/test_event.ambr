@@ -575,6 +575,134 @@
     'state': 'unknown',
   })
 # ---
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.bilresa_dual_button_button_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (1)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'BILRESA dual button Button (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.bilresa_dual_button_button_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.bilresa_dual_button_button_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (2)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'BILRESA dual button Button (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.bilresa_dual_button_button_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1664,7 +1792,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000013-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1728,7 +1856,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1794,7 +1922,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-2-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---

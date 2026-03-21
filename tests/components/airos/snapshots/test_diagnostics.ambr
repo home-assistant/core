@@ -14,7 +14,7 @@
       ]),
       'derived': dict({
         'access_point': True,
-        'fw_major': None,
+        'fw_major': 8,
         'mac': '**REDACTED**',
         'mac_interface': 'br0',
         'mode': 'point_to_point',
