@@ -6,8 +6,9 @@ from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -46,6 +47,13 @@ async def test_victron_battery_sensor(
     assert state.attributes["device_class"] == "current"
     assert state.attributes["unit_of_measurement"] == "A"
 
+    # Verify device info was registered correctly
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "123_battery_0")})
+    assert device is not None
+    assert device.manufacturer == "Victron Energy"
+    assert device.name == "Battery"
+
     # Update the same metric to exercise the entity update callback path.
     await inject_message(victron_hub, "N/123/battery/0/Dc/0/Current", '{"value": 11.2}')
     await hass.async_block_till_done()
@@ -73,3 +81,10 @@ async def test_victron_enum_sensor(
     assert state is not None
     # Value 1 maps to State.LOW_POWER with id="low_power"
     assert state.state == "low_power"
+
+    # Verify system device has no via_device (it IS the gateway)
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "123_system_0")})
+    assert device is not None
+    assert device.manufacturer == "Victron Energy"
+    assert device.via_device_id is None
