@@ -85,6 +85,9 @@
       "robot_cleaner_dust_bag": {
         "name": "Dust bag full"
       },
+      "stick_cleaner_dust_bag": {
+        "name": "[%key:component::smartthings::entity::binary_sensor::robot_cleaner_dust_bag::name%]"
+      },
       "sub_remote_control": {
         "name": "Upper washer remote control"
       },

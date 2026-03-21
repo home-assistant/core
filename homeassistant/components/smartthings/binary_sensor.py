@@ -217,6 +217,17 @@ CAPABILITY_TO_SENSORS: dict[
             entity_category=EntityCategory.DIAGNOSTIC,
         )
     },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUST_BAG: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="full",
+            component_translation_key={
+                "station": "stick_cleaner_dust_bag",
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            exists_fn=lambda component, _: component == "station",
+        )
+    },
 }
 
 
