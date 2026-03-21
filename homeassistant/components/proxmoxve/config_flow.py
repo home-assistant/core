@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
+    CONF_AUTH_PROVIDERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -22,13 +23,23 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .common import sanitize_userid
+from .common import sanitize_config_entry
 from .const import (
+    AUTH_METHODS,
+    AUTH_OTHER,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
+    CONF_TOKEN,
+    CONF_TOKEN_NAME,
+    CONF_TOKEN_SECRET,
     CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
@@ -37,27 +48,54 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-CONFIG_SCHEMA = vol.Schema(
+BASE_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_AUTH_PROVIDERS, default=DEFAULT_REALM): SelectSelector(
+            SelectSelectorConfig(
+                options=AUTH_METHODS,
+                translation_key=CONF_AUTH_PROVIDERS,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_TOKEN, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
+
+REGULAR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
+TOKEN_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN_NAME): cv.string,
+        vol.Required(CONF_TOKEN_SECRET): cv.string,
     }
 )
 
 
 def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the user input and fetch data (sync, for executor)."""
+    auth_kwargs = {
+        "password": data[CONF_PASSWORD],
+    }
+    if data[CONF_TOKEN]:
+        auth_kwargs = {
+            "token_name": data[CONF_TOKEN_NAME],
+            "token_value": data[CONF_TOKEN_SECRET],
+        }
+    sanitize_config_entry(data)
     try:
         client = ProxmoxAPI(
-            data[CONF_HOST],
+            host=data[CONF_HOST],
             port=data[CONF_PORT],
-            user=sanitize_userid(data),
-            password=data[CONF_PASSWORD],
+            user=data[CONF_USERNAME],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            **auth_kwargs,
         )
         nodes = client.nodes.get()
     except AuthenticationError as err:
@@ -97,25 +135,48 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Proxmox VE."""
 
     VERSION = 2
+    _data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-        proxmox_nodes: list[dict[str, Any]] = []
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            proxmox_nodes, errors = await self._validate_input(user_input)
-            if not errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST],
-                    data={**user_input, CONF_NODES: proxmox_nodes},
-                )
+            self._data = user_input
+            return await self.async_step_auth()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=CONFIG_SCHEMA,
+            data_schema=BASE_SCHEMA,
+        )
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the auth step."""
+        errors: dict[str, str] = {}
+        proxmox_nodes: list[dict[str, Any]] = []
+
+        if user_input is not None:
+            self._data = {**self._data, **user_input}
+            self._async_abort_entries_match({CONF_HOST: self._data[CONF_HOST]})
+            proxmox_nodes, errors = await self._validate_input(self._data)
+
+            if not errors:
+                return self.async_create_entry(
+                    title=self._data[CONF_HOST],
+                    data={**self._data, CONF_NODES: proxmox_nodes},
+                )
+
+        data_schema = REGULAR_SCHEMA
+        if self._data[CONF_TOKEN]:
+            data_schema = TOKEN_SCHEMA
+        if self._data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
+            data_schema = data_schema.extend({vol.Required(CONF_REALM): cv.string})
+
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=data_schema,
             errors=errors,
         )
 
@@ -181,7 +242,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=CONFIG_SCHEMA,
+                data_schema=REGULAR_SCHEMA,
                 suggested_values=user_input or suggested_values,
             ),
             errors=errors,

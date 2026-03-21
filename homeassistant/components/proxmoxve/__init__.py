@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    CONF_AUTH_PROVIDERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -29,6 +30,9 @@ from .const import (
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
+    CONF_TOKEN,
+    CONF_TOKEN_NAME,
+    CONF_TOKEN_SECRET,
     CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
@@ -53,9 +57,15 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
                         vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_PASSWORD): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Required(
+                            CONF_AUTH_PROVIDERS, default=DEFAULT_REALM
+                        ): cv.string,
                         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
+                        vol.Optional(CONF_TOKEN, default=False): cv.boolean,
+                        vol.Optional(CONF_TOKEN_NAME): cv.string,
+                        vol.Optional(CONF_TOKEN_SECRET): cv.string,
                         vol.Optional(
                             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                         ): cv.boolean,
