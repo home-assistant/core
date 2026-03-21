@@ -763,14 +763,14 @@ async def test_webhook_subscription_retry_on_failure(
     assert withings.subscribe_notification.call_count >= 6
 
 
-async def test_webhook_subscription_max_retries_exceeded(
+async def test_webhook_subscription_continues_retrying(
     hass: HomeAssistant,
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test webhook subscription schedules retry after max attempts."""
+    """Test webhook subscription continues retrying with exponential backoff."""
     withings.subscribe_notification.side_effect = WithingsError(
         "The callback URL is either absent or incorrect"
     )
@@ -778,13 +778,13 @@ async def test_webhook_subscription_max_retries_exceeded(
     await setup_integration(hass, webhook_config_entry)
     await prepare_webhook_setup(hass, freezer)
 
-    # Tick through all retry delays: 30, 60, 120, 240 seconds
-    for delay in (30, 60, 120, 240):
+    # Tick through retry delays with exponential backoff: 30, 60, 120, 240, 480
+    for delay in (30, 60, 120, 240, 480):
         freezer.tick(timedelta(seconds=delay))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert "Will retry in 30 minutes" in caplog.text
+    assert "Failed to subscribe to Withings webhooks" in caplog.text
 
 
 async def test_webhook_subscription_rate_limited(
@@ -812,7 +812,7 @@ async def test_webhook_subscription_auth_failure(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test webhook subscription stops on auth failure."""
+    """Test webhook subscription stops on auth failure and triggers reauth."""
     withings.subscribe_notification.side_effect = WithingsAuthenticationFailedError(
         "Authentication failed"
     )
@@ -823,6 +823,12 @@ async def test_webhook_subscription_auth_failure(
     assert "Authentication failed while subscribing to webhooks" in caplog.text
     assert withings.subscribe_notification.call_count == 1
 
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
+        for flow in flows
+    )
+
 
 async def test_webhook_subscription_invalid_params(
     hass: HomeAssistant,
@@ -831,7 +837,7 @@ async def test_webhook_subscription_invalid_params(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test invalid params error retries and schedules delayed retry."""
+    """Test invalid params error stops retrying."""
     withings.subscribe_notification.side_effect = WithingsInvalidParamsError(
         "Invalid callback URL"
     )
@@ -839,11 +845,5 @@ async def test_webhook_subscription_invalid_params(
     await setup_integration(hass, webhook_config_entry)
     await prepare_webhook_setup(hass, freezer)
 
-    # Tick through all retry delays: 30, 60, 120, 240 seconds
-    for delay in (30, 60, 120, 240):
-        freezer.tick(timedelta(seconds=delay))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    assert "Invalid webhook URL" in caplog.text
-    assert "Will retry in 30 minutes" in caplog.text
+    assert "Webhook URL rejected by Withings" in caplog.text
+    assert withings.subscribe_notification.call_count == 1

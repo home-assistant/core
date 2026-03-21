@@ -69,7 +69,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 WEBHOOK_REGISTER_DELAY = 1
-WEBHOOK_RETRY_DELAY = 1800
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 type WithingsConfigEntry = ConfigEntry[WithingsData]
 
@@ -323,9 +322,7 @@ class WithingsWebhookManager:
 
     async def _async_subscribe_webhook(self, _: Any = None) -> None:
         """Attempt to subscribe to Withings webhooks."""
-        max_retries = 5
         base_delay = 30
-        delay: int | None = None
 
         async with self._register_lock:
             if self._webhooks_registered or self._webhook_url is None:
@@ -340,28 +337,23 @@ class WithingsWebhookManager:
                 WithingsAuthenticationFailedError,
             ) as err:
                 LOGGER.error(
-                    "Authentication failed while subscribing to webhooks: %s. "
-                    "Please reauthenticate the integration",
+                    "Authentication failed while subscribing to webhooks: %s",
+                    err,
+                )
+                self.entry.async_start_reauth(self.hass)
+                return
+            except WithingsInvalidParamsError as err:
+                LOGGER.error(
+                    "Webhook URL rejected by Withings: %s",
                     err,
                 )
                 return
             except WithingsTooManyRequestsError as err:
                 delay = 300 * (self._subscribe_attempt + 1)
                 LOGGER.warning(
-                    "Rate limited by Withings API (attempt %d/%d): %s. "
+                    "Rate limited by Withings API (attempt %d): %s. "
                     "Retrying in %d seconds",
                     self._subscribe_attempt + 1,
-                    max_retries,
-                    err,
-                    delay,
-                )
-            except WithingsInvalidParamsError as err:
-                delay = base_delay * (2**self._subscribe_attempt)
-                LOGGER.warning(
-                    "Invalid webhook URL (attempt %d/%d): %s. "
-                    "Retrying in %d seconds",
-                    self._subscribe_attempt + 1,
-                    max_retries,
                     err,
                     delay,
                 )
@@ -369,9 +361,8 @@ class WithingsWebhookManager:
                 delay = base_delay * (2**self._subscribe_attempt)
                 LOGGER.warning(
                     "Failed to subscribe to Withings webhooks "
-                    "(attempt %d/%d): %s. Retrying in %d seconds",
+                    "(attempt %d): %s. Retrying in %d seconds",
                     self._subscribe_attempt + 1,
-                    max_retries,
                     err,
                     delay,
                 )
@@ -389,19 +380,8 @@ class WithingsWebhookManager:
                 self._webhooks_registered = True
                 return
 
-            if delay is not None:
-                self._subscribe_attempt += 1
-                if self._subscribe_attempt < max_retries:
-                    self._schedule_retry(delay)
-                else:
-                    LOGGER.warning(
-                        "Webhook subscription failed after %d attempts. "
-                        "Will retry in %d minutes",
-                        max_retries,
-                        WEBHOOK_RETRY_DELAY // 60,
-                    )
-                    self._subscribe_attempt = 0
-                    self._schedule_retry(WEBHOOK_RETRY_DELAY)
+            self._subscribe_attempt += 1
+            self._schedule_retry(delay)
 
 
 async def async_unsubscribe_webhooks(client: WithingsClient) -> None:
