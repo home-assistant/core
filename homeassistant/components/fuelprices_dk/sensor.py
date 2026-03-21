@@ -37,7 +37,7 @@ async def async_setup_entry(
     entry: FuelpricesDkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensor platform for Braendstofpriser integration."""
+    """Set up the sensor platform for Fuelprices.dk."""
 
     for coordinator in entry.runtime_data.values():
         subentry_sensors = []
@@ -58,7 +58,7 @@ async def async_setup_entry(
 
 
 class BraendstofpriserSensor(CoordinatorEntity[APIClient], RestoreSensor):
-    """Sensor for Braendstofpriser integration."""
+    """Sensor for Fuelprices.dk."""
 
     _attr_has_entity_name = True
 
