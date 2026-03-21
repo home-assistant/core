@@ -979,7 +979,6 @@ async def test_subentry_web_search_user_location(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_STORE_RESPONSES: store_responses,
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
@@ -993,6 +992,7 @@ async def test_subentry_web_search_user_location(
             CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
             CONF_TOP_P: RECOMMENDED_TOP_P,
             CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+            CONF_STORE_RESPONSES: store_responses,
         },
     )
     await hass.async_block_till_done()

@@ -474,22 +474,28 @@ async def test_assist_api_tools_conversion(
 
 
 @pytest.mark.parametrize(
-    ("mock_conversation_subentry_data", "expected_store"),
+    "expected_store",
     [
-        ({CONF_STORE_RESPONSES: False}, False),
-        ({CONF_STORE_RESPONSES: True}, True),
+        False,
+        True,
     ],
-    indirect=["mock_conversation_subentry_data"],
 )
 async def test_store_responses_forwarded_for_conversation_agent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_conversation_subentry_data: dict[str, bool],
     mock_init_component,
     mock_create_stream: AsyncMock,
     expected_store: bool,
 ) -> None:
     """Test store_responses is forwarded for the conversation agent."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_STORE_RESPONSES: expected_store},
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
     mock_create_stream.return_value = [
         create_message_item(id="msg_A", text="Hello!", output_index=0)
     ]
