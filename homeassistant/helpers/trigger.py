@@ -618,6 +618,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
+        raw_value: Any
         if domain_spec.value_source is None:
             raw_value = state.state
         else:
