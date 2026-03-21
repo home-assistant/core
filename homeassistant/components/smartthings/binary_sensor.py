@@ -208,6 +208,16 @@ CAPABILITY_TO_SENSORS: dict[
             supported_states_attributes=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
         )
     },
+    Capability.SAMSUNG_CE_CLEAN_STATION_STICK_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            component_translation_key={
+                "station": "stick_cleaner_status",
+            },
+            exists_fn=lambda component, _: component == "station",
+            is_on_key="attached",
+        )
+    },
     Capability.SAMSUNG_CE_MICROFIBER_FILTER_STATUS: {
         Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
             key=Attribute.STATUS,
