@@ -263,15 +263,17 @@ async def test_temperature_features_is_valid(
         )
 
 
-async def test_capability_attributes_fan_speed_modes() -> None:
+async def test_capability_attributes_fan_speed_modes(hass: HomeAssistant) -> None:
     """Test fan speed modes are exposed as capability attributes when set."""
     climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
+    climate_entity.hass = hass
 
     assert ATTR_FAN_SPEED_MODES not in climate_entity.capability_attributes
 
     climate_entity_with_fan_speed_modes = MockClimateEntity(
         name="test", entity_id="climate.test"
     )
+    climate_entity_with_fan_speed_modes.hass = hass
     climate_entity_with_fan_speed_modes._attr_fan_speed_modes = ["low"]
 
     assert (
