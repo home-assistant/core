@@ -296,8 +296,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             if cfg_region not in user_input[CONF_REGIONS]
         ]
 
+        removed_uids = set(removed_entities_slots + removed_entities_area)
+
         for entry in entries:
-            for entity_uid in set(removed_entities_slots + removed_entities_area):
+            for entity_uid in removed_uids:
                 if entry.unique_id == entity_uid:
                     entity_registry.async_remove(entry.entity_id)
                     break
