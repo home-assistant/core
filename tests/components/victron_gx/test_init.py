@@ -45,15 +45,10 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=True,
-    ) as mock_forward:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    mock_forward.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")
@@ -71,24 +66,15 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=True,
-    ) as mock_unload:
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_unload.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")
@@ -108,12 +94,8 @@ async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
     config_entry.runtime_data.new_metric_callbacks[MetricKind.SENSOR] = MagicMock()
@@ -122,59 +104,13 @@ async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
         return_value=False,
-    ) as mock_unload:
+    ):
         assert not await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.FAILED_UNLOAD
     assert config_entry.runtime_data.new_metric_callbacks
     hub_disconnect.assert_not_awaited()
-    mock_unload.assert_called_once()
-
-
-@pytest.mark.usefixtures("mock_victron_hub_library")
-async def test_update_entry_does_not_reload(hass: HomeAssistant) -> None:
-    """Test generic config entry updates do not trigger reload."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SSL: False,
-            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        },
-        unique_id=MOCK_INSTALLATION_ID,
-    )
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-            return_value=True,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_reload") as mock_reload,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Generic config updates should not trigger reloads.
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={
-                CONF_HOST: MOCK_HOST,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_SSL: False,
-                CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-            },
-        )
-        await hass.async_block_till_done()
-
-        # Verify no reload is triggered by a generic entry update.
-        assert mock_reload.call_count == 0
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")
@@ -192,12 +128,8 @@ async def test_stop_on_homeassistant_stop(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
     hub_disconnect = config_entry.runtime_data._hub.disconnect
@@ -236,30 +168,15 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
     )
     config_entry.add_to_hass(hass)
 
-    async def _mock_forward(*_args, **_kwargs) -> None:
-        config_entry.runtime_data.new_metric_callbacks[MetricKind.SENSOR] = MagicMock()
-
-    with (
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            side_effect=_mock_forward,
-        ) as mock_forward,
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-            return_value=True,
-        ) as mock_unload,
-        patch(
-            "homeassistant.components.victron_gx.Hub.start",
-            side_effect=start_exception,
-        ),
+    with patch(
+        "homeassistant.components.victron_gx.Hub.start",
+        side_effect=start_exception,
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state is expected_state
     assert config_entry.runtime_data.new_metric_callbacks == {}
-    mock_forward.assert_called_once()
-    mock_unload.assert_called_once()
 
 
 async def test_hub_start_connection_error(

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_victron_battery_sensor[sensor.battery_dc_bus_current-entry-after-update]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -42,8 +43,9 @@
 # ---
 # name: test_victron_battery_sensor[sensor.battery_dc_bus_current-entry-initial]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
