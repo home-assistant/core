@@ -1,8 +1,7 @@
 """An abstract class for entities."""
 
-from __future__ import annotations
-
 from abc import ABCMeta
+from annotationlib import Format, get_annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping
@@ -381,9 +380,20 @@ class CachedProperties(type):
                 if isinstance(attr, (FunctionType, property)):
                     raise TypeError(f"Can't override {attr_name} in subclass")
                 setattr(cls, private_attr_name, attr)
-                annotations = cls.__annotations__
+                annotations = get_annotations(cls, format=Format.FORWARDREF)
                 if attr_name in annotations:
                     annotations[private_attr_name] = annotations.pop(attr_name)
+
+                    if "__annotations__" in cls.__dict__:
+                        cls.__annotations__ = annotations
+                    else:
+
+                        def wrapped_annotate(format: Format) -> dict[str, Any]:
+                            # Note: to avoid complicating things, we only support FORWARDREF
+                            return annotations
+
+                        cls.__annotate__ = wrapped_annotate
+
             # Create the _attr_ property
             setattr(cls, attr_name, make_property(property_name))
 

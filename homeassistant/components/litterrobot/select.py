@@ -120,15 +120,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        LitterRobotSelectEntity(
-            robot=robot, coordinator=coordinator, description=description
-        )
-        for robot in coordinator.account.robots
-        for robot_type, descriptions in ROBOT_SELECT_MAP.items()
-        if isinstance(robot, robot_type)
-        for description in descriptions
-    )
+    known_robots: set[str] = set()
+
+    def _check_robots() -> None:
+        all_robots = coordinator.account.robots
+        current_robots = {robot.serial for robot in all_robots}
+        new_robots = current_robots - known_robots
+        if new_robots:
+            known_robots.update(new_robots)
+            async_add_entities(
+                LitterRobotSelectEntity(
+                    robot=robot, coordinator=coordinator, description=description
+                )
+                for robot in all_robots
+                if robot.serial in new_robots
+                for robot_type, descriptions in ROBOT_SELECT_MAP.items()
+                if isinstance(robot, robot_type)
+                for description in descriptions
+            )
+
+    _check_robots()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
 class LitterRobotSelectEntity(

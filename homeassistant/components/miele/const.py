@@ -500,6 +500,7 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     pasta_paela = 14
     tall_items = 17, 42
     glasses_warm = 19
+    quick_intense = 21
     normal = 30
     power_wash = 44, 204
     comfort_wash = 203
