@@ -306,3 +306,8 @@ class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
                 fan_only=True,
             )
             self.set((self.key, "FanOnly"))
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_cop_mode",
+            )
