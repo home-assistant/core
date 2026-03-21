@@ -409,7 +409,7 @@ async def test_max_conversions_kills_running_process(
     procs_started = asyncio.Event()
     proc_count = 0
 
-    def _make_mock_proc() -> AsyncMock:
+    def _make_mock_proc(*_args: object, **_kwargs: object) -> AsyncMock:
         """Create a mock ffmpeg process that blocks on stdout read."""
         nonlocal proc_count
         future: asyncio.Future[bytes] = hass.loop.create_future()
@@ -432,7 +432,7 @@ async def test_max_conversions_kills_running_process(
 
     with patch(
         "asyncio.create_subprocess_exec",
-        side_effect=lambda *a, **kw: _make_mock_proc(),
+        side_effect=_make_mock_proc,
     ):
         url1 = async_create_proxy_url(
             hass, device_id, "url1", media_format="mp3"
