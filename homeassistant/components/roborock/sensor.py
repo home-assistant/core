@@ -556,7 +556,7 @@ async def async_setup_entry(
         if description.value_fn(coordinator.data) is not None
     )
     # Q10 status is push-based and values may arrive asynchronously after setup.
-    # Register all sensors unconditionally and let each entity become available
+    # Register all sensors unconditionally and let each entity's state be updated
     # as trait updates are received.
     entities.extend(
         RoborockSensorEntityB01Q10(coordinator, description)
