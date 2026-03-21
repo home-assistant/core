@@ -131,7 +131,11 @@ rules:
     comment: |
       Less important sensors such as the account age/timestamp diagnostic sensor
       are not disabled by default.
-  entity-translations: todo
+  entity-translations:
+    status: done
+    comment: |
+      translation_key is set on all entity descriptions in sensor.py
+      (value, balance, age, sum_income, sum_expense, savings, savings_rate).
   exception-translations:
     status: todo
     comment: |
