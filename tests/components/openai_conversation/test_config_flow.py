@@ -950,6 +950,11 @@ async def test_subentry_switching(
 
     assert subentry_flow["type"] is FlowResultType.ABORT
     assert subentry_flow["reason"] == "reconfigure_successful"
+    if not expected_options.get(CONF_RECOMMENDED, False):
+        expected_options = {
+            CONF_STORE_RESPONSES: False,
+            **expected_options,
+        }
     assert subentry.data == expected_options
 
 
@@ -1047,6 +1052,7 @@ async def test_subentry_web_search_user_location(
         CONF_TOP_P: RECOMMENDED_TOP_P,
         CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
         CONF_SERVICE_TIER: "auto",
+        CONF_STORE_RESPONSES: False,
         CONF_WEB_SEARCH: True,
         CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
         CONF_WEB_SEARCH_USER_LOCATION: True,
