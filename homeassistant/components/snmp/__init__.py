@@ -110,6 +110,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
         _LOGGER.error("Invalid authentication credentials or protocols: %s", err)
         return False
 
+    if coordinator.sys_name:
+        hass.config_entries.async_update_entry(entry, title=coordinator.sys_name)
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

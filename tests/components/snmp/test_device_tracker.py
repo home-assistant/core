@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.snmp.const import CONF_IMPORTED_BY, DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -212,3 +212,46 @@ async def test_device_tracker_update(
     assert hass.states.get(entity_id_1).state == STATE_NOT_HOME
     # mac2 is disabled so no state
     assert hass.states.get(entity_id_2) is None
+
+
+async def test_device_tracker_device_registry_linking(
+    hass: HomeAssistant, mock_walk, mock_get_cmd
+) -> None:
+    """Test that entities and devices are correctly linked in the registry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "community": "public",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    dr_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    mac = "00:11:22:33:44:55"
+
+    with patch(
+        "homeassistant.components.snmp.UdpTransportTarget.create",
+        return_value=Mock(),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify Host Device
+    host_device = dr_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert host_device is not None
+
+    # Verify Client Device Linking (it should exist immediately because of device_info)
+    client_device = dr_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert client_device is not None
+    assert client_device.via_device_id == host_device.id
+
+    # Verify Entity Linking
+    entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
+    reg_entry = ent_reg.async_get(entity_id)
+    assert reg_entry.device_id == client_device.id
+    assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION

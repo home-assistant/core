@@ -7,12 +7,14 @@ from typing import Any
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    ScannerEntity,
+    SourceType,
+    TrackerEntity,
 )
 from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -49,10 +51,8 @@ async def async_setup_entry(
     """Set up the SNMP device tracker from a Config Entry.
 
     Follows the same pattern as freebox and unifi: entities are added via
-    async_add_entities and ScannerEntity's built-in lifecycle handles device
-    creation and linking. Disabled entities do not create devices; devices
-    are created only when the user enables the entity or another integration
-    creates a device with the same MAC.
+    async_add_entities. Disabled entities do not create devices; devices
+    are created only when the user enables the entity.
     """
     coordinator = entry.runtime_data
     ent_reg = er.async_get(hass)
@@ -62,6 +62,10 @@ async def async_setup_entry(
     # from the current poll.
     registry_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
     initial_macs = {e.unique_id for e in registry_entries if e.unique_id}
+
+    # 1.5 Get host device for via_device linking (ensures host device exists)
+    dr_reg = dr.async_get(hass)
+    dr_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     # 2. Pre-cleanup: Remove legacy or restored states that conflict with our
     # registered entities so their entity_ids are available.
@@ -84,24 +88,26 @@ async def async_setup_entry(
     @callback
     def _handle_coordinator_update() -> None:
         """Handle updated data from the coordinator."""
-        new_entities = []
-        if coordinator.data:
-            for mac in coordinator.data:
-                if mac not in tracked_macs:
-                    # Discovery of a brand new device.
-                    # Check if there is a legacy state from known_devices.yaml
-                    # that we should take over (enable by default).
-                    entity_slug = mac.replace(":", "_").lower()
-                    legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{entity_slug}"
-                    default_enabled = False
-                    if not ent_reg.async_get(legacy_id) and hass.states.get(legacy_id):
-                        hass.states.async_remove(legacy_id)
-                        default_enabled = True
+        if not coordinator.data:
+            return
 
-                    tracked_macs.add(mac)
-                    new_entities.append(
-                        SnmpTrackerEntity(coordinator, entry, mac, default_enabled)
-                    )
+        new_entities = []
+        for mac in coordinator.data:
+            # Discovery of a brand new device.
+            if mac not in tracked_macs:
+                # 1. Determine if the entity should be enabled by default
+                entity_slug = mac.replace(":", "_").lower()
+                legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{entity_slug}"
+                default_enabled = False
+                if not ent_reg.async_get(legacy_id) and hass.states.get(legacy_id):
+                    hass.states.async_remove(legacy_id)
+                    default_enabled = True
+
+                tracked_macs.add(mac)
+                new_entities.append(
+                    SnmpTrackerEntity(coordinator, entry, mac, default_enabled)
+                )
+
         if new_entities:
             async_add_entities(new_entities)
 
@@ -109,10 +115,11 @@ async def async_setup_entry(
     _handle_coordinator_update()
 
 
-class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity):
+class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], TrackerEntity):
     """Represent an individual device tracked via SNMP."""
 
     _attr_should_poll = False
+    _attr_source_type = SourceType.ROUTER
 
     def __init__(
         self,
@@ -124,8 +131,8 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac
+        self._attr_entity_registry_enabled_default = default_enabled
         self._entry = entry
-        self._default_enabled = default_enabled
 
     @property
     def is_connected(self) -> bool:
@@ -135,6 +142,18 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         return self._attr_mac_address in self.coordinator.data
 
     @property
+    def state(self) -> str:
+        """Return the state of the device."""
+        if self.is_connected:
+            return STATE_HOME
+        return STATE_NOT_HOME
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        return self._attr_entity_registry_enabled_default
+
+    @property
     def unique_id(self) -> str:
         """Return a unique ID for this entity (just the MAC address)."""
         assert self._attr_mac_address is not None
@@ -142,21 +161,27 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
 
     @property
     def name(self) -> str:
-        """Return the name of the device (MAC address with underscores)."""
+        """Return the name of the device (IP or MAC address with underscores)."""
+        if (
+            self.coordinator.data
+            and self._attr_mac_address is not None
+            and (ip := self.coordinator.data.get(self._attr_mac_address))
+        ):
+            return ip
+
         assert self._attr_mac_address is not None
         return self._attr_mac_address.replace(":", "_")
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if entity is enabled by default.
-
-        Entities are enabled by default only if they were imported from a legacy
-        state where they were already active, to avoid breaking existing automations.
-        Otherwise, newly discovered devices are left disabled by default.
-        ScannerEntity's base class will further check if a matching device exists
-        in the device registry, enabling the entity if one is found.
-        """
-        return self._default_enabled
+    def device_info(self) -> dr.DeviceInfo:
+        """Return device value for this entity."""
+        name = self.name
+        assert self._attr_mac_address is not None
+        return dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._attr_mac_address)},
+            via_device=(DOMAIN, self._entry.entry_id),
+            name=name,
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
