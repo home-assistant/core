@@ -271,7 +271,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10.0',
   })
 # ---
 # name: test_sensors[sensor.transmission_session_ratio-entry]
@@ -327,7 +327,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.5',
   })
 # ---
 # name: test_sensors[sensor.transmission_session_upload-entry]
@@ -385,7 +385,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5.0',
   })
 # ---
 # name: test_sensors[sensor.transmission_started_torrents-entry]
@@ -560,7 +560,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '100.0',
   })
 # ---
 # name: test_sensors[sensor.transmission_total_ratio-entry]
@@ -616,7 +616,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.8',
   })
 # ---
 # name: test_sensors[sensor.transmission_total_torrents-entry]
@@ -727,7 +727,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '80.0',
   })
 # ---
 # name: test_sensors[sensor.transmission_upload_speed-entry]
