@@ -9,7 +9,6 @@ from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT, valida
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
-    CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
     DOMAIN,
 )
@@ -78,7 +77,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_SSL: False,
-            CONF_ROOT_TOPIC_PREFIX: "N/test",
         },
     )
 
@@ -90,7 +88,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_SSL: False,
-        CONF_ROOT_TOPIC_PREFIX: "N/test",
         CONF_SERIAL: None,
         CONF_MODEL: None,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,

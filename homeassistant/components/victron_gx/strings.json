@@ -33,7 +33,6 @@
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "root_topic_prefix": "Optional root topic prefix",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
@@ -41,7 +40,6 @@
           "host": "Hostname or IP address of Victron device, usually mDNS name like 'venus.local'",
           "password": "Password for the Victron device, default is empty. This is not your VRM password.",
           "port": "The MQTT port on the host. Normally it is 1883.",
-          "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
           "ssl": "Indicates whether to use SSL to connect to the Victron device. Normally it is disabled.",
           "username": "Username for the MQTT server, default is empty. Not needed by Victron devices. This is only needed if you route your MQTT messages through a non-Victron server and it does require a username."
         }

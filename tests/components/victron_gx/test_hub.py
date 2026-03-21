@@ -13,7 +13,6 @@ from victron_mqtt.testing import finalize_injection, inject_message
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
-    CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
     DOMAIN,
 )
@@ -44,7 +43,6 @@ def basic_config():
         CONF_INSTALLATION_ID: "123",
         CONF_MODEL: "Venus GX",
         CONF_SERIAL: "HQ12345678",
-        CONF_ROOT_TOPIC_PREFIX: "N/",
     }
 
 

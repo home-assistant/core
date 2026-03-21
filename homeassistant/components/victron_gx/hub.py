@@ -29,13 +29,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.redact import async_redact_data
 
-from .const import (
-    CONF_INSTALLATION_ID,
-    CONF_MODEL,
-    CONF_ROOT_TOPIC_PREFIX,
-    CONF_SERIAL,
-    DOMAIN,
-)
+from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +72,6 @@ class Hub:
             installation_id=config.get(CONF_INSTALLATION_ID) or None,
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
-            topic_prefix=config.get(CONF_ROOT_TOPIC_PREFIX) or None,
             operation_mode=OperationMode.READ_ONLY,
             update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
         )

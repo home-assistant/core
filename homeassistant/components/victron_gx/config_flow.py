@@ -21,13 +21,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import (
-    CONF_INSTALLATION_ID,
-    CONF_MODEL,
-    CONF_ROOT_TOPIC_PREFIX,
-    CONF_SERIAL,
-    DOMAIN,
-)
+from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
@@ -47,7 +41,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         vol.Required(CONF_SSL, default=False): selector.BooleanSelector(),
-        vol.Optional(CONF_ROOT_TOPIC_PREFIX): selector.TextSelector(),
     }
 )
 
@@ -80,7 +73,6 @@ async def validate_input(data: dict[str, Any]) -> str:
             use_ssl=data.get(CONF_SSL, False),
             installation_id=data.get(CONF_INSTALLATION_ID) or None,
             serial=data.get(CONF_SERIAL) or None,
-            topic_prefix=data.get(CONF_ROOT_TOPIC_PREFIX) or None,
         )
 
         await hub.connect()
