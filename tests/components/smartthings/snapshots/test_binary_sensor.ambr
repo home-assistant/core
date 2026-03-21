@@ -2125,56 +2125,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_dustbin_emptying-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.stick_vacuum_dustbin_emptying',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Dustbin emptying',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Dustbin emptying',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'dustbin_emptying',
-    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_samsungce.stickCleanerDustbinStatus_operatingState_operatingState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_dustbin_emptying-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Stick vacuum Dustbin emptying',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.stick_vacuum_dustbin_emptying',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

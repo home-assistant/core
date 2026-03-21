@@ -64,9 +64,6 @@
       "dryer_wrinkle_prevent_active": {
         "name": "Wrinkle prevent active"
       },
-      "dustbin_emptying": {
-        "name": "Dustbin emptying"
-      },
       "filter_status": {
         "name": "Filter status"
       },
@@ -983,6 +980,9 @@
       },
       "dry_plus": {
         "name": "Dry plus"
+      },
+      "empty_dustbin": {
+        "name": "Empty dustbin"
       },
       "heated_dry": {
         "name": "Heated dry"
