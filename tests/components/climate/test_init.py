@@ -269,9 +269,15 @@ async def test_capability_attributes_fan_speed_modes() -> None:
 
     assert ATTR_FAN_SPEED_MODES not in climate_entity.capability_attributes
 
-    climate_entity._attr_fan_speed_modes = ["low"]
+    climate_entity_with_fan_speed_modes = MockClimateEntity(
+        name="test", entity_id="climate.test"
+    )
+    climate_entity_with_fan_speed_modes._attr_fan_speed_modes = ["low"]
 
-    assert climate_entity.capability_attributes[ATTR_FAN_SPEED_MODES] == ["low"]
+    assert (
+        climate_entity_with_fan_speed_modes.capability_attributes[ATTR_FAN_SPEED_MODES]
+        == ["low"]
+    )
 
 
 async def test_mode_validation(
