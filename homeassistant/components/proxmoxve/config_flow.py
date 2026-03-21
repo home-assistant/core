@@ -150,6 +150,33 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=BASE_SCHEMA,
         )
 
+    def _get_auth_schema(
+        self,
+        data: Mapping[str, Any],
+    ) -> vol.Schema:
+        """Return the auth schema based on the flow data."""
+        schema = REGULAR_SCHEMA
+        if data[CONF_TOKEN]:
+            schema = TOKEN_SCHEMA
+        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
+            schema = schema.extend({vol.Required(CONF_REALM): cv.string})
+        return schema
+
+    def _get_auth_updates(
+        self,
+        data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Return the auth updates based on the flow data."""
+        updates = {CONF_PASSWORD: data[CONF_PASSWORD]}
+        if data[CONF_TOKEN]:
+            updates = {
+                CONF_TOKEN_NAME: data[CONF_TOKEN_NAME],
+                CONF_TOKEN_SECRET: data[CONF_TOKEN_SECRET],
+            }
+        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
+            updates[CONF_REALM] = data.get(CONF_REALM, DEFAULT_REALM)
+        return updates
+
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -168,15 +195,9 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={**self._data, CONF_NODES: proxmox_nodes},
                 )
 
-        data_schema = REGULAR_SCHEMA
-        if self._data[CONF_TOKEN]:
-            data_schema = TOKEN_SCHEMA
-        if self._data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
-            data_schema = data_schema.extend({vol.Required(CONF_REALM): cv.string})
-
         return self.async_show_form(
             step_id="auth",
-            data_schema=data_schema,
+            data_schema=self._get_auth_schema(self._data),
             errors=errors,
         )
 
@@ -193,17 +214,17 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            user_input = {**reauth_entry.data, **user_input}
-            _, errors = await self._validate_input(user_input)
+            merged_data = {**reauth_entry.data, **user_input}
+            _, errors = await self._validate_input(merged_data)
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                    data_updates=self._get_auth_updates(merged_data),
                 )
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=self._get_auth_schema(reauth_entry.data),
             errors=errors,
         )
 
