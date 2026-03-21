@@ -10,7 +10,7 @@ from roborock.data import (
     WaterLevelMapping,
     ZeoProgram,
 )
-from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
 
@@ -435,6 +435,9 @@ async def test_q10_cleaning_mode_select_update_success(
 
     assert q10_device.b01_q10_properties
     assert q10_device.b01_q10_properties.vacuum.set_clean_mode.call_count == 1
+    q10_device.b01_q10_properties.vacuum.set_clean_mode.assert_called_once_with(
+        YXCleanType.BOTH_WORK
+    )
 
 
 async def test_q10_cleaning_mode_select_update_failure(
