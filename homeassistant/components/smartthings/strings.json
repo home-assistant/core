@@ -64,6 +64,9 @@
       "dryer_wrinkle_prevent_active": {
         "name": "Wrinkle prevent active"
       },
+      "dustbin_emptying": {
+        "name": "Dustbin emptying"
+      },
       "filter_status": {
         "name": "Filter status"
       },
@@ -834,6 +837,22 @@
           "clear": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::clear%]",
           "detected": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::detected%]",
           "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
+        }
+      },
+      "stick_cleaner_dust_bag_usage": {
+        "name": "Dust bag cycles",
+        "unit_of_measurement": "cycles"
+      },
+      "stick_cleaner_dustbin_last_emptied": {
+        "name": "Last emptied"
+      },
+      "stick_cleaner_operating_state": {
+        "state": {
+          "emptying_dustbin": "Emptying dustbin",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "using_vacuum": "Using vacuum",
+          "uv_cleaning": "UV cleaning",
+          "uv_paused": "UV paused"
         }
       },
       "thermostat_cooling_setpoint": {

@@ -228,6 +228,22 @@ CAPABILITY_TO_SENSORS: dict[
             exists_fn=lambda component, _: component == "station",
         )
     },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS: {
+        Attribute.OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.OPERATING_STATE,
+            is_on_key="emptying",
+            translation_key="dustbin_emptying",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_STICK_STATUS: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="charging",
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
 }
 
 
