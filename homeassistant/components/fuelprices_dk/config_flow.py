@@ -31,7 +31,7 @@ def _get_api_error_key(exc: ClientResponseError) -> str:
     return "cannot_connect"
 
 
-class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
+class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fuelprices.dk."""
 
     VERSION = 1
@@ -42,7 +42,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {"station": BraendstofpriserStationSubentryFlow}
+        return {"station": FuelpricesDkStationSubentryFlow}
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -225,7 +225,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
+class FuelpricesDkStationSubentryFlow(ConfigSubentryFlow):
     """Handle station subentries for Fuelprices.dk."""
 
     def __init__(self) -> None:

@@ -10,7 +10,7 @@ from homeassistant.components.fuelprices_dk.const import DOMAIN
 from homeassistant.components.fuelprices_dk.coordinator import APIClient
 from homeassistant.components.fuelprices_dk.sensor import (
     SENSORS,
-    BraendstofpriserSensor,
+    FuelpricesDkSensor,
     async_setup_entry,
 )
 from homeassistant.config_entries import ConfigSubentryData
@@ -60,7 +60,7 @@ async def test_async_setup_entry_creates_sensors(hass: HomeAssistant) -> None:
     coordinator = FakeCoordinator(subentry_id)
     config_entry.runtime_data = {coordinator.subentry_id: coordinator}
 
-    added_entities: list[BraendstofpriserSensor] = []
+    added_entities: list[FuelpricesDkSensor] = []
     add_kwargs: dict[str, str] = {}
 
     def _async_add_entities(entities, *_args, **kwargs) -> None:
@@ -100,7 +100,7 @@ async def test_sensor_available_follows_product_presence() -> None:
         description for description in SENSORS if description.key == "price"
     )
 
-    sensor = BraendstofpriserSensor(
+    sensor = FuelpricesDkSensor(
         cast(APIClient, coordinator),
         coordinator.station_name,
         "Blyfri95",
@@ -124,7 +124,7 @@ async def test_sensor_writes_state_on_coordinator_update() -> None:
         description for description in SENSORS if description.key == "price"
     )
 
-    sensor = BraendstofpriserSensor(
+    sensor = FuelpricesDkSensor(
         cast(APIClient, coordinator),
         coordinator.station_name,
         "Blyfri95",

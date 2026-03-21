@@ -45,7 +45,7 @@ async def async_setup_entry(
             for product_key, product_info in coordinator.products.items():
                 product_name = product_info["name"]
                 subentry_sensors.append(
-                    BraendstofpriserSensor(
+                    FuelpricesDkSensor(
                         coordinator,
                         coordinator.station_name,
                         product_key,
@@ -57,7 +57,7 @@ async def async_setup_entry(
         async_add_entities(subentry_sensors, config_subentry_id=coordinator.subentry_id)
 
 
-class BraendstofpriserSensor(CoordinatorEntity[APIClient], RestoreSensor):
+class FuelpricesDkSensor(CoordinatorEntity[APIClient], RestoreSensor):
     """Sensor for Fuelprices.dk."""
 
     _attr_has_entity_name = True
