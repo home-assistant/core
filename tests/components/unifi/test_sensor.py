@@ -524,6 +524,7 @@ async def test_bandwidth_sensors(
     hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 3
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
     assert hass.states.get("sensor.wireless_client_rx") is None
     assert hass.states.get("sensor.wireless_client_tx") is None
@@ -536,6 +537,7 @@ async def test_bandwidth_sensors(
     hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 7
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
@@ -1046,6 +1048,7 @@ async def test_bandwidth_port_sensors(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that port bandwidth sensors are working as expected."""
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     p1rx_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_rx")
@@ -1076,6 +1079,7 @@ async def test_bandwidth_port_sensors(
     await hass.async_block_till_done()
 
     # Validate state object
+    assert len(hass.states.async_all()) == 9
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     # Verify sensor state
@@ -1101,6 +1105,7 @@ async def test_bandwidth_port_sensors(
     hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     assert hass.states.get("sensor.mock_name_uptime")
