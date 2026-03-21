@@ -488,7 +488,11 @@ async def test_store_responses_forwarded_for_conversation_agent(
     expected_store: bool,
 ) -> None:
     """Test store_responses is forwarded for the conversation agent."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "conversation"
+    )
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         subentry,
