@@ -67,6 +67,9 @@
       "main_brush_time_left": {
         "default": "mdi:brush"
       },
+      "mop_drying_remaining_time": {
+        "default": "mdi:clock-outline"
+      },
       "sensor_time_left": {
         "default": "mdi:eye-outline"
       },
