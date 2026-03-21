@@ -251,7 +251,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.5.2
+aioesphomeapi==44.6.2
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -422,7 +422,7 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
-aiotedee==0.2.25
+aiotedee==0.2.27
 
 # homeassistant.components.tractive
 aiotractive==1.0.0
@@ -2593,7 +2593,7 @@ python-gitlab==1.6.0
 python-google-drive-api==0.1.0
 
 # homeassistant.components.google_weather
-python-google-weather-api==0.0.4
+python-google-weather-api==0.0.6
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
@@ -2660,7 +2660,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==4.25.0
+python-roborock==4.26.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3014,7 +3014,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.3
+starlink-grpc-core==1.2.4
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -3319,7 +3319,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.6.0
+xiaomi-ble==1.10.0
 
 # homeassistant.components.knx
 xknx==3.15.0

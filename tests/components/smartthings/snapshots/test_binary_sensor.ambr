@@ -2023,6 +2023,56 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_stick_cleaner_in_station-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.stick_vacuum_stick_cleaner_in_station',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stick cleaner in station',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stick cleaner in station',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stick_cleaner_status',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_station_samsungce.cleanStationStickStatus_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][binary_sensor.stick_vacuum_stick_cleaner_in_station-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Stick vacuum Stick cleaner in station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.stick_vacuum_stick_cleaner_in_station',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
