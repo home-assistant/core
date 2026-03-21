@@ -37,7 +37,7 @@ class NinaWarningData:
     sender: str
     severity: str
     recommended_actions: str
-    affected_areas_shorted: str
+    affected_areas_short: str
     affected_areas: str
     more_info_url: str
     sent: str

@@ -47,7 +47,7 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
     NinaSensorEntityDescription(
         key="affected_areas",
         translation_key="affected_areas",
-        value_fn=lambda data: data.affected_areas_shorted,
+        value_fn=lambda data: data.affected_areas_short,
     ),
     NinaSensorEntityDescription(
         key="more_info_url",
@@ -97,7 +97,7 @@ async def async_setup_entry(
 
 
 class NinaSensor(NinaEntity, SensorEntity):
-    """Representation of a NINA headline."""
+    """Representation of a NINA sensor."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
