@@ -7,10 +7,14 @@ from typing import cast
 from xknx.devices import NumericValue
 
 from homeassistant import config_entries
-from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
+from homeassistant.components.number import (
+    ENTITY_ID_FORMAT,
+    NumberDeviceClass,
+    NumberMode,
+    RestoreNumber,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_MODE,
     CONF_NAME,
     CONF_TYPE,
@@ -79,6 +83,7 @@ class _KnxNumber(RestoreNumber):
     """Representation of a KNX number."""
 
     _device: NumericValue
+    _entity_id_format = ENTITY_ID_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -120,8 +125,7 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.sensor_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]

@@ -9,14 +9,8 @@ from xknx.devices import TimeDevice as XknxTimeDevice
 from xknx.dpt.dpt_10 import KNXTime as XknxTime
 
 from homeassistant import config_entries
-from homeassistant.components.time import TimeEntity
-from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.components.time import ENTITY_ID_FORMAT, TimeEntity
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -75,6 +69,7 @@ class _KNXTime(TimeEntity, RestoreEntity):
     """Representation of a KNX time."""
 
     _device: XknxTimeDevice
+    _entity_id_format = ENTITY_ID_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -117,8 +112,7 @@ class KnxYamlTime(_KNXTime, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.remote_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
 
 

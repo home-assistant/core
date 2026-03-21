@@ -14,6 +14,7 @@ from xknx.devices import Device as XknxDevice, Sensor as XknxSensor
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    ENTITY_ID_FORMAT,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -22,7 +23,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -170,6 +170,7 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
     """Representation of a KNX sensor."""
 
     _device: XknxSensor
+    _entity_id_format = ENTITY_ID_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -213,8 +214,7 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.sensor_value.group_address_state),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]

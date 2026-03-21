@@ -7,9 +7,8 @@ from xknx.devices import Notification as XknxNotification
 from xknx.dpt import DPTLatin1
 
 from homeassistant import config_entries
-from homeassistant.components.text import TextEntity, TextMode
+from homeassistant.components.text import ENTITY_ID_FORMAT, TextEntity, TextMode
 from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
     CONF_MODE,
     CONF_NAME,
     CONF_TYPE,
@@ -75,6 +74,7 @@ class _KnxText(TextEntity, RestoreEntity):
     """Representation of a KNX text."""
 
     _device: XknxNotification
+    _entity_id_format = ENTITY_ID_FORMAT
     _attr_native_max = 14
 
     async def async_added_to_hass(self) -> None:
@@ -123,8 +123,7 @@ class KnxYamlText(_KnxText, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.remote_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         self._attr_mode = config[CONF_MODE]
 

@@ -6,9 +6,8 @@ from xknx import XKNX
 from xknx.devices import Device as XknxDevice, RawValue
 
 from homeassistant import config_entries
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import ENTITY_ID_FORMAT, SelectEntity
 from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     CONF_PAYLOAD,
     STATE_UNAVAILABLE,
@@ -62,6 +61,7 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
     """Representation of a KNX select."""
 
     _device: RawValue
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX select."""
@@ -69,8 +69,7 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.remote_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         self._option_payloads: dict[str, int] = {
             option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]

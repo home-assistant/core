@@ -6,9 +6,8 @@ from xknx import XKNX
 from xknx.devices import Weather as XknxWeather
 
 from homeassistant import config_entries
-from homeassistant.components.weather import WeatherEntity
+from homeassistant.components.weather import ENTITY_ID_FORMAT, WeatherEntity
 from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     Platform,
     UnitOfPressure,
@@ -79,6 +78,7 @@ class KNXWeather(KnxYamlEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
     _device: XknxWeather
+    _entity_id_format = ENTITY_ID_FORMAT
     _attr_native_pressure_unit = UnitOfPressure.PA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
@@ -89,8 +89,7 @@ class KNXWeather(KnxYamlEntity, WeatherEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device._temperature.group_address_state),  # noqa: SLF001
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
 
     @property

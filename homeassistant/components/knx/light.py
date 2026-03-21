@@ -16,10 +16,11 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_XY_COLOR,
+    ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
 )
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -324,6 +325,7 @@ class _KnxLight(LightEntity):
     _attr_max_color_temp_kelvin: int
     _attr_min_color_temp_kelvin: int
     _device: XknxLight
+    _entity_id_format = ENTITY_ID_FORMAT
 
     @property
     def is_on(self) -> bool:
@@ -562,8 +564,7 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=self._device_unique_id(),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         self._attr_color_mode = next(iter(self.supported_color_modes))
         self._attr_max_color_temp_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]

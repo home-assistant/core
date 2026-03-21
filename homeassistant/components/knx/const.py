@@ -67,6 +67,7 @@ CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
+CONF_DEFAULT_ENTITY_ID: Final = "default_entity_id"
 CONF_CONTEXT_TIMEOUT: Final = "context_timeout"
 CONF_IGNORE_INTERNAL_STATE: Final = "ignore_internal_state"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
