@@ -90,3 +90,23 @@ async def test_victron_battery_sensor(
     assert hass.states.get(entity_id) == snapshot(
         name=f"{entity_id}-state-after-update"
     )
+
+
+async def test_victron_enum_sensor(
+    hass: HomeAssistant,
+    init_integration,
+) -> None:
+    """Test sensor with VictronEnum value normalizes to enum id."""
+    victron_hub, _mock_config_entry = init_integration
+
+    # SystemState/State produces a VictronEnum (State enum)
+    await inject_message(
+        victron_hub, "N/123/system/0/SystemState/State", '{"value": 1}'
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.victron_venus_system_state")
+    assert state is not None
+    # Value 1 maps to State.LOW_POWER with id="low_power"
+    assert state.state == "low_power"

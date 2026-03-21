@@ -8,6 +8,7 @@ from victron_mqtt import (
     MetricKind,
     MetricNature,
     MetricType,
+    VictronEnum,
 )
 
 from homeassistant.components.sensor import (
@@ -15,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,17 +37,12 @@ METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, SensorDeviceClass] = {
     MetricType.SPEED: SensorDeviceClass.SPEED,
     MetricType.LIQUID_VOLUME: SensorDeviceClass.VOLUME_STORAGE,
     MetricType.DURATION: SensorDeviceClass.DURATION,
+    MetricType.ENUM: SensorDeviceClass.ENUM,
 }
 
 METRIC_NATURE_TO_STATE_CLASS: dict[MetricNature, SensorStateClass] = {
     MetricNature.CUMULATIVE: SensorStateClass.TOTAL_INCREASING,
     MetricNature.INSTANTANEOUS: SensorStateClass.MEASUREMENT,
-}
-
-UNIT_MAPPING: dict[str, str] = {
-    "s": UnitOfTime.SECONDS,
-    "min": UnitOfTime.MINUTES,
-    "h": UnitOfTime.HOURS,
 }
 
 
@@ -91,13 +86,21 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         super().__init__(device, metric, device_info)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(metric.metric_nature)
-        unit = metric.unit_of_measurement
-        self._attr_native_unit_of_measurement = (
-            UNIT_MAPPING.get(unit, unit) if unit is not None else None
-        )
-        self._attr_native_value = metric.value
+        # Only set native_unit_of_measurement when a device_class is present.
+        # Entities without a device_class get their display unit from
+        # the translation files instead.
+        if self._attr_device_class is not None:
+            self._attr_native_unit_of_measurement = metric.unit_of_measurement
+        self._attr_native_value = VictronSensor._normalize_value(metric.value)
 
     @callback
     def _on_update_cb(self, value: Any) -> None:
-        self._attr_native_value = value
+        self._attr_native_value = VictronSensor._normalize_value(value)
         self.async_write_ha_state()
+
+    @staticmethod
+    def _normalize_value(value: Any) -> Any:
+        """Normalize Victron enum values to their enum code."""
+        if isinstance(value, VictronEnum):
+            return value.id
+        return value
