@@ -68,12 +68,19 @@ class MatterTimeSyncButton(MatterEntity, ButtonEntity):
         """Sync Home Assistant time to the Matter device."""
         now = dt_util.utcnow()
         tz = dt_util.get_default_time_zone()
-        utc_us = int((now - CHIP_EPOCH).total_seconds() * 1_000_000)
+        delta = now - CHIP_EPOCH
+        utc_us = (
+            (delta.days * 86400 * 1_000_000)
+            + (delta.seconds * 1_000_000)
+            + delta.microseconds
+        )
 
         # Compute timezone and DST offsets
         local_now = now.astimezone(tz)
-        utc_offset = int(local_now.utcoffset().total_seconds())  # type: ignore[union-attr]
-        dst_offset = int(local_now.dst().total_seconds()) if local_now.dst() else 0  # type: ignore[union-attr]
+        utc_offset_delta = local_now.utcoffset()
+        utc_offset = int(utc_offset_delta.total_seconds()) if utc_offset_delta else 0
+        dst_offset_delta = local_now.dst()
+        dst_offset = int(dst_offset_delta.total_seconds()) if dst_offset_delta else 0
         standard_offset = utc_offset - dst_offset
 
         # 1. Set timezone

@@ -138,11 +138,18 @@ async def test_time_sync_button(
     # Compute expected values based on HA's configured timezone
     chip_epoch = datetime(2000, 1, 1, tzinfo=UTC)
     frozen_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=UTC)
-    expected_utc_us = int((frozen_now - chip_epoch).total_seconds() * 1_000_000)
+    delta = frozen_now - chip_epoch
+    expected_utc_us = (
+        (delta.days * 86400 * 1_000_000)
+        + (delta.seconds * 1_000_000)
+        + delta.microseconds
+    )
     ha_tz = dt_util.get_default_time_zone()
     local_now = frozen_now.astimezone(ha_tz)
-    utc_offset = int(local_now.utcoffset().total_seconds())  # type: ignore[union-attr]
-    dst_offset = int(local_now.dst().total_seconds()) if local_now.dst() else 0  # type: ignore[union-attr]
+    utc_offset_delta = local_now.utcoffset()
+    utc_offset = int(utc_offset_delta.total_seconds()) if utc_offset_delta else 0
+    dst_offset_delta = local_now.dst()
+    dst_offset = int(dst_offset_delta.total_seconds()) if dst_offset_delta else 0
     standard_offset = utc_offset - dst_offset
 
     # Verify SetTimeZone command
