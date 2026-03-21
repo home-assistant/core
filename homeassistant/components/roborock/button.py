@@ -107,7 +107,6 @@ Q10_BUTTON_DESCRIPTIONS = [
     ButtonEntityDescription(
         key="empty_dustbin",
         translation_key="empty_dustbin",
-        entity_category=EntityCategory.CONFIG,
     ),
 ]
 

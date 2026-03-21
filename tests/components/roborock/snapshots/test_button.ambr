@@ -12,7 +12,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'button.roborock_q10_s5_empty_dustbin',
     'has_entity_name': True,
     'hidden_by': None,
