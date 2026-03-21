@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_button_entities[button.ct_backup-entry]
+# name: test_all_button_entities[button.ct_backup_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.ct_backup',
+    'entity_id': 'button.ct_backup_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,112 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'proxmoxve',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'start',
-    'unique_id': '1234_201_start',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities[button.ct_backup-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-backup',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.ct_backup',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_button_entities[button.ct_backup_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.ct_backup_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'proxmoxve',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'stop',
-    'unique_id': '1234_201_stop',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities[button.ct_backup_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-backup',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.ct_backup_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_button_entities[button.ct_backup_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.ct_backup_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Restart',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.ct_backup_3-state]
+# name: test_all_button_entities[button.ct_backup_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'ct-backup',
+      'friendly_name': 'ct-backup Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.ct_backup_3',
+    'entity_id': 'button.ct_backup_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.ct_nginx-entry]
+# name: test_all_button_entities[button.ct_backup_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -164,7 +64,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.ct_nginx',
+    'entity_id': 'button.ct_backup_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -172,35 +72,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Start',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': '1234_200_start',
+    'unique_id': '1234_201_start',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.ct_nginx-state]
+# name: test_all_button_entities[button.ct_backup_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-nginx',
+      'friendly_name': 'ct-backup Start',
     }),
     'context': <ANY>,
-    'entity_id': 'button.ct_nginx',
+    'entity_id': 'button.ct_backup_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.ct_nginx_2-entry]
+# name: test_all_button_entities[button.ct_backup_stop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -214,7 +114,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.ct_nginx_2',
+    'entity_id': 'button.ct_backup_stop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -222,35 +122,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Stop',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '1234_200_stop',
+    'unique_id': '1234_201_stop',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.ct_nginx_2-state]
+# name: test_all_button_entities[button.ct_backup_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-nginx',
+      'friendly_name': 'ct-backup Stop',
     }),
     'context': <ANY>,
-    'entity_id': 'button.ct_nginx_2',
+    'entity_id': 'button.ct_backup_stop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.ct_nginx_3-entry]
+# name: test_all_button_entities[button.ct_nginx_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -264,7 +164,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.ct_nginx_3',
+    'entity_id': 'button.ct_nginx_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -272,12 +172,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Restart',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -287,21 +187,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.ct_nginx_3-state]
+# name: test_all_button_entities[button.ct_nginx_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'ct-nginx',
+      'friendly_name': 'ct-nginx Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.ct_nginx_3',
+    'entity_id': 'button.ct_nginx_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.pve1-entry]
+# name: test_all_button_entities[button.ct_nginx_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -315,7 +215,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.pve1',
+    'entity_id': 'button.ct_nginx_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -323,12 +223,112 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': '1234_200_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities[button.ct_nginx_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ct-nginx Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ct_nginx_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities[button.ct_nginx_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.ct_nginx_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop',
+    'unique_id': '1234_200_stop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities[button.ct_nginx_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ct-nginx Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.ct_nginx_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities[button.pve1_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.pve1_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Restart',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -338,21 +338,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.pve1-state]
+# name: test_all_button_entities[button.pve1_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'pve1',
+      'friendly_name': 'pve1 Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.pve1',
+    'entity_id': 'button.pve1_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.pve1_2-entry]
+# name: test_all_button_entities[button.pve1_shutdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -366,7 +366,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.pve1_2',
+    'entity_id': 'button.pve1_shutdown',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -374,12 +374,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Shutdown',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Shutdown',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -389,20 +389,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.pve1_2-state]
+# name: test_all_button_entities[button.pve1_shutdown-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1',
+      'friendly_name': 'pve1 Shutdown',
     }),
     'context': <ANY>,
-    'entity_id': 'button.pve1_2',
+    'entity_id': 'button.pve1_shutdown',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.pve1_3-entry]
+# name: test_all_button_entities[button.pve1_start_all-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -416,7 +416,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.pve1_3',
+    'entity_id': 'button.pve1_start_all',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -424,12 +424,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Start all',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Start all',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -439,20 +439,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.pve1_3-state]
+# name: test_all_button_entities[button.pve1_start_all-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1',
+      'friendly_name': 'pve1 Start all',
     }),
     'context': <ANY>,
-    'entity_id': 'button.pve1_3',
+    'entity_id': 'button.pve1_start_all',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.pve1_4-entry]
+# name: test_all_button_entities[button.pve1_stop_all-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -466,7 +466,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.pve1_4',
+    'entity_id': 'button.pve1_stop_all',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -474,12 +474,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Stop all',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Stop all',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -489,20 +489,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.pve1_4-state]
+# name: test_all_button_entities[button.pve1_stop_all-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1',
+      'friendly_name': 'pve1 Stop all',
     }),
     'context': <ANY>,
-    'entity_id': 'button.pve1_4',
+    'entity_id': 'button.pve1_stop_all',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_db-entry]
+# name: test_all_button_entities[button.vm_db_hibernate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -516,7 +516,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_db',
+    'entity_id': 'button.vm_db_hibernate',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -524,163 +524,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Hibernate',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'proxmoxve',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'start',
-    'unique_id': '1234_101_start',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities[button.vm_db-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.vm_db',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_button_entities[button.vm_db_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_db_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'proxmoxve',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'stop',
-    'unique_id': '1234_101_stop',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities[button.vm_db_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.vm_db_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_button_entities[button.vm_db_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_db_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'proxmoxve',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '1234_101_restart',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities[button.vm_db_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'vm-db',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.vm_db_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_button_entities[button.vm_db_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_db_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Hibernate',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -690,20 +539,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_db_4-state]
+# name: test_all_button_entities[button.vm_db_hibernate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db',
+      'friendly_name': 'vm-db Hibernate',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_db_4',
+    'entity_id': 'button.vm_db_hibernate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_db_5-entry]
+# name: test_all_button_entities[button.vm_db_reset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -717,7 +566,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_db_5',
+    'entity_id': 'button.vm_db_reset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -725,12 +574,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Reset',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Reset',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -740,20 +589,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_db_5-state]
+# name: test_all_button_entities[button.vm_db_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db',
+      'friendly_name': 'vm-db Reset',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_db_5',
+    'entity_id': 'button.vm_db_reset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_db_6-entry]
+# name: test_all_button_entities[button.vm_db_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -767,7 +616,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_db_6',
+    'entity_id': 'button.vm_db_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -775,12 +624,63 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Restart',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234_101_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities[button.vm_db_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'vm-db Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.vm_db_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities[button.vm_db_shutdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.vm_db_shutdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Shutdown',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Shutdown',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -790,20 +690,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_db_6-state]
+# name: test_all_button_entities[button.vm_db_shutdown-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db',
+      'friendly_name': 'vm-db Shutdown',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_db_6',
+    'entity_id': 'button.vm_db_shutdown',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web-entry]
+# name: test_all_button_entities[button.vm_db_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -817,7 +717,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web',
+    'entity_id': 'button.vm_db_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -825,35 +725,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Start',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': '1234_100_start',
+    'unique_id': '1234_101_start',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web-state]
+# name: test_all_button_entities[button.vm_db_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web',
+      'friendly_name': 'vm-db Start',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web',
+    'entity_id': 'button.vm_db_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web_2-entry]
+# name: test_all_button_entities[button.vm_db_stop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -867,7 +767,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web_2',
+    'entity_id': 'button.vm_db_stop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -875,35 +775,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Stop',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '1234_100_stop',
+    'unique_id': '1234_101_stop',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web_2-state]
+# name: test_all_button_entities[button.vm_db_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web',
+      'friendly_name': 'vm-db Stop',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web_2',
+    'entity_id': 'button.vm_db_stop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web_3-entry]
+# name: test_all_button_entities[button.vm_web_hibernate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -917,7 +817,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web_3',
+    'entity_id': 'button.vm_web_hibernate',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -925,63 +825,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'proxmoxve',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '1234_100_restart',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities[button.vm_web_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'vm-web',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.vm_web_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_button_entities[button.vm_web_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Hibernate',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Hibernate',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -991,20 +840,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web_4-state]
+# name: test_all_button_entities[button.vm_web_hibernate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web',
+      'friendly_name': 'vm-web Hibernate',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web_4',
+    'entity_id': 'button.vm_web_hibernate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web_5-entry]
+# name: test_all_button_entities[button.vm_web_reset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1018,7 +867,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web_5',
+    'entity_id': 'button.vm_web_reset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1026,12 +875,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Reset',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Reset',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1041,20 +890,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web_5-state]
+# name: test_all_button_entities[button.vm_web_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web',
+      'friendly_name': 'vm-web Reset',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web_5',
+    'entity_id': 'button.vm_web_reset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web_6-entry]
+# name: test_all_button_entities[button.vm_web_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1068,7 +917,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web_6',
+    'entity_id': 'button.vm_web_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1076,12 +925,63 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Restart',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234_100_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities[button.vm_web_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'vm-web Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.vm_web_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities[button.vm_web_shutdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.vm_web_shutdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Shutdown',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Shutdown',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1091,13 +991,113 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web_6-state]
+# name: test_all_button_entities[button.vm_web_shutdown-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web',
+      'friendly_name': 'vm-web Shutdown',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web_6',
+    'entity_id': 'button.vm_web_shutdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities[button.vm_web_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.vm_web_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': '1234_100_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities[button.vm_web_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'vm-web Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.vm_web_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities[button.vm_web_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.vm_web_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop',
+    'unique_id': '1234_100_stop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities[button.vm_web_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'vm-web Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.vm_web_stop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
