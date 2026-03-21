@@ -79,7 +79,7 @@ async def validate_input(data: dict[str, Any]) -> str:
             password=data.get(CONF_PASSWORD) or None,
             use_ssl=data.get(CONF_SSL, False),
             installation_id=data.get(CONF_INSTALLATION_ID) or None,
-            serial=data.get(CONF_SERIAL, "noserial"),
+            serial=data.get(CONF_SERIAL) or None,
             topic_prefix=data.get(CONF_ROOT_TOPIC_PREFIX) or None,
         )
 

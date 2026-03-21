@@ -68,7 +68,6 @@ class Hub:
         config = {**entry.data, **entry.options}
         self.hass = hass
         self.host = config[CONF_HOST]
-        self.id = entry.unique_id
 
         self._hub = VictronVenusHub(
             host=self.host,
@@ -78,7 +77,7 @@ class Hub:
             use_ssl=config.get(CONF_SSL, False),
             installation_id=config.get(CONF_INSTALLATION_ID) or None,
             model_name=config.get(CONF_MODEL) or None,
-            serial=config.get(CONF_SERIAL, "noserial"),
+            serial=config.get(CONF_SERIAL) or None,
             topic_prefix=config.get(CONF_ROOT_TOPIC_PREFIX) or None,
             operation_mode=OperationMode.READ_ONLY,
             update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
