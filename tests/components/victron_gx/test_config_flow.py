@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from victron_mqtt import AuthenticationError, CannotConnectError
 
-from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT, validate_input
+from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -539,34 +539,47 @@ async def test_ssdp_auth_error(
     assert result["errors"] == {"base": error}
 
 
-async def test_validate_input_ignores_disconnect_error(
+async def test_user_flow_disconnect_error_ignored(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
-    """Test validate_input ignores disconnect errors in cleanup."""
+    """Test config flow succeeds even when disconnect raises."""
     mock_victron_hub.return_value.disconnect.side_effect = Exception("disconnect fail")
 
-    installation_id = await validate_input(
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-        }
+        },
     )
 
-    assert installation_id == MOCK_INSTALLATION_ID
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_INSTALLATION_ID
 
 
-async def test_validate_input_missing_installation_id(
+async def test_user_flow_missing_installation_id(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
-    """Test validate_input raises when hub returns no installation id."""
+    """Test config flow handles hub returning no installation id."""
     mock_victron_hub.return_value.installation_id = None
 
-    with pytest.raises(CannotConnectError):
-        await validate_input(
-            {
-                CONF_HOST: MOCK_HOST,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_SSL: False,
-            }
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}

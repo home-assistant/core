@@ -2,53 +2,14 @@
 
 from __future__ import annotations
 
-import pytest
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.victron_gx.const import (
-    CONF_INSTALLATION_ID,
-    CONF_MODEL,
-    CONF_SERIAL,
-    DOMAIN,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def basic_config():
-    """Provide basic configuration."""
-    return {
-        CONF_HOST: "venus.local",
-        CONF_PORT: 1883,
-        CONF_USERNAME: "test_user",
-        CONF_PASSWORD: "test_pass",
-        CONF_SSL: False,
-        CONF_INSTALLATION_ID: "123",
-        CONF_MODEL: "Venus GX",
-        CONF_SERIAL: "HQ12345678",
-    }
-
-
-@pytest.fixture
-def mock_config_entry(basic_config):
-    """Create a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_unique_id",
-        data=basic_config,
-    )
 
 
 async def test_victron_battery_sensor(

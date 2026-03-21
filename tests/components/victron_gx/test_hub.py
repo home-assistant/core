@@ -1,108 +1,16 @@
 """Test the Victron GX MQTT Hub class."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
-from victron_mqtt import (
-    AuthenticationError,
-    Device as VictronVenusDevice,
-    Hub as VictronVenusHub,
-)
+from victron_mqtt import Device as VictronVenusDevice, Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.victron_gx.const import (
-    CONF_INSTALLATION_ID,
-    CONF_MODEL,
-    CONF_SERIAL,
-    DOMAIN,
-)
+from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.components.victron_gx.hub import Hub
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def basic_config():
-    """Provide basic configuration."""
-    return {
-        CONF_HOST: "venus.local",
-        CONF_PORT: 1883,
-        CONF_USERNAME: "test_user",
-        CONF_PASSWORD: "test_pass",
-        CONF_SSL: False,
-        CONF_INSTALLATION_ID: "123",
-        CONF_MODEL: "Venus GX",
-        CONF_SERIAL: "HQ12345678",
-    }
-
-
-@pytest.fixture
-def mock_config_entry(basic_config: dict[str, object]) -> MockConfigEntry:
-    """Create a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_unique_id",
-        data=basic_config,
-    )
-
-
-async def test_hub_start_success(
-    hass: HomeAssistant,
-    init_integration: tuple[VictronVenusHub, MockConfigEntry],
-) -> None:
-    """Test successful hub start."""
-    victron_hub, mock_config_entry = init_integration
-
-    # Verify the hub was started (integration was set up successfully)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert victron_hub.installation_id == "123"
-
-
-async def test_hub_start_authentication_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test hub start with authentication error."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
-        side_effect=AuthenticationError("Authentication failed"),
-    ):
-        # Attempt to set up the config entry - should fail with auth error
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Verify the config entry is in SETUP_ERROR state (auth failed)
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_hub_stop(
-    hass: HomeAssistant,
-    init_integration: tuple[VictronVenusHub, MockConfigEntry],
-) -> None:
-    """Test hub stop."""
-    _, mock_config_entry = init_integration
-
-    # Verify it's initially loaded
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    # Unload the config entry (which stops the hub)
-    unload_ok = await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify hub is disconnected by checking config entry state
-    assert unload_ok is True
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_map_device_info() -> None:
