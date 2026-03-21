@@ -85,6 +85,13 @@
       "robot_cleaner_dust_bag": {
         "name": "Dust bag full"
       },
+      "stick_cleaner_status": {
+        "name": "Stick cleaner in station",
+        "state": {
+          "off": "Detached",
+          "on": "Attached"
+        }
+      },
       "sub_remote_control": {
         "name": "Upper washer remote control"
       },
