@@ -20,6 +20,9 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "sync_time": {
+        "default": "mdi:clock-check-outline"
       }
     },
     "fan": {

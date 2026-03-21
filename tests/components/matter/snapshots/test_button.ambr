@@ -1325,6 +1325,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[eve_shutter][button.eve_shutter_switch_20eci1701_sync_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.eve_shutter_switch_20eci1701_sync_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sync time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_time',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-0-TimeSynchronizationSyncTimeButton-56-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_shutter][button.eve_shutter_switch_20eci1701_sync_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Sync time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_shutter_switch_20eci1701_sync_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1376,6 +1426,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_sync_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.eve_thermo_20ebp1701_sync_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sync time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_time',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-TimeSynchronizationSyncTimeButton-56-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_sync_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20EBP1701 Sync time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_thermo_20ebp1701_sync_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[eve_thermo_v5][button.eve_thermo_20ecd1701_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1421,6 +1521,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_thermo_20ecd1701_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[eve_thermo_v5][button.eve_thermo_20ecd1701_sync_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.eve_thermo_20ecd1701_sync_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sync time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_time',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-0-TimeSynchronizationSyncTimeButton-56-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_thermo_v5][button.eve_thermo_20ecd1701_sync_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20ECD1701 Sync time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_thermo_20ecd1701_sync_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1929,6 +2079,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.alpstuga_air_quality_monitor_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[ikea_air_quality_monitor][button.alpstuga_air_quality_monitor_sync_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.alpstuga_air_quality_monitor_sync_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sync time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_time',
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-0-TimeSynchronizationSyncTimeButton-56-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[ikea_air_quality_monitor][button.alpstuga_air_quality_monitor_sync_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ALPSTUGA air quality monitor Sync time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.alpstuga_air_quality_monitor_sync_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2839,6 +3039,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_laundrydryer_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_leak_sensor][button.water_leak_detector_sync_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.water_leak_detector_sync_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sync time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_time',
+    'unique_id': '00000000000004D2-0000000000000020-MatterNodeDevice-0-TimeSynchronizationSyncTimeButton-56-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_leak_sensor][button.water_leak_detector_sync_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water Leak Detector Sync time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.water_leak_detector_sync_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4205,6 +4455,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.light_switch_example_identify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[silabs_light_switch][button.light_switch_example_sync_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.light_switch_example_sync_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sync time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_time',
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-0-TimeSynchronizationSyncTimeButton-56-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[silabs_light_switch][button.light_switch_example_sync_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light switch example Sync time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.light_switch_example_sync_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

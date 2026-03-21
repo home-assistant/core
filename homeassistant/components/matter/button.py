@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
@@ -17,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -50,6 +52,61 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
         if TYPE_CHECKING:
             assert self.entity_description.command is not None
         await self.send_device_command(self.entity_description.command())
+
+
+# CHIP epoch: 2000-01-01 00:00:00 UTC
+CHIP_EPOCH = datetime(2000, 1, 1, tzinfo=UTC)
+
+
+class MatterTimeSyncButton(MatterEntity, ButtonEntity):
+    """Button to synchronize time to a Matter device."""
+
+    entity_description: MatterButtonEntityDescription
+
+    async def async_press(self) -> None:
+        """Sync Home Assistant time to the Matter device."""
+        now = dt_util.utcnow()
+        tz = dt_util.get_default_time_zone()
+        utc_us = int((now - CHIP_EPOCH).total_seconds() * 1_000_000)
+
+        # Compute timezone and DST offsets
+        local_now = now.astimezone(tz)
+        utc_offset = int(local_now.utcoffset().total_seconds())  # type: ignore[union-attr]
+        dst_offset = int(local_now.dst().total_seconds()) if local_now.dst() else 0  # type: ignore[union-attr]
+        standard_offset = utc_offset - dst_offset
+
+        # 1. Set timezone
+        await self.send_device_command(
+            clusters.TimeSynchronization.Commands.SetTimeZone(
+                timeZone=[
+                    clusters.TimeSynchronization.Structs.TimeZoneStruct(
+                        offset=standard_offset, validAt=0, name=str(tz)
+                    )
+                ]
+            )
+        )
+
+        # 2. Set DST offset
+        far_future_us = utc_us + (365 * 24 * 3600 * 1_000_000)
+        await self.send_device_command(
+            clusters.TimeSynchronization.Commands.SetDSTOffset(
+                DSTOffset=[
+                    clusters.TimeSynchronization.Structs.DSTOffsetStruct(
+                        offset=dst_offset,
+                        validStarting=0,
+                        validUntil=far_future_us,
+                    )
+                ]
+            )
+        )
+
+        # 3. Set UTC time
+        await self.send_device_command(
+            clusters.TimeSynchronization.Commands.SetUTCTime(
+                UTCTime=utc_us,
+                granularity=clusters.TimeSynchronization.Enums.GranularityEnum.kMicrosecondsGranularity,
+            )
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -168,5 +225,17 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.WaterHeaterManagement.Commands.CancelBoost.command_id,
         allow_multi=True,  # Also used in water_heater
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="TimeSynchronizationSyncTimeButton",
+            translation_key="sync_time",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterTimeSyncButton,
+        required_attributes=(clusters.TimeSynchronization.Attributes.UTCTime,),
+        allow_multi=True,
+        allow_none_value=True,
     ),
 ]

@@ -1,5 +1,6 @@
-"""Test Matter switches."""
+"""Test Matter buttons."""
 
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -10,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .common import snapshot_matter_entities
 
@@ -106,4 +108,76 @@ async def test_smoke_detector_self_test(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.SmokeCoAlarm.Commands.SelfTestRequest(),
+    )
+
+
+@pytest.mark.freeze_time("2025-06-15T12:00:00+00:00")
+@pytest.mark.parametrize("node_fixture", ["ikea_air_quality_monitor"])
+async def test_time_sync_button(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test button entity is created for a Matter TimeSynchronization Cluster."""
+    entity_id = "button.alpstuga_air_quality_monitor_sync_time"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["friendly_name"] == "ALPSTUGA air quality monitor Sync time"
+    # test press action
+    await hass.services.async_call(
+        "button",
+        "press",
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 3
+
+    # Compute expected values based on HA's configured timezone
+    chip_epoch = datetime(2000, 1, 1, tzinfo=UTC)
+    frozen_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=UTC)
+    expected_utc_us = int((frozen_now - chip_epoch).total_seconds() * 1_000_000)
+    ha_tz = dt_util.get_default_time_zone()
+    local_now = frozen_now.astimezone(ha_tz)
+    utc_offset = int(local_now.utcoffset().total_seconds())  # type: ignore[union-attr]
+    dst_offset = int(local_now.dst().total_seconds()) if local_now.dst() else 0  # type: ignore[union-attr]
+    standard_offset = utc_offset - dst_offset
+
+    # Verify SetTimeZone command
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=0,
+        command=clusters.TimeSynchronization.Commands.SetTimeZone(
+            timeZone=[
+                clusters.TimeSynchronization.Structs.TimeZoneStruct(
+                    offset=standard_offset,
+                    validAt=0,
+                    name=str(ha_tz),
+                )
+            ]
+        ),
+    )
+    # Verify SetDSTOffset command
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=0,
+        command=clusters.TimeSynchronization.Commands.SetDSTOffset(
+            DSTOffset=[
+                clusters.TimeSynchronization.Structs.DSTOffsetStruct(
+                    offset=dst_offset,
+                    validStarting=0,
+                    validUntil=expected_utc_us + (365 * 24 * 3600 * 1_000_000),
+                )
+            ]
+        ),
+    )
+    # Verify SetUTCTime command
+    assert matter_client.send_device_command.call_args_list[2] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=0,
+        command=clusters.TimeSynchronization.Commands.SetUTCTime(
+            UTCTime=expected_utc_us,
+            granularity=clusters.TimeSynchronization.Enums.GranularityEnum.kMicrosecondsGranularity,
+        ),
     )

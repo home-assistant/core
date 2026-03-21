@@ -141,6 +141,9 @@
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
+      },
+      "sync_time": {
+        "name": "Sync time"
       }
     },
     "climate": {
