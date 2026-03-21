@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 from victron_mqtt.testing import finalize_injection, inject_message
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -54,7 +54,6 @@ def mock_config_entry(basic_config):
 
 async def test_victron_battery_sensor(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     init_integration,
 ) -> None:
     """Test SENSOR MetricKind - battery current sensor is created and updated."""
@@ -75,21 +74,25 @@ async def test_victron_battery_sensor(
     assert len(entities) == 1
     entity = entities[0]
     assert entity.entity_id == "sensor.battery_dc_bus_current"
+    assert entity.unique_id == "battery_0_battery_current"
+    assert entity.original_device_class is SensorDeviceClass.CURRENT
+    assert entity.unit_of_measurement == "A"
+    assert entity.translation_key == "battery_current"
 
-    entity_id = entity.entity_id
-    assert entity == snapshot(name=f"{entity_id}-entry-initial")
-    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state-initial")
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "10.5"
+    assert state.attributes["state_class"] is SensorStateClass.MEASUREMENT
+    assert state.attributes["device_class"] == "current"
+    assert state.attributes["unit_of_measurement"] == "A"
 
     # Update the same metric to exercise the entity update callback path.
     await inject_message(victron_hub, "N/123/battery/0/Dc/0/Current", '{"value": 11.2}')
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get(entity_id) == snapshot(
-        name=f"{entity_id}-entry-after-update"
-    )
-    assert hass.states.get(entity_id) == snapshot(
-        name=f"{entity_id}-state-after-update"
-    )
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "11.2"
 
 
 async def test_victron_enum_sensor(
