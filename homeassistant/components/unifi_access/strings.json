@@ -76,6 +76,20 @@
       "door_lock_rule_ended_time": {
         "name": "Rule End Time"
       }
+    },
+    "select": {
+      "door_lock_rules": {
+        "name": "Door Lock Rule",
+        "state": {
+          "": "No rule",
+          "custom": "Custom (set interval)",
+          "keep_lock": "Keep it locked",
+          "keep_unlock": "Keep it unlocked",
+          "lock_early": "Lock early",
+          "lock_now": "Lock now",
+          "reset": "Reset rule"
+        }
+      }
     }
   },
   "exceptions": {

@@ -57,6 +57,19 @@
                 }
             }
         },
+        "select": {
+            "door_lock_rules": {
+                "name": "Door Lock Rule",
+                "state": {
+                    "custom": "Custom (set interval)",
+                    "keep_lock": "Keep it locked",
+                    "keep_unlock": "Keep it unlocked",
+                    "lock_early": "Lock early",
+                    "lock_now": "Lock now",
+                    "reset": "Reset rule"
+                }
+            }
+        },
         "sensor": {
             "door_lock_rule": {
                 "name": "Door Lock Rule",

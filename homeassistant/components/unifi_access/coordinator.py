@@ -14,7 +14,9 @@ from unifi_access_api import (
     ApiError,
     ApiNotFoundError,
     Door,
+    DoorLockRule,
     DoorLockRuleStatus,
+    DoorLockRuleType,
     EmergencyStatus,
     UnifiAccessApiClient,
     WsMessageHandler,
@@ -81,6 +83,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         )
         self.client = client
         self._event_listeners: list[Callable[[DoorEvent], None]] = []
+        self.lock_rule_intervals: dict[str, int] = {}
 
     @callback
     def async_subscribe_door_events(
@@ -94,6 +97,31 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         self._event_listeners.append(event_callback)
         return _unsubscribe
+
+    async def async_set_lock_rule(self, door_id: str, rule_type: str) -> None:
+        """Set a temporary lock rule for a door."""
+        if not rule_type:
+            return
+        interval = self.lock_rule_intervals.get(door_id, 10)
+        rule = DoorLockRule(type=DoorLockRuleType(rule_type), interval=interval)
+        await self.client.set_door_lock_rule(door_id, rule)
+        if self.data is None or door_id not in self.data.doors:
+            return
+        new_status = DoorLockRuleStatus(
+            type=DoorLockRuleType.NONE
+            if rule_type == DoorLockRuleType.RESET
+            else DoorLockRuleType(rule_type)
+        )
+        updated_door = self.data.doors[door_id].with_updates(
+            lock_rule_status=new_status
+        )
+        self.async_set_updated_data(
+            UnifiAccessData(
+                doors={**self.data.doors, door_id: updated_door},
+                emergency=self.data.emergency,
+                supports_lock_rules=self.data.supports_lock_rules,
+            )
+        )
 
     async def _async_setup(self) -> None:
         """Set up the WebSocket connection for push updates."""
