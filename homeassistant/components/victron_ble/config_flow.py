@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -122,4 +123,43 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
             ),
+        )
+
+    async def async_step_reauth(
+        self, _entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by a reauth event."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation with a new encryption key."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            device = VictronBluetoothDeviceData(user_input[CONF_ACCESS_TOKEN])
+
+            # Find the current advertisement data for this device
+            for discovery_info in async_discovered_service_info(self.hass, False):
+                if discovery_info.address == reauth_entry.unique_id:
+                    mfr_data = discovery_info.manufacturer_data.get(VICTRON_IDENTIFIER)
+                    if mfr_data is None or not device.validate_advertisement_key(
+                        mfr_data
+                    ):
+                        errors["base"] = "invalid_access_token"
+                        break
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
+                    )
+            else:
+                errors["base"] = "no_devices_found"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
+            description_placeholders={"title": reauth_entry.title},
+            errors=errors,
         )
