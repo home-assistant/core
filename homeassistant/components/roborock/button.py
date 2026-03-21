@@ -20,12 +20,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
     RoborockWashingMachineUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityA01, RoborockEntity, RoborockEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01Q10,
+    RoborockEntity,
+    RoborockEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,6 +103,14 @@ ZEO_BUTTON_DESCRIPTIONS = [
 ]
 
 
+Q10_BUTTON_DESCRIPTIONS = [
+    ButtonEntityDescription(
+        key="empty_dustbin",
+        translation_key="empty_dustbin",
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -138,6 +152,15 @@ async def async_setup_entry(
                 for coordinator in config_entry.runtime_data.a01
                 if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
                 for description in ZEO_BUTTON_DESCRIPTIONS
+            ),
+            (
+                RoborockQ10EmptyDustbinButtonEntity(
+                    coordinator,
+                    description,
+                )
+                for coordinator in config_entry.runtime_data.b01_q10
+                if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+                for description in Q10_BUTTON_DESCRIPTIONS
             ),
         )
     )
@@ -233,3 +256,37 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
             ) from err
         finally:
             await self.coordinator.async_request_refresh()
+
+
+class RoborockQ10EmptyDustbinButtonEntity(
+    RoborockCoordinatedEntityB01Q10, ButtonEntity
+):
+    """A class to define Q10 empty dustbin button entity."""
+
+    entity_description: ButtonEntityDescription
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+        entity_description: ButtonEntityDescription,
+    ) -> None:
+        """Create a Q10 empty dustbin button entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+        )
+
+    async def async_press(self, **kwargs: Any) -> None:
+        """Press the button to empty dustbin."""
+        try:
+            await self.coordinator.api.vacuum.empty_dustbin()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "empty_dustbin",
+                },
+            ) from err
