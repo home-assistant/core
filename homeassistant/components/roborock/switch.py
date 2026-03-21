@@ -133,6 +133,16 @@ async def async_setup_entry(
         if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
     )
     entities.extend(
+        RoborockQ10Switch(
+            f"auto_empty_{coordinator.duid_slug}",
+            coordinator,
+            B01_Q10_DP.DUST_SWITCH,
+            "auto_empty",
+        )
+        for coordinator in config_entry.runtime_data.b01_q10
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+    )
+    entities.extend(
         RoborockSwitchA01(
             coordinator,
             description,

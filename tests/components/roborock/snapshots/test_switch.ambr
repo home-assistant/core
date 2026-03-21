@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_switches[switch.roborock_q10_s5_auto_empty-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.roborock_q10_s5_auto_empty',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-empty',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-empty',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_empty',
+    'unique_id': 'auto_empty_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_auto_empty-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock Q10 S5+ Auto-empty',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.roborock_q10_s5_auto_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switches[switch.roborock_q10_s5_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -172,6 +172,7 @@ def create_b01_q10_trait() -> Mock:
     update_from_dps work without manual mocking.
     """
     q10_trait = AsyncMock()
+    q10_trait._dust_switch = 1
     q10_trait._child_lock = 0
     q10_trait._not_disturb = 0
 
@@ -197,12 +198,16 @@ def create_b01_q10_trait() -> Mock:
         elif dp_code == B01_Q10_DP.NOT_DISTURB:
             q10_trait._not_disturb = int(bool(value))
             status.update_from_dps({B01_Q10_DP.NOT_DISTURB: q10_trait._not_disturb})
+        elif dp_code == B01_Q10_DP.DUST_SWITCH:
+            q10_trait._dust_switch = int(bool(value))
+            status.update_from_dps({B01_Q10_DP.DUST_SWITCH: q10_trait._dust_switch})
 
     q10_trait.command.send = AsyncMock(side_effect=command_send_side_effect)
 
     async def refresh_side_effect() -> None:
         status.update_from_dps(
             {
+                B01_Q10_DP.DUST_SWITCH: q10_trait._dust_switch,
                 B01_Q10_DP.CHILD_LOCK: q10_trait._child_lock,
                 B01_Q10_DP.NOT_DISTURB: q10_trait._not_disturb,
             }

@@ -102,6 +102,9 @@
       }
     },
     "switch": {
+      "auto_empty": {
+        "default": "mdi:delete-sweep"
+      },
       "child_lock": {
         "default": "mdi:account-lock"
       },

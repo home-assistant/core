@@ -550,6 +550,9 @@
       }
     },
     "switch": {
+      "auto_empty": {
+        "name": "Auto-empty"
+      },
       "child_lock": {
         "name": "Child lock"
       },

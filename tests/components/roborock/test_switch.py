@@ -135,10 +135,11 @@ async def test_update_failed(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "dp_code"),
+    ("entity_id", "dp_code", "initial_state"),
     [
-        ("switch.roborock_q10_s5_child_lock", B01_Q10_DP.CHILD_LOCK),
-        ("switch.roborock_q10_s5_do_not_disturb", B01_Q10_DP.NOT_DISTURB),
+        ("switch.roborock_q10_s5_auto_empty", B01_Q10_DP.DUST_SWITCH, "on"),
+        ("switch.roborock_q10_s5_child_lock", B01_Q10_DP.CHILD_LOCK, "off"),
+        ("switch.roborock_q10_s5_do_not_disturb", B01_Q10_DP.NOT_DISTURB, "off"),
     ],
 )
 async def test_q10_switch_success(
@@ -146,6 +147,7 @@ async def test_q10_switch_success(
     setup_entry: MockConfigEntry,
     entity_id: str,
     dp_code: B01_Q10_DP,
+    initial_state: str,
     fake_q10_vacuum: FakeDevice,
 ) -> None:
     """Test turning Q10 switch entities on and off."""
@@ -153,7 +155,7 @@ async def test_q10_switch_success(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == initial_state
 
     await hass.services.async_call(
         "switch",
@@ -189,6 +191,7 @@ async def test_q10_switch_success(
 @pytest.mark.parametrize(
     ("entity_id", "service"),
     [
+        ("switch.roborock_q10_s5_auto_empty", SERVICE_TURN_ON),
         ("switch.roborock_q10_s5_child_lock", SERVICE_TURN_ON),
         ("switch.roborock_q10_s5_do_not_disturb", SERVICE_TURN_OFF),
     ],
