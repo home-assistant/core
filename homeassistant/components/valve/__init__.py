@@ -190,7 +190,7 @@ class ValveEntity(Entity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any] | None:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data: dict[str, Any] = {}
         data[ATTR_IS_CLOSED] = self.is_closed
