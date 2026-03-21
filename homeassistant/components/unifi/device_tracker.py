@@ -86,9 +86,8 @@ def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
         return False
 
     client = hub.api.clients[obj_id]
-    wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
     if (
-        client.mac in wireless_clients
+        client.mac in hub.entity_loader.wireless_clients
         and client.essid
         and hub.config.option_ssid_filter
         and client.essid not in hub.config.option_ssid_filter
