@@ -94,6 +94,9 @@
       "sensor_life": {
         "default": "mdi:eye-outline"
       },
+      "sensor_remaining_life": {
+        "default": "mdi:eye-outline"
+      },
       "sensor_time_left": {
         "default": "mdi:eye-outline"
       },
