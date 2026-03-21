@@ -243,7 +243,7 @@ class FFmpegConvertResponse(web.StreamResponse):
             if request.transport:
                 request.transport.abort()
             raise  # don't log error
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
             raise
         finally:
@@ -258,7 +258,7 @@ class FFmpegConvertResponse(web.StreamResponse):
                     proc.kill()
 
                 # Wait for process to exit so returncode is set
-                await proc.wait()
+                await asyncio.wait_for(proc.wait(), timeout=5)
 
                 # Let stderr collector finish draining
                 if not stderr_task.done():
@@ -268,6 +268,12 @@ class FFmpegConvertResponse(web.StreamResponse):
                         stderr_task.cancel()
                         with contextlib.suppress(asyncio.CancelledError):
                             await stderr_task
+            except TimeoutError:
+                _LOGGER.warning(
+                    "Timed out waiting for ffmpeg process to exit for device %s",
+                    self.device_id,
+                )
+                stderr_task.cancel()
             except asyncio.CancelledError:
                 # Kill the process if we were interrupted
                 if proc.returncode is None:
@@ -287,7 +293,8 @@ class FFmpegConvertResponse(web.StreamResponse):
 
             # Close connection by writing EOF unless already closing
             if request.transport and not request.transport.is_closing():
-                await writer.write_eof()
+                with contextlib.suppress(Exception):
+                    await writer.write_eof()
 
     async def _collect_ffmpeg_stderr(
         self,

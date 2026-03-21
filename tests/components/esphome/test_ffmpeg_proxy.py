@@ -288,6 +288,41 @@ async def test_ffmpeg_stderr_drain_timeout(
     assert "first error line" in caplog.text
 
 
+async def test_ffmpeg_proc_wait_timeout(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that proc.wait() timeout is handled gracefully."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    async def _stdout_read(_size: int = -1) -> bytes:
+        await asyncio.sleep(0)
+        return b""
+
+    async def _proc_wait() -> None:
+        # Block forever so wait_for times out
+        await asyncio.Future()
+
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = _stdout_read
+    mock_proc.stderr.readline = AsyncMock(return_value=b"")
+    mock_proc.returncode = 1
+    mock_proc.kill = MagicMock()
+    mock_proc.wait = _proc_wait
+
+    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        await req.content.read()
+
+    assert "Timed out waiting for ffmpeg process to exit" in caplog.text
+
+
 async def test_ffmpeg_cleanup_on_cancellation(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
