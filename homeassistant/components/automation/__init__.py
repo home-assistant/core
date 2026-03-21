@@ -135,6 +135,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "motion",
     "occupancy",
     "person",
+    "schedule",
     "siren",
     "switch",
     "vacuum",

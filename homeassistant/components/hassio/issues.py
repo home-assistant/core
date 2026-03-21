@@ -92,6 +92,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
+    "issue_system_ntp_sync_failed",
 }
 
 _LOGGER = logging.getLogger(__name__)
