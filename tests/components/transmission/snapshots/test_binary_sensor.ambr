@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors[binary_sensor.transmission_port_forwarding-entry]
+# name: test_binary_sensors[binary_sensor.transmission_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -12,8 +12,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.transmission_port_forwarding',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.transmission_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port forwarding',
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Port forwarding',
+    'original_name': 'Connectivity',
     'platform': 'transmission',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.transmission_port_forwarding-state]
+# name: test_binary_sensors[binary_sensor.transmission_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Transmission Port forwarding',
+      'friendly_name': 'Transmission Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.transmission_port_forwarding',
+    'entity_id': 'binary_sensor.transmission_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
