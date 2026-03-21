@@ -307,6 +307,9 @@
       "guard_set": {
         "name": "Guard set current position"
       },
+      "ptz_auto": {
+        "name": "PTZ continuous rotation"
+      },
       "ptz_calibrate": {
         "name": "PTZ calibrate"
       },
@@ -316,8 +319,20 @@
       "ptz_left": {
         "name": "PTZ left"
       },
+      "ptz_left_down": {
+        "name": "PTZ left down"
+      },
+      "ptz_left_up": {
+        "name": "PTZ left up"
+      },
       "ptz_right": {
         "name": "PTZ right"
+      },
+      "ptz_right_down": {
+        "name": "PTZ right down"
+      },
+      "ptz_right_up": {
+        "name": "PTZ right up"
       },
       "ptz_stop": {
         "name": "PTZ stop"

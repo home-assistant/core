@@ -1,12 +1,13 @@
 """Support for Meteoclimatic sensor."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -21,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
-from .coordinator import MeteoclimaticUpdateCoordinator
+from .coordinator import MeteoclimaticConfigEntry, MeteoclimaticUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -113,11 +114,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MeteoclimaticConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteoclimatic sensor platform."""
-    coordinator: MeteoclimaticUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [MeteoclimaticSensor(coordinator, description) for description in SENSOR_TYPES],
@@ -140,26 +141,24 @@ class MeteoclimaticSensor(
         """Initialize the Meteoclimatic sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        station = self.coordinator.data["station"]
+        station = coordinator.data.station
         self._attr_name = f"{station.name} {description.name}"
         self._attr_unique_id = f"{station.code}_{description.key}"
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return DeviceInfo(
+        if TYPE_CHECKING:
+            assert coordinator.config_entry.unique_id is not None
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=self.coordinator.name,
+            name=coordinator.name,
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return (
-            getattr(self.coordinator.data["weather"], self.entity_description.key)
+            getattr(self.coordinator.data.weather, self.entity_description.key)
             if self.coordinator.data
             else None
         )

@@ -187,6 +187,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             color_modes.add(ColorMode.HS)
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         self._fixed_color_mode = None
+        self._attr_color_mode = ColorMode.UNKNOWN
         if self.supported_color_modes and len(self.supported_color_modes) == 1:
             self._fixed_color_mode = next(iter(self.supported_color_modes))
             self._attr_color_mode = self._fixed_color_mode

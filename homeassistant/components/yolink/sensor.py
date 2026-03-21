@@ -381,7 +381,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CONDUCTIVITY,
         native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_SOIL_TH_SENSOR],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SOIL_TH_SENSOR,
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: data.get("conductivity"),
     ),

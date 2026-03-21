@@ -53,7 +53,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 local_bridge = await tedee_client.get_local_bridge()
-            except (TedeeAuthException, TedeeLocalAuthException):
+            except TedeeAuthException, TedeeLocalAuthException:
                 errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"

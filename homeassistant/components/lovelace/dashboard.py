@@ -170,7 +170,7 @@ class LovelaceStorage(LovelaceConfig):
     async def _load(self) -> dict[str, Any]:
         """Load the config."""
         data = await self._store.async_load()
-        self._data = data if data else {"config": None}
+        self._data = data or {"config": None}
         return self._data
 
     @callback

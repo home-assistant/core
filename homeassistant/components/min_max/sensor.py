@@ -365,7 +365,7 @@ class MinMaxSensor(SensorEntity):
                     device_classes.append(SensorDeviceClass(device_class))
                 else:
                     device_classes.append(None)
-            except (HomeAssistantError, ValueError):
+            except HomeAssistantError, ValueError:
                 # If we can't get device class for any entity, don't set it
                 device_classes.append(None)
 

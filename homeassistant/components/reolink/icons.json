@@ -141,6 +141,9 @@
       "guard_set": {
         "default": "mdi:crosshairs-gps"
       },
+      "ptz_auto": {
+        "default": "mdi:infinity"
+      },
       "ptz_calibrate": {
         "default": "mdi:pan"
       },
@@ -150,7 +153,19 @@
       "ptz_left": {
         "default": "mdi:pan"
       },
+      "ptz_left_down": {
+        "default": "mdi:pan"
+      },
+      "ptz_left_up": {
+        "default": "mdi:pan"
+      },
       "ptz_right": {
+        "default": "mdi:pan"
+      },
+      "ptz_right_down": {
+        "default": "mdi:pan"
+      },
+      "ptz_right_up": {
         "default": "mdi:pan"
       },
       "ptz_stop": {

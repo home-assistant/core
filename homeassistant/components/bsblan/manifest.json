@@ -1,13 +1,14 @@
 {
   "domain": "bsblan",
-  "name": "BSB-Lan",
+  "name": "BSB-LAN",
   "codeowners": ["@liudger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bsblan",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["bsblan"],
-  "requirements": ["python-bsblan==4.1.0"],
+  "quality_scale": "silver",
+  "requirements": ["python-bsblan==5.1.2"],
   "zeroconf": [
     {
       "name": "bsb-lan*",

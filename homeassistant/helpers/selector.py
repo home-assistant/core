@@ -119,6 +119,13 @@ def _validate_supported_features(supported_features: list[str]) -> int:
     return feature_mask
 
 
+def _validate_selector_reorder_config(config: Any) -> Any:
+    """Validate selectors with reorder option."""
+    if config.get("reorder") and not config.get("multiple"):
+        raise vol.Invalid("reorder can only be used when multiple is true")
+    return config
+
+
 def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
     """Make selector config schema."""
     if schema_dict is None:
@@ -158,8 +165,21 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("supported_features"): [
             vol.All(cv.ensure_list, [str], _validate_supported_features)
         ],
+        # Unit of measurement of the entity
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.ensure_list, [str]),
     }
 )
+
+
+class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
+    """Class for legacy entity filter support in EntitySelectorConfig.
+
+    Provided for backwards compatibility and remains feature frozen.
+    """
+
+    integration: str
+    domain: str | list[str]
+    device_class: str | list[str]
 
 
 # Legacy entity selector config schema used directly under entity selectors
@@ -183,6 +203,7 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     domain: str | list[str]
     device_class: str | list[str]
     supported_features: list[str]
+    unit_of_measurement: str | list[str]
 
 
 DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
@@ -301,6 +322,7 @@ class AreaSelectorConfig(BaseSelectorConfig, total=False):
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
     multiple: bool
+    reorder: bool
 
 
 @SELECTORS.register("area")
@@ -309,18 +331,22 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     selector_type = "area"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Optional("entity"): vol.All(
-                cv.ensure_list,
-                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-            vol.Optional("device"): vol.All(
-                cv.ensure_list,
-                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-            vol.Optional("multiple", default=False): cv.boolean,
-        }
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Optional("entity"): vol.All(
+                    cv.ensure_list,
+                    [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+                vol.Optional("device"): vol.All(
+                    cv.ensure_list,
+                    [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("reorder", default=False): cv.boolean,
+            }
+        ),
+        _validate_selector_reorder_config,
     )
 
     def __init__(self, config: AreaSelectorConfig | None = None) -> None:
@@ -502,7 +528,7 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
             for choice in self.config["choices"].values():
                 try:
                     validated = selector(choice["selector"])(data)  # type: ignore[operator]
-                except (vol.Invalid, vol.MultipleInvalid):
+                except vol.Invalid, vol.MultipleInvalid:
                     continue
                 else:
                     return validated
@@ -838,6 +864,7 @@ class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_second: bool
     enable_millisecond: bool
     allow_negative: bool
 
@@ -853,9 +880,11 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            # Enable seconds field in frontend.
+            vol.Optional("enable_second", default=True): cv.boolean,
             # Enable millisecond field in frontend.
             vol.Optional("enable_millisecond"): cv.boolean,
-            # Allow negative durations. Will default to False in HA Core 2025.6.0.
+            # Allow negative durations.
             vol.Optional("allow_negative"): cv.boolean,
         }
     )
@@ -866,15 +895,21 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config.get("allow_negative", True):
+        if self.config.get("allow_negative", False):
             cv.time_period_dict(data)
         else:
             cv.positive_time_period_dict(data)
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total=False):
+class EntitySelectorConfig(
+    BaseSelectorConfig, _LegacyEntityFilterSelectorConfig, total=False
+):
     """Class to represent an entity selector config."""
+
+    # Note: The class inherits _LegacyEntityFilterSelectorConfig to keep
+    # support for legacy entity filter at top level for backwards compatibility,
+    # new entity filter options should be added under the `filter` key instead.
 
     exclude_entities: list[str]
     include_entities: list[str]
@@ -889,18 +924,21 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
-            vol.Optional("exclude_entities"): [str],
-            vol.Optional("include_entities"): [str],
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("reorder", default=False): cv.boolean,
-            vol.Optional("filter"): vol.All(
-                cv.ensure_list,
-                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-        }
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
+                vol.Optional("exclude_entities"): [str],
+                vol.Optional("include_entities"): [str],
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("reorder", default=False): cv.boolean,
+                vol.Optional("filter"): vol.All(
+                    cv.ensure_list,
+                    [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+            }
+        ),
+        _validate_selector_reorder_config,
     )
 
     def __init__(self, config: EntitySelectorConfig | None = None) -> None:
@@ -1490,6 +1528,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
 
     entity_id: str
     hide_states: list[str]
+    attribute: str
     multiple: bool
 
 
@@ -1512,11 +1551,7 @@ class StateSelector(Selector[StateSelectorConfig]):
         {
             vol.Optional("entity_id"): cv.entity_id,
             vol.Optional("hide_states"): [str],
-            # The attribute to filter on, is currently deliberately not
-            # configurable/exposed. We are considering separating state
-            # selectors into two types: one for state and one for attribute.
-            # Limiting the public use, prevents breaking changes in the future.
-            # vol.Optional("attribute"): str,
+            vol.Optional("attribute"): str,
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )

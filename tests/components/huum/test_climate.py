@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -48,7 +49,7 @@ async def test_set_hvac_mode(
 
     mock_huum.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
@@ -70,7 +71,7 @@ async def test_set_temperature(
 
     mock_huum.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,

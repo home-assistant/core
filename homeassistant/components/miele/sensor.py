@@ -61,6 +61,7 @@ PLATE_COUNT = {
     "KM7575": 6,
     "KM7678": 6,
     "KM7697": 6,
+    "KM7699": 5,
     "KM7878": 6,
     "KM7897": 6,
     "KMDA7633": 5,
@@ -330,9 +331,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
             key="energy_forecast",
             translation_key="energy_forecast",
             value_fn=(
-                lambda value: value.energy_forecast * 100
-                if value.energy_forecast is not None
-                else None
+                lambda value: (
+                    value.energy_forecast * 100
+                    if value.energy_forecast is not None
+                    else None
+                )
             ),
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -365,9 +368,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
             key="water_forecast",
             translation_key="water_forecast",
             value_fn=(
-                lambda value: value.water_forecast * 100
-                if value.water_forecast is not None
-                else None
+                lambda value: (
+                    value.water_forecast * 100
+                    if value.water_forecast is not None
+                    else None
+                )
             ),
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -661,8 +666,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
                 device_class=SensorDeviceClass.ENUM,
                 options=sorted(PlatePowerStep.keys()),
                 value_fn=lambda value: None,
-                unique_id_fn=lambda device_id,
-                description: f"{device_id}-{description.key}-{description.zone}",
+                unique_id_fn=lambda device_id, description: (
+                    f"{device_id}-{description.key}-{description.zone}"
+                ),
             ),
         )
         for i in range(1, 7)
@@ -676,9 +682,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
         description=MieleSensorDescription(
             key="state_drying_step",
             translation_key="drying_step",
-            value_fn=lambda value: StateDryingStep(
-                cast(int, value.state_drying_step)
-            ).name,
+            value_fn=lambda value: (
+                StateDryingStep(cast(int, value.state_drying_step)).name
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=SensorDeviceClass.ENUM,
             options=sorted(StateDryingStep.keys()),
@@ -698,7 +704,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
 
 POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]] = (
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_1_level",
             translation_key="twin_dos_1_level",
@@ -708,7 +717,10 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
         ),
     ),
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_2_level",
             translation_key="twin_dos_2_level",
@@ -744,6 +756,36 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
             translation_key="rinse_aid_level",
             value_fn=lambda value: value.rinse_aid_filling_level,
             native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="descaling_counter",
+            translation_key="descaling_counter",
+            value_fn=lambda value: value.descaling_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="degreasing_counter",
+            translation_key="degreasing_counter",
+            value_fn=lambda value: value.degreasing_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="milk_cleaning_counter",
+            translation_key="milk_cleaning_counter",
+            value_fn=lambda value: value.milk_cleaning_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),

@@ -72,8 +72,8 @@ BLOCK_LIGHTS = {
     ),
     ("relay", "output"): BlockLightDescription(
         key="relay|output",
-        removal_condition=lambda settings, block: not is_block_channel_type_light(
-            settings, block
+        removal_condition=lambda settings, block: (
+            not is_block_channel_type_light(settings, block)
         ),
     ),
 }
@@ -538,8 +538,8 @@ LIGHTS: Final = {
     "switch": RpcEntityDescription(
         key="switch",
         sub_key="output",
-        removal_condition=lambda config, _status, key: not is_rpc_channel_type_light(
-            config, get_rpc_key_id(key)
+        removal_condition=lambda config, _status, key: (
+            not is_rpc_channel_type_light(config, get_rpc_key_id(key))
         ),
         entity_class=RpcShellySwitchAsLight,
     ),

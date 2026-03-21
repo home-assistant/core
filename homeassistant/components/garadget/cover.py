@@ -221,7 +221,7 @@ class GaradgetCover(CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
-        if self._state not in ["stopped"]:
+        if self._state != "stopped":
             self._put_command("setState", "stop")
             self._start_watcher("stop")
 

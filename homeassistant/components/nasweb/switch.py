@@ -9,7 +9,7 @@ from typing import Any
 from webio_api import Output as NASwebOutput
 from webio_api.const import STATE_ENTITY_UNAVAILABLE, STATE_OUTPUT_OFF, STATE_OUTPUT_ON
 
-from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -71,7 +71,7 @@ async def async_setup_entry(
         for index in removed:
             unique_id = f"{DOMAIN}.{config.unique_id}.relay_switch.{index}"
             if entity_id := entity_registry.async_get_entity_id(
-                DOMAIN_SWITCH, DOMAIN, unique_id
+                SWITCH_DOMAIN, DOMAIN, unique_id
             ):
                 entity_registry.async_remove(entity_id)
                 current_outputs.remove(index)
