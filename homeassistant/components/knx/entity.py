@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import DOMAIN
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .storage.config_store import PlatformControllerBase
 from .storage.const import CONF_DEVICE_INFO
 
@@ -122,14 +122,17 @@ class KnxYamlEntity(_KnxEntityBase):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        name: str,
-        entity_category: EntityCategory | None,
+        entity_config: dict[str, Any],
     ) -> None:
         """Initialize the YAML entity."""
         self._knx_module = knx_module
-        self._attr_name = name or None
+        self._attr_name = entity_config[CONF_NAME] or None
         self._attr_unique_id = unique_id
-        self._attr_entity_category = entity_category
+        self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
+
+        default_entity_id: str | None
+        if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+            self.entity_id = default_entity_id
 
 
 class KnxUiEntity(_KnxEntityBase):
