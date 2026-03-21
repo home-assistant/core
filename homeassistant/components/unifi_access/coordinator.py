@@ -195,15 +195,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             updates["door_lock_relay_status"] = "unlock"
 
         if ws_state.remain_lock is not None:
-            new_lock_rule = DoorLockRuleStatus(
-                type=ws_state.remain_lock.type,
-                ended_time=ws_state.remain_lock.until,
-            )
+            new_lock_rule = ws_state.remain_lock.to_door_lock_rule_status()
         elif ws_state.remain_unlock is not None:
-            new_lock_rule = DoorLockRuleStatus(
-                type=ws_state.remain_unlock.type,
-                ended_time=ws_state.remain_unlock.until,
-            )
+            new_lock_rule = ws_state.remain_unlock.to_door_lock_rule_status()
         else:
             new_lock_rule = DoorLockRuleStatus()
         if new_lock_rule != current_door.lock_rule_status:
