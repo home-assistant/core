@@ -251,7 +251,8 @@ class RoborockQ10EmptyDustbinButtonEntity(
 ):
     """A class to define Q10 empty dustbin button entity."""
 
-    _attr_name = "Empty dustbin"
+    _attr_name = None
+    _attr_translation_key = "empty_dustbin"
     _attr_entity_category = EntityCategory.CONFIG
     coordinator: RoborockB01Q10UpdateCoordinator
 
