@@ -316,6 +316,8 @@ async def test_classic_api_session_relogin_on_json_error(
     )
     # Verify re-login was called (once for setup, once for re-login)
     assert mock_growatt_classic_api.login.call_count >= 2
+    # Verify the data fetch was retried and succeeded (error + retry)
+    assert mock_growatt_classic_api.tlx_detail.call_count >= 2
 
 
 async def test_classic_api_setup(

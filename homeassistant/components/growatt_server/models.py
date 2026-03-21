@@ -18,3 +18,4 @@ class GrowattRuntimeData:
     devices: dict[str, GrowattCoordinator]
     login_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     last_login_time: float | None = None
+    api_lock: asyncio.Lock = field(default_factory=asyncio.Lock)

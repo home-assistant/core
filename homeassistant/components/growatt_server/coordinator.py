@@ -225,9 +225,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.api_version != "classic":
             return False
 
-        # Guard: config_entry may be None or runtime_data not yet set
-        # (e.g. during async_config_entry_first_refresh)
-        if self.config_entry is None or not hasattr(self.config_entry, "runtime_data"):
+        if self.config_entry is None:
             return False
 
         config_entry = self.config_entry
@@ -284,26 +282,37 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Asynchronously update data via library."""
+        if self.api_version == "classic" and self.config_entry is not None:
+            # Serialize Classic API calls across coordinators: the underlying
+            # requests.Session (and its session cookie) is not thread-safe.
+            runtime_data: GrowattRuntimeData = self.config_entry.runtime_data
+            async with runtime_data.api_lock:
+                try:
+                    return await self.hass.async_add_executor_job(
+                        self._sync_update_data
+                    )
+                except json.decoder.JSONDecodeError as err:
+                    # The server returned an HTML login page instead of JSON — session expired.
+                    _LOGGER.debug(
+                        "Data fetch failed for %s (%s: %s), attempting re-login",
+                        self.device_id,
+                        type(err).__name__,
+                        err,
+                    )
+                    if await self._async_re_login():
+                        try:
+                            return await self.hass.async_add_executor_job(
+                                self._sync_update_data
+                            )
+                        except json.decoder.JSONDecodeError as retry_err:
+                            raise UpdateFailed(
+                                f"Data fetch failed after re-login for {self.device_id}: {retry_err}"
+                            ) from retry_err
+                    raise UpdateFailed(f"Error fetching data: {err}") from err
+
         try:
             return await self.hass.async_add_executor_job(self._sync_update_data)
         except json.decoder.JSONDecodeError as err:
-            if self.api_version == "classic":
-                # The server returned an HTML login page instead of JSON — session expired.
-                _LOGGER.warning(
-                    "Data fetch failed for %s (%s: %s), attempting re-login",
-                    self.device_id,
-                    type(err).__name__,
-                    err,
-                )
-                if await self._async_re_login():
-                    try:
-                        return await self.hass.async_add_executor_job(
-                            self._sync_update_data
-                        )
-                    except json.decoder.JSONDecodeError as retry_err:
-                        raise UpdateFailed(
-                            f"Data fetch failed after re-login for {self.device_id}: {retry_err}"
-                        ) from retry_err
             raise UpdateFailed(f"Error fetching data: {err}") from err
 
     def get_currency(self):
