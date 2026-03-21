@@ -82,7 +82,7 @@ WIRELESS_DISCONNECTION = (
 @callback
 def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id not in hub.config.option_tracked_clients:
+    if obj_id not in hub.config.option_supported_clients:
         return False
 
     client = hub.api.clients[obj_id]

@@ -288,7 +288,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                     vol.Optional(
                         CONF_CLIENT_SOURCE,
                         default=self.options.get(
-                            CONF_CLIENT_SOURCE, self.hub.config.option_tracked_clients
+                            CONF_CLIENT_SOURCE, self.hub.config.option_supported_clients
                         ),
                     ): cv.multi_select(self._client_options()),
                     vol.Optional(
@@ -351,7 +351,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                     vol.Optional(
                         CONF_CLIENT_SOURCE,
                         default=self.options.get(
-                            CONF_CLIENT_SOURCE, self.hub.config.option_tracked_clients
+                            CONF_CLIENT_SOURCE, self.hub.config.option_supported_clients
                         ),
                     ): cv.multi_select(self._client_options()),
                 }
