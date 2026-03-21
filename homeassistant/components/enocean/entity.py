@@ -34,14 +34,14 @@ class EnOceanEntityID:
 
     def __hash__(self) -> int:
         """Return the hash of the entity ID."""
-        return hash((self.__device_address.to_number(), self.unique_id))
+        return hash((int(self.__device_address), self.unique_id))
 
     def __eq__(self, other: object) -> bool:
         """Check equality with another entity ID."""
         if not isinstance(other, EnOceanEntityID):
             return NotImplemented
-        return (self.__device_address.to_number(), self.unique_id) == (
-            other.device_address.to_number(),
+        return (int(self.__device_address), self.unique_id) == (
+            int(other.device_address),
             other.unique_id,
         )
 

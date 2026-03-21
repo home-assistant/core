@@ -72,6 +72,11 @@
         "name": "B1"
       }
     },
+    "light": {
+      "light": {
+        "name": "Light"
+      }
+    },
     "sensor": {
       "angle": {
         "name": "Angle"
@@ -167,32 +172,6 @@
           "open": "Open",
           "tilted": "Tilted"
         }
-      }
-    },
-    "switch": {
-      "switch_1": {
-        "name": "Switch 1"
-      },
-      "switch_2": {
-        "name": "Switch 2"
-      },
-      "switch_3": {
-        "name": "Switch 3"
-      },
-      "switch_4": {
-        "name": "Switch 4"
-      },
-      "switch_5": {
-        "name": "Switch 5"
-      },
-      "switch_6": {
-        "name": "Switch 6"
-      },
-      "switch_7": {
-        "name": "Switch 7"
-      },
-      "switch_8": {
-        "name": "Switch 8"
       }
     }
   },

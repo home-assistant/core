@@ -28,11 +28,8 @@ from . import EnOceanConfigEntry
 from .entity import EnOceanEntity, EnOceanEntityID
 
 _COVER_STATE_TO_HA = {
-    "open": (False, False),
     "opening": (True, False),
-    "closed": (False, False),
     "closing": (False, True),
-    "stopped": (False, False),
 }
 
 

@@ -19,11 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import EnOceanConfigEntry
 from .entity import EnOceanEntity, EnOceanEntityID
 
-# Map Observable units to HA unit strings where they differ from the library's.
-# The library already uses conventional units (°C, %, lx, V, W, Wh, …) so most
-# pass through directly; this dict only overrides when needed.
-_UNIT_OVERRIDE: dict[Observable, str] = {}
-
 _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
     Observable.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
     Observable.HUMIDITY: SensorDeviceClass.HUMIDITY,
@@ -102,9 +97,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         if entity_type == EntityType.METADATA:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_device_class = _OBSERVABLE_TO_DEVICE_CLASS.get(observable)
-        self._attr_native_unit_of_measurement = _UNIT_OVERRIDE.get(
-            observable, observable.unit
-        )
+        self._attr_native_unit_of_measurement = observable.unit
         if observable.kind == ValueKind.ENUM:
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = observable.possible_values
@@ -113,10 +106,6 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
             self._attr_state_class = _SCALAR_STATE_CLASS
 
         gateway.add_observation_callback(self._on_observation)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state after restart."""
-        await super().async_added_to_hass()
 
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
