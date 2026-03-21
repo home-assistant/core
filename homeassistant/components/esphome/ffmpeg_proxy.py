@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
 _MAX_STDERR_LINES: Final[int] = 64
+_PROC_WAIT_TIMEOUT: Final[int] = 5
 _SENSITIVE_QUERY_PARAMS: Final[re.Pattern[str]] = re.compile(
     r"(?<=[?&])(authSig|token|key|password|secret)=[^&\s]+", re.IGNORECASE
 )
@@ -258,7 +259,7 @@ class FFmpegConvertResponse(web.StreamResponse):
                     proc.kill()
 
                 # Wait for process to exit so returncode is set
-                await asyncio.wait_for(proc.wait(), timeout=5)
+                await asyncio.wait_for(proc.wait(), timeout=_PROC_WAIT_TIMEOUT)
 
                 # Let stderr collector finish draining
                 if not stderr_task.done():

@@ -20,6 +20,8 @@ from homeassistant.components.esphome.ffmpeg_proxy import (
     _MAX_STDERR_LINES,
     async_create_proxy_url,
 )
+
+FFMPEG_PROXY = "homeassistant.components.esphome.ffmpeg_proxy"
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -314,7 +316,10 @@ async def test_ffmpeg_proc_wait_timeout(
     mock_proc.kill = MagicMock()
     mock_proc.wait = _proc_wait
 
-    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+    with (
+        patch("asyncio.create_subprocess_exec", return_value=mock_proc),
+        patch(f"{FFMPEG_PROXY}._PROC_WAIT_TIMEOUT", 0),
+    ):
         url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
         req = await client.get(url)
         assert req.status == HTTPStatus.OK
