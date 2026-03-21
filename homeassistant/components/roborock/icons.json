@@ -40,6 +40,12 @@
       }
     },
     "sensor": {
+      "battery": {
+        "default": "mdi:battery"
+      },
+      "brush_remaining": {
+        "default": "mdi:brush"
+      },
       "clean_percent": {
         "default": "mdi:progress-check"
       },
@@ -49,11 +55,17 @@
       "cleaning_brush_time_left": {
         "default": "mdi:brush"
       },
+      "cleaning_time": {
+        "default": "mdi:clock-outline"
+      },
       "countdown": {
         "default": "mdi:clock-outline"
       },
       "dock_error": {
         "default": "mdi:garage-open"
+      },
+      "filter_life": {
+        "default": "mdi:air-filter"
       },
       "filter_time_left": {
         "default": "mdi:air-filter"
@@ -64,11 +76,29 @@
       "last_clean_start": {
         "default": "mdi:clock-time-twelve"
       },
+      "main_brush_life": {
+        "default": "mdi:brush"
+      },
       "main_brush_time_left": {
         "default": "mdi:brush"
       },
+      "mop_clean_remaining": {
+        "default": "mdi:clock-outline"
+      },
+      "mop_life_time_left": {
+        "default": "mdi:texture"
+      },
+      "q7_status": {
+        "default": "mdi:information-outline"
+      },
+      "sensor_life": {
+        "default": "mdi:eye-outline"
+      },
       "sensor_time_left": {
         "default": "mdi:eye-outline"
+      },
+      "side_brush_life": {
+        "default": "mdi:brush"
       },
       "side_brush_time_left": {
         "default": "mdi:brush"
@@ -78,6 +108,9 @@
       },
       "strainer_time_left": {
         "default": "mdi:filter-variant"
+      },
+      "times_after_clean": {
+        "default": "mdi:counter"
       },
       "total_cleaning_area": {
         "default": "mdi:texture-box"
