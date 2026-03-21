@@ -615,7 +615,8 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
             if decoded_dps:
                 data = dict(self.data) if self.data is not None else {}
                 data.update(decoded_dps)
-                self.async_set_updated_data(data)
+                if data != self.data:
+                    self.async_set_updated_data(data)
             original_update_from_dps(decoded_dps)
 
         setattr(self.api.status, "update_from_dps", update_from_dps)
@@ -644,7 +645,8 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
         """Optimistically update a raw DPS value."""
         data = dict(self.data) if self.data is not None else {}
         data[dp_code] = value
-        self.async_set_updated_data(data)
+        if data != self.data:
+            self.async_set_updated_data(data)
 
     @cached_property
     def duid(self) -> str:
