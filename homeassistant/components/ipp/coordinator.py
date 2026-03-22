@@ -79,6 +79,9 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
                 },
             )
         except IPPError:
+            _LOGGER.debug(
+                "Failed to fetch page count attributes from printer", exc_info=True
+            )
             return self.page_counts
 
         page_counts: dict[str, int] = {}
