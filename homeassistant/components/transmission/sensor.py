@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import contextlib
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
@@ -67,10 +68,6 @@ def _get_current_stats_field(
     with contextlib.suppress(KeyError, AttributeError):
         return getattr(coordinator.data.current_stats, field)
     return None
-        value = raw.get(field)
-        return int(value) if isinstance(value, (int, float)) else None
-    except (AttributeError, TypeError):
-        return None
 
 
 def _get_cumulative_stats_field(
@@ -80,10 +77,6 @@ def _get_cumulative_stats_field(
     with contextlib.suppress(KeyError, AttributeError):
         return getattr(coordinator.data.cumulative_stats, field)
     return None
-        value = raw.get(field)
-        return int(value) if isinstance(value, (int, float)) else None
-    except (AttributeError, TypeError):
-        return None
 
 
 SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
@@ -166,7 +159,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         val_func=lambda coordinator: _bytes_to_gib(
-            _get_current_stats_field(coordinator, "downloadedBytes")
+            _get_current_stats_field(coordinator, "downloaded_bytes")
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -177,7 +170,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         val_func=lambda coordinator: _bytes_to_gib(
-            _get_current_stats_field(coordinator, "uploadedBytes")
+            _get_current_stats_field(coordinator, "uploaded_bytes")
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -188,7 +181,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         val_func=lambda coordinator: _bytes_to_gib(
-            _get_cumulative_stats_field(coordinator, "downloadedBytes")
+            _get_cumulative_stats_field(coordinator, "downloaded_bytes")
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -199,7 +192,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         val_func=lambda coordinator: _bytes_to_gib(
-            _get_cumulative_stats_field(coordinator, "uploadedBytes")
+            _get_cumulative_stats_field(coordinator, "uploaded_bytes")
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -208,8 +201,8 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
         val_func=lambda coordinator: _compute_ratio(
-            _get_current_stats_field(coordinator, "uploadedBytes"),
-            _get_current_stats_field(coordinator, "downloadedBytes"),
+            _get_current_stats_field(coordinator, "uploaded_bytes"),
+            _get_current_stats_field(coordinator, "downloaded_bytes"),
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -218,8 +211,8 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
         val_func=lambda coordinator: _compute_ratio(
-            _get_cumulative_stats_field(coordinator, "uploadedBytes"),
-            _get_cumulative_stats_field(coordinator, "downloadedBytes"),
+            _get_cumulative_stats_field(coordinator, "uploaded_bytes"),
+            _get_cumulative_stats_field(coordinator, "downloaded_bytes"),
         ),
     ),
 )

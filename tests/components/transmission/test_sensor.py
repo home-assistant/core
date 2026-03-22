@@ -143,10 +143,9 @@ def test_helper_functions() -> None:
 
 
 def test_get_stats_field_exception() -> None:
-    """Test _get_current/cumulative_stats_field with AttributeError."""
-
+    """Test _get_current/cumulative_stats_field returns None on missing data."""
     coordinator = MagicMock()
-    coordinator.data.fields = None  # triggers AttributeError on .get()
-
-    assert _get_current_stats_field(coordinator, "downloadedBytes") is None
-    assert _get_cumulative_stats_field(coordinator, "downloadedBytes") is None
+    coordinator.data.current_stats = MagicMock(spec=[])
+    coordinator.data.cumulative_stats = MagicMock(spec=[])
+    assert _get_current_stats_field(coordinator, "downloaded_bytes") is None
+    assert _get_cumulative_stats_field(coordinator, "downloaded_bytes") is None
