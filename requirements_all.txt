@@ -1176,7 +1176,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.10.2
+habluetooth==5.11.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1732,7 +1732,7 @@ openwrt-ubus-rpc==0.0.2
 opower==0.17.1
 
 # homeassistant.components.oralb
-oralb-ble==1.0.2
+oralb-ble==1.1.0
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2660,7 +2660,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==4.26.2
+python-roborock==4.26.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3310,7 +3310,7 @@ wirelesstagpy==0.8.1
 wled==0.21.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.23
+wolf-comm==0.0.48
 
 # homeassistant.components.wsdot
 wsdot==0.0.1
