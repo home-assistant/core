@@ -1,7 +1,9 @@
 """Define a class to manage fetching Twitch data."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import random
 
 from twitchAPI.helper import first
 from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
@@ -14,6 +16,15 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
+
+# Maximum number of concurrent Twitch API requests per update cycle.
+# Limits burst load on the Twitch API.
+_MAX_CONCURRENT_REQUESTS = 10
+
+# Jitter window in seconds. Each channel fetch is delayed by a random
+# offset in [0, _JITTER_WINDOW] to spread API calls across time rather
+# than hitting the API in a single burst.
+_JITTER_WINDOW = 2.0
 
 type TwitchConfigEntry = ConfigEntry[TwitchCoordinator]
 
@@ -71,7 +82,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
     async def _async_setup(self) -> None:
         channels = self.config_entry.options[CONF_CHANNELS]
         self.users = []
-        # Split channels into chunks of 100 to avoid hitting the rate limit
+        # Split channels into chunks of 100 to avoid hitting the rate limit.
         for chunk in chunk_list(channels, 100):
             self.users.extend(
                 [channel async for channel in self.twitch.get_users(logins=chunk)]
@@ -79,7 +90,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         if not (user := await first(self.twitch.get_users())):
             raise UpdateFailed("Logged in user not found")
         self.current_user = user
-        self.users.append(self.current_user)  # Add current_user to users list.
+        self.users.append(self.current_user)
 
     async def _async_update_data(self) -> dict[str, TwitchUpdate]:
         await self.session.async_ensure_token_valid()
@@ -89,7 +100,6 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             self.session.token["refresh_token"],
             False,
         )
-        data: dict[str, TwitchUpdate] = {}
         streams: dict[str, Stream] = {
             s.user_id: s
             async for s in self.twitch.get_followed_streams(
@@ -104,21 +114,53 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 user_id=self.current_user.id, first=100
             )
         }
-        for channel in self.users:
-            followers = await self.twitch.get_channel_followers(channel.id)
-            stream = streams.get(channel.id)
-            follow = follows.get(channel.id)
-            sub: UserSubscription | None = None
-            try:
-                sub = await self.twitch.check_user_subscription(
-                    user_id=self.current_user.id, broadcaster_id=channel.id
-                )
-            except TwitchResourceNotFound:
-                LOGGER.debug("User is not subscribed to %s", channel.display_name)
-            except TwitchAPIException as exc:
-                LOGGER.error("Error response on check_user_subscription: %s", exc)
 
-            data[channel.id] = TwitchUpdate(
+        api_channels = {f.broadcaster_login for f in follows.values()}
+        config_channels = set(self.config_entry.options[CONF_CHANNELS])
+        # Only sync new follows — channels that were unfollowed are intentionally
+        # kept in the config so they continue to be tracked.
+        additions = api_channels - config_channels
+        if additions:
+            LOGGER.info(
+                "Discovered new followed channels: %s",
+                ", ".join(sorted(additions)),
+            )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options={
+                    **self.config_entry.options,
+                    CONF_CHANNELS: sorted(config_channels | additions),
+                },
+            )
+            # Add the new users to self.users immediately so they are included
+            # in this update cycle. The normal poll interval will keep them
+            # up to date — no reload needed.
+            for chunk in chunk_list(sorted(additions), 100):
+                self.users.extend(
+                    [u async for u in self.twitch.get_users(logins=list(chunk))]
+                )
+
+        semaphore = asyncio.Semaphore(_MAX_CONCURRENT_REQUESTS)
+
+        async def _fetch_channel(channel: TwitchUser) -> tuple[str, TwitchUpdate]:
+            # Random jitter so requests are spread across the window rather
+            # than all hitting the API simultaneously.
+            await asyncio.sleep(random.uniform(0, _JITTER_WINDOW))
+            async with semaphore:
+                followers = await self.twitch.get_channel_followers(channel.id)
+                stream = streams.get(channel.id)
+                follow = follows.get(channel.id)
+                sub: UserSubscription | None = None
+                try:
+                    sub = await self.twitch.check_user_subscription(
+                        user_id=self.current_user.id, broadcaster_id=channel.id
+                    )
+                except TwitchResourceNotFound:
+                    LOGGER.debug("User is not subscribed to %s", channel.display_name)
+                except TwitchAPIException as exc:
+                    LOGGER.error("Error response on check_user_subscription: %s", exc)
+
+            return channel.id, TwitchUpdate(
                 channel.display_name,
                 followers.total,
                 bool(stream),
@@ -134,4 +176,6 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 follow.followed_at if follow else None,
                 stream.viewer_count if stream else None,
             )
-        return data
+
+        results = await asyncio.gather(*[_fetch_channel(c) for c in self.users])
+        return dict(results)
