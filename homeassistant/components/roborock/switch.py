@@ -40,6 +40,9 @@ _Q10_SWITCH_DPS_LISTENERS: dict[
     int,
     list[Callable[[dict[B01_Q10_DP, Any]], None]],
 ] = {}
+_Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS: dict[
+    int, Callable[[dict[B01_Q10_DP, Any]], None]
+] = {}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -248,10 +251,11 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         listeners = _Q10_SWITCH_DPS_LISTENERS.setdefault(coordinator_id, [])
         listeners.append(self._dps_listener)
 
-        if len(listeners) > 1:
+        if coordinator_id in _Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS:
             return
 
         original_update_from_dps = self.coordinator.api.status.update_from_dps
+        _Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS[coordinator_id] = original_update_from_dps
 
         def update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
             """Forward raw DPS updates to listeners before trait conversion."""
@@ -269,6 +273,14 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
             listeners.remove(self._dps_listener)
             if not listeners:
                 _Q10_SWITCH_DPS_LISTENERS.pop(coordinator_id, None)
+                if original_update_from_dps := _Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS.pop(
+                    coordinator_id, None
+                ):
+                    setattr(
+                        self.coordinator.api.status,
+                        "update_from_dps",
+                        original_update_from_dps,
+                    )
         await super().async_will_remove_from_hass()
 
     def _async_handle_dps_update(self, decoded_dps: dict[B01_Q10_DP, Any]) -> None:
