@@ -18,5 +18,7 @@ CONF_REFRESH_TOKEN = "refresh_token"
 DOMAIN = "twitch"
 CONF_CHANNELS = "channels"
 CONF_CLEANUP_UNFOLLOWED = "cleanup_unfollowed"
+CONF_SCAN_INTERVAL = "scan_interval"
+DEFAULT_SCAN_INTERVAL = 5  # minutes
 
 OAUTH_SCOPES = [AuthScope.USER_READ_SUBSCRIPTIONS, AuthScope.USER_READ_FOLLOWS]

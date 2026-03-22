@@ -72,10 +72,12 @@
     "step": {
       "init": {
         "data": {
-          "cleanup_unfollowed": "Automatically remove sensors for unfollowed channels"
+          "cleanup_unfollowed": "Remove sensors for unfollowed channels",
+          "scan_interval": "Poll interval (minutes)"
         },
         "data_description": {
-          "cleanup_unfollowed": "When enabled, sensors for channels you have unfollowed on Twitch will be permanently removed from the entity registry."
+          "cleanup_unfollowed": "When enabled, sensors for channels you have unfollowed on Twitch will be permanently removed from the entity registry.",
+          "scan_interval": "How often to poll Twitch for updates. Lower values give faster updates but use more API quota."
         },
         "title": "Twitch options"
       }
