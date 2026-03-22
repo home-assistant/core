@@ -20,6 +20,8 @@ from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
     CONF_REGION,
+    CONF_SHOW_ROOMS,
+    CONF_SHOW_WALLS,
     DOMAIN,
     DRAWABLES,
 )
