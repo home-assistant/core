@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import contextlib
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
@@ -67,7 +66,7 @@ def _get_stats_field(
     field: str,
 ) -> int | None:
     """Safely get a numeric field from a stats section, returning None on errors."""
-    with contextlib.suppress(KeyError, AttributeError):
+    with suppress(KeyError, AttributeError):
         value = getattr(getattr(coordinator.data, stats_attr), field)
         return int(value) if isinstance(value, (int, float)) else None
     return None
