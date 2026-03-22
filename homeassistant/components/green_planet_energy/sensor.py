@@ -80,11 +80,10 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
             # After 18:00 the day period is over; use tomorrow's date
             (
                 dt_util.start_of_local_day() + timedelta(days=1)
-                if now_h >= 18
+                if (now_h := dt_util.now().hour) >= 18
                 else dt_util.start_of_local_day()
             ).replace(hour=hour)
-            if (now_h := dt_util.now().hour) is not None
-            and (hour := api.get_lowest_price_day_with_hour(data, now_h)[1]) is not None
+            if (hour := api.get_lowest_price_day_with_hour(data, now_h)[1]) is not None
             else None
         ),
     ),
