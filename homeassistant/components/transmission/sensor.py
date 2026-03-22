@@ -41,8 +41,8 @@ class TransmissionSensorEntityDescription(SensorEntityDescription):
     extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
 
 
-def _bytes_to_gb(value: int | None) -> float | None:
-    """Convert bytes to gigabytes, return None if value is unavailable."""
+def _bytes_to_gib(value: int | None) -> float | None:
+    """Convert bytes to gibibytes (GiB), return None if value is unavailable."""
     if value is None:
         return None
     return round(value / 1_073_741_824, 3)
@@ -167,7 +167,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gb(
+        val_func=lambda coordinator: _bytes_to_gib(
             _get_current_stats_field(coordinator, "downloadedBytes")
         ),
     ),
@@ -178,7 +178,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gb(
+        val_func=lambda coordinator: _bytes_to_gib(
             _get_current_stats_field(coordinator, "uploadedBytes")
         ),
     ),
@@ -189,7 +189,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gb(
+        val_func=lambda coordinator: _bytes_to_gib(
             _get_cumulative_stats_field(coordinator, "downloadedBytes")
         ),
     ),
@@ -200,7 +200,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gb(
+        val_func=lambda coordinator: _bytes_to_gib(
             _get_cumulative_stats_field(coordinator, "uploadedBytes")
         ),
     ),
