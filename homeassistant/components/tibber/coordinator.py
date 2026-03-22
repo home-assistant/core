@@ -312,10 +312,13 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
                 await asyncio.gather(
                     *(home.update_info_and_price_info() for home in homes_to_update)
                 )
-        except tibber.RetryableHttpExceptionError as err:
-            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
-        except tibber.FatalHttpExceptionError as err:
-            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
+        except (
+            tibber.RetryableHttpExceptionError,
+            tibber.FatalHttpExceptionError,
+        ) as err:
+            _LOGGER.error(
+                "Error communicating with Tibber API (%s): %s", err.status, err
+            )
 
         result = {home.home_id: _build_home_data(home) for home in active_homes}
 
