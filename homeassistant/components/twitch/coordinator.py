@@ -122,21 +122,12 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                     CONF_CHANNELS: sorted(config_channels | additions),
                 },
             )
-            # Add the new users to self.users so they are included in this
-            # update cycle already.
+            # Add the new users to self.users immediately so they are included
+            # in this update cycle. The normal poll interval will keep them
+            # up to date — no reload needed.
             for chunk in chunk_list(sorted(additions), 100):
                 self.users.extend(
                     [u async for u in self.twitch.get_users(logins=list(chunk))]
-                )
-            # On the first update self.data is None and sensors are created
-            # directly from coordinator.data by async_setup_entry — no reload
-            # needed. On subsequent updates a reload is required to add new
-            # sensor entities. Deferring via call_soon ensures _async_update_data
-            # finishes fully before the reload is triggered.
-            if self.data is not None:
-                entry_id = self.config_entry.entry_id
-                self.hass.loop.call_soon(
-                    self.hass.config_entries.async_schedule_reload, entry_id
                 )
 
         for channel in self.users:
