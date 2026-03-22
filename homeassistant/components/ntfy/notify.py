@@ -71,7 +71,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     async def publish(self, **kwargs: Any) -> None:
         """Publish a message to a topic via ntfy.publish action."""
         await self._publish(**kwargs)
-        self._async_set_last_notification_timestamp()
+        self._async_record_notification()
 
     async def _publish(self, **kwargs: Any) -> None:
         """Publish a message to a topic via ntfy.publish action."""

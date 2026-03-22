@@ -157,15 +157,15 @@ class NotifyEntity(RestoreEntity):
             self.__set_state(state.state)
 
     @final
-    def _set_last_notification_timestamp(self) -> None:
+    def _record_notification(self) -> None:
         run_callback_threadsafe(
-            self.hass.loop, self._async_set_last_notification_timestamp
+            self.hass.loop, self._async_record_notification
         ).result()
 
     @final
     @callback
-    def _async_set_last_notification_timestamp(self) -> None:
-        """Set last notification timestamp."""
+    def _async_record_notification(self) -> None:
+        """Record last notification."""
 
         self.__set_state(dt_util.utcnow().isoformat())
         self.async_write_ha_state()
@@ -177,7 +177,7 @@ class NotifyEntity(RestoreEntity):
         Should not be overridden, handle setting last notification timestamp.
         """
         await self.async_send_message(**kwargs)
-        self._async_set_last_notification_timestamp()
+        self._async_record_notification()
 
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
