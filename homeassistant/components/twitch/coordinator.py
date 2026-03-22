@@ -1,5 +1,6 @@
 """Define a class to manage fetching Twitch data."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -89,7 +90,6 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             self.session.token["refresh_token"],
             False,
         )
-        data: dict[str, TwitchUpdate] = {}
         streams: dict[str, Stream] = {
             s.user_id: s
             async for s in self.twitch.get_followed_streams(
@@ -130,7 +130,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                     [u async for u in self.twitch.get_users(logins=list(chunk))]
                 )
 
-        for channel in self.users:
+        async def _fetch_channel(channel: TwitchUser) -> tuple[str, TwitchUpdate]:
             followers = await self.twitch.get_channel_followers(channel.id)
             stream = streams.get(channel.id)
             follow = follows.get(channel.id)
@@ -144,7 +144,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             except TwitchAPIException as exc:
                 LOGGER.error("Error response on check_user_subscription: %s", exc)
 
-            data[channel.id] = TwitchUpdate(
+            return channel.id, TwitchUpdate(
                 channel.display_name,
                 followers.total,
                 bool(stream),
@@ -160,4 +160,6 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 follow.followed_at if follow else None,
                 stream.viewer_count if stream else None,
             )
-        return data
+
+        results = await asyncio.gather(*[_fetch_channel(c) for c in self.users])
+        return dict(results)
