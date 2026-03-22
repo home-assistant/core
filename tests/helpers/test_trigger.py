@@ -2581,6 +2581,33 @@ async def test_make_entity_target_state_trigger(
 
 
 @pytest.mark.parametrize(
+    "attribute_value",
+    [
+        pytest.param(["a", "b"], id="list"),
+        pytest.param({"key": "value"}, id="dict"),
+        pytest.param(123, id="int"),
+        pytest.param(None, id="none"),
+    ],
+)
+async def test_string_entity_trigger_base_non_string_attribute(
+    hass: HomeAssistant,
+    attribute_value: Any,
+) -> None:
+    """Test that attribute-based triggers handle non-string attribute values gracefully."""
+    trigger_cls = make_entity_target_state_trigger(
+        {"light": DomainSpec(value_source="effect")}, to_states={"rainbow"}
+    )
+
+    config = TriggerConfig(key="light.test", target={"entity_id": "light.bed"})
+    trig = trigger_cls(hass, config)
+
+    state_with_unhashable = State("light.bed", "on", {"effect": attribute_value})
+
+    # Non-string attribute values should not raise and should not match
+    assert not trig.is_valid_state(state_with_unhashable)
+
+
+@pytest.mark.parametrize(
     (
         "domain_specs",
         "from_states",
