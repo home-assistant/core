@@ -398,6 +398,8 @@ async def test_q10_cleaning_mode_select_current_option(
     assert state is not None
     options = state.attributes.get("options")
     assert options is not None
+    assert set(options) == {"vac_and_mop", "vacuum", "mop"}
+    assert len(options) == len(set(options))
 
     assert fake_q10_vacuum.b01_q10_properties
     fake_q10_vacuum.b01_q10_properties.status.update_from_dps(
