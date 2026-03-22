@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -62,10 +62,6 @@ async def async_setup_entry(
     # from the current poll.
     registry_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
     initial_macs = {e.unique_id for e in registry_entries if e.unique_id}
-
-    # 1.5 Get host device for via_device linking (ensures host device exists)
-    dr_reg = dr.async_get(hass)
-    dr_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     # 2. Pre-cleanup: Remove legacy or restored states that conflict with our
     # registered entities so their entity_ids are available.
