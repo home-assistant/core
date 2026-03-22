@@ -135,11 +135,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
-    q10_coordinators = [
-        coordinator
-        for coordinator in config_entry.runtime_data.b01_q10
-        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-    ]
     entities = [
         *[
             RoborockSwitch(
@@ -158,7 +153,7 @@ async def async_setup_entry(
                 coordinator,
                 description,
             )
-            for coordinator in q10_coordinators
+            for coordinator in config_entry.runtime_data.b01_q10
             for description in Q10_SWITCH_DESCRIPTIONS
         ],
         *[
@@ -171,7 +166,7 @@ async def async_setup_entry(
             if description.data_protocol in coordinator.request_protocols
         ],
     ]
-    for coordinator in q10_coordinators:
+    for coordinator in config_entry.runtime_data.b01_q10:
         await coordinator.async_refresh()
     async_add_entities(entities)
 
