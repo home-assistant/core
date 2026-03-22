@@ -105,14 +105,29 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
             async def check_task() -> None:
                 assert self.device is not None
-                while self.device.last_update_time is None:
-                    await asyncio.sleep(1)
+
+                async def _wait_for_update() -> None:
+                    while self.device is not None and self.device.last_update_time is None:
+                        await asyncio.sleep(1)
+
+                # Limit how long we wait for the device to send an update to
+                # avoid a background task that can run indefinitely.
+                await asyncio.wait_for(_wait_for_update(), timeout=300)
 
             self.task_one = self.hass.async_create_task(check_task())
 
         if not self.task_one.done():
             progress_action = "task_one"
             uncompleted_task = self.task_one
+        else:
+            # The task has completed; check if it finished successfully or
+            # timed out while waiting for the device to send an update.
+            try:
+                await self.task_one
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timed out waiting for device update during config flow")
+                self.task_one = None
+                return self.async_abort(reason="cannot_connect")
 
         if uncompleted_task:
             return self.async_show_progress(
