@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    }
+  }
+}

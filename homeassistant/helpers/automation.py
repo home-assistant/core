@@ -39,7 +39,7 @@ class DomainSpec:
 class NumericalDomainSpec(DomainSpec):
     """DomainSpec with an optional value converter for numerical triggers."""
 
-    value_converter: Callable[[Any], float] | None = None
+    value_converter: Callable[[float], float] | None = None
     """Optional converter for numerical values (e.g. uint8 → percentage)."""
 
 

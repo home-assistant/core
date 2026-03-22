@@ -518,54 +518,75 @@ def parametrize_trigger_states(
 
 
 def parametrize_numerical_attribute_changed_trigger_states(
-    trigger: str, state: str, attribute: str
+    trigger: str,
+    state: str,
+    attribute: str,
+    *,
+    trigger_options: dict[str, Any] | None = None,
+    required_filter_attributes: dict | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical changed triggers."""
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={},
+            trigger_options={**trigger_options},
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 50}),
-                (state, {attribute: 100}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
-            other_states=[(state, {attribute: None})],
+            other_states=[(state, {attribute: None} | unit_attributes)],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
+            trigger_options={CONF_ABOVE: 10, **trigger_options},
             target_states=[
-                (state, {attribute: 50}),
-                (state, {attribute: 100}),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 0} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
+            trigger_options={CONF_BELOW: 90, **trigger_options},
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 50}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 100}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
     ]
 
 
 def parametrize_numerical_attribute_crossed_threshold_trigger_states(
-    trigger: str, state: str, attribute: str
+    trigger: str,
+    state: str,
+    attribute: str,
+    *,
+    trigger_options: dict[str, Any] | None = None,
+    required_filter_attributes: dict | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
@@ -573,16 +594,18 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 50}),
-                (state, {attribute: 60}),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 60} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-                (state, {attribute: 100}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
@@ -590,52 +613,62 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 100}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 50}),
-                (state, {attribute: 60}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 60} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
                 CONF_LOWER_LIMIT: 10,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 50}),
-                (state, {attribute: 100}),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 0} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 50}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 100}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
     ]
 
 
 def parametrize_numerical_state_value_changed_trigger_states(
-    trigger: str, device_class: str
+    trigger: str,
+    *,
+    device_class: str,
+    trigger_options: dict[str, Any] | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical state-value changed triggers.
 
@@ -646,30 +679,37 @@ def parametrize_numerical_state_value_changed_trigger_states(
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
     required_filter_attributes = {ATTR_DEVICE_CLASS: device_class}
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={},
-            target_states=["0", "50", "100"],
-            other_states=["none"],
+            trigger_options=trigger_options,
+            target_states=[
+                ("0", unit_attributes),
+                ("50", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            other_states=[("none", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
-            target_states=["50", "100"],
-            other_states=["none", "0"],
+            trigger_options={CONF_ABOVE: 10} | trigger_options,
+            target_states=[("50", unit_attributes), ("100", unit_attributes)],
+            other_states=[("none", unit_attributes), ("0", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
-            target_states=["0", "50"],
-            other_states=["none", "100"],
+            trigger_options={CONF_BELOW: 90} | trigger_options,
+            target_states=[("0", unit_attributes), ("50", unit_attributes)],
+            other_states=[("none", unit_attributes), ("100", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
             trigger_from_none=False,
@@ -678,7 +718,11 @@ def parametrize_numerical_state_value_changed_trigger_states(
 
 
 def parametrize_numerical_state_value_crossed_threshold_trigger_states(
-    trigger: str, device_class: str
+    trigger: str,
+    *,
+    device_class: str,
+    trigger_options: dict[str, Any] | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical state-value crossed threshold triggers.
 
@@ -689,6 +733,9 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
     required_filter_attributes = {ATTR_DEVICE_CLASS: device_class}
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
@@ -696,9 +743,14 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
-            target_states=["50", "60"],
-            other_states=["none", "0", "100"],
+            target_states=[("50", unit_attributes), ("60", unit_attributes)],
+            other_states=[
+                ("none", unit_attributes),
+                ("0", unit_attributes),
+                ("100", unit_attributes),
+            ],
             required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
@@ -708,9 +760,14 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
-            target_states=["0", "100"],
-            other_states=["none", "50", "60"],
+            target_states=[("0", unit_attributes), ("100", unit_attributes)],
+            other_states=[
+                ("none", unit_attributes),
+                ("50", unit_attributes),
+                ("60", unit_attributes),
+            ],
             required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
@@ -719,9 +776,10 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
                 CONF_LOWER_LIMIT: 10,
+                **trigger_options,
             },
-            target_states=["50", "100"],
-            other_states=["none", "0"],
+            target_states=[("50", unit_attributes), ("100", unit_attributes)],
+            other_states=[("none", unit_attributes), ("0", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
@@ -730,9 +788,10 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
-            target_states=["0", "50"],
-            other_states=["none", "100"],
+            target_states=[("0", unit_attributes), ("50", unit_attributes)],
+            other_states=[("none", unit_attributes), ("100", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
