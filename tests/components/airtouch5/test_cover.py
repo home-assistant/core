@@ -1,5 +1,6 @@
 """Tests for the Airtouch5 cover platform."""
 
+from asyncio import sleep
 from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
@@ -123,6 +124,7 @@ async def test_cover_callbacks(
 
         # Partly open
         await _call_zone_status_callback(0.7)
+        await sleep(0.01)  # let the loop process state updates
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.OPEN
@@ -137,6 +139,7 @@ async def test_cover_callbacks(
 
         # Fully closed
         await _call_zone_status_callback(0.0)
+        await sleep(0.01)  # let the loop process state updates
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.CLOSED
@@ -144,6 +147,7 @@ async def test_cover_callbacks(
 
         # Partly reopened
         await _call_zone_status_callback(0.3)
+        await sleep(0.01)  # let the loop process state updates
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.OPEN
