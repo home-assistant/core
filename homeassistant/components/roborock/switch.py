@@ -36,14 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-_Q10_SWITCH_DPS_LISTENERS: dict[
-    int,
-    list[Callable[[dict[B01_Q10_DP, Any]], None]],
-] = {}
-_Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS: dict[
-    int, Callable[[dict[B01_Q10_DP, Any]], None]
-] = {}
-
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockSwitchDescription(SwitchEntityDescription):
@@ -242,45 +234,11 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         super().__init__(unique_id, coordinator)
         self._dp_code = entity_description.dp_code
         self._is_on: bool | None = None
-        self._dps_listener = self._async_handle_dps_update
-        self._register_dps_listener()
-
-    def _register_dps_listener(self) -> None:
-        """Register a listener for raw DPS updates from the status trait."""
-        coordinator_id = id(self.coordinator)
-        listeners = _Q10_SWITCH_DPS_LISTENERS.setdefault(coordinator_id, [])
-        listeners.append(self._dps_listener)
-
-        if coordinator_id in _Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS:
-            return
-
-        original_update_from_dps = self.coordinator.api.status.update_from_dps
-        _Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS[coordinator_id] = original_update_from_dps
-
-        def update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
-            """Forward raw DPS updates to listeners before trait conversion."""
-            for listener in list(_Q10_SWITCH_DPS_LISTENERS.get(coordinator_id, [])):
-                listener(decoded_dps)
-            original_update_from_dps(decoded_dps)
-
-        setattr(self.coordinator.api.status, "update_from_dps", update_from_dps)
+        self.coordinator.add_dps_listener(self._async_handle_dps_update)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove DPS listener."""
-        coordinator_id = id(self.coordinator)
-        listeners = _Q10_SWITCH_DPS_LISTENERS.get(coordinator_id)
-        if listeners and self._dps_listener in listeners:
-            listeners.remove(self._dps_listener)
-            if not listeners:
-                _Q10_SWITCH_DPS_LISTENERS.pop(coordinator_id, None)
-                if original_update_from_dps := _Q10_SWITCH_ORIGINAL_UPDATE_FROM_DPS.pop(
-                    coordinator_id, None
-                ):
-                    setattr(
-                        self.coordinator.api.status,
-                        "update_from_dps",
-                        original_update_from_dps,
-                    )
+        self.coordinator.remove_dps_listener(self._async_handle_dps_update)
         await super().async_will_remove_from_hass()
 
     def _async_handle_dps_update(self, decoded_dps: dict[B01_Q10_DP, Any]) -> None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -10,6 +11,7 @@ from typing import Any, TypeVar
 from propcache.api import cached_property
 from roborock import B01Props
 from roborock.data import HomeDataScene
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.b01 import Q7PropertiesApi, Q10PropertiesApi
@@ -603,10 +605,31 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self._device = device
         self.api = api
         self.device_info = get_device_info(device)
+        self._dps_listeners: list[Callable[[dict[B01_Q10_DP, Any]], None]] = []
 
     async def _async_setup(self) -> None:
         """Start the Q10 push subscription before the first refresh."""
         await self.api.start()
+        original_update_from_dps = self.api.status.update_from_dps
+
+        def _fan_out_update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
+            for listener in list(self._dps_listeners):
+                listener(decoded_dps)
+            original_update_from_dps(decoded_dps)
+
+        self.api.status.update_from_dps = _fan_out_update_from_dps  # type: ignore[method-assign]
+
+    def add_dps_listener(
+        self, listener: Callable[[dict[B01_Q10_DP, Any]], None]
+    ) -> None:
+        """Register a listener for raw DPS updates."""
+        self._dps_listeners.append(listener)
+
+    def remove_dps_listener(
+        self, listener: Callable[[dict[B01_Q10_DP, Any]], None]
+    ) -> None:
+        """Remove a previously registered DPS listener."""
+        self._dps_listeners.remove(listener)
 
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
