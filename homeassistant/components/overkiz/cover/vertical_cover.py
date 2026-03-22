@@ -101,8 +101,8 @@ class VerticalCover(OverkizGenericCover):
 
     async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
         """Move the cover and tilt to a specific position simultaneously."""
-        position = 100 - kwargs.get(ATTR_POSITION, 100)
-        tilt_position = 100 - kwargs.get(ATTR_TILT_POSITION, 100)
+        position = 100 - kwargs[ATTR_POSITION]
+        tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
 
         if self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
             await self.executor.async_execute_command(
