@@ -63,7 +63,7 @@ class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumb
         if last_data and last_data.native_value is not None:
             self._attr_native_value = last_data.native_value
         self.coordinator.lock_rule_intervals[self._door_id] = int(
-            self._attr_native_value
+            self.native_value or DEFAULT_LOCK_RULE_INTERVAL
         )
 
     async def async_set_native_value(self, value: float) -> None:
