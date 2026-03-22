@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,10 +37,22 @@ async def async_setup_entry(
 ) -> None:
     """Initialize entries."""
     coordinator = entry.runtime_data
+    known_channel_ids: set[str] = set()
 
-    async_add_entities(
-        TwitchSensor(coordinator, channel_id) for channel_id in coordinator.data
-    )
+    @callback
+    def _async_add_new_entities() -> None:
+        """Add sensor entities for newly discovered channels."""
+        new_ids = set(coordinator.data) - known_channel_ids
+        if new_ids:
+            known_channel_ids.update(new_ids)
+            async_add_entities(
+                TwitchSensor(coordinator, channel_id) for channel_id in new_ids
+            )
+
+    # Create entities for channels already known after first refresh.
+    _async_add_new_entities()
+    # On subsequent coordinator updates, create entities for any new follows.
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 
 class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):

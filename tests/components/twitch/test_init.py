@@ -90,7 +90,7 @@ async def test_expired_token_refresh_failure(
     config_entry: MockConfigEntry,
     twitch_mock: AsyncMock,
 ) -> None:
-    """Test failure while refreshing token with a transient error."""
+    """Test failure while refreshing expired token requiring reauth or retry."""
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         OAUTH2_TOKEN,
