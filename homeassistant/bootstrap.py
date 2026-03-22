@@ -247,6 +247,7 @@ DEFAULT_INTEGRATIONS = {
     "humidity",
     "motion",
     "occupancy",
+    "temperature",
     "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
