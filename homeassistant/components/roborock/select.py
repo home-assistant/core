@@ -54,6 +54,16 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
+Q10_CLEAN_MODE_LEGACY_TO_STATE_KEY: dict[str, str] = {
+    "bothwork": "vac_and_mop",
+    "onlysweep": "vacuum",
+    "onlymop": "mop",
+}
+
+Q10_CLEAN_MODE_STATE_KEY_TO_LEGACY: dict[str, str] = {
+    value: key for key, value in Q10_CLEAN_MODE_LEGACY_TO_STATE_KEY.items()
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockSelectDescription(SelectEntityDescription):
@@ -475,17 +485,26 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         return str(current_value)
 
 
-def _map_q10_clean_mode_to_state_key(mode_code: int) -> str | None:
-    """Map Q10 clean mode code to HA state key (matching Q7 keys)."""
-    match mode_code:
-        case 1:
-            return "vac_and_mop"
-        case 2:
-            return "vacuum"
-        case 3:
-            return "mop"
-        case _:
-            return None
+def _map_q10_clean_mode_to_state_key(clean_mode: YXCleanType) -> str | None:
+    """Map Q10 clean mode enum value to HA state key (matching Q7 keys)."""
+    if clean_mode == YXCleanType.UNKNOWN:
+        return None
+
+    if clean_mode.value in {"vac_and_mop", "vacuum", "mop"}:
+        return clean_mode.value
+
+    return Q10_CLEAN_MODE_LEGACY_TO_STATE_KEY.get(clean_mode.value)
+
+
+def _map_q10_state_key_to_clean_mode(state_key: str) -> YXCleanType | None:
+    """Map HA state key back to Q10 clean mode enum, supporting legacy values."""
+    if (clean_mode := YXCleanType.from_any_optional(state_key)) is not None:
+        return clean_mode
+
+    if legacy_value := Q10_CLEAN_MODE_STATE_KEY_TO_LEGACY.get(state_key):
+        return YXCleanType.from_any_optional(legacy_value)
+
+    return None
 
 
 class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEntity):
@@ -518,7 +537,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
         return [
             state_key
             for option in YXCleanType
-            if (state_key := _map_q10_clean_mode_to_state_key(option.code)) is not None
+            if (state_key := _map_q10_clean_mode_to_state_key(option)) is not None
             if option != YXCleanType.UNKNOWN
         ]
 
@@ -528,18 +547,13 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
         clean_mode = self.coordinator.api.status.clean_mode
         if clean_mode is None:
             return None
-        return _map_q10_clean_mode_to_state_key(clean_mode.code)
+        if (clean_mode_enum := YXCleanType.from_code_optional(clean_mode.code)) is None:
+            return None
+        return _map_q10_clean_mode_to_state_key(clean_mode_enum)
 
     async def async_select_option(self, option: str) -> None:
         """Set the cleaning mode."""
-        # Find the mode that matches the selected option
-        mode = None
-        for clean_mode in YXCleanType:
-            if _map_q10_clean_mode_to_state_key(clean_mode.code) == option:
-                mode = clean_mode
-                break
-
-        if mode is None:
+        if (mode := _map_q10_state_key_to_clean_mode(option)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="select_option_failed",
