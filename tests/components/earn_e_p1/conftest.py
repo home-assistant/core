@@ -5,12 +5,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from homeassistant.components.earn_e_p1.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-DOMAIN = "earn_e_p1"
 MOCK_HOST = "192.168.1.100"
 MOCK_SERIAL = "E0012345678901234"
 
@@ -18,9 +19,7 @@ MOCK_SERIAL = "E0012345678901234"
 @pytest.fixture(autouse=True)
 def mock_listener():
     """Mock EarnEP1Listener to avoid real UDP sockets."""
-    with patch(
-        "homeassistant.components.earn_e_p1.EarnEP1Listener"
-    ) as mock_cls:
+    with patch("homeassistant.components.earn_e_p1.EarnEP1Listener") as mock_cls:
         instance = MagicMock()
         instance.start = AsyncMock()
         instance.stop = AsyncMock()

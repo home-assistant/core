@@ -32,20 +32,12 @@
     },
     "abort": {
       "already_configured": "This EARN-E P1 meter is already configured.",
+      "cannot_connect": "Cannot connect — no data received from the device.",
       "reconfigure_successful": "Reconfiguration successful."
     }
   },
   "entity": {
     "sensor": {
-      "power_delivered": {
-        "name": "Power delivered"
-      },
-      "power_returned": {
-        "name": "Power returned"
-      },
-      "voltage_l1": {
-        "name": "Voltage L1"
-      },
       "current_l1": {
         "name": "Current L1"
       },
@@ -63,6 +55,15 @@
       },
       "gas_delivered": {
         "name": "Gas delivered"
+      },
+      "power_delivered": {
+        "name": "Power delivered"
+      },
+      "power_returned": {
+        "name": "Power returned"
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"

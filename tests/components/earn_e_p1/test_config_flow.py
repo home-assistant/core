@@ -5,18 +5,18 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from earn_e_p1 import EarnEP1Device
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
 
+from tests.common import MockConfigEntry
+
 DISCOVER_PATH = (
-    "homeassistant.components.earn_e_p1.config_flow"
-    ".EarnEP1ConfigFlow._async_discover"
+    "homeassistant.components.earn_e_p1.config_flow.EarnEP1ConfigFlow._async_discover"
 )
 VALIDATE_PATH = (
     "homeassistant.components.earn_e_p1.config_flow"

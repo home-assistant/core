@@ -41,7 +41,7 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.sw_version: str | None = None
         self._listener = listener
 
-    def _handle_update(self, device: EarnEP1Device, raw: dict[str, Any]) -> None:
+    def _handle_update(self, device: EarnEP1Device, _raw: dict[str, Any]) -> None:
         """Handle data update from the listener."""
         self.model = device.model
         self.sw_version = device.sw_version
