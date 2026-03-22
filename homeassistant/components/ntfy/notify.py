@@ -71,10 +71,10 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     async def publish(self, **kwargs: Any) -> None:
         """Publish a message to a topic via ntfy.publish action."""
         await self._publish(**kwargs)
-        self._async_record_notification()
+        self.async_record_notification()
 
     async def _publish(self, **kwargs: Any) -> None:
-        """Publish a message to a topic via ntfy.publish action."""
+        """Shared internal helper to publish a message to a topic."""
         attachment = None
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
