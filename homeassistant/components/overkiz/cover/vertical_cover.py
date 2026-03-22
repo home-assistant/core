@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityFeature,
 )
+from homeassistant.exceptions import ServiceValidationError
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from .generic_cover import (
@@ -101,22 +102,18 @@ class VerticalCover(OverkizGenericCover):
 
     async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
         """Move the cover and tilt to a specific position simultaneously."""
+        if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
+            raise ServiceValidationError(
+                "This device does not support simultaneous position and tilt."
+            )
+
         position = 100 - kwargs[ATTR_POSITION]
         tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
 
-        if self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_CLOSURE_AND_ORIENTATION,
-                position,
-                tilt_position,
-            )
-            return
-
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CLOSURE, position, refresh_afterwards=False
-        )
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ORIENTATION, tilt_position
+            OverkizCommand.SET_CLOSURE_AND_ORIENTATION,
+            position,
+            tilt_position,
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
