@@ -21,10 +21,10 @@ from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
 # Limits burst load on the Twitch API.
 _MAX_CONCURRENT_REQUESTS = 10
 
-# Fraction of the poll interval used as the jitter window.
-# Each channel fetch is delayed by a random offset in [0, jitter_window]
-# to spread API calls across time rather than hitting the API in a burst.
-_JITTER_FRACTION = 0.1
+# Jitter fraction of the poll interval. Each channel fetch is delayed by a
+# random offset in [0, update_interval * _JITTER_FRACTION] before acquiring
+# the semaphore, spreading API calls evenly across the full poll window.
+_JITTER_FRACTION = 1.0
 
 type TwitchConfigEntry = ConfigEntry[TwitchCoordinator]
 
@@ -144,8 +144,8 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         jitter_window = self.update_interval.total_seconds() * _JITTER_FRACTION
 
         async def _fetch_channel(channel: TwitchUser) -> tuple[str, TwitchUpdate]:
-            # Random jitter proportional to the poll interval (10%) so requests
-            # are spread across time rather than all hitting the API simultaneously.
+            # Spread requests across the full poll interval so Twitch receives
+            # a steady trickle instead of a burst on every update cycle.
             await asyncio.sleep(random.uniform(0, jitter_window))
             async with semaphore:
                 followers = await self.twitch.get_channel_followers(channel.id)
