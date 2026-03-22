@@ -4,15 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean_async import (
-    EURID,
-    Dim,
-    EntityType,
-    Gateway,
-    Observable,
-    Observation,
-    Switch,
-)
+from enocean_async import EURID, Dim, EntityType, Gateway, Observable, Observation
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -80,15 +72,23 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         """Turn on or dim the light."""
         brightness: int = kwargs.get(ATTR_BRIGHTNESS, 255)
         # Convert HA brightness 0–255 to 0–100 %.
-        dim_value = round(brightness * 100 / 255)
+        dim_value = brightness * 100 / 255
         await self.gateway.send_command(
             self.enocean_entity_id.device_address,
             Dim(dim_value=dim_value, entity_id=self.enocean_entity_id.unique_id),
         )
+        await self.async_update_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.gateway.send_command(
             self.enocean_entity_id.device_address,
-            Switch(switch_on=False, entity_id=self.enocean_entity_id.unique_id),
+            # Use Dim(0) rather than Switch so the dimmer's ramp mechanism is used.
+            Dim(
+                dim_value=0,
+                switch_on=False,
+                entity_id=self.enocean_entity_id.unique_id,
+            ),
         )
+
+        await self.async_update_ha_state()

@@ -46,6 +46,17 @@
         "name": "Occupancy"
       }
     },
+    "button": {
+      "query_measurement": {
+        "name": "Query measurement"
+      },
+      "query_position": {
+        "name": "Query position"
+      },
+      "query_status": {
+        "name": "Query status"
+      }
+    },
     "event": {
       "a0": {
         "name": "A0"
@@ -77,9 +88,45 @@
         "name": "Light"
       }
     },
+    "number": {
+      "max_brightness": {
+        "name": "Maximum brightness"
+      },
+      "min_brightness": {
+        "name": "Minimum brightness"
+      },
+      "ramp_time": {
+        "name": "Ramp time"
+      }
+    },
+    "select": {
+      "dimming_mode": {
+        "name": "Dimming mode",
+        "state": {
+          "absolute": "Absolute",
+          "relative": "Relative"
+        }
+      },
+      "repositioning_mode": {
+        "name": "Repositioning mode",
+        "state": {
+          "direct": "Direct",
+          "down_first": "Down first",
+          "up_first": "Up first"
+        }
+      }
+    },
     "sensor": {
       "angle": {
         "name": "Angle"
+      },
+      "connection_status": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "reconnecting": "Reconnecting"
+        }
       },
       "counter": {
         "name": "Counter"
@@ -146,6 +193,12 @@
       },
       "telegram_count": {
         "name": "Telegram count"
+      },
+      "telegrams_received": {
+        "name": "Telegrams received"
+      },
+      "telegrams_sent": {
+        "name": "Telegrams sent"
       },
       "temperature": {
         "name": "Temperature"

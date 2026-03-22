@@ -5,10 +5,7 @@ import glob
 from typing import Any
 
 from enocean_async import DEVICE_TYPES, DeviceType, Gateway
-from enocean_async.address import (
-    EURID as EnOceanDeviceAddress,
-    Address as EnOceanAddress,
-)
+from enocean_async.address import EURID, Address
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -241,28 +238,22 @@ class OptionsFlowHandler(OptionsFlow):
         gateway: Gateway = self.config_entry.runtime_data
         default_sender_id = str(await gateway.base_id)
 
-        device_id: EnOceanDeviceAddress | None = None
-        sender_id: EnOceanAddress | None = None
+        device_id: EURID | None = None
+        sender_id: Address | None = None
 
         if user_input is not None:
             # device id must be a valid EnOcean ID and not already configured
-            if not EnOceanDeviceAddress.validate_string(
-                user_input[CONF_ENOCEAN_DEVICE_ID]
-            ):
+            try:
+                device_id = EURID(user_input[CONF_ENOCEAN_DEVICE_ID])
+            except ValueError:
                 errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
-
             else:
-                device_id = EnOceanDeviceAddress(user_input[CONF_ENOCEAN_DEVICE_ID])
-
                 for dev in devices:
-                    if not EnOceanDeviceAddress.validate_string(
-                        dev[CONF_ENOCEAN_DEVICE_ID]
-                    ):
+                    try:
+                        existing_id = EURID(dev[CONF_ENOCEAN_DEVICE_ID])
+                    except ValueError:
                         continue
-                    if (
-                        EnOceanDeviceAddress(dev[CONF_ENOCEAN_DEVICE_ID]).to_number()
-                        == device_id.to_number()
-                    ):
+                    if int(existing_id) == int(device_id):
                         errors[CONF_ENOCEAN_DEVICE_ID] = (
                             ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
                         )
@@ -273,10 +264,11 @@ class OptionsFlowHandler(OptionsFlow):
             # sender id must be a valid EnOcean address string
             if user_input[CONF_ENOCEAN_SENDER_ID].strip() == "":
                 sender_id = await gateway.base_id
-            elif not EnOceanAddress.validate_string(user_input[CONF_ENOCEAN_SENDER_ID]):
-                errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
             else:
-                sender_id = EnOceanAddress(user_input[CONF_ENOCEAN_SENDER_ID])
+                try:
+                    sender_id = Address(user_input[CONF_ENOCEAN_SENDER_ID])
+                except ValueError:
+                    errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
             # append to the configuration if no errors
             if not errors:
@@ -392,7 +384,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         device_id = "00:00:00:00"
         device_type_id: str = ""
-        sender_id: EnOceanAddress = EnOceanAddress(0)
+        sender_id: Address = Address(0)
         sender_id_string: str = ""
 
         gateway: Gateway = self.config_entry.runtime_data
@@ -409,9 +401,9 @@ class OptionsFlowHandler(OptionsFlow):
             # sender id must be either empty or a valid EnOcean ID
             sender_id_string = user_input[CONF_ENOCEAN_SENDER_ID].strip()
             if sender_id_string != "":
-                if EnOceanAddress.validate_string(sender_id_string):
-                    sender_id = EnOceanAddress(sender_id_string)
-                else:
+                try:
+                    sender_id = Address(sender_id_string)
+                except ValueError:
                     errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]

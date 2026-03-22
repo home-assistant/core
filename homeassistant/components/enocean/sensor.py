@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from enocean_async import EURID, EntityType, Gateway, Observable, Observation
+from enocean_async.semantics.entity import EntityCategory as LibEntityCategory
 from enocean_async.semantics.value_kind import ValueKind
 
 from homeassistant.components.sensor import (
@@ -34,6 +35,12 @@ _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
 
 _SCALAR_STATE_CLASS: SensorStateClass = SensorStateClass.MEASUREMENT
 
+_LIB_CATEGORY_MAP: dict[str, EntityCategory | None] = {
+    LibEntityCategory.CONFIG: EntityCategory.CONFIG,
+    LibEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+    LibEntityCategory.DEFAULT: None,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -44,12 +51,12 @@ async def async_setup_entry(
     gateway: Gateway = config_entry.runtime_data
     gateway_eurid: EURID = await gateway.eurid
 
-    entities = []
+    entities: list[EnOceanSensor] = []
+
     for eurid, spec in gateway.device_specs.items():
         for entity in spec.entities:
             if entity.entity_type not in (EntityType.SENSOR, EntityType.METADATA):
                 continue
-            # Create one HA sensor per scalar/enum observable in the entity.
             for observable in entity.observables:
                 if observable.kind == ValueKind.BINARY:
                     continue
@@ -64,9 +71,28 @@ async def async_setup_entry(
                         gateway_eurid,
                         observable,
                         entity.id,
-                        entity.entity_type,
+                        entity_category=EntityCategory.DIAGNOSTIC
+                        if entity.entity_type == EntityType.METADATA
+                        else None,
                     )
                 )
+
+    for entity in gateway.gateway_entities:
+        for observable in entity.observables:
+            entity_id = EnOceanEntityID(
+                device_address=gateway_eurid,
+                unique_id=entity.id,
+            )
+            entities.append(
+                EnOceanSensor(
+                    entity_id,
+                    gateway,
+                    gateway_eurid,
+                    observable,
+                    entity.id,
+                    entity_category=_LIB_CATEGORY_MAP.get(entity.category),
+                )
+            )
 
     async_add_entities(entities)
 
@@ -81,7 +107,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         gateway_eurid: EURID,
         observable: Observable,
         eep_entity_id: str,
-        entity_type: EntityType,
+        entity_category: EntityCategory | None = None,
     ) -> None:
         """Initialize the EnOcean sensor."""
         super().__init__(
@@ -94,8 +120,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         # Use the observable's own value string as the translation key (e.g. "temperature",
         # "last_seen") rather than the full unique_id which contains a dot.
         self._attr_translation_key = observable.value
-        if entity_type == EntityType.METADATA:
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_entity_category = entity_category
         self._attr_device_class = _OBSERVABLE_TO_DEVICE_CLASS.get(observable)
         self._attr_native_unit_of_measurement = observable.unit
         if observable.kind == ValueKind.ENUM:

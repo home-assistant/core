@@ -89,9 +89,9 @@ class EnOceanEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Get device info."""
         address = self.__enocean_entity_id.device_address
+        if address == self.__gateway_eurid:
+            return DeviceInfo(identifiers={(DOMAIN, str(self.__gateway_eurid))})
         spec = self.__gateway.device_spec(address)
-        if spec is None:
-            return None
 
         dt = spec.device_type
         manufacturer = str(dt.manufacturer) if dt.manufacturer is not None else None

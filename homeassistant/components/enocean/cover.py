@@ -1,5 +1,6 @@
 """Support for EnOcean roller shutters."""
 
+from asyncio import sleep
 from typing import Any
 
 from enocean_async import (
@@ -11,6 +12,7 @@ from enocean_async import (
     CoverStop,
     EntityType,
     Gateway,
+    Instructable,
     Observable,
     Observation,
 )
@@ -47,7 +49,12 @@ async def async_setup_entry(
         for entity in spec.entities:
             if entity.entity_type == EntityType.COVER:
                 entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(EnOceanCover(entity_id, gateway, gateway_eurid))
+                supports_query = (
+                    Instructable.COVER_QUERY_POSITION_AND_ANGLE in entity.actions
+                )
+                entities.append(
+                    EnOceanCover(entity_id, gateway, gateway_eurid, supports_query)
+                )
 
     async_add_entities(entities)
 
@@ -68,6 +75,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         enocean_entity_id: EnOceanEntityID,
         gateway: Gateway,
         gateway_eurid: EURID,
+        supports_query: bool,
     ) -> None:
         """Initialize the EnOcean cover."""
         super().__init__(
@@ -75,16 +83,19 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             gateway=gateway,
             gateway_eurid=gateway_eurid,
         )
+        self._supports_query = supports_query
         self._attr_is_closed: bool | None = None
         gateway.add_observation_callback(self._on_observation)
 
     async def async_added_to_hass(self) -> None:
         """Query current position after Home Assistant (re)start."""
         await super().async_added_to_hass()
-        await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            CoverQueryPositionAndAngle(entity_id=self.enocean_entity_id.unique_id),
-        )
+        if self._supports_query:
+            await sleep(5)  # Wait a bit for the gateway to be ready after HA startup.
+            await self.gateway.send_command(
+                self.enocean_entity_id.device_address,
+                CoverQueryPositionAndAngle(entity_id=self.enocean_entity_id.unique_id),
+            )
 
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
@@ -102,7 +113,10 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             self._attr_is_closed = state == "closed"
 
         if Observable.POSITION in observation.values:
-            self._attr_current_cover_position = observation.values[Observable.POSITION]
+            # HA: 0=closed, 100=open. Library: 0=open, 100=closed.
+            self._attr_current_cover_position = (
+                100 - observation.values[Observable.POSITION]
+            )
             self._attr_is_closed = self._attr_current_cover_position == 0
 
         self.schedule_update_ha_state()
@@ -128,7 +142,8 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         await self.gateway.send_command(
             self.enocean_entity_id.device_address,
             CoverSetPositionAndAngle(
-                position=kwargs[ATTR_POSITION],
+                # HA: 0=closed, 100=open. Library: 0=open, 100=closed.
+                position=100 - kwargs[ATTR_POSITION],
                 entity_id=self.enocean_entity_id.unique_id,
             ),
         )
