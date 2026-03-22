@@ -132,4 +132,7 @@ class NinaSensor(NinaEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
+        if not self.available:
+            return None
+
         return self.entity_description.value_fn(self._get_warning_data())
