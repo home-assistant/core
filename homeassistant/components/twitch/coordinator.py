@@ -69,40 +69,16 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         self.session = session
 
     async def _async_setup(self) -> None:
+        channels = self.config_entry.options[CONF_CHANNELS]
+        self.users = []
+        # Split channels into chunks of 100 to avoid hitting the rate limit.
+        for chunk in chunk_list(channels, 100):
+            self.users.extend(
+                [channel async for channel in self.twitch.get_users(logins=chunk)]
+            )
         if not (user := await first(self.twitch.get_users())):
             raise UpdateFailed("Logged in user not found")
         self.current_user = user
-
-        # Fetch the authoritative follow list from the API and sync the
-        # config entry so setup always uses up-to-date channels.
-        api_channels = {
-            f.broadcaster_login
-            async for f in await self.twitch.get_followed_channels(
-                user_id=self.current_user.id, first=100
-            )
-        }
-        config_channels = set(self.config_entry.options[CONF_CHANNELS])
-        additions = api_channels - config_channels
-        if additions:
-            LOGGER.info(
-                "Syncing new followed channels on setup: %s",
-                ", ".join(sorted(additions)),
-            )
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                options={
-                    **self.config_entry.options,
-                    CONF_CHANNELS: sorted(config_channels | additions),
-                },
-            )
-
-        # Build self.users from the union of config channels + new follows.
-        channels_to_track = config_channels | additions
-        self.users = []
-        for chunk in chunk_list(sorted(channels_to_track), 100):
-            self.users.extend(
-                [u async for u in self.twitch.get_users(logins=list(chunk))]
-            )
         self.users.append(self.current_user)
 
     async def _async_update_data(self) -> dict[str, TwitchUpdate]:
@@ -146,11 +122,22 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                     CONF_CHANNELS: sorted(config_channels | additions),
                 },
             )
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
-            # Return early — the reload will set up fresh data. Continuing to
-            # fetch here would result in a CancelledError when HA tears down
-            # the current coordinator mid-request.
-            return self.data or {}
+            # Add the new users to self.users so they are included in this
+            # update cycle already.
+            for chunk in chunk_list(sorted(additions), 100):
+                self.users.extend(
+                    [u async for u in self.twitch.get_users(logins=list(chunk))]
+                )
+            # On the first update self.data is None and sensors are created
+            # directly from coordinator.data by async_setup_entry — no reload
+            # needed. On subsequent updates a reload is required to add new
+            # sensor entities. Deferring via call_soon ensures _async_update_data
+            # finishes fully before the reload is triggered.
+            if self.data is not None:
+                entry_id = self.config_entry.entry_id
+                self.hass.loop.call_soon(
+                    self.hass.config_entries.async_schedule_reload, entry_id
+                )
 
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
