@@ -3,6 +3,9 @@ set_cover_position_and_tilt:
     entity:
       integration: overkiz
       domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.SET_POSITION
+        - cover.CoverEntityFeature.SET_TILT_POSITION
   fields:
     position:
       required: true

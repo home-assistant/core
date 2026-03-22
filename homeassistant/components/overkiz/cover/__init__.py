@@ -3,6 +3,11 @@
 from pyoverkiz.enums import OverkizCommand, UIClass
 import voluptuous as vol
 
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    CoverEntityFeature,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
@@ -47,12 +52,16 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "set_cover_position_and_tilt",
         {
-            vol.Required("position"): vol.All(
+            vol.Required(ATTR_POSITION): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
-            vol.Required("tilt_position"): vol.All(
+            vol.Required(ATTR_TILT_POSITION): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
         },
         "async_set_cover_position_and_tilt",
+        required_features=[
+            CoverEntityFeature.SET_POSITION,
+            CoverEntityFeature.SET_TILT_POSITION,
+        ],
     )

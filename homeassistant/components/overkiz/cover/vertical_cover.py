@@ -14,6 +14,7 @@ from pyoverkiz.enums import (
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntityFeature,
 )
@@ -98,14 +99,22 @@ class VerticalCover(OverkizGenericCover):
         position = 100 - kwargs[ATTR_POSITION]
         await self.executor.async_execute_command(OverkizCommand.SET_CLOSURE, position)
 
-    async def async_set_cover_position_and_tilt(
-        self, position: int, tilt_position: int
-    ) -> None:
+    async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
         """Move the cover and tilt to a specific position simultaneously."""
+        position = 100 - kwargs.get(ATTR_POSITION, 100)
+        tilt_position = 100 - kwargs.get(ATTR_TILT_POSITION, 100)
+
+        if self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_CLOSURE_AND_ORIENTATION,
+                position,
+                tilt_position,
+            )
+            return
+
+        await self.executor.async_execute_command(OverkizCommand.SET_CLOSURE, position)
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CLOSURE_AND_ORIENTATION,
-            100 - position,
-            100 - tilt_position,
+            OverkizCommand.SET_ORIENTATION, tilt_position
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
