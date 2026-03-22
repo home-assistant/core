@@ -110,9 +110,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         if api_channels != config_channels:
             additions = api_channels - config_channels
             removals = config_channels - api_channels
-            change_summary = [f"+{c}" for c in additions] + [
-                f"-{c}" for c in removals
-            ]
+            change_summary = [f"+{c}" for c in additions] + [f"-{c}" for c in removals]
             LOGGER.info(
                 "Discovered changes to followed channels: %s",
                 ", ".join(change_summary),

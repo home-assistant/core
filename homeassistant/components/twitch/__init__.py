@@ -65,9 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
     return True
 
 
-async def _async_update_listener(
-    hass: HomeAssistant, entry: TwitchConfigEntry
-) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
     """Handle config entry options update (e.g. followed channels changed)."""
     if entry.state is not ConfigEntryState.LOADED:
         return
