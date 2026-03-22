@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["wolf_comm"],
-  "requirements": ["wolf-comm==0.0.23"]
+  "requirements": ["wolf-comm==0.0.48"]
 }
