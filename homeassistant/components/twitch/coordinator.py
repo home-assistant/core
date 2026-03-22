@@ -67,6 +67,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             config_entry=entry,
         )
         self.session = session
+        self._initial_update_done = False
 
     async def _async_setup(self) -> None:
         channels = self.config_entry.options[CONF_CHANNELS]
@@ -108,8 +109,8 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         api_channels = {f.broadcaster_login for f in follows.values()}
         config_channels = set(self.config_entry.options[CONF_CHANNELS])
         if api_channels != config_channels:
-            additions = api_channels - config_channels
-            removals = config_channels - api_channels
+            additions = sorted(api_channels - config_channels)
+            removals = sorted(config_channels - api_channels)
             change_summary = [f"+{c}" for c in additions] + [f"-{c}" for c in removals]
             LOGGER.info(
                 "Discovered changes to followed channels: %s",
@@ -119,10 +120,17 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 self.config_entry,
                 options={
                     **self.config_entry.options,
-                    CONF_CHANNELS: list(api_channels),
+                    CONF_CHANNELS: sorted(api_channels),
                 },
             )
+            # Only reload after the initial setup is complete so we don't
+            # discard entities that are still being set up on first run.
+            if self._initial_update_done:
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
 
+        self._initial_update_done = True
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
             stream = streams.get(channel.id)
