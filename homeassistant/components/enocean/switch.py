@@ -54,7 +54,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
         if Observable.SWITCH_STATE in observation.values:
             self._attr_is_on = bool(observation.values[Observable.SWITCH_STATE])
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""

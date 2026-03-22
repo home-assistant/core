@@ -60,7 +60,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
             self._attr_is_on = pct > 0
             # Convert 0–100 % to HA brightness 0–255.
             self._attr_brightness = round(pct * 255 / 100)
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on or dim the light."""

@@ -53,5 +53,5 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         for obs, value in observation.values.items():
             if obs.kind == ValueKind.BINARY:
                 self._attr_is_on = bool(value)
-                self.schedule_update_ha_state()
+                self.async_write_ha_state()
                 return

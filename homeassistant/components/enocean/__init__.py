@@ -120,7 +120,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     async_cleanup_device_registry(hass=hass, entry=config_entry)
 
-    version_info = await gateway.version_info
+    version_info = gateway.version_info
     if version_info is None:
         raise ConfigEntryNotReady("EnOcean gateway did not respond to version query")
 
@@ -136,7 +136,7 @@ async def async_setup_entry(
     )
 
     # Add devices to the gateway so it can decode their telegrams.
-    base_id = await gateway.base_id
+    base_id = gateway.base_id
     for device in config_entry.options.get(CONF_ENOCEAN_DEVICES, []):
         try:
             enocean_id = EURID(device[CONF_ENOCEAN_DEVICE_ID])

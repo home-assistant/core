@@ -138,4 +138,4 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         if self._observable is Observable.LAST_SEEN:
             value = datetime.fromtimestamp(value, tz=UTC)
         self._attr_native_value = value
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

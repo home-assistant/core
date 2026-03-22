@@ -53,4 +53,4 @@ class EnOceanEvent(EnOceanEntity, EventEntity):
         if Observable.BUTTON_EVENT in observation.values:
             event_type = observation.values[Observable.BUTTON_EVENT]
             self._trigger_event(event_type)
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()

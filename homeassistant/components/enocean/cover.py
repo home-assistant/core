@@ -110,7 +110,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             )
             self._attr_is_closed = self._attr_current_cover_position == 0
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
