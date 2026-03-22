@@ -767,8 +767,8 @@ async def test_enbrighten_55258_zw4002_fan(
         state = hass.states.get(entity_id)
         return state.attributes[ATTR_PERCENTAGE]
 
-    # This device has the speeds:
-    # 1 = 1-33, 2 = 34-66, 3 = 67-100
+    # This device has the following speeds in Z-Wave JS:
+    # 1 = 1-33, 2 = 34-66, 3 = 67-99
     percentages_to_zwave_speeds = [
         [[0], [0]],
         [range(1, 34), range(1, 34)],
