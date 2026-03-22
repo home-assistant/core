@@ -9,17 +9,18 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.earn_e_p1.const import DOMAIN
+from tests.common import MockConfigEntry
 
-from .conftest import MOCK_HOST, MOCK_SERIAL
+from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
 
 DISCOVER_PATH = (
-    "custom_components.earn_e_p1.config_flow.EarnEP1ConfigFlow._async_discover"
+    "homeassistant.components.earn_e_p1.config_flow"
+    ".EarnEP1ConfigFlow._async_discover"
 )
 VALIDATE_PATH = (
-    "custom_components.earn_e_p1.config_flow.EarnEP1ConfigFlow._async_validate_host"
+    "homeassistant.components.earn_e_p1.config_flow"
+    ".EarnEP1ConfigFlow._async_validate_host"
 )
 
 
@@ -186,7 +187,6 @@ async def test_manual_entry_unexpected_error(
     assert result["errors"] == {"base": "unknown"}
 
 
-
 async def test_reconfigure_succeeds(
     hass: HomeAssistant, mock_config_entry, mock_setup_entry
 ) -> None:
@@ -260,7 +260,10 @@ async def test_reconfigure_duplicate_abort(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    with patch(VALIDATE_PATH, return_value=_mock_device(host=other_host, serial=other_serial)):
+    with patch(
+        VALIDATE_PATH,
+        return_value=_mock_device(host=other_host, serial=other_serial),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: other_host}
         )

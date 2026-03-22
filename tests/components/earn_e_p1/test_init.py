@@ -7,9 +7,7 @@ from unittest.mock import AsyncMock
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from custom_components.earn_e_p1.const import DOMAIN
-
-from .conftest import MOCK_HOST, MOCK_SERIAL
+from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
 
 
 async def test_setup_entry_success(

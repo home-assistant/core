@@ -8,8 +8,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
-from custom_components.earn_e_p1.const import DOMAIN
-from custom_components.earn_e_p1.coordinator import EarnEP1Coordinator
+from homeassistant.components.earn_e_p1.coordinator import EarnEP1Coordinator
+
+from .conftest import DOMAIN
 
 from .conftest import MOCK_SERIAL
 
