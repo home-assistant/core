@@ -42,7 +42,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -233,6 +233,7 @@ class WithingsWebhookManager:
         self._webhooks_registered: bool = False
         self._webhook_url_invalid: bool = False
         self._ha_webhook_registered: bool = False
+        self._cancel_retry: CALLBACK_TYPE | None = None
         self._register_lock = asyncio.Lock()
 
     @property
@@ -240,10 +241,17 @@ class WithingsWebhookManager:
         """Return Withings data."""
         return self.entry.runtime_data
 
+    def _cancel_pending_retry(self) -> None:
+        """Cancel any pending retry."""
+        if self._cancel_retry is not None:
+            self._cancel_retry()
+            self._cancel_retry = None
+
     def _schedule_retry(self, delay: int) -> None:
         """Schedule a webhook registration retry."""
-        self.entry.async_on_unload(
-            async_call_later(self.hass, delay, self._async_subscribe_webhook)
+        self._cancel_pending_retry()
+        self._cancel_retry = async_call_later(
+            self.hass, delay, self._async_subscribe_webhook
         )
 
     async def unregister_webhook(
@@ -255,8 +263,10 @@ class WithingsWebhookManager:
             LOGGER.debug(
                 "Unregister Withings webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
             )
+            self._cancel_pending_retry()
             webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
             self._ha_webhook_registered = False
+            self._webhook_url = None
             for coordinator in self.withings_data.coordinators:
                 coordinator.webhook_subscription_listener(False)
             self._webhooks_registered = False
@@ -274,6 +284,7 @@ class WithingsWebhookManager:
         async with self._register_lock:
             if self._webhooks_registered:
                 return
+            self._cancel_pending_retry()
             if cloud.async_active_subscription(self.hass):
                 webhook_url = await _async_cloudhook_generate_url(self.hass, self.entry)
             else:
