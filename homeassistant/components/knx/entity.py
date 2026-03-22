@@ -8,7 +8,7 @@ from xknx.devices import Device as XknxDevice
 
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 
@@ -110,12 +110,8 @@ class KnxYamlEntity(_KnxEntityBase):
         self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
 
         default_entity_id: str | None
-        if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is None:
-            return
-        entity_platform, _, object_id = default_entity_id.partition(".")
-        self.entity_id = async_generate_entity_id(
-            f"{entity_platform}.{{}}", object_id, hass=knx_module.hass
-        )
+        if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+            self.entity_id = default_entity_id
 
 
 class KnxUiEntity(_KnxEntityBase):
