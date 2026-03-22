@@ -101,56 +101,58 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
-    entities: list[SwitchEntity] = [
-        RoborockSwitch(
-            f"{description.key}_{coordinator.duid_slug}",
-            coordinator,
-            description,
-            trait,
-        )
-        for coordinator in config_entry.runtime_data.v1
-        for description in SWITCH_DESCRIPTIONS
-        if (trait := description.trait(coordinator.properties_api)) is not None
+    entities = [
+        *[
+            RoborockSwitch(
+                f"{description.key}_{coordinator.duid_slug}",
+                coordinator,
+                description,
+                trait,
+            )
+            for coordinator in config_entry.runtime_data.v1
+            for description in SWITCH_DESCRIPTIONS
+            if (trait := description.trait(coordinator.properties_api)) is not None
+        ],
+        *[
+            RoborockQ10Switch(
+                f"child_lock_{coordinator.duid_slug}",
+                coordinator,
+                B01_Q10_DP.CHILD_LOCK,
+                "child_lock",
+            )
+            for coordinator in config_entry.runtime_data.b01_q10
+            if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+        ],
+        *[
+            RoborockQ10Switch(
+                f"dnd_switch_{coordinator.duid_slug}",
+                coordinator,
+                B01_Q10_DP.NOT_DISTURB,
+                "dnd_switch",
+            )
+            for coordinator in config_entry.runtime_data.b01_q10
+            if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+        ],
+        *[
+            RoborockQ10Switch(
+                f"auto_empty_{coordinator.duid_slug}",
+                coordinator,
+                B01_Q10_DP.DUST_SWITCH,
+                "auto_empty",
+            )
+            for coordinator in config_entry.runtime_data.b01_q10
+            if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+        ],
+        *[
+            RoborockSwitchA01(
+                coordinator,
+                description,
+            )
+            for coordinator in config_entry.runtime_data.a01
+            for description in A01_SWITCH_DESCRIPTIONS
+            if description.data_protocol in coordinator.request_protocols
+        ],
     ]
-    entities.extend(
-        RoborockQ10Switch(
-            f"child_lock_{coordinator.duid_slug}",
-            coordinator,
-            B01_Q10_DP.CHILD_LOCK,
-            "child_lock",
-        )
-        for coordinator in config_entry.runtime_data.b01_q10
-        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-    )
-    entities.extend(
-        RoborockQ10Switch(
-            f"dnd_switch_{coordinator.duid_slug}",
-            coordinator,
-            B01_Q10_DP.NOT_DISTURB,
-            "dnd_switch",
-        )
-        for coordinator in config_entry.runtime_data.b01_q10
-        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-    )
-    entities.extend(
-        RoborockQ10Switch(
-            f"auto_empty_{coordinator.duid_slug}",
-            coordinator,
-            B01_Q10_DP.DUST_SWITCH,
-            "auto_empty",
-        )
-        for coordinator in config_entry.runtime_data.b01_q10
-        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-    )
-    entities.extend(
-        RoborockSwitchA01(
-            coordinator,
-            description,
-        )
-        for coordinator in config_entry.runtime_data.a01
-        for description in A01_SWITCH_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
-    )
     async_add_entities(entities)
 
 
