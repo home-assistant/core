@@ -307,6 +307,8 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
                 translation_key="update_options_failed",
             ) from err
         self._is_on = True
+        if self.hass:
+            self.async_write_ha_state()
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -319,6 +321,8 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
                 translation_key="update_options_failed",
             ) from err
         self._is_on = False
+        if self.hass:
+            self.async_write_ha_state()
         await self.coordinator.async_refresh()
 
 
