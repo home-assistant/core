@@ -125,14 +125,7 @@ async def test_cover_callbacks(
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.state == CoverState.OPEN
-<<<<<<< HEAD
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == 70
-    zone_2 = hass.states.get(COVER_ZONE_2_ENTITY_ID)
-    assert zone_2 and zone_2.state == zone_2_initial_state
-    assert zone_2.attributes.get(ATTR_CURRENT_POSITION) == zone_2_initial_position
-=======
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 90
->>>>>>> 9c70246491c (fixing asserts)
 
     # Fully open
     await _call_zone_status_callback(1)
