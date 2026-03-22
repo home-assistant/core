@@ -166,7 +166,7 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
         if entity_description.requires_dishwasher_machine_state is not None:
             capabilities.add(Capability.DISHWASHER_OPERATING_STATE)
-        super().__init__(client, device, capabilities)
+        super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
         self.button_capability = capability
         self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.command}"
