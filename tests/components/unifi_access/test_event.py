@@ -154,10 +154,12 @@ async def test_access_event(
             event_type="access.door.unlock",
             result=result,
             metadata=InsightsMetadata(
-                door=[InsightsMetadataEntry(
-                    id=door_id,
-                    display_name="Door",
-                )],
+                door=[
+                    InsightsMetadataEntry(
+                        id=door_id,
+                        display_name="Door",
+                    )
+                ],
                 actor=InsightsMetadataEntry(
                     display_name=actor,
                 ),
@@ -177,6 +179,39 @@ async def test_access_event(
     assert state.attributes["actor"] == actor
     assert state.attributes["authentication"] == authentication
     assert state.attributes["result"] == result
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_access_event_with_single_door_metadata(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access events still work when the websocket door metadata is not a list."""
+    handlers = _get_ws_handlers(mock_client)
+
+    insights_msg = InsightsAdd(
+        event="access.logs.insights.add",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            metadata=InsightsMetadata.model_construct(
+                door=InsightsMetadataEntry(
+                    id="door-001",
+                    display_name="Front Door",
+                ),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](insights_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["result"] == "ACCESS"
     assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
@@ -234,10 +269,12 @@ async def test_access_event_result_mapping(
             event_type="access.door.unlock",
             result=result,
             metadata=InsightsMetadata(
-                door=[InsightsMetadataEntry(
-                    id="door-001",
-                    display_name="Front Door",
-                )],
+                door=[
+                    InsightsMetadataEntry(
+                        id="door-001",
+                        display_name="Front Door",
+                    )
+                ],
             ),
         ),
     )
