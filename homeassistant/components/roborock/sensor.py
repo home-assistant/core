@@ -96,7 +96,7 @@ def _q10_error_value_fn(status: Q10StatusTrait) -> str | None:
         return fault
     try:
         return RoborockErrorCode(fault).name
-    except ValueError:
+    except ValueError, TypeError:
         _LOGGER.debug("Unknown Roborock error code reported for Q10: %s", fault)
         return None
 
