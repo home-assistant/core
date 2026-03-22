@@ -125,7 +125,7 @@ class NinaSensor(NinaEntity, SensorEntity):
         if self._get_active_warnings_count() <= self._warning_index:
             return False
 
-        return self._get_warning_data().is_valid
+        return self._get_warning_data().is_valid and super().available
 
     @property
     def native_value(self) -> str | None:
