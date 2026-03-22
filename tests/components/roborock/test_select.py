@@ -17,6 +17,7 @@ from roborock.roborock_message import RoborockZeoProtocol
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.select import (
     A01_SELECT_DESCRIPTIONS,
+    RoborockQ10CleanModeSelectEntity,
     RoborockSelectEntityA01,
 )
 from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
@@ -456,3 +457,22 @@ async def test_q10_cleaning_mode_select_update_failure(
             blocking=True,
             target={"entity_id": entity_id},
         )
+
+
+async def test_q10_cleaning_mode_select_invalid_option(
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test that an invalid option raises ServiceValidationError and does not call set_clean_mode."""
+    assert fake_q10_vacuum.b01_q10_properties
+    coordinator = Mock(
+        duid_slug="q10_duid",
+        device_info=Mock(),
+        api=fake_q10_vacuum.b01_q10_properties,
+        async_refresh=AsyncMock(),
+    )
+    entity = RoborockQ10CleanModeSelectEntity(coordinator)
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_select_option("invalid_option")
+
+    fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.assert_not_called()
