@@ -112,7 +112,9 @@ class VerticalCover(OverkizGenericCover):
             )
             return
 
-        await self.executor.async_execute_command(OverkizCommand.SET_CLOSURE, position)
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE, position, refresh_afterwards=False
+        )
         await self.executor.async_execute_command(
             OverkizCommand.SET_ORIENTATION, tilt_position
         )
