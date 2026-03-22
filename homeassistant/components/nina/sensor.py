@@ -12,7 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_MESSAGE_SLOTS, CONF_REGIONS, SEVERITY_VALUES
+from .const import CONF_MESSAGE_SLOTS, CONF_REGIONS, SENSOR_SUFFIXES, SEVERITY_VALUES
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator, NinaWarningData
 from .entity import NinaEntity
 
@@ -28,29 +28,29 @@ class NinaSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
     NinaSensorEntityDescription(
-        key="headline",
+        key=SENSOR_SUFFIXES[0],
         translation_key="headline",
         value_fn=lambda data: data.headline,
     ),
     NinaSensorEntityDescription(
-        key="sender",
+        key=SENSOR_SUFFIXES[1],
         translation_key="sender",
         value_fn=lambda data: data.sender,
     ),
     NinaSensorEntityDescription(
-        key="severity",
+        key=SENSOR_SUFFIXES[2],
         options=SEVERITY_VALUES,
         device_class=SensorDeviceClass.ENUM,
         translation_key="severity",
         value_fn=lambda data: data.severity.lower(),
     ),
     NinaSensorEntityDescription(
-        key="affected_areas",
+        key=SENSOR_SUFFIXES[3],
         translation_key="affected_areas",
         value_fn=lambda data: data.affected_areas_short,
     ),
     NinaSensorEntityDescription(
-        key="more_info_url",
+        key=SENSOR_SUFFIXES[4],
         translation_key="more_info_url",
         value_fn=lambda data: data.more_info_url,
     ),
