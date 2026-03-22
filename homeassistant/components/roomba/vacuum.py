@@ -125,7 +125,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def activity(self):
+    def activity(self) -> VacuumActivity:
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
         cycle = clean_mission_status.get("cycle")
@@ -213,7 +213,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         else:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "stop")
 
@@ -221,7 +221,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         """Pause the cleaning cycle."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "pause")
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         if self.state == VacuumActivity.CLEANING:
             await self.async_pause()
@@ -231,11 +231,16 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
                 await asyncio.sleep(1)
         await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Located vacuum."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "find")
 
-    async def async_send_command(self, command, params=None, **kwargs):
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s", command, params, kwargs)
         await self.hass.async_add_executor_job(
@@ -270,7 +275,7 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
     _attr_supported_features = SUPPORT_ROOMBA_CARPET_BOOST
 
     @property
-    def fan_speed(self):
+    def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         fan_speed = None
         carpet_boost = self.vacuum_state.get("carpetBoost")
@@ -284,7 +289,7 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
                 fan_speed = FAN_SPEED_ECO
         return fan_speed
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if fan_speed.capitalize() in FAN_SPEEDS:
             fan_speed = fan_speed.capitalize()
@@ -329,7 +334,7 @@ class BraavaJet(IRobotVacuum):
         ]
 
     @property
-    def fan_speed(self):
+    def fan_speed(self) -> str:
         """Return the fan speed of the vacuum cleaner."""
         # Mopping behavior and spray amount as fan speed
         rank_overlap = self.vacuum_state.get("rankOverlap", {})
@@ -345,7 +350,7 @@ class BraavaJet(IRobotVacuum):
         pad_wetness_value = pad_wetness.get("disposable")
         return f"{behavior}-{pad_wetness_value}"
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         try:
             split = fan_speed.split("-", 1)

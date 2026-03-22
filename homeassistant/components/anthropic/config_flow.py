@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 import logging
 import re
@@ -13,6 +14,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -41,7 +43,9 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CODE_EXECUTION_UNSUPPORTED_MODELS,
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
@@ -110,19 +114,12 @@ async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionD
         # Resolve alias from versioned model name:
         model_alias = (
             model_info.id[:-9]
-            if model_info.id
-            not in (
-                "claude-3-haiku-20240307",
-                "claude-3-5-haiku-20241022",
-                "claude-3-opus-20240229",
-            )
+            if model_info.id != "claude-3-haiku-20240307"
             and model_info.id[-2:-1] != "-"
             else model_info.id
         )
         if short_form.search(model_alias):
             model_alias += "-0"
-        if model_alias.endswith(("haiku", "opus", "sonnet")):
-            model_alias += "-latest"
         model_options.append(
             SelectOptionDict(
                 label=model_info.display_name,
@@ -164,6 +161,10 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
                 return self.async_create_entry(
                     title="Claude",
                     data=user_input,
@@ -191,6 +192,22 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 "instructions_url": "https://www.home-assistant.io/integrations/anthropic/#generating-an-api-key",
             },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+            )
+        return await self.async_step_user(user_input)
 
     @classmethod
     @callback
@@ -399,6 +416,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
         else:
             self.options.pop(CONF_THINKING_EFFORT, None)
+
+        if not model.startswith(tuple(CODE_EXECUTION_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_CODE_EXECUTION,
+                    default=DEFAULT[CONF_CODE_EXECUTION],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_CODE_EXECUTION, None)
 
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(

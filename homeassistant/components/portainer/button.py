@@ -74,6 +74,26 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
             )
         ),
     ),
+    PortainerButtonDescription(
+        key="pause",
+        translation_key="pause_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.pause_container(
+                endpoint_id, container_id
+            )
+        ),
+    ),
+    PortainerButtonDescription(
+        key="resume",
+        translation_key="resume_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.unpause_container(
+                endpoint_id, container_id
+            )
+        ),
+    ),
 )
 
 
@@ -167,18 +187,6 @@ class PortainerEndpointButton(PortainerEndpointEntity, PortainerBaseButton):
 
     entity_description: PortainerButtonDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerButtonDescription,
-        device_info: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer endpoint button entity."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
-
     async def _async_press_call(self) -> None:
         """Call the endpoint button press action."""
         await self.entity_description.press_action(
@@ -190,19 +198,6 @@ class PortainerContainerButton(PortainerContainerEntity, PortainerBaseButton):
     """Defines a Portainer button."""
 
     entity_description: PortainerButtonDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerButtonDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer button entity."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     async def _async_press_call(self) -> None:
         """Call the container button press action."""

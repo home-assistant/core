@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
@@ -236,7 +237,8 @@ async def test_authentication_error(
     assert port_field.default() == 8080
     assert passkey_field.default() == "secret"
     assert username_field.default() == "testuser"
-    assert password_field.default() == "wrongpassword"
+    # Password should never be pre-filled for security reasons
+    assert password_field.default is vol.UNDEFINED
 
 
 async def test_authentication_error_vs_connection_error(
@@ -1059,3 +1061,128 @@ async def test_zeroconf_discovery_auth_error_during_confirm(
 
     # Should show the discovery_confirm form again with auth error
     _assert_form_result(result, "discovery_confirm", {"base": "invalid_auth"})
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "new_passkey",
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    _assert_abort_result(result, "reconfigure_successful")
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+    assert mock_config_entry.data[CONF_PORT] == 8080
+    assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (BSBLANAuthError, "invalid_auth"),
+        (BSBLANConnectionError, "cannot_connect"),
+    ],
+)
+async def test_reconfigure_flow_error_recovery(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test reconfigure flow can recover from errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_bsblan.device.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "wrong_key",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "wrong_password",
+        },
+    )
+
+    _assert_form_result(result, "reconfigure", {"base": error})
+
+    # Recover: clear the error and submit correct credentials
+    mock_bsblan.device.side_effect = None
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "new_passkey",
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    _assert_abort_result(result, "reconfigure_successful")
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+    assert mock_config_entry.data[CONF_PORT] == 8080
+    assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow aborts when connecting to a different device."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock device returning a different MAC address
+    device = mock_bsblan.device.return_value
+    device.MAC = "aa:bb:cc:dd:ee:ff"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.99",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_abort_result(result, "unique_id_mismatch")

@@ -49,9 +49,13 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Device can't be discovered
+  discovery:
+    status: exempt
+    comment: Device can't be discovered
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

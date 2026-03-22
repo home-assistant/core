@@ -74,6 +74,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_preset_modes = list(PRESET_MODES.values())
+    _attr_translation_key = "thermostat"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -101,12 +102,12 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         return PRESET_MODES[self.spa_status.heat_mode]
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current water temperature."""
         return self.spa_status.water.temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the target water temperature."""
         return self.spa_status.set_temperature
 

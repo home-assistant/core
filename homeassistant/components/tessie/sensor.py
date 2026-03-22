@@ -34,8 +34,18 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TessieConfigEntry
-from .const import TessieChargeStates, TessieWallConnectorStates
-from .entity import TessieEnergyEntity, TessieEntity, TessieWallConnectorEntity
+from .const import (
+    ENERGY_HISTORY_FIELDS,
+    TessieChargePortLatchStates,
+    TessieChargeStates,
+    TessieWallConnectorStates,
+)
+from .entity import (
+    TessieEnergyEntity,
+    TessieEnergyHistoryEntity,
+    TessieEntity,
+    TessieWallConnectorEntity,
+)
 from .models import TessieEnergyData, TessieVehicleData
 
 
@@ -51,6 +61,7 @@ def minutes_to_datetime(value: StateType) -> datetime | None:
 class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
 
+    data_key: str | None = None
     value_fn: Callable[[StateType], StateType | datetime] = lambda x: x
     available_fn: Callable[[StateType], bool] = lambda _: True
 
@@ -132,12 +143,78 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TessieSensorEntityDescription(
+        key="phantom_drain_percent",
+        data_key="charge_state_phantom_drain",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+    ),
+    TessieSensorEntityDescription(
         key="charge_state_energy_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
+    ),
+    TessieSensorEntityDescription(
+        key="lifetime_energy_used",
+        data_key="charge_state_lifetime_energy_used",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+    ),
+    TessieSensorEntityDescription(
+        key="pack_current",
+        data_key="charge_state_pack_current",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+    ),
+    TessieSensorEntityDescription(
+        key="pack_voltage",
+        data_key="charge_state_pack_voltage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+    ),
+    TessieSensorEntityDescription(
+        key="module_temp_min",
+        data_key="charge_state_module_temp_min",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+    ),
+    TessieSensorEntityDescription(
+        key="module_temp_max",
+        data_key="charge_state_module_temp_max",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_conn_charge_cable",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_charge_port_latch",
+        options=list(TessieChargePortLatchStates.values()),
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda value: TessieChargePortLatchStates[cast(str, value)],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     TessieSensorEntityDescription(
         key="drive_state_speed",
@@ -266,7 +343,6 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
 )
 
-
 ENERGY_LIVE_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
         key="solar_power",
@@ -344,6 +420,17 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
+    TessieSensorEntityDescription(
+        key="island_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "on_grid",
+            "off_grid",
+            "off_grid_intentional",
+            "off_grid_unintentional",
+            "island_status_unknown",
+        ],
+    ),
 )
 
 WALL_CONNECTOR_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
@@ -374,6 +461,22 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
+)
+
+ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
+    SensorEntityDescription(
+        key=key,
+        translation_key=key,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=(
+            key.startswith("total") or key == "grid_energy_imported"
+        ),
+    )
+    for key in ENERGY_HISTORY_FIELDS
 )
 
 PARALLEL_UPDATES = 0
@@ -416,6 +519,12 @@ async def async_setup_entry(
                 for din in energysite.live_coordinator.data.get("wall_connectors", {})
                 for description in WALL_CONNECTOR_DESCRIPTIONS
             ),
+            (  # Add energy history
+                TessieEnergyHistorySensorEntity(energysite, description)
+                for energysite in entry.runtime_data.energysites
+                for description in ENERGY_HISTORY_DESCRIPTIONS
+                if energysite.history_coordinator is not None
+            ),
         )
     )
 
@@ -432,7 +541,7 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        super().__init__(vehicle, description.key)
+        super().__init__(vehicle, description.key, description.data_key)
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -508,3 +617,24 @@ class TessieWallConnectorSensorEntity(TessieWallConnectorEntity, SensorEntity):
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
         self._attr_native_value = self.entity_description.value_fn(self._value)
+
+
+class TessieEnergyHistorySensorEntity(TessieEnergyHistoryEntity, SensorEntity):
+    """Sensor entity for Tessie energy site history."""
+
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        data: TessieEnergyData,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = self._value is not None
+        self._attr_native_value = self._value
+        self._attr_last_reset = self.coordinator.data["_period_start"]
