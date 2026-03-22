@@ -107,7 +107,7 @@ async def test_select_not_created_when_lock_rules_unsupported(
     mock_client: MagicMock,
 ) -> None:
     """Test that select entities are not created when lock rules are unsupported."""
-    mock_client.get_door_lock_rule = AsyncMock(side_effect=ApiNotFoundError)
+    mock_client.get_door_lock_rule = AsyncMock(side_effect=ApiNotFoundError())
     with patch(
         "homeassistant.components.unifi_access.PLATFORMS", [Platform.SELECT]
     ):
@@ -132,6 +132,8 @@ async def test_select_lock_early_option_shown_for_schedule_rule(
 
     state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
     assert state is not None
+    assert state.state == "schedule"
+    assert "schedule" in state.attributes["options"]
     assert "lock_early" in state.attributes["options"]
 
 
