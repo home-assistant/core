@@ -1,6 +1,7 @@
 """Test Roborock Sensors."""
 
 import pytest
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -40,9 +41,7 @@ async def test_q10_vacuum_error_updates_from_push(
     assert state.state == STATE_UNKNOWN
 
     assert fake_q10_vacuum.b01_q10_properties is not None
-    fake_q10_vacuum.b01_q10_properties.status.fault = 5
-
-    await fake_q10_vacuum.b01_q10_properties.refresh()
+    fake_q10_vacuum.b01_q10_properties.status.update_from_dps({B01_Q10_DP.FAULT: 5})
     await hass.async_block_till_done()
 
     updated_state = hass.states.get(entity_id)
