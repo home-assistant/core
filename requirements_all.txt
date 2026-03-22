@@ -945,7 +945,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==1.1.3
+evohome-async==1.2.0
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18

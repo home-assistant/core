@@ -76,7 +76,7 @@ async def test_set_operation_mode(
         mock_fcn.assert_awaited_once_with()
 
     # SERVICE_SET_OPERATION_MODE: off (until next scheduled setpoint)
-    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
@@ -96,7 +96,7 @@ async def test_set_operation_mode(
         results.append(mock_fcn.await_args.kwargs)
 
     # SERVICE_SET_OPERATION_MODE: on (until next scheduled setpoint)
-    with patch("evohomeasync2.hotwater.HotWater.on") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
@@ -137,7 +137,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
         mock_fcn.assert_awaited_once_with()
 
     # set_away_mode: on
-    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_AWAY_MODE,
@@ -156,7 +156,7 @@ async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
     """Test SERVICE_TURN_OFF of an evohome DHW zone."""
 
     # turn_off
-    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_TURN_OFF,
@@ -174,7 +174,7 @@ async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
     """Test SERVICE_TURN_ON of an evohome DHW zone."""
 
     # turn_on
-    with patch("evohomeasync2.hotwater.HotWater.on") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_TURN_ON,
