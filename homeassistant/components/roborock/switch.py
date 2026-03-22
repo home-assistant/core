@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -155,8 +156,12 @@ async def async_setup_entry(
             if description.data_protocol in coordinator.request_protocols
         ],
     ]
-    for coordinator in config_entry.runtime_data.b01_q10:
-        await coordinator.async_refresh()
+    await asyncio.gather(
+        *(
+            coordinator.async_refresh()
+            for coordinator in config_entry.runtime_data.b01_q10
+        )
+    )
     async_add_entities(entities)
 
 
