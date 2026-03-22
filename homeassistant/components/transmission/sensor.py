@@ -68,7 +68,8 @@ def _get_stats_field(
 ) -> int | None:
     """Safely get a numeric field from a stats section, returning None on errors."""
     with contextlib.suppress(KeyError, AttributeError):
-        return getattr(getattr(coordinator.data, stats_attr), field)
+        value = getattr(getattr(coordinator.data, stats_attr), field)
+        return int(value) if isinstance(value, (int, float)) else None
     return None
 
 
