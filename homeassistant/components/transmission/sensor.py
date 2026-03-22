@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import suppress
+import contextlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -63,28 +63,26 @@ def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None
 def _get_current_stats_field(
     coordinator: TransmissionDataUpdateCoordinator, field: str
 ) -> int | None:
-    """Safely get a field from current_stats without raising KeyError."""
-    try:
-        raw = coordinator.data.fields.get("current-stats")
-        if raw is None:
-            return None
+    """Safely get a field from current_stats."""
+    with contextlib.suppress(KeyError, AttributeError):
+        return getattr(coordinator.data.current_stats, field)
+    return None
         value = raw.get(field)
         return int(value) if isinstance(value, (int, float)) else None
-    except AttributeError, TypeError:
+    except (AttributeError, TypeError):
         return None
 
 
 def _get_cumulative_stats_field(
     coordinator: TransmissionDataUpdateCoordinator, field: str
 ) -> int | None:
-    """Safely get a field from cumulative_stats without raising KeyError."""
-    try:
-        raw = coordinator.data.fields.get("cumulative-stats")
-        if raw is None:
-            return None
+    """Safely get a field from cumulative_stats."""
+    with contextlib.suppress(KeyError, AttributeError):
+        return getattr(coordinator.data.cumulative_stats, field)
+    return None
         value = raw.get(field)
         return int(value) if isinstance(value, (int, float)) else None
-    except AttributeError, TypeError:
+    except (AttributeError, TypeError):
         return None
 
 
