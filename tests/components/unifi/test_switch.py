@@ -16,9 +16,9 @@ from homeassistant.components.switch import (
 )
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DPI_RESTRICTIONS,
     CONF_SITE_ID,
-    CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DOMAIN,
 )
@@ -913,7 +913,6 @@ async def test_hub_not_client(hass: HomeAssistant) -> None:
     [
         {
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
-            CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         }
     ],
@@ -1016,7 +1015,6 @@ async def test_remove_switches(
     [
         {
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
-            CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         }
     ],
@@ -1412,7 +1410,6 @@ async def test_outlet_switches(
     [
         {
             CONF_BLOCK_CLIENT: [BLOCKED["mac"]],
-            CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
             CONF_DPI_RESTRICTIONS: False,
         }
@@ -1482,7 +1479,7 @@ async def test_option_block_clients(
 
 @pytest.mark.parametrize(
     "config_entry_options",
-    [{CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False}],
+    [{CONF_CLIENT_SOURCE: [], CONF_TRACK_DEVICES: False}],
 )
 @pytest.mark.parametrize("client_payload", [[CLIENT_1]])
 @pytest.mark.parametrize("dpi_app_payload", [DPI_APPS])
