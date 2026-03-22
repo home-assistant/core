@@ -94,12 +94,6 @@ class RoborockSwitchDescriptionQ10(SwitchEntityDescription):
 
 Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
     RoborockSwitchDescriptionQ10(
-        key="child_lock",
-        dp_code=B01_Q10_DP.CHILD_LOCK,
-        translation_key="child_lock",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    RoborockSwitchDescriptionQ10(
         key="dnd_switch",
         dp_code=B01_Q10_DP.NOT_DISTURB,
         translation_key="dnd_switch",
