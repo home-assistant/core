@@ -18,7 +18,7 @@ from homeassistant.components.transmission.sensor import (
     _get_current_stats_field,
     get_state,
 )
-from homeassistant.const import STATE_IDLE, Platform
+from homeassistant.const import STATE_IDLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -103,11 +103,11 @@ async def test_stats_sensors_none_when_missing(
 
     state = hass.states.get("sensor.transmission_session_download")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.transmission_session_ratio")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_get_state_combinations(

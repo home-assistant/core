@@ -255,7 +255,7 @@
     'supported_features': 0,
     'translation_key': 'session_download',
     'unique_id': '01J0BC4QM2YBRP6H5G933AETT7-session_download',
-    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
 # name: test_sensors[sensor.transmission_session_download-state]
@@ -264,7 +264,7 @@
       'device_class': 'data_size',
       'friendly_name': 'Transmission Session download',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_session_download',
@@ -369,7 +369,7 @@
     'supported_features': 0,
     'translation_key': 'session_upload',
     'unique_id': '01J0BC4QM2YBRP6H5G933AETT7-session_upload',
-    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
 # name: test_sensors[sensor.transmission_session_upload-state]
@@ -378,7 +378,7 @@
       'device_class': 'data_size',
       'friendly_name': 'Transmission Session upload',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_session_upload',
@@ -544,7 +544,7 @@
     'supported_features': 0,
     'translation_key': 'total_download',
     'unique_id': '01J0BC4QM2YBRP6H5G933AETT7-total_download',
-    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
 # name: test_sensors[sensor.transmission_total_download-state]
@@ -553,7 +553,7 @@
       'device_class': 'data_size',
       'friendly_name': 'Transmission Total download',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_total_download',
@@ -711,7 +711,7 @@
     'supported_features': 0,
     'translation_key': 'total_upload',
     'unique_id': '01J0BC4QM2YBRP6H5G933AETT7-total_upload',
-    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
 # name: test_sensors[sensor.transmission_total_upload-state]
@@ -720,7 +720,7 @@
       'device_class': 'data_size',
       'friendly_name': 'Transmission Total upload',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_total_upload',
