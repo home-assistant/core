@@ -352,7 +352,8 @@ async def async_setup_entry(
 ) -> None:
     """Add select entities for a config entry."""
     entry_data = entry.runtime_data
-    async_add_entities(
+    entities: list[SmartThingsEntity] = []
+    entities.extend(
         SmartThingsSelectEntity(entry_data.client, device, description, component)
         for capability, description in CAPABILITIES_TO_SELECT.items()
         for device in entry_data.devices.values()
@@ -373,7 +374,7 @@ async def async_setup_entry(
             )
         )
     )
-    async_add_entities(
+    entities.extend(
         SmartThingsDishwasherWashingOptionSelectEntity(
             entry_data.client,
             device,
@@ -391,6 +392,7 @@ async def async_setup_entry(
         )
         if attribute in DISHWASHER_WASHING_OPTIONS_TO_SELECT
     )
+    async_add_entities(entities)
 
 
 class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
