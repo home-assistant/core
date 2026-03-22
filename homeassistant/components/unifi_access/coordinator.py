@@ -30,6 +30,7 @@ from unifi_access_api.models.websocket import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -116,7 +117,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     self.client.get_emergency_status(),
                 )
         except ApiAuthError as err:
-            raise UpdateFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except ApiConnectionError as err:
             raise UpdateFailed(f"Error connecting to API: {err}") from err
         except ApiError as err:
