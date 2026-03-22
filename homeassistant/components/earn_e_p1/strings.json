@@ -2,27 +2,27 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to EARN-E P1 Meter",
+        "title": "Connect to EARN-E P1 meter",
         "description": "No device was automatically discovered. Enter the IP address of your EARN-E energy monitor manually.",
         "data": {
           "host": "IP address"
         },
         "data_description": {
-          "host": "The local IP address of your EARN-E P1 Meter (e.g. 192.168.1.100)."
+          "host": "The local IP address of your EARN-E P1 meter (e.g. 192.168.1.100)."
         }
       },
       "discovery_confirm": {
-        "title": "Discovered EARN-E P1 Meter",
-        "description": "An EARN-E P1 Meter was found at **{host}**."
+        "title": "Discovered EARN-E P1 meter",
+        "description": "An EARN-E P1 meter was found at **{host}**."
       },
       "reconfigure": {
-        "title": "Reconfigure EARN-E P1 Meter",
+        "title": "Reconfigure EARN-E P1 meter",
         "description": "Update the IP address of your EARN-E energy monitor.",
         "data": {
           "host": "IP address"
         },
         "data_description": {
-          "host": "The new local IP address of your EARN-E P1 Meter."
+          "host": "The new local IP address of your EARN-E P1 meter."
         }
       }
     },
@@ -31,18 +31,17 @@
       "unknown": "An unexpected error occurred."
     },
     "abort": {
-      "already_configured": "This EARN-E P1 Meter is already configured.",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "This EARN-E P1 meter is already configured.",
       "reconfigure_successful": "Reconfiguration successful."
     }
   },
   "entity": {
     "sensor": {
       "power_delivered": {
-        "name": "Power Delivered"
+        "name": "Power delivered"
       },
       "power_returned": {
-        "name": "Power Returned"
+        "name": "Power returned"
       },
       "voltage_l1": {
         "name": "Voltage L1"
@@ -51,22 +50,22 @@
         "name": "Current L1"
       },
       "energy_delivered_tariff1": {
-        "name": "Energy Delivered Tariff 1"
+        "name": "Energy delivered tariff 1"
       },
       "energy_delivered_tariff2": {
-        "name": "Energy Delivered Tariff 2"
+        "name": "Energy delivered tariff 2"
       },
       "energy_returned_tariff1": {
-        "name": "Energy Returned Tariff 1"
+        "name": "Energy returned tariff 1"
       },
       "energy_returned_tariff2": {
-        "name": "Energy Returned Tariff 2"
+        "name": "Energy returned tariff 2"
       },
       "gas_delivered": {
-        "name": "Gas Delivered"
+        "name": "Gas delivered"
       },
       "wifi_rssi": {
-        "name": "WiFi RSSI"
+        "name": "Wi-Fi RSSI"
       }
     }
   }
