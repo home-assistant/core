@@ -538,7 +538,6 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
             state_key
             for option in YXCleanType
             if (state_key := _map_q10_clean_mode_to_state_key(option)) is not None
-            if option != YXCleanType.UNKNOWN
         ]
 
     @property
