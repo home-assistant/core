@@ -3973,6 +3973,7 @@ async def test_recorder_platforms_with_custom_equivalent_units(
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4073,6 +4074,7 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4166,6 +4168,7 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
