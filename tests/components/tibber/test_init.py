@@ -89,3 +89,34 @@ async def test_setup_requires_data_api_reauth(hass: HomeAssistant) -> None:
 
     with pytest.raises(ConfigEntryAuthFailed):
         await async_setup_entry(hass, entry)
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_get_client_updates_websocket_init_payload(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure the websocket transport init_payload is updated with the fresh token."""
+    session = MagicMock()
+    session.async_ensure_token_valid = AsyncMock()
+    session.token = {CONF_ACCESS_TOKEN: "new-token"}
+
+    runtime = TibberRuntimeData(session=session)
+
+    with patch("homeassistant.components.tibber.tibber.Tibber") as mock_client_cls:
+        mock_transport = MagicMock()
+        mock_transport.init_payload = {"token": "old-token"}
+
+        mock_sub_manager = MagicMock()
+        mock_sub_manager.transport = mock_transport
+
+        mock_realtime = MagicMock()
+        mock_realtime.sub_manager = mock_sub_manager
+
+        mock_client = MagicMock()
+        mock_client.set_access_token = MagicMock()
+        mock_client.realtime = mock_realtime
+        mock_client_cls.return_value = mock_client
+
+        await runtime.async_get_client(hass)
+
+        assert mock_transport.init_payload == {"token": "new-token"}

@@ -56,6 +56,13 @@ class TibberRuntimeData:
                 ssl=ssl_util.get_default_context(),
             )
         self._client.set_access_token(access_token)
+        # Update the websocket transport's init_payload so that reconnection
+        # attempts by the watchdog use the refreshed OAuth token instead of
+        # the stale one baked in at transport creation time.
+        if (sub_manager := self._client.realtime.sub_manager) is not None and hasattr(
+            sub_manager.transport, "init_payload"
+        ):
+            sub_manager.transport.init_payload = {"token": access_token}
         return self._client
 
 

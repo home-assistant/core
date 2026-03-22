@@ -185,6 +185,10 @@ def tibber_mock() -> AsyncGenerator[MagicMock]:
         tibber_mock.get_homes = MagicMock(return_value=[])
         tibber_mock.set_access_token = MagicMock()
 
+        realtime_mock = MagicMock()
+        realtime_mock.sub_manager = None
+        tibber_mock.realtime = realtime_mock
+
         data_api_mock = MagicMock()
         data_api_mock.get_all_devices = AsyncMock(return_value={})
         data_api_mock.update_devices = AsyncMock(return_value={})
