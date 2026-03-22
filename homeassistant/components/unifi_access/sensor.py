@@ -54,7 +54,7 @@ class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the active lock rule type, or None if no rule is active."""
-        rule_status = self._door.lock_rule_status
+        rule_status = self.coordinator.get_lock_rule_status(self._door_id)
         if rule_status is None or rule_status.type is DoorLockRuleType.NONE:
             return None
         return rule_status.type.value
@@ -78,7 +78,7 @@ class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
     @property
     def native_value(self) -> datetime | None:
         """Return the time when the lock rule expires, or None if no rule is active."""
-        rule_status = self._door.lock_rule_status
+        rule_status = self.coordinator.get_lock_rule_status(self._door_id)
         if rule_status is None or not rule_status.ended_time:
             return None
         return datetime.fromtimestamp(rule_status.ended_time, tz=UTC)

@@ -7,7 +7,12 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
-from unifi_access_api import ApiNotFoundError, DoorLockRuleStatus, DoorLockRuleType
+from unifi_access_api import (
+    ApiNotFoundError,
+    DoorLockRuleStatus,
+    DoorLockRuleType,
+    DoorPositionStatus,
+)
 from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
@@ -102,7 +107,7 @@ async def test_sensor_not_created_when_lock_rules_unsupported(
     mock_client: MagicMock,
 ) -> None:
     """Test that sensor entities are not created when lock rules are unsupported."""
-    mock_client.get_door_lock_rule = AsyncMock(side_effect=ApiNotFoundError)
+    mock_client.get_door_lock_rule = AsyncMock(side_effect=ApiNotFoundError())
     with patch(
         "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
     ):
@@ -173,7 +178,7 @@ async def test_sensor_lock_rule_websocket_rule_cleared(
         data=LocationUpdateData(
             id="door-001",
             location_type="DOOR",
-            state=LocationUpdateState(),
+            state=LocationUpdateState.model_validate({"remain_lock": None}),
         ),
     )
     await handlers["access.data.device.location_update_v2"](update_msg)
@@ -181,3 +186,37 @@ async def test_sensor_lock_rule_websocket_rule_cleared(
 
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "unknown"
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY).state == "unknown"
+
+
+async def test_sensor_partial_websocket_update_preserves_lock_rule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a partial websocket update keeps the current lock rule state."""
+    mock_client.get_door_lock_rule = AsyncMock(
+        return_value=DoorLockRuleStatus(
+            type=DoorLockRuleType.KEEP_LOCK, ended_time=1700000000
+        )
+    )
+    with patch(
+        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    handlers = _get_ws_handlers(mock_client)
+    update_msg = LocationUpdateV2(
+        event="access.data.device.location_update_v2",
+        data=LocationUpdateData(
+            id="door-001",
+            location_type="DOOR",
+            state=LocationUpdateState(dps=DoorPositionStatus.OPEN),
+        ),
+    )
+    await handlers["access.data.device.location_update_v2"](update_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "keep_lock"
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY).state == (
+        datetime.fromtimestamp(1700000000, tz=UTC).isoformat()
+    )
