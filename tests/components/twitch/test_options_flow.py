@@ -73,14 +73,19 @@ async def test_cleanup_removes_unfollowed_entity(
         hass, "get_followed_channels_single.json", FollowedChannel
     )
 
-    await setup_integration(hass, entry)
+    # Pre-register the "homeassistant" entity (broadcaster_id 456) so it
+    # actually exists in the registry before cleanup runs.
+    entry.add_to_hass(hass)
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create("sensor", DOMAIN, "456", config_entry=entry)
+
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     remaining_unique_ids = {e.unique_id for e in entries}
 
-    # Only "internetofthings" channel (broadcaster_id 123) should remain
+    # "456" should have been removed by the cleanup logic
     assert "456" not in remaining_unique_ids
 
 

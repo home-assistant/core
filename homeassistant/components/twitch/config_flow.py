@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 
@@ -122,6 +123,7 @@ class OAuth2FlowHandler(
         return await self.async_step_user()
 
     @staticmethod
+    @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Return the options flow handler."""
         return TwitchOptionsFlowHandler()
