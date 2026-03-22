@@ -185,7 +185,13 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.command = AsyncMock()
 
     def _raw_value(value: Any) -> Any:
-        return value.value if hasattr(value, "value") else value
+        return (
+            value.code
+            if hasattr(value, "code")
+            else value.value
+            if hasattr(value, "value")
+            else value
+        )
 
     async def refresh_side_effect() -> None:
         """Simulate a device push via the public Q10 DPS update API."""
