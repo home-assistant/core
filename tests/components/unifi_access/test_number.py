@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
-from unifi_access_api import ApiNotFoundError, DoorLockRuleStatus
+from unifi_access_api import ApiNotFoundError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

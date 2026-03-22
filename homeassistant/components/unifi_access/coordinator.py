@@ -36,7 +36,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_LOCK_RULE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         """Set a temporary lock rule for a door."""
         if not rule_type:
             return
-        interval = self.lock_rule_intervals.get(door_id, 10)
+        interval = self.lock_rule_intervals.get(door_id, DEFAULT_LOCK_RULE_INTERVAL)
         rule = DoorLockRule(type=DoorLockRuleType(rule_type), interval=interval)
         await self.client.set_door_lock_rule(door_id, rule)
         if self.data is None or door_id not in self.data.doors:

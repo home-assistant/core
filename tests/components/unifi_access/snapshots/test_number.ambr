@@ -29,7 +29,7 @@
     'object_id_base': 'Rule Interval (min)',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Rule Interval (min)',
     'platform': 'unifi_access',
@@ -38,17 +38,19 @@
     'supported_features': 0,
     'translation_key': 'door_lock_rule_interval',
     'unique_id': 'door-002-lock_rule_interval',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_number_entities[number.back_door_rule_interval_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Back Door Rule Interval (min)',
       'max': 480,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.back_door_rule_interval_min',
@@ -88,7 +90,7 @@
     'object_id_base': 'Rule Interval (min)',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Rule Interval (min)',
     'platform': 'unifi_access',
@@ -97,17 +99,19 @@
     'supported_features': 0,
     'translation_key': 'door_lock_rule_interval',
     'unique_id': 'door-001-lock_rule_interval',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_number_entities[number.front_door_rule_interval_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Front Door Rule Interval (min)',
       'max': 480,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.front_door_rule_interval_min',
