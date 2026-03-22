@@ -157,7 +157,10 @@ async def async_remove_config_entry_device(
 
 def _strip_optional(value: str | None) -> str | None:
     """Strip whitespace from an optional string value."""
-    return value.strip() if value else value
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped or None
 
 
 def _manufacturer_from_status(status: dict[str, str]) -> str | None:

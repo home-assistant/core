@@ -278,9 +278,10 @@ async def test_device_location(
 
 async def test_device_info_strips_whitespace(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that trailing whitespace is stripped from device info fields."""
+    """Test that leading and trailing whitespace is stripped from device info fields."""
     await async_init_integration(
         hass,
         username="someuser",
@@ -290,6 +291,8 @@ async def test_device_info_strips_whitespace(
             "ups.mfr": "Tripp Lite ",
             "ups.model": "Tripp Lite UPS ",
             "ups.firmware": "1.0 ",
+            "device.part": "SMART1000 ",
+            "device.location": "Server Room ",
         },
         list_ups={"ups1": "UPS 1"},
         list_commands_return_value=[],
@@ -304,6 +307,11 @@ async def test_device_info_strips_whitespace(
     assert device_entry.model == "Tripp Lite UPS"
     assert device_entry.sw_version == "1.0"
     assert device_entry.serial_number == "A00000000000"
+    assert device_entry.model_id == "SMART1000"
+    assert (
+        device_entry.area_id
+        == area_registry.async_get_area_by_name("Server Room").id
+    )
 
 
 async def test_update_options(hass: HomeAssistant) -> None:
