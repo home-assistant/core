@@ -33,7 +33,7 @@ from .common import sanitize_config_entry
 from .const import (
     CONF_NODE,
     CONF_TOKEN,
-    CONF_TOKEN_NAME,
+    CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -191,9 +191,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         }
         if data.get(CONF_TOKEN):
             auth_kwargs = {
-                "token_name": data[CONF_TOKEN_NAME],
+                "token_name": data[CONF_TOKEN_ID],
                 "token_value": data[CONF_TOKEN_SECRET],
             }
+        _LOGGER.error(
+            "HOIConnecting as %s to %s using %s",
+            data[CONF_USERNAME],
+            data[CONF_HOST],
+            auth_kwargs.keys(),
+        )
+        _LOGGER.error("HOI data %s", data)
         self.proxmox = ProxmoxAPI(
             host=data[CONF_HOST],
             port=data[CONF_PORT],

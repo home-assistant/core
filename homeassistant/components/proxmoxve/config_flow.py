@@ -12,7 +12,7 @@ import requests
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_AUTH_PROVIDERS,
     CONF_HOST,
@@ -38,7 +38,7 @@ from .const import (
     CONF_NODES,
     CONF_REALM,
     CONF_TOKEN,
-    CONF_TOKEN_NAME,
+    CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
     CONF_VMS,
     DEFAULT_PORT,
@@ -65,14 +65,14 @@ BASE_SCHEMA = vol.Schema(
     }
 )
 
-REGULAR_SCHEMA = vol.Schema(
+PASSWORD_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): cv.string,
     }
 )
 TOKEN_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_TOKEN_NAME): cv.string,
+        vol.Required(CONF_TOKEN_ID): cv.string,
         vol.Required(CONF_TOKEN_SECRET): cv.string,
     }
 )
@@ -83,12 +83,12 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     auth_kwargs = {
         "password": data[CONF_PASSWORD],
     }
-    if data[CONF_TOKEN]:
+    if data.get(CONF_TOKEN):
         auth_kwargs = {
-            "token_name": data[CONF_TOKEN_NAME],
+            "token_name": data[CONF_TOKEN_ID],
             "token_value": data[CONF_TOKEN_SECRET],
         }
-    sanitize_config_entry(data)
+    data = sanitize_config_entry(data)
     try:
         client = ProxmoxAPI(
             host=data[CONF_HOST],
@@ -105,6 +105,7 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     except ConnectTimeout as err:
         raise ProxmoxConnectTimeout from err
     except ResourceException as err:
+        _LOGGER.exception("Error fetching nodes: %s")
         raise ProxmoxNoNodesFound from err
     except requests.exceptions.ConnectionError as err:
         raise ProxmoxConnectionError from err
@@ -134,8 +135,9 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
 class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Proxmox VE."""
 
-    VERSION = 2
+    VERSION = 3
     _data: dict[str, Any] = {}
+    _entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -143,41 +145,14 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             self._data = user_input
-            return await self.async_step_auth()
+            return await self.async_step_user_auth()
 
         return self.async_show_form(
             step_id="user",
             data_schema=BASE_SCHEMA,
         )
 
-    def _get_auth_schema(
-        self,
-        data: Mapping[str, Any],
-    ) -> vol.Schema:
-        """Return the auth schema based on the flow data."""
-        schema = REGULAR_SCHEMA
-        if data[CONF_TOKEN]:
-            schema = TOKEN_SCHEMA
-        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
-            schema = schema.extend({vol.Required(CONF_REALM): cv.string})
-        return schema
-
-    def _get_auth_updates(
-        self,
-        data: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Return the auth updates based on the flow data."""
-        updates = {CONF_PASSWORD: data[CONF_PASSWORD]}
-        if data[CONF_TOKEN]:
-            updates = {
-                CONF_TOKEN_NAME: data[CONF_TOKEN_NAME],
-                CONF_TOKEN_SECRET: data[CONF_TOKEN_SECRET],
-            }
-        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
-            updates[CONF_REALM] = data.get(CONF_REALM, DEFAULT_REALM)
-        return updates
-
-    async def async_step_auth(
+    async def async_step_user_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the auth step."""
@@ -185,7 +160,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         proxmox_nodes: list[dict[str, Any]] = []
 
         if user_input is not None:
-            self._data = {**self._data, **user_input}
+            self._data = sanitize_config_entry({**self._data, **user_input})
             self._async_abort_entries_match({CONF_HOST: self._data[CONF_HOST]})
             proxmox_nodes, errors = await self._validate_input(self._data)
 
@@ -196,7 +171,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="auth",
+            step_id="user_auth",
             data_schema=self._get_auth_schema(self._data),
             errors=errors,
         )
@@ -231,40 +206,77 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the integration."""
-        errors: dict[str, str] = {}
-        reconf_entry = self._get_reconfigure_entry()
+        """Handle the initial reconfiguration step step."""
+        self._entry = self._get_reconfigure_entry()
         suggested_values = {
-            CONF_HOST: reconf_entry.data[CONF_HOST],
-            CONF_PORT: reconf_entry.data[CONF_PORT],
-            CONF_REALM: reconf_entry.data[CONF_REALM],
-            CONF_USERNAME: reconf_entry.data[CONF_USERNAME],
-            CONF_PASSWORD: reconf_entry.data[CONF_PASSWORD],
-            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
+            CONF_AUTH_PROVIDERS: self._entry.data.get(
+                CONF_AUTH_PROVIDERS, self._entry.data.get(CONF_REALM, DEFAULT_REALM)
+            ),
+            CONF_HOST: self._entry.data[CONF_HOST],
+            CONF_USERNAME: self._entry.data[CONF_USERNAME].split("@")[0],
+            CONF_PORT: self._entry.data[CONF_PORT],
+            CONF_VERIFY_SSL: self._entry.data[CONF_VERIFY_SSL],
+            CONF_TOKEN: self._entry.data.get(CONF_TOKEN, False),
+            CONF_PASSWORD: self._entry.data.get(CONF_PASSWORD),
+            CONF_TOKEN_ID: self._entry.data.get(CONF_TOKEN_ID),
+            CONF_TOKEN_SECRET: self._entry.data.get(CONF_TOKEN_SECRET),
+            CONF_REALM: self._entry.data[CONF_REALM],
         }
-
-        if user_input:
+        if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            user_input = {**reconf_entry.data, **user_input}
-            _, errors = await self._validate_input(user_input)
-            if not errors:
-                return self.async_update_reload_and_abort(
-                    reconf_entry,
-                    data_updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                        CONF_REALM: user_input[CONF_REALM],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    },
-                )
+            self._data = sanitize_config_entry({**self._entry.data, **user_input})
+            return await self.async_step_reconfigure_auth()
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=REGULAR_SCHEMA,
-                suggested_values=user_input or suggested_values,
+                data_schema=BASE_SCHEMA,
+                suggested_values=self._data or suggested_values,
+            ),
+        )
+
+    async def async_step_reconfigure_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: self._data[CONF_HOST]})
+            self._data = sanitize_config_entry({**self._data, **user_input})
+            _, errors = await self._validate_input(self._data)
+            # Discard password/token from data to avoid storing
+            data_kwargs = {
+                CONF_PASSWORD: self._data[CONF_PASSWORD],
+                CONF_TOKEN_ID: None,
+                CONF_TOKEN_SECRET: None,
+            }
+            if self._data[CONF_TOKEN]:
+                data_kwargs = {
+                    CONF_TOKEN_ID: self._data[CONF_TOKEN_ID],
+                    CONF_TOKEN_SECRET: self._data[CONF_TOKEN_SECRET],
+                    CONF_PASSWORD: None,
+                }
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._entry,
+                    data_updates={
+                        CONF_AUTH_PROVIDERS: self._data[CONF_AUTH_PROVIDERS],
+                        CONF_HOST: self._data[CONF_HOST],
+                        CONF_USERNAME: self._data[CONF_USERNAME],
+                        CONF_PORT: self._data[CONF_PORT],
+                        CONF_VERIFY_SSL: self._data[CONF_VERIFY_SSL],
+                        CONF_TOKEN: self._data[CONF_TOKEN],
+                        CONF_REALM: self._data[CONF_REALM],
+                        **data_kwargs,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_auth",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=self._get_auth_schema(self._data),
+                suggested_values=self._data,
             ),
             errors=errors,
         )
@@ -324,6 +336,33 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             title=import_data[CONF_HOST],
             data={**import_data, CONF_NODES: proxmox_nodes},
         )
+
+    def _get_auth_schema(
+        self,
+        data: Mapping[str, Any],
+    ) -> vol.Schema:
+        """Return the auth schema based on the flow data."""
+        schema = PASSWORD_SCHEMA
+        if data.get(CONF_TOKEN):
+            schema = TOKEN_SCHEMA
+        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
+            schema = schema.extend({vol.Required(CONF_REALM): cv.string})
+        return schema
+
+    def _get_auth_updates(
+        self,
+        data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Return the auth updates based on the flow data."""
+        updates = {CONF_PASSWORD: data[CONF_PASSWORD]}
+        if data.get(CONF_TOKEN):
+            updates = {
+                CONF_TOKEN_ID: data[CONF_TOKEN_ID],
+                CONF_TOKEN_SECRET: data[CONF_TOKEN_SECRET],
+            }
+        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
+            updates[CONF_REALM] = data.get(CONF_REALM, DEFAULT_REALM)
+        return updates
 
 
 class ProxmoxError(HomeAssistantError):

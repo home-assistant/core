@@ -13,22 +13,6 @@
       "ssl_error": "SSL check failed. Check the SSL settings"
     },
     "step": {
-      "auth": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "realm": "Realm",
-          "token_name": "Token ID",
-          "token_value": "Secret"
-        },
-        "data_description": {
-          "password": "The password for the user",
-          "realm": "Specify your authentication realm",
-          "token_name": "The name given to the token",
-          "token_value": "The secret generated the token"
-        },
-        "description": "Enter your Proxmox VE server details to set up the integration.",
-        "title": "Connect to Proxmox VE"
-      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
@@ -42,22 +26,38 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::auth::data::realm%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token": "[%key:component::proxmoxve::config::step::user::data::token%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
-          "password": "[%key:component::proxmoxve::config::step::auth::data_description::password%]",
           "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::auth::data_description::realm%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token": "[%key:component::proxmoxve::config::step::user::data_description::token%]",
           "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
           "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"
         },
         "description": "Use the following form to reconfigure your Proxmox VE server connection.",
         "title": "Reconfigure Proxmox VE integration"
+      },
+      "reconfigure_auth": {
+        "data": {
+          "id": "[%key:component::proxmoxve::config::step::user_auth::data::id%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
+        },
+        "data_description": {
+          "id": "[%key:component::proxmoxve::config::step::user_auth::data_description::id%]",
+          "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
+        },
+        "description": "[%key:component::proxmoxve::config::step::user_auth::description%]",
+        "title": "[%key:component::proxmoxve::config::step::user_auth::title%]"
       },
       "user": {
         "data": {
@@ -75,6 +75,22 @@
           "token": "Enable to use an API token or leave disabled to authenticate with a password",
           "username": "The username for the Proxmox VE server",
           "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
+        },
+        "description": "Enter your Proxmox VE server details to set up the integration.",
+        "title": "Connect to Proxmox VE"
+      },
+      "user_auth": {
+        "data": {
+          "id": "Token ID",
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "Realm",
+          "token_value": "Secret"
+        },
+        "data_description": {
+          "id": "The name given to the API token",
+          "password": "The password for the user",
+          "realm": "Specify your authentication realm",
+          "token_value": "The secret generated for the API token"
         },
         "description": "Enter your Proxmox VE server details to set up the integration.",
         "title": "Connect to Proxmox VE"

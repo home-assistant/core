@@ -5,17 +5,20 @@ from typing import Any
 
 from homeassistant.const import CONF_AUTH_PROVIDERS, CONF_USERNAME
 
-from .const import CONF_REALM
+from .const import AUTH_OTHER, CONF_REALM
 
 
 def sanitize_config_entry(input_data: Mapping[str, Any]) -> dict[str, Any]:
     """Sanitize the user ID and realm in config_entry data."""
     data = dict(input_data)
     username = data[CONF_USERNAME].split("@")[0]
-    realm = (
-        data[CONF_REALM].lower()
-        if CONF_REALM in data
-        else data[CONF_AUTH_PROVIDERS].lower()
-    )
+    provider = data[CONF_AUTH_PROVIDERS]
+
+    realm = provider.lower()
+    if provider == AUTH_OTHER:
+        realm = data[CONF_REALM].lower()
+
+    data[CONF_REALM] = realm
     data[CONF_USERNAME] = f"{username}@{realm}"
+
     return data
