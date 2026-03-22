@@ -14,15 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_CHANNELS,
-    CONF_CLEANUP_UNFOLLOWED,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    LOGGER,
-    OAUTH_SCOPES,
-)
+from .const import CONF_CHANNELS, CONF_CLEANUP_UNFOLLOWED, DOMAIN, LOGGER, OAUTH_SCOPES
 
 type TwitchConfigEntry = ConfigEntry[TwitchCoordinator]
 
@@ -68,12 +60,11 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
     ) -> None:
         """Initialize the coordinator."""
         self.twitch = twitch
-        interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=interval),
+            update_interval=timedelta(minutes=5),
             config_entry=entry,
         )
         self.session = session
@@ -147,10 +138,10 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                         [u async for u in self.twitch.get_users(logins=list(chunk))]
                     )
             if removals:
-                removal_logins = {r.lower() for r in removals}
-                self.users = [
-                    u for u in self.users if u.login.lower() not in removal_logins
-                ]
+                keep_ids = {f.broadcaster_id for f in follows.values()} | {
+                    self.current_user.id
+                }
+                self.users = [u for u in self.users if u.id in keep_ids]
 
         async def _fetch_channel(channel: TwitchUser) -> tuple[str, TwitchUpdate]:
             followers = await self.twitch.get_channel_followers(channel.id)

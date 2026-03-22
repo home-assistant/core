@@ -43,13 +43,13 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
-        """Add sensor entities for newly discovered channels and clean up removed ones."""
+        """Add sensor entities for new channels and remove unfollowed ones."""
         current_ids = set(coordinator.data)
         new_ids = current_ids - known_channel_ids
         if new_ids:
             known_channel_ids.update(new_ids)
             async_add_entities(
-                TwitchSensor(coordinator, channel_id) for channel_id in new_ids
+                TwitchSensor(coordinator, channel_id) for channel_id in sorted(new_ids)
             )
         if entry.options.get(CONF_CLEANUP_UNFOLLOWED, False):
             removed_ids = known_channel_ids - current_ids
@@ -65,9 +65,23 @@ async def async_setup_entry(
                     ):
                         entity_registry.async_remove(entity_entry.entity_id)
 
+    # Remove stale entity registry entries left from a previous session
+    # (e.g. channels unfollowed while HA was offline).
+    if entry.options.get(CONF_CLEANUP_UNFOLLOWED, False):
+        entity_registry = er.async_get(hass)
+        current_channel_ids = set(coordinator.data)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if (
+                entity_entry.domain == "sensor"
+                and entity_entry.unique_id not in current_channel_ids
+            ):
+                entity_registry.async_remove(entity_entry.entity_id)
+
     # Create entities for channels already known after first refresh.
     _async_add_new_entities()
-    # On subsequent coordinator updates, add new entities / remove stale ones.
+    # On subsequent coordinator updates, add new / remove unfollowed entities.
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 
@@ -125,6 +139,8 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the picture of the sensor."""
+        if self.channel_id not in self.coordinator.data:
+            return None
         if self.channel.is_streaming:
             assert self.channel.stream_picture is not None
             return self.channel.stream_picture

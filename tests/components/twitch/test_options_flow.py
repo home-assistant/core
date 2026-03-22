@@ -127,3 +127,51 @@ async def test_no_cleanup_keeps_unfollowed_entity(
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     remaining_unique_ids = {e.unique_id for e in entries}
     assert "456" in remaining_unique_ids
+
+
+async def test_runtime_cleanup_removes_entity(
+    hass: HomeAssistant,
+    twitch_mock: AsyncMock,
+) -> None:
+    """Entity is removed from registry at runtime when channel disappears from data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test",
+        unique_id="123",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": time.time() + 3600,
+                "scope": "user:read:follows user:read:subscriptions",
+            },
+        },
+        options={
+            "channels": ["internetofthings", "homeassistant"],
+            CONF_CLEANUP_UNFOLLOWED: True,
+        },
+    )
+    await setup_integration(hass, entry)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
+
+    # Both channels should have entities after setup.
+    initial = {
+        e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert "123" in initial
+
+    # Simulate a coordinator refresh where channel "123" is gone.
+    reduced = {cid: data for cid, data in coordinator.data.items() if cid != "123"}
+    coordinator.async_set_updated_data(reduced)
+    await hass.async_block_till_done()
+
+    remaining = {
+        e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert "123" not in remaining
