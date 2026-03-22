@@ -13,7 +13,7 @@ from pysnmp.hlapi.v3arch.asyncio import (
 from pysnmp.smi.error import WrongValueError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_USERNAME, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -61,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
     privkey = entry.data.get(CONF_PRIV_KEY)
     privproto = entry.data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
     context_name = entry.data.get(CONF_CONTEXT_NAME)
+    port = int(entry.data.get(CONF_PORT, DEFAULT_PORT))
 
     if version == "3":
         if not authkey:
@@ -79,13 +80,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     try:
-        target = await UdpTransportTarget.create(
-            (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
-        )
+        target = await UdpTransportTarget.create((host, port), timeout=DEFAULT_TIMEOUT)
     except PySnmpError:
         try:
             target = await Udp6TransportTarget.create(
-                (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
+                (host, port), timeout=DEFAULT_TIMEOUT
             )
         except PySnmpError as err:
             _LOGGER.error("Invalid SNMP host: %s", err)
