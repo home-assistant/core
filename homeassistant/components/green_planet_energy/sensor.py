@@ -67,7 +67,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_placeholders={"time_range": "(06:00-18:00)"},
         value_fn=lambda api, data: (
             price / 100
-            if (price := api.get_lowest_price_day(data)) is not None
+            if (price := api.get_lowest_price_day(data, dt_util.now().hour)) is not None
             else None
         ),
     ),
@@ -77,8 +77,14 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(06:00-18:00)"},
         value_fn=lambda api, data: (
-            dt_util.start_of_local_day().replace(hour=hour)
-            if (hour := api.get_lowest_price_day_with_hour(data)[1]) is not None
+            # After 18:00 the day period is over; use tomorrow's date
+            (
+                dt_util.start_of_local_day() + timedelta(days=1)
+                if now_h >= 18
+                else dt_util.start_of_local_day()
+            ).replace(hour=hour)
+            if (now_h := dt_util.now().hour) is not None
+            and (hour := api.get_lowest_price_day_with_hour(data, now_h)[1]) is not None
             else None
         ),
     ),
