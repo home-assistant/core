@@ -182,18 +182,18 @@
   },
   "services": {
     "set_cover_position_and_tilt": {
-      "name": "Set cover position and tilt",
       "description": "Sets both the position and the tilt of the cover simultaneously.",
       "fields": {
         "position": {
-          "name": "Position",
-          "description": "Target position of the cover."
+          "description": "Target position of the cover.",
+          "name": "Position"
         },
         "tilt_position": {
-          "name": "Tilt position",
-          "description": "Target tilt position of the cover."
+          "description": "Target tilt position of the cover.",
+          "name": "Tilt position"
         }
-      }
+      },
+      "name": "Set cover position and tilt"
     }
   }
 }
