@@ -400,7 +400,7 @@ async def test_q10_cleaning_mode_select_current_option(
 
     assert fake_q10_vacuum.b01_q10_properties
     fake_q10_vacuum.b01_q10_properties.status.update_from_dps(
-        {B01_Q10_DP.CLEAN_MODE: 1}
+        {B01_Q10_DP.CLEAN_MODE: YXCleanType.BOTH_WORK.code}
     )
     await hass.async_block_till_done()
 
