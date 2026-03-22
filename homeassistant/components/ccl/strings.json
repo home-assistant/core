@@ -23,6 +23,24 @@
       },
       "uvi": {
         "name": "UV index"
+      },
+      "voc_level": {
+        "name": "VOC level"
+      },
+      "aqi": {
+        "name": "Air quality index"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "lightning_distance": {
+        "name": "Lightning distance"
+      },
+      "lightning_duration": {
+        "name": "Lightning duration"
+      },
+      "lightning_frequency": {
+        "name": "Lightning frequency"
       }
     }
   }
