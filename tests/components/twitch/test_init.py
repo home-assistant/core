@@ -91,7 +91,6 @@ async def test_expired_token_refresh_failure(
     twitch_mock: AsyncMock,
 ) -> None:
     """Test failure while refreshing token with a transient error."""
-
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         OAUTH2_TOKEN,
@@ -102,7 +101,6 @@ async def test_expired_token_refresh_failure(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify a transient failure has occurred
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].state is expected_state
 
