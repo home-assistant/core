@@ -81,7 +81,7 @@ TOKEN_SCHEMA = vol.Schema(
 def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the user input and fetch data (sync, for executor)."""
     auth_kwargs = {
-        "password": data[CONF_PASSWORD],
+        "password": data.get(CONF_PASSWORD),
     }
     if data.get(CONF_TOKEN):
         auth_kwargs = {
@@ -105,7 +105,6 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     except ConnectTimeout as err:
         raise ProxmoxConnectTimeout from err
     except ResourceException as err:
-        _LOGGER.exception("Error fetching nodes: %s")
         raise ProxmoxNoNodesFound from err
     except requests.exceptions.ConnectionError as err:
         raise ProxmoxConnectionError from err
@@ -354,7 +353,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         data: dict[str, Any],
     ) -> dict[str, Any]:
         """Return the auth updates based on the flow data."""
-        updates = {CONF_PASSWORD: data[CONF_PASSWORD]}
+        updates = {CONF_PASSWORD: data.get(CONF_PASSWORD)}
         if data.get(CONF_TOKEN):
             updates = {
                 CONF_TOKEN_ID: data[CONF_TOKEN_ID],

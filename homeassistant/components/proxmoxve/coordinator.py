@@ -187,7 +187,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         """Initialize ProxmoxAPI instance."""
         data = sanitize_config_entry(self.config_entry.data)
         auth_kwargs = {
-            "password": data[CONF_PASSWORD],
+            "password": data.get(CONF_PASSWORD),
         }
         if data.get(CONF_TOKEN):
             auth_kwargs = {
