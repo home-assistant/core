@@ -155,6 +155,11 @@ async def async_remove_config_entry_device(
     )
 
 
+def _strip_optional(value: str | None) -> str | None:
+    """Strip whitespace from an optional string value."""
+    return value.strip() if value else value
+
+
 def _manufacturer_from_status(status: dict[str, str]) -> str | None:
     """Find the best manufacturer value from the status."""
     return (
@@ -277,15 +282,17 @@ class PyNUTData:
         if not self._status:
             return None
 
-        manufacturer = _manufacturer_from_status(self._status)
-        model = _model_from_status(self._status)
-        model_id: str | None = self._status.get("device.part")
-        firmware = _firmware_from_status(self._status)
-        serial = _serial_from_status(self._status)
+        manufacturer = _strip_optional(_manufacturer_from_status(self._status))
+        model = _strip_optional(_model_from_status(self._status))
+        model_id: str | None = _strip_optional(self._status.get("device.part"))
+        firmware = _strip_optional(_firmware_from_status(self._status))
+        serial = _strip_optional(_serial_from_status(self._status))
         mac_address: str | None = self._status.get("device.macaddr")
         if mac_address is not None:
-            mac_address = format_mac(mac_address.rstrip().replace(" ", ":"))
-        device_location: str | None = self._status.get("device.location")
+            mac_address = format_mac(mac_address.strip().replace(" ", ":"))
+        device_location: str | None = _strip_optional(
+            self._status.get("device.location")
+        )
         return NUTDeviceInfo(
             manufacturer,
             model,

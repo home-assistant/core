@@ -276,6 +276,36 @@ async def test_device_location(
     )
 
 
+async def test_device_info_strips_whitespace(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that trailing whitespace is stripped from device info fields."""
+    await async_init_integration(
+        hass,
+        username="someuser",
+        password="somepassword",
+        list_vars={
+            "ups.serial": "A00000000000",
+            "ups.mfr": "Tripp Lite ",
+            "ups.model": "Tripp Lite UPS ",
+            "ups.firmware": "1.0 ",
+        },
+        list_ups={"ups1": "UPS 1"},
+        list_commands_return_value=[],
+    )
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "Tripp Lite _Tripp Lite UPS _A00000000000")}
+    )
+
+    assert device_entry is not None
+    assert device_entry.manufacturer == "Tripp Lite"
+    assert device_entry.model == "Tripp Lite UPS"
+    assert device_entry.sw_version == "1.0"
+    assert device_entry.serial_number == "A00000000000"
+
+
 async def test_update_options(hass: HomeAssistant) -> None:
     """Test update options triggers reload."""
     mock_pynut = _get_mock_nutclient(
