@@ -267,7 +267,7 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         self._is_on = True
         if self.hass:
             self.async_write_ha_state()
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
@@ -281,7 +281,7 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         self._is_on = False
         if self.hass:
             self.async_write_ha_state()
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
 
 class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
