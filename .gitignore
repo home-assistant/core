@@ -141,6 +141,6 @@ tmp_cache
 pytest_buckets.txt
 
 # AI tooling
-.claude/settings.local.json
+.claude/
 .serena/
 
