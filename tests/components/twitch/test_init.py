@@ -161,11 +161,11 @@ async def test_new_follow_syncs_config_entry(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_removed_follow_syncs_config_entry(
+async def test_unfollowed_channel_stays_in_config(
     hass: HomeAssistant,
     twitch_mock: AsyncMock,
 ) -> None:
-    """Unfollowed channel is removed from the config entry options."""
+    """Unfollowed channel is kept in config entry options and continues to be tracked."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test",
@@ -182,6 +182,7 @@ async def test_removed_follow_syncs_config_entry(
         options={"channels": ["internetofthings", "homeassistant"]},
     )
     # API returns only "internetofthings" → "homeassistant" was unfollowed
+    # but should remain in the config so it keeps being tracked.
     twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
         hass, "get_followed_channels_single.json", FollowedChannel
     )
@@ -189,7 +190,8 @@ async def test_removed_follow_syncs_config_entry(
     await setup_integration(hass, entry)
     await hass.async_block_till_done()
 
-    assert entry.options["channels"] == ["internetofthings"]
+    # "homeassistant" must still be in channels — removals are ignored
+    assert set(entry.options["channels"]) == {"internetofthings", "homeassistant"}
     assert entry.state is ConfigEntryState.LOADED
 
 
