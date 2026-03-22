@@ -115,6 +115,7 @@ async def test_node_startall_stopall_buttons(
         ("button.vm_web_restart", 100, "reboot"),
         ("button.vm_web_hibernate", 100, "hibernate"),
         ("button.vm_web_reset", 100, "reset"),
+        ("button.vm_web_shutdown", 100, "shutdown"),
     ],
 )
 async def test_vm_buttons(
