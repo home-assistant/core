@@ -1572,6 +1572,6 @@ Q10_STATUS = Q10Status(
     battery=100,
     status=YXDeviceState.CHARGING,
     fan_level=YXFanLevel.BALANCED,
-    water_level=YXWaterLevel.MIDDLE,
+    water_level=YXWaterLevel.MEDIUM,
     clean_count=1,
 )
