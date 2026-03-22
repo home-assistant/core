@@ -1,0 +1,76 @@
+{
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "selector": {
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    },
+    "trigger_threshold_type": {
+      "options": {
+        "above": "Above",
+        "below": "Below",
+        "between": "Between",
+        "outside": "Outside"
+      }
+    }
+  },
+  "title": "Temperature",
+  "triggers": {
+    "changed": {
+      "description": "Triggers when the temperature changes.",
+      "fields": {
+        "above": {
+          "description": "Only trigger when temperature is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when temperature is below this value.",
+          "name": "Below"
+        },
+        "unit": {
+          "description": "All values will be converted to this unit when evaluating the trigger.",
+          "name": "Unit of measurement"
+        }
+      },
+      "name": "Temperature changed"
+    },
+    "crossed_threshold": {
+      "description": "Triggers when the temperature crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::temperature::common::trigger_behavior_description%]",
+          "name": "[%key:component::temperature::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "The lower limit of the threshold.",
+          "name": "Lower limit"
+        },
+        "threshold_type": {
+          "description": "The type of threshold to use.",
+          "name": "Threshold type"
+        },
+        "unit": {
+          "description": "[%key:component::temperature::triggers::changed::fields::unit::description%]",
+          "name": "[%key:component::temperature::triggers::changed::fields::unit::name%]"
+        },
+        "upper_limit": {
+          "description": "The upper limit of the threshold.",
+          "name": "Upper limit"
+        }
+      },
+      "name": "Temperature crossed threshold"
+    }
+  }
+}
