@@ -173,17 +173,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], TrackerEntity)
         return self._attr_mac_address.replace(":", "_")
 
     @property
-    def device_info(self) -> dr.DeviceInfo:
-        """Return device value for this entity."""
-        name = self.name
-        assert self._attr_mac_address is not None
-        return dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._attr_mac_address)},
-            via_device=(DOMAIN, self._entry.entry_id),
-            name=name,
-        )
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the extra state attributes of the device."""
         attributes: dict[str, Any] = {}

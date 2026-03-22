@@ -243,15 +243,15 @@ async def test_device_tracker_device_registry_linking(
     host_device = dr_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
     assert host_device is not None
 
-    # Verify Client Device Linking (it should exist immediately because of device_info)
+    # Verify Client Device Linking (it should not exist because device_info was removed)
     client_device = dr_reg.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
-    assert client_device is not None
-    assert client_device.via_device_id == host_device.id
+    assert client_device is None
 
     # Verify Entity Linking
     entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
     reg_entry = ent_reg.async_get(entity_id)
-    assert reg_entry.device_id == client_device.id
+    assert reg_entry is not None
+    assert reg_entry.device_id is None
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
