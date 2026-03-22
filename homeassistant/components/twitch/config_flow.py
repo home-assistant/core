@@ -21,7 +21,15 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 
-from .const import CONF_CHANNELS, CONF_CLEANUP_UNFOLLOWED, DOMAIN, LOGGER, OAUTH_SCOPES
+from .const import (
+    CONF_CHANNELS,
+    CONF_CLEANUP_UNFOLLOWED,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    OAUTH_SCOPES,
+)
 
 
 class OAuth2FlowHandler(
@@ -141,6 +149,7 @@ class TwitchOptionsFlowHandler(OptionsFlow):
                 data={
                     **self.config_entry.options,
                     CONF_CLEANUP_UNFOLLOWED: user_input[CONF_CLEANUP_UNFOLLOWED],
+                    CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
                 }
             )
 
@@ -154,6 +163,12 @@ class TwitchOptionsFlowHandler(OptionsFlow):
                             CONF_CLEANUP_UNFOLLOWED, False
                         ),
                     ): bool,
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
                 }
             ),
         )

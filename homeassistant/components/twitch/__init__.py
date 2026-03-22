@@ -17,7 +17,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .const import (
+    CONF_CLEANUP_UNFOLLOWED,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    OAUTH_SCOPES,
+    PLATFORMS,
+)
 from .coordinator import TwitchConfigEntry, TwitchCoordinator
 
 
@@ -60,7 +67,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     return True
+
+
+_USER_OPTION_DEFAULTS: dict[str, object] = {
+    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+    CONF_CLEANUP_UNFOLLOWED: False,
+}
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
+    """Reload when user-facing options change (ignore channel-sync updates)."""
+    coordinator = entry.runtime_data
+    prev = coordinator.user_options_snapshot
+    curr = {
+        k: entry.options.get(k, default) for k, default in _USER_OPTION_DEFAULTS.items()
+    }
+    if prev != curr:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:

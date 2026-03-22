@@ -5,7 +5,12 @@ from unittest.mock import AsyncMock
 
 from twitchAPI.object.api import FollowedChannel
 
-from homeassistant.components.twitch.const import CONF_CLEANUP_UNFOLLOWED, DOMAIN
+from homeassistant.components.twitch.const import (
+    CONF_CLEANUP_UNFOLLOWED,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,7 +44,11 @@ async def test_options_flow_enable_cleanup(
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CLEANUP_UNFOLLOWED: True}
+        result["flow_id"],
+        user_input={
+            CONF_CLEANUP_UNFOLLOWED: True,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        },
     )
     assert result["type"] == "create_entry"
     assert config_entry.options[CONF_CLEANUP_UNFOLLOWED] is True
