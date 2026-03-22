@@ -57,7 +57,7 @@ def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None
         return None
     if downloaded == 0:
         return None
-    return round(uploaded / downloaded, 3)
+    return uploaded / downloaded
 
 
 def _get_current_stats_field(
