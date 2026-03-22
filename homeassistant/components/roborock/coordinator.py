@@ -624,9 +624,19 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self._original_update_from_dps = original_update_from_dps
 
         def _fan_out_update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
-            for listener in list(self._dps_listeners):
-                listener(decoded_dps)
-            original_update_from_dps(decoded_dps)
+            """Fan out DPS updates to listeners and then run core parsing."""
+            try:
+                for listener in list(self._dps_listeners):
+                    try:
+                        listener(decoded_dps)
+                    except Exception:  # pylint: disable=broad-except
+                        _LOGGER.exception(
+                            "Error in DPS listener %s for device %s",
+                            listener,
+                            self.duid,
+                        )
+            finally:
+                original_update_from_dps(decoded_dps)
 
         setattr(self.api.status, "update_from_dps", _fan_out_update_from_dps)
 
