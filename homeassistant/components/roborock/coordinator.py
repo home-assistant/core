@@ -609,7 +609,14 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_setup(self) -> None:
         """Start the Q10 push subscription before the first refresh."""
-        await self.api.start()
+        try:
+            await self.api.start()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to start Q10 subscription: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_fail",
+            ) from ex
         original_update_from_dps = self.api.status.update_from_dps
 
         def _fan_out_update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
