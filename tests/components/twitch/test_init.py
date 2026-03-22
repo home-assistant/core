@@ -225,10 +225,7 @@ async def test_unchanged_follows_no_config_update(
 
     # async_update_entry must not have been called for options changes
     options_calls = [
-        call
-        for call in mock_update.call_args_list
-        if call.kwargs.get("options") is not None
-        or (len(call.args) > 1 and "options" in str(call))
+        call for call in mock_update.call_args_list if "options" in call.kwargs
     ]
     assert options_calls == [], (
         "config entry options must not be updated when channels are in sync"

@@ -129,6 +129,22 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 self.hass.config_entries.async_schedule_reload(
                     self.config_entry.entry_id
                 )
+            else:
+                # On the initial update we can't reload, so rebuild self.users
+                # from the API channels so the first platform setup creates
+                # sensors for the correct (up-to-date) channel set.
+                try:
+                    updated_users: list[TwitchUser] = []
+                    for chunk in chunk_list(sorted(api_channels), 100):
+                        updated_users.extend(
+                            [u async for u in self.twitch.get_users(logins=list(chunk))]
+                        )
+                    self.users = updated_users
+                    self.users.append(self.current_user)
+                except TwitchAPIException as exc:
+                    LOGGER.error(
+                        "Error rebuilding users list on initial refresh: %s", exc
+                    )
 
         self._initial_update_done = True
         for channel in self.users:
