@@ -67,20 +67,44 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             config_entry=entry,
         )
         self.session = session
-        self._initial_update_done = False
 
     async def _async_setup(self) -> None:
-        channels = self.config_entry.options[CONF_CHANNELS]
-        self.users = []
-        # Split channels into chunks of 100 to avoid hitting the rate limit
-        for chunk in chunk_list(channels, 100):
-            self.users.extend(
-                [channel async for channel in self.twitch.get_users(logins=chunk)]
-            )
         if not (user := await first(self.twitch.get_users())):
             raise UpdateFailed("Logged in user not found")
         self.current_user = user
-        self.users.append(self.current_user)  # Add current_user to users list.
+
+        # Fetch the authoritative follow list from the API and sync the
+        # config entry so setup always uses up-to-date channels.
+        api_channels = {
+            f.broadcaster_login
+            async for f in await self.twitch.get_followed_channels(
+                user_id=self.current_user.id, first=100
+            )
+        }
+        config_channels = set(self.config_entry.options[CONF_CHANNELS])
+        if api_channels != config_channels:
+            additions = sorted(api_channels - config_channels)
+            removals = sorted(config_channels - api_channels)
+            change_summary = [f"+{c}" for c in additions] + [f"-{c}" for c in removals]
+            LOGGER.info(
+                "Syncing followed channels on setup: %s",
+                ", ".join(change_summary),
+            )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options={
+                    **self.config_entry.options,
+                    CONF_CHANNELS: sorted(api_channels),
+                },
+            )
+
+        # Build self.users from the authoritative API channel set.
+        self.users = []
+        for chunk in chunk_list(sorted(api_channels), 100):
+            self.users.extend(
+                [u async for u in self.twitch.get_users(logins=list(chunk))]
+            )
+        self.users.append(self.current_user)
 
     async def _async_update_data(self) -> dict[str, TwitchUpdate]:
         await self.session.async_ensure_token_valid()
@@ -123,30 +147,8 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                     CONF_CHANNELS: sorted(api_channels),
                 },
             )
-            # Only reload after the initial setup is complete so we don't
-            # discard entities that are still being set up on first run.
-            if self._initial_update_done:
-                self.hass.config_entries.async_schedule_reload(
-                    self.config_entry.entry_id
-                )
-            else:
-                # On the initial update we can't reload, so rebuild self.users
-                # from the API channels so the first platform setup creates
-                # sensors for the correct (up-to-date) channel set.
-                try:
-                    updated_users: list[TwitchUser] = []
-                    for chunk in chunk_list(sorted(api_channels), 100):
-                        updated_users.extend(
-                            [u async for u in self.twitch.get_users(logins=list(chunk))]
-                        )
-                    self.users = updated_users
-                    self.users.append(self.current_user)
-                except TwitchAPIException as exc:
-                    LOGGER.error(
-                        "Error rebuilding users list on initial refresh: %s", exc
-                    )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
-        self._initial_update_done = True
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
             stream = streams.get(channel.id)
