@@ -10,7 +10,6 @@ from typing import Any, TypeVar
 from propcache.api import cached_property
 from roborock import B01Props
 from roborock.data import HomeDataScene
-from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.b01 import Q7PropertiesApi, Q10PropertiesApi
@@ -572,7 +571,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         return data
 
 
-class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any]]):
+class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for B01 Q10 devices.
 
     The Q10 uses push-based MQTT status updates. The `refresh()` call sends a
@@ -609,7 +608,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
         """Start the Q10 push subscription before the first refresh."""
         await self.api.start()
 
-    async def _async_update_data(self) -> dict[B01_Q10_DP, Any]:
+    async def _async_update_data(self) -> None:
         """Request a status push from the device.
 
         This sends a fire-and-forget REQUEST_DPS command. The actual data
@@ -623,7 +622,6 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
                 translation_domain=DOMAIN,
                 translation_key="request_fail",
             ) from ex
-        return self.data or {}
 
     @cached_property
     def duid(self) -> str:
