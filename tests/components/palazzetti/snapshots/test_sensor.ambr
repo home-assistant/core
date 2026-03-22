@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.stove_air_outlet_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -58,8 +59,9 @@
 # ---
 # name: test_all_entities[sensor.stove_hydro_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -115,8 +117,9 @@
 # ---
 # name: test_all_entities[sensor.stove_hydro_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -172,8 +175,9 @@
 # ---
 # name: test_all_entities[sensor.stove_pellet_quantity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -229,8 +233,9 @@
 # ---
 # name: test_all_entities[sensor.stove_return_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -286,8 +291,9 @@
 # ---
 # name: test_all_entities[sensor.stove_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -343,8 +349,9 @@
 # ---
 # name: test_all_entities[sensor.stove_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -492,8 +499,9 @@
 # ---
 # name: test_all_entities[sensor.stove_tank_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -549,8 +557,9 @@
 # ---
 # name: test_all_entities[sensor.stove_wood_combustion_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
