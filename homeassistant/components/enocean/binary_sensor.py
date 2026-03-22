@@ -1,6 +1,6 @@
 """Support for EnOcean binary sensors."""
 
-from enocean_async import EURID, EntityType, Gateway, Observation
+from enocean_async import EntityType, Gateway, Observation
 from enocean_async.semantics.value_kind import ValueKind
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -18,14 +18,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
         for entity in spec.entities:
             if entity.entity_type == EntityType.BINARY:
                 entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(EnOceanBinarySensor(entity_id, gateway, gateway_eurid))
+                entities.append(EnOceanBinarySensor(entity_id, gateway))
 
     async_add_entities(entities)
 
@@ -37,14 +36,9 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         gateway.add_observation_callback(self._on_observation)
 
     def _on_observation(self, observation: Observation) -> None:

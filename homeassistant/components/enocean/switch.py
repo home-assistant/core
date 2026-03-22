@@ -2,14 +2,7 @@
 
 from typing import Any
 
-from enocean_async import (
-    EURID,
-    EntityType,
-    Gateway,
-    Observable,
-    Observation,
-    SetSwitchOutput,
-)
+from enocean_async import EntityType, Gateway, Observable, Observation, SetSwitchOutput
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -26,14 +19,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
         for entity in spec.entities:
             if entity.entity_type == EntityType.SWITCH:
                 entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(EnOceanSwitch(entity_id, gateway, gateway_eurid))
+                entities.append(EnOceanSwitch(entity_id, gateway))
 
     async_add_entities(entities)
 
@@ -47,14 +39,9 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
     ) -> None:
         """Initialize the EnOcean switch."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         gateway.add_observation_callback(self._on_observation)
 
     def _on_observation(self, observation: Observation) -> None:

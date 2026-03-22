@@ -9,7 +9,7 @@ from .const import DOMAIN
 
 
 class EnOceanEntityID:
-    """An EnOcean entity is uniquely identified by its device's EnOcean Unique Radio Identifier (EURID) and a unique ID string for the entity."""
+    """Uniquely identifies an EnOcean entity by its device EURID and a per-entity string."""
 
     def __init__(self, device_address: EURID, unique_id: str | None = None) -> None:
         """Construct an EnOcean entity ID."""
@@ -53,7 +53,6 @@ class EnOceanEntity(Entity):
         self,
         enocean_entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
     ) -> None:
         """Initialize the entity."""
         super().__init__()
@@ -68,7 +67,6 @@ class EnOceanEntity(Entity):
 
         self.__enocean_entity_id: EnOceanEntityID = enocean_entity_id
         self.__gateway: Gateway = gateway
-        self.__gateway_eurid: EURID = gateway_eurid
 
     @property
     def unique_id(self) -> str:
@@ -89,8 +87,9 @@ class EnOceanEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Get device info."""
         address = self.__enocean_entity_id.device_address
-        if address == self.__gateway_eurid:
-            return DeviceInfo(identifiers={(DOMAIN, str(self.__gateway_eurid))})
+        gateway_eurid = self.__gateway.eurid
+        if address == gateway_eurid:
+            return DeviceInfo(identifiers={(DOMAIN, str(gateway_eurid))})
         spec = self.__gateway.device_spec(address)
 
         dt = spec.device_type
@@ -102,5 +101,5 @@ class EnOceanEntity(Entity):
             model=dt.model,
             model_id=f"EEP {dt.eep}",
             serial_number=str(address),
-            via_device=(DOMAIN, str(self.__gateway_eurid)),
+            via_device=(DOMAIN, str(gateway_eurid)),
         )

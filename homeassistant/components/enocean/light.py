@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean_async import EURID, Dim, EntityType, Gateway, Observable, Observation
+from enocean_async import Dim, EntityType, Gateway, Observable, Observation
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -21,14 +21,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
         for entity in spec.entities:
             if entity.entity_type == EntityType.DIMMER:
                 entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(EnOceanLight(entity_id, gateway, gateway_eurid))
+                entities.append(EnOceanLight(entity_id, gateway))
 
     async_add_entities(entities)
 
@@ -43,14 +42,9 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
     ) -> None:
         """Initialize the EnOcean light."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         gateway.add_observation_callback(self._on_observation)
 
     def _on_observation(self, observation: Observation) -> None:
@@ -77,7 +71,6 @@ class EnOceanLight(EnOceanEntity, LightEntity):
             self.enocean_entity_id.device_address,
             Dim(dim_value=dim_value, entity_id=self.enocean_entity_id.unique_id),
         )
-        await self.async_update_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -90,5 +83,3 @@ class EnOceanLight(EnOceanEntity, LightEntity):
                 entity_id=self.enocean_entity_id.unique_id,
             ),
         )
-
-        await self.async_update_ha_state()

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enocean_async import EURID, EntityType, Gateway, NumberRange
+from enocean_async import EntityType, Gateway, NumberRange
 
 from homeassistant.components.number import NumberMode, RestoreNumber
 from homeassistant.const import EntityCategory
@@ -26,7 +26,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
@@ -38,7 +37,6 @@ async def async_setup_entry(
                     EnOceanNumber(
                         entity_id,
                         gateway,
-                        gateway_eurid,
                         number_range,
                         _ENTITY_CATEGORY_MAP.get(entity.category),
                     )
@@ -56,16 +54,11 @@ class EnOceanNumber(EnOceanEntity, RestoreNumber):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
         number_range: NumberRange,
         entity_category: EntityCategory | None,
     ) -> None:
         """Initialize the EnOcean number entity."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._attr_native_min_value = number_range.min_value
         self._attr_native_max_value = number_range.max_value
         self._attr_native_step = number_range.step

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enocean_async import (
-    EURID,
     CoverQueryPositionAndAngle,
     EntityType,
     Gateway,
@@ -34,7 +33,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
@@ -46,9 +44,7 @@ async def async_setup_entry(
                     continue
                 instruction_cls = _INSTRUCTABLE_TO_INSTRUCTION[action]
                 entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(
-                    EnOceanButton(entity_id, gateway, gateway_eurid, instruction_cls)
-                )
+                entities.append(EnOceanButton(entity_id, gateway, instruction_cls))
 
     async_add_entities(entities)
 
@@ -60,15 +56,10 @@ class EnOceanButton(EnOceanEntity, ButtonEntity):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
         instruction_cls: type[Instruction],
     ) -> None:
         """Initialize the EnOcean trigger button."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._instruction_cls = instruction_cls
 
     async def async_press(self) -> None:

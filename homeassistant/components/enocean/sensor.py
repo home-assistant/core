@@ -49,7 +49,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
+    gateway_eurid: EURID = gateway.eurid
 
     entities: list[EnOceanSensor] = []
 
@@ -68,7 +68,6 @@ async def async_setup_entry(
                     EnOceanSensor(
                         entity_id,
                         gateway,
-                        gateway_eurid,
                         observable,
                         entity.id,
                         entity_category=EntityCategory.DIAGNOSTIC
@@ -87,7 +86,6 @@ async def async_setup_entry(
                 EnOceanSensor(
                     entity_id,
                     gateway,
-                    gateway_eurid,
                     observable,
                     entity.id,
                     entity_category=_LIB_CATEGORY_MAP.get(entity.category),
@@ -104,17 +102,12 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
         observable: Observable,
         eep_entity_id: str,
         entity_category: EntityCategory | None = None,
     ) -> None:
         """Initialize the EnOcean sensor."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._observable = observable
         self._entity_part = eep_entity_id
         # Use the observable's own value string as the translation key (e.g. "temperature",

@@ -4,7 +4,6 @@ from asyncio import sleep
 from typing import Any
 
 from enocean_async import (
-    EURID,
     CoverClose,
     CoverOpen,
     CoverQueryPositionAndAngle,
@@ -42,7 +41,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
@@ -52,9 +50,7 @@ async def async_setup_entry(
                 supports_query = (
                     Instructable.COVER_QUERY_POSITION_AND_ANGLE in entity.actions
                 )
-                entities.append(
-                    EnOceanCover(entity_id, gateway, gateway_eurid, supports_query)
-                )
+                entities.append(EnOceanCover(entity_id, gateway, supports_query))
 
     async_add_entities(entities)
 
@@ -74,15 +70,10 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self,
         enocean_entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
         supports_query: bool,
     ) -> None:
         """Initialize the EnOcean cover."""
-        super().__init__(
-            enocean_entity_id=enocean_entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=enocean_entity_id, gateway=gateway)
         self._supports_query = supports_query
         self._attr_is_closed: bool | None = None
         gateway.add_observation_callback(self._on_observation)

@@ -1,6 +1,6 @@
 """Support for EnOcean button/rocker events."""
 
-from enocean_async import EURID, EntityType, Gateway, Observable, Observation
+from enocean_async import EntityType, Gateway, Observable, Observation
 
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant
@@ -17,14 +17,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
         for entity in spec.entities:
             if entity.entity_type == EntityType.BUTTON:
                 entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(EnOceanEvent(entity_id, gateway, gateway_eurid))
+                entities.append(EnOceanEvent(entity_id, gateway))
 
     async_add_entities(entities)
 
@@ -38,14 +37,9 @@ class EnOceanEvent(EnOceanEntity, EventEntity):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
     ) -> None:
         """Initialize the EnOcean event entity."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         gateway.add_observation_callback(self._on_observation)
 
     def _on_observation(self, observation: Observation) -> None:

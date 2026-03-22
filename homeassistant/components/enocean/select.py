@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enocean_async import EURID, EntityType, EnumOptions, Gateway
+from enocean_async import EntityType, EnumOptions, Gateway
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
@@ -27,7 +27,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = await gateway.eurid
 
     entities = []
     for eurid, spec in gateway.device_specs.items():
@@ -39,7 +38,6 @@ async def async_setup_entry(
                     EnOceanSelect(
                         entity_id,
                         gateway,
-                        gateway_eurid,
                         enum_options,
                         _ENTITY_CATEGORY_MAP.get(entity.category),
                     )
@@ -55,16 +53,11 @@ class EnOceanSelect(EnOceanEntity, SelectEntity, RestoreEntity):
         self,
         entity_id: EnOceanEntityID,
         gateway: Gateway,
-        gateway_eurid: EURID,
         enum_options: EnumOptions,
         entity_category: EntityCategory | None,
     ) -> None:
         """Initialize the EnOcean select entity."""
-        super().__init__(
-            enocean_entity_id=entity_id,
-            gateway=gateway,
-            gateway_eurid=gateway_eurid,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._attr_options = list(enum_options.options)
         self._attr_entity_category = entity_category
         self._attr_current_option = enum_options.default
