@@ -36,6 +36,21 @@ class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GreenPlanetEnergyAPI, dict[str, Any]], float | datetime | None]
 
 
+def _get_lowest_price_day_time(
+    api: GreenPlanetEnergyAPI, data: dict[str, Any]
+) -> datetime | None:
+    """Return timestamp of the lowest-priced day hour (06:00–18:00)."""
+    now_h = dt_util.now().hour
+    hour = api.get_lowest_price_day_with_hour(data, now_h)[1]
+    if hour is None:
+        return None
+    # After 18:00 the day period is over; use tomorrow's date
+    base = dt_util.start_of_local_day()
+    if now_h >= 18:
+        base += timedelta(days=1)
+    return base.replace(hour=hour)
+
+
 SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
     # Statistical sensors only - hourly prices available via service
     GreenPlanetEnergySensorEntityDescription(
@@ -76,16 +91,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="lowest_price_day_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(06:00-18:00)"},
-        value_fn=lambda api, data: (
-            # After 18:00 the day period is over; use tomorrow's date
-            (
-                dt_util.start_of_local_day() + timedelta(days=1)
-                if (now_h := dt_util.now().hour) >= 18
-                else dt_util.start_of_local_day()
-            ).replace(hour=hour)
-            if (hour := api.get_lowest_price_day_with_hour(data, now_h)[1]) is not None
-            else None
-        ),
+        value_fn=lambda api, data: _get_lowest_price_day_time(api, data),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night",
