@@ -200,6 +200,110 @@ async def test_coordinator_workaround_sub_units_without_main_device(
         (FritzTriggerMock(), None, 1),
     ],
 )
+async def test_coordinator_cleanup_ain_with_underscore(
+    hass: HomeAssistant,
+    fritz: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cleanup does not wrongly remove entities for devices with underscore in AIN.
+
+    The old split("_")[0] check extracted only the first segment of an AIN
+    containing underscores, causing active entities to be removed incorrectly.
+    """
+    device_underscore = FritzDeviceSwitchMock(
+        ain="fake_ain_switch",
+        device_and_unit_id=("fake_ain_switch", None),
+        name="fake_switch_underscore",
+    )
+    device_normal = FritzDeviceSwitchMock(
+        ain="fake ain cover",
+        device_and_unit_id=("fake ain cover", None),
+        name="fake_switch_normal",
+    )
+    fritz().get_devices.return_value = [device_underscore, device_normal]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    count_before = len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+    assert count_before > 0
+
+    # Remove device_normal to trigger cleanup_removed_devices()
+    fritz().get_devices.return_value = [device_underscore]
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    remaining = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert all("fake_ain_switch" in e.unique_id for e in remaining)
+    assert not any("fake ain cover" in e.unique_id for e in remaining)
+
+
+async def test_coordinator_cleanup_preserves_trigger_entities(
+    hass: HomeAssistant,
+    fritz: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that trigger entities are not wrongly removed when a device is deleted.
+
+    The old cleanup code only included devices and templates in available_ains,
+    so trigger AINs were never found and trigger entities were deleted on every
+    cleanup run, even when the trigger itself was still active.
+    """
+    fritz().get_triggers.return_value = [FritzTriggerMock()]
+    fritz().get_devices.return_value = [
+        FritzDeviceSwitchMock(
+            ain="fake ain switch 1",
+            device_and_unit_id=("fake ain switch 1", None),
+            name="fake_switch_1",
+        ),
+        FritzDeviceSwitchMock(
+            ain="fake ain switch 2",
+            device_and_unit_id=("fake ain switch 2", None),
+            name="fake_switch_2",
+        ),
+    ]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    trigger_entities_before = [
+        e
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if FritzTriggerMock.ain in e.unique_id
+    ]
+    assert len(trigger_entities_before) == 1
+
+    # Remove one device to trigger cleanup_removed_devices()
+    fritz().get_devices.return_value = [
+        FritzDeviceSwitchMock(
+            ain="fake ain switch 1",
+            device_and_unit_id=("fake ain switch 1", None),
+            name="fake_switch_1",
+        ),
+    ]
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    trigger_entities_after = [
+        e
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if FritzTriggerMock.ain in e.unique_id
+    ]
+    assert len(trigger_entities_after) == 1
+
+
 async def test_coordinator_has_triggers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

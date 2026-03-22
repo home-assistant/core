@@ -95,12 +95,15 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
     def cleanup_removed_devices(self, data: FritzboxCoordinatorData) -> None:
         """Cleanup entity and device registry from removed devices."""
-        available_ains = list(data.devices) + list(data.templates)
+        available_ains = list(data.devices) + list(data.templates) + list(data.triggers)
         entity_reg = er.async_get(self.hass)
         for entity in er.async_entries_for_config_entry(
             entity_reg, self.config_entry.entry_id
         ):
-            if entity.unique_id.split("_")[0] not in available_ains:
+            if not any(
+                entity.unique_id == ain or entity.unique_id.startswith(f"{ain}_")
+                for ain in available_ains
+            ):
                 LOGGER.debug("Removing obsolete entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
 
