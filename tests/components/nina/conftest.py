@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from .const import (
     DUMMY_CONFIG_ENTRY,
     DUMMY_CONFIG_ENTRY_AREA_FILTERS,
-    DUMMY_CONFIG_ENTRY_NO_FILTERS,
+    DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS,
 )
 
 from tests.common import (
@@ -49,12 +49,12 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_no_filter(hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry_default_filter(hass: HomeAssistant) -> MockConfigEntry:
     """Provide a common mock config entry with no filters."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="NINA",
-        data=deepcopy(DUMMY_CONFIG_ENTRY_NO_FILTERS),
+        data=deepcopy(DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS),
         version=1,
         minor_version=3,
     )

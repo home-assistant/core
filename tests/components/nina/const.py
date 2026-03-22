@@ -38,7 +38,7 @@ DUMMY_CONFIG_ENTRY: dict[str, Any] = {
     CONF_REGIONS: {"095760000000": "Aach"},
 }
 
-DUMMY_CONFIG_ENTRY_NO_FILTERS: dict[str, Any] = {
+DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS: dict[str, Any] = {
     CONF_MESSAGE_SLOTS: 5,
     CONF_REGIONS: {"083350000000": "Aach, Stadt"},
     CONF_FILTERS: {

@@ -33,14 +33,14 @@ async def test_sensors(
 async def test_sensors_without_corona_filter(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_config_entry_no_filter: MockConfigEntry,
+    mock_config_entry_default_filter: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
     await setup_single_platform(
         hass,
-        mock_config_entry_no_filter,
+        mock_config_entry_default_filter,
         Platform.SENSOR,
         mock_nina_class,
         nina_warnings,
