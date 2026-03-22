@@ -11,13 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import EnOceanConfigEntry
-from .entity import EnOceanEntity, EnOceanEntityID
-
-_ENTITY_CATEGORY_MAP: dict[str, EntityCategory | None] = {
-    "config": EntityCategory.CONFIG,
-    "diagnostic": EntityCategory.DIAGNOSTIC,
-    "default": None,
-}
+from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity, EnOceanEntityID
 
 
 async def async_setup_entry(
@@ -39,7 +33,7 @@ async def async_setup_entry(
                         entity_id,
                         gateway,
                         enum_options,
-                        _ENTITY_CATEGORY_MAP.get(entity.category),
+                        LIB_ENTITY_CATEGORY_MAP.get(entity.category),
                     )
                 )
 

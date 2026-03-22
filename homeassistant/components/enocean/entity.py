@@ -1,49 +1,35 @@
 """Representation of an EnOcean device."""
 
-from enocean_async import EURID, Gateway
+from dataclasses import dataclass
 
+from enocean_async import EURID, Gateway
+from enocean_async.semantics.entity import EntityCategory as LibEntityCategory
+
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
+LIB_ENTITY_CATEGORY_MAP: dict[str, EntityCategory | None] = {
+    LibEntityCategory.CONFIG: EntityCategory.CONFIG,
+    LibEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+    LibEntityCategory.DEFAULT: None,
+}
 
+
+@dataclass
 class EnOceanEntityID:
     """Uniquely identifies an EnOcean entity by its device EURID and a per-entity string."""
 
-    def __init__(self, device_address: EURID, unique_id: str | None = None) -> None:
-        """Construct an EnOcean entity ID."""
-        self.__device_address = device_address
-        self.__unique_id: str | None = unique_id
-
-    @property
-    def device_address(self) -> EURID:
-        """Return the device address part of the entity ID."""
-        return self.__device_address
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID part of the entity ID."""
-        return self.__unique_id
+    device_address: EURID
+    unique_id: str | None = None
 
     def __str__(self) -> str:
-        """Return a string representation of the entity."""
-        if self.__unique_id:
-            return f"{self.__device_address!s}.{self.__unique_id}"
-        return f"{self.__device_address!s}"
-
-    def __hash__(self) -> int:
-        """Return the hash of the entity ID."""
-        return hash((int(self.__device_address), self.unique_id))
-
-    def __eq__(self, other: object) -> bool:
-        """Check equality with another entity ID."""
-        if not isinstance(other, EnOceanEntityID):
-            return NotImplemented
-        return (int(self.__device_address), self.unique_id) == (
-            int(other.device_address),
-            other.unique_id,
-        )
+        """Return string representation used as the HA unique_id."""
+        if self.unique_id:
+            return f"{self.device_address!s}.{self.unique_id}"
+        return str(self.device_address)
 
 
 class EnOceanEntity(Entity):

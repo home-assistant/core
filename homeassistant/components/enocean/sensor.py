@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from enocean_async import EURID, EntityType, Gateway, Observable, Observation
-from enocean_async.semantics.entity import EntityCategory as LibEntityCategory
 from enocean_async.semantics.value_kind import ValueKind
 
 from homeassistant.components.sensor import (
@@ -18,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
-from .entity import EnOceanEntity, EnOceanEntityID
+from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity, EnOceanEntityID
 
 _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
     Observable.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
@@ -34,12 +33,6 @@ _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
 }
 
 _SCALAR_STATE_CLASS: SensorStateClass = SensorStateClass.MEASUREMENT
-
-_LIB_CATEGORY_MAP: dict[str, EntityCategory | None] = {
-    LibEntityCategory.CONFIG: EntityCategory.CONFIG,
-    LibEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    LibEntityCategory.DEFAULT: None,
-}
 
 
 async def async_setup_entry(
@@ -88,7 +81,7 @@ async def async_setup_entry(
                     gateway,
                     observable,
                     entity.id,
-                    entity_category=_LIB_CATEGORY_MAP.get(entity.category),
+                    entity_category=LIB_ENTITY_CATEGORY_MAP.get(entity.category),
                 )
             )
 
