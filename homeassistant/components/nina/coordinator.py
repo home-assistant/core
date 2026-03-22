@@ -156,7 +156,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.id,
                     raw_warn.headline,
                     raw_warn.description,
-                    raw_warn.sender,
+                    raw_warn.sender or "",
                     raw_warn.severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
                     shortened_affected_areas,
