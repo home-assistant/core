@@ -606,6 +606,9 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self.device_info = get_device_info(device)
         self._dps_listeners: list[Callable[[dict[B01_Q10_DP, Any]], None]] = []
+        self._original_update_from_dps: (
+            Callable[[dict[B01_Q10_DP, Any]], None] | None
+        ) = None
 
     async def _async_setup(self) -> None:
         """Start the Q10 push subscription before the first refresh."""
@@ -618,13 +621,14 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="request_fail",
             ) from ex
         original_update_from_dps = self.api.status.update_from_dps
+        self._original_update_from_dps = original_update_from_dps
 
         def _fan_out_update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
             for listener in list(self._dps_listeners):
                 listener(decoded_dps)
             original_update_from_dps(decoded_dps)
 
-        self.api.status.update_from_dps = _fan_out_update_from_dps  # type: ignore[method-assign]
+        setattr(self.api.status, "update_from_dps", _fan_out_update_from_dps)
 
     def add_dps_listener(
         self, listener: Callable[[dict[B01_Q10_DP, Any]], None]
@@ -652,6 +656,12 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN,
                 translation_key="request_fail",
             ) from ex
+
+    async def async_shutdown(self) -> None:
+        """Restore the original update_from_dps method during shutdown."""
+        if self._original_update_from_dps is not None:
+            setattr(self.api.status, "update_from_dps", self._original_update_from_dps)
+        await super().async_shutdown()
 
     @cached_property
     def duid(self) -> str:
