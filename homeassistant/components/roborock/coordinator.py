@@ -606,6 +606,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self.device_info = get_device_info(device)
         self._dps_listeners: list[Callable[[dict[B01_Q10_DP, Any]], None]] = []
+        self._last_decoded_dps: dict[B01_Q10_DP, Any] = {}
         self._original_update_from_dps: (
             Callable[[dict[B01_Q10_DP, Any]], None] | None
         ) = None
@@ -626,6 +627,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         def _fan_out_update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
             """Fan out DPS updates to listeners and then run core parsing."""
             try:
+                self._last_decoded_dps = decoded_dps.copy()
                 for listener in list(self._dps_listeners):
                     try:
                         listener(decoded_dps)
@@ -641,10 +643,22 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         setattr(self.api.status, "update_from_dps", _fan_out_update_from_dps)
 
     def add_dps_listener(
-        self, listener: Callable[[dict[B01_Q10_DP, Any]], None]
+        self,
+        listener: Callable[[dict[B01_Q10_DP, Any]], None],
+        *,
+        replay_last: bool = False,
     ) -> None:
         """Register a listener for raw DPS updates."""
         self._dps_listeners.append(listener)
+        if replay_last and self._last_decoded_dps:
+            try:
+                listener(self._last_decoded_dps)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Error replaying DPS listener %s for device %s",
+                    listener,
+                    self.duid,
+                )
 
     def remove_dps_listener(
         self, listener: Callable[[dict[B01_Q10_DP, Any]], None]

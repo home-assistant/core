@@ -234,12 +234,16 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         super().__init__(unique_id, coordinator)
         self._dp_code = entity_description.dp_code
         self._is_on: bool | None = None
-        self.coordinator.add_dps_listener(self._async_handle_dps_update)
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove DPS listener."""
-        self.coordinator.remove_dps_listener(self._async_handle_dps_update)
-        await super().async_will_remove_from_hass()
+    async def async_added_to_hass(self) -> None:
+        """Register DPS listener when entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.coordinator.add_dps_listener(
+            self._async_handle_dps_update, replay_last=True
+        )
+        self.async_on_remove(
+            lambda: self.coordinator.remove_dps_listener(self._async_handle_dps_update)
+        )
 
     def _async_handle_dps_update(self, decoded_dps: dict[B01_Q10_DP, Any]) -> None:
         """Handle a raw DPS update."""
