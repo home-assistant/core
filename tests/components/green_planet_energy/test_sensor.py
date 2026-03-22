@@ -61,7 +61,7 @@ async def test_lowest_price_day_uses_tomorrow_after_18(
         data: dict, current_hour: int | None = None
     ) -> float:
         if current_hour is not None and current_hour >= 18:
-            return 31.0  # 25 + 6*1 Cent/kWh — tomorrow's cheapest at hour 10
+            return 31.0  # 31 Cent/kWh — tomorrow's cheapest at hour 10
         return 26.0
 
     def lowest_price_day_with_hour_side_effect(
