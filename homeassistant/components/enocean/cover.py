@@ -81,13 +81,17 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Query current position after Home Assistant (re)start."""
         await super().async_added_to_hass()
-        if self._supports_query:
-            await sleep(5)  # Wait a bit for the gateway to be ready after HA startup.
-            await self.gateway.send_command(
-                self.enocean_entity_id.device_address,
-                CoverQueryPositionAndAngle(entity_id=self.enocean_entity_id.unique_id),
-            )
+        if self._supports_query and self.hass is not None:
+            # Schedule the query in the background to avoid delaying HA startup.
+            self.hass.async_create_task(self._async_query_position_later())
 
+    async def _async_query_position_later(self) -> None:
+        """Wait for the gateway to be ready, then query current position."""
+        await sleep(5)  # Wait a bit for the gateway to be ready after HA startup.
+        await self.gateway.send_command(
+            self.enocean_entity_id.device_address,
+            CoverQueryPositionAndAngle(entity_id=self.enocean_entity_id.unique_id),
+        )
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if (
