@@ -16,7 +16,6 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_XY_COLOR,
-    ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
 )
@@ -325,7 +324,6 @@ class _KnxLight(LightEntity):
     _attr_max_color_temp_kelvin: int
     _attr_min_color_temp_kelvin: int
     _device: XknxLight
-    _entity_id_format = ENTITY_ID_FORMAT
 
     @property
     def is_on(self) -> bool:

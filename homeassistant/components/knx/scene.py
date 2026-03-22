@@ -65,7 +65,6 @@ class _KnxScene(BaseScene, _KnxEntityBase):
     """Representation of a KNX scene."""
 
     _device: XknxScene
-    _entity_id_format = "scene.{}"
 
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

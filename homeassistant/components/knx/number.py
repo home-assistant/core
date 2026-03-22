@@ -7,12 +7,7 @@ from typing import cast
 from xknx.devices import NumericValue
 
 from homeassistant import config_entries
-from homeassistant.components.number import (
-    ENTITY_ID_FORMAT,
-    NumberDeviceClass,
-    NumberMode,
-    RestoreNumber,
-)
+from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_MODE,
@@ -83,7 +78,6 @@ class _KnxNumber(RestoreNumber):
     """Representation of a KNX number."""
 
     _device: NumericValue
-    _entity_id_format = ENTITY_ID_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

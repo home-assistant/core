@@ -7,7 +7,7 @@ from typing import Any
 from xknx.devices import BinarySensor as XknxBinarySensor
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -80,7 +80,6 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
     """Representation of a KNX binary sensor."""
 
     _device: XknxBinarySensor
-    _entity_id_format = ENTITY_ID_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

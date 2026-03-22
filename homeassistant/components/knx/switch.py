@@ -7,7 +7,7 @@ from typing import Any
 from xknx.devices import Switch as XknxSwitch
 
 from homeassistant import config_entries
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -75,7 +75,6 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
     """Base class for a KNX switch."""
 
     _device: XknxSwitch
-    _entity_id_format = ENTITY_ID_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

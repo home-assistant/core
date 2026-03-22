@@ -11,7 +11,7 @@ from xknx.devices import Fan as XknxFan
 from xknx.telegram.address import parse_device_group_address
 
 from homeassistant import config_entries
-from homeassistant.components.fan import ENTITY_ID_FORMAT, FanEntity, FanEntityFeature
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -130,7 +130,6 @@ class _KnxFan(FanEntity):
     """Representation of a KNX fan."""
 
     _device: XknxFan
-    _entity_id_format = ENTITY_ID_FORMAT
     _step_range: tuple[int, int] | None
 
     def _get_knx_speed(self, percentage: int) -> int:

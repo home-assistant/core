@@ -54,7 +54,6 @@ class _KnxEntityBase(Entity):
     _attr_should_poll = False
 
     _attr_unique_id: str
-    _entity_id_format: str
     _knx_module: KNXModule
     _device: XknxDevice
 
@@ -111,11 +110,12 @@ class KnxYamlEntity(_KnxEntityBase):
         self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
 
         default_entity_id: str | None
-        if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
-            _, _, object_id = default_entity_id.partition(".")
-            self.entity_id = async_generate_entity_id(
-                self._entity_id_format, object_id, hass=knx_module.hass
-            )
+        if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is None:
+            return
+        entity_platform, _, object_id = default_entity_id.partition(".")
+        self.entity_id = async_generate_entity_id(
+            f"{entity_platform}.{{}}", object_id, hass=knx_module.hass
+        )
 
 
 class KnxUiEntity(_KnxEntityBase):

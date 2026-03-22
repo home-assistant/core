@@ -5,7 +5,7 @@ from __future__ import annotations
 from xknx.devices import RawValue as XknxRawValue
 
 from homeassistant import config_entries
-from homeassistant.components.button import ENTITY_ID_FORMAT, ButtonEntity
+from homeassistant.components.button import ButtonEntity
 from homeassistant.const import CONF_NAME, CONF_PAYLOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -32,7 +32,6 @@ class KNXButton(KnxYamlEntity, ButtonEntity):
     """Representation of a KNX button."""
 
     _device: XknxRawValue
-    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX button."""

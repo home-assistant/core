@@ -14,7 +14,6 @@ from xknx.devices import Device as XknxDevice, Sensor as XknxSensor
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
-    ENTITY_ID_FORMAT,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -170,7 +169,6 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
     """Representation of a KNX sensor."""
 
     _device: XknxSensor
-    _entity_id_format = ENTITY_ID_FORMAT
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

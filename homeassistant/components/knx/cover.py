@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    ENTITY_ID_FORMAT,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -76,7 +75,6 @@ class _KnxCover(CoverEntity):
     """Representation of a KNX cover."""
 
     _device: XknxCover
-    _entity_id_format = ENTITY_ID_FORMAT
 
     def init_base(self) -> None:
         """Initialize common attributes - may be based on xknx device instance."""
