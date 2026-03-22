@@ -131,7 +131,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         self, update_information: MatterSoftwareVersion
     ) -> str | None:
         """Return the version string to expose in Home Assistant."""
-        latest_version = update_information.software_version_string
+        latest_version: str = update_information.software_version_string
         if self._installed_software_version is None:
             return latest_version
 
