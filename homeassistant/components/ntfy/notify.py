@@ -65,7 +65,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Publish a message to a topic."""
+        """Publish a message to a topic via notify.send_message action."""
         await self._publish(message=message, title=title)
 
     async def publish(self, **kwargs: Any) -> None:
