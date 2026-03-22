@@ -15,8 +15,9 @@
 # ---
 # name: test_buttons[button.frenck_identify-identify-key-light-mini].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +101,9 @@
 # ---
 # name: test_buttons[button.frenck_restart-restart-key-light-mini].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
