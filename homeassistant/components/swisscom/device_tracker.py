@@ -3,20 +3,27 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from datetime import datetime
 import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    SCAN_INTERVAL,
+    ScannerEntity,
 )
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,87 +34,145 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> SwisscomDeviceScanner | None:
-    """Return the Swisscom device scanner."""
-    scanner = SwisscomDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Swisscom device tracker platform."""
+    host: str = config[CONF_HOST]
 
-    return scanner if scanner.success_init else None
+    # Test the router is accessible
+    data = await hass.async_add_executor_job(_get_swisscom_data, host)
+    if data is None:
+        return
 
+    tracked: set[str] = set()
+    connected_macs: set[str] = set()
+    device_names: dict[str, str] = {}
+    signal = f"swisscom_update_{host}"
 
-class SwisscomDeviceScanner(DeviceScanner):
-    """Class which queries a router running Swisscom Internet-Box firmware."""
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.last_results = {}
-
-        # Test the router is accessible.
-        data = self.get_swisscom_data()
-        self.success_init = data is not None
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return [client["mac"] for client in self.last_results]
-
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        if not self.last_results:
-            return None
-        for client in self.last_results:
-            if client["mac"] == device:
-                return client["host"]
-        return None
-
-    def _update_info(self):
-        """Ensure the information from the Swisscom router is up to date.
-
-        Return boolean if scanning successful.
-        """
-        if not self.success_init:
-            return False
-
+    async def async_scan_devices(now: datetime | None = None) -> None:
+        """Scan for devices and update state."""
         _LOGGER.debug("Loading data from Swisscom Internet Box")
-        if not (data := self.get_swisscom_data()):
-            return False
+        data = await hass.async_add_executor_job(_get_swisscom_data, host)
+        if not data:
+            return
 
-        active_clients = [client for client in data.values() if client["status"]]
-        self.last_results = active_clients
-        return True
+        active_clients = [
+            client for client in data.values() if client["status"]
+        ]
 
-    def get_swisscom_data(self):
-        """Retrieve data from Swisscom and return parsed result."""
-        url = f"http://{self.host}/ws"
-        headers = {"Content-Type": "application/x-sah-ws-4-call+json"}
-        data = """
-        {"service":"Devices", "method":"get",
-        "parameters":{"expression":"lan and not self"}}"""
+        new_connected = {client["mac"] for client in active_clients}
+        for client in active_clients:
+            device_names[client["mac"]] = client["host"]
 
-        devices = {}
+        connected_macs.clear()
+        connected_macs.update(new_connected)
 
-        try:
-            request = requests.post(url, headers=headers, data=data, timeout=10)
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-            requests.exceptions.ConnectTimeout,
-        ):
-            _LOGGER.debug("No response from Swisscom Internet Box")
-            return devices
+        new_macs = [mac for mac in new_connected if mac not in tracked]
+        tracked.update(new_macs)
+        if new_macs:
+            async_add_entities(
+                [
+                    SwisscomDeviceTracker(
+                        mac, device_names[mac], connected_macs, device_names, signal
+                    )
+                    for mac in new_macs
+                ]
+            )
 
-        if "status" not in request.json():
-            _LOGGER.debug("No status in response from Swisscom Internet Box")
-            return devices
+        async_dispatcher_send(hass, signal)
 
-        for device in request.json()["status"]:
-            with suppress(KeyError, requests.exceptions.RequestException):
-                devices[device["Key"]] = {
-                    "ip": device["IPAddress"],
-                    "mac": device["PhysAddress"],
-                    "host": device["Name"],
-                    "status": device["Active"],
-                }
+    await async_scan_devices()
+
+    scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    async_track_time_interval(hass, async_scan_devices, scan_interval)
+
+
+def _get_swisscom_data(host: str) -> dict | None:
+    """Retrieve data from Swisscom and return parsed result."""
+    url = f"http://{host}/ws"
+    headers = {"Content-Type": "application/x-sah-ws-4-call+json"}
+    data = (
+        '{"service":"Devices", "method":"get",'
+        '"parameters":{"expression":"lan and not self"}}'
+    )
+
+    devices: dict = {}
+
+    try:
+        request = requests.post(url, headers=headers, data=data, timeout=10)
+    except (
+        requests.exceptions.ConnectionError,
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectTimeout,
+    ):
+        _LOGGER.debug("No response from Swisscom Internet Box")
         return devices
+
+    if "status" not in request.json():
+        _LOGGER.debug("No status in response from Swisscom Internet Box")
+        return devices
+
+    for device in request.json()["status"]:
+        with suppress(KeyError, requests.exceptions.RequestException):
+            devices[device["Key"]] = {
+                "ip": device["IPAddress"],
+                "mac": device["PhysAddress"],
+                "host": device["Name"],
+                "status": device["Active"],
+            }
+    return devices
+
+
+class SwisscomDeviceTracker(ScannerEntity):
+    """Representation of a Swisscom tracked device."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        mac: str,
+        name: str,
+        connected_macs: set[str],
+        device_names: dict[str, str],
+        signal: str,
+    ) -> None:
+        """Initialize a Swisscom device tracker entity."""
+        self._mac = mac
+        self._attr_name = name
+        self._connected_macs = connected_macs
+        self._device_names = device_names
+        self._signal = signal
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._mac in self._connected_macs
+
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        return self._device_names.get(self._mac)
+
+    @property
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    async def async_added_to_hass(self) -> None:
+        """Register state update callback."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._signal,
+                self._async_update_state,
+            )
+        )
+
+    @callback
+    def _async_update_state(self) -> None:
+        """Update the device state."""
+        self.async_write_ha_state()
