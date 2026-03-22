@@ -5,7 +5,17 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'schedule',
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'lock_early',
+        'lock_now',
+        'reset',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -24,7 +34,7 @@
     'object_id_base': 'Door Lock Rule',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Door Lock Rule',
     'platform': 'unifi_access',
@@ -39,7 +49,17 @@
 # name: test_sensor_entities[sensor.back_door_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Back Door Door Lock Rule',
+      'options': list([
+        'schedule',
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'lock_early',
+        'lock_now',
+        'reset',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.back_door_door_lock_rule',
@@ -106,7 +126,17 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'schedule',
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'lock_early',
+        'lock_now',
+        'reset',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -125,7 +155,7 @@
     'object_id_base': 'Door Lock Rule',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Door Lock Rule',
     'platform': 'unifi_access',
@@ -140,7 +170,17 @@
 # name: test_sensor_entities[sensor.front_door_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Front Door Door Lock Rule',
+      'options': list([
+        'schedule',
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'lock_early',
+        'lock_now',
+        'reset',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.front_door_door_lock_rule',

@@ -6,7 +6,6 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import ApiNotFoundError, DoorLockRuleStatus, DoorLockRuleType
 from unifi_access_api.models.websocket import (

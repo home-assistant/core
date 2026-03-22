@@ -38,7 +38,9 @@ async def async_setup_entry(
 class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
     """Sensor reporting the current lock rule for a UniFi Access door."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_options = [t.value for t in DoorLockRuleType if t != DoorLockRuleType.NONE]
     _attr_translation_key = "door_lock_rule"
 
     def __init__(
@@ -77,6 +79,6 @@ class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
     def native_value(self) -> datetime | None:
         """Return the time when the lock rule expires, or None if no rule is active."""
         rule_status = self._door.lock_rule_status
-        if rule_status is None or rule_status.ended_time == 0:
+        if rule_status is None or not rule_status.ended_time:
             return None
         return datetime.fromtimestamp(rule_status.ended_time, tz=UTC)

@@ -133,10 +133,10 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 lock_rules = await asyncio.gather(
                     *(self.client.get_door_lock_rule(door.id) for door in doors)
                 )
-            doors = [
-                door.with_updates(lock_rule_status=rule)
-                for door, rule in zip(doors, lock_rules)
-            ]
+                doors = [
+                    door.with_updates(lock_rule_status=rule)
+                    for door, rule in zip(doors, lock_rules, strict=True)
+                ]
         except ApiNotFoundError:
             supports_lock_rules = False
         except (ApiAuthError, ApiConnectionError, ApiError, TimeoutError) as err:
@@ -194,14 +194,15 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         elif ws_state.lock == "unlocked":
             updates["door_lock_relay_status"] = "unlock"
 
-        if ws_state.remain_lock is not None:
-            new_lock_rule = ws_state.remain_lock.to_door_lock_rule_status()
-        elif ws_state.remain_unlock is not None:
-            new_lock_rule = ws_state.remain_unlock.to_door_lock_rule_status()
-        else:
-            new_lock_rule = DoorLockRuleStatus()
-        if new_lock_rule != current_door.lock_rule_status:
-            updates["lock_rule_status"] = new_lock_rule
+        if self.data.supports_lock_rules:
+            if ws_state.remain_lock is not None:
+                new_lock_rule = ws_state.remain_lock.to_door_lock_rule_status()
+            elif ws_state.remain_unlock is not None:
+                new_lock_rule = ws_state.remain_unlock.to_door_lock_rule_status()
+            else:
+                new_lock_rule = DoorLockRuleStatus()
+            if new_lock_rule != current_door.lock_rule_status:
+                updates["lock_rule_status"] = new_lock_rule
 
         if not updates:
             return
@@ -243,7 +244,10 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
-        door = insights.data.metadata.door
+        door_entries = insights.data.metadata.door
+        if not door_entries:
+            return
+        door = door_entries[0]
         if not door.id:
             return
         event_type = (
