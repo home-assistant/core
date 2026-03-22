@@ -26,7 +26,6 @@ from homeassistant.core import Context, HomeAssistant, is_callback
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, format_unserializable_data
 
 from .json import find_paths_unserializable_data, json_bytes, json_dumps
-from .network import NoURLAvailableError, get_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,10 +58,13 @@ def request_handler_factory(
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
+            # Import here to avoid circular dependency with network.py
+            from .network import NoURLAvailableError, get_url  # noqa: PLC0415
+
             try:
                 url_prefix = get_url(hass, require_current_request=True)
             except NoURLAvailableError:
-                # Omit header to avoid leaking configured urls
+                # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
             raise HTTPUnauthorized(
                 # Include resource metadata endpoint for RFC9728

@@ -109,7 +109,7 @@ async def test_requires_auth_includes_www_authenticate(
     mock_request.get = Mock(return_value=False)
     with (
         patch(
-            "homeassistant.helpers.http.get_url",
+            "homeassistant.helpers.network.get_url",
             return_value="https://example.com",
         ),
         pytest.raises(HTTPUnauthorized) as exc_info,
@@ -132,7 +132,7 @@ async def test_requires_auth_omits_www_authenticate_without_url(
     mock_request.get = Mock(return_value=False)
     with (
         patch(
-            "homeassistant.helpers.http.get_url",
+            "homeassistant.helpers.network.get_url",
             side_effect=NoURLAvailableError,
         ),
         pytest.raises(HTTPUnauthorized) as exc_info,
