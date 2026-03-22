@@ -4,6 +4,7 @@
   "codeowners": ["@nmaggioni"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/snmp",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyasn1", "pysmi", "pysnmp"],
   "quality_scale": "legacy",
