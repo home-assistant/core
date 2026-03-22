@@ -392,6 +392,30 @@
       "mop_life_time_left": {
         "name": "Mop life time left"
       },
+      "q10_status": {
+        "name": "Status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "cleaning": "[%key:component::roborock::entity::sensor::status::state::cleaning%]",
+          "creating_map": "[%key:component::roborock::entity::sensor::status::state::creating_map%]",
+          "dusting": "[%key:component::roborock::entity::sensor::status::state::dusting%]",
+          "fault": "[%key:component::roborock::entity::sensor::status::state::fault%]",
+          "going_to_charge": "[%key:component::roborock::entity::sensor::status::state::going_to_charge%]",
+          "mopping": "[%key:component::roborock::entity::sensor::status::state::mopping%]",
+          "paused": "[%key:common::state::paused%]",
+          "relocating": "[%key:component::roborock::entity::sensor::status::state::relocating%]",
+          "remote_control": "[%key:component::roborock::entity::sensor::status::state::remote_control%]",
+          "saving_map": "[%key:component::roborock::entity::sensor::status::state::saving_map%]",
+          "sleeping": "[%key:component::roborock::entity::sensor::status::state::sleeping%]",
+          "standby": "[%key:component::roborock::entity::sensor::status::state::standby%]",
+          "sweep_and_mop": "[%key:component::roborock::entity::sensor::status::state::sweep_and_mop%]",
+          "sweeping": "[%key:component::roborock::entity::sensor::status::state::sweeping%]",
+          "transitioning": "[%key:component::roborock::entity::sensor::status::state::transitioning%]",
+          "unknown": "[%key:component::roborock::entity::sensor::status::state::unknown%]",
+          "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
+          "waiting_to_charge": "[%key:component::roborock::entity::sensor::status::state::waiting_to_charge%]"
+        }
+      },
       "q7_status": {
         "name": "Status",
         "state": {

@@ -428,7 +428,7 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
 Q10_B01_SENSOR_DESCRIPTIONS = [
     RoborockSensorDescriptionQ10(
         key="status",
-        translation_key="status",
+        translation_key="q10_status",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda data: data.status.value if data.status is not None else None,
         entity_category=EntityCategory.DIAGNOSTIC,
