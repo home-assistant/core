@@ -146,7 +146,7 @@ class NINADataUpdateCoordinator(
                     )
                     continue
 
-                shorted_affected_areas: str = (
+                shortened_affected_areas: str = (
                     affected_areas_string[0:250] + "..."
                     if len(affected_areas_string) > 250
                     else affected_areas_string
@@ -159,7 +159,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.sender,
                     raw_warn.severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
-                    shorted_affected_areas,
+                    shortened_affected_areas,
                     affected_areas_string,
                     raw_warn.web or "",
                     raw_warn.sent or "",
