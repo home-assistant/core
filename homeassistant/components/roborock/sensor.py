@@ -94,7 +94,11 @@ def _q10_error_value_fn(status: Q10StatusTrait) -> str | None:
         return None
     if isinstance(fault, str):
         return fault
-    return RoborockErrorCode(fault).name
+    try:
+        return RoborockErrorCode(fault).name
+    except ValueError:
+        _LOGGER.debug("Unknown Roborock error code reported for Q10: %s", fault)
+        return None
 
 
 def _dock_error_value_fn(state: DeviceState) -> str | None:
