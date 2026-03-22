@@ -444,7 +444,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             self.entity_description.key, self.entity_description.status_attribute
         )
         if self.entity_description.options_map:
-            option = self.entity_description.options_map.get(option)
+            option = self.entity_description.options_map.get(option, option)
         if self.entity_description.value_is_integer and option is not None:
             option = str(option)
         return option
