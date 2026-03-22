@@ -49,8 +49,8 @@ async def target_entities(hass: HomeAssistant, domain: str) -> dict[str, list[st
     """Create multiple entities associated with different targets.
 
     Returns a dict with the following keys:
-    - included: List of entity_ids meant to be targeted.
-    - excluded: List of entity_ids not meant to be targeted.
+    - included_entities: List of entity_ids meant to be targeted.
+    - excluded_entities: List of entity_ids not meant to be targeted.
     """
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -133,7 +133,7 @@ async def target_entities(hass: HomeAssistant, domain: str) -> dict[str, list[st
 
     # Return all available entities
     return {
-        "included": [
+        "included_entities": [
             f"{domain}.standalone_{domain}",
             f"{domain}.standalone2_{domain}",
             f"{domain}.label_{domain}",
@@ -141,7 +141,7 @@ async def target_entities(hass: HomeAssistant, domain: str) -> dict[str, list[st
             f"{domain}.device_{domain}",
             f"{domain}.device2_{domain}",
         ],
-        "excluded": [
+        "excluded_entities": [
             f"{domain}.standalone_{domain}_excluded",
             f"{domain}.label_{domain}_excluded",
             f"{domain}.area_{domain}_excluded",
@@ -186,16 +186,16 @@ class StateDescription(TypedDict):
 class TriggerStateDescription(TypedDict):
     """Test state and expected service call count."""
 
-    included: StateDescription  # State for entities meant to be targeted
-    excluded: StateDescription  # State for entities not meant to be targeted
+    included_state: StateDescription  # State for entities meant to be targeted
+    excluded_state: StateDescription  # State for entities not meant to be targeted
     count: int  # Expected service call count
 
 
 class ConditionStateDescription(TypedDict):
     """Test state and expected condition evaluation."""
 
-    included: StateDescription  # State for entities meant to be targeted
-    excluded: StateDescription  # State for entities not meant to be targeted
+    included_state: StateDescription  # State for entities meant to be targeted
+    excluded_state: StateDescription  # State for entities not meant to be targeted
 
     condition_true: bool  # If the condition is expected to evaluate to true
     condition_true_first_entity: bool  # If the condition is expected to evaluate to true for the first targeted entity
@@ -207,7 +207,7 @@ def _parametrize_condition_states(
     condition_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
-    additional_attributes: dict | None,
+    required_filter_attributes: dict | None,
     condition_true_if_invalid: bool,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected condition evaluations.
@@ -219,8 +219,9 @@ def _parametrize_condition_states(
     where states is a list of ConditionStateDescription dicts.
     """
 
-    additional_attributes = additional_attributes or {}
+    required_filter_attributes = required_filter_attributes or {}
     condition_options = condition_options or {}
+    has_required_filter_attributes = bool(required_filter_attributes)
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict],
@@ -230,24 +231,24 @@ def _parametrize_condition_states(
         """Return ConditionStateDescription dict."""
         if isinstance(state, str) or state is None:
             return {
-                "included": {
+                "included_state": {
                     "state": state,
-                    "attributes": additional_attributes,
+                    "attributes": required_filter_attributes,
                 },
-                "excluded": {
-                    "state": state if additional_attributes else None,
+                "excluded_state": {
+                    "state": state if has_required_filter_attributes else None,
                     "attributes": {},
                 },
                 "condition_true": condition_true,
                 "condition_true_first_entity": condition_true_first_entity,
             }
         return {
-            "included": {
+            "included_state": {
                 "state": state[0],
-                "attributes": state[1] | additional_attributes,
+                "attributes": state[1] | required_filter_attributes,
             },
-            "excluded": {
-                "state": state[0] if additional_attributes else None,
+            "excluded_state": {
+                "state": state[0] if has_required_filter_attributes else None,
                 "attributes": state[1],
             },
             "condition_true": condition_true,
@@ -299,7 +300,7 @@ def parametrize_condition_states_any(
     condition_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
-    additional_attributes: dict | None = None,
+    required_filter_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected condition evaluations.
 
@@ -315,7 +316,7 @@ def parametrize_condition_states_any(
         condition_options=condition_options,
         target_states=target_states,
         other_states=other_states,
-        additional_attributes=additional_attributes,
+        required_filter_attributes=required_filter_attributes,
         condition_true_if_invalid=False,
     )
 
@@ -326,7 +327,7 @@ def parametrize_condition_states_all(
     condition_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
-    additional_attributes: dict | None = None,
+    required_filter_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected condition evaluations.
 
@@ -342,7 +343,7 @@ def parametrize_condition_states_all(
         condition_options=condition_options,
         target_states=target_states,
         other_states=other_states,
-        additional_attributes=additional_attributes,
+        required_filter_attributes=required_filter_attributes,
         condition_true_if_invalid=True,
     )
 
@@ -354,7 +355,7 @@ def parametrize_trigger_states(
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
     extra_invalid_states: list[str | None | tuple[str | None, dict]] | None = None,
-    additional_attributes: dict | None = None,
+    required_filter_attributes: dict | None = None,
     trigger_from_none: bool = True,
     retrigger_on_target_state: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -377,7 +378,7 @@ def parametrize_trigger_states(
 
     extra_invalid_states = extra_invalid_states or []
     invalid_states = [STATE_UNAVAILABLE, STATE_UNKNOWN, *extra_invalid_states]
-    additional_attributes = additional_attributes or {}
+    required_filter_attributes = required_filter_attributes or {}
     trigger_options = trigger_options or {}
 
     def state_with_attributes(
@@ -386,23 +387,23 @@ def parametrize_trigger_states(
         """Return TriggerStateDescription dict."""
         if isinstance(state, str) or state is None:
             return {
-                "included": {
+                "included_state": {
                     "state": state,
-                    "attributes": additional_attributes,
+                    "attributes": required_filter_attributes,
                 },
-                "excluded": {
-                    "state": state if additional_attributes else None,
+                "excluded_state": {
+                    "state": state if required_filter_attributes else None,
                     "attributes": {},
                 },
                 "count": count,
             }
         return {
-            "included": {
+            "included_state": {
                 "state": state[0],
-                "attributes": state[1] | additional_attributes,
+                "attributes": state[1] | required_filter_attributes,
             },
-            "excluded": {
-                "state": state[0] if additional_attributes else None,
+            "excluded_state": {
+                "state": state[0] if required_filter_attributes else None,
                 "attributes": state[1],
             },
             "count": count,
@@ -517,54 +518,75 @@ def parametrize_trigger_states(
 
 
 def parametrize_numerical_attribute_changed_trigger_states(
-    trigger: str, state: str, attribute: str
+    trigger: str,
+    state: str,
+    attribute: str,
+    *,
+    trigger_options: dict[str, Any] | None = None,
+    required_filter_attributes: dict | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical changed triggers."""
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={},
+            trigger_options={**trigger_options},
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 50}),
-                (state, {attribute: 100}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
-            other_states=[(state, {attribute: None})],
+            other_states=[(state, {attribute: None} | unit_attributes)],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
+            trigger_options={CONF_ABOVE: 10, **trigger_options},
             target_states=[
-                (state, {attribute: 50}),
-                (state, {attribute: 100}),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 0} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
+            trigger_options={CONF_BELOW: 90, **trigger_options},
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 50}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 100}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
         ),
     ]
 
 
 def parametrize_numerical_attribute_crossed_threshold_trigger_states(
-    trigger: str, state: str, attribute: str
+    trigger: str,
+    state: str,
+    attribute: str,
+    *,
+    trigger_options: dict[str, Any] | None = None,
+    required_filter_attributes: dict | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
@@ -572,16 +594,18 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 50}),
-                (state, {attribute: 60}),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 60} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-                (state, {attribute: 100}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
@@ -589,52 +613,62 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 100}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 50}),
-                (state, {attribute: 60}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 60} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
                 CONF_LOWER_LIMIT: 10,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 50}),
-                (state, {attribute: 100}),
+                (state, {attribute: 50} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 0} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
             target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 50}),
+                (state, {attribute: 0} | unit_attributes),
+                (state, {attribute: 50} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 100}),
+                (state, {attribute: None} | unit_attributes),
+                (state, {attribute: 100} | unit_attributes),
             ],
+            required_filter_attributes=required_filter_attributes,
         ),
     ]
 
 
 def parametrize_numerical_state_value_changed_trigger_states(
-    trigger: str, device_class: str
+    trigger: str,
+    *,
+    device_class: str,
+    trigger_options: dict[str, Any] | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical state-value changed triggers.
 
@@ -644,32 +678,39 @@ def parametrize_numerical_state_value_changed_trigger_states(
     """
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
-    additional_attributes = {ATTR_DEVICE_CLASS: device_class}
+    required_filter_attributes = {ATTR_DEVICE_CLASS: device_class}
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={},
-            target_states=["0", "50", "100"],
-            other_states=["none"],
-            additional_attributes=additional_attributes,
+            trigger_options=trigger_options,
+            target_states=[
+                ("0", unit_attributes),
+                ("50", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            other_states=[("none", unit_attributes)],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
-            target_states=["50", "100"],
-            other_states=["none", "0"],
-            additional_attributes=additional_attributes,
+            trigger_options={CONF_ABOVE: 10} | trigger_options,
+            target_states=[("50", unit_attributes), ("100", unit_attributes)],
+            other_states=[("none", unit_attributes), ("0", unit_attributes)],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
-            target_states=["0", "50"],
-            other_states=["none", "100"],
-            additional_attributes=additional_attributes,
+            trigger_options={CONF_BELOW: 90} | trigger_options,
+            target_states=[("0", unit_attributes), ("50", unit_attributes)],
+            other_states=[("none", unit_attributes), ("100", unit_attributes)],
+            required_filter_attributes=required_filter_attributes,
             retrigger_on_target_state=True,
             trigger_from_none=False,
         ),
@@ -677,7 +718,11 @@ def parametrize_numerical_state_value_changed_trigger_states(
 
 
 def parametrize_numerical_state_value_crossed_threshold_trigger_states(
-    trigger: str, device_class: str
+    trigger: str,
+    *,
+    device_class: str,
+    trigger_options: dict[str, Any] | None = None,
+    unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical state-value crossed threshold triggers.
 
@@ -687,7 +732,10 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     """
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
-    additional_attributes = {ATTR_DEVICE_CLASS: device_class}
+    required_filter_attributes = {ATTR_DEVICE_CLASS: device_class}
+    trigger_options = trigger_options or {}
+    unit_attributes = unit_attributes or {}
+
     return [
         *parametrize_trigger_states(
             trigger=trigger,
@@ -695,10 +743,15 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
-            target_states=["50", "60"],
-            other_states=["none", "0", "100"],
-            additional_attributes=additional_attributes,
+            target_states=[("50", unit_attributes), ("60", unit_attributes)],
+            other_states=[
+                ("none", unit_attributes),
+                ("0", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -707,10 +760,15 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
                 CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
-            target_states=["0", "100"],
-            other_states=["none", "50", "60"],
-            additional_attributes=additional_attributes,
+            target_states=[("0", unit_attributes), ("100", unit_attributes)],
+            other_states=[
+                ("none", unit_attributes),
+                ("50", unit_attributes),
+                ("60", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -718,10 +776,11 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
                 CONF_LOWER_LIMIT: 10,
+                **trigger_options,
             },
-            target_states=["50", "100"],
-            other_states=["none", "0"],
-            additional_attributes=additional_attributes,
+            target_states=[("50", unit_attributes), ("100", unit_attributes)],
+            other_states=[("none", unit_attributes), ("0", unit_attributes)],
+            required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -729,10 +788,11 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
                 CONF_UPPER_LIMIT: 90,
+                **trigger_options,
             },
-            target_states=["0", "50"],
-            other_states=["none", "100"],
-            additional_attributes=additional_attributes,
+            target_states=[("0", unit_attributes), ("50", unit_attributes)],
+            other_states=[("none", unit_attributes), ("100", unit_attributes)],
+            required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
         ),
     ]
@@ -876,14 +936,14 @@ async def assert_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test condition with the 'any' behavior."""
-    other_entity_ids = set(target_entities["included"]) - {entity_id}
-    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+    other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
-    for eid in target_entities["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_entities["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -894,8 +954,8 @@ async def assert_condition_behavior_any(
     )
 
     for state in states:
-        included_state = state["included"]
-        excluded_state = state["excluded"]
+        included_state = state["included_state"]
+        excluded_state = state["excluded_state"]
 
         # Set excluded entities first to verify that they don't make the
         # condition evaluate to true
@@ -928,14 +988,14 @@ async def assert_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test condition with the 'all' behavior."""
-    other_entity_ids = set(target_entities["included"]) - {entity_id}
-    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+    other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
-    for eid in target_entities["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_entities["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -946,8 +1006,8 @@ async def assert_condition_behavior_all(
     )
 
     for state in states:
-        included_state = state["included"]
-        excluded_state = state["excluded"]
+        included_state = state["included_state"]
+        excluded_state = state["excluded_state"]
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
@@ -976,21 +1036,21 @@ async def assert_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode any."""
-    other_entity_ids = set(target_entities["included"]) - {entity_id}
-    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+    other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
-    for eid in target_entities["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_entities["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state in states[1:]:
-        excluded_state = state["excluded"]
-        included_state = state["included"]
+        excluded_state = state["excluded_state"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
@@ -1021,14 +1081,14 @@ async def assert_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode first."""
-    other_entity_ids = set(target_entities["included"]) - {entity_id}
-    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+    other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
-    for eid in target_entities["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_entities["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -1036,8 +1096,8 @@ async def assert_trigger_behavior_first(
     )
 
     for state in states[1:]:
-        excluded_state = state["excluded"]
-        included_state = state["included"]
+        excluded_state = state["excluded_state"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
@@ -1067,14 +1127,14 @@ async def assert_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode last."""
-    other_entity_ids = set(target_entities["included"]) - {entity_id}
-    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+    other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
-    for eid in target_entities["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_entities["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
     for eid in excluded_entity_ids:
-        set_or_remove_state(hass, eid, states[0]["excluded"])
+        set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -1082,8 +1142,8 @@ async def assert_trigger_behavior_last(
     )
 
     for state in states[1:]:
-        excluded_state = state["excluded"]
-        included_state = state["included"]
+        excluded_state = state["excluded_state"]
+        included_state = state["included_state"]
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()

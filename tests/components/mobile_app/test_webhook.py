@@ -1142,7 +1142,6 @@ async def test_webhook_handle_conversation_process(
             },
             "language": hass.config.language,
             "data": {
-                "targets": [],
                 "success": [],
                 "failed": [],
             },

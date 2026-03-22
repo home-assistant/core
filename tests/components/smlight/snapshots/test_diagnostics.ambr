@@ -13,6 +13,7 @@
       'hw_version': None,
       'legacy_api': 0,
       'model': 'SLZB-06p7',
+      'psram_total': None,
       'radios': list([
         dict({
           'chip_index': 0,
