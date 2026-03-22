@@ -330,7 +330,7 @@ async def test_node_buttons_permission_denied_for_auditor_role(
     entity_id: str,
     translation_key: str,
 ) -> None:
-    """Test that buttons are missing when only Audit permissions exist."""
+    """Test that buttons are raising accordingly for Auditor permissions."""
     mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
 
     await setup_integration(hass, mock_config_entry)
@@ -343,3 +343,21 @@ async def test_node_buttons_permission_denied_for_auditor_role(
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key
+
+
+async def test_vm_buttons_denied_for_specific_vm(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that button only works on actual permissions."""
+    await setup_integration(hass, mock_config_entry)
+    mock_proxmox_client._node_mock.qemu(101)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.vm_db_start"},
+            blocking=True,
+        )
