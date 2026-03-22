@@ -147,6 +147,10 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 },
             )
             self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            # Return early — the reload will set up fresh data. Continuing to
+            # fetch here would result in a CancelledError when HA tears down
+            # the current coordinator mid-request.
+            return self.data or {}
 
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
