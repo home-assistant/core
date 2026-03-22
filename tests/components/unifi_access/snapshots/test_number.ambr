@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_number_entities[number.back_door_rule_interval_min-entry]
+# name: test_number_entities[number.back_door_rule_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.back_door_rule_interval_min',
+    'entity_id': 'number.back_door_rule_interval',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -26,12 +26,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Rule Interval (min)',
+    'object_id_base': 'Rule Interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Rule Interval (min)',
+    'original_name': 'Rule Interval',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -41,11 +41,11 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_number_entities[number.back_door_rule_interval_min-state]
+# name: test_number_entities[number.back_door_rule_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Back Door Rule Interval (min)',
+      'friendly_name': 'Back Door Rule Interval',
       'max': 480,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
@@ -53,14 +53,14 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.back_door_rule_interval_min',
+    'entity_id': 'number.back_door_rule_interval',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
 # ---
-# name: test_number_entities[number.front_door_rule_interval_min-entry]
+# name: test_number_entities[number.front_door_rule_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -79,7 +79,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.front_door_rule_interval_min',
+    'entity_id': 'number.front_door_rule_interval',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,12 +87,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Rule Interval (min)',
+    'object_id_base': 'Rule Interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Rule Interval (min)',
+    'original_name': 'Rule Interval',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -102,11 +102,11 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_number_entities[number.front_door_rule_interval_min-state]
+# name: test_number_entities[number.front_door_rule_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Front Door Rule Interval (min)',
+      'friendly_name': 'Front Door Rule Interval',
       'max': 480,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
@@ -114,7 +114,7 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.front_door_rule_interval_min',
+    'entity_id': 'number.front_door_rule_interval',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

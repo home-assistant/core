@@ -39,7 +39,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_LOCK_RULE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_LOCK_RULE_INTERVAL = 10
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
 

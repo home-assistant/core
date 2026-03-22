@@ -9,8 +9,8 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .const import DEFAULT_LOCK_RULE_INTERVAL
+from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .entity import UnifiAccessEntity
 
 PARALLEL_UPDATES = 0

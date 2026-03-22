@@ -15,8 +15,8 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-FRONT_DOOR_INTERVAL_ENTITY = "number.front_door_rule_interval_min"
-BACK_DOOR_INTERVAL_ENTITY = "number.back_door_rule_interval_min"
+FRONT_DOOR_INTERVAL_ENTITY = "number.front_door_rule_interval"
+BACK_DOOR_INTERVAL_ENTITY = "number.back_door_rule_interval"
 
 
 async def test_number_entities(
