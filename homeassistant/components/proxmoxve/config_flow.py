@@ -205,7 +205,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial reconfiguration step step."""
+        """Handle the initial reconfiguration step."""
         self._entry = self._get_reconfigure_entry()
         suggested_values = {
             CONF_AUTH_PROVIDERS: self._entry.data.get(

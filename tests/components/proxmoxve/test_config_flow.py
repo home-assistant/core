@@ -346,7 +346,7 @@ async def test_import_flow_exceptions(
 
 
 def sanitize_config_entry(data: dict[str, Any]) -> dict[str, Any]:
-    """Test we sanitize the config entry data correctly."""
+    """Sanitize config entry data by removing unused or None auth keys for assertions."""
     # Ignore unused keys (i.e. when switching from password to token or vice versa)
     # as we cannot unset them in the config entry, but the flow should still succeed
     unused_auth_keys = [CONF_TOKEN_ID, CONF_TOKEN_SECRET]

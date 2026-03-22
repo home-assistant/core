@@ -168,7 +168,7 @@ async def test_migration_v1_to_v3(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test migration from version 1 to 2."""
+    """Test migration from version 1."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
