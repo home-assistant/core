@@ -1,7 +1,5 @@
 """Integration to UniFi Network and its various features."""
 
-from collections.abc import Mapping
-
 from aiounifi.models.client import Client
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,10 +14,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_CLIENT_SOURCE,
     CONF_SITE_ID,
-    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_WIRED_CLIENTS,
-    DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN,
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
@@ -54,7 +50,7 @@ async def async_migrate_entry(
     options = dict(config_entry.options)
 
     if config_entry.version == 1 and config_entry.minor_version < 2:
-        tracked_clients = await _async_get_tracked_clients(hass, config_entry, options)
+        tracked_clients = _get_tracked_clients(hass, config_entry, options)
         options[CONF_CLIENT_SOURCE] = sorted(tracked_clients)
         options.pop(CONF_TRACK_CLIENTS, None)
         options.pop(CONF_TRACK_WIRED_CLIENTS, None)
@@ -94,60 +90,15 @@ def _async_get_tracked_clients_from_entity_registry(
     return tracked_clients
 
 
-@callback
-def _legacy_client_is_tracked(
-    options: Mapping[str, object], client: Client, wireless_clients: set[str]
-) -> bool:
-    """Check if a client matches the legacy broad tracking rules."""
-    if not options.get(CONF_TRACK_CLIENTS, True):
-        return False
-
-    if client.mac not in wireless_clients and not options.get(
-        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
-    ):
-        return False
-
-    ssid_filter = set(_get_option_list(options, CONF_SSID_FILTER))
-    if client.essid and ssid_filter and client.essid not in ssid_filter:
-        return False
-
-    return True
-
-
-@callback
-def _get_option_list(options: Mapping[str, object], key: str) -> list[str]:
-    """Return a list option if present."""
-    if (value := options.get(key)) is None or not isinstance(value, list):
-        return []
-    return [item for item in value if isinstance(item, str)]
-
-
-async def _async_get_tracked_clients(
-    hass: HomeAssistant, config_entry: UnifiConfigEntry, options: Mapping[str, object]
+def _get_tracked_clients(
+    hass: HomeAssistant, config_entry: UnifiConfigEntry, options: dict[str, object]
 ) -> set[str]:
-    """Build the client whitelist from legacy tracking settings."""
-    tracked_clients = set(_get_option_list(options, CONF_CLIENT_SOURCE))
+    """Build the client whitelist from explicit selection and entity registry."""
+    tracked_clients: set[str] = set()
+    if isinstance((client_source := options.get(CONF_CLIENT_SOURCE)), list):
+        tracked_clients.update(item for item in client_source if isinstance(item, str))
     tracked_clients.update(
         _async_get_tracked_clients_from_entity_registry(hass, config_entry)
-    )
-
-    try:
-        api = await get_unifi_api(hass, config_entry.data)
-        await api.clients.update()
-    except AuthenticationRequired, CannotConnect:
-        return tracked_clients
-
-    wireless_clients = set(
-        getattr(hass.data.get(UNIFI_WIRELESS_CLIENTS), "wireless_clients", set())
-    )
-    wireless_clients.update(
-        client.mac for client in api.clients.values() if not client.is_wired
-    )
-
-    tracked_clients.update(
-        client.mac
-        for client in api.clients.values()
-        if _legacy_client_is_tracked(options, client, wireless_clients)
     )
 
     return tracked_clients

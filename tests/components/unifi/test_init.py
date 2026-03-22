@@ -66,87 +66,52 @@ async def test_setup_entry_fails_trigger_reauth_flow(
 
 
 @pytest.mark.parametrize(
-    "client_payload",
+    (
+        "config_entry_options",
+        "entity_registry_clients",
+        "expected_client_source",
+    ),
     [
-        [
-            {
-                "hostname": "client_1",
-                "ip": "10.0.0.1",
-                "is_wired": False,
-                "mac": "00:00:00:00:00:01",
-            }
-        ]
+        # Neither explicit allowlist nor entity-registry tracked clients.
+        ({}, [], []),
+        # Explicit allowlist only.
+        (
+            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
+            [],
+            ["00:00:00:00:00:01"],
+        ),
+        # Entity registry only.
+        ({}, ["00:00:00:00:00:02"], ["00:00:00:00:00:02"]),
+        # Both explicit allowlist and entity-registry tracked clients, with some overlap.
+        (
+            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
+            ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+            ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+        ),
     ],
 )
-async def test_migrate_legacy_entry_without_tracking_options_seeds_client_selection(
-    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
-) -> None:
-    """Legacy entries seed client selection when tracking was implicitly enabled."""
-    config_entry = await config_entry_factory()
-
-    assert config_entry.minor_version == 2
-    assert config_entry.options[CONF_CLIENT_SOURCE] == ["00:00:00:00:00:01"]
-    assert CONF_TRACK_CLIENTS not in config_entry.options
-
-
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "hostname": "client_1",
-                "ip": "10.0.0.1",
-                "is_wired": False,
-                "mac": "00:00:00:00:00:01",
-            }
-        ]
-    ],
-)
-@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: False}])
-async def test_migrate_legacy_entry_preserves_explicit_track_clients_false_as_empty_whitelist(
-    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
-) -> None:
-    """Legacy entries with tracking disabled migrate to an empty whitelist."""
-    config_entry = await config_entry_factory()
-
-    assert config_entry.minor_version == 2
-    assert config_entry.options[CONF_CLIENT_SOURCE] == []
-    assert CONF_TRACK_CLIENTS not in config_entry.options
-
-
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "hostname": "client_1",
-                "ip": "10.0.0.1",
-                "is_wired": False,
-                "mac": "00:00:00:00:00:01",
-            }
-        ]
-    ],
-)
-@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: False}])
-async def test_migrate_legacy_entry_preserves_entity_registry_clients(
+async def test_migrate_legacy_entry_builds_client_source_from_allowlist_and_entity_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     config_entry_factory: ConfigEntryFactoryType,
     entity_registry: er.EntityRegistry,
+    entity_registry_clients: list[str],
+    expected_client_source: list[str],
 ) -> None:
-    """Legacy migration keeps client trackers already present in entity registry."""
-    entity_registry.async_get_or_create(
-        TRACKER_DOMAIN,
-        DOMAIN,
-        "site_id-00:00:00:00:00:01",
-        suggested_object_id="client_1",
-        config_entry=config_entry,
-    )
+    """Legacy migration only preserves explicit and entity-registry clients."""
+    for mac in entity_registry_clients:
+        entity_registry.async_get_or_create(
+            TRACKER_DOMAIN,
+            DOMAIN,
+            f"site_id-{mac}",
+            suggested_object_id=f"client_{mac}",
+            config_entry=config_entry,
+        )
 
     migrated_entry = await config_entry_factory()
 
     assert migrated_entry.minor_version == 2
-    assert migrated_entry.options[CONF_CLIENT_SOURCE] == ["00:00:00:00:00:01"]
+    assert migrated_entry.options[CONF_CLIENT_SOURCE] == expected_client_source
     assert CONF_TRACK_CLIENTS not in migrated_entry.options
 
 
@@ -174,7 +139,7 @@ async def test_migrate_legacy_entry_preserves_track_devices_and_ssid_filter(
     config_entry = await config_entry_factory()
 
     assert config_entry.minor_version == 2
-    assert config_entry.options[CONF_CLIENT_SOURCE] == ["00:00:00:00:00:01"]
+    assert config_entry.options[CONF_CLIENT_SOURCE] == []
     assert config_entry.options[CONF_TRACK_DEVICES] is False
     assert config_entry.options[CONF_SSID_FILTER] == ["ssid"]
 
@@ -317,7 +282,7 @@ async def test_wireless_clients(
         {
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
-            CONF_TRACK_CLIENTS: True,
+            CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
             CONF_TRACK_DEVICES: True,
         }
     ],

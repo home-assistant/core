@@ -16,7 +16,6 @@ from homeassistant.components.unifi.const import (
     CONF_CLIENT_SOURCE,
     CONF_IGNORE_WIRED_BUG,
     CONF_SSID_FILTER,
-    CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DEFAULT_DETECTION_TIME,
     DOMAIN,
@@ -110,6 +109,18 @@ async def test_entity_and_device_data(
 @pytest.mark.parametrize(
     "client_payload", [[WIRELESS_CLIENT_1, WIRED_BUG_CLIENT, UNSEEN_CLIENT]]
 )
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_CLIENT_SOURCE: [
+                "00:00:00:00:00:01",
+                "00:00:00:00:00:03",
+                "00:00:00:00:00:04",
+            ]
+        }
+    ],
+)
 @pytest.mark.parametrize("known_wireless_clients", [[WIRED_BUG_CLIENT["mac"]]])
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_client_state_update(
@@ -162,6 +173,9 @@ async def test_client_state_update(
 
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]}]
+)
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_client_state_from_event_source(
@@ -288,6 +302,10 @@ async def test_tracked_device_state_change(
 
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"]}],
+)
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_remove_clients(
@@ -311,6 +329,9 @@ async def test_remove_clients(
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
 @pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]}]
+)
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_hub_state_change(
@@ -333,6 +354,10 @@ async def test_hub_state_change(
     assert hass.states.get("device_tracker.switch_1").state == STATE_HOME
 
 
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"]}],
+)
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_option_ssid_filter(
     hass: HomeAssistant,
@@ -447,6 +472,9 @@ async def test_option_ssid_filter(
     assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
 
 
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]}]
+)
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_wireless_client_go_wired_issue(
     hass: HomeAssistant,
@@ -506,7 +534,15 @@ async def test_wireless_client_go_wired_issue(
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
 
-@pytest.mark.parametrize("config_entry_options", [{CONF_IGNORE_WIRED_BUG: True}])
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
+            CONF_IGNORE_WIRED_BUG: True,
+        }
+    ],
+)
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_option_ignore_wired_bug(
     hass: HomeAssistant,
@@ -621,33 +657,22 @@ async def test_restoring_client(
     ("config_entry_options", "updated_options", "expected"),
     [
         (
-            {
-                CONF_TRACK_CLIENTS: False,
-                CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
-            },
+            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"]},
             {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
             ((True, True, True), (True, None, True)),
         ),
         (
-            {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
+            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
             {CONF_CLIENT_SOURCE: []},
             ((True, None, True), (None, None, True)),
         ),
         (
-            {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]},
+            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]},
             {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"]},
             ((None, True, True), (True, True, True)),
         ),
         (
-            {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
-            {CONF_TRACK_CLIENTS: True},
-            ((True, None, True), (None, None, True)),
-        ),
-        (
-            {
-                CONF_TRACK_CLIENTS: False,
-                CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
-            },
+            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"]},
             {
                 CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
                 CONF_TRACK_DEVICES: False,

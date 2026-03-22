@@ -463,7 +463,7 @@ async def test_simple_option_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_CLIENT_SOURCE: [CLIENTS[0]["mac"]],
+        CONF_CLIENT_SOURCE: [],
         CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
