@@ -232,5 +232,7 @@ async def test_unchanged_follows_no_config_update(
         if call.kwargs.get("options") is not None
         or (len(call.args) > 1 and "options" in str(call))
     ]
-    assert options_calls == [], "config entry options must not be updated when channels are in sync"
+    assert options_calls == [], (
+        "config entry options must not be updated when channels are in sync"
+    )
     assert entry.state is ConfigEntryState.LOADED
