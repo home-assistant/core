@@ -65,7 +65,6 @@
                     "keep_lock": "Keep it locked",
                     "keep_unlock": "Keep it unlocked",
                     "lock_early": "Lock early",
-                    "lock_now": "Lock now",
                     "reset": "Reset rule"
                 }
             }

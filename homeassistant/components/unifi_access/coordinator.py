@@ -107,10 +107,11 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         await self.client.set_door_lock_rule(door_id, rule)
         if self.data is None or door_id not in self.data.doors:
             return
+        rule_type_enum = DoorLockRuleType(rule_type)
         new_status = DoorLockRuleStatus(
             type=DoorLockRuleType.NONE
-            if rule_type == DoorLockRuleType.RESET
-            else DoorLockRuleType(rule_type)
+            if rule_type_enum == DoorLockRuleType.RESET
+            else rule_type_enum
         )
         updated_door = self.data.doors[door_id].with_updates(
             lock_rule_status=new_status

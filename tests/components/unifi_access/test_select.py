@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import ApiNotFoundError, DoorLockRuleStatus, DoorLockRuleType
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -46,7 +45,7 @@ async def test_select_current_option_no_rule(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test select reflects empty string when no lock rule is active."""
+    """Test select reflects unknown state when no lock rule is active."""
     mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
     with patch(
         "homeassistant.components.unifi_access.PLATFORMS", [Platform.SELECT]
@@ -55,7 +54,7 @@ async def test_select_current_option_no_rule(
 
     state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
     assert state is not None
-    assert state.state == ""
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_select_current_option_active_rule(
@@ -102,28 +101,6 @@ async def test_select_option_calls_api(
     assert call_args[0][1].type == DoorLockRuleType.KEEP_LOCK
 
 
-async def test_select_empty_option_does_not_call_api(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test selecting an empty option does not call the API."""
-    mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SELECT]
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        Platform.SELECT,
-        "select_option",
-        {"entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY, "option": ""},
-        blocking=True,
-    )
-
-    mock_client.set_door_lock_rule.assert_not_called()
-
-
 async def test_select_not_created_when_lock_rules_unsupported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -137,3 +114,41 @@ async def test_select_not_created_when_lock_rules_unsupported(
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY) is None
+
+
+async def test_select_lock_early_option_shown_for_schedule_rule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test lock_early appears in options when a schedule rule is active."""
+    mock_client.get_door_lock_rule = AsyncMock(
+        return_value=DoorLockRuleStatus(type=DoorLockRuleType.SCHEDULE)
+    )
+    with patch(
+        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SELECT]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
+    assert state is not None
+    assert "lock_early" in state.attributes["options"]
+
+
+async def test_select_lock_early_option_hidden_for_non_schedule_rule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test lock_early is absent from options when no schedule rule is active."""
+    mock_client.get_door_lock_rule = AsyncMock(
+        return_value=DoorLockRuleStatus(type=DoorLockRuleType.KEEP_LOCK)
+    )
+    with patch(
+        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SELECT]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
+    assert state is not None
+    assert "lock_early" not in state.attributes["options"]

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unifi_access_api import Door, DoorLockRuleType
+from unifi_access_api import Door, DoorLockRuleType, UnifiAccessError
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
@@ -43,25 +44,29 @@ class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
-        """Return the currently active lock rule, or None/empty if no rule is set."""
+        """Return the currently active lock rule, or None if no rule is set."""
         rule_status = self._door.lock_rule_status
         if rule_status is None or rule_status.type in (
             DoorLockRuleType.NONE,
             DoorLockRuleType.RESET,
         ):
-            return ""
+            return None
         return rule_status.type.value
 
     @property
     def options(self) -> list[str]:
         """Return the available lock rule options."""
-        opts = ["", "keep_lock", "keep_unlock", "custom", "reset"]
-        if self.current_option == DoorLockRuleType.SCHEDULE:
+        opts = ["keep_lock", "keep_unlock", "custom", "reset"]
+        if self.current_option == DoorLockRuleType.SCHEDULE.value:
             opts.append("lock_early")
         return opts
 
     async def async_select_option(self, option: str) -> None:
         """Apply the selected lock rule to the door."""
-        if not option:
-            return
-        await self.coordinator.async_set_lock_rule(self._door_id, option)
+        try:
+            await self.coordinator.async_set_lock_rule(self._door_id, option)
+        except UnifiAccessError as err:
+            raise HomeAssistantError(
+                translation_domain="unifi_access",
+                translation_key="unlock_failed",
+            ) from err
