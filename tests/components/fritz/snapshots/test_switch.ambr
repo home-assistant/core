@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_switch_setup[fc_data0][switch.mock_title_wi_fi_wifi_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -154,8 +157,9 @@
 # ---
 # name: test_switch_setup[fc_data0][switch.mock_title_wi_fi_wifi_5ghz-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -207,8 +211,9 @@
 # ---
 # name: test_switch_setup[fc_data0][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -256,8 +261,9 @@
 # ---
 # name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -306,8 +312,9 @@
 # ---
 # name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,8 +363,9 @@
 # ---
 # name: test_switch_setup[fc_data1][switch.mock_title_wi_fi_wifi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -409,8 +417,9 @@
 # ---
 # name: test_switch_setup[fc_data1][switch.mock_title_wi_fi_wifi2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -462,8 +471,9 @@
 # ---
 # name: test_switch_setup[fc_data1][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -511,8 +521,9 @@
 # ---
 # name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -561,8 +572,9 @@
 # ---
 # name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -611,8 +623,9 @@
 # ---
 # name: test_switch_setup[fc_data2][switch.mock_title_wi_fi_wifi_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -664,8 +677,9 @@
 # ---
 # name: test_switch_setup[fc_data2][switch.mock_title_wi_fi_wifi_5ghz-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -717,8 +731,9 @@
 # ---
 # name: test_switch_setup[fc_data2][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -766,8 +781,9 @@
 # ---
 # name: test_switch_setup[fc_data3][switch.mock_title_call_deflection_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -822,8 +838,9 @@
 # ---
 # name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -872,8 +889,9 @@
 # ---
 # name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -922,8 +940,9 @@
 # ---
 # name: test_switch_setup[fc_data3][switch.mock_title_wi_fi_mywifi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -975,8 +994,9 @@
 # ---
 # name: test_switch_setup[fc_data3][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

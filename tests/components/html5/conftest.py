@@ -35,6 +35,7 @@ def mock_config_entry() -> MockConfigEntry:
             ATTR_VAPID_EMAIL: MOCK_CONF[ATTR_VAPID_EMAIL],
             CONF_NAME: DOMAIN,
         },
+        entry_id="ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     )
 
 
@@ -52,15 +53,24 @@ def mock_load_config() -> Generator[MagicMock]:
 def mock_wp() -> Generator[AsyncMock]:
     """Mock WebPusher."""
 
-    with (
-        patch(
-            "homeassistant.components.html5.notify.WebPusher", autospec=True
-        ) as mock_client,
-    ):
+    with patch(
+        "homeassistant.components.html5.notify.WebPusher", autospec=True
+    ) as mock_client:
         client = mock_client.return_value
         client.cls = mock_client
         client.send_async.return_value = AsyncMock(spec=ClientResponse, status=201)
         yield client
+
+
+@pytest.fixture(name="webpush_async")
+def mock_webpush_async() -> Generator[AsyncMock]:
+    """Mock webpush_async."""
+
+    with patch(
+        "homeassistant.components.html5.notify.webpush_async", autospec=True
+    ) as mock_client:
+        mock_client.return_value = AsyncMock(spec=ClientResponse, status=201)
+        yield mock_client
 
 
 @pytest.fixture

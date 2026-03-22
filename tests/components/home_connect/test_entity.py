@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
-    ArrayOfHomeAppliances,
     ArrayOfPrograms,
     Event,
     EventKey,
@@ -334,20 +333,7 @@ async def test_program_options_retrieval_after_appliance_connection(
     option_entity_id: str,
 ) -> None:
     """Test that the options are correctly retrieved at the start and updated on program updates."""
-    array_of_home_appliances = client.get_home_appliances.return_value
-
-    async def get_home_appliances_with_options_mock() -> ArrayOfHomeAppliances:
-        return ArrayOfHomeAppliances(
-            [
-                appliance
-                for appliance in array_of_home_appliances.homeappliances
-                if appliance.ha_id != appliance.ha_id
-            ]
-        )
-
-    client.get_home_appliances = AsyncMock(
-        side_effect=get_home_appliances_with_options_mock
-    )
+    appliance.connected = False
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,

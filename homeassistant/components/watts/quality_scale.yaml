@@ -56,11 +56,11 @@ rules:
   entity-translations:
     status: exempt
     comment: No entity required translations.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: Thermostat entities use standard HA Climate entity.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios, auth issues are handled by reauthentication flow.

@@ -290,6 +290,7 @@ async def test_switch_no_profile_entities_list(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools switches with no profile entities."""
 
@@ -312,6 +313,7 @@ async def test_switch_no_mesh_wifi_uplink(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools switches when no mesh WiFi uplink."""
 
@@ -330,6 +332,7 @@ async def test_switch_device_no_wan_access(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools switches when device has no WAN access."""
 
@@ -355,6 +358,7 @@ async def test_switch_device_no_ip_address(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools switches when device has no IP address."""
 

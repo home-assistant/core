@@ -80,7 +80,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             try:
                 devices_list = await self.client.discover_devices()
             except WattsVisionAuthError as err:
-                raise ConfigEntryAuthFailed("Authentication failed") from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
             except (
                 WattsVisionConnectionError,
                 WattsVisionTimeoutError,
@@ -91,7 +94,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 ValueError,
             ) as err:
                 if is_first_refresh:
-                    raise ConfigEntryNotReady("Failed to discover devices") from err
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="failed_to_discover_devices",
+                    ) from err
                 _LOGGER.warning(
                     "Periodic discovery failed: %s, falling back to update", err
                 )
@@ -114,7 +120,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             devices = await self.client.get_devices_report(device_ids)
         except WattsVisionAuthError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (
             WattsVisionConnectionError,
             WattsVisionTimeoutError,
@@ -124,7 +133,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             TimeoutError,
             ValueError,
         ) as err:
-            raise UpdateFailed("Failed to update devices") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_update_devices",
+            ) from err
 
         _LOGGER.debug("Updated %d devices", len(devices))
         return devices
@@ -207,10 +219,18 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             TimeoutError,
             ValueError,
         ) as err:
-            raise UpdateFailed(f"Failed to refresh device {self.device_id}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_refresh_device",
+                translation_placeholders={"device_id": self.device_id},
+            ) from err
 
         if not device:
-            raise UpdateFailed(f"Device {self.device_id} not found")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"device_id": self.device_id},
+            )
 
         _LOGGER.debug("Refreshed device %s", self.device_id)
         return WattsVisionDeviceData(device=device)
