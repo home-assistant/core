@@ -7,12 +7,10 @@ from typing import Any
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SourceType,
-    TrackerEntity,
+    ScannerEntity,
 )
 from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -50,9 +48,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SNMP device tracker from a Config Entry.
 
-    Follows the same pattern as freebox and unifi: entities are added via
-    async_add_entities. Disabled entities do not create devices; devices
-    are created only when the user enables the entity.
+    Follows the same pattern as other router integrations: entities are added via
+    async_add_entities. ScannerEntity handles the state and attributes.
     """
     coordinator = entry.runtime_data
     ent_reg = er.async_get(hass)
@@ -111,11 +108,10 @@ async def async_setup_entry(
     _handle_coordinator_update()
 
 
-class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], TrackerEntity):
+class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity):
     """Represent an individual device tracked via SNMP."""
 
     _attr_should_poll = False
-    _attr_source_type = SourceType.ROUTER
 
     def __init__(
         self,
@@ -138,11 +134,17 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], TrackerEntity)
         return self._attr_mac_address in self.coordinator.data
 
     @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self.is_connected:
-            return STATE_HOME
-        return STATE_NOT_HOME
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        assert self._attr_mac_address is not None
+        return self._attr_mac_address
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the primary ip address of the device."""
+        if not self.coordinator.data or self._attr_mac_address is None:
+            return None
+        return self.coordinator.data.get(self._attr_mac_address)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -158,11 +160,7 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], TrackerEntity)
     @property
     def name(self) -> str:
         """Return the name of the device (IP or MAC address with underscores)."""
-        if (
-            self.coordinator.data
-            and self._attr_mac_address is not None
-            and (ip := self.coordinator.data.get(self._attr_mac_address))
-        ):
+        if ip := self.ip_address:
             return ip
 
         assert self._attr_mac_address is not None
@@ -172,14 +170,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], TrackerEntity)
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the extra state attributes of the device."""
         attributes: dict[str, Any] = {}
-
-        if (
-            self.coordinator.data
-            and self._attr_mac_address is not None
-            and (ip := self.coordinator.data.get(self._attr_mac_address))
-        ):
-            attributes["ip"] = ip
-            attributes["mac"] = self._attr_mac_address
 
         latitude = getattr(self.hass.config, "latitude", None)
         longitude = getattr(self.hass.config, "longitude", None)
