@@ -4,7 +4,7 @@
       "default": "Configuration completed successfully!"
     },
     "progress": {
-      "task_one": "Waiting for the first data to be received from the weather station...\n\nPlease open the WSLink app on your mobile device.\nGo to the Settings of your weather station, then select 'Weather server' -> 'Home Assistant'.\nFill in all blanks with keys provided below, and select 'Save' afterwards.\n\nServer IP: {host}\nPort: {port}\n Path: {path}"
+      "task_one": "Waiting for the first data to be received from the weather station...\n\nPlease open the WSLink app on your mobile device.\nGo to the Settings of your weather station, then select 'Weather server' -> 'Home Assistant'.\nFill in all blanks with keys provided below, and select 'Save' afterwards.\n\nServer IP: {host}\nPort: {port}\nPath: {path}"
     },
     "step": {
       "user": {
