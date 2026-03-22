@@ -299,7 +299,5 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         removed_uids = set(removed_entities_slots + removed_entities_area)
 
         for entry in entries:
-            for entity_uid in removed_uids:
-                if entry.unique_id == entity_uid:
-                    entity_registry.async_remove(entry.entity_id)
-                    break
+            if entry.unique_id in removed_uids:
+                entity_registry.async_remove(entry.entity_id)
