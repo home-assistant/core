@@ -194,13 +194,12 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 "token_name": data[CONF_TOKEN_ID],
                 "token_value": data[CONF_TOKEN_SECRET],
             }
-        _LOGGER.error(
-            "HOIConnecting as %s to %s using %s",
+        _LOGGER.debug(
+            "Connecting as %s to %s using %s",
             data[CONF_USERNAME],
             data[CONF_HOST],
             auth_kwargs.keys(),
         )
-        _LOGGER.error("HOI data %s", data)
         self.proxmox = ProxmoxAPI(
             host=data[CONF_HOST],
             port=data[CONF_PORT],
