@@ -91,7 +91,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="lowest_price_day_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(06:00-18:00)"},
-        value_fn=lambda api, data: _get_lowest_price_day_time(api, data),
+        value_fn=_get_lowest_price_day_time,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night",
