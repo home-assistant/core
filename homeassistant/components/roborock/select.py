@@ -567,4 +567,3 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
                 translation_key="command_failed",
                 translation_placeholders={"command": "set_clean_mode"},
             ) from err
-        await self.coordinator.async_refresh()
