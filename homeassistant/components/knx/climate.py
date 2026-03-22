@@ -16,7 +16,6 @@ from xknx.remote_value.remote_value_setpoint_shift import SetpointShiftMode
 
 from homeassistant import config_entries
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -318,7 +317,6 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
     _device: XknxClimate
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "knx_climate"
-    _entity_id_format = ENTITY_ID_FORMAT
 
     default_hvac_mode: HVACMode
     _last_hvac_mode: HVACMode
