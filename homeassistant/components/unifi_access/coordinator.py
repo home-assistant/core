@@ -30,6 +30,7 @@ from unifi_access_api.models.websocket import (
     V2LocationState,
     V2LocationUpdate,
     WebsocketMessage,
+    WsDoorLockRuleStatus,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -62,6 +63,16 @@ class UnifiAccessData:
     emergency: EmergencyStatus
     door_lock_rules: dict[str, DoorLockRuleStatus]
     supports_lock_rules: bool
+
+
+def _ws_rule_status_to_lock_rule_status(
+    ws_rule_status: WsDoorLockRuleStatus,
+) -> DoorLockRuleStatus:
+    """Convert websocket lock rule data to the API status model."""
+    return DoorLockRuleStatus(
+        type=ws_rule_status.type,
+        ended_time=ws_rule_status.until,
+    )
 
 
 class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
@@ -234,13 +245,13 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         if self.data.supports_lock_rules:
             if "remain_lock" in ws_state.model_fields_set:
                 updated_lock_rule = (
-                    ws_state.remain_lock.to_door_lock_rule_status()
+                    _ws_rule_status_to_lock_rule_status(ws_state.remain_lock)
                     if ws_state.remain_lock is not None
                     else DoorLockRuleStatus()
                 )
             elif "remain_unlock" in ws_state.model_fields_set:
                 updated_lock_rule = (
-                    ws_state.remain_unlock.to_door_lock_rule_status()
+                    _ws_rule_status_to_lock_rule_status(ws_state.remain_unlock)
                     if ws_state.remain_unlock is not None
                     else DoorLockRuleStatus()
                 )

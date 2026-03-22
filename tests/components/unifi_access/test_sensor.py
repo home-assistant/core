@@ -55,9 +55,7 @@ async def test_sensor_entities(
             type=DoorLockRuleType.KEEP_LOCK, ended_time=1700000000
         )
     )
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -74,9 +72,7 @@ async def test_sensor_lock_rule_state(
             type=DoorLockRuleType.KEEP_LOCK, ended_time=1700000000
         )
     )
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "keep_lock"
@@ -92,9 +88,7 @@ async def test_sensor_no_active_rule(
 ) -> None:
     """Test sensor state is unknown when no lock rule is active."""
     mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "unknown"
@@ -108,9 +102,7 @@ async def test_sensor_not_created_when_lock_rules_unsupported(
 ) -> None:
     """Test that sensor entities are not created when lock rules are unsupported."""
     mock_client.get_door_lock_rule = AsyncMock(side_effect=ApiNotFoundError())
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY) is None
@@ -124,9 +116,7 @@ async def test_sensor_lock_rule_websocket_update(
 ) -> None:
     """Test lock rule sensor updates via websocket."""
     mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "unknown"
@@ -165,9 +155,7 @@ async def test_sensor_lock_rule_websocket_rule_cleared(
             type=DoorLockRuleType.KEEP_LOCK, ended_time=1700000000
         )
     )
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "keep_lock"
@@ -199,9 +187,7 @@ async def test_sensor_partial_websocket_update_preserves_lock_rule(
             type=DoorLockRuleType.KEEP_LOCK, ended_time=1700000000
         )
     )
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     handlers = _get_ws_handlers(mock_client)
