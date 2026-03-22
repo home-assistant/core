@@ -62,7 +62,7 @@ def request_handler_factory(
             try:
                 url_prefix = get_url(hass, require_current_request=True)
             except NoURLAvailableError:
-                # Omit header to avoid leaking configured urls
+                # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
             raise HTTPUnauthorized(
                 # Include resource metadata endpoint for RFC9728
