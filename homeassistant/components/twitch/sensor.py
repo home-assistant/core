@@ -6,10 +6,12 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONF_CLEANUP_UNFOLLOWED
 from .coordinator import TwitchConfigEntry, TwitchCoordinator, TwitchUpdate
 
 ATTR_GAME = "game"
@@ -41,17 +43,31 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
-        """Add sensor entities for newly discovered channels."""
-        new_ids = set(coordinator.data) - known_channel_ids
+        """Add sensor entities for newly discovered channels and clean up removed ones."""
+        current_ids = set(coordinator.data)
+        new_ids = current_ids - known_channel_ids
         if new_ids:
             known_channel_ids.update(new_ids)
             async_add_entities(
                 TwitchSensor(coordinator, channel_id) for channel_id in new_ids
             )
+        if entry.options.get(CONF_CLEANUP_UNFOLLOWED, False):
+            removed_ids = known_channel_ids - current_ids
+            if removed_ids:
+                known_channel_ids.difference_update(removed_ids)
+                entity_registry = er.async_get(hass)
+                for entity_entry in er.async_entries_for_config_entry(
+                    entity_registry, entry.entry_id
+                ):
+                    if (
+                        entity_entry.domain == "sensor"
+                        and entity_entry.unique_id in removed_ids
+                    ):
+                        entity_registry.async_remove(entity_entry.entity_id)
 
     # Create entities for channels already known after first refresh.
     _async_add_new_entities()
-    # On subsequent coordinator updates, create entities for any new follows.
+    # On subsequent coordinator updates, add new entities / remove stale ones.
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
+from .const import CONF_CHANNELS, CONF_CLEANUP_UNFOLLOWED, DOMAIN, LOGGER, OAUTH_SCOPES
 
 type TwitchConfigEntry = ConfigEntry[TwitchCoordinator]
 
@@ -107,28 +107,41 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
 
         api_channels = {f.broadcaster_login for f in follows.values()}
         config_channels = set(self.config_entry.options[CONF_CHANNELS])
-        # Only sync new follows — channels that were unfollowed are intentionally
-        # kept in the config so they continue to be tracked.
+
         additions = api_channels - config_channels
-        if additions:
-            LOGGER.info(
-                "Discovered new followed channels: %s",
-                ", ".join(sorted(additions)),
-            )
+        removals: set[str] = set()
+        if self.config_entry.options.get(CONF_CLEANUP_UNFOLLOWED, False):
+            removals = config_channels - api_channels
+
+        if additions or removals:
+            updated = sorted((config_channels | additions) - removals)
+            if additions:
+                LOGGER.info(
+                    "Discovered new followed channels: %s",
+                    ", ".join(sorted(additions)),
+                )
+            if removals:
+                LOGGER.info(
+                    "Removing unfollowed channels: %s",
+                    ", ".join(sorted(removals)),
+                )
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 options={
                     **self.config_entry.options,
-                    CONF_CHANNELS: sorted(config_channels | additions),
+                    CONF_CHANNELS: updated,
                 },
             )
-            # Add the new users to self.users immediately so they are included
-            # in this update cycle. The normal poll interval will keep them
-            # up to date — no reload needed.
-            for chunk in chunk_list(sorted(additions), 100):
-                self.users.extend(
-                    [u async for u in self.twitch.get_users(logins=list(chunk))]
-                )
+            if additions:
+                for chunk in chunk_list(sorted(additions), 100):
+                    self.users.extend(
+                        [u async for u in self.twitch.get_users(logins=list(chunk))]
+                    )
+            if removals:
+                removal_logins = {r.lower() for r in removals}
+                self.users = [
+                    u for u in self.users if u.login.lower() not in removal_logins
+                ]
 
         async def _fetch_channel(channel: TwitchUser) -> tuple[str, TwitchUpdate]:
             followers = await self.twitch.get_channel_followers(channel.id)

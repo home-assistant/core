@@ -21,6 +21,19 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Twitch options",
+        "data": {
+          "cleanup_unfollowed": "Automatically remove sensors for unfollowed channels"
+        },
+        "data_description": {
+          "cleanup_unfollowed": "When enabled, sensors for channels you have unfollowed on Twitch will be permanently removed from the entity registry."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "channel": {
