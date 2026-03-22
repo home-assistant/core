@@ -195,11 +195,11 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
                 translation_domain=DOMAIN, translation_key="remote_control_status"
             )
         if (
-            self.entity_description.requires_dishwasher_machine_state
+            self.entity_description.requires_dishwasher_machine_state is not None
             and self.get_attribute_value(
                 Capability.DISHWASHER_OPERATING_STATE, Attribute.MACHINE_STATE
             )
-            not in self.entity_description.requires_dishwasher_machine_state
+            != self.entity_description.requires_dishwasher_machine_state
         ):
             raise ServiceValidationError(
                 f"Can only be updated when dishwasher machine state is {self.entity_description.requires_dishwasher_machine_state}"
