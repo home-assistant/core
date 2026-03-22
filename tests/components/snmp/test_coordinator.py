@@ -132,3 +132,42 @@ async def test_coordinator_host_info_error(
     ):
         await coordinator._async_fetch_host_info()
         assert coordinator.model == ""  # Should be set to empty string to prevent retry
+
+
+async def test_coordinator_walk_errindication(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test handling of errindication (string vs exception) during walk."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
+    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    coordinator.model = "Test"
+
+    # 1. Test errindication as a string
+    async def mock_walk_string_error(*args, **kwargs):
+        yield "timeout", None, None, []
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk_string_error,
+        ),
+        pytest.raises(UpdateFailed, match="SNMPLIB error: timeout") as excinfo,
+    ):
+        await coordinator._async_update_data()
+    assert excinfo.value.__cause__ is None
+
+    # 2. Test errindication as an exception
+    exc = PySnmpError("Some error")
+
+    async def mock_walk_exception_error(*args, **kwargs):
+        yield exc, None, None, []
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk_exception_error,
+        ),
+        pytest.raises(UpdateFailed, match="SNMPLIB error: Some error") as excinfo,
+    ):
+        await coordinator._async_update_data()
+    assert excinfo.value.__cause__ is exc

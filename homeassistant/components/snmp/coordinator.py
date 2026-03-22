@@ -100,9 +100,10 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         try:
             async for errindication, errstatus, errindex, res in walker:
                 if errindication:
-                    raise UpdateFailed(
-                        f"SNMPLIB error: {errindication}"
-                    ) from errindication
+                    message = f"SNMPLIB error: {errindication}"
+                    if isinstance(errindication, BaseException):
+                        raise UpdateFailed(message) from errindication
+                    raise UpdateFailed(message)
                 if errstatus:
                     err_msg = f"SNMP error: {errstatus.prettyPrint()} at {(errindex and res[int(errindex) - 1][0]) or '?'}"
                     raise UpdateFailed(err_msg)
