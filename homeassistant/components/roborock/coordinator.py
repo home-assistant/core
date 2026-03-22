@@ -623,7 +623,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
                 translation_domain=DOMAIN,
                 translation_key="request_fail",
             ) from ex
-        return dict(self.data) if self.data is not None else {}
+        return self.data or {}
 
     @cached_property
     def duid(self) -> str:
