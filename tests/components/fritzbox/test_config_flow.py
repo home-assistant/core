@@ -53,6 +53,15 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_UDN: "uuid:only-a-test",
         },
     ),
+    "hostname": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="https://fritz.box:12345/test",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+        },
+    ),
 }
 
 
@@ -262,6 +271,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
         (MOCK_SSDP_DATA["ip4_valid"], FlowResultType.FORM),
         (MOCK_SSDP_DATA["ip6_valid"], FlowResultType.FORM),
         (MOCK_SSDP_DATA["ip6_invalid"], FlowResultType.ABORT),
+        (MOCK_SSDP_DATA["hostname"], FlowResultType.FORM),
     ],
 )
 async def test_ssdp(

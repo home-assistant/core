@@ -119,11 +119,12 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info.ssdp_location).hostname
         assert isinstance(host, str)
 
-        if (
-            ipaddress.ip_address(host).version == 6
-            and ipaddress.ip_address(host).is_link_local
-        ):
-            return self.async_abort(reason="ignore_ip6_link_local")
+        try:
+            ip = ipaddress.ip_address(host)
+            if ip.version == 6 and ip.is_link_local:
+                return self.async_abort(reason="ignore_ip6_link_local")
+        except ValueError:
+            pass
 
         if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
             uuid = uuid.removeprefix("uuid:")
