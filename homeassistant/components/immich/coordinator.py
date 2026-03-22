@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -90,7 +90,7 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
                 translation_key="auth_error",
             ) from err
         except CONNECT_ERRORS as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
