@@ -82,25 +82,24 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             )
         }
         config_channels = set(self.config_entry.options[CONF_CHANNELS])
-        if api_channels != config_channels:
-            additions = sorted(api_channels - config_channels)
-            removals = sorted(config_channels - api_channels)
-            change_summary = [f"+{c}" for c in additions] + [f"-{c}" for c in removals]
+        additions = api_channels - config_channels
+        if additions:
             LOGGER.info(
-                "Syncing followed channels on setup: %s",
-                ", ".join(change_summary),
+                "Syncing new followed channels on setup: %s",
+                ", ".join(sorted(additions)),
             )
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 options={
                     **self.config_entry.options,
-                    CONF_CHANNELS: sorted(api_channels),
+                    CONF_CHANNELS: sorted(config_channels | additions),
                 },
             )
 
-        # Build self.users from the authoritative API channel set.
+        # Build self.users from the union of config channels + new follows.
+        channels_to_track = config_channels | additions
         self.users = []
-        for chunk in chunk_list(sorted(api_channels), 100):
+        for chunk in chunk_list(sorted(channels_to_track), 100):
             self.users.extend(
                 [u async for u in self.twitch.get_users(logins=list(chunk))]
             )
@@ -132,19 +131,19 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
 
         api_channels = {f.broadcaster_login for f in follows.values()}
         config_channels = set(self.config_entry.options[CONF_CHANNELS])
-        if api_channels != config_channels:
-            additions = sorted(api_channels - config_channels)
-            removals = sorted(config_channels - api_channels)
-            change_summary = [f"+{c}" for c in additions] + [f"-{c}" for c in removals]
+        # Only sync new follows — channels that were unfollowed are intentionally
+        # kept in the config so they continue to be tracked.
+        additions = api_channels - config_channels
+        if additions:
             LOGGER.info(
-                "Discovered changes to followed channels: %s",
-                ", ".join(change_summary),
+                "Discovered new followed channels: %s",
+                ", ".join(sorted(additions)),
             )
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 options={
                     **self.config_entry.options,
-                    CONF_CHANNELS: sorted(api_channels),
+                    CONF_CHANNELS: sorted(config_channels | additions),
                 },
             )
             self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
