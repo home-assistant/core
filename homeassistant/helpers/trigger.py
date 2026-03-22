@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Hashable, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 import functools
@@ -337,7 +337,9 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
+class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec, StateT: Hashable = str](
+    Trigger
+):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpecT]
@@ -363,12 +365,9 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
-    def _get_tracked_value(self, state: State) -> Any:
+    @abc.abstractmethod
+    def _get_tracked_value(self, state: State) -> StateT | None:
         """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[state.domain]
-        if domain_spec.value_source is None:
-            return state.state
-        return state.attributes.get(domain_spec.value_source)
 
     @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
@@ -452,7 +451,21 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
         )
 
 
-class EntityTargetStateTriggerBase(EntityTriggerBase):
+class StringEntityTriggerBase(EntityTriggerBase[DomainSpec, str]):
+    """Trigger for string based entity state changes."""
+
+    def _get_tracked_value(self, state: State) -> str | None:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[state.domain]
+        if domain_spec.value_source is None:
+            return state.state
+        value = state.attributes.get(domain_spec.value_source)
+        if not isinstance(value, str):
+            return None
+        return value
+
+
+class EntityTargetStateTriggerBase(StringEntityTriggerBase):
     """Trigger for entity state changes to a specific state.
 
     Uses _get_tracked_value to extract the value, so it works for both
@@ -477,7 +490,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
         return self._get_tracked_value(state) in self._to_states
 
 
-class EntityTransitionTriggerBase(EntityTriggerBase):
+class EntityTransitionTriggerBase(StringEntityTriggerBase):
     """Trigger for entity state changes between specific states."""
 
     _from_states: set[str]
@@ -499,7 +512,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
         return self._get_tracked_value(state) in self._to_states
 
 
-class EntityOriginStateTriggerBase(EntityTriggerBase):
+class EntityOriginStateTriggerBase(StringEntityTriggerBase):
     """Trigger for entity state changes from a specific state."""
 
     _from_state: str
@@ -599,7 +612,9 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
+class EntityNumericalStateTriggerBase(
+    EntityTriggerBase[NumericalDomainSpec, float | None]
+):
     """Base class for numerical state and state attribute triggers."""
 
     def _get_numerical_value(self, entity_or_float: float | str) -> float | None:

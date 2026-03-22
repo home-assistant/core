@@ -5,14 +5,14 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
-    EntityTriggerBase,
+    StringEntityTriggerBase,
     Trigger,
 )
 
 from . import DOMAIN
 
 
-class ButtonPressedTrigger(EntityTriggerBase):
+class ButtonPressedTrigger(StringEntityTriggerBase):
     """Trigger for button entity presses."""
 
     _domain_specs = {DOMAIN: DomainSpec()}
