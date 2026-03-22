@@ -4,7 +4,7 @@ from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
 from homeassistant import config_entries
-from homeassistant.components.notify import ENTITY_ID_FORMAT, NotifyEntity
+from homeassistant.components.notify import NotifyEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,7 +41,6 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
     """Representation of a KNX notification entity."""
 
     _device: XknxNotification
-    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX notification."""

@@ -4,7 +4,7 @@ from xknx import XKNX
 from xknx.devices import Device as XknxDevice, RawValue
 
 from homeassistant import config_entries
-from homeassistant.components.select import ENTITY_ID_FORMAT, SelectEntity
+from homeassistant.components.select import SelectEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
@@ -59,7 +59,6 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
     """Representation of a KNX select."""
 
     _device: RawValue
-    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX select."""
