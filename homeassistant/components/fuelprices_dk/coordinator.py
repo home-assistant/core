@@ -92,7 +92,7 @@ class APIClient(DataUpdateCoordinator[None]):
                 product_data["name"],
                 product_data["price"],
             )
-            _LOGGER.debug(
-                "Updated at: %s",
-                data["station"].get("last_update", "UNKNOWN"),
-            )
+        _LOGGER.debug(
+            "Updated at: %s",
+            data["station"].get("last_update", "UNKNOWN"),
+        )

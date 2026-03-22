@@ -41,7 +41,7 @@ class FakeCoordinator:
 
 
 async def test_async_setup_entry_creates_sensors(hass: HomeAssistant) -> None:
-    """Test sensor setup creates one sensor per product."""
+    """Test sensor setup creates one sensor per product and diagnostics."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -73,9 +73,10 @@ async def test_async_setup_entry_creates_sensors(hass: HomeAssistant) -> None:
         cast(AddConfigEntryEntitiesCallback, _async_add_entities),
     )
 
-    assert len(added_entities) == 2
+    assert len(added_entities) == 3
     assert add_kwargs["config_subentry_id"] == coordinator.subentry_id
     assert {entity.unique_id for entity in added_entities} == {
+        f"{TEST_STATION['id']}_last_updated_last_updated",
         f"{TEST_STATION['id']}_price_blyfri95",
         f"{TEST_STATION['id']}_price_blyfri98",
     }
@@ -91,6 +92,13 @@ async def test_async_setup_entry_creates_sensors(hass: HomeAssistant) -> None:
     }
     assert product_entity.device_info["entry_type"] is DeviceEntryType.SERVICE
     assert product_entity.device_class is None
+
+    last_updated_entity = next(
+        entity for entity in added_entities if entity.name == "Last Updated"
+    )
+
+    assert last_updated_entity.native_value == datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
+    assert last_updated_entity.entity_category is not None
 
 
 async def test_sensor_available_follows_product_presence() -> None:
@@ -114,6 +122,30 @@ async def test_sensor_available_follows_product_presence() -> None:
     coordinator.products.pop("Blyfri95")
 
     assert sensor.available is False
+    assert sensor.native_value is None
+
+
+async def test_last_updated_sensor_uses_coordinator_timestamp() -> None:
+    """Test the last updated sensor exposes coordinator timestamp data."""
+    coordinator = FakeCoordinator("station_1")
+    last_updated_description = next(
+        description for description in SENSORS if description.key == "last_updated"
+    )
+
+    sensor = FuelpricesDkSensor(
+        cast(APIClient, coordinator),
+        coordinator.station_name,
+        "last_updated",
+        "Last Updated",
+        last_updated_description,
+    )
+
+    assert sensor.available is True
+    assert sensor.native_value == datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
+
+    coordinator.updated_at = None
+
+    assert sensor.available is True
     assert sensor.native_value is None
 
 

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
+    EntityCategory,
     RestoreSensor,
+    SensorDeviceClass,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -29,6 +32,14 @@ SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gas-station",
     ),
+    SensorEntityDescription(
+        key="last_updated",
+        name="Last Updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:clock-outline",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 
@@ -42,6 +53,18 @@ async def async_setup_entry(
     for coordinator in entry.runtime_data.values():
         subentry_sensors = []
         for sensor in SENSORS:
+            if sensor.key == "last_updated":
+                subentry_sensors.append(
+                    FuelpricesDkSensor(
+                        coordinator,
+                        coordinator.station_name,
+                        "last_updated",
+                        "Last Updated",
+                        sensor,
+                    )
+                )
+                continue
+
             for product_key, product_info in coordinator.products.items():
                 product_name = product_info["name"]
                 subentry_sensors.append(
@@ -96,11 +119,17 @@ class FuelpricesDkSensor(CoordinatorEntity[APIClient], RestoreSensor):
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
+        if self.entity_description.key == "last_updated":
+            return super().available
+
         return super().available and self._product_key in self.coordinator.products
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> datetime | float | None:
         """Return the current value of the sensor."""
+        if self.entity_description.key == "last_updated":
+            return self.coordinator.updated_at
+
         if (product := self.coordinator.products.get(self._product_key)) is None:
             return None
 
