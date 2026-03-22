@@ -2,13 +2,13 @@
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
+from homeassistant.helpers.trigger import StringEntityTriggerBase, Trigger
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
 from .models import CoverDomainSpec
 
 
-class CoverTriggerBase(EntityTriggerBase[CoverDomainSpec]):
+class CoverTriggerBase(StringEntityTriggerBase[CoverDomainSpec]):
     """Base trigger for cover state changes."""
 
     def _get_value(self, state: State) -> str | bool | None:

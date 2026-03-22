@@ -451,7 +451,9 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec, StateT: Hashable =
         )
 
 
-class StringEntityTriggerBase(EntityTriggerBase[DomainSpec, str]):
+class StringEntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](
+    EntityTriggerBase[DomainSpecT, str]
+):
     """Trigger for string based entity state changes."""
 
     def _get_tracked_value(self, state: State) -> str | None:
