@@ -85,6 +85,35 @@ class RoborockSwitchDescriptionA01(SwitchEntityDescription):
     data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockSwitchDescriptionQ10(SwitchEntityDescription):
+    """Class to describe a Roborock Q10 switch entity."""
+
+    dp_code: B01_Q10_DP
+
+
+Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
+    RoborockSwitchDescriptionQ10(
+        key="child_lock",
+        dp_code=B01_Q10_DP.CHILD_LOCK,
+        translation_key="child_lock",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockSwitchDescriptionQ10(
+        key="dnd_switch",
+        dp_code=B01_Q10_DP.NOT_DISTURB,
+        translation_key="dnd_switch",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockSwitchDescriptionQ10(
+        key="auto_empty",
+        dp_code=B01_Q10_DP.DUST_SWITCH,
+        translation_key="auto_empty",
+        entity_category=EntityCategory.CONFIG,
+    ),
+]
+
+
 A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
     RoborockSwitchDescriptionA01(
         key="sound_setting",
@@ -115,32 +144,12 @@ async def async_setup_entry(
         ],
         *[
             RoborockQ10Switch(
-                f"child_lock_{coordinator.duid_slug}",
+                f"{description.key}_{coordinator.duid_slug}",
                 coordinator,
-                B01_Q10_DP.CHILD_LOCK,
-                "child_lock",
+                description,
             )
             for coordinator in config_entry.runtime_data.b01_q10
-            if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-        ],
-        *[
-            RoborockQ10Switch(
-                f"dnd_switch_{coordinator.duid_slug}",
-                coordinator,
-                B01_Q10_DP.NOT_DISTURB,
-                "dnd_switch",
-            )
-            for coordinator in config_entry.runtime_data.b01_q10
-            if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-        ],
-        *[
-            RoborockQ10Switch(
-                f"auto_empty_{coordinator.duid_slug}",
-                coordinator,
-                B01_Q10_DP.DUST_SWITCH,
-                "auto_empty",
-            )
-            for coordinator in config_entry.runtime_data.b01_q10
+            for description in Q10_SWITCH_DESCRIPTIONS
             if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
         ],
         *[
@@ -210,20 +219,19 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
 class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
     """Roborock Q10 switch entity."""
 
-    _attr_entity_category = EntityCategory.CONFIG
+    entity_description: RoborockSwitchDescriptionQ10
     coordinator: RoborockB01Q10UpdateCoordinator
 
     def __init__(
         self,
         unique_id: str,
         coordinator: RoborockB01Q10UpdateCoordinator,
-        dp_code: B01_Q10_DP,
-        translation_key: str,
+        entity_description: RoborockSwitchDescriptionQ10,
     ) -> None:
         """Initialize the Q10 switch."""
+        self.entity_description = entity_description
         super().__init__(unique_id, coordinator)
-        self._dp_code = dp_code
-        self._attr_translation_key = translation_key
+        self._dp_code = entity_description.dp_code
 
     @property
     def is_on(self) -> bool | None:
