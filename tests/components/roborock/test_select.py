@@ -1,7 +1,7 @@
 """Test Roborock Select platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from roborock import CleanTypeMapping, RoborockCommand
@@ -94,13 +94,14 @@ async def test_update_success_selected_map(
     """Test allowed changing values for select entities."""
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id) is not None
-    await hass.services.async_call(
-        "select",
-        SERVICE_SELECT_OPTION,
-        service_data={"option": value},
-        blocking=True,
-        target={"entity_id": entity_id},
-    )
+    with patch("homeassistant.components.roborock.select.asyncio.sleep"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": value},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
     assert fake_vacuum.v1_properties
     assert fake_vacuum.v1_properties.maps.set_current_map.call_count == 1
     assert fake_vacuum.v1_properties.maps.set_current_map.call_args == [(1,)]
