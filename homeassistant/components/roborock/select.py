@@ -477,12 +477,15 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
 
 def _map_q10_clean_mode_to_state_key(mode_code: int) -> str | None:
     """Map Q10 clean mode code to HA state key (matching Q7 keys)."""
-    mapping = {
-        1: "vac_and_mop",
-        2: "vacuum",
-        3: "mop",
-    }
-    return mapping.get(mode_code)
+    match mode_code:
+        case 1:
+            return "vac_and_mop"
+        case 2:
+            return "vacuum"
+        case 3:
+            return "mop"
+        case _:
+            return None
 
 
 class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEntity):
