@@ -110,11 +110,7 @@ async def test_stats_sensors_none_when_missing(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_get_state_combinations(
-    hass: HomeAssistant,
-    mock_transmission_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
+def test_get_state_combinations() -> None:
     """Test get_state with all upload/download combinations."""
 
     assert get_state(1, 1) == STATE_UP_DOWN
