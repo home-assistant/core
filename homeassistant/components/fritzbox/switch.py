@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyfritzhome.devicetypes import FritzhomeTrigger
 
@@ -58,7 +58,7 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return self.data.switch_state  # type: ignore [no-any-return]
+        return cast(bool, self.data.switch_state)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -103,7 +103,7 @@ class FritzboxTrigger(FritzBoxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the trigger is active."""
-        return self.data.active  # type: ignore [no-any-return]
+        return cast(bool, self.data.active)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate the trigger."""

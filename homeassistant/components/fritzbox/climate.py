@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -115,15 +115,15 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     def current_temperature(self) -> float:
         """Return the current temperature."""
         if self.data.has_temperature_sensor and self.data.temperature is not None:
-            return self.data.temperature  # type: ignore [no-any-return]
-        return self.data.actual_temperature  # type: ignore [no-any-return]
+            return cast(float, self.data.temperature)
+        return cast(float, self.data.actual_temperature)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.data.target_temperature in [ON_API_TEMPERATURE, OFF_API_TEMPERATURE]:
             return None
-        return self.data.target_temperature  # type: ignore [no-any-return]
+        return cast(float, self.data.target_temperature)
 
     async def async_set_hkr_state(self, hkr_state: str) -> None:
         """Set the state of the climate."""
