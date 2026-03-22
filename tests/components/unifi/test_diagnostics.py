@@ -8,6 +8,7 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -181,6 +182,7 @@ WLAN_DATA = [
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
             CONF_BLOCK_CLIENT: ["00:00:00:00:00:01"],
+            CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
         }
     ],
 )
