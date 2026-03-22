@@ -157,7 +157,7 @@ class SmartThingsSelectDescription(SelectEntityDescription):
 
     key: Capability
     requires_remote_control_status: bool = False
-    requires_dishwasher_machine_state: set[str] | None = None
+    requires_dishwasher_machine_state: str | None = None
     options_attribute: Attribute
     status_attribute: Attribute
     command: Command
@@ -210,7 +210,7 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         key=Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
         translation_key="dishwasher_washing_course",
         requires_remote_control_status=True,
-        requires_dishwasher_machine_state={"stop"},
+        requires_dishwasher_machine_state="stop",
         options_attribute=Attribute.SUPPORTED_COURSES,
         status_attribute=Attribute.WASHING_COURSE,
         command=Command.SET_WASHING_COURSE,
@@ -330,7 +330,7 @@ DISHWASHER_WASHING_OPTIONS_TO_SELECT: dict[
         command=Command.SET_SELECTED_ZONE,
         entity_category=EntityCategory.CONFIG,
         requires_remote_control_status=True,
-        requires_dishwasher_machine_state={"stop"},
+        requires_dishwasher_machine_state="stop",
     ),
     Attribute.ZONE_BOOSTER: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS,
@@ -340,7 +340,7 @@ DISHWASHER_WASHING_OPTIONS_TO_SELECT: dict[
         command=Command.SET_ZONE_BOOSTER,
         entity_category=EntityCategory.CONFIG,
         requires_remote_control_status=True,
-        requires_dishwasher_machine_state={"stop"},
+        requires_dishwasher_machine_state="stop",
     ),
 }
 
@@ -410,7 +410,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         capabilities = {entity_description.key}
         if entity_description.requires_remote_control_status:
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
-        if entity_description.requires_dishwasher_machine_state:
+        if entity_description.requires_dishwasher_machine_state is not None:
             capabilities.add(Capability.DISHWASHER_OPERATING_STATE)
         if extra_capabilities is not None:
             capabilities.update(extra_capabilities)
@@ -469,11 +469,8 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             )
             not in self.entity_description.requires_dishwasher_machine_state
         ):
-            state_list = " or ".join(
-                self.entity_description.requires_dishwasher_machine_state
-            )
             raise ServiceValidationError(
-                f"Can only be updated when dishwasher machine state is {state_list}"
+                f"Can only be updated when dishwasher machine state is {self.entity_description.requires_dishwasher_machine_state}"
             )
 
     async def async_select_option(self, option: str) -> None:
