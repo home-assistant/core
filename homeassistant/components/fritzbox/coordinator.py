@@ -183,14 +183,24 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             new_data = await self.hass.async_add_executor_job(
                 self._update_fritz_devices
             )
-        except (RequestConnectionError, HTTPError) as ex:
+        except (RequestConnectionError, HTTPError, LoginError) as ex:
             LOGGER.debug(
-                "Reload %s due to error '%s' to ensure proper re-login",
+                "Error fetching %s data, attempting re-login: '%s'",
                 self.config_entry.title,
                 ex,
             )
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
-            raise UpdateFailed from ex
+            try:
+                await self.hass.async_add_executor_job(self.fritz.login)
+            except LoginError as login_ex:
+                raise ConfigEntryAuthFailed from login_ex
+            except (RequestConnectionError, HTTPError) as conn_ex:
+                raise UpdateFailed(conn_ex) from conn_ex
+            try:
+                new_data = await self.hass.async_add_executor_job(
+                    self._update_fritz_devices
+                )
+            except (RequestConnectionError, HTTPError, LoginError) as retry_ex:
+                raise UpdateFailed(retry_ex) from retry_ex
 
         for device in new_data.devices.values():
             # create device registry entry for new main devices
