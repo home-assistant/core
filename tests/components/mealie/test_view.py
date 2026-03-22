@@ -8,7 +8,7 @@ from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.mealie.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST, Platform
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -37,11 +37,11 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def image_only() -> Generator[None]:
-    """Enable only the image platform for these tests."""
+def no_platforms() -> Generator[None]:
+    """Disable platform setup for view tests (view is registered in async_setup)."""
     with patch(
         "homeassistant.components.mealie.PLATFORMS",
-        [Platform.IMAGE],
+        [],
     ):
         yield
 
