@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from twitchAPI.object.api import FollowedChannel
 
 from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,7 +15,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from . import setup_integration
+from . import TwitchIterObject, setup_integration
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -140,3 +141,96 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_new_follow_syncs_config_entry(
+    hass: HomeAssistant,
+    twitch_mock: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Newly followed channel is added to the config entry options."""
+    # config_entry starts with only "internetofthings"
+    # get_followed_channels fixture returns "internetofthings" + "homeassistant"
+    # → coordinator must detect the delta and update the config entry
+
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done()
+
+    assert set(config_entry.options["channels"]) == {
+        "internetofthings",
+        "homeassistant",
+    }
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_removed_follow_syncs_config_entry(
+    hass: HomeAssistant,
+    twitch_mock: AsyncMock,
+) -> None:
+    """Unfollowed channel is removed from the config entry options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test",
+        unique_id="123",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": time.time() + 3600,
+                "scope": "user:read:follows user:read:subscriptions",
+            },
+        },
+        options={"channels": ["internetofthings", "homeassistant"]},
+    )
+    # API returns only "internetofthings" → "homeassistant" was unfollowed
+    twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
+        hass, "get_followed_channels_single.json", FollowedChannel
+    )
+
+    await setup_integration(hass, entry)
+    await hass.async_block_till_done()
+
+    assert entry.options["channels"] == ["internetofthings"]
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_unchanged_follows_no_config_update(
+    hass: HomeAssistant,
+    twitch_mock: AsyncMock,
+) -> None:
+    """When followed channels match the config, no config update is triggered."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test",
+        unique_id="123",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": time.time() + 3600,
+                "scope": "user:read:follows user:read:subscriptions",
+            },
+        },
+        # Channels already match what get_followed_channels.json returns
+        options={"channels": ["internetofthings", "homeassistant"]},
+    )
+
+    with patch.object(
+        hass.config_entries,
+        "async_update_entry",
+        wraps=hass.config_entries.async_update_entry,
+    ) as mock_update:
+        await setup_integration(hass, entry)
+        await hass.async_block_till_done()
+
+    # async_update_entry must not have been called for options changes
+    options_calls = [
+        call
+        for call in mock_update.call_args_list
+        if call.kwargs.get("options") is not None
+        or (len(call.args) > 1 and "options" in str(call))
+    ]
+    assert options_calls == [], "config entry options must not be updated when channels are in sync"
+    assert entry.state is ConfigEntryState.LOADED

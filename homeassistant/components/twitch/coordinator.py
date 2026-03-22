@@ -104,6 +104,27 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 user_id=self.current_user.id, first=100
             )
         }
+
+        api_channels = {f.broadcaster_login for f in follows.values()}
+        config_channels = set(self.config_entry.options[CONF_CHANNELS])
+        if api_channels != config_channels:
+            additions = api_channels - config_channels
+            removals = config_channels - api_channels
+            change_summary = [f"+{c}" for c in additions] + [
+                f"-{c}" for c in removals
+            ]
+            LOGGER.info(
+                "Discovered changes to followed channels: %s",
+                ", ".join(change_summary),
+            )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options={
+                    **self.config_entry.options,
+                    CONF_CHANNELS: list(api_channels),
+                },
+            )
+
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
             stream = streams.get(channel.id)
