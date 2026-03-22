@@ -61,22 +61,29 @@ def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None
     return uploaded / downloaded
 
 
+def _get_stats_field(
+    coordinator: TransmissionDataUpdateCoordinator,
+    stats_attr: str,
+    field: str,
+) -> int | None:
+    """Safely get a numeric field from a stats section, returning None on errors."""
+    with contextlib.suppress(KeyError, AttributeError):
+        return getattr(getattr(coordinator.data, stats_attr), field)
+    return None
+
+
 def _get_current_stats_field(
     coordinator: TransmissionDataUpdateCoordinator, field: str
 ) -> int | None:
-    """Safely get a field from current_stats."""
-    with contextlib.suppress(KeyError, AttributeError):
-        return getattr(coordinator.data.current_stats, field)
-    return None
+    """Safely get a field from the current_stats section, returning None on errors."""
+    return _get_stats_field(coordinator, "current_stats", field)
 
 
 def _get_cumulative_stats_field(
     coordinator: TransmissionDataUpdateCoordinator, field: str
 ) -> int | None:
-    """Safely get a field from cumulative_stats."""
-    with contextlib.suppress(KeyError, AttributeError):
-        return getattr(coordinator.data.cumulative_stats, field)
-    return None
+    """Safely get a field from the cumulative_stats section, returning None on errors."""
+    return _get_stats_field(coordinator, "cumulative_stats", field)
 
 
 SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
