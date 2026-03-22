@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -165,19 +164,3 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
 
         assert self._attr_mac_address is not None
         return self._attr_mac_address.replace(":", "_")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the extra state attributes of the device."""
-        attributes: dict[str, Any] = {}
-
-        latitude = getattr(self.hass.config, "latitude", None)
-        longitude = getattr(self.hass.config, "longitude", None)
-        if latitude is not None:
-            attributes["latitude"] = latitude
-        if longitude is not None:
-            attributes["longitude"] = longitude
-
-        attributes["gps_accuracy"] = 0
-
-        return attributes
