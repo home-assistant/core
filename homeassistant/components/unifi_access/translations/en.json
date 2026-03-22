@@ -65,7 +65,8 @@
                     "keep_lock": "Keep it locked",
                     "keep_unlock": "Keep it unlocked",
                     "lock_early": "Lock early",
-                    "reset": "Reset rule"
+                    "reset": "Reset rule",
+                    "schedule": "Schedule"
                 }
             }
         },
@@ -101,6 +102,9 @@
         },
         "unlock_failed": {
             "message": "Failed to unlock the door."
+        },
+        "lock_rule_failed": {
+            "message": "Failed to update the door lock rule."
         }
     }
 }

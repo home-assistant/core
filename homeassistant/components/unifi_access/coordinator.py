@@ -39,6 +39,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_LOCK_RULE_INTERVAL = 10
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
 
@@ -103,24 +104,25 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         """Set a temporary lock rule for a door."""
         if not rule_type:
             return
-        interval = self.lock_rule_intervals.get(door_id, 10)
-        rule = DoorLockRule(type=DoorLockRuleType(rule_type), interval=interval)
+        interval = self.lock_rule_intervals.get(door_id, DEFAULT_LOCK_RULE_INTERVAL)
+        lock_rule_type = DoorLockRuleType(rule_type)
+        rule = DoorLockRule(type=lock_rule_type, interval=interval)
         await self.client.set_door_lock_rule(door_id, rule)
         if self.data is None or door_id not in self.data.doors:
             return
-        rule_type_enum = DoorLockRuleType(rule_type)
         new_status = DoorLockRuleStatus(
             type=DoorLockRuleType.NONE
-            if rule_type_enum == DoorLockRuleType.RESET
-            else rule_type_enum
-        )
-        updated_door = self.data.doors[door_id].with_updates(
-            lock_rule_status=new_status
+            if lock_rule_type == DoorLockRuleType.RESET
+            else lock_rule_type
         )
         self.async_set_updated_data(
             UnifiAccessData(
-                doors={**self.data.doors, door_id: updated_door},
+                doors=self.data.doors,
                 emergency=self.data.emergency,
+                door_lock_rules={
+                    **self.data.door_lock_rules,
+                    door_id: new_status,
+                },
                 supports_lock_rules=self.data.supports_lock_rules,
             )
         )
