@@ -95,8 +95,8 @@ def _get_tracked_clients(
 ) -> set[str]:
     """Build the client whitelist from explicit selection and entity registry."""
     tracked_clients: set[str] = set()
-    if isinstance((client_source := options.get(CONF_CLIENT_SOURCE)), list):
-        tracked_clients.update(item for item in client_source if isinstance(item, str))
+    if isinstance((client_source := options.get(CONF_CLIENT_SOURCE, [])), list):
+        tracked_clients.update(client_source)
     tracked_clients.update(
         _async_get_tracked_clients_from_entity_registry(hass, config_entry)
     )
