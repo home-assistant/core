@@ -95,16 +95,16 @@ async def test_setup_requires_data_api_reauth(hass: HomeAssistant) -> None:
 async def test_async_get_client_updates_websocket_init_payload(
     hass: HomeAssistant,
 ) -> None:
-    """Ensure the websocket transport init_payload is updated with the fresh token."""
+    """Ensure the websocket transport init_payload is refreshed on token rotation."""
     session = MagicMock()
     session.async_ensure_token_valid = AsyncMock()
-    session.token = {CONF_ACCESS_TOKEN: "new-token"}
+    session.token = {CONF_ACCESS_TOKEN: "initial-token"}
 
     runtime = TibberRuntimeData(session=session)
 
     with patch("homeassistant.components.tibber.tibber.Tibber") as mock_client_cls:
         mock_transport = MagicMock()
-        mock_transport.init_payload = {"token": "old-token"}
+        mock_transport.init_payload = {"token": "initial-token"}
 
         mock_sub_manager = MagicMock()
         mock_sub_manager.transport = mock_transport
@@ -117,6 +117,13 @@ async def test_async_get_client_updates_websocket_init_payload(
         mock_client.realtime = mock_realtime
         mock_client_cls.return_value = mock_client
 
+        # First call creates and caches the client with the initial token.
         await runtime.async_get_client(hass)
+        assert mock_transport.init_payload == {"token": "initial-token"}
 
-        assert mock_transport.init_payload == {"token": "new-token"}
+        # Simulate OAuth token rotation while the client is cached.
+        session.token = {CONF_ACCESS_TOKEN: "rotated-token"}
+
+        # Second call reuses the cached client; init_payload must be refreshed.
+        await runtime.async_get_client(hass)
+        assert mock_transport.init_payload == {"token": "rotated-token"}
