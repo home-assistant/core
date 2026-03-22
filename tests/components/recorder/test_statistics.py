@@ -4216,6 +4216,9 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
             in caplog.text
         )
 
+    # Reset domains for which warnings were shown
+    statistics._warn_custom_units_error.clear()
+
 
 @pytest.mark.parametrize(
     ("service_args", "expected_result"),
