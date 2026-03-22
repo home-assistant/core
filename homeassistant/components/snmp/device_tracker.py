@@ -194,6 +194,7 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], TrackerEntity)
             and (ip := self.coordinator.data.get(self._attr_mac_address))
         ):
             attributes["ip"] = ip
+            attributes["mac"] = self._attr_mac_address
 
         latitude = getattr(self.hass.config, "latitude", None)
         longitude = getattr(self.hass.config, "longitude", None)
