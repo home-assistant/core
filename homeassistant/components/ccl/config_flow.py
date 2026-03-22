@@ -9,6 +9,7 @@ from typing import Any
 
 from aioccl import CCLDevice, CCLServer
 from aioccl.exception import CCLDeviceRegistrationException
+from aioccl.server import register
 from aiohttp import web
 from aiohttp.hdrs import METH_POST
 from yarl import URL
@@ -19,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 
+from . import devices
 from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,10 +41,15 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         uncompleted_task: asyncio.Task[None] | None = None
 
+        # Initial step, set up the webhook and device
         if CONF_PATH not in self.data:
-            self.data[CONF_WEBHOOK_ID] = secrets.token_hex(4)
+            # Generate a unique webhook ID
+            while True:
+                self.data[CONF_WEBHOOK_ID] = secrets.token_hex(4)
+                if await self.async_set_unique_id(self.data[CONF_WEBHOOK_ID]) is None:
+                    break
 
-            url = URL(get_url(self.hass, prefer_cloud=True))
+            url = URL(get_url(self.hass))
             assert url.host
 
             self.data[CONF_HOST] = url.host
@@ -51,18 +58,16 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_WEBHOOK_ID]
             )
 
-            await self.async_set_unique_id(self.data[CONF_WEBHOOK_ID])
-            self._abort_if_unique_id_configured()
-
             self.device = CCLDevice(self.data[CONF_WEBHOOK_ID])
+            # Try to register the device, but if it already exists, use the existing one
             try:
-                CCLServer.register(self.device)
+                register(devices, self.device)
             except CCLDeviceRegistrationException:
                 _LOGGER.debug(
                     "Device with webhook ID %s is already registered",
                     self.data[CONF_WEBHOOK_ID],
                 )
-                self.device = CCLServer.devices[self.data[CONF_WEBHOOK_ID]]
+                self.device = devices[self.data[CONF_WEBHOOK_ID]]
 
             async def register_webhook() -> None:
                 """Register webhook for the device."""
@@ -95,6 +100,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await register_webhook()
 
+        # Create a task to wait for the first update from the device
         if not self.task_one:
 
             async def check_task() -> None:

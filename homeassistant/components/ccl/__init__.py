@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aioccl import CCLServer
+from aioccl import CCLDevice
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
@@ -16,10 +16,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+devices: dict[str, CCLDevice] = {}
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
-    device = CCLServer.devices[entry.data[CONF_WEBHOOK_ID]]
+    device = devices[entry.data[CONF_WEBHOOK_ID]]
 
     coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
