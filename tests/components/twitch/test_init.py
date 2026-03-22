@@ -9,8 +9,10 @@ import pytest
 from twitchAPI.object.api import FollowedChannel
 
 from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.twitch.coordinator import TwitchUpdate
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -226,10 +228,58 @@ async def test_unchanged_follows_no_config_update(
         await hass.async_block_till_done()
 
     # async_update_entry must not have been called for options changes
-    options_calls = [
-        call for call in mock_update.call_args_list if "options" in call.kwargs
-    ]
+    options_calls = [c for c in mock_update.call_args_list if "options" in c.kwargs]
     assert options_calls == [], (
         "config entry options must not be updated when channels are in sync"
     )
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_new_follow_creates_entity_at_runtime(
+    hass: HomeAssistant,
+    twitch_mock: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """New sensor entity is created at runtime when coordinator data gains a channel."""
+    # Start with the default fixture — config_entry has only "internetofthings",
+    # but the API mock returns both "internetofthings" and "homeassistant".
+    # After the first refresh, the coordinator data will contain both.
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    initial_entities = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    initial_ids = {e.unique_id for e in initial_entities}
+
+    # Inject a brand-new channel into coordinator data and fire listeners.
+    coordinator = config_entry.runtime_data
+    new_data = dict(coordinator.data)
+    new_data["999"] = TwitchUpdate(
+        name="NewChannel",
+        followers=50,
+        is_streaming=False,
+        game=None,
+        title=None,
+        started_at=None,
+        stream_picture=None,
+        picture="logo.png",
+        subscribed=None,
+        subscription_gifted=None,
+        subscription_tier=None,
+        follows=True,
+        following_since=None,
+        viewers=None,
+    )
+    coordinator.async_set_updated_data(new_data)
+    await hass.async_block_till_done()
+
+    updated_entities = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    updated_ids = {e.unique_id for e in updated_entities}
+
+    # The listener must have created a new entity for channel "999".
+    assert "999" not in initial_ids
+    assert "999" in updated_ids
