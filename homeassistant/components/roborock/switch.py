@@ -226,8 +226,7 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if switch is on."""
-        value = self.coordinator.data.get(self._dp_code)
-        if value is None:
+        if (value := self.coordinator.data.get(self._dp_code)) is None:
             return None
         return bool(value)
 
