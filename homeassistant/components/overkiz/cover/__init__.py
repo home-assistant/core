@@ -1,7 +1,7 @@
 """Support for Overkiz covers - shutters etc."""
 
-import voluptuous as vol
 from pyoverkiz.enums import OverkizCommand, UIClass
+import voluptuous as vol
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -47,8 +47,12 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "set_cover_position_and_tilt",
         {
-            vol.Required("position"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-            vol.Required("tilt_position"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+            vol.Required("position"): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
+            vol.Required("tilt_position"): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
         },
         "async_set_cover_position_and_tilt",
     )
