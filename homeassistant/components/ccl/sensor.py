@@ -94,6 +94,7 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key="CH_SENSOR_TYPE",
         device_class=SensorDeviceClass.ENUM,
         options=["thermo-hygro", "pool", "soil"],
+        translation_key="ch_sensor_type",
     ),
     CCLSensorTypes.CO: SensorEntityDescription(
         key="CO",
@@ -177,11 +178,11 @@ async def async_setup_entry(
     """Add sensors for passed config entry in HA."""
     coordinator = entry.runtime_data
 
-    def _new_sensors(sensors: list[CCLSensor]) -> bool:
+    def _new_sensors(sensors: dict[str, CCLSensor]) -> bool:
         """Add sensors to the data entry."""
         sensor_entities = []
 
-        for sensor in sensors:
+        for sensor in sensors.values():
             if sensor.sensor_type in CCL_SENSOR_DESCRIPTIONS:
                 entity_description = dataclasses.replace(
                     CCL_SENSOR_DESCRIPTIONS[sensor.sensor_type],

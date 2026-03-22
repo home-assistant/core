@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import secrets
 from typing import Any
 
 from aioccl import CCLDevice, CCLServer
@@ -18,7 +17,7 @@ from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from . import devices
 from .const import DOMAIN, NAME
@@ -45,12 +44,15 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         if CONF_PATH not in self.data:
             # Generate a unique webhook ID
             while True:
-                self.data[CONF_WEBHOOK_ID] = secrets.token_hex(4)
+                self.data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
                 if await self.async_set_unique_id(self.data[CONF_WEBHOOK_ID]) is None:
                     break
 
-            url = URL(get_url(self.hass))
-            assert url.host
+            try:
+                url = URL(get_url(self.hass))
+            except NoURLAvailableError as err:
+                _LOGGER.error("Failed to generate webhook URL: %s", err)
+                return self.async_abort(reason="invalid_url")
 
             self.data[CONF_HOST] = url.host
             self.data[CONF_PORT] = str(url.port)
@@ -88,7 +90,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                     webhook.async_register(
                         self.hass,
                         DOMAIN,
-                        f"{NAME}-{CONF_WEBHOOK_ID}",
+                        f"{NAME}-{self.data[CONF_WEBHOOK_ID]}",
                         self.data[CONF_WEBHOOK_ID],
                         handle_webhook,
                         allowed_methods=[METH_POST],
@@ -107,7 +109,9 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert self.device is not None
 
                 async def _wait_for_update() -> None:
-                    while self.device is not None and self.device.last_update_time is None:
+                    while (
+                        self.device is not None and self.device.last_update_time is None
+                    ):
                         await asyncio.sleep(1)
 
                 # Limit how long we wait for the device to send an update to
@@ -124,7 +128,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             # timed out while waiting for the device to send an update.
             try:
                 await self.task_one
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.error("Timed out waiting for device update during config flow")
                 self.task_one = None
                 return self.async_abort(reason="cannot_connect")
