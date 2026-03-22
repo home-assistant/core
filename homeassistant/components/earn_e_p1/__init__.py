@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Listener
+
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant

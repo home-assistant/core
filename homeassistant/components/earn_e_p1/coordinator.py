@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from earn_e_p1 import EarnEP1Device, EarnEP1Listener
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator

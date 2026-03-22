@@ -169,6 +169,7 @@ FLOWS = {
         "dwd_weather_warnings",
         "dynalite",
         "eafm",
+        "earn_e_p1",
         "easyenergy",
         "ecobee",
         "ecoforest",

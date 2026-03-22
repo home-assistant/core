@@ -6,8 +6,9 @@ import asyncio
 import logging
 from typing import Any
 
-import voluptuous as vol
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Device, EarnEP1Listener, discover
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
