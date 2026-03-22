@@ -1,5 +1,7 @@
 """NINA sensor platform."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
