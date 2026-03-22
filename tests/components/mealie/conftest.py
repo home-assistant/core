@@ -92,3 +92,15 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
     )
+
+
+@pytest.fixture
+def mock_config_entry_with_url() -> MockConfigEntry:
+    """Mock a config entry where host already contains a protocol."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Mealie",
+        data={CONF_HOST: "https://demo.mealie.io", CONF_API_TOKEN: "token"},
+        entry_id="01J0BC4QM2YBRP6H5G933CETT8",
+        unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba1",
+    )
