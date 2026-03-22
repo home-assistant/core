@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import random
 
 from twitchAPI.helper import first
 from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
@@ -158,7 +159,16 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 }
                 self.users = [u for u in self.users if u.id in keep_ids]
 
+        # Stagger per-channel API requests across the poll interval so
+        # Twitch sees a steady trickle instead of a burst every cycle.
+        jitter_window = (
+            self.update_interval.total_seconds()
+            if self.update_interval is not None
+            else 300.0
+        )
+
         async def _fetch_channel(channel: TwitchUser) -> tuple[str, TwitchUpdate]:
+            await asyncio.sleep(random.uniform(0, jitter_window))
             followers = await self.twitch.get_channel_followers(channel.id)
             stream = streams.get(channel.id)
             follow = follows.get(channel.id)
