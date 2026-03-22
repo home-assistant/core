@@ -604,22 +604,6 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
         self._device = device
         self.api = api
         self.device_info = get_device_info(device)
-        self._wrap_status_updates()
-
-    def _wrap_status_updates(self) -> None:
-        """Capture raw Q10 DPS updates for entities that need them."""
-        original_update_from_dps = self.api.status.update_from_dps
-
-        def update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
-            """Cache raw DPS updates before forwarding them to the status trait."""
-            if decoded_dps:
-                data = dict(self.data) if self.data is not None else {}
-                data.update(decoded_dps)
-                if data != self.data:
-                    self.async_set_updated_data(data)
-            original_update_from_dps(decoded_dps)
-
-        setattr(self.api.status, "update_from_dps", update_from_dps)
 
     async def _async_setup(self) -> None:
         """Start the Q10 push subscription before the first refresh."""
@@ -640,13 +624,6 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
                 translation_key="request_fail",
             ) from ex
         return dict(self.data) if self.data is not None else {}
-
-    def async_set_dp_value(self, dp_code: B01_Q10_DP, value: Any) -> None:
-        """Optimistically update a raw DPS value."""
-        data = dict(self.data) if self.data is not None else {}
-        data[dp_code] = value
-        if data != self.data:
-            self.async_set_updated_data(data)
 
     @cached_property
     def duid(self) -> str:

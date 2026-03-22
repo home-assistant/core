@@ -36,6 +36,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+_Q10_SWITCH_DPS_LISTENERS: dict[
+    int,
+    list[Callable[[dict[B01_Q10_DP, Any]], None]],
+] = {}
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockSwitchDescription(SwitchEntityDescription):
@@ -130,6 +135,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
+    q10_coordinators = [
+        coordinator
+        for coordinator in config_entry.runtime_data.b01_q10
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+    ]
     entities = [
         *[
             RoborockSwitch(
@@ -148,9 +158,8 @@ async def async_setup_entry(
                 coordinator,
                 description,
             )
-            for coordinator in config_entry.runtime_data.b01_q10
+            for coordinator in q10_coordinators
             for description in Q10_SWITCH_DESCRIPTIONS
-            if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
         ],
         *[
             RoborockSwitchA01(
@@ -162,6 +171,8 @@ async def async_setup_entry(
             if description.data_protocol in coordinator.request_protocols
         ],
     ]
+    for coordinator in q10_coordinators:
+        await coordinator.async_refresh()
     async_add_entities(entities)
 
 
@@ -232,13 +243,52 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         self.entity_description = entity_description
         super().__init__(unique_id, coordinator)
         self._dp_code = entity_description.dp_code
+        self._is_on: bool | None = None
+        self._dps_listener = self._async_handle_dps_update
+        self._register_dps_listener()
+
+    def _register_dps_listener(self) -> None:
+        """Register a listener for raw DPS updates from the status trait."""
+        coordinator_id = id(self.coordinator)
+        listeners = _Q10_SWITCH_DPS_LISTENERS.setdefault(coordinator_id, [])
+        listeners.append(self._dps_listener)
+
+        if len(listeners) > 1:
+            return
+
+        original_update_from_dps = self.coordinator.api.status.update_from_dps
+
+        def update_from_dps(decoded_dps: dict[B01_Q10_DP, Any]) -> None:
+            """Forward raw DPS updates to listeners before trait conversion."""
+            for listener in list(_Q10_SWITCH_DPS_LISTENERS.get(coordinator_id, [])):
+                listener(decoded_dps)
+            original_update_from_dps(decoded_dps)
+
+        setattr(self.coordinator.api.status, "update_from_dps", update_from_dps)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove DPS listener."""
+        coordinator_id = id(self.coordinator)
+        listeners = _Q10_SWITCH_DPS_LISTENERS.get(coordinator_id)
+        if listeners and self._dps_listener in listeners:
+            listeners.remove(self._dps_listener)
+            if not listeners:
+                _Q10_SWITCH_DPS_LISTENERS.pop(coordinator_id, None)
+        await super().async_will_remove_from_hass()
+
+    def _async_handle_dps_update(self, decoded_dps: dict[B01_Q10_DP, Any]) -> None:
+        """Handle a raw DPS update."""
+        if self._dp_code not in decoded_dps:
+            return
+
+        self._is_on = bool(decoded_dps[self._dp_code])
+        if self.hass:
+            self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return True if switch is on."""
-        if (value := self.coordinator.data.get(self._dp_code)) is None:
-            return None
-        return bool(value)
+        return self._is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
@@ -249,7 +299,7 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="update_options_failed",
             ) from err
-        self.coordinator.async_set_dp_value(self._dp_code, 1)
+        self._is_on = True
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -261,7 +311,7 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01Q10, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="update_options_failed",
             ) from err
-        self.coordinator.async_set_dp_value(self._dp_code, 0)
+        self._is_on = False
         await self.coordinator.async_refresh()
 
 
