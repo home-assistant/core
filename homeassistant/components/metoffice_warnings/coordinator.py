@@ -90,7 +90,10 @@ class MetOfficeWarningsCoordinator(DataUpdateCoordinator[MetOfficeWarningsData])
         pub_date: datetime | None = None
         pub_date_text = channel.findtext("pubDate")
         if pub_date_text:
-            pub_date = parsedate_to_datetime(pub_date_text)
+            try:
+                pub_date = parsedate_to_datetime(pub_date_text)
+            except ValueError:
+                _LOGGER.warning("Invalid pubDate format: %s", pub_date_text)
 
         warnings: list[MetOfficeWarning] = []
         for item in channel.findall("item"):

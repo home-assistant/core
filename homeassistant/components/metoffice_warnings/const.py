@@ -23,7 +23,7 @@ REGIONS: dict[str, str] = {
     "wl": "Wales",
     "nw": "North West England",
     "ne": "North East England",
-    "yh": "Yorkshire & Humber",
+    "yh": "Yorkshire & Humber",  # codespell:ignore humber
     "wm": "West Midlands",
     "em": "East Midlands",
     "ee": "East of England",
