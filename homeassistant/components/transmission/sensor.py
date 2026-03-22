@@ -45,7 +45,7 @@ def _bytes_to_gib(value: int | None) -> float | None:
     """Convert bytes to gibibytes (GiB), return None if value is unavailable."""
     if value is None:
         return None
-    return round(value / 1_073_741_824, 3)
+    return value / 1_073_741_824
 
 
 def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None:
