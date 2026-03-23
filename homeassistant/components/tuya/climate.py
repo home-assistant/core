@@ -79,27 +79,27 @@ class TuyaClimateEntityDescription(ClimateEntityDescription):
 
 CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
     DeviceCategory.DBL: TuyaClimateEntityDescription(
-        key="dbl",
+        key="",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
     DeviceCategory.KT: TuyaClimateEntityDescription(
-        key="kt",
+        key="",
         switch_only_hvac_mode=HVACMode.COOL,
     ),
     DeviceCategory.QN: TuyaClimateEntityDescription(
-        key="qn",
+        key="",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
     DeviceCategory.RS: TuyaClimateEntityDescription(
-        key="rs",
+        key="",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
     DeviceCategory.WK: TuyaClimateEntityDescription(
-        key="wk",
+        key="",
         switch_only_hvac_mode=HVACMode.HEAT_COOL,
     ),
     DeviceCategory.WKF: TuyaClimateEntityDescription(
-        key="wkf",
+        key="",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
 }
@@ -258,6 +258,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
+    _attr_target_temperature_step = 1.0
 
     def __init__(
         self,
@@ -277,10 +278,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         temperature_unit: UnitOfTemperature,
     ) -> None:
         """Determine which values to use."""
-        self._attr_target_temperature_step = 1.0
-        self.entity_description = description
-
-        super().__init__(device, device_manager)
+        super().__init__(device, device_manager, description)
         self._current_humidity_wrapper = current_humidity_wrapper
         self._current_temperature = current_temperature_wrapper
         self._fan_mode_wrapper = fan_mode_wrapper
