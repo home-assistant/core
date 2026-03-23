@@ -179,7 +179,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
 
         hass.config_entries.async_update_entry(
             entry,
-            unique_id=airtouch_device.system_id,
+            unique_id=str(airtouch_device.system_id),
             data=new_data,
             minor_version=2,
         )
