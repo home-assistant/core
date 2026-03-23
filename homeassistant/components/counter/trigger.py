@@ -18,11 +18,19 @@ from homeassistant.helpers.trigger import (
 from . import CONF_INITIAL, DOMAIN
 
 
-class CounterDecrementedTrigger(EntityTriggerBase):
-    """Trigger for when a counter is decremented."""
+class CounterBaseIntegerTrigger(EntityTriggerBase):
+    """Base trigger for valid counter integer states."""
 
     _domain_specs = {DOMAIN: DomainSpec()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state attribute is valid."""
+        return _is_integer_state(state)
+
+
+class CounterDecrementedTrigger(CounterBaseIntegerTrigger):
+    """Trigger for when a counter is decremented."""
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -30,16 +38,9 @@ class CounterDecrementedTrigger(EntityTriggerBase):
             return False
         return int(from_state.state) > int(to_state.state)
 
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute is valid."""
-        return _is_integer_state(state)
 
-
-class CounterIncrementedTrigger(EntityTriggerBase):
+class CounterIncrementedTrigger(CounterBaseIntegerTrigger):
     """Trigger for when a counter is incremented."""
-
-    _domain_specs = {DOMAIN: DomainSpec()}
-    _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -47,13 +48,9 @@ class CounterIncrementedTrigger(EntityTriggerBase):
             return False
         return int(from_state.state) < int(to_state.state)
 
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute is valid."""
-        return _is_integer_state(state)
 
-
-class CounterMaxReachedTrigger(EntityTriggerBase):
-    """Trigger for when a counter reaches its maximum value."""
+class CounterValueBaseTrigger(EntityTriggerBase):
+    """Base trigger for counter value changes."""
 
     _domain_specs = {DOMAIN: DomainSpec()}
 
@@ -62,6 +59,10 @@ class CounterMaxReachedTrigger(EntityTriggerBase):
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
         return from_state.state != to_state.state
+
+
+class CounterMaxReachedTrigger(CounterValueBaseTrigger):
+    """Trigger for when a counter reaches its maximum value."""
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
@@ -70,16 +71,8 @@ class CounterMaxReachedTrigger(EntityTriggerBase):
         return state.state == str(max_value)
 
 
-class CounterMinReachedTrigger(EntityTriggerBase):
+class CounterMinReachedTrigger(CounterValueBaseTrigger):
     """Trigger for when a counter reaches its minimum value."""
-
-    _domain_specs = {DOMAIN: DomainSpec()}
-
-    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-        return from_state.state != to_state.state
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
@@ -88,16 +81,8 @@ class CounterMinReachedTrigger(EntityTriggerBase):
         return state.state == str(min_value)
 
 
-class CounterResetTrigger(EntityTriggerBase):
+class CounterResetTrigger(CounterValueBaseTrigger):
     """Trigger for reset of counter entities."""
-
-    _domain_specs = {DOMAIN: DomainSpec()}
-
-    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-        return from_state.state != to_state.state
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
