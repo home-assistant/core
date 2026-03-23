@@ -1494,5 +1494,5 @@ Q7_B01_PROPS = B01Props(
     main_sensor=500,
     mop_life=1200,
     real_clean_time=3000,
-    quantity=100,
+    battery=100,
 )
