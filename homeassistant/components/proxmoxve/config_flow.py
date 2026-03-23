@@ -216,9 +216,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PORT: self._entry.data[CONF_PORT],
             CONF_VERIFY_SSL: self._entry.data[CONF_VERIFY_SSL],
             CONF_TOKEN: self._entry.data.get(CONF_TOKEN, False),
-            CONF_PASSWORD: self._entry.data.get(CONF_PASSWORD),
             CONF_TOKEN_ID: self._entry.data.get(CONF_TOKEN_ID),
-            CONF_TOKEN_SECRET: self._entry.data.get(CONF_TOKEN_SECRET),
             CONF_REALM: self._entry.data[CONF_REALM],
         }
         if user_input is not None:
@@ -275,9 +273,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_auth",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=self._get_auth_schema(self._data),
-                suggested_values=sanitize_config_entry(
-                    self._data, strip_credentials=True
-                ),
+                suggested_values=sanitize_config_entry(self._data),
             ),
             errors=errors,
         )
