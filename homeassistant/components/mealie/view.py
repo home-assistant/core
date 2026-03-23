@@ -61,6 +61,11 @@ class MealieImageView(HomeAssistantView):
                 return web.Response(
                     body=data, content_type=content_type, headers=headers
                 )
-        except ClientError, TimeoutError:
-            _LOGGER.exception("Error fetching Mealie image for recipe %s", recipe_id)
+        except (ClientError, TimeoutError) as err:
+            _LOGGER.warning(
+                "Error fetching Mealie image for recipe %s from %s: %s",
+                recipe_id,
+                image_url,
+                err,
+            )
             return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)
