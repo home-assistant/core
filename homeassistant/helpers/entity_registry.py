@@ -612,6 +612,24 @@ def _async_strip_prefix_from_entity_name(
     return new_name[0].upper() + new_name[1:]
 
 
+@callback
+def _unprefix_original_name(
+    hass: HomeAssistant,
+    original_name: str | None,
+    has_entity_name: bool,
+    device_id: str | None,
+) -> str | None:
+    """Calculate original_name_unprefixed."""
+    if has_entity_name or device_id is None:
+        return None
+
+    if (device := dr.async_get(hass).async_get(device_id)) is None:
+        return None
+
+    device_name = device.name_by_user or device.name
+    return _async_strip_prefix_from_entity_name(original_name, device_name)
+
+
 @attr.s(frozen=True, slots=True)
 class DeletedRegistryEntry:
     """Deleted Entity Registry Entry."""
@@ -1407,17 +1425,9 @@ class EntityRegistry(BaseRegistry):
             )
 
         original_name = none_if_undefined(original_name)
-        original_name_unprefixed: str | None = None
-
-        if (
-            not has_entity_name_bool
-            and device_id is not None
-            and (device := dr.async_get(self.hass).async_get(device_id)) is not None
-        ):
-            device_name = device.name_by_user or device.name
-            original_name_unprefixed = _async_strip_prefix_from_entity_name(
-                original_name, device_name
-            )
+        original_name_unprefixed = _unprefix_original_name(
+            self.hass, original_name, has_entity_name_bool, device_id
+        )
 
         if (
             disabled_by is None
@@ -1798,16 +1808,9 @@ class EntityRegistry(BaseRegistry):
                 original_name if original_name is not UNDEFINED else old.original_name
             )
 
-            original_name_unprefixed = None
-            if (
-                not has_entity_name
-                and device_id is not None
-                and (device := dr.async_get(self.hass).async_get(device_id)) is not None
-            ):
-                device_name = device.name_by_user or device.name
-                original_name_unprefixed = _async_strip_prefix_from_entity_name(
-                    original_name, device_name
-                )
+            original_name_unprefixed = _unprefix_original_name(
+                self.hass, original_name, has_entity_name, device_id
+            )
             new_values["original_name_unprefixed"] = original_name_unprefixed
 
         new = self.entities[entity_id] = attr.evolve(old, **new_values)
@@ -1975,17 +1978,12 @@ class EntityRegistry(BaseRegistry):
                     )
                     continue
 
-                original_name_unprefixed: str | None = None
-                if (
-                    not entity["has_entity_name"]
-                    and (device_id := entity["device_id"]) is not None
-                    and (device := dr.async_get(self.hass).async_get(device_id))
-                    is not None
-                ):
-                    device_name = device.name_by_user or device.name
-                    original_name_unprefixed = _async_strip_prefix_from_entity_name(
-                        entity["original_name"], device_name
-                    )
+                original_name_unprefixed = _unprefix_original_name(
+                    self.hass,
+                    entity["original_name"],
+                    entity["has_entity_name"],
+                    entity["device_id"],
+                )
 
                 entities[entity["entity_id"]] = RegistryEntry(
                     aliases=_deserialize_aliases(entity["aliases_v2"]),
