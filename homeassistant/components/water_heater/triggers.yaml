@@ -14,25 +14,6 @@
             - last
             - any
 
-.number_or_entity: &number_or_entity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-        entity:
-          selector:
-            entity:
-              filter:
-                domain:
-                  - input_number
-                  - number
-                  - sensor
-      translation_key: number_or_entity
-
 .trigger_threshold_type: &trigger_threshold_type
   required: true
   default: above
@@ -45,19 +26,52 @@
         - outside
       translation_key: trigger_threshold_type
 
+.number_or_entity_temperature: &number_or_entity_temperature
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "°C"
+                    - "°F"
+                - domain: sensor
+                  device_class: temperature
+                - domain: number
+                  device_class: temperature
+      translation_key: number_or_entity
+
+.trigger_unit_temperature: &trigger_unit_temperature
+  required: false
+  selector:
+    select:
+      options:
+        - "°C"
+        - "°F"
+
 turned_off: *trigger_common
 turned_on: *trigger_common
 
 target_temperature_changed:
   target: *trigger_water_heater_target
   fields:
-    above: *number_or_entity
-    below: *number_or_entity
+    above: *number_or_entity_temperature
+    below: *number_or_entity_temperature
+    unit: *trigger_unit_temperature
 
 target_temperature_crossed_threshold:
   target: *trigger_water_heater_target
   fields:
     behavior: *trigger_behavior
     threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity
-    upper_limit: *number_or_entity
+    lower_limit: *number_or_entity_temperature
+    upper_limit: *number_or_entity_temperature
+    unit: *trigger_unit_temperature
