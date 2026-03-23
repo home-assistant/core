@@ -206,8 +206,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-        raw = self.coordinator.data.zones[self._zone_id].sound_program
-        return _humanize_sound_mode(raw) if raw else None
+        sound_program_id = self.coordinator.data.zones[self._zone_id].sound_program
+        return self.coordinator.data.sound_program_names[sound_program_id]
 
     @property
     def sound_mode_list(self):
