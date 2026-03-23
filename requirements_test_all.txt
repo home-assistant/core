@@ -836,7 +836,7 @@ eternalegypt==0.0.18
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==1.1.3
+evohome-async==1.2.0
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -1016,7 +1016,7 @@ greeclimate==2.1.1
 greeneye_monitor==3.0.3
 
 # homeassistant.components.green_planet_energy
-greenplanet-energy-api==0.1.4
+greenplanet-energy-api==0.1.10
 
 # homeassistant.components.pure_energie
 gridnet==5.0.1
@@ -1093,7 +1093,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260312.0
+home-assistant-frontend==20260312.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.3
@@ -1644,7 +1644,7 @@ py-sucks==0.9.11
 py-synologydsm-api==2.7.3
 
 # homeassistant.components.unifi_access
-py-unifi-access==1.1.0
+py-unifi-access==1.1.3
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -2693,7 +2693,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.1.2
+universal-silabs-flasher==1.0.2
 
 # homeassistant.components.upb
 upb-lib==0.6.1
@@ -2835,7 +2835,7 @@ yalexs==9.2.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.6.1
+yolink-api==0.6.3
 
 # homeassistant.components.youless
 youless-api==2.2.0
