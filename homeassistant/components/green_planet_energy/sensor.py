@@ -46,9 +46,7 @@ def _get_lowest_price_day_time(
     if hour is None:
         return None
     # After 18:00 the day period is over; use tomorrow's date
-    base = dt_util.start_of_local_day(
-        now + timedelta(days=1) if now_h >= 18 else now
-    )
+    base = dt_util.start_of_local_day(now + timedelta(days=1) if now_h >= 18 else now)
     return base.replace(hour=hour)
 
 
