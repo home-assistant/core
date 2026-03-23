@@ -433,6 +433,30 @@ async def test_new_entity_added_to_target_fires_triggers(
     )
 
 
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_trigger_skips_missing_entity(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a missing entity does not prevent other entities from being tracked."""
+    nonexistent_entity_id = "todo.nonexistent"
+
+    # Target both a valid entity and a non-existent one
+    await _setup_automation(
+        hass, {CONF_ENTITY_ID: [TODO_ENTITY_ID1, nonexistent_entity_id]}
+    )
+
+    assert f"Skipping entity {nonexistent_entity_id}" in caplog.text
+
+    # The valid entity should still be tracked
+    await _add_item(hass, TODO_ENTITY_ID1, "item_one")
+    _assert_service_calls(
+        service_calls,
+        [{"platform": "todo.item_added", "entity_id": TODO_ENTITY_ID1}],
+    )
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
 @pytest.mark.parametrize(
     "trigger_target",
