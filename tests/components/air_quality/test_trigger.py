@@ -76,10 +76,10 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
         "air_quality.pm10_crossed_threshold",
         "air_quality.ozone_changed",
         "air_quality.ozone_crossed_threshold",
-        "air_quality.vocs_changed",
-        "air_quality.vocs_crossed_threshold",
-        "air_quality.vocs_ratio_changed",
-        "air_quality.vocs_ratio_crossed_threshold",
+        "air_quality.voc_changed",
+        "air_quality.voc_crossed_threshold",
+        "air_quality.voc_ratio_changed",
+        "air_quality.voc_ratio_crossed_threshold",
         "air_quality.no_changed",
         "air_quality.no_crossed_threshold",
         "air_quality.no2_changed",
@@ -374,13 +374,13 @@ async def test_air_quality_trigger_binary_sensor_behavior_last(
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
-            "air_quality.vocs_changed",
+            "air_quality.voc_changed",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             trigger_options=_UGM3_TRIGGER_OPTIONS,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "air_quality.vocs_crossed_threshold",
+            "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             trigger_options=_UGM3_TRIGGER_OPTIONS,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
@@ -423,13 +423,13 @@ async def test_air_quality_trigger_binary_sensor_behavior_last(
         ),
         # With unit conversion (ppb base unit)
         *parametrize_numerical_state_value_changed_trigger_states(
-            "air_quality.vocs_ratio_changed",
+            "air_quality.voc_ratio_changed",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
             trigger_options=_PPB_TRIGGER_OPTIONS,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "air_quality.vocs_ratio_crossed_threshold",
+            "air_quality.voc_ratio_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
             trigger_options=_PPB_TRIGGER_OPTIONS,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
@@ -544,7 +544,7 @@ async def test_air_quality_trigger_sensor_behavior_any(
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "air_quality.vocs_crossed_threshold",
+            "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             trigger_options=_UGM3_TRIGGER_OPTIONS,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
@@ -569,7 +569,7 @@ async def test_air_quality_trigger_sensor_behavior_any(
         ),
         # With unit conversion (ppb base unit)
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "air_quality.vocs_ratio_crossed_threshold",
+            "air_quality.voc_ratio_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
             trigger_options=_PPB_TRIGGER_OPTIONS,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
@@ -654,7 +654,7 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "air_quality.vocs_crossed_threshold",
+            "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             trigger_options=_UGM3_TRIGGER_OPTIONS,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
@@ -679,7 +679,7 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
         ),
         # With unit conversion (ppb base unit)
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "air_quality.vocs_ratio_crossed_threshold",
+            "air_quality.voc_ratio_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
             trigger_options=_PPB_TRIGGER_OPTIONS,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
