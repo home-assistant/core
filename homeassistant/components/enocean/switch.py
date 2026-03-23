@@ -5,7 +5,7 @@ from typing import Any
 from enocean_async import EntityType, Gateway, Observable, Observation, SetSwitchOutput
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
@@ -33,6 +33,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
+    @callback
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if observation.device != self.address or observation.entity != self.entity_key:

@@ -3,7 +3,7 @@
 from enocean_async import EntityType, Gateway, Observable, Observation
 
 from homeassistant.components.event import EventEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
@@ -31,6 +31,7 @@ class EnOceanEvent(EnOceanEntity, EventEntity):
 
     _attr_event_types = Observable.BUTTON_EVENT.possible_values
 
+    @callback
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if observation.device != self.address or observation.entity != self.entity_key:

@@ -7,7 +7,7 @@ from typing import Any
 from enocean_async import Dim, EntityType, Gateway, Observable, Observation
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
@@ -36,6 +36,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
+    @callback
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if observation.device != self.address or observation.entity != self.entity_key:

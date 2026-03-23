@@ -4,6 +4,7 @@ from enocean_async import EURID, Gateway, Observation
 from enocean_async.semantics.entity import EntityCategory as LibEntityCategory
 
 from homeassistant.const import EntityCategory
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -47,6 +48,7 @@ class EnOceanEntity(Entity):
             )
         )
 
+    @callback
     def _on_observation(self, _observation: Observation) -> None:
         """Handle an incoming observation."""
 

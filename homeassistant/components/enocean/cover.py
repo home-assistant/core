@@ -23,7 +23,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
@@ -94,6 +94,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             CoverQueryPositionAndAngle(entity_id=self.entity_key),
         )
 
+    @callback
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if observation.device != self.address or observation.entity != self.entity_key:

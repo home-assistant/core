@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
@@ -110,6 +110,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         else:
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
+    @callback
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if (

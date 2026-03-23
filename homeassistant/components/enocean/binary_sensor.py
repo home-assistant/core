@@ -4,7 +4,7 @@ from enocean_async import EntityType, Gateway, Observation
 from enocean_async.semantics.value_kind import ValueKind
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
@@ -32,6 +32,7 @@ async def async_setup_entry(
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     """Representation of an EnOcean binary sensor."""
 
+    @callback
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if observation.device != self.address or observation.entity != self.entity_key:
