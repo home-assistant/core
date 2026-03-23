@@ -336,11 +336,6 @@ class ZWaveBaseEntity(Entity):
             value.value_id,
         )
 
-        # Do NOT remove from discovered_value_ids here. The "metadata updated"
-        # listener in __init__.py has already scheduled an async_on_value_added
-        # task. By keeping value_id in discovered_value_ids, that task will
-        # return early. We handle removal + re-discovery in the correct order
-        # in our own async task below.
         self.hass.async_create_task(self._async_remove_and_rediscover(value))
 
     async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
