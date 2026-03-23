@@ -519,6 +519,94 @@ def test_number_selector_schema_error(schema) -> None:
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            None,
+            ({"type": "above", "value": {"number": 10}},),
+            (),
+        ),
+        (
+            {},
+            (
+                {"type": "above", "value": {"number": 10}},
+                {"type": "below", "value": {"entity_id": "sensor.temperature"}},
+                {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 20},
+                },
+                {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"entity_id": "sensor.max_temp"},
+                },
+                # active_choice field
+                {
+                    "type": "above",
+                    "value": {"active_choice": "number", "number": 10},
+                },
+                {
+                    "type": "below",
+                    "value": {
+                        "active_choice": "entity",
+                        "entity_id": "sensor.temperature",
+                    },
+                },
+            ),
+            (
+                None,
+                "not_a_dict",
+                {},
+                {"type": "above"},  # Missing value
+                {"type": "below"},  # Missing value
+                {"type": "between", "value_min": {"number": 10}},  # Missing value_max
+                {"type": "outside", "value_max": {"number": 20}},  # Missing value_min
+                {"type": "above", "value": {}},  # Entry missing number and entity_id
+                {"type": "above", "value": {"number": 10}, "extra": "key"},
+                {"type": "invalid_type", "value": {"number": 10}},
+                {
+                    "type": "above",
+                    "value": {"active_choice": "invalid", "number": 10},
+                },  # Invalid active_choice
+            ),
+        ),
+        (
+            {"unit_of_measurement": ["°C", "°F"]},
+            (
+                {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 20},
+                },
+            ),
+            (),
+        ),
+        (
+            {"number": {"min": 0, "max": 100}},
+            ({"type": "above", "value": {"number": 50}},),
+            (),
+        ),
+        (
+            {"entity": {"domain": "sensor"}},
+            ({"type": "above", "value": {"entity_id": "sensor.temperature"}},),
+            (),
+        ),
+        (
+            {"entity": [{"domain": "sensor"}, {"domain": "input_number"}]},
+            ({"type": "above", "value": {"entity_id": "sensor.temperature"}},),
+            (),
+        ),
+    ],
+)
+def test_numeric_threshold_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test numeric threshold selector."""
+    _test_selector("numeric_threshold", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     [({}, ("abc123",), (None,))],
 )
 def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> None:

@@ -1316,6 +1316,94 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
+class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a numeric threshold selector config."""
+
+    unit_of_measurement: list[str]
+    number: NumberSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+
+
+class NumericThresholdType(StrEnum):
+    """Possible threshold types for a numeric threshold selector."""
+
+    ABOVE = "above"
+    BELOW = "below"
+    BETWEEN = "between"
+    OUTSIDE = "outside"
+
+
+class NumericThresholdActiveChoice(StrEnum):
+    """Possible active choices for a numeric threshold value entry."""
+
+    NUMBER = "number"
+    ENTITY = "entity"
+
+
+_NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional("active_choice"): vol.All(
+                vol.Coerce(NumericThresholdActiveChoice), lambda val: val.value
+            ),
+            vol.Optional("number"): vol.Coerce(float),
+            vol.Optional("entity_id"): cv.entity_id,
+            vol.Optional("unit_of_measurement"): str,
+        }
+    ),
+    vol.Any(
+        vol.Schema({vol.Required("number"): object}, extra=vol.ALLOW_EXTRA),
+        vol.Schema({vol.Required("entity_id"): object}, extra=vol.ALLOW_EXTRA),
+        msg="Value entry must contain at least one of 'number' or 'entity_id'",
+    ),
+)
+
+_NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required("type"): vol.In(
+                [NumericThresholdType.ABOVE, NumericThresholdType.BELOW]
+            ),
+            vol.Required("value"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+        }
+    ),
+    vol.Schema(
+        {
+            vol.Required("type"): vol.In(
+                [NumericThresholdType.BETWEEN, NumericThresholdType.OUTSIDE]
+            ),
+            vol.Required("value_min"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+            vol.Required("value_max"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+        }
+    ),
+)
+
+
+@SELECTORS.register("numeric_threshold")
+class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
+    """Selector of a numeric threshold condition."""
+
+    selector_type = "numeric_threshold"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("unit_of_measurement"): [str],
+            vol.Optional("number"): NumberSelector.CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+            ),
+        }
+    )
+
+    def __init__(self, config: NumericThresholdSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return _NUMERIC_THRESHOLD_VALUE_SCHEMA(data)
+
+
 class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
