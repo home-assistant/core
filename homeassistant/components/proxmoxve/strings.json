@@ -64,7 +64,7 @@
           "auth_providers": "Authentication provider",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "token": "Use an API Token",
+          "token": "Use an API token",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
