@@ -121,9 +121,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         state_wrapper: DeviceWrapper[TuyaAlarmControlPanelState],
     ) -> None:
         """Init Tuya Alarm."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._action_wrapper = action_wrapper
         self._changed_by_wrapper = changed_by_wrapper
         self._state_wrapper = state_wrapper

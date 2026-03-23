@@ -30,10 +30,12 @@
           selector:
             entity:
               filter:
-                domain:
-                  - input_number
-                  - number
-                  - sensor
+                - domain: input_number
+                  unit_of_measurement: "%"
+                - domain: number
+                  unit_of_measurement: "%"
+                - domain: sensor
+                  unit_of_measurement: "%"
       translation_key: number_or_entity
 
 turned_on: *trigger_common

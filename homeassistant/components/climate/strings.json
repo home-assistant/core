@@ -462,6 +462,10 @@
         "below": {
           "description": "Trigger when the target temperature is below this value.",
           "name": "Below"
+        },
+        "unit": {
+          "description": "All values will be converted to this unit when evaluating the trigger.",
+          "name": "Unit of measurement"
         }
       },
       "name": "Climate-control device target temperature changed"
@@ -480,6 +484,10 @@
         "threshold_type": {
           "description": "Type of threshold crossing to trigger on.",
           "name": "Threshold type"
+        },
+        "unit": {
+          "description": "[%key:component::climate::triggers::target_temperature_changed::fields::unit::description%]",
+          "name": "[%key:component::climate::triggers::target_temperature_changed::fields::unit::name%]"
         },
         "upper_limit": {
           "description": "Upper threshold limit.",
