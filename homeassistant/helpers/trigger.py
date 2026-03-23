@@ -84,7 +84,7 @@ from .target import (
     async_track_target_selector_state_change_event,
 )
 from .template import Template
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -602,11 +602,22 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 
+    _valid_unit: str | None | UndefinedType = UNDEFINED
+
+    def _is_valid_unit(self, unit: str | None) -> bool:
+        """Check if the given unit is valid for this trigger."""
+        if isinstance(self._valid_unit, UndefinedType):
+            return True
+        return unit == self._valid_unit
+
     def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
         """Get numerical value from float or entity state."""
         if isinstance(entity_or_float, str):
             if not (state := self._hass.states.get(entity_or_float)):
                 # Entity not found
+                return None
+            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+                # Entity unit does not match the expected unit
                 return None
             try:
                 return float(state.state)
@@ -620,6 +631,8 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
         domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
+            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+                return None
             raw_value = state.state
         else:
             raw_value = state.attributes.get(domain_spec.value_source)
@@ -1016,6 +1029,7 @@ def make_entity_origin_state_trigger(
 
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
+    valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
@@ -1023,12 +1037,14 @@ def make_entity_numerical_state_changed_trigger(
         """Trigger for numerical state value changes."""
 
         _domain_specs = domain_specs
+        _valid_unit = valid_unit
 
     return CustomTrigger
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
+    valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 
@@ -1036,6 +1052,7 @@ def make_entity_numerical_state_crossed_threshold_trigger(
         """Trigger for numerical state value crossing a threshold."""
 
         _domain_specs = domain_specs
+        _valid_unit = valid_unit
 
     return CustomTrigger
 
