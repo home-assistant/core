@@ -1,8 +1,12 @@
 """Base class for Portainer entities."""
 
+import logging
+
 from yarl import URL
 
 from homeassistant.const import CONF_URL
+from homeassistant.core import callback
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -14,6 +18,8 @@ from .coordinator import (
     PortainerCoordinatorData,
     PortainerStackData,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -80,7 +86,15 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         assert names, "Container names list unexpectedly empty"
         self.device_name = names[0].replace("/", " ").strip()
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info, always reflecting the current container ID."""
+        container_id = (
+            self.container_data.container.id if self.available else self.device_id
+        )
+        return DeviceInfo(
             identifiers={
                 (
                     DOMAIN,
@@ -89,22 +103,42 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             },
             manufacturer=DEFAULT_NAME,
             configuration_url=URL(
-                f"{coordinator.config_entry.data[CONF_URL]}#!/{self.endpoint_id}/docker/containers/{self.device_id}"
+                f"{self.coordinator.config_entry.data[CONF_URL]}"
+                f"#!/{self.endpoint_id}/docker/containers/{container_id}"
             ),
             model="Container",
             name=self.device_name,
-            # If the container belongs to a stack, nest it under the stack
-            # else it's the endpoint
             via_device=(
                 DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.id}"
-                if device_info.stack
-                else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+                f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{self._device_info.stack.id}"
+                if self._device_info.stack
+                else f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
             translation_key=None if self.device_name else "unknown_container",
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator, keeping URL current."""
+        if self.available and self.device_entry:
+            new_configuration_url = URL(
+                f"{self.coordinator.config_entry.data[CONF_URL]}"
+                f"#!/{self.endpoint_id}/docker/containers/{self.container_data.container.id}"
+            )
+
+            if self.device_entry.configuration_url != new_configuration_url:
+                _LOGGER.debug(
+                    "Updating configuration URL for device %s: %s -> %s",
+                    self.device_entry.id,
+                    self.device_entry.configuration_url,
+                    new_configuration_url,
+                )
+                dr.async_get(self.hass).async_update_device(
+                    device_id=self.device_entry.id,
+                    configuration_url=new_configuration_url,
+                )
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
