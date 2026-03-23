@@ -617,7 +617,7 @@ async def test_humidity_trigger_ignores_limit_entity_with_wrong_unit(
     trigger_options: dict[str, Any],
     limit_entities: list[str],
 ) -> None:
-    """Test humidity crossed_threshold trigger does not fire if limit entity unit is not %."""
+    """Test humidity triggers do not fire if limit entity unit is not %."""
     await assert_trigger_ignores_limit_entities_with_wrong_unit(
         hass,
         service_calls=service_calls,
