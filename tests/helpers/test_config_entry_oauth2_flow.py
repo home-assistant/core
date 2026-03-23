@@ -843,6 +843,15 @@ async def test_device_flow_full_flow(
         "code": "user-code",
     }
 
+    # Poll the progress step again before the task completes
+    # device registration must not be repeated
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["description_placeholders"] == {
+        "url": "https://example.com/device",
+        "code": "user-code",
+    }
+
     login_event.set()
     await hass.async_block_till_done()
 
@@ -856,7 +865,7 @@ async def test_device_flow_full_flow(
         "token": token_response,
     }
 
-    device_impl.async_register_device.assert_awaited()
+    device_impl.async_register_device.assert_awaited_once()
     device_impl.async_check_device_activation.assert_awaited_with(
         {
             "device_code": "device-code",

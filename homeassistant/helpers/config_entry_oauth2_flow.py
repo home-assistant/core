@@ -846,6 +846,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         self.login_task: asyncio.Task | None = None
         self.device_token: dict[str, str] | None = None
         self.device_flow_error: BaseException | None = None
+        self.device_registry: dict
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
@@ -857,19 +858,22 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Create an entry for device flow."""
-        try:
-            async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
-                # Done so we don't have to enforce abstract methods on the other implementations
-                device = await self.flow_impl.async_register_device()
-        except TimeoutError as err:
-            _LOGGER.error("Timeout registering device: %s", err)
-            return self.async_abort(reason="authorize_url_timeout")
-
-        async def _wait_for_login() -> dict[str, str]:
-            """Wait for the user to authorize the device."""
-            return await self.flow_impl.async_check_device_activation(device)
-
         if self.login_task is None:
+            try:
+                async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
+                    device_registry = await self.flow_impl.async_register_device()
+            except TimeoutError as err:
+                _LOGGER.error("Timeout registering device: %s", err)
+                return self.async_abort(reason="authorize_url_timeout")
+
+            self.device_registry = device_registry
+
+            async def _wait_for_login() -> dict[str, str]:
+                """Wait for the user to authorize the device."""
+                return await self.flow_impl.async_check_device_activation(
+                    device_registry
+                )
+
             _LOGGER.info("Starting login task")
             self.login_task = self.hass.async_create_task(_wait_for_login())
 
@@ -884,8 +888,8 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
             step_id="device_flow",
             progress_action="wait_for_device",
             description_placeholders={
-                "url": device["verification_uri"],
-                "code": device["user_code"],
+                "url": self.device_registry["verification_uri"],
+                "code": self.device_registry["user_code"],
             },
             progress_task=self.login_task,
         )
