@@ -215,6 +215,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return [
             _humanize_sound_mode(m)
             for m in self.coordinator.data.zones[self._zone_id].sound_program_list
+            if m
         ]
 
     @property
