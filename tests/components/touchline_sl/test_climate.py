@@ -98,9 +98,18 @@ async def test_migrate_device_identifiers(
     # Pre-populate the device registry with the old identifier format.
     mock_config_entry.add_to_hass(hass)
     registry = dr.async_get(hass)
+
+    # Create the module device as it would have existed in a previous run.
+    registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("touchline_sl", "deadbeef")},
+    )
+
+    # Create the legacy zone device with via_device pointing to the module.
     old_device = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("touchline_sl", "1")},
+        via_device=("touchline_sl", "deadbeef"),
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
