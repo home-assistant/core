@@ -43,6 +43,11 @@ from .entity import MusicCastDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _humanize_sound_mode(raw: str) -> str:
+    return raw.replace("_", " ").title()
+
+
 MUSIC_PLAYER_BASE_SUPPORT = (
     MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.REPEAT_SET
@@ -201,12 +206,16 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-        return self.coordinator.data.zones[self._zone_id].sound_program
+        raw = self.coordinator.data.zones[self._zone_id].sound_program
+        return _humanize_sound_mode(raw) if raw else None
 
     @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
-        return self.coordinator.data.zones[self._zone_id].sound_program_list
+        return [
+            _humanize_sound_mode(m)
+            for m in self.coordinator.data.zones[self._zone_id].sound_program_list
+        ]
 
     @property
     def zone(self):
@@ -399,7 +408,11 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        await self.coordinator.musiccast.select_sound_mode(self._zone_id, sound_mode)
+        raw = {
+            _humanize_sound_mode(m): m
+            for m in self.coordinator.data.zones[self._zone_id].sound_program_list
+        }.get(sound_mode, sound_mode)
+        await self.coordinator.musiccast.select_sound_mode(self._zone_id, raw)
 
     @property
     def media_image_url(self):
