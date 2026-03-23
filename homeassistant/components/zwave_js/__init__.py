@@ -108,6 +108,8 @@ from .const import (
     DOMAIN,
     ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_METADATA_UPDATED,
+    EVENT_VALUE_ADDED,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
     LOGGER,
@@ -781,7 +783,7 @@ class NodeEvents:
         )
 
         # add listeners to handle new values that get added later
-        for event in ("value added", EVENT_VALUE_UPDATED, "metadata updated"):
+        for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
