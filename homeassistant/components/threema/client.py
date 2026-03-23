@@ -80,10 +80,6 @@ class ThreemaAPIClient:
             raise ThreemaConnectionError(
                 f"Gateway error validating credentials: {err}"
             ) from err
-        except Exception as err:
-            raise ThreemaConnectionError(
-                f"Failed to validate credentials: {err}"
-            ) from err
 
     async def send_text_message(self, recipient_id: str, text: str) -> str:
         """Send a text message to a Threema ID.
