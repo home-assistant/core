@@ -1,17 +1,20 @@
 """Test the Airtouch 5 config flow."""
 
 import contextlib
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.airtouch5 import async_migrate_entry
 from homeassistant.components.airtouch5.config_flow import AirTouch5ConfigFlow
 from homeassistant.components.airtouch5.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .conftest import AirtouchDevice
+from .conftest import CONF_HOST, AirtouchDevice, MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -217,7 +220,7 @@ async def test_select_connection_exception(
         ),
         patch(
             "airtouch5py.airtouch5_simple_client.Airtouch5SimpleClient.test_connection",
-            return_value=Exception,
+            side_effect=Exception,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -231,9 +234,7 @@ async def test_select_connection_exception(
             {"Select Device": fake_device.system_id},
         )
 
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["data"]["host"] == fake_device.ip
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert result2["type"] is FlowResultType.FORM
 
 
 async def test_discovery_success() -> None:
@@ -369,3 +370,144 @@ async def test_discover_device_by_ip_exception_closes() -> None:
         await flow._discover_device_by_ip("1.1.1.1")
 
     mock_instance.close.assert_awaited_once()
+
+
+async def test_migrate_entry_success(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test successful migration."""
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4"},
+        unique_id="old_id",
+        version=1,
+        minor_version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock device returned from discovery
+    mock_device = MagicMock()
+    mock_device.system_id = "sys123"
+    mock_device.ip = "1.2.3.4"
+    mock_device.model = "model"
+    mock_device.console_id = "console"
+    mock_device.name = "My AC"
+
+    with patch(
+        "homeassistant.components.airtouch5.AirtouchDiscovery"
+    ) as mock_discovery:
+        instance = mock_discovery.return_value
+        instance.establish_server = AsyncMock()
+        instance.discover_by_ip = AsyncMock(return_value=mock_device)
+        instance.close = AsyncMock()
+
+        # Create an entity to migrate
+        entity_entry = entity_registry.async_get_or_create(
+            "climate",
+            DOMAIN,
+            "zone_1",
+        )
+
+        await async_migrate_entry(hass, mock_config_entry)
+
+        updated = entity_registry.async_get(entity_entry.entity_id)
+
+        assert updated.unique_id == "sys123_1"
+
+        result = await async_migrate_entry(hass, mock_config_entry)
+
+    assert result is True
+
+    # Check config entry updated
+    assert mock_config_entry.unique_id == "sys123"
+    assert mock_config_entry.data["system_id"] == "sys123"
+    assert mock_config_entry.minor_version == 2
+
+    # Check entity updated
+    updated = entity_registry.async_get(entity_entry.entity_id)
+    assert updated.unique_id == "sys123_1"
+
+
+async def test_migrate_entry_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration fails on timeout."""
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4"},
+        unique_id="old_id",
+        version=1,
+        minor_version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.airtouch5.AirtouchDiscovery"
+    ) as mock_discovery:
+        instance = mock_discovery.return_value
+        instance.establish_server = AsyncMock()
+        instance.discover_by_ip = AsyncMock(side_effect=TimeoutError)
+        instance.close = AsyncMock()
+
+        result = await async_migrate_entry(hass, mock_config_entry)
+
+    assert result is False
+
+    async def test_migrate_entry_noop(
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ):
+        """Test migration skipped when version not 1."""
+
+        mock_config_entry.minor_version = 2
+
+        result = await async_migrate_entry(hass, mock_config_entry)
+
+        assert result is True
+
+    async def test_migrate_entry_updates_device_registry(
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+        device_registry: DeviceRegistry,
+    ):
+        """Test device identifiers are updated."""
+
+        mock_config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_HOST: "1.2.3.4"},
+            unique_id="old_id",
+            version=1,
+            minor_version=1,
+        )
+        mock_config_entry.add_to_hass(hass)
+
+        device = device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("airtouch5", "zone_1")},
+            name="Zone Device",
+        )
+
+        mock_device = MagicMock()
+        mock_device.system_id = "sys123"
+        mock_device.ip = "1.2.3.4"
+        mock_device.model = "model"
+        mock_device.console_id = "console"
+        mock_device.name = "My AC"
+
+        with patch(
+            "homeassistant.components.airtouch5.AirtouchDiscovery"
+        ) as mock_discovery:
+            instance = mock_discovery.return_value
+            instance.establish_server = AsyncMock()
+            instance.discover_by_ip = AsyncMock(return_value=mock_device)
+            instance.close = AsyncMock()
+
+            await async_migrate_entry(hass, mock_config_entry)
+
+        updated_device = device_registry.async_get(device.id)
+        assert ("airtouch5", "sys123_1") in updated_device.identifiers
