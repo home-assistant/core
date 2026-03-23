@@ -836,8 +836,8 @@ async def webhook_update_live_activity_token(
         EVENT_LIVE_ACTIVITY_TOKEN_UPDATED,
         {
             ATTR_LIVE_ACTIVITY_TAG: activity_tag,
-            "device_id": device.id,
-            "webhook_id": webhook_id,
+            ATTR_DEVICE_ID: device.id,
+            CONF_WEBHOOK_ID: webhook_id,
         },
         EventOrigin.remote,
         context=registration_context(config_entry.data),
@@ -876,8 +876,8 @@ async def webhook_live_activity_dismissed(
         EVENT_LIVE_ACTIVITY_DISMISSED,
         {
             ATTR_LIVE_ACTIVITY_TAG: activity_tag,
-            "device_id": device.id,
-            "webhook_id": webhook_id,
+            ATTR_DEVICE_ID: device.id,
+            CONF_WEBHOOK_ID: webhook_id,
         },
         EventOrigin.remote,
         context=registration_context(config_entry.data),

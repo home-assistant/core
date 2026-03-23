@@ -237,7 +237,7 @@ class MobileAppNotificationService(BaseNotificationService):
             return None
 
         tag = notification_data.get(ATTR_LIVE_ACTIVITY_TAG)
-        if not tag:
+        if not tag or not isinstance(tag, str):
             return None
 
         # Per-activity token — the activity is already running on the device.
