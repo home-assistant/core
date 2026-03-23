@@ -22,7 +22,6 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLAN config flow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
