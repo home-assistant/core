@@ -92,7 +92,8 @@
       },
       "entry_type": "Allowed chat ID",
       "error": {
-        "chat_not_found": "Chat not found"
+        "chat_not_found": "Chat not found",
+        "telegram_error": "[%key:component::telegram_bot::config::error::telegram_error%]"
       },
       "initiate_flow": {
         "user": "Add allowed chat ID"

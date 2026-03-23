@@ -153,6 +153,7 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(CONF_TRUSTED_NETWORKS): vol.Coerce(str),
     }
 )
+SUBENTRY_SCHEMA: vol.Schema = vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(
@@ -598,24 +599,30 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             )
 
         errors: dict[str, str] = {}
+        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
 
         if user_input is not None:
             config_entry: TelegramBotConfigEntry = self._get_entry()
             bot = config_entry.runtime_data.bot
 
+            # validate chat id
             chat_id: int = user_input[CONF_CHAT_ID]
-            chat_name = await _async_get_chat_name(bot, chat_id)
-            if chat_name:
+            try:
+                chat_info: ChatFullInfo = await bot.get_chat(chat_id)
+            except BadRequest:
+                errors["base"] = "chat_not_found"
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+
+            if not errors:
                 return self.async_create_entry(
-                    title=f"{chat_name} ({chat_id})",
+                    title=chat_info.effective_name or str(chat_id),
                     data={CONF_CHAT_ID: chat_id},
                     unique_id=str(chat_id),
                 )
 
-            errors["base"] = "chat_not_found"
-
         service: TelegramNotificationService = self._get_entry().runtime_data
-        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
         description_placeholders["bot_username"] = f"@{service.bot.username}"
         description_placeholders["bot_url"] = f"https://t.me/{service.bot.username}"
 
@@ -639,7 +646,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+                SUBENTRY_SCHEMA,
                 suggested_values,
             ),
             description_placeholders=description_placeholders,
@@ -677,11 +684,3 @@ async def _get_most_recent_chat(
             )
 
     return None
-
-
-async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:
-    try:
-        chat_info: ChatFullInfo = await bot.get_chat(chat_id)
-        return chat_info.effective_name or str(chat_id)
-    except BadRequest:
-        return ""
