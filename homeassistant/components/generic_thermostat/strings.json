@@ -1,5 +1,8 @@
 {
   "config": {
+    "error": {
+      "min_max_runtime": "Minimum run time must be less than the maximum run time."
+    },
     "step": {
       "presets": {
         "data": {
@@ -45,7 +48,7 @@
   },
   "options": {
     "error": {
-      "min_max_runtime": "Minimum run time must be less than the maximum run time."
+      "min_max_runtime": "[%key:component::generic_thermostat::config::error::min_max_runtime%]"
     },
     "step": {
       "init": {

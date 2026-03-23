@@ -116,7 +116,11 @@ async def _validate_config(
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA), next_step="presets"),
+    "user": SchemaFlowFormStep(
+        vol.Schema(CONFIG_SCHEMA),
+        validate_user_input=_validate_config,
+        next_step="presets",
+    ),
     "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
 }
 
