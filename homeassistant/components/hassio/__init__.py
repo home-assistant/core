@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from dataclasses import replace
 from datetime import datetime
 import logging
 import os
@@ -15,6 +16,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
     GreenOptions,
     HomeAssistantInfo,
+    HomeAssistantOptions,
     HostInfo,
     InstalledAddon,
     NetworkInfo,
@@ -22,20 +24,28 @@ from aiohasupervisor.models import (
     RootInfo,
     StoreInfo,
     SupervisorInfo,
+    SupervisorOptions,
     YellowOptions,
 )
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.models import RefreshToken
 from homeassistant.components import frontend, panel_custom
 from homeassistant.components.homeassistant import async_set_stop_handler
-from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.http import (
+    CONF_SERVER_HOST,
+    CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE,
+    StaticPathConfig,
+)
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     HASSIO_USER_NAME,
+    SERVER_PORT,
     Platform,
 )
 from homeassistant.core import (
@@ -445,8 +455,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         require_admin=True,
     )
 
+    async def update_hass_api(http_config: dict[str, Any], refresh_token: RefreshToken):
+        """Update Home Assistant API data on Hass.io."""
+        options = HomeAssistantOptions(
+            ssl=CONF_SSL_CERTIFICATE in http_config,
+            port=http_config.get(CONF_SERVER_PORT) or SERVER_PORT,
+            refresh_token=refresh_token.token,
+        )
+
+        if http_config.get(CONF_SERVER_HOST) is not None:
+            options = replace(options, watchdog=False)
+            _LOGGER.warning(
+                "Found incompatible HTTP option 'server_host'. Watchdog feature"
+                " disabled"
+            )
+
+        try:
+            await supervisor_client.homeassistant.set_options(options)
+        except SupervisorError as err:
+            _LOGGER.warning(
+                "Failed to update Home Assistant options in Supervisor: %s", err
+            )
+
     update_hass_api_task = hass.async_create_task(
-        hassio.update_hass_api(config.get("http", {}), refresh_token), eager_start=True
+        update_hass_api(config.get("http", {}), refresh_token), eager_start=True
     )
 
     last_timezone = None
@@ -457,19 +489,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         nonlocal last_timezone
         nonlocal last_country
 
-        new_timezone = str(hass.config.time_zone)
-        new_country = str(hass.config.country)
+        new_timezone = hass.config.time_zone
+        new_country = hass.config.country
 
         if new_timezone != last_timezone or new_country != last_country:
             last_timezone = new_timezone
             last_country = new_country
-            await hassio.update_hass_config(new_timezone, new_country)
+
+            try:
+                await supervisor_client.supervisor.set_options(
+                    SupervisorOptions(timezone=new_timezone, country=new_country)
+                )
+            except SupervisorError as err:
+                _LOGGER.warning("Failed to update Supervisor options: %s", err)
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
     push_config_task = hass.async_create_task(push_config(None), eager_start=True)
     # Start listening for problems with supervisor and making issues
-    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
+    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass)
     issues_task = hass.async_create_task(issues.setup(), eager_start=True)
 
     async def async_service_handler(service: ServiceCall) -> None:
@@ -617,7 +655,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_set_stop_handler(hass, _async_stop)
 
     # Init discovery Hass.io feature
-    async_setup_discovery_view(hass, hassio)
+    async_setup_discovery_view(hass)
 
     # Init auth Hass.io feature
     assert user is not None

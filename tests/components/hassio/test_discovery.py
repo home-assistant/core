@@ -127,33 +127,27 @@ async def test_hassio_discovery_startup_done(
     addon_installed.return_value.name = "Mosquitto Test"
 
     supervisor_root_info.side_effect = SupervisorError()
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_api",
-            return_value={"result": "ok"},
-        ),
-    ):
-        await hass.async_start()
-        await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
+    await hass.async_start()
+    await async_setup_component(hass, "hassio", {})
+    await hass.async_block_till_done()
 
-        assert get_addon_discovery_info.call_count == 1
-        assert mock_mqtt.async_step_hassio.called
-        mock_mqtt.async_step_hassio.assert_called_with(
-            HassioServiceInfo(
-                config={
-                    "broker": "mock-broker",
-                    "port": 1883,
-                    "username": "mock-user",
-                    "password": "mock-pass",
-                    "protocol": "3.1.1",
-                    "addon": "Mosquitto Test",
-                },
-                name="Mosquitto Test",
-                slug="mosquitto",
-                uuid=uuid.hex,
-            )
+    assert get_addon_discovery_info.call_count == 1
+    assert mock_mqtt.async_step_hassio.called
+    mock_mqtt.async_step_hassio.assert_called_with(
+        HassioServiceInfo(
+            config={
+                "broker": "mock-broker",
+                "port": 1883,
+                "username": "mock-user",
+                "password": "mock-pass",
+                "protocol": "3.1.1",
+                "addon": "Mosquitto Test",
+            },
+            name="Mosquitto Test",
+            slug="mosquitto",
+            uuid=uuid.hex,
         )
+    )
 
 
 async def test_hassio_discovery_webhook(

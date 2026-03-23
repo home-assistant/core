@@ -10,7 +10,7 @@ from aiohasupervisor.models import AddonsStats, AddonState, InstalledAddonComple
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.auth.models import RefreshToken
+from homeassistant.components.hassio.const import DATA_CONFIG_STORE
 from homeassistant.components.hassio.handler import HassIO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,7 +33,7 @@ def disable_security_filter() -> Generator[None]:
 
 @pytest.fixture
 async def hassio_client(
-    hassio_stubs: RefreshToken, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hassio_stubs: None, hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Return a Hass.io HTTP client."""
     return await hass_client()
@@ -41,9 +41,7 @@ async def hassio_client(
 
 @pytest.fixture
 async def hassio_noauth_client(
-    hassio_stubs: RefreshToken,
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
+    hassio_stubs: None, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> TestClient:
     """Return a Hass.io HTTP client without auth."""
     return await aiohttp_client(hass.http.app)
@@ -53,10 +51,15 @@ async def hassio_noauth_client(
 async def hassio_client_supervisor(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
-    hassio_stubs: RefreshToken,
+    hassio_stubs: None,
 ) -> TestClient:
     """Return an authenticated HTTP client."""
-    access_token = hass.auth.async_create_access_token(hassio_stubs)
+    hassio_user_id = hass.data[DATA_CONFIG_STORE].data.hassio_user
+    hassio_user = await hass.auth.async_get_user(hassio_user_id)
+    assert hassio_user
+    assert hassio_user.refresh_tokens
+    refresh_token = next(iter(hassio_user.refresh_tokens.values()))
+    access_token = hass.auth.async_create_access_token(refresh_token)
     return await aiohttp_client(
         hass.http.app,
         headers={"Authorization": f"Bearer {access_token}"},

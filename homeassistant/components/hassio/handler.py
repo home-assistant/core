@@ -14,13 +14,6 @@ from aiohasupervisor.models import SupervisorOptions
 import aiohttp
 from yarl import URL
 
-from homeassistant.auth.models import RefreshToken
-from homeassistant.components.http import (
-    CONF_SERVER_HOST,
-    CONF_SERVER_PORT,
-    CONF_SSL_CERTIFICATE,
-)
-from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.singleton import singleton
 
@@ -33,22 +26,6 @@ KEY_SUPERVISOR_CLIENT = "supervisor_client"
 
 class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
-
-
-def _api_bool[**_P](
-    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
-) -> Callable[_P, Coroutine[Any, Any, bool]]:
-    """Return a boolean."""
-
-    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> bool:
-        """Wrap function."""
-        try:
-            data = await funct(*argv, **kwargs)
-            return data["result"] == "ok"
-        except HassioAPIError:
-            return False
-
-    return _wrapper
 
 
 def api_data[**_P](
@@ -94,37 +71,6 @@ class HassIO:
         This method returns a coroutine.
         """
         return self.send_command("/ingress/panels", method="get")
-
-    @_api_bool
-    async def update_hass_api(
-        self, http_config: dict[str, Any], refresh_token: RefreshToken
-    ):
-        """Update Home Assistant API data on Hass.io."""
-        port = http_config.get(CONF_SERVER_PORT) or SERVER_PORT
-        options = {
-            "ssl": CONF_SSL_CERTIFICATE in http_config,
-            "port": port,
-            "refresh_token": refresh_token.token,
-        }
-
-        if http_config.get(CONF_SERVER_HOST) is not None:
-            options["watchdog"] = False
-            _LOGGER.warning(
-                "Found incompatible HTTP option 'server_host'. Watchdog feature"
-                " disabled"
-            )
-
-        return await self.send_command("/homeassistant/options", payload=options)
-
-    @_api_bool
-    def update_hass_config(self, timezone: str, country: str | None) -> Coroutine:
-        """Update Home-Assistant timezone data on Hass.io.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(
-            "/supervisor/options", payload={"timezone": timezone, "country": country}
-        )
 
     async def send_command(
         self,

@@ -63,7 +63,7 @@ from .const import (
     UPDATE_KEY_SUPERVISOR,
 )
 from .coordinator import HassioDataUpdateCoordinator, get_addons_list, get_host_info
-from .handler import HassIO, get_supervisor_client
+from .handler import get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
 ISSUE_KEY_UNSUPPORTED = "unsupported"
@@ -175,10 +175,9 @@ class Issue:
 class SupervisorIssues:
     """Create issues from supervisor events."""
 
-    def __init__(self, hass: HomeAssistant, client: HassIO) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize supervisor issues."""
         self._hass = hass
-        self._client = client
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[UUID, Issue] = {}
