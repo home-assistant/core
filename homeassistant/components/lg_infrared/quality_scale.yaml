@@ -76,20 +76,17 @@ rules:
     status: exempt
     comment: |
       Each config entry creates a single device.
-  entity-category:
-    status: exempt
-    comment: |
-      The remote entity is the primary entity and does not need a category.
-  entity-device-class:
-    status: exempt
-    comment: |
-      Remote entities do not have a device class.
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: |
       The remote entity is the primary entity and should be enabled by default.
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      This integration does not raise exceptions.
   icon-translations:
     status: exempt
     comment: |
