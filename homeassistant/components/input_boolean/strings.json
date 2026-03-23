@@ -1,8 +1,4 @@
 {
-  "common": {
-    "trigger_behavior_description": "The behavior of the targeted toggles to trigger on.",
-    "trigger_behavior_name": "Behavior"
-  },
   "entity_component": {
     "_": {
       "name": "[%key:component::input_boolean::title%]",
@@ -18,15 +14,6 @@
             "true": "[%key:common::state::yes%]"
           }
         }
-      }
-    }
-  },
-  "selector": {
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -48,27 +35,5 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Input boolean",
-  "triggers": {
-    "turned_off": {
-      "description": "Triggers after one or more toggles turn off.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::input_boolean::common::trigger_behavior_description%]",
-          "name": "[%key:component::input_boolean::common::trigger_behavior_name%]"
-        }
-      },
-      "name": "Toggle turned off"
-    },
-    "turned_on": {
-      "description": "Triggers after one or more toggles turn on.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::input_boolean::common::trigger_behavior_description%]",
-          "name": "[%key:component::input_boolean::common::trigger_behavior_name%]"
-        }
-      },
-      "name": "Toggle turned on"
-    }
-  }
+  "title": "Input boolean"
 }
