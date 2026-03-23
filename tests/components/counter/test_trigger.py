@@ -10,7 +10,7 @@ from homeassistant.components.counter import (
     CONF_MINIMUM,
     DOMAIN,
 )
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
@@ -82,6 +82,16 @@ async def test_counter_triggers_gated_by_labs_flag(
             [
                 {"included_state": {"state": None, "attributes": {}}, "count": 0},
                 {"included_state": {"state": "1", "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "count": 0,
+                },
+                {"included_state": {"state": "1", "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
+                {"included_state": {"state": "1", "attributes": {}}, "count": 0},
                 {"included_state": {"state": "2", "attributes": {}}, "count": 0},
                 {"included_state": {"state": "1", "attributes": {}}, "count": 1},
             ],
@@ -91,6 +101,16 @@ async def test_counter_triggers_gated_by_labs_flag(
             None,
             [
                 {"included_state": {"state": None, "attributes": {}}, "count": 0},
+                {"included_state": {"state": "2", "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "count": 0,
+                },
+                {"included_state": {"state": "2", "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
                 {"included_state": {"state": "2", "attributes": {}}, "count": 0},
                 {"included_state": {"state": "1", "attributes": {}}, "count": 0},
                 {"included_state": {"state": "2", "attributes": {}}, "count": 1},
