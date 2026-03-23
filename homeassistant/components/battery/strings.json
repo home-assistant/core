@@ -49,21 +49,21 @@
       "name": "Battery not low"
     },
     "percentage_changed": {
-      "description": "Triggers when the battery percentage changes.",
+      "description": "Triggers when the battery level changes.",
       "fields": {
         "above": {
-          "description": "Only trigger when battery percentage is above this value.",
+          "description": "Only trigger when battery level is above this value.",
           "name": "Above"
         },
         "below": {
-          "description": "Only trigger when battery percentage is below this value.",
+          "description": "Only trigger when battery level is below this value.",
           "name": "Below"
         }
       },
-      "name": "Battery percentage changed"
+      "name": "Battery level changed"
     },
     "percentage_crossed_threshold": {
-      "description": "Triggers when the battery percentage crosses a threshold.",
+      "description": "Triggers when the battery level crosses a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::battery::common::trigger_behavior_description%]",
@@ -82,7 +82,7 @@
           "name": "Upper limit"
         }
       },
-      "name": "Battery percentage crossed threshold"
+      "name": "Battery level crossed threshold"
     },
     "started_charging": {
       "description": "Triggers after one or more batteries start charging.",
