@@ -69,6 +69,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 WEBHOOK_REGISTER_DELAY = 1
+MAX_WEBHOOK_RETRY_INTERVAL = 1800
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 type WithingsConfigEntry = ConfigEntry[WithingsData]
 
@@ -332,7 +333,6 @@ class WithingsWebhookManager:
 
     async def _async_subscribe_webhook(self, _: Any = None) -> None:
         """Attempt to subscribe to Withings webhooks."""
-        base_delay = 30
 
         async with self._register_lock:
             if self._webhooks_registered or self._webhook_url is None:
@@ -359,7 +359,9 @@ class WithingsWebhookManager:
                 )
                 return
             except WithingsTooManyRequestsError as err:
-                delay = min(300 * (self._subscribe_attempt + 1), 1800)
+                delay = min(
+                    300 * (self._subscribe_attempt + 1), MAX_WEBHOOK_RETRY_INTERVAL
+                )
                 LOGGER.warning(
                     "Rate limited by Withings API (attempt %d): %s. "
                     "Retrying in %d seconds",
@@ -368,7 +370,11 @@ class WithingsWebhookManager:
                     delay,
                 )
             except WithingsError as err:
-                delay = min(base_delay * (2**self._subscribe_attempt), 1800)
+                base_delay = 30
+                delay = min(
+                    base_delay * (2**self._subscribe_attempt),
+                    MAX_WEBHOOK_RETRY_INTERVAL,
+                )
                 LOGGER.warning(
                     "Failed to subscribe to Withings webhooks "
                     "(attempt %d): %s. Retrying in %d seconds",
