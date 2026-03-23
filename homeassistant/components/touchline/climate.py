@@ -152,11 +152,9 @@ class Touchline(ClimateEntity):
         self._controller_id = self.unit.get_controller_id()
         self._attr_unique_id = f"{self._controller_id}_{self._device_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._attr_name,
             manufacturer="Roth",
-            via_device=(DOMAIN, self._controller_id),
-            suggested_area=self._attr_name,
         )
         self._attr_current_temperature = self.unit.get_current_temperature()
         self._attr_target_temperature = self.unit.get_target_temperature()
