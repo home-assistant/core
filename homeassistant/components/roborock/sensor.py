@@ -88,8 +88,6 @@ class RoborockSensorDescriptionQ10(SensorEntityDescription):
     value_fn: Callable[[Q10StatusTrait], StateType]
 
 
-
-
 def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
         status := state.status.dock_error_status
