@@ -118,6 +118,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -129,7 +130,6 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
         self._attr_native_max_value = DEFAULT_MAX_VALUE
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_native_value",
             template_validators.number(self, CONF_STATE),
         )

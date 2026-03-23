@@ -215,6 +215,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _extra_optimistic_options = (CONF_POSITION,)
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -222,7 +223,6 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         """Initialize the features."""
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_current_cover_position",
             template_validators.strenum(
                 self, CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED

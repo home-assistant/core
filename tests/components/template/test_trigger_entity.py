@@ -24,11 +24,12 @@ class TestEntity(trigger_entity.TriggerEntity):
     __test__ = False
     _entity_id_format = "test.{}"
     extra_template_keys = (CONF_STATE,)
+    _state_option = CONF_STATE
 
     @property
     def state(self) -> bool | None:
         """Return extra attributes."""
-        return self._rendered.get(CONF_STATE)
+        return self._rendered.get(self._state_option)
 
 
 async def test_reference_blueprints_is_none(hass: HomeAssistant) -> None:

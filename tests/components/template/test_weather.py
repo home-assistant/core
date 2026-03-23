@@ -107,6 +107,28 @@ async def setup_weather(
 
 
 @pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "condition": "{{ x - 2 }}",
+            "temperature": "{{ 20 }}",
+            "humidity": "{{ 25 }}",
+        },
+    ],
+)
+@pytest.mark.usefixtures("setup_weather")
+async def test_template_state_exception(hass: HomeAssistant) -> None:
+    """Test condition produces exception."""
+    await async_trigger(hass, "sensor.condition", "anything")
+    state = hass.states.get(TEST_WEATHER.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
     ("style", "config"),
     [
         (
@@ -239,6 +261,11 @@ async def test_template_state_text(
         assert state.attributes.get(v_attr) == value or (
             entity_id == "sensor.uv_index" and style == ConfigurationStyle.LEGACY
         )
+
+    await async_trigger(hass, "sensor.condition", "None")
+    state = hass.states.get(TEST_WEATHER.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

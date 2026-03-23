@@ -158,6 +158,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -166,7 +167,6 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._code_format_template_error: TemplateError | None = None
 
         self.setup_state_template(
-            CONF_STATE,
             "_lock_state",
             template_validators.strenum(
                 self, CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
@@ -192,16 +192,18 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
                 self._attr_supported_features |= supported_feature
 
     def _set_state(self, state: LockState | None) -> None:
-        if state is None:
-            self._attr_is_locked = None
-            return
-
         self._attr_is_jammed = state == LockState.JAMMED
         self._attr_is_opening = state == LockState.OPENING
         self._attr_is_locking = state == LockState.LOCKING
         self._attr_is_open = state == LockState.OPEN
         self._attr_is_unlocking = state == LockState.UNLOCKING
-        self._attr_is_locked = state == LockState.LOCKED
+
+        # All other parameters need to be set False in order
+        # for the lock to be unknown.
+        if state is None:
+            self._attr_is_locked = state
+        else:
+            self._attr_is_locked = state == LockState.LOCKED
 
     @callback
     def _update_code_format(self, render: str | TemplateError | None):

@@ -209,6 +209,7 @@ class AbstractTemplateAlarmControlPanel(
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity calls AbstractTemplateEntity.__init__.
     def __init__(self, name: str) -> None:  # pylint: disable=super-init-not-called
@@ -218,7 +219,6 @@ class AbstractTemplateAlarmControlPanel(
         self._attr_code_format = self._config[CONF_CODE_FORMAT].value
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_alarm_state",
             validator=tcv.strenum(self, CONF_STATE, AlarmControlPanelState),
         )

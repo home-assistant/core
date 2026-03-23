@@ -292,12 +292,16 @@ class TemplateEntity(AbstractTemplateEntity):
 
     def setup_state_template(
         self,
-        option: str,
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
     ) -> None:
-        """Set up a template that manages the main state of the entity."""
+        """Set up a template that manages the main state of the entity.
+
+        Requires _state_option to be set on the inheriting class. _state_option represents
+        the configuration option that derives the state. E.g. Template weather entities main state option
+        is 'condition', where switch is 'state'.
+        """
 
         @callback
         def _update_state(result: Any) -> None:
@@ -314,13 +318,22 @@ class TemplateEntity(AbstractTemplateEntity):
                 self._attr_available = True
 
             state = validator(result) if validator else result
+
             if on_update:
                 on_update(state)
             else:
                 setattr(self, attribute, state)
 
+        if self._state_option is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+            )
+
         self.add_template(
-            option, attribute, on_update=_update_state, none_on_template_error=False
+            self._state_option,
+            attribute,
+            on_update=_update_state,
+            none_on_template_error=False,
         )
 
     def setup_template(
