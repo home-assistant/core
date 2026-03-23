@@ -58,7 +58,8 @@ def _get_current_stats_field(
 ) -> int | None:
     """Safely get a field from the current_stats section, returning None on errors."""
     with suppress(KeyError, AttributeError):
-        return getattr(coordinator.data.current_stats, field)
+        value = getattr(coordinator.data.current_stats, field)
+        return int(value) if isinstance(value, (int, float)) else None
     return None
 
 
@@ -67,7 +68,8 @@ def _get_cumulative_stats_field(
 ) -> int | None:
     """Safely get a field from the cumulative_stats section, returning None on errors."""
     with suppress(KeyError, AttributeError):
-        return getattr(coordinator.data.cumulative_stats, field)
+        value = getattr(coordinator.data.cumulative_stats, field)
+        return int(value) if isinstance(value, (int, float)) else None
     return None
 
 
