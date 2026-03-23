@@ -62,14 +62,6 @@
         }
       }
     },
-    "switch": {
-      "evacuation": {
-        "name": "Evacuation"
-      },
-      "lockdown": {
-        "name": "Lockdown"
-      }
-    },
     "sensor": {
       "door_lock_rule": {
         "name": "Door Lock Rule",
@@ -85,6 +77,14 @@
       },
       "door_lock_rule_ended_time": {
         "name": "Rule End Time"
+      }
+    },
+    "switch": {
+      "evacuation": {
+        "name": "Evacuation"
+      },
+      "lockdown": {
+        "name": "Lockdown"
       }
     }
   },

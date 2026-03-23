@@ -142,19 +142,21 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         supports_lock_rules = self.data.supports_lock_rules if self.data else True
         door_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
-        try:
-            async with asyncio.timeout(10):
-                lock_rules = await asyncio.gather(
-                    *(self.client.get_door_lock_rule(door.id) for door in doors)
-                )
-                door_lock_rules = {
-                    door.id: rule for door, rule in zip(doors, lock_rules, strict=True)
-                }
-        except ApiNotFoundError:
-            supports_lock_rules = False
-            door_lock_rules = {}
-        except (ApiAuthError, ApiConnectionError, ApiError, TimeoutError) as err:
-            _LOGGER.debug("Could not fetch door lock rules: %s", err)
+        if supports_lock_rules:
+            try:
+                async with asyncio.timeout(10):
+                    lock_rules = await asyncio.gather(
+                        *(self.client.get_door_lock_rule(door.id) for door in doors)
+                    )
+                    door_lock_rules = {
+                        door.id: rule
+                        for door, rule in zip(doors, lock_rules, strict=True)
+                    }
+            except ApiNotFoundError:
+                supports_lock_rules = False
+                door_lock_rules = {}
+            except (ApiAuthError, ApiConnectionError, ApiError, TimeoutError) as err:
+                _LOGGER.debug("Could not fetch door lock rules: %s", err)
 
         return UnifiAccessData(
             doors={door.id: door for door in doors},
