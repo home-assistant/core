@@ -34,24 +34,24 @@ from homeassistant.util.unit_conversion import (
 
 
 def _make_detected_trigger(
-    dc: BinarySensorDeviceClass,
+    device_class: BinarySensorDeviceClass,
 ) -> type[EntityTargetStateTriggerBase]:
     """Create a detected trigger for a binary sensor device class."""
 
     class DetectedTrigger(EntityTargetStateTriggerBase):
-        _domain_specs = {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=dc)}
+        _domain_specs = {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}
         _to_states = {STATE_ON}
 
     return DetectedTrigger
 
 
 def _make_cleared_trigger(
-    dc: BinarySensorDeviceClass,
+    device_class: BinarySensorDeviceClass,
 ) -> type[EntityTargetStateTriggerBase]:
     """Create a cleared trigger for a binary sensor device class."""
 
     class ClearedTrigger(EntityTargetStateTriggerBase):
-        _domain_specs = {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=dc)}
+        _domain_specs = {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}
         _to_states = {STATE_OFF}
 
     return ClearedTrigger
@@ -86,7 +86,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         OzoneConcentrationConverter,
     ),
-    "vocs_changed": make_entity_numerical_state_changed_with_unit_trigger(
+    "voc_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {
             SENSOR_DOMAIN: NumericalDomainSpec(
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
@@ -95,7 +95,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         MassVolumeConcentrationConverter,
     ),
-    "vocs_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+    "voc_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
         {
             SENSOR_DOMAIN: NumericalDomainSpec(
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
@@ -104,7 +104,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         MassVolumeConcentrationConverter,
     ),
-    "vocs_ratio_changed": make_entity_numerical_state_changed_with_unit_trigger(
+    "voc_ratio_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {
             SENSOR_DOMAIN: NumericalDomainSpec(
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
@@ -113,7 +113,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_PARTS_PER_BILLION,
         UnitlessRatioConverter,
     ),
-    "vocs_ratio_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+    "voc_ratio_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
         {
             SENSOR_DOMAIN: NumericalDomainSpec(
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS

@@ -169,7 +169,7 @@
                   device_class: ozone
       translation_key: number_or_entity
 
-.number_or_entity_vocs: &number_or_entity_vocs
+.number_or_entity_voc: &number_or_entity_voc
   required: false
   selector:
     choose:
@@ -192,7 +192,7 @@
                   device_class: volatile_organic_compounds
       translation_key: number_or_entity
 
-.number_or_entity_vocs_ratio: &number_or_entity_vocs_ratio
+.number_or_entity_voc_ratio: &number_or_entity_voc_ratio
   required: false
   selector:
     choose:
@@ -351,7 +351,7 @@
         - "ppb"
         - "μg/m³"
 
-.unit_vocs: &unit_vocs
+.unit_voc: &unit_voc
   required: false
   selector:
     select:
@@ -359,7 +359,7 @@
         - "μg/m³"
         - "mg/m³"
 
-.unit_vocs_ratio: &unit_vocs_ratio
+.unit_voc_ratio: &unit_voc_ratio
   required: false
   selector:
     select:
@@ -437,12 +437,12 @@
     - domain: sensor
       device_class: ozone
 
-.target_vocs: &target_vocs
+.target_voc: &target_voc
   entity:
     - domain: sensor
       device_class: volatile_organic_compounds
 
-.target_vocs_ratio: &target_vocs_ratio
+.target_voc_ratio: &target_voc_ratio
   entity:
     - domain: sensor
       device_class: volatile_organic_compounds_parts
@@ -597,37 +597,37 @@ ozone_crossed_threshold:
     upper_limit: *number_or_entity_ozone
     unit: *unit_ozone
 
-vocs_changed:
-  target: *target_vocs
+voc_changed:
+  target: *target_voc
   fields:
-    above: *number_or_entity_vocs
-    below: *number_or_entity_vocs
-    unit: *unit_vocs
+    above: *number_or_entity_voc
+    below: *number_or_entity_voc
+    unit: *unit_voc
 
-vocs_crossed_threshold:
-  target: *target_vocs
+voc_crossed_threshold:
+  target: *target_voc
   fields:
     behavior: *trigger_behavior
     threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity_vocs
-    upper_limit: *number_or_entity_vocs
-    unit: *unit_vocs
+    lower_limit: *number_or_entity_voc
+    upper_limit: *number_or_entity_voc
+    unit: *unit_voc
 
-vocs_ratio_changed:
-  target: *target_vocs_ratio
+voc_ratio_changed:
+  target: *target_voc_ratio
   fields:
-    above: *number_or_entity_vocs_ratio
-    below: *number_or_entity_vocs_ratio
-    unit: *unit_vocs_ratio
+    above: *number_or_entity_voc_ratio
+    below: *number_or_entity_voc_ratio
+    unit: *unit_voc_ratio
 
-vocs_ratio_crossed_threshold:
-  target: *target_vocs_ratio
+voc_ratio_crossed_threshold:
+  target: *target_voc_ratio
   fields:
     behavior: *trigger_behavior
     threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity_vocs_ratio
-    upper_limit: *number_or_entity_vocs_ratio
-    unit: *unit_vocs_ratio
+    lower_limit: *number_or_entity_voc_ratio
+    upper_limit: *number_or_entity_voc_ratio
+    unit: *unit_voc_ratio
 
 no_changed:
   target: *target_no
