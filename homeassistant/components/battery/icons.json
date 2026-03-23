@@ -1,0 +1,22 @@
+{
+  "triggers": {
+    "low": {
+      "trigger": "mdi:battery-low"
+    },
+    "not_low": {
+      "trigger": "mdi:battery-high"
+    },
+    "percentage_changed": {
+      "trigger": "mdi:battery-sync"
+    },
+    "percentage_crossed_threshold": {
+      "trigger": "mdi:battery-alert"
+    },
+    "started_charging": {
+      "trigger": "mdi:battery-charging"
+    },
+    "stopped_charging": {
+      "trigger": "mdi:battery-off"
+    }
+  }
+}
