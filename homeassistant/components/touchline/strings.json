@@ -19,10 +19,6 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "description": "Configuring {integration_title} using YAML is deprecated and will be removed in a future release. Remove the YAML configuration for {integration_title} from configuration.yaml and configure {integration_title} via the Home Assistant UI.",
-      "title": "YAML configuration for {integration_title} is deprecated"
-    },
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Home Assistant could not connect to the Roth Touchline controller while importing your YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",
       "title": "Roth Touchline YAML configuration import failed"
