@@ -82,6 +82,7 @@ from .automation import (
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
+    number_or_entity,
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
@@ -97,7 +98,6 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .trigger import _number_or_entity
 from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
@@ -479,8 +479,8 @@ NUMERICAL_CONDITION_SCHEMA = vol.Schema(
                 vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                     [BEHAVIOR_ANY, BEHAVIOR_ALL]
                 ),
-                vol.Optional(CONF_ABOVE): _number_or_entity,
-                vol.Optional(CONF_BELOW): _number_or_entity,
+                vol.Optional(CONF_ABOVE): number_or_entity,
+                vol.Optional(CONF_BELOW): number_or_entity,
             },
             cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
             _validate_above_below,

@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
@@ -37,7 +37,9 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_not_charging": make_entity_state_condition(
         BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF
     ),
-    "percentage": make_entity_numerical_condition(BATTERY_PERCENTAGE_DOMAIN_SPECS, "%"),
+    "percentage": make_entity_numerical_condition(
+        BATTERY_PERCENTAGE_DOMAIN_SPECS, PERCENTAGE
+    ),
 }
 
 
