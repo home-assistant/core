@@ -83,3 +83,33 @@ async def test_zones_with_same_id_across_modules_get_distinct_devices(
     assert device_a is not None
     assert device_b is not None
     assert device_a.id != device_b.id
+
+
+async def test_migrate_device_identifiers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_touchlinesl_client: MagicMock,
+) -> None:
+    """Test that existing zone devices with old-style identifiers are migrated."""
+    zone = make_mock_zone(zone_id=1)
+    module = make_mock_module([zone])
+    mock_touchlinesl_client.modules = AsyncMock(return_value=[module])
+
+    # Pre-populate the device registry with the old identifier format.
+    mock_config_entry.add_to_hass(hass)
+    registry = dr.async_get(hass)
+    old_device = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("touchline_sl", "1")},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Old identifier should no longer exist.
+    assert registry.async_get_device(identifiers={("touchline_sl", "1")}) is None
+
+    # New identifier should exist and point to the same device entry.
+    migrated = registry.async_get_device(identifiers={("touchline_sl", "deadbeef-1")})
+    assert migrated is not None
+    assert migrated.id == old_device.id
