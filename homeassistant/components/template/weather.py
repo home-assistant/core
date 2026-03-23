@@ -390,6 +390,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_CONDITION
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.

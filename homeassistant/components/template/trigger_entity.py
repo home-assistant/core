@@ -64,17 +64,26 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
     ) -> None:
-        """Set up a template that manages the main state of the entity."""
-        if self._state_option is not None:
-            if self.add_template(
-                self._state_option,
-                attribute,
-                validator,
-                on_update,
-                none_on_template_error=False,
-            ):
-                self._to_render_simple.append(self._state_option)
-                self._parse_result.add(self._state_option)
+        """Set up a template that manages the main state of the entity.
+
+        Requires _state_option to be set on the inheriting class. _state_option represents
+        the configuration option that derives the state. E.g. Template weather entities main state option
+        is 'condition', where switch is 'state'.
+        """
+        if self._state_option is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+            )
+
+        if self.add_template(
+            self._state_option,
+            attribute,
+            validator,
+            on_update,
+            none_on_template_error=False,
+        ):
+            self._to_render_simple.append(self._state_option)
+            self._parse_result.add(self._state_option)
 
     def setup_template(
         self,

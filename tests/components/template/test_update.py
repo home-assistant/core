@@ -209,22 +209,18 @@ async def test_device_id(
 
 @pytest.mark.parametrize(("count", "extra_config"), [(1, None)])
 @pytest.mark.parametrize(
-    "style",
+    ("style", "expected_state"),
     [
-        ConfigurationStyle.MODERN,
-        ConfigurationStyle.TRIGGER,
+        (ConfigurationStyle.MODERN, STATE_UNKNOWN),
+        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
     ],
 )
 @pytest.mark.parametrize(
-    ("installed_template", "latest_template", "expected_state"),
+    ("installed_template", "latest_template"),
     [
-        ("{{states.test['big.fat...']}}", TEST_LATEST_TEMPLATE, STATE_UNKNOWN),
-        (TEST_INSTALLED_TEMPLATE, "{{states.test['big.fat...']}}", STATE_UNAVAILABLE),
-        (
-            "{{states.test['big.fat...']}}",
-            "{{states.test['big.fat...']}}",
-            STATE_UNAVAILABLE,
-        ),
+        ("{{states.test['big.fat...']}}", TEST_LATEST_TEMPLATE),
+        (TEST_INSTALLED_TEMPLATE, "{{states.test['big.fat...']}}"),
+        ("{{states.test['big.fat...']}}", "{{states.test['big.fat...']}}"),
     ],
 )
 @pytest.mark.usefixtures("setup_update")
@@ -233,9 +229,6 @@ async def test_syntax_error(
     expected_state: str,
 ) -> None:
     """Test template update with render error."""
-    hass.states.async_set(TEST_SENSOR_ID, "anything")
-    await hass.async_block_till_done()
-
     state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state == expected_state
 
@@ -364,7 +357,7 @@ async def test_installed_version_template(
     state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == expected
-    assert state.attributes.get("installed_version") == expected_attr
+    assert state.attributes["installed_version"] == expected_attr
 
 
 @pytest.mark.parametrize(
@@ -383,7 +376,7 @@ async def test_installed_version_template(
         ("{{ 2.0 }}", STATE_ON, "2.0"),
         ("{{ None }}", STATE_UNKNOWN, None),
         ("{{ 'foo' }}", STATE_ON, "foo"),
-        ("{{ x + 2 }}", STATE_UNAVAILABLE, None),
+        ("{{ x + 2 }}", STATE_UNKNOWN, None),
     ],
 )
 @pytest.mark.usefixtures("setup_update")
@@ -398,7 +391,7 @@ async def test_latest_version_template(
     state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == expected
-    assert state.attributes.get("latest_version") == expected_attr
+    assert state.attributes["latest_version"] == expected_attr
 
 
 @pytest.mark.parametrize(
