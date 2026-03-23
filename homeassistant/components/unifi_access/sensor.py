@@ -28,7 +28,10 @@ async def async_setup_entry(
         async_add_entities(
             sensor_class(coordinator, door)
             for door_id, door in coordinator.data.doors.items()
-            if door_id in coordinator.data.door_lock_rules
+            if (
+                not coordinator.data.lock_rule_support_complete
+                or door_id in coordinator.data.door_lock_rules
+            )
             for sensor_class in (
                 UnifiAccessDoorLockRuleSensor,
                 UnifiAccessDoorLockRuleEndTimeSensor,

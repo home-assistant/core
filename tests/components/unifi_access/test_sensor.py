@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import (
+    ApiConnectionError,
     ApiNotFoundError,
     DoorLockRuleStatus,
     DoorLockRuleType,
@@ -132,6 +133,25 @@ async def test_sensor_created_for_supported_doors_only(
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY) is not None
     assert hass.states.get(BACK_DOOR_LOCK_RULE_ENTITY) is None
     assert hass.states.get(BACK_DOOR_LOCK_RULE_END_TIME_ENTITY) is None
+
+
+async def test_sensor_created_when_initial_lock_rule_fetch_has_transient_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test sensors are still created when the initial lock rule fetch fails transiently."""
+    mock_client.get_door_lock_rule = AsyncMock(
+        side_effect=ApiConnectionError("Connection failed")
+    )
+
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY) is not None
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY) is not None
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_ENTITY) is not None
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_END_TIME_ENTITY) is not None
 
 
 async def test_sensor_lock_rule_websocket_update(

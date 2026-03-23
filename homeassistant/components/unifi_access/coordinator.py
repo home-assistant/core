@@ -61,6 +61,7 @@ class UnifiAccessData:
     emergency: EmergencyStatus
     door_lock_rules: dict[str, DoorLockRuleStatus]
     supports_lock_rules: bool
+    lock_rule_support_complete: bool
 
 
 def _ws_rule_status_to_lock_rule_status(
@@ -140,27 +141,38 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         except TimeoutError as err:
             raise UpdateFailed("Timeout communicating with UniFi Access API") from err
 
+        previous_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
         door_lock_rules: dict[str, DoorLockRuleStatus] = {}
+        lock_rule_support_complete = True
         try:
             async with asyncio.timeout(10):
-                lock_rules = await asyncio.gather(
-                    *(self._async_get_door_lock_rule(door.id) for door in doors)
+                lock_rule_results = await asyncio.gather(
+                    *(self._async_get_door_lock_rule(door.id) for door in doors),
+                    return_exceptions=True,
                 )
-                door_lock_rules = {
-                    door.id: rule
-                    for door, rule in zip(doors, lock_rules, strict=True)
-                    if rule is not None
-                }
-        except (ApiAuthError, ApiConnectionError, ApiError, TimeoutError) as err:
-            _LOGGER.debug("Could not fetch door lock rules: %s", err)
-            if self.data:
-                door_lock_rules = self.data.door_lock_rules.copy()
+        except TimeoutError as err:
+            lock_rule_results = [err] * len(doors)
+        for door, result in zip(doors, lock_rule_results, strict=True):
+            if isinstance(result, DoorLockRuleStatus):
+                door_lock_rules[door.id] = result
+                continue
+
+            if result is None:
+                continue
+
+            lock_rule_support_complete = False
+            _LOGGER.debug("Could not fetch door lock rule for %s: %s", door.id, result)
+            if door.id in previous_lock_rules:
+                door_lock_rules[door.id] = previous_lock_rules[door.id]
+
+        supports_lock_rules = bool(door_lock_rules) or not lock_rule_support_complete
 
         return UnifiAccessData(
             doors={door.id: door for door in doors},
             emergency=emergency,
             door_lock_rules=door_lock_rules,
-            supports_lock_rules=bool(door_lock_rules),
+            supports_lock_rules=supports_lock_rules,
+            lock_rule_support_complete=lock_rule_support_complete,
         )
 
     async def _async_get_door_lock_rule(
@@ -251,6 +263,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 emergency=self.data.emergency,
                 door_lock_rules=door_lock_rules,
                 supports_lock_rules=self.data.supports_lock_rules,
+                lock_rule_support_complete=self.data.lock_rule_support_complete,
             )
         )
 
@@ -268,6 +281,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 ),
                 door_lock_rules=self.data.door_lock_rules,
                 supports_lock_rules=self.data.supports_lock_rules,
+                lock_rule_support_complete=self.data.lock_rule_support_complete,
             )
         )
 
