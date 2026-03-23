@@ -86,7 +86,9 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         super().__init__(device, metric, device_info)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         # Enum sensors must not have a state class
-        if self._attr_device_class != SensorDeviceClass.ENUM:
+        if self._attr_device_class == SensorDeviceClass.ENUM:
+            self._attr_options = metric.enum_values
+        else:
             self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(
                 metric.metric_nature
             )
