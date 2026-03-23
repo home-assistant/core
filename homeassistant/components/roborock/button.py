@@ -159,7 +159,6 @@ async def async_setup_entry(
                     description,
                 )
                 for coordinator in config_entry.runtime_data.b01_q10
-                if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
                 for description in Q10_BUTTON_DESCRIPTIONS
             ),
         )
