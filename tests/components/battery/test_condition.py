@@ -69,9 +69,6 @@ async def test_battery_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
-# --- is_low / is_not_low (binary_sensor with device_class battery) ---
-
-
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
@@ -160,9 +157,6 @@ async def test_battery_low_high_condition_behavior_all(
         condition_options=condition_options,
         states=states,
     )
-
-
-# --- is_charging / is_not_charging (binary_sensor with device_class battery_charging) ---
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -255,9 +249,6 @@ async def test_battery_charging_condition_behavior_all(
     )
 
 
-# --- Device class exclusion ---
-
-
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "target_state", "other_state", "device_class"),
@@ -308,8 +299,6 @@ async def test_battery_condition_excludes_wrong_device_class(
     await hass.async_block_till_done()
     assert condition(hass) is True
 
-
-# --- percentage (sensor and number with device_class battery) ---
 
 _BATTERY_ATTRS = {ATTR_DEVICE_CLASS: "battery", ATTR_UNIT_OF_MEASUREMENT: "%"}
 
