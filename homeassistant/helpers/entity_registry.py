@@ -242,6 +242,9 @@ class RegistryEntry:
     compat_aliases: list[str] = attr.ib(factory=list, eq=False)
     compat_name: str | None = attr.ib(default=None, eq=False)
 
+    # Used for integrations that still do not set has_entity_name to True
+    original_name_stripped: str | None = attr.ib(default=None, eq=False)
+
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
@@ -279,7 +282,15 @@ class RegistryEntry:
             display_dict["hb"] = True
         if self.has_entity_name:
             display_dict["hn"] = True
-        name = self.name if self.name is not None else self.original_name
+        name = (
+            self.name
+            if self.name is not None
+            else (
+                self.original_name_stripped
+                if self.original_name_stripped is not None
+                else self.original_name
+            )
+        )
         if name is not None:
             display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
@@ -315,6 +326,11 @@ class RegistryEntry:
         # Convert sets and tuples to lists
         # so the JSON serializer does not have to do
         # it every time
+        original_name = (
+            self.original_name_stripped
+            if self.original_name_stripped is not None
+            else self.original_name
+        )
         return {
             "area_id": self.area_id,
             "categories": self.categories,
@@ -333,7 +349,7 @@ class RegistryEntry:
             "modified_at": self.modified_at.timestamp(),
             "name": self.name,
             "options": self.options,
-            "original_name": self.original_name,
+            "original_name": original_name,
             "platform": self.platform,
             "translation_key": self.translation_key,
             "unique_id": self.unique_id,
@@ -451,6 +467,7 @@ def _async_get_full_entity_name(
     has_entity_name: bool,
     name: str | None,
     original_name: str | None,
+    original_name_stripped: str | None | UndefinedType = UNDEFINED,
     overridden_name: str | None = None,
 ) -> str:
     """Get full name for an entity.
@@ -458,28 +475,35 @@ def _async_get_full_entity_name(
     This includes the device name if appropriate.
     Used for both full entity name and entity ID.
     """
-    use_device = False
-    if name is not None:
-        use_device = True
-    elif overridden_name is not None:
+    if name is None and overridden_name is not None:
         name = overridden_name
-    else:
-        name = original_name
-        if has_entity_name:
-            use_device = True
 
-    device = (
-        dr.async_get(hass).async_get(device_id)
-        if use_device and device_id is not None
-        else None
-    )
-
-    if device is not None:
+    elif (
+        device_id is not None
+        and (device := dr.async_get(hass).async_get(device_id)) is not None
+    ):
         device_name = device.name_by_user or device.name
+
+        if name is None:
+            name = original_name
+
+            if original_name_stripped is UNDEFINED:
+                original_name_stripped = None
+                if not has_entity_name:
+                    original_name_stripped = _async_strip_prefix_from_entity_name(
+                        original_name, device_name
+                    )
+
+            if original_name_stripped is not None:
+                name = original_name_stripped
+
         if not name:
             name = device_name
         elif device_name:
             name = f"{device_name} {name}"
+
+    elif name is None:
+        name = original_name
 
     if not name:
         return fallback
@@ -494,9 +518,11 @@ def async_get_full_entity_name(
     original_name: str | None | UndefinedType = UNDEFINED,
 ) -> str:
     """Get full entity name for an entry."""
-    original_name = (
-        original_name if original_name is not UNDEFINED else entry.original_name
-    )
+    original_name_stripped: str | None | UndefinedType = UNDEFINED
+    if original_name is UNDEFINED or original_name == entry.original_name:
+        original_name = entry.original_name
+        original_name_stripped = entry.original_name_stripped
+
     return _async_get_full_entity_name(
         hass,
         device_id=entry.device_id,
@@ -504,6 +530,7 @@ def async_get_full_entity_name(
         has_entity_name=entry.has_entity_name,
         name=entry.name,
         original_name=original_name,
+        original_name_stripped=original_name_stripped,
     )
 
 
@@ -1377,6 +1404,19 @@ class EntityRegistry(BaseRegistry):
                 unique_id=unique_id,
             )
 
+        original_name = none_if_undefined(original_name)
+        original_name_stripped: str | None = None
+
+        if (
+            not has_entity_name_bool
+            and device_id is not None
+            and (device := dr.async_get(self.hass).async_get(device_id)) is not None
+        ):
+            device_name = device.name_by_user or device.name
+            original_name_stripped = _async_strip_prefix_from_entity_name(
+                original_name, device_name
+            )
+
         if (
             disabled_by is None
             and config_entry
@@ -1410,7 +1450,8 @@ class EntityRegistry(BaseRegistry):
             options=options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
-            original_name=none_if_undefined(original_name),
+            original_name=original_name,
+            original_name_stripped=original_name_stripped,
             platform=platform,
             suggested_object_id=suggested_object_id,
             supported_features=none_if_undefined(supported_features) or 0,
@@ -1523,9 +1564,11 @@ class EntityRegistry(BaseRegistry):
         if not device:
             return
 
+        changes = event.data["changes"]
+
         # Remove entities which belong to config entries no longer associated with the
         # device
-        if old_config_entries := event.data["changes"].get("config_entries"):
+        if old_config_entries := changes.get("config_entries"):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -1539,9 +1582,7 @@ class EntityRegistry(BaseRegistry):
 
         # Remove entities which belong to config subentries no longer associated with the
         # device
-        if old_config_entries_subentries := event.data["changes"].get(
-            "config_entries_subentries"
-        ):
+        if old_config_entries_subentries := changes.get("config_entries_subentries"):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -1557,6 +1598,29 @@ class EntityRegistry(BaseRegistry):
                     not in device.config_entries_subentries[config_entry_id]
                 ):
                     self.async_remove(entity.entity_id)
+
+        # Update name if device name changed
+        if (by_user := "name_by_user" in changes) or "name" in changes:
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            device_name = device.name_by_user or device.name
+            for entity in entities:
+                if entity.has_entity_name:
+                    continue
+                name = (
+                    entity.original_name_stripped
+                    if by_user and entity.name is None
+                    else UNDEFINED
+                )
+                original_name_stripped = _async_strip_prefix_from_entity_name(
+                    entity.original_name, device_name
+                )
+                self._async_update_entity(
+                    entity.entity_id,
+                    name=name,
+                    original_name_stripped=original_name_stripped,
+                )
 
         # Re-enable disabled entities if the device is no longer disabled
         if not device.disabled:
@@ -1608,6 +1672,7 @@ class EntityRegistry(BaseRegistry):
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
+        original_name_stripped: str | None | UndefinedType = UNDEFINED,
         platform: str | None | UndefinedType = UNDEFINED,
         suggested_object_id: str | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
@@ -1641,6 +1706,7 @@ class EntityRegistry(BaseRegistry):
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
             ("original_name", original_name),
+            ("original_name_stripped", original_name_stripped),
             ("platform", platform),
             ("suggested_object_id", suggested_object_id),
             ("supported_features", supported_features),
@@ -1715,9 +1781,38 @@ class EntityRegistry(BaseRegistry):
 
         self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
 
+        if original_name_stripped is UNDEFINED and (
+            original_name is not UNDEFINED
+            or device_id is not UNDEFINED
+            or has_entity_name is not UNDEFINED
+        ):
+            device_id = device_id if device_id is not UNDEFINED else old.device_id
+            has_entity_name = (
+                has_entity_name
+                if has_entity_name is not UNDEFINED
+                else old.has_entity_name
+            )
+            original_name = (
+                original_name if original_name is not UNDEFINED else old.original_name
+            )
+
+            original_name_stripped = None
+            if (
+                not has_entity_name
+                and device_id is not None
+                and (device := dr.async_get(self.hass).async_get(device_id)) is not None
+            ):
+                device_name = device.name_by_user or device.name
+                original_name_stripped = _async_strip_prefix_from_entity_name(
+                    original_name, device_name
+                )
+            new_values["original_name_stripped"] = original_name_stripped
+
         new = self.entities[entity_id] = attr.evolve(old, **new_values)
 
         self.async_schedule_save()
+
+        old_values.pop("original_name_stripped", None)
 
         data: _EventEntityRegistryUpdatedData_Update = {
             "action": "update",
@@ -1878,6 +1973,18 @@ class EntityRegistry(BaseRegistry):
                     )
                     continue
 
+                original_name_stripped: str | None = None
+                if (
+                    not entity["has_entity_name"]
+                    and (device_id := entity["device_id"]) is not None
+                    and (device := dr.async_get(self.hass).async_get(device_id))
+                    is not None
+                ):
+                    device_name = device.name_by_user or device.name
+                    original_name_stripped = _async_strip_prefix_from_entity_name(
+                        entity["original_name"], device_name
+                    )
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     aliases=_deserialize_aliases(entity["aliases_v2"]),
                     area_id=entity["area_id"],
@@ -1911,6 +2018,7 @@ class EntityRegistry(BaseRegistry):
                     original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
+                    original_name_stripped=original_name_stripped,
                     platform=entity["platform"],
                     suggested_object_id=entity["suggested_object_id"],
                     supported_features=entity["supported_features"],
