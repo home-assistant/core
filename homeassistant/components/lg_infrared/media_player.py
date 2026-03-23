@@ -85,8 +85,8 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
                     "available" if ir_available else "unavailable",
                 )
 
-            self._attr_available = ir_available
-            self.async_write_ha_state()
+                self._attr_available = ir_available
+                self.async_write_ha_state()
 
         self.async_on_remove(
             async_track_state_change_event(
