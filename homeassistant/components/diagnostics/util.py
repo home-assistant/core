@@ -52,7 +52,7 @@ def _entity_entry_filter(a: attr.Attribute, _: Any) -> bool:
         "_cache",
         "compat_aliases",
         "compat_name",
-        "original_name_stripped",
+        "original_name_unprefixed",
     )
 
 
