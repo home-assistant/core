@@ -599,15 +599,6 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-def _is_integer_state(state: State) -> bool:
-    """Return True if the state's value can be interpreted as an integer."""
-    try:
-        int(state.state)
-    except TypeError, ValueError:
-        return False
-    return True
-
-
 class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 

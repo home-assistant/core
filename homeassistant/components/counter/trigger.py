@@ -12,10 +12,18 @@ from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
     EntityTriggerBase,
     Trigger,
-    _is_integer_state,
 )
 
 from . import CONF_INITIAL, DOMAIN
+
+
+def _is_integer_state(state: State) -> bool:
+    """Return True if the state's value can be interpreted as an integer."""
+    try:
+        int(state.state)
+    except TypeError, ValueError:
+        return False
+    return True
 
 
 class CounterBaseIntegerTrigger(EntityTriggerBase):
