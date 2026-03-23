@@ -1,6 +1,6 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted battery devices.",
+    "condition_behavior_description": "How the state should match on the targeted batteries.",
     "condition_behavior_name": "Behavior"
   },
   "conditions": {
