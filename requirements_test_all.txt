@@ -1052,7 +1052,7 @@ habluetooth==5.11.1
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==2.0.0
+hass-nabucasa==2.2.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
