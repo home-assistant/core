@@ -54,7 +54,7 @@ async def test_lowest_price_day_uses_tomorrow_after_18(
     """After 18:00 the lowest day-price sensors must switch to tomorrow's data."""
     # 2024-01-02 02:00:00 UTC = 2024-01-01 18:00:00 PST (UTC-8)
     # so dt_util.now().hour == 18, triggering the tomorrow-switch.
-    freezer.move_to("2024-01-02 02:00:00")
+    freezer.move_to("2024-01-02 02:00:00+00:00")
 
     # Return tomorrow's cheapest day slot when current_hour >= 18
     def lowest_price_day_side_effect(
