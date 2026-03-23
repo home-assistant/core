@@ -26,7 +26,7 @@
           "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
           "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
         },
-        "description": "The connection to the Proxmox VE server requires re-authentication. Please enter your password to continue.",
+        "description": "The connection to the Proxmox VE server requires re-authentication. Please update your credentials to continue.",
         "title": "Re-authenticate Proxmox VE integration"
       },
       "reconfigure": {
