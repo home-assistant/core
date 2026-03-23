@@ -41,13 +41,6 @@ class TransmissionSensorEntityDescription(SensorEntityDescription):
     extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
 
 
-def _bytes_to_gib(value: int | None) -> float | None:
-    """Convert bytes to gibibytes (GiB), return None if value is unavailable."""
-    if value is None:
-        return None
-    return value / 1_073_741_824
-
-
 def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None:
     """Compute upload/download ratio.
 
@@ -162,44 +155,48 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         key="session_download",
         translation_key="session_download",
         device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gib(
-            _get_current_stats_field(coordinator, "downloaded_bytes")
+        val_func=lambda coordinator: _get_current_stats_field(
+            coordinator, "downloaded_bytes"
         ),
     ),
     TransmissionSensorEntityDescription(
         key="session_upload",
         translation_key="session_upload",
         device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gib(
-            _get_current_stats_field(coordinator, "uploaded_bytes")
+        val_func=lambda coordinator: _get_current_stats_field(
+            coordinator, "uploaded_bytes"
         ),
     ),
     TransmissionSensorEntityDescription(
         key="total_download",
         translation_key="total_download",
         device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gib(
-            _get_cumulative_stats_field(coordinator, "downloaded_bytes")
+        val_func=lambda coordinator: _get_cumulative_stats_field(
+            coordinator, "downloaded_bytes"
         ),
     ),
     TransmissionSensorEntityDescription(
         key="total_upload",
         translation_key="total_upload",
         device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _bytes_to_gib(
-            _get_cumulative_stats_field(coordinator, "uploaded_bytes")
+        val_func=lambda coordinator: _get_cumulative_stats_field(
+            coordinator, "uploaded_bytes"
         ),
     ),
     TransmissionSensorEntityDescription(

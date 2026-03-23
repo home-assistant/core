@@ -12,7 +12,6 @@ from homeassistant.components.transmission.const import (
     STATE_UP_DOWN,
 )
 from homeassistant.components.transmission.sensor import (
-    _bytes_to_gib,
     _compute_ratio,
     _get_cumulative_stats_field,
     _get_current_stats_field,
@@ -122,10 +121,6 @@ def test_get_state_combinations() -> None:
 def test_helper_functions() -> None:
     """Test helper functions directly."""
 
-    # _bytes_to_gib
-    assert _bytes_to_gib(None) is None
-    assert _bytes_to_gib(0) == 0.0
-    assert _bytes_to_gib(1_073_741_824) == 1.0
 
     # _compute_ratio - zero download
     assert _compute_ratio(100, 0) is None
