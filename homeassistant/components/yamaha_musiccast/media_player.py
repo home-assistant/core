@@ -212,11 +212,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
-        return [
-            _humanize_sound_mode(m)
-            for m in self.coordinator.data.zones[self._zone_id].sound_program_list
-            if m
-        ]
+        return list(self.coordinator.data.sound_program_names.values())
 
     @property
     def zone(self):
