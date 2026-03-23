@@ -359,11 +359,9 @@ class ZWaveBaseEntity(Entity):
             value.value_id
         )
         node_events = controller_events.node_events
-        value_updates_disc_info = (
-            controller_events.node_events.value_updates_disc_info.get(
-                value.node.node_id, {}
-            )
-        )
+        value_updates_disc_info = node_events.value_updates_disc_info[
+            value.node.node_id
+        ]
         await node_events.async_on_value_added(value_updates_disc_info, value)
 
     @callback
