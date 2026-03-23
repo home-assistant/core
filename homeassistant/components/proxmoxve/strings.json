@@ -113,6 +113,9 @@
       "container_memory": {
         "name": "Memory usage"
       },
+      "container_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
       "container_status": {
         "name": "Status",
         "state": {
@@ -142,6 +145,9 @@
       "node_memory": {
         "name": "Memory usage"
       },
+      "node_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
       "node_status": {
         "name": "Status",
         "state": {
@@ -169,6 +175,9 @@
       },
       "vm_memory": {
         "name": "Memory usage"
+      },
+      "vm_memory_percentage": {
+        "name": "Memory usage percentage"
       },
       "vm_status": {
         "name": "Status",
