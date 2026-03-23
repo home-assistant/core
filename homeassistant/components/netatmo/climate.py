@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -44,17 +44,17 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
-    EVENT_TYPE_SCHEDULE,
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
     SERVICE_CLEAR_TEMPERATURE_SETTING,
+    SIGNAL_SCHEDULE_CHANGED,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
+from .data_handler import ACCOUNT, HOME, SIGNAL_NAME, NetatmoRoom
 from .entity import NetatmoRoomEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -231,7 +231,6 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             EVENT_TYPE_SET_POINT,
             EVENT_TYPE_THERM_MODE,
             EVENT_TYPE_CANCEL_SET_POINT,
-            EVENT_TYPE_SCHEDULE,
         ):
             self.async_on_remove(
                 async_dispatcher_connect(
@@ -241,36 +240,36 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 )
             )
 
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
+                self._handle_schedule_changed,
+            )
+        )
+
+    @callback
+    def _handle_schedule_changed(self, schedule_id: str) -> None:
+        """Handle schedule change triggered by another entity."""
+        selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES].get(
+            self.home.entity_id, {}
+        ).get(schedule_id)
+        # update selected schedule attributes
+        self._selected_schedule = getattr(selected_schedule, "name", None)
+        self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+            self._selected_schedule
+        )
+        self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
+            selected_schedule, "entity_id", None
+        )
+        self.async_write_ha_state()
+
     @callback
     def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
 
         if self.home.entity_id != data["home_id"]:
-            return
-
-        if data["event_type"] == EVENT_TYPE_SCHEDULE:
-            # handle schedule change
-            if "schedule_id" in data:
-                selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES][
-                    self.home.entity_id
-                ].get(data["schedule_id"])
-                self._selected_schedule = getattr(
-                    selected_schedule,
-                    "name",
-                    None,
-                )
-                self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
-                    self._selected_schedule
-                )
-
-                self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
-                    selected_schedule, "entity_id", None
-                )
-
-                self.async_write_ha_state()
-                self.data_handler.async_force_update(self._signal_name)
-            # ignore other schedule events
             return
 
         home = data["home"]
@@ -427,6 +426,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
+        # schedule.selected is populated from homesdata, not homestatus
         selected_schedule = self.home.get_selected_schedule()
         self._selected_schedule = getattr(selected_schedule, "name", None)
         self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
@@ -462,13 +462,25 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             _LOGGER.error("%s is not a valid schedule", kwargs.get(ATTR_SCHEDULE_NAME))
             return
 
-        await self.home.async_switch_schedule(schedule_id=schedule_id)
         _LOGGER.debug(
-            "Setting %s schedule to %s (%s)",
+            "Schedule changed for home %s (%s): %s -> %s [trigger: service]",
+            self.home.name,
             self.home.entity_id,
-            kwargs.get(ATTR_SCHEDULE_NAME),
+            self._selected_schedule,
+            schedule_name,
+        )
+        await self.home.async_switch_schedule(schedule_id=schedule_id)
+        # update in-memory selection state to prevent stale poll from reverting
+        for sid, sched in self.home.schedules.items():
+            sched.selected = sid == schedule_id
+        # notify other entities of the schedule change
+        async_dispatcher_send(
+            self.hass,
+            f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
             schedule_id,
         )
+        # trigger immediate homesdata refresh to confirm schedule selection
+        self.data_handler.async_force_update(ACCOUNT)
 
     async def _async_service_set_preset_mode_with_end_datetime(
         self, **kwargs: Any

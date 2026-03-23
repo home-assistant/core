@@ -186,7 +186,7 @@ class NetatmoDataHandler:
         We do up to BATCH_SIZE calls in one update in order
         to minimize the calls on the api service.
         """
-        for data_class in islice(self._queue, 0, BATCH_SIZE * self._interval_factor):
+        for data_class in list(islice(self._queue, 0, BATCH_SIZE * self._interval_factor)):
             if data_class.next_scan > time():
                 continue
 
@@ -449,9 +449,10 @@ class NetatmoDataHandler:
         self, home: pyatmo.Home, signal_home: str
     ) -> None:
         """Set up climate schedule per home."""
-        if NetatmoDeviceCategory.climate in [
-            next(iter(x)) for x in [room.features for room in home.rooms.values()] if x
-        ]:
+        if any(
+            NetatmoDeviceCategory.climate in room.features
+            for room in home.rooms.values()
+        ):
             self.hass.data[DOMAIN][DATA_SCHEDULES][home.entity_id] = self.account.homes[
                 home.entity_id
             ].schedules
