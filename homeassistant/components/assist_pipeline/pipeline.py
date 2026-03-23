@@ -662,7 +662,8 @@ class PipelineRun:
         """Emit run start event."""
         self._device_id = device_id
         self._satellite_id = satellite_id
-        self._start_debug_recording_thread()
+        if self.start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
+            self._start_debug_recording_thread()
 
         data: dict[str, Any] = {
             "pipeline": self.pipeline.id,
@@ -1504,9 +1505,7 @@ class PipelineRun:
 
     def _start_debug_recording_thread(self) -> None:
         """Start thread to record wake/stt audio if debug_recording_dir is set."""
-        if self.debug_recording_thread is not None:
-            # Already started
-            return
+        assert self.debug_recording_thread is None
 
         # Directory to save audio for each pipeline run.
         # Configured in YAML for assist_pipeline.
