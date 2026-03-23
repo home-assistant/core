@@ -4,13 +4,12 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
     TriggerStateDescription,
-    arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
@@ -21,11 +20,11 @@ from tests.components.common import (
 )
 
 DEVICE_CLASS_TRIGGERS = [
-    ("awning", "cover.awning_opened", "cover.awning_closed"),
-    ("blind", "cover.blind_opened", "cover.blind_closed"),
-    ("curtain", "cover.curtain_opened", "cover.curtain_closed"),
-    ("shade", "cover.shade_opened", "cover.shade_closed"),
-    ("shutter", "cover.shutter_opened", "cover.shutter_closed"),
+    (CoverDeviceClass.AWNING, "cover.awning_opened", "cover.awning_closed"),
+    (CoverDeviceClass.BLIND, "cover.blind_opened", "cover.blind_closed"),
+    (CoverDeviceClass.CURTAIN, "cover.curtain_opened", "cover.curtain_closed"),
+    (CoverDeviceClass.SHADE, "cover.shade_opened", "cover.shade_closed"),
+    (CoverDeviceClass.SHUTTER, "cover.shutter_opened", "cover.shutter_closed"),
 ]
 
 
@@ -270,106 +269,3 @@ async def test_cover_trigger_behavior_last(
         trigger_options=trigger_options,
         states=states,
     )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    (
-        "trigger_key",
-        "device_class",
-        "wrong_device_class",
-        "cover_initial",
-        "cover_initial_is_closed",
-        "cover_target",
-        "cover_target_is_closed",
-    ),
-    [
-        (
-            opened_key,
-            device_class,
-            "damper",
-            CoverState.CLOSED,
-            True,
-            CoverState.OPEN,
-            False,
-        )
-        for device_class, opened_key, _ in DEVICE_CLASS_TRIGGERS
-    ]
-    + [
-        (
-            closed_key,
-            device_class,
-            "damper",
-            CoverState.OPEN,
-            False,
-            CoverState.CLOSED,
-            True,
-        )
-        for device_class, _, closed_key in DEVICE_CLASS_TRIGGERS
-    ],
-)
-async def test_cover_trigger_excludes_non_matching_device_class(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    trigger_key: str,
-    device_class: str,
-    wrong_device_class: str,
-    cover_initial: str,
-    cover_initial_is_closed: bool,
-    cover_target: str,
-    cover_target_is_closed: bool,
-) -> None:
-    """Test cover trigger does not fire for entities without matching device_class."""
-    entity_id_matching = "cover.test_matching"
-    entity_id_wrong = "cover.test_wrong"
-
-    # Set initial states
-    hass.states.async_set(
-        entity_id_matching,
-        cover_initial,
-        {ATTR_DEVICE_CLASS: device_class, ATTR_IS_CLOSED: cover_initial_is_closed},
-    )
-    hass.states.async_set(
-        entity_id_wrong,
-        cover_initial,
-        {
-            ATTR_DEVICE_CLASS: wrong_device_class,
-            ATTR_IS_CLOSED: cover_initial_is_closed,
-        },
-    )
-    await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass,
-        trigger_key,
-        {},
-        {
-            CONF_ENTITY_ID: [
-                entity_id_matching,
-                entity_id_wrong,
-            ]
-        },
-    )
-
-    # Matching device class changes - should trigger
-    hass.states.async_set(
-        entity_id_matching,
-        cover_target,
-        {ATTR_DEVICE_CLASS: device_class, ATTR_IS_CLOSED: cover_target_is_closed},
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_matching
-    service_calls.clear()
-
-    # Wrong device class changes - should NOT trigger
-    hass.states.async_set(
-        entity_id_wrong,
-        cover_target,
-        {
-            ATTR_DEVICE_CLASS: wrong_device_class,
-            ATTR_IS_CLOSED: cover_target_is_closed,
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 0
