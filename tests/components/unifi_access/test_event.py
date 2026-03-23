@@ -150,16 +150,14 @@ async def test_access_event(
 
     insights_msg = InsightsAdd(
         event="access.logs.insights.add",
-        data=InsightsAddData(
+        data=InsightsAddData.model_construct(
             event_type="access.door.unlock",
             result=result,
-            metadata=InsightsMetadata(
-                door=[
-                    InsightsMetadataEntry(
-                        id=door_id,
-                        display_name="Door",
-                    )
-                ],
+            metadata=InsightsMetadata.model_construct(
+                door=InsightsMetadataEntry(
+                    id=door_id,
+                    display_name="Door",
+                ),
                 actor=InsightsMetadataEntry(
                     display_name=actor,
                 ),
@@ -225,11 +223,11 @@ async def test_insights_no_door_id_ignored(
 
     insights_msg = InsightsAdd(
         event="access.logs.insights.add",
-        data=InsightsAddData(
+        data=InsightsAddData.model_construct(
             event_type="access.door.unlock",
             result="ACCESS",
-            metadata=InsightsMetadata(
-                door=[InsightsMetadataEntry(id="", display_name="")],
+            metadata=InsightsMetadata.model_construct(
+                door=InsightsMetadataEntry(id="", display_name=""),
             ),
         ),
     )
@@ -265,16 +263,14 @@ async def test_access_event_result_mapping(
 
     insights_msg = InsightsAdd(
         event="access.logs.insights.add",
-        data=InsightsAddData(
+        data=InsightsAddData.model_construct(
             event_type="access.door.unlock",
             result=result,
-            metadata=InsightsMetadata(
-                door=[
-                    InsightsMetadataEntry(
-                        id="door-001",
-                        display_name="Front Door",
-                    )
-                ],
+            metadata=InsightsMetadata.model_construct(
+                door=InsightsMetadataEntry(
+                    id="door-001",
+                    display_name="Front Door",
+                ),
             ),
         ),
     )
