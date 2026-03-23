@@ -1,15 +1,17 @@
 """Test the Liebherr light platform."""
 
+import copy
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyliebherrhomeapi import DeviceState, PresentationLightControl
+from pyliebherrhomeapi import Device, DeviceState, DeviceType, PresentationLightControl
 from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,26 +20,24 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.LIGHT]
-
-
-@pytest.fixture(autouse=True)
-def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
-    """Make sure all entities are enabled."""
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -154,13 +154,26 @@ async def test_light_when_control_missing(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("value", "max_value", "expected_state", "expected_brightness"),
+    [
+        (0, 5, STATE_OFF, None),
+        (None, 5, STATE_UNKNOWN, None),
+        (1, 0, STATE_ON, None),
+    ],
+    ids=["off", "null_value", "zero_max"],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_light_off_state(
+async def test_light_state_updates(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    value: int | None,
+    max_value: int,
+    expected_state: str,
+    expected_brightness: int | None,
 ) -> None:
-    """Test light entity reports off when value is 0."""
+    """Test light entity state after coordinator update."""
     entity_id = "light.test_fridge_presentation_light"
 
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
@@ -169,8 +182,8 @@ async def test_light_off_state(
             PresentationLightControl(
                 name="presentationlight",
                 type="PresentationLightControl",
-                value=0,
-                max=5,
+                value=value,
+                max=max_value,
             ),
         ],
     )
@@ -181,7 +194,8 @@ async def test_light_off_state(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_BRIGHTNESS) == expected_brightness
 
 
 async def test_no_light_entity_without_control(
@@ -201,3 +215,53 @@ async def test_no_light_entity_without_control(
         await hass.async_block_till_done()
 
     assert hass.states.get("light.test_fridge_presentation_light") is None
+
+
+async def test_dynamic_device_discovery_light(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_liebherr_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test new devices with presentation light are automatically discovered."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", [Platform.LIGHT]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.test_fridge_presentation_light") is not None
+    assert hass.states.get("light.new_fridge_presentation_light") is None
+
+    new_device = Device(
+        device_id="new_device_id",
+        nickname="New Fridge",
+        device_type=DeviceType.FRIDGE,
+        device_name="K2601",
+    )
+    new_device_state = DeviceState(
+        device=new_device,
+        controls=[
+            PresentationLightControl(
+                name="presentationlight",
+                type="PresentationLightControl",
+                value=2,
+                max=5,
+            ),
+        ],
+    )
+
+    mock_liebherr_client.get_devices.return_value = [MOCK_DEVICE, new_device]
+    mock_liebherr_client.get_device_state.side_effect = lambda device_id, **kw: (
+        copy.deepcopy(
+            new_device_state if device_id == "new_device_id" else MOCK_DEVICE_STATE
+        )
+    )
+
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.new_fridge_presentation_light")
+    assert state is not None
+    assert state.state == STATE_ON

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyliebherrhomeapi import PresentationLightControl
 from pyliebherrhomeapi.const import CONTROL_PRESENTATION_LIGHT
@@ -86,8 +86,9 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
-        if (control := self._light_control) is None:
-            return None
+        control = self._light_control
+        if TYPE_CHECKING:
+            assert control is not None
         if control.value is None:
             return None
         return control.value > 0
@@ -95,8 +96,9 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the light (0-255)."""
-        if (control := self._light_control) is None:
-            return None
+        control = self._light_control
+        if TYPE_CHECKING:
+            assert control is not None
         if control.value is None or control.max is None or control.max == 0:
             return None
         return math.ceil(control.value * 255 / control.max)
@@ -104,9 +106,9 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         control = self._light_control
-        max_level = (
-            control.max if control and control.max else DEFAULT_MAX_BRIGHTNESS_LEVEL
-        )
+        if TYPE_CHECKING:
+            assert control is not None
+        max_level = control.max or DEFAULT_MAX_BRIGHTNESS_LEVEL
 
         if ATTR_BRIGHTNESS in kwargs:
             target = max(1, round(kwargs[ATTR_BRIGHTNESS] * max_level / 255))
