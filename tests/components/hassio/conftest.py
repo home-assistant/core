@@ -33,7 +33,7 @@ def disable_security_filter() -> Generator[None]:
 
 @pytest.fixture
 async def hassio_client(
-    hassio_stubs, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hassio_stubs: None, hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Return a Hass.io HTTP client."""
     return await hass_client()
@@ -41,7 +41,7 @@ async def hassio_client(
 
 @pytest.fixture
 async def hassio_noauth_client(
-    hassio_stubs, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hassio_stubs: None, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> TestClient:
     """Return a Hass.io HTTP client without auth."""
     return await aiohttp_client(hass.http.app)
@@ -49,7 +49,9 @@ async def hassio_noauth_client(
 
 @pytest.fixture
 async def hassio_client_supervisor(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, hassio_stubs
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hassio_stubs: None,
 ) -> TestClient:
     """Return an authenticated HTTP client."""
     hassio_user_id = hass.data[DATA_CONFIG_STORE].data.hassio_user
