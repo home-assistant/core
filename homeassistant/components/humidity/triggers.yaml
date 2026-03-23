@@ -26,9 +26,9 @@
               filter:
                 - domain: input_number
                   unit_of_measurement: "%"
-                - domain: sensor
-                  device_class: humidity
                 - domain: number
+                  device_class: humidity
+                - domain: sensor
                   device_class: humidity
       translation_key: number_or_entity
 
