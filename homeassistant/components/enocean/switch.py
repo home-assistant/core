@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
-from .entity import EnOceanEntity, EnOceanEntityID
+from .entity import EnOceanEntity
 
 
 async def async_setup_entry(
@@ -20,14 +20,12 @@ async def async_setup_entry(
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
 
-    entities = []
-    for eurid, spec in gateway.device_specs.items():
-        for entity in spec.entities:
-            if entity.entity_type == EntityType.SWITCH:
-                entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(EnOceanSwitch(entity_id, gateway))
-
-    async_add_entities(entities)
+    async_add_entities(
+        EnOceanSwitch(eurid, entity.id, gateway)
+        for eurid, spec in gateway.device_specs.items()
+        for entity in spec.entities
+        if entity.entity_type == EntityType.SWITCH
+    )
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
@@ -35,21 +33,9 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(
-        self,
-        entity_id: EnOceanEntityID,
-        gateway: Gateway,
-    ) -> None:
-        """Initialize the EnOcean switch."""
-        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
-        gateway.add_observation_callback(self._on_observation)
-
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
-        if (
-            observation.device != self.enocean_entity_id.device_address
-            or observation.entity != self.enocean_entity_id.unique_id
-        ):
+        if observation.device != self.address or observation.entity != self.entity_key:
             return
 
         if Observable.SWITCH_STATE in observation.values:
@@ -59,15 +45,13 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            SetSwitchOutput(
-                output_value=100, entity_id=self.enocean_entity_id.unique_id
-            ),
+            self.address,
+            SetSwitchOutput(output_value=100, entity_id=self.entity_key),
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            SetSwitchOutput(output_value=0, entity_id=self.enocean_entity_id.unique_id),
+            self.address,
+            SetSwitchOutput(output_value=0, entity_id=self.entity_key),
         )

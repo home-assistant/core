@@ -8,6 +8,7 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_ENOCEAN_DEVICE_ID,
@@ -17,6 +18,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     PLATFORMS,
+    SIGNAL_OBSERVATION,
 )
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
@@ -154,6 +156,10 @@ async def async_setup_entry(
                 device.get(CONF_ENOCEAN_DEVICE_ID, "unknown"),
                 ex,
             )
+
+    gateway.add_observation_callback(
+        lambda obs: async_dispatcher_send(hass, SIGNAL_OBSERVATION, obs)
+    )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True

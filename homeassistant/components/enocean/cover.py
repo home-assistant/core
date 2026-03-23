@@ -4,6 +4,7 @@ from asyncio import sleep
 from typing import Any
 
 from enocean_async import (
+    EURID,
     CoverClose,
     CoverOpen,
     CoverQueryPositionAndAngle,
@@ -26,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
-from .entity import EnOceanEntity, EnOceanEntityID
+from .entity import EnOceanEntity
 
 _COVER_STATE_TO_HA = {
     "opening": (True, False),
@@ -42,17 +43,17 @@ async def async_setup_entry(
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
 
-    entities = []
-    for eurid, spec in gateway.device_specs.items():
-        for entity in spec.entities:
-            if entity.entity_type == EntityType.COVER:
-                entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                supports_query = (
-                    Instructable.COVER_QUERY_POSITION_AND_ANGLE in entity.actions
-                )
-                entities.append(EnOceanCover(entity_id, gateway, supports_query))
-
-    async_add_entities(entities)
+    async_add_entities(
+        EnOceanCover(
+            eurid,
+            entity.id,
+            gateway,
+            Instructable.COVER_QUERY_POSITION_AND_ANGLE in entity.actions,
+        )
+        for eurid, spec in gateway.device_specs.items()
+        for entity in spec.entities
+        if entity.entity_type == EntityType.COVER
+    )
 
 
 class EnOceanCover(EnOceanEntity, CoverEntity):
@@ -68,20 +69,20 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def __init__(
         self,
-        enocean_entity_id: EnOceanEntityID,
+        address: EURID,
+        entity_key: str,
         gateway: Gateway,
         supports_query: bool,
     ) -> None:
         """Initialize the EnOcean cover."""
-        super().__init__(enocean_entity_id=enocean_entity_id, gateway=gateway)
+        super().__init__(address, entity_key, gateway)
         self._supports_query = supports_query
         self._attr_is_closed: bool | None = None
-        gateway.add_observation_callback(self._on_observation)
 
     async def async_added_to_hass(self) -> None:
         """Query current position after Home Assistant (re)start."""
         await super().async_added_to_hass()
-        if self._supports_query and self.hass is not None:
+        if self._supports_query:
             # Schedule the query in the background to avoid delaying HA startup.
             self.hass.async_create_task(self._async_query_position_later())
 
@@ -89,15 +90,13 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Wait for the gateway to be ready, then query current position."""
         await sleep(5)  # Wait a bit for the gateway to be ready after HA startup.
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            CoverQueryPositionAndAngle(entity_id=self.enocean_entity_id.unique_id),
+            self.address,
+            CoverQueryPositionAndAngle(entity_id=self.entity_key),
         )
+
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
-        if (
-            observation.device != self.enocean_entity_id.device_address
-            or observation.entity != self.enocean_entity_id.unique_id
-        ):
+        if observation.device != self.address or observation.entity != self.entity_key:
             return
 
         if Observable.COVER_STATE in observation.values:
@@ -116,18 +115,16 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **_kwargs: Any) -> None:
         """Open the cover."""
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            CoverOpen(entity_id=self.enocean_entity_id.unique_id),
+            self.address, CoverOpen(entity_id=self.entity_key)
         )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **_kwargs: Any) -> None:
         """Close the cover."""
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            CoverClose(entity_id=self.enocean_entity_id.unique_id),
+            self.address, CoverClose(entity_id=self.entity_key)
         )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -135,17 +132,16 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         if ATTR_POSITION not in kwargs:
             return
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
+            self.address,
             CoverSetPositionAndAngle(
                 # HA: 0=closed, 100=open. Library: 0=open, 100=closed.
                 position=100 - kwargs[ATTR_POSITION],
-                entity_id=self.enocean_entity_id.unique_id,
+                entity_id=self.entity_key,
             ),
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop any cover movement."""
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            CoverStop(entity_id=self.enocean_entity_id.unique_id),
+            self.address, CoverStop(entity_id=self.entity_key)
         )

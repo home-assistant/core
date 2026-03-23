@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
-from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity, EnOceanEntityID
+from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
 
 _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
     Observable.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
@@ -31,8 +31,6 @@ _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
     Observable.RSSI: SensorDeviceClass.SIGNAL_STRENGTH,
     Observable.LAST_SEEN: SensorDeviceClass.TIMESTAMP,
 }
-
-_SCALAR_STATE_CLASS: SensorStateClass = SensorStateClass.MEASUREMENT
 
 
 async def async_setup_entry(
@@ -53,13 +51,10 @@ async def async_setup_entry(
             for observable in entity.observables:
                 if observable.kind == ValueKind.BINARY:
                     continue
-                entity_id = EnOceanEntityID(
-                    device_address=eurid,
-                    unique_id=f"{entity.id}.{observable.value}",
-                )
                 entities.append(
                     EnOceanSensor(
-                        entity_id,
+                        eurid,
+                        f"{entity.id}.{observable.value}",
                         gateway,
                         observable,
                         entity.id,
@@ -70,20 +65,17 @@ async def async_setup_entry(
                 )
 
     for entity in gateway.gateway_entities:
-        for observable in entity.observables:
-            entity_id = EnOceanEntityID(
-                device_address=gateway_eurid,
-                unique_id=entity.id,
+        (observable,) = entity.observables
+        entities.append(
+            EnOceanSensor(
+                gateway_eurid,
+                entity.id,
+                gateway,
+                observable,
+                entity.id,
+                entity_category=LIB_ENTITY_CATEGORY_MAP.get(entity.category),
             )
-            entities.append(
-                EnOceanSensor(
-                    entity_id,
-                    gateway,
-                    observable,
-                    entity.id,
-                    entity_category=LIB_ENTITY_CATEGORY_MAP.get(entity.category),
-                )
-            )
+        )
 
     async_add_entities(entities)
 
@@ -93,18 +85,20 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
 
     def __init__(
         self,
-        entity_id: EnOceanEntityID,
+        address: EURID,
+        entity_key: str,
         gateway: Gateway,
         observable: Observable,
         eep_entity_id: str,
         entity_category: EntityCategory | None = None,
     ) -> None:
         """Initialize the EnOcean sensor."""
-        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
+        super().__init__(address, entity_key, gateway)
         self._observable = observable
-        self._entity_part = eep_entity_id
-        # Use the observable's own value string as the translation key (e.g. "temperature",
-        # "last_seen") rather than the full unique_id which contains a dot.
+        self._eep_entity_id = eep_entity_id
+        # Override the translation key set by the base class: use the observable's
+        # value string (e.g. "temperature") rather than the full entity_key which
+        # may contain a dot (e.g. "sensor_entity.temperature").
         self._attr_translation_key = observable.value
         self._attr_entity_category = entity_category
         self._attr_device_class = _OBSERVABLE_TO_DEVICE_CLASS.get(observable)
@@ -114,15 +108,13 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
             self._attr_options = observable.possible_values
             self._attr_native_unit_of_measurement = None
         else:
-            self._attr_state_class = _SCALAR_STATE_CLASS
-
-        gateway.add_observation_callback(self._on_observation)
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if (
-            observation.device != self.enocean_entity_id.device_address
-            or observation.entity != self._entity_part
+            observation.device != self.address
+            or observation.entity != self._eep_entity_id
             or self._observable not in observation.values
         ):
             return

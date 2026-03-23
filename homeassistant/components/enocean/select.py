@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enocean_async import EntityType, EnumOptions, Gateway
+from enocean_async import EURID, EntityType, EnumOptions, Gateway
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import EnOceanConfigEntry
-from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity, EnOceanEntityID
+from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
 
 
 async def async_setup_entry(
@@ -22,22 +22,18 @@ async def async_setup_entry(
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
 
-    entities = []
-    for eurid, spec in gateway.device_specs.items():
-        for entity in spec.entities:
-            if entity.entity_type == EntityType.OPTION_ENUM:
-                enum_options: EnumOptions = entity.option_spec
-                entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(
-                    EnOceanSelect(
-                        entity_id,
-                        gateway,
-                        enum_options,
-                        LIB_ENTITY_CATEGORY_MAP.get(entity.category),
-                    )
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        EnOceanSelect(
+            eurid,
+            entity.id,
+            gateway,
+            entity.option_spec,
+            LIB_ENTITY_CATEGORY_MAP.get(entity.category),
+        )
+        for eurid, spec in gateway.device_specs.items()
+        for entity in spec.entities
+        if entity.entity_type == EntityType.OPTION_ENUM
+    )
 
 
 class EnOceanSelect(EnOceanEntity, SelectEntity, RestoreEntity):
@@ -45,13 +41,14 @@ class EnOceanSelect(EnOceanEntity, SelectEntity, RestoreEntity):
 
     def __init__(
         self,
-        entity_id: EnOceanEntityID,
+        address: EURID,
+        entity_key: str,
         gateway: Gateway,
         enum_options: EnumOptions,
         entity_category: EntityCategory | None,
     ) -> None:
         """Initialize the EnOcean select entity."""
-        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
+        super().__init__(address, entity_key, gateway)
         self._attr_options = list(enum_options.options)
         self._attr_entity_category = entity_category
         self._attr_current_option = enum_options.default

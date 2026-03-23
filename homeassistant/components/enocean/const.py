@@ -41,6 +41,8 @@ ENOCEAN_DEFAULT_DEVICE_NAME = "EnOcean device"
 ENOCEAN_DEVICE_TYPE_ID = "device_type_id"
 
 
+SIGNAL_OBSERVATION = "enocean_observation"
+
 LOGGER = logging.getLogger(__package__)
 
 PLATFORMS: list[Platform] = [

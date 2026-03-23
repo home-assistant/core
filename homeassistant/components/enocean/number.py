@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enocean_async import EntityType, Gateway, NumberRange
+from enocean_async import EURID, EntityType, Gateway, NumberRange
 
 from homeassistant.components.number import NumberMode, RestoreNumber
 from homeassistant.const import EntityCategory
@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
-from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity, EnOceanEntityID
+from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
 
 
 async def async_setup_entry(
@@ -21,22 +21,18 @@ async def async_setup_entry(
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
 
-    entities = []
-    for eurid, spec in gateway.device_specs.items():
-        for entity in spec.entities:
-            if entity.entity_type == EntityType.OPTION_NUMBER:
-                number_range: NumberRange = entity.option_spec
-                entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(
-                    EnOceanNumber(
-                        entity_id,
-                        gateway,
-                        number_range,
-                        LIB_ENTITY_CATEGORY_MAP.get(entity.category),
-                    )
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        EnOceanNumber(
+            eurid,
+            entity.id,
+            gateway,
+            entity.option_spec,
+            LIB_ENTITY_CATEGORY_MAP.get(entity.category),
+        )
+        for eurid, spec in gateway.device_specs.items()
+        for entity in spec.entities
+        if entity.entity_type == EntityType.OPTION_NUMBER
+    )
 
 
 class EnOceanNumber(EnOceanEntity, RestoreNumber):
@@ -46,13 +42,14 @@ class EnOceanNumber(EnOceanEntity, RestoreNumber):
 
     def __init__(
         self,
-        entity_id: EnOceanEntityID,
+        address: EURID,
+        entity_key: str,
         gateway: Gateway,
         number_range: NumberRange,
         entity_category: EntityCategory | None,
     ) -> None:
         """Initialize the EnOcean number entity."""
-        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
+        super().__init__(address, entity_key, gateway)
         self._attr_native_min_value = number_range.min_value
         self._attr_native_max_value = number_range.max_value
         self._attr_native_step = number_range.step

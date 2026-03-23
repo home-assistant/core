@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
-from .entity import EnOceanEntity, EnOceanEntityID
+from .entity import EnOceanEntity
 
 
 async def async_setup_entry(
@@ -22,14 +22,12 @@ async def async_setup_entry(
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
 
-    entities = []
-    for eurid, spec in gateway.device_specs.items():
-        for entity in spec.entities:
-            if entity.entity_type == EntityType.DIMMER:
-                entity_id = EnOceanEntityID(device_address=eurid, unique_id=entity.id)
-                entities.append(EnOceanLight(entity_id, gateway))
-
-    async_add_entities(entities)
+    async_add_entities(
+        EnOceanLight(eurid, entity.id, gateway)
+        for eurid, spec in gateway.device_specs.items()
+        for entity in spec.entities
+        if entity.entity_type == EntityType.DIMMER
+    )
 
 
 class EnOceanLight(EnOceanEntity, LightEntity):
@@ -38,21 +36,9 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(
-        self,
-        entity_id: EnOceanEntityID,
-        gateway: Gateway,
-    ) -> None:
-        """Initialize the EnOcean light."""
-        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
-        gateway.add_observation_callback(self._on_observation)
-
     def _on_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
-        if (
-            observation.device != self.enocean_entity_id.device_address
-            or observation.entity != self.enocean_entity_id.unique_id
-        ):
+        if observation.device != self.address or observation.entity != self.entity_key:
             return
 
         if Observable.OUTPUT_VALUE in observation.values:
@@ -66,20 +52,15 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         """Turn on or dim the light."""
         brightness: int = kwargs.get(ATTR_BRIGHTNESS, 255)
         # Convert HA brightness 0–255 to 0–100 %.
-        dim_value = brightness * 100 / 255
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
-            Dim(dim_value=dim_value, entity_id=self.enocean_entity_id.unique_id),
+            self.address,
+            Dim(dim_value=brightness * 100 / 255, entity_id=self.entity_key),
         )
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn off the light."""
         await self.gateway.send_command(
-            self.enocean_entity_id.device_address,
+            self.address,
             # Use Dim(0) rather than Switch so the dimmer's ramp mechanism is used.
-            Dim(
-                dim_value=0,
-                switch_on=False,
-                entity_id=self.enocean_entity_id.unique_id,
-            ),
+            Dim(dim_value=0, switch_on=False, entity_id=self.entity_key),
         )
