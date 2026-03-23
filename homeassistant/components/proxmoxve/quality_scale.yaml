@@ -63,6 +63,10 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency:
+    status: todo
+    comment: The upstream client library (proxmoxer) performs synchronous HTTP I/O integration runs calls in the executor
+  inject-websession:
+    status: todo
+    comment: The upstream client library (proxmoxer) does not support injecting HA aiohttp ClientSession
   strict-typing: todo
