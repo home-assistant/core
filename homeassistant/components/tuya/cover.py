@@ -240,9 +240,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         tilt_position: DeviceWrapper[int] | None,
     ) -> None:
         """Init Tuya Cover."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._attr_supported_features = CoverEntityFeature(0)
 
         self._current_position = current_position or set_position

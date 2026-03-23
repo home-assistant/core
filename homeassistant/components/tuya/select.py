@@ -397,9 +397,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         dpcode_wrapper: DeviceWrapper[str],
     ) -> None:
         """Init Tuya sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = dpcode_wrapper
         self._attr_options = dpcode_wrapper.options
 
