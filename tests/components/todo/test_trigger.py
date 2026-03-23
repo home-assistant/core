@@ -158,7 +158,7 @@ async def _setup_automation(hass: HomeAssistant, target: dict[str, Any]) -> None
                 ],
                 "action": {
                     "service": "test.item_added",
-                    "data_template": {
+                    "data": {
                         "platform": "{{ trigger.platform }}",
                         "entity_id": "{{ trigger.entity_id }}",
                         "item_ids": "{{ trigger.item_ids }}",
