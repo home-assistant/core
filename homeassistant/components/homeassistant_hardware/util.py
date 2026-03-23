@@ -10,12 +10,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 
-from universal_silabs_flasher.const import (
-    ApplicationType as FlasherApplicationType,
-    ResetTarget as FlasherResetTarget,
-)
+from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.firmware import parse_firmware_image
-from universal_silabs_flasher.flasher import Flasher
+from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher, Flasher
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntryState
@@ -61,18 +58,6 @@ class ApplicationType(StrEnum):
     def as_flasher_application_type(self) -> FlasherApplicationType:
         """Convert the application type enum into one compatible with USF."""
         return FlasherApplicationType(self.value)
-
-
-class ResetTarget(StrEnum):
-    """Methods to reset a device into bootloader mode."""
-
-    RTS_DTR = "rts_dtr"
-    BAUDRATE = "baudrate"
-    YELLOW = "yellow"
-
-    def as_flasher_reset_target(self) -> FlasherResetTarget:
-        """Convert the reset target enum into one compatible with USF."""
-        return FlasherResetTarget(self.value)
 
 
 @singleton(OTBR_ADDON_MANAGER_DATA)
@@ -310,23 +295,20 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
 async def probe_silabs_firmware_info(
     device: str,
     *,
-    bootloader_reset_methods: Sequence[ResetTarget],
-    application_probe_methods: Sequence[tuple[ApplicationType, int]],
+    flasher_cls: type[BaseFlasher],
+    application_probe_methods: Sequence[ApplicationType] | None = None,
 ) -> FirmwareInfo | None:
     """Probe the running firmware on a SiLabs device."""
-    flasher = Flasher(
-        device=device,
-        probe_methods=tuple(
-            (m.as_flasher_application_type(), baudrate)
-            for m, baudrate in application_probe_methods
-        ),
-        bootloader_reset=tuple(
-            m.as_flasher_reset_target() for m in bootloader_reset_methods
-        ),
-    )
+    flasher = flasher_cls(device=device)
 
     try:
-        await flasher.probe_app_type()
+        await flasher.probe_app_type(
+            only=(
+                [m.as_flasher_application_type() for m in application_probe_methods]
+                if application_probe_methods is not None
+                else None
+            )
+        )
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Failed to probe application type", exc_info=True)
 
@@ -349,20 +331,25 @@ async def probe_silabs_firmware_info(
 async def probe_silabs_firmware_type(
     device: str,
     *,
-    bootloader_reset_methods: Sequence[ResetTarget],
     application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> ApplicationType | None:
     """Probe the running firmware type on a SiLabs device."""
-
-    fw_info = await probe_silabs_firmware_info(
-        device,
-        bootloader_reset_methods=bootloader_reset_methods,
-        application_probe_methods=application_probe_methods,
+    flasher = Flasher(
+        device=device,
+        probe_methods=[
+            (m.as_flasher_application_type(), b) for m, b in application_probe_methods
+        ],
     )
-    if fw_info is None:
+
+    try:
+        await flasher.probe_app_type()
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Failed to probe application type", exc_info=True)
+
+    if flasher.app_type is None:
         return None
 
-    return fw_info.firmware_type
+    return ApplicationType.from_flasher_application_type(flasher.app_type)
 
 
 @asynccontextmanager
@@ -385,36 +372,18 @@ async def async_flash_silabs_firmware(
     hass: HomeAssistant,
     device: str,
     fw_data: bytes,
+    flasher_cls: type[DeviceSpecificFlasher],
     expected_installed_firmware_type: ApplicationType,
-    bootloader_reset_methods: Sequence[ResetTarget],
-    application_probe_methods: Sequence[tuple[ApplicationType, int]],
     progress_callback: Callable[[int, int], None] | None = None,
 ) -> FirmwareInfo:
     """Flash firmware to the SiLabs device.
 
     This function is meant to be used within a firmware update context.
     """
-    if not any(
-        method == expected_installed_firmware_type
-        for method, _ in application_probe_methods
-    ):
-        raise ValueError(
-            f"Expected installed firmware type {expected_installed_firmware_type!r}"
-            f" not in application probe methods {application_probe_methods!r}"
-        )
 
     fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
 
-    flasher = Flasher(
-        device=device,
-        probe_methods=tuple(
-            (m.as_flasher_application_type(), baudrate)
-            for m, baudrate in application_probe_methods
-        ),
-        bootloader_reset=tuple(
-            m.as_flasher_reset_target() for m in bootloader_reset_methods
-        ),
-    )
+    flasher = flasher_cls(device=device)
 
     try:
         # Enter the bootloader with indeterminate progress
@@ -431,13 +400,9 @@ async def async_flash_silabs_firmware(
 
     probed_firmware_info = await probe_silabs_firmware_info(
         device,
-        bootloader_reset_methods=bootloader_reset_methods,
+        flasher_cls=flasher_cls,
         # Only probe for the expected installed firmware type
-        application_probe_methods=[
-            (method, baudrate)
-            for method, baudrate in application_probe_methods
-            if method == expected_installed_firmware_type
-        ],
+        application_probe_methods=[expected_installed_firmware_type],
     )
 
     if probed_firmware_info is None:

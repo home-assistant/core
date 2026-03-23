@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
+from universal_silabs_flasher.flasher import Zbt1Flasher
+
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
@@ -16,7 +18,6 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
 )
 from homeassistant.components.usb import (
     usb_service_info_from_device,
@@ -81,18 +82,7 @@ class SkyConnectFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     context: ConfigFlowContext
 
     ZIGBEE_BAUDRATE = 115200
-    # There is no hardware bootloader trigger
-    BOOTLOADER_RESET_METHODS: list[ResetTarget] = []
-    APPLICATION_PROBE_METHODS = [
-        (ApplicationType.GECKO_BOOTLOADER, 115200),
-        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
-        (ApplicationType.SPINEL, 460800),
-        # CPC baudrates can be removed once multiprotocol is removed
-        (ApplicationType.CPC, 115200),
-        (ApplicationType.CPC, 230400),
-        (ApplicationType.CPC, 460800),
-        (ApplicationType.ROUTER, 115200),
-    ]
+    _flasher_cls = Zbt1Flasher
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
