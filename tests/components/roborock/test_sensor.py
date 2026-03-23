@@ -40,8 +40,11 @@ async def test_q10_vacuum_error_updates_from_push(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+
     assert fake_q10_vacuum.b01_q10_properties is not None
-    fake_q10_vacuum.b01_q10_properties.status.update_from_dps({B01_Q10_DP.FAULT: 5})
+    # Mutate the fault value, then call refresh to simulate a device push
+    fake_q10_vacuum.b01_q10_properties.status.fault = 5
+    await fake_q10_vacuum.b01_q10_properties.refresh()
     await hass.async_block_till_done()
 
     updated_state = hass.states.get(entity_id)
