@@ -411,13 +411,9 @@ async def test_migrate_entry_success(
             "zone_1",
         )
 
-        await async_migrate_entry(hass, mock_config_entry)
-
-        updated = entity_registry.async_get(entity_entry.entity_id)
-
-        assert updated.unique_id == "sys123_1"
-
         result = await async_migrate_entry(hass, mock_config_entry)
+        updated = entity_registry.async_get(entity_entry.entity_id)
+        assert updated.unique_id == "sys123_1"
 
     assert result is True
 
@@ -429,6 +425,120 @@ async def test_migrate_entry_success(
     # Check entity updated
     updated = entity_registry.async_get(entity_entry.entity_id)
     assert updated.unique_id == "sys123_1"
+
+
+async def test_migrate_entry_success_AC_unit(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test successful migration."""
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4"},
+        unique_id="old_id",
+        version=1,
+        minor_version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock device returned from discovery
+    mock_device = MagicMock()
+    mock_device.system_id = "sys123"
+    mock_device.ip = "1.2.3.4"
+    mock_device.model = "model"
+    mock_device.console_id = "console"
+    mock_device.name = "My AC"
+
+    with patch(
+        "homeassistant.components.airtouch5.AirtouchDiscovery"
+    ) as mock_discovery:
+        instance = mock_discovery.return_value
+        instance.establish_server = AsyncMock()
+        instance.discover_by_ip = AsyncMock(return_value=mock_device)
+        instance.close = AsyncMock()
+
+        # Create an entity to migrate
+        entity_entry = entity_registry.async_get_or_create(
+            "climate",
+            DOMAIN,
+            "ac_0",
+        )
+
+        result = await async_migrate_entry(hass, mock_config_entry)
+
+        updated = entity_registry.async_get(entity_entry.entity_id)
+
+        assert updated.unique_id == "sys123"
+
+    assert result is True
+
+    # Check config entry updated
+    assert mock_config_entry.unique_id == "sys123"
+    assert mock_config_entry.data["system_id"] == "sys123"
+    assert mock_config_entry.minor_version == 2
+
+    # Check entity updated
+    updated = entity_registry.async_get(entity_entry.entity_id)
+    assert updated.unique_id == "sys123"
+
+
+async def test_migrate_entry_success_cover(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test successful migration."""
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4"},
+        unique_id="old_id",
+        version=1,
+        minor_version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock device returned from discovery
+    mock_device = MagicMock()
+    mock_device.system_id = "sys123"
+    mock_device.ip = "1.2.3.4"
+    mock_device.model = "model"
+    mock_device.console_id = "console"
+    mock_device.name = "My AC"
+
+    with patch(
+        "homeassistant.components.airtouch5.AirtouchDiscovery"
+    ) as mock_discovery:
+        instance = mock_discovery.return_value
+        instance.establish_server = AsyncMock()
+        instance.discover_by_ip = AsyncMock(return_value=mock_device)
+        instance.close = AsyncMock()
+
+        # Create an entity to migrate
+        entity_entry = entity_registry.async_get_or_create(
+            "cover",
+            DOMAIN,
+            "zone_1_open_percentage",
+        )
+
+        result = await async_migrate_entry(hass, mock_config_entry)
+
+        updated = entity_registry.async_get(entity_entry.entity_id)
+
+        assert updated.unique_id == "sys123_1_open_percentage"
+
+    assert result is True
+
+    # Check config entry updated
+    assert mock_config_entry.unique_id == "sys123"
+    assert mock_config_entry.data["system_id"] == "sys123"
+    assert mock_config_entry.minor_version == 2
+
+    # Check entity updated
+    updated = entity_registry.async_get(entity_entry.entity_id)
+    assert updated.unique_id == "sys123_1_open_percentage"
 
 
 async def test_migrate_entry_timeout(
