@@ -100,8 +100,8 @@ SENSOR_DESCRIPTIONS: tuple[EarnEP1SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EarnEP1SensorEntityDescription(
-        key="gas_imported",
-        translation_key="gas_imported",
+        key="gas_consumed",
+        translation_key="gas_consumed",
         json_key="gas_delivered",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,

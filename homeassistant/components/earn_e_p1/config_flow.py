@@ -57,7 +57,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         loop = asyncio.get_running_loop()
         found: asyncio.Future[EarnEP1Device] = loop.create_future()
 
-        def on_update(device: EarnEP1Device, raw: dict[str, Any]) -> None:
+        def on_update(device: EarnEP1Device, _raw: dict[str, Any]) -> None:
             if device.serial and not found.done():
                 found.set_result(device)
 

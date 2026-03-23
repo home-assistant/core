@@ -22,7 +22,9 @@ async def _setup_integration(
     return mock_config_entry.runtime_data
 
 
-async def test_sensors_created(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+async def test_sensors_created(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that sensors are created on setup."""
     coordinator = await _setup_integration(hass, mock_config_entry)
 
@@ -60,7 +62,9 @@ async def test_sensor_unavailable_when_key_missing(
     assert state.state == "unavailable"
 
 
-async def test_sensor_native_value(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+async def test_sensor_native_value(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test sensor returns correct native value."""
     coordinator = await _setup_integration(hass, mock_config_entry)
 
@@ -81,7 +85,9 @@ async def test_sensor_native_value(hass: HomeAssistant, mock_config_entry: MockC
     )
 
 
-async def test_device_info(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+async def test_device_info(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test device info is correct."""
     original_init = EarnEP1Coordinator.__init__
 

@@ -53,8 +53,8 @@
       "energy_imported_tariff2": {
         "name": "Energy imported tariff 2"
       },
-      "gas_imported": {
-        "name": "Gas imported"
+      "gas_consumed": {
+        "name": "Gas consumed"
       },
       "power_exported": {
         "name": "Power exported"
