@@ -65,6 +65,8 @@
 
 .trigger_target: &trigger_target
   entity:
+    - domain: number
+      device_class: power
     - domain: sensor
       device_class: power
 

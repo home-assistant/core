@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
@@ -15,9 +16,8 @@ from homeassistant.helpers.trigger import (
 from homeassistant.util.unit_conversion import PowerConverter
 
 POWER_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
-    SENSOR_DOMAIN: NumericalDomainSpec(
-        device_class=SensorDeviceClass.POWER,
-    ),
+    NUMBER_DOMAIN: NumericalDomainSpec(device_class=NumberDeviceClass.POWER),
+    SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.POWER),
 }
 
 
