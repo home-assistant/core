@@ -603,7 +603,7 @@ def _is_integer_state(state: State) -> bool:
     """Return True if the state's value can be interpreted as an integer."""
     try:
         int(state.state)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return False
     return True
 
