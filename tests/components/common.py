@@ -1175,10 +1175,6 @@ def parametrize_numerical_condition_above_below_any(
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for numerical conditions.
 
-    Unlike parametrize_numerical_attribute_changed_trigger_states, this is for
-    entities where the tracked numerical value is in state.state (e.g. sensor
-    entities), not in an attribute.
-
     Returns a list of tuples with (condition, condition_options, states).
     """
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
