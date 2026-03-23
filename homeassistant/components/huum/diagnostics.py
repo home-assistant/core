@@ -5,12 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .coordinator import HuumConfigEntry
 
-TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 TO_REDACT_DATA = {"sauna_name", "payment_end_date"}
 
 
