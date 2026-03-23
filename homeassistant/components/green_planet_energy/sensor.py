@@ -40,15 +40,14 @@ def _get_lowest_price_day_time(
     api: GreenPlanetEnergyAPI, data: dict[str, Any]
 ) -> datetime | None:
     """Return timestamp of the lowest-priced day hour (06:00–18:00)."""
-    now_h = dt_util.now().hour
+    now = dt_util.now()
+    now_h = now.hour
     hour = api.get_lowest_price_day_with_hour(data, now_h)[1]
     if hour is None:
         return None
     # After 18:00 the day period is over; use tomorrow's date
-    base = (
-        dt_util.start_of_local_day(dt_util.now() + timedelta(days=1))
-        if now_h >= 18
-        else dt_util.start_of_local_day()
+    base = dt_util.start_of_local_day(
+        now + timedelta(days=1) if now_h >= 18 else now
     )
     return base.replace(hour=hour)
 
