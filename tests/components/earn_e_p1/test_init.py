@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
 
+from tests.common import MockConfigEntry
+
 
 async def test_setup_entry_success(
-    hass: HomeAssistant, mock_config_entry, mock_listener
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
 ) -> None:
     """Test successful setup of a config entry."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -26,7 +28,7 @@ async def test_setup_entry_success(
 
 
 async def test_setup_entry_oserror_raises_not_ready(
-    hass: HomeAssistant, mock_config_entry, mock_listener
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
 ) -> None:
     """Test that OSError during setup raises ConfigEntryNotReady."""
     mock_listener.start = AsyncMock(side_effect=OSError("Address in use"))
@@ -38,7 +40,7 @@ async def test_setup_entry_oserror_raises_not_ready(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, mock_config_entry, mock_listener
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
 ) -> None:
     """Test unloading a config entry stops the shared listener."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

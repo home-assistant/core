@@ -41,26 +41,26 @@
       "current_l1": {
         "name": "Current L1"
       },
-      "energy_delivered_tariff1": {
-        "name": "Energy delivered tariff 1"
+      "energy_exported_tariff1": {
+        "name": "Energy exported tariff 1"
       },
-      "energy_delivered_tariff2": {
-        "name": "Energy delivered tariff 2"
+      "energy_exported_tariff2": {
+        "name": "Energy exported tariff 2"
       },
-      "energy_returned_tariff1": {
-        "name": "Energy returned tariff 1"
+      "energy_imported_tariff1": {
+        "name": "Energy imported tariff 1"
       },
-      "energy_returned_tariff2": {
-        "name": "Energy returned tariff 2"
+      "energy_imported_tariff2": {
+        "name": "Energy imported tariff 2"
       },
-      "gas_delivered": {
-        "name": "Gas delivered"
+      "gas_imported": {
+        "name": "Gas imported"
       },
-      "power_delivered": {
-        "name": "Power delivered"
+      "power_exported": {
+        "name": "Power exported"
       },
-      "power_returned": {
-        "name": "Power returned"
+      "power_imported": {
+        "name": "Power imported"
       },
       "voltage_l1": {
         "name": "Voltage L1"

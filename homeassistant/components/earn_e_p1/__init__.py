@@ -54,6 +54,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> 
             for e in hass.config_entries.async_entries(DOMAIN)
         )
         if not other_loaded:
-            await hass.data.pop(DOMAIN).stop()
+            await hass.data[DOMAIN].stop()
+            hass.data.pop(DOMAIN)
 
     return unload_ok

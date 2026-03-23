@@ -10,9 +10,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import DOMAIN, MOCK_SERIAL
 
+from tests.common import MockConfigEntry
+
 
 async def _setup_integration(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> EarnEP1Coordinator:
     """Set up the integration and return the coordinator."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -20,32 +22,32 @@ async def _setup_integration(
     return mock_config_entry.runtime_data
 
 
-async def test_sensors_created(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_sensors_created(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
     """Test that sensors are created on setup."""
     coordinator = await _setup_integration(hass, mock_config_entry)
 
     coordinator.async_set_updated_data({"power_delivered": 1.234})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.earn_e_p1_meter_power_delivered")
+    state = hass.states.get("sensor.earn_e_p1_meter_power_imported")
     assert state is not None
     assert state.state == "1.234"
 
 
 async def test_sensor_unavailable_without_data(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test sensor is unavailable when no data has been received."""
     await _setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.earn_e_p1_meter_power_delivered")
+    state = hass.states.get("sensor.earn_e_p1_meter_power_imported")
     assert state is not None
     assert state.state == "unavailable"
 
 
 async def test_sensor_unavailable_when_key_missing(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test sensor is unavailable when its specific key is missing from data."""
     coordinator = await _setup_integration(hass, mock_config_entry)
@@ -53,12 +55,12 @@ async def test_sensor_unavailable_when_key_missing(
     coordinator.async_set_updated_data({"power_delivered": 1.0})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.earn_e_p1_meter_power_returned")
+    state = hass.states.get("sensor.earn_e_p1_meter_power_exported")
     assert state is not None
     assert state.state == "unavailable"
 
 
-async def test_sensor_native_value(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_sensor_native_value(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
     """Test sensor returns correct native value."""
     coordinator = await _setup_integration(hass, mock_config_entry)
 
@@ -71,15 +73,15 @@ async def test_sensor_native_value(hass: HomeAssistant, mock_config_entry) -> No
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.earn_e_p1_meter_power_delivered").state == "2.5"
+    assert hass.states.get("sensor.earn_e_p1_meter_power_imported").state == "2.5"
     assert hass.states.get("sensor.earn_e_p1_meter_voltage_l1").state == "230.1"
     assert (
-        hass.states.get("sensor.earn_e_p1_meter_energy_delivered_tariff_1").state
+        hass.states.get("sensor.earn_e_p1_meter_energy_imported_tariff_1").state
         == "12345.678"
     )
 
 
-async def test_device_info(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_device_info(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
     """Test device info is correct."""
     original_init = EarnEP1Coordinator.__init__
 
@@ -104,7 +106,7 @@ async def test_device_info(hass: HomeAssistant, mock_config_entry) -> None:
 
 
 async def test_sensor_unique_id_uses_serial(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that sensor unique_id uses serial when available."""
     coordinator = await _setup_integration(hass, mock_config_entry)
@@ -113,6 +115,6 @@ async def test_sensor_unique_id_uses_serial(
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("sensor.earn_e_p1_meter_power_delivered")
+    entry = entity_registry.async_get("sensor.earn_e_p1_meter_power_imported")
     assert entry is not None
-    assert entry.unique_id == f"{MOCK_SERIAL}_power_delivered"
+    assert entry.unique_id == f"{MOCK_SERIAL}_power_imported"

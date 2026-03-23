@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -17,7 +18,7 @@ MOCK_SERIAL = "E0012345678901234"
 
 
 @pytest.fixture(autouse=True)
-def mock_listener():
+def mock_listener() -> Generator[MagicMock]:
     """Mock EarnEP1Listener to avoid real UDP sockets."""
     with patch("homeassistant.components.earn_e_p1.EarnEP1Listener") as mock_cls:
         instance = MagicMock()
@@ -43,7 +44,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async_setup_entry to avoid real setup in config flow tests."""
     with patch(
         "homeassistant.components.earn_e_p1.async_setup_entry", return_value=True

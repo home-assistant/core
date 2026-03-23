@@ -26,6 +26,8 @@ from . import EarnEP1ConfigEntry
 from .coordinator import EarnEP1Coordinator
 from .entity import EarnEP1Entity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EarnEP1SensorEntityDescription(SensorEntityDescription):
@@ -36,15 +38,17 @@ class EarnEP1SensorEntityDescription(SensorEntityDescription):
 
 SENSOR_DESCRIPTIONS: tuple[EarnEP1SensorEntityDescription, ...] = (
     EarnEP1SensorEntityDescription(
-        key="power_delivered",
-        translation_key="power_delivered",
+        key="power_imported",
+        translation_key="power_imported",
+        json_key="power_delivered",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EarnEP1SensorEntityDescription(
-        key="power_returned",
-        translation_key="power_returned",
+        key="power_exported",
+        translation_key="power_exported",
+        json_key="power_returned",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,36 +68,41 @@ SENSOR_DESCRIPTIONS: tuple[EarnEP1SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EarnEP1SensorEntityDescription(
-        key="energy_delivered_tariff1",
-        translation_key="energy_delivered_tariff1",
+        key="energy_imported_tariff1",
+        translation_key="energy_imported_tariff1",
+        json_key="energy_delivered_tariff1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EarnEP1SensorEntityDescription(
-        key="energy_delivered_tariff2",
-        translation_key="energy_delivered_tariff2",
+        key="energy_imported_tariff2",
+        translation_key="energy_imported_tariff2",
+        json_key="energy_delivered_tariff2",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EarnEP1SensorEntityDescription(
-        key="energy_returned_tariff1",
-        translation_key="energy_returned_tariff1",
+        key="energy_exported_tariff1",
+        translation_key="energy_exported_tariff1",
+        json_key="energy_returned_tariff1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EarnEP1SensorEntityDescription(
-        key="energy_returned_tariff2",
-        translation_key="energy_returned_tariff2",
+        key="energy_exported_tariff2",
+        translation_key="energy_exported_tariff2",
+        json_key="energy_returned_tariff2",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EarnEP1SensorEntityDescription(
-        key="gas_delivered",
-        translation_key="gas_delivered",
+        key="gas_imported",
+        translation_key="gas_imported",
+        json_key="gas_delivered",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,

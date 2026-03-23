@@ -38,8 +38,13 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: todo
+  log-when-unavailable:
+    status: exempt
+    comment: >-
+      Push-based integration; the device stops sending UDP packets when
+      unavailable. The entity becomes unavailable via the custom available
+      property but there is no error event to log.
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: This integration does not require authentication.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from earn_e_p1 import EarnEP1Device
 
@@ -32,7 +32,7 @@ def _mock_device(
 
 
 async def test_user_flow_discovery_succeeds(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user flow when auto-discovery finds a device with serial."""
     with patch(DISCOVER_PATH, return_value=_mock_device()):
@@ -53,7 +53,7 @@ async def test_user_flow_discovery_succeeds(
 
 
 async def test_user_flow_discovery_no_serial_validates(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test discovery without serial triggers validation on confirm."""
     with patch(DISCOVER_PATH, return_value=_mock_device(serial=None)):
@@ -74,7 +74,7 @@ async def test_user_flow_discovery_no_serial_validates(
 
 
 async def test_user_flow_discovery_no_serial_validate_fails(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test discovery without serial aborts when validation also fails."""
     with patch(DISCOVER_PATH, return_value=_mock_device(serial=None)):
@@ -92,7 +92,7 @@ async def test_user_flow_discovery_no_serial_validate_fails(
 
 
 async def test_user_flow_discovery_timeout_shows_manual_form(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user flow falls back to manual form when discovery times out."""
     with patch(DISCOVER_PATH, return_value=None):
@@ -105,7 +105,7 @@ async def test_user_flow_discovery_timeout_shows_manual_form(
 
 
 async def test_manual_entry_validation_succeeds(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test manual IP entry with successful validation."""
     with patch(DISCOVER_PATH, return_value=None):
@@ -127,7 +127,7 @@ async def test_manual_entry_validation_succeeds(
 
 
 async def test_manual_entry_validation_timeout_then_retry(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test manual entry: validation timeout shows error, retry succeeds."""
     with patch(DISCOVER_PATH, return_value=None):
@@ -152,7 +152,7 @@ async def test_manual_entry_validation_timeout_then_retry(
 
 
 async def test_manual_entry_validation_oserror(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test manual entry: OSError during validation shows cannot_connect."""
     with patch(DISCOVER_PATH, return_value=None):
@@ -170,7 +170,7 @@ async def test_manual_entry_validation_oserror(
 
 
 async def test_manual_entry_unexpected_error(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test manual entry: unexpected exception shows unknown error."""
     with patch(DISCOVER_PATH, return_value=None):
@@ -188,7 +188,7 @@ async def test_manual_entry_unexpected_error(
 
 
 async def test_reconfigure_succeeds(
-    hass: HomeAssistant, mock_config_entry, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reconfigure flow with new IP."""
     new_host = "192.168.1.200"
@@ -209,7 +209,7 @@ async def test_reconfigure_succeeds(
 
 
 async def test_reconfigure_port_in_use_skips_validation(
-    hass: HomeAssistant, mock_config_entry, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reconfigure when port is in use preserves existing serial."""
     new_host = "192.168.1.200"
@@ -228,7 +228,7 @@ async def test_reconfigure_port_in_use_skips_validation(
 
 
 async def test_reconfigure_unexpected_error(
-    hass: HomeAssistant, mock_config_entry, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reconfigure with unexpected error shows unknown error."""
     result = await mock_config_entry.start_reconfigure_flow(hass)
@@ -244,7 +244,7 @@ async def test_reconfigure_unexpected_error(
 
 
 async def test_reconfigure_duplicate_abort(
-    hass: HomeAssistant, mock_config_entry, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reconfigure aborts when new IP matches existing entry."""
     other_host = "192.168.1.50"
