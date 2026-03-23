@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,7 +39,7 @@ def _get_ws_handlers(
 
 
 @pytest.fixture(autouse=True)
-def only_event_platform() -> Callable[[], None]:
+def only_event_platform() -> Generator[None]:
     """Limit setup to the event platform for event tests."""
     with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.EVENT]):
         yield

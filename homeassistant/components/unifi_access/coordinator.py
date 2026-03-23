@@ -60,6 +60,7 @@ class UnifiAccessData:
     doors: dict[str, Door]
     emergency: EmergencyStatus
     door_lock_rules: dict[str, DoorLockRuleStatus]
+    unconfirmed_lock_rule_doors: set[str]
     supports_lock_rules: bool
     lock_rule_support_complete: bool
 
@@ -143,6 +144,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         previous_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
         door_lock_rules: dict[str, DoorLockRuleStatus] = {}
+        unconfirmed_lock_rule_doors: set[str] = set()
         lock_rule_support_complete = True
         try:
             async with asyncio.timeout(10):
@@ -164,13 +166,16 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             _LOGGER.debug("Could not fetch door lock rule for %s: %s", door.id, result)
             if door.id in previous_lock_rules:
                 door_lock_rules[door.id] = previous_lock_rules[door.id]
+            else:
+                unconfirmed_lock_rule_doors.add(door.id)
 
-        supports_lock_rules = bool(door_lock_rules) or not lock_rule_support_complete
+        supports_lock_rules = bool(door_lock_rules) or bool(unconfirmed_lock_rule_doors)
 
         return UnifiAccessData(
             doors={door.id: door for door in doors},
             emergency=emergency,
             door_lock_rules=door_lock_rules,
+            unconfirmed_lock_rule_doors=unconfirmed_lock_rule_doors,
             supports_lock_rules=supports_lock_rules,
             lock_rule_support_complete=lock_rule_support_complete,
         )
@@ -224,6 +229,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         current_door = self.data.doors[door_id]
         updates: dict[str, object] = {}
         door_lock_rules = self.data.door_lock_rules
+        unconfirmed_lock_rule_doors = self.data.unconfirmed_lock_rule_doors.copy()
         current_lock_rule = door_lock_rules.get(door_id)
         updated_lock_rule = current_lock_rule
         if ws_state.dps is not None:
@@ -256,11 +262,15 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         updated_door = current_door.with_updates(**updates) if updates else current_door
         supports_lock_rules = self.data.supports_lock_rules
-        if lock_rule_updated and updated_lock_rule != current_lock_rule:
+        if lock_rule_updated and (
+            updated_lock_rule != current_lock_rule
+            or door_id in unconfirmed_lock_rule_doors
+        ):
             door_lock_rules = {
                 **door_lock_rules,
                 door_id: updated_lock_rule or DoorLockRuleStatus(),
             }
+            unconfirmed_lock_rule_doors.discard(door_id)
             supports_lock_rules = True
 
         self.async_set_updated_data(
@@ -268,6 +278,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 doors={**self.data.doors, door_id: updated_door},
                 emergency=self.data.emergency,
                 door_lock_rules=door_lock_rules,
+                unconfirmed_lock_rule_doors=unconfirmed_lock_rule_doors,
                 supports_lock_rules=supports_lock_rules,
                 lock_rule_support_complete=self.data.lock_rule_support_complete,
             )
@@ -286,6 +297,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     lockdown=update.data.lockdown,
                 ),
                 door_lock_rules=self.data.door_lock_rules,
+                unconfirmed_lock_rule_doors=self.data.unconfirmed_lock_rule_doors,
                 supports_lock_rules=self.data.supports_lock_rules,
                 lock_rule_support_complete=self.data.lock_rule_support_complete,
             )
@@ -326,6 +338,10 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     def get_lock_rule_status(self, door_id: str) -> DoorLockRuleStatus | None:
         """Return the current lock rule status for a door."""
         return self.data.door_lock_rules.get(door_id)
+
+    def get_lock_rule_sensor_door_ids(self) -> set[str]:
+        """Return doors that should expose lock-rule sensor entities."""
+        return self.data.door_lock_rules.keys() | self.data.unconfirmed_lock_rule_doors
 
     @callback
     def _dispatch_door_event(

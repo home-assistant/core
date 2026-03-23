@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_lock_rule_sensors() -> None:
-        new_door_ids = sorted(set(coordinator.data.door_lock_rules) - added_doors)
+        new_door_ids = sorted(coordinator.get_lock_rule_sensor_door_ids() - added_doors)
         if not new_door_ids:
             return
 
@@ -71,6 +71,13 @@ class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
             return None
         return rule_status.type.value
 
+    @property
+    def available(self) -> bool:
+        """Return whether the sensor should currently be shown as available."""
+        return super().available and (
+            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
+        )
+
 
 class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
     """Sensor reporting when the current lock rule expires."""
@@ -94,3 +101,10 @@ class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
         if rule_status is None or not rule_status.ended_time:
             return None
         return datetime.fromtimestamp(rule_status.ended_time, tz=UTC)
+
+    @property
+    def available(self) -> bool:
+        """Return whether the sensor should currently be shown as available."""
+        return super().available and (
+            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
+        )

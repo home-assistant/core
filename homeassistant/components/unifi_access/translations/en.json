@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Reauthentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -9,6 +10,15 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "data_description": {
+                    "api_token": "API token generated in the UniFi Access settings."
+                },
+                "description": "The API token for UniFi Access at {host} is invalid. Please provide a new token."
+            },
             "user": {
                 "data": {
                     "api_token": "API token",
@@ -24,11 +34,6 @@
         }
     },
     "entity": {
-        "binary_sensor": {
-            "open": {
-                "name": "Open"
-            }
-        },
         "button": {
             "unlock": {
                 "name": "Unlock"
@@ -59,7 +64,7 @@
         },
         "sensor": {
             "door_lock_rule": {
-                "name": "Door Lock Rule",
+                "name": "Lock Rule",
                 "state": {
                     "custom": "Custom",
                     "keep_lock": "Locked",

@@ -64,7 +64,7 @@
     },
     "sensor": {
       "door_lock_rule": {
-        "name": "Door Lock Rule",
+        "name": "Lock Rule",
         "state": {
           "custom": "Custom",
           "keep_lock": "Locked",

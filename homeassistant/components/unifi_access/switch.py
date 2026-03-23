@@ -107,6 +107,9 @@ class UnifiAccessEmergencySwitch(UnifiAccessHubEntity, SwitchEntity):
                     doors=self.coordinator.data.doors,
                     emergency=new_status,
                     door_lock_rules=self.coordinator.data.door_lock_rules,
+                    unconfirmed_lock_rule_doors=(
+                        self.coordinator.data.unconfirmed_lock_rule_doors
+                    ),
                     supports_lock_rules=self.coordinator.data.supports_lock_rules,
                     lock_rule_support_complete=(
                         self.coordinator.data.lock_rule_support_complete

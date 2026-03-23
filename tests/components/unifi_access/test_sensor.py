@@ -30,9 +30,9 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-FRONT_DOOR_LOCK_RULE_ENTITY = "sensor.front_door_door_lock_rule"
+FRONT_DOOR_LOCK_RULE_ENTITY = "sensor.front_door_lock_rule"
 FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY = "sensor.front_door_rule_end_time"
-BACK_DOOR_LOCK_RULE_ENTITY = "sensor.back_door_door_lock_rule"
+BACK_DOOR_LOCK_RULE_ENTITY = "sensor.back_door_lock_rule"
 BACK_DOOR_LOCK_RULE_END_TIME_ENTITY = "sensor.back_door_rule_end_time"
 
 
@@ -140,7 +140,7 @@ async def test_sensor_created_after_websocket_update_when_initial_fetch_fails(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test a websocket update can create sensors after a transient startup error."""
+    """Test websocket updates refine placeholder sensors after a transient startup error."""
     mock_client.get_door_lock_rule = AsyncMock(
         side_effect=ApiConnectionError("Connection failed")
     )
@@ -148,10 +148,10 @@ async def test_sensor_created_after_websocket_update_when_initial_fetch_fails(
     with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY) is None
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY) is None
-    assert hass.states.get(BACK_DOOR_LOCK_RULE_ENTITY) is None
-    assert hass.states.get(BACK_DOOR_LOCK_RULE_END_TIME_ENTITY) is None
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "unknown"
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY).state == "unknown"
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_ENTITY).state == "unknown"
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_END_TIME_ENTITY).state == "unknown"
 
     handlers = _get_ws_handlers(mock_client)
     update_msg = LocationUpdateV2(
@@ -174,6 +174,30 @@ async def test_sensor_created_after_websocket_update_when_initial_fetch_fails(
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY).state == (
         datetime.fromtimestamp(1700000000, tz=UTC).isoformat()
     )
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_ENTITY).state == "unknown"
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_END_TIME_ENTITY).state == "unknown"
+
+
+async def test_sensor_placeholder_created_only_for_transient_error_doors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test placeholders are created only for doors with transient fetch errors."""
+
+    async def mock_get_door_lock_rule(door_id: str) -> DoorLockRuleStatus:
+        if door_id == "door-001":
+            raise ApiConnectionError("Connection failed")
+        raise ApiNotFoundError
+
+    mock_client.get_door_lock_rule = AsyncMock(side_effect=mock_get_door_lock_rule)
+
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY) is not None
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY).state == "unknown"
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY) is not None
     assert hass.states.get(BACK_DOOR_LOCK_RULE_ENTITY) is None
     assert hass.states.get(BACK_DOOR_LOCK_RULE_END_TIME_ENTITY) is None
 
