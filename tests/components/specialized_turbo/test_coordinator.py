@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak import BleakError
@@ -15,8 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_ADDRESS
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def _make_coordinator(
     hass: HomeAssistant, pin: int | None = None
@@ -27,7 +24,7 @@ def _make_coordinator(
         return_value=None,
     ):
         coord = SpecializedTurboCoordinator(
-            hass, _LOGGER, address=MOCK_ADDRESS, pin=pin
+            hass, address=MOCK_ADDRESS, pin=pin
         )
     coord.hass = hass
     coord.async_update_listeners = MagicMock()
@@ -73,7 +70,8 @@ async def test_needs_poll_after_disconnect_reconnect(hass: HomeAssistant) -> Non
     assert coord._needs_poll(MagicMock(), None) is False
 
     # Simulate bike leaving (disconnect callback fires)
-    coord._on_disconnect(mock_client)
+    with patch.object(hass.loop, "call_soon_threadsafe"):
+        coord._on_disconnect(mock_client)
     assert coord._client is None
 
     # Bike comes back in range — needs_poll must return True to reconnect
@@ -344,11 +342,12 @@ async def test_on_disconnect(hass: HomeAssistant) -> None:
     coord = _make_coordinator(hass)
     coord._client = MagicMock()
 
-    coord._on_disconnect(MagicMock())
+    with patch.object(hass.loop, "call_soon_threadsafe") as mock_call:
+        coord._on_disconnect(MagicMock())
 
     assert coord._was_unavailable is True
     assert coord._client is None
-    coord.async_update_listeners.assert_called_once()
+    mock_call.assert_called_once_with(coord.async_update_listeners)
 
 
 async def test_on_disconnect_already_unavailable(hass: HomeAssistant) -> None:
@@ -357,11 +356,12 @@ async def test_on_disconnect_already_unavailable(hass: HomeAssistant) -> None:
     coord._was_unavailable = True
     coord._client = MagicMock()
 
-    coord._on_disconnect(MagicMock())
+    with patch.object(hass.loop, "call_soon_threadsafe") as mock_call:
+        coord._on_disconnect(MagicMock())
 
     assert coord._was_unavailable is True
     assert coord._client is None
-    coord.async_update_listeners.assert_called_once()
+    mock_call.assert_called_once_with(coord.async_update_listeners)
 
 
 # --- async_shutdown ---

@@ -28,7 +28,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        logger: logging.Logger,
         *,
         address: str,
         pin: int | None = None,
@@ -36,7 +35,7 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
-            logger=logger,
+            logger=_LOGGER,
             address=address,
             needs_poll_method=self._needs_poll,
             poll_method=self._do_poll,
@@ -64,20 +63,27 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
     ) -> None:
         """Connect to the bike and subscribe to notifications."""
         try:
-            await self._ensure_connected()
+            await self._ensure_connected(service_info)
         except BleakError as err:
             _LOGGER.debug("BLE connection unavailable for %s: %s", self._address, err)
             self._client = None
 
-    async def _ensure_connected(self) -> None:
+    async def _ensure_connected(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak | None = None,
+    ) -> None:
         """Establish BLE connection and subscribe to notifications."""
         if self._client and self._client.is_connected:
             return
 
         _LOGGER.debug("Connecting to Specialized Turbo at %s", self._address)
 
-        ble_device = bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
+        ble_device = (
+            service_info.device
+            if service_info is not None
+            else bluetooth.async_ble_device_from_address(
+                self.hass, self._address, connectable=True
+            )
         )
 
         if ble_device is None:
@@ -102,7 +108,7 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         if self._pin is not None:
             try:
                 await client.pair(protection_level=2)
-                _LOGGER.info("Paired with PIN")
+                _LOGGER.debug("Pairing completed")
             except NotImplementedError:
                 _LOGGER.debug("Backend does not support programmatic pairing")
             except Exception:  # noqa: BLE001
@@ -110,7 +116,7 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
 
         # Subscribe to telemetry notifications
         await client.start_notify(CHAR_NOTIFY, self._notification_handler)
-        _LOGGER.info("Subscribed to telemetry notifications")
+        _LOGGER.debug("Subscribed to telemetry notifications")
 
     def _notification_handler(
         self, sender: BleakGATTCharacteristic | int, data: bytearray
@@ -136,15 +142,16 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         """Return True if the BLE client is connected."""
         return self._client is not None and self._client.is_connected
 
-    @callback
     def _on_disconnect(self, client: BleakClient) -> None:
         """Handle unexpected disconnection."""
         if not self._was_unavailable:
             _LOGGER.info("Disconnected from Specialized Turbo at %s", self._address)
             self._was_unavailable = True
         self._client = None
-        # Notify listeners so entities mark themselves unavailable
-        self.async_update_listeners()
+        # Notify listeners so entities mark themselves unavailable.
+        # Schedule on the event loop since bleak disconnect callbacks
+        # may come from a background thread.
+        self.hass.loop.call_soon_threadsafe(self.async_update_listeners)
 
     async def async_shutdown(self) -> None:
         """Clean up BLE connection on unload."""

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from bleak import BleakClient
@@ -21,8 +20,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PIN, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):

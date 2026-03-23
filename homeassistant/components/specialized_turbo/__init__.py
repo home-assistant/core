@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_PIN
 from .coordinator import SpecializedTurboCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -27,7 +23,6 @@ async def async_setup_entry(
 
     coordinator = SpecializedTurboCoordinator(
         hass,
-        _LOGGER,
         address=address,
         pin=pin,
     )

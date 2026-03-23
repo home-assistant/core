@@ -11,20 +11,20 @@
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "pin": "Pairing PIN"
+          "pin": "[%key:component::specialized_turbo::config::step::user::data::pin%]"
         },
         "data_description": {
-          "pin": "The 4-digit PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+          "pin": "[%key:component::specialized_turbo::config::step::user::data_description::pin%]"
         },
         "description": "A Specialized Turbo bike was found at {address} ({name}). Enter the pairing PIN shown on the bike's TCU display to connect.",
         "title": "Discovered Specialized Turbo Bike"
       },
       "reconfigure": {
         "data": {
-          "pin": "Pairing PIN"
+          "pin": "[%key:component::specialized_turbo::config::step::user::data::pin%]"
         },
         "data_description": {
-          "pin": "The 4-digit PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+          "pin": "[%key:component::specialized_turbo::config::step::user::data_description::pin%]"
         },
         "description": "Update the pairing PIN for your Specialized Turbo bike.",
         "title": "Reconfigure Specialized Turbo"
@@ -49,7 +49,13 @@
         "name": "ECO assist"
       },
       "assist_level": {
-        "name": "Assist level"
+        "name": "Assist level",
+        "state": {
+          "off": "Off",
+          "eco": "Eco",
+          "trail": "Trail",
+          "turbo": "Turbo"
+        }
       },
       "assist_trail_pct": {
         "name": "Trail assist"
@@ -62,9 +68,6 @@
       },
       "battery_charge_cycles": {
         "name": "Charge cycles"
-      },
-      "battery_charge_percent": {
-        "name": "Battery"
       },
       "battery_current": {
         "name": "Battery current"

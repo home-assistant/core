@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from specialized_turbo import AssistLevel, TelemetrySnapshot
 
@@ -39,7 +38,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import SpecializedTurboConfigEntry
-from .const import DOMAIN
 from .coordinator import SpecializedTurboCoordinator
 
 PARALLEL_UPDATES = 0
@@ -49,16 +47,16 @@ PARALLEL_UPDATES = 0
 class SpecializedSensorEntityDescription(SensorEntityDescription):
     """Describes a Specialized Turbo sensor entity."""
 
-    value_fn: Callable[[TelemetrySnapshot], Any]
+    value_fn: Callable[[TelemetrySnapshot], StateType]
 
 
 def _assist_level_name(snap: TelemetrySnapshot) -> str | None:
-    """Return assist level as a human-readable string."""
+    """Return assist level as a snake_case string for translation."""
     level = snap.motor.assist_level
     if level is None:
         return None
     if isinstance(level, AssistLevel):
-        return str(level.name.capitalize())
+        return level.name.lower()
     return str(level)
 
 
@@ -66,7 +64,6 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
     # --- Battery ---
     SpecializedSensorEntityDescription(
         key="battery_charge_percent",
-        translation_key="battery_charge_percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -77,7 +74,6 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
         translation_key="battery_capacity_wh",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda s: s.battery.capacity_wh,
     ),
     SpecializedSensorEntityDescription(
@@ -182,6 +178,8 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
     SpecializedSensorEntityDescription(
         key="assist_level",
         translation_key="assist_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["off", "eco", "trail", "turbo"],
         value_fn=_assist_level_name,
     ),
     # --- Settings (informational) ---
@@ -247,8 +245,6 @@ class SpecializedTurboSensor(
         self._attr_unique_id = f"{format_mac(entry.data['address'])}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, format_mac(entry.data["address"]))},
-            identifiers={(DOMAIN, format_mac(entry.data["address"]))},
-            name=entry.title,
             manufacturer="Specialized",
             model="Turbo",
         )

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from specialized_turbo import AssistLevel, TelemetrySnapshot
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.specialized_turbo.sensor import (
     PARALLEL_UPDATES,
     SENSOR_DESCRIPTIONS,
@@ -163,28 +164,28 @@ def test_assist_level_name_off() -> None:
     """Test assist level name for OFF."""
     snap = TelemetrySnapshot()
     snap.motor.assist_level = AssistLevel.OFF
-    assert _assist_level_name(snap) == "Off"
+    assert _assist_level_name(snap) == "off"
 
 
 def test_assist_level_name_eco() -> None:
     """Test assist level name for ECO."""
     snap = TelemetrySnapshot()
     snap.motor.assist_level = AssistLevel.ECO
-    assert _assist_level_name(snap) == "Eco"
+    assert _assist_level_name(snap) == "eco"
 
 
 def test_assist_level_name_trail() -> None:
     """Test assist level name for TRAIL."""
     snap = TelemetrySnapshot()
     snap.motor.assist_level = AssistLevel.TRAIL
-    assert _assist_level_name(snap) == "Trail"
+    assert _assist_level_name(snap) == "trail"
 
 
 def test_assist_level_name_turbo() -> None:
     """Test assist level name for TURBO."""
     snap = TelemetrySnapshot()
     snap.motor.assist_level = AssistLevel.TURBO
-    assert _assist_level_name(snap) == "Turbo"
+    assert _assist_level_name(snap) == "turbo"
 
 
 def test_assist_level_name_unknown_int() -> None:
@@ -208,9 +209,12 @@ def test_parallel_updates_zero() -> None:
 
 
 def test_all_descriptions_have_translation_key() -> None:
-    """Test that all descriptions have a translation key."""
+    """Test that descriptions without device class have a translation key."""
     for desc in SENSOR_DESCRIPTIONS:
-        assert desc.translation_key is not None, f"{desc.key} missing translation_key"
+        if desc.device_class is None or desc.device_class == SensorDeviceClass.ENUM:
+            assert (
+                desc.translation_key is not None
+            ), f"{desc.key} missing translation_key"
 
 
 def test_value_fn_returns_none_for_empty_snapshot() -> None:

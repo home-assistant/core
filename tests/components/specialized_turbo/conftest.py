@@ -79,10 +79,16 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent actual entry setup during config flow tests."""
-    with patch(
-        "homeassistant.components.specialized_turbo.async_setup_entry",
-        return_value=True,
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.specialized_turbo.async_setup_entry",
+            return_value=True,
+        ) as mock,
+        patch(
+            "homeassistant.components.specialized_turbo.async_unload_entry",
+            return_value=True,
+        ),
+    ):
         yield mock
 
 
