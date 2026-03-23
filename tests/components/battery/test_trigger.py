@@ -64,7 +64,7 @@ async def test_battery_triggers_gated_by_labs_flag(
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
-# --- low / high (binary_sensor with device_class battery) ---
+# --- Binary sensor triggers (low, not_low, started_charging, stopped_charging) ---
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -89,9 +89,23 @@ async def test_battery_triggers_gated_by_labs_flag(
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
+        *parametrize_trigger_states(
+            trigger="battery.started_charging",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="battery.stopped_charging",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
+            trigger_from_none=False,
+        ),
     ],
 )
-async def test_battery_low_high_trigger_behavior_any(
+async def test_battery_binary_sensor_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
@@ -102,7 +116,7 @@ async def test_battery_low_high_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test the battery low/high triggers with 'any' behavior."""
+    """Test the battery binary sensor triggers with 'any' behavior."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
@@ -138,9 +152,23 @@ async def test_battery_low_high_trigger_behavior_any(
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
+        *parametrize_trigger_states(
+            trigger="battery.started_charging",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="battery.stopped_charging",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
+            trigger_from_none=False,
+        ),
     ],
 )
-async def test_battery_low_high_trigger_behavior_first(
+async def test_battery_binary_sensor_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
@@ -151,7 +179,7 @@ async def test_battery_low_high_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test the battery low/high triggers with 'first' behavior."""
+    """Test the battery binary sensor triggers with 'first' behavior."""
     await assert_trigger_behavior_first(
         hass,
         service_calls=service_calls,
@@ -187,44 +215,6 @@ async def test_battery_low_high_trigger_behavior_first(
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
-    ],
-)
-async def test_battery_low_high_trigger_behavior_last(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_binary_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test the battery low/high triggers with 'last' behavior."""
-    await assert_trigger_behavior_last(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_binary_sensors,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-# --- started_charging / stopped_charging (binary_sensor with device_class battery_charging) ---
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("binary_sensor"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
         *parametrize_trigger_states(
             trigger="battery.started_charging",
             target_states=[STATE_ON],
@@ -241,7 +231,7 @@ async def test_battery_low_high_trigger_behavior_last(
         ),
     ],
 )
-async def test_battery_charging_trigger_behavior_any(
+async def test_battery_binary_sensor_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
@@ -252,105 +242,7 @@ async def test_battery_charging_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test the battery started_charging/stopped_charging triggers with 'any' behavior."""
-    await assert_trigger_behavior_any(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_binary_sensors,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("binary_sensor"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_trigger_states(
-            trigger="battery.started_charging",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
-            trigger_from_none=False,
-        ),
-        *parametrize_trigger_states(
-            trigger="battery.stopped_charging",
-            target_states=[STATE_OFF],
-            other_states=[STATE_ON],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
-            trigger_from_none=False,
-        ),
-    ],
-)
-async def test_battery_charging_trigger_behavior_first(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_binary_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test the battery started_charging/stopped_charging triggers with 'first' behavior."""
-    await assert_trigger_behavior_first(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_binary_sensors,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("binary_sensor"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_trigger_states(
-            trigger="battery.started_charging",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
-            trigger_from_none=False,
-        ),
-        *parametrize_trigger_states(
-            trigger="battery.stopped_charging",
-            target_states=[STATE_OFF],
-            other_states=[STATE_ON],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "battery_charging"},
-            trigger_from_none=False,
-        ),
-    ],
-)
-async def test_battery_charging_trigger_behavior_last(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_binary_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test the battery started_charging/stopped_charging triggers with 'last' behavior."""
+    """Test the battery binary sensor triggers with 'last' behavior."""
     await assert_trigger_behavior_last(
         hass,
         service_calls=service_calls,
