@@ -186,19 +186,19 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth: ask for new password and validate."""
         errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
+        self._entry = self._get_reauth_entry()
         if user_input is not None:
-            merged_data = {**reauth_entry.data, **user_input}
+            merged_data = {**self._entry.data, **user_input}
             _, errors = await self._validate_input(merged_data)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    reauth_entry,
+                    self._entry,
                     data_updates=self._get_auth_updates(merged_data),
                 )
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=self._get_auth_schema(reauth_entry.data),
+            data_schema=self._get_auth_schema(self._entry.data),
             errors=errors,
         )
 
