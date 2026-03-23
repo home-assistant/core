@@ -4,21 +4,53 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass, RssiError
+from zwave_js_server.const.command_class.energy_production import (
+    CC_SPECIFIC_PARAMETER,
+    CC_SPECIFIC_SCALE as ENERGY_PRODUCTION_CC_SPECIFIC_SCALE,
+    EnergyProductionParameter,
+    PowerScale,
+)
 from zwave_js_server.const.command_class.meter import (
+    CC_SPECIFIC_METER_TYPE,
+    CC_SPECIFIC_SCALE as METER_CC_SPECIFIC_SCALE,
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
+    VALUE_PROPERTY,
+    ElectricScale,
+    MeterType,
 )
-from zwave_js_server.exceptions import BaseZwaveJSServerError, RssiErrorReceived
+from zwave_js_server.const.command_class.multilevel_sensor import (
+    CC_SPECIFIC_SCALE as MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
+    CC_SPECIFIC_SENSOR_TYPE,
+    TEMPERATURE_SENSORS,
+    TemperatureScale,
+)
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    RssiErrorReceived,
+    UnknownValueData,
+)
 from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.controller.statistics import ControllerStatistics
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.statistics import NodeStatistics
-from zwave_js_server.util.command_class.meter import get_meter_type
+from zwave_js_server.model.value import Value as ZwaveValue
+from zwave_js_server.util.command_class.energy_production import (
+    get_energy_production_scale_type,
+)
+from zwave_js_server.util.command_class.meter import (
+    get_meter_scale_type,
+    get_meter_type,
+)
+from zwave_js_server.util.command_class.multilevel_sensor import (
+    get_multilevel_sensor_scale_type,
+)
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -27,6 +59,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -34,6 +67,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UV_INDEX,
     EntityCategory,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -55,7 +89,6 @@ from .const import (
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
     DOMAIN,
-    ENTITY_DESC_KEY_BATTERY_LEVEL,
     ENTITY_DESC_KEY_BATTERY_LIST_STATE,
     ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
     ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
@@ -63,7 +96,6 @@ from .const import (
     ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
-    ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER,
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
@@ -76,35 +108,32 @@ from .const import (
     ENTITY_DESC_KEY_PRESSURE,
     ENTITY_DESC_KEY_SIGNAL_STRENGTH,
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
-    ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
     LOGGER,
     SERVICE_RESET_METER,
 )
-from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import (
     NumericSensorDataTemplate,
     NumericSensorDataTemplateData,
 )
-from .entity import ZWaveBaseEntity
+from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 from .migrate import async_migrate_statistics_sensors
-from .models import ZwaveJSConfigEntry
+from .models import (
+    NewZWaveDiscoverySchema,
+    ValueType,
+    ZwaveDiscoveryInfo,
+    ZwaveJSConfigEntry,
+    ZWaveValueDiscoverySchema,
+)
 
 PARALLEL_UPDATES = 0
 
 
 # These descriptions should have a non None unit of measurement.
 ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] = {
-    (ENTITY_DESC_KEY_BATTERY_LEVEL, PERCENTAGE): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_BATTERY_LEVEL,
-        device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-    ),
     (ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, PERCENTAGE): SensorEntityDescription(
         key=ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -224,21 +253,6 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ),
-    (ENTITY_DESC_KEY_TEMPERATURE, UnitOfTemperature.CELSIUS): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_TEMPERATURE,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
-    (
-        ENTITY_DESC_KEY_TEMPERATURE,
-        UnitOfTemperature.FAHRENHEIT,
-    ): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_TEMPERATURE,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
-    ),
     (
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         UnitOfTemperature.CELSIUS,
@@ -288,16 +302,6 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-    ),
-    (
-        ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER,
-        UnitOfPower.WATT,
-    ): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_POWER,
-        name="Energy production power",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
     ),
 }
 
@@ -601,7 +605,7 @@ async def async_setup_entry(
     assert driver is not None  # Driver is ready before platforms are loaded.
 
     @callback
-    def async_add_sensor(info: ZwaveDiscoveryInfo) -> None:
+    def async_add_sensor(info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
@@ -612,7 +616,13 @@ async def async_setup_entry(
 
         entity_description = get_entity_description(data)
 
-        if info.platform_hint == "numeric_sensor":
+        if isinstance(info, NewZwaveDiscoveryInfo) and (
+            entity_class := info.entity_class
+        ) in (NewZWaveNumericSensor, NewZWaveMeterSensor):
+            entities.append(entity_class(config_entry, driver, info))
+        elif isinstance(info, NewZwaveDiscoveryInfo):
+            pass  # other entity classes are not migrated yet
+        elif info.platform_hint == "numeric_sensor":
             entities.append(
                 ZWaveNumericSensor(
                     config_entry,
@@ -802,7 +812,103 @@ class ZWaveNumericSensor(ZwaveSensor):
         return float(self.info.primary_value.value)
 
 
+class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
+    """Representation of a Z-Wave Numeric sensor."""
+
+    _attr_force_update = True
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: NewZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(config_entry, driver, info)
+        entity_description = info.entity_description
+        if not entity_description.name or entity_description.name is UNDEFINED:
+            self._attr_name = self.generate_name(include_value_name=True)
+        self._scale_type = self._get_scale_type()
+
+    def _get_scale_type(self) -> IntEnum | None:
+        """Return the scale type of the value."""
+        primary_value = self.info.primary_value
+        scale_type_function: Callable[[ZwaveValue], IntEnum] | None
+        match primary_value.command_class:
+            case CommandClass.METER:
+                scale_type_function = get_meter_scale_type
+            case CommandClass.SENSOR_MULTILEVEL:
+                scale_type_function = get_multilevel_sensor_scale_type
+            case CommandClass.ENERGY_PRODUCTION:
+                scale_type_function = get_energy_production_scale_type
+            case _:
+                scale_type_function = None
+        if scale_type_function is None:
+            return None
+        try:
+            scale_type = scale_type_function(primary_value)
+        except UnknownValueData:
+            return None
+
+        return scale_type
+
+    @callback
+    def on_value_update(self) -> None:
+        """Handle scale changes for this value on value updated event."""
+        # TODO: Try to limit this to metadata updated event.  # pylint: disable=fixme
+        scale_type = self._get_scale_type()
+        if scale_type is not self._scale_type:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return None
+        return float(self.info.primary_value.value)
+
+
 class ZWaveMeterSensor(ZWaveNumericSensor):
+    """Representation of a Z-Wave Meter CC sensor."""
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, int | str] | None:
+        """Return extra state attributes."""
+        meter_type = get_meter_type(self.info.primary_value)
+        return {
+            ATTR_METER_TYPE: meter_type.value,
+            ATTR_METER_TYPE_NAME: meter_type.name,
+        }
+
+    async def async_reset_meter(
+        self, meter_type: int | None = None, value: int | None = None
+    ) -> None:
+        """Reset meter(s) on device."""
+        node = self.info.node
+        endpoint = self.info.primary_value.endpoint or 0
+        options = {}
+        if meter_type is not None:
+            options[RESET_METER_OPTION_TYPE] = meter_type
+        if value is not None:
+            options[RESET_METER_OPTION_TARGET_VALUE] = value
+        args = [options] if options else []
+        try:
+            await node.endpoints[endpoint].async_invoke_cc_api(
+                CommandClass.METER, "reset", *args, wait_for_result=False
+            )
+        except BaseZwaveJSServerError as err:
+            raise HomeAssistantError(
+                f"Failed to reset meters on node {node} endpoint {endpoint}: {err}"
+            ) from err
+        LOGGER.debug(
+            "Meters on node %s endpoint %s reset with the following options: %s",
+            node,
+            endpoint,
+            options,
+        )
+
+
+class NewZWaveMeterSensor(NewZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
 
     @property
@@ -1135,3 +1241,103 @@ class ZWaveStatisticsSensor(SensorEntity):
 
         # Set initial state
         self._set_statistics(self.statistics_src.statistics)
+
+
+DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"level"},
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="battery_level",
+            device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, TemperatureScale.CELSIUS),
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, sensor_type)
+                for sensor_type in TEMPERATURE_SENSORS
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="temperature_celsius",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, TemperatureScale.FAHRENHEIT),
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, sensor_type)
+                for sensor_type in TEMPERATURE_SENSORS
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="temperature_fahrenheit",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.METER},
+            type={ValueType.NUMBER},
+            property={VALUE_PROPERTY},
+            all_available_cc_specific={
+                (CC_SPECIFIC_METER_TYPE, MeterType.ELECTRIC),
+                (METER_CC_SPECIFIC_SCALE, ElectricScale.AMPERE),
+            },
+        ),
+        entity_class=NewZWaveMeterSensor,
+        entity_description=SensorEntityDescription(
+            key="meter_current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.ENERGY_PRODUCTION},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_PARAMETER, EnergyProductionParameter.POWER),
+                (ENERGY_PRODUCTION_CC_SPECIFIC_SCALE, PowerScale.WATTS),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="energy_production_power",
+            name="Energy production power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.WATT,
+        ),
+    ),
+]

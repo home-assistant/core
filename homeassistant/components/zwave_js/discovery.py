@@ -75,10 +75,12 @@ from .models import (
     ZWaveValueDiscoverySchema,
     ZwaveValueID,
 )
+from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
 
 NEW_DISCOVERY_SCHEMAS: dict[Platform, list[NewZWaveDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
     Platform.EVENT: EVENT_SCHEMAS,
+    Platform.SENSOR: SENSOR_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(NEW_DISCOVERY_SCHEMAS)
 
@@ -878,7 +880,7 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BATTERY},
             type={ValueType.NUMBER},
-            property={"level", "maximumCapacity"},
+            property={"maximumCapacity"},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
@@ -1564,10 +1566,17 @@ def check_value(
     ):
         return False
     # check available cc specific
-    if (
-        schema.any_available_cc_specific is not None
-        and value.metadata.cc_specific is not None
-        and not any(
+    if schema.all_available_cc_specific is not None and (
+        value.metadata.cc_specific is None
+        or not all(
+            key in value.metadata.cc_specific and value.metadata.cc_specific[key] == val
+            for key, val in schema.all_available_cc_specific
+        )
+    ):
+        return False
+    if schema.any_available_cc_specific is not None and (
+        value.metadata.cc_specific is None
+        or not any(
             key in value.metadata.cc_specific and value.metadata.cc_specific[key] == val
             for key, val in schema.any_available_cc_specific
         )
