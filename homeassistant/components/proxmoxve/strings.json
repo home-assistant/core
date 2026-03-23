@@ -15,27 +15,33 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "id": "[%key:component::proxmoxve::config::step::user_auth::data::id%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
         },
         "data_description": {
-          "password": "The new password for the Proxmox VE server"
+          "id": "[%key:component::proxmoxve::config::step::user_auth::data_description::id%]",
+          "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
         },
         "description": "The connection to the Proxmox VE server requires re-authentication. Please enter your password to continue.",
         "title": "Re-authenticate Proxmox VE integration"
       },
       "reconfigure": {
         "data": {
+          "auth_providers": "[%key:component::proxmoxve::config::step::user::data::auth_providers%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
           "token": "[%key:component::proxmoxve::config::step::user::data::token%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
+          "auth_providers": "[%key:component::proxmoxve::config::step::user::data_description::auth_providers%]",
           "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
           "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
           "token": "[%key:component::proxmoxve::config::step::user::data_description::token%]",
           "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
           "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"

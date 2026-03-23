@@ -275,7 +275,9 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_auth",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=self._get_auth_schema(self._data),
-                suggested_values=self._data,
+                suggested_values=sanitize_config_entry(
+                    self._data, strip_credentials=True
+                ),
             ),
             errors=errors,
         )
