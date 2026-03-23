@@ -357,7 +357,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -400,7 +400,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'ct-backup Network input',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
@@ -418,7 +418,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -461,7 +461,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'ct-backup Network output',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
@@ -892,7 +892,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,7 +935,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'ct-nginx Network input',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
@@ -953,7 +953,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -996,7 +996,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'ct-nginx Network output',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
@@ -1838,7 +1838,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1881,7 +1881,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'vm-db Network input',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
@@ -1899,7 +1899,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1942,7 +1942,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'vm-db Network output',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
@@ -2373,7 +2373,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2416,7 +2416,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'vm-web Network input',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
@@ -2434,7 +2434,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2477,7 +2477,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': 'vm-web Network output',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,

@@ -188,7 +188,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_netout",
@@ -199,7 +199,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -278,7 +278,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_netout",
@@ -289,7 +289,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
