@@ -87,3 +87,8 @@ rules:
   stale-devices:
     status: exempt
     comment: No devices in current scope.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
