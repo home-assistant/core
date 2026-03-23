@@ -2038,8 +2038,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return warn_unsupported
 
             hass_globals = [
-                "area_id",
-                "area_name",
                 "closest",
                 "distance",
                 "entity_name",
@@ -2054,8 +2052,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "states",
             ]
             hass_filters = [
-                "area_id",
-                "area_name",
                 "closest",
                 "entity_name",
                 "expand",
