@@ -194,7 +194,9 @@ def create_b01_q10_trait() -> Mock:
         )
 
     async def refresh_side_effect() -> None:
-        """Simulate a device push via the public Q10 DPS update API."""
+        """Simulate a device push via the public Q10 DPS update API with new data."""
+        # Mutate clean_count to simulate a new cleaning cycle
+        status.clean_count += 1
         dps: dict[B01_Q10_DP, Any] = {
             B01_Q10_DP.STATUS: _raw_value(status.status),
             B01_Q10_DP.BATTERY: status.battery,
