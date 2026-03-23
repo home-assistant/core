@@ -42,9 +42,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: Notify entities do not require a device. Gateway device will be added with QR code image platform in a follow-up.
+  devices: done
   diagnostics: todo
   discovery:
     status: exempt
