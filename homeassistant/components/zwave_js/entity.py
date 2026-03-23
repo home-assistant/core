@@ -353,10 +353,17 @@ class ZWaveBaseEntity(Entity):
         await self.async_remove()
 
         # Now clear from discovered_value_ids and trigger re-discovery
+        # using the existing discovery info dict
         controller_events.discovered_value_ids[self.device_entry.id].discard(
             value.value_id
         )
-        await controller_events.node_events.async_on_value_added({}, value)
+        node_events = controller_events.node_events
+        value_updates_disc_info = (
+            controller_events.node_events.value_updates_disc_info.get(
+                value.node.node_id, {}
+            )
+        )
+        await node_events.async_on_value_added(value_updates_disc_info, value)
 
     @callback
     def get_zwave_value(

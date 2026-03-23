@@ -758,6 +758,9 @@ class NodeEvents:
         self.dev_reg = controller_events.dev_reg
         self.ent_reg = er.async_get(hass)
         self.hass = hass
+        self.value_updates_disc_info: dict[
+            int, dict[str, PlatformZwaveDiscoveryInfo]
+        ] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -768,7 +771,9 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
+        # Store the discovery info so it can be reused when re-discovering entities
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
+        self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
         await asyncio.gather(
