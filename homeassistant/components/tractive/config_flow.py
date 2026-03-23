@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from http import HTTPStatus
 import logging
 from typing import Any
 
+import aiohttp
 import aiotractive
 import voluptuous as vol
 
@@ -34,6 +36,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         user_id = await client.user_id()
     except aiotractive.exceptions.UnauthorizedError as error:
         raise InvalidAuth from error
+    except aiotractive.exceptions.TractiveError as error:
+        if (
+            isinstance(error.__cause__, aiohttp.ClientResponseError)
+            and error.__cause__.status == HTTPStatus.TOO_MANY_REQUESTS
+        ):
+            raise RateLimitExceeded from error
+        raise CannotConnect from error
     finally:
         await client.close()
 
@@ -56,6 +65,10 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
+        except RateLimitExceeded:
+            errors["base"] = "rate_limit_exceeded"
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:
@@ -86,6 +99,10 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+            except RateLimitExceeded:
+                errors["base"] = "rate_limit_exceeded"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:
@@ -105,5 +122,13 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class RateLimitExceeded(HomeAssistantError):
+    """Error to indicate the API rate limit has been exceeded."""
