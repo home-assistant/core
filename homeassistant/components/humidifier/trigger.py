@@ -1,13 +1,46 @@
 """Provides triggers for humidifiers."""
 
-from homeassistant.const import STATE_OFF, STATE_ON
+import voluptuous as vol
+
+from homeassistant.const import ATTR_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger
+from homeassistant.helpers.trigger import (
+    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
+    EntityTargetStateTriggerBase,
+    Trigger,
+    TriggerConfig,
+    make_entity_target_state_trigger,
+)
 
 from .const import ATTR_ACTION, DOMAIN, HumidifierAction
 
+CONF_MODE = "mode"
+
+MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(CONF_MODE): vol.All(cv.ensure_list, vol.Length(min=1), [str]),
+        },
+    }
+)
+
+
+class ModeChangedTrigger(EntityTargetStateTriggerBase):
+    """Trigger for humidifier mode changes."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_MODE)}
+    _schema = MODE_CHANGED_TRIGGER_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the mode trigger."""
+        super().__init__(hass, config)
+        self._to_states = set(self._options[CONF_MODE])
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
+    "mode_changed": ModeChangedTrigger,
     "started_drying": make_entity_target_state_trigger(
         {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.DRYING
     ),
