@@ -309,8 +309,7 @@ async def test_device_info_strips_whitespace(
     assert device_entry.serial_number == "A00000000000"
     assert device_entry.model_id == "SMART1000"
     assert (
-        device_entry.area_id
-        == area_registry.async_get_area_by_name("Server Room").id
+        device_entry.area_id == area_registry.async_get_area_by_name("Server Room").id
     )
 
 
