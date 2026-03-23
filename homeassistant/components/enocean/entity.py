@@ -49,8 +49,14 @@ class EnOceanEntity(Entity):
         )
 
     @callback
-    def _on_observation(self, _observation: Observation) -> None:
-        """Handle an incoming observation."""
+    def _on_observation(self, observation: Observation) -> None:
+        """Filter and dispatch incoming observations."""
+        if observation.device != self.address or observation.entity != self.entity_key:
+            return
+        self._update_from_observation(observation)
+
+    def _update_from_observation(self, _observation: Observation) -> None:
+        """Update entity state from a matched observation (override in subclasses)."""
 
     @property
     def device_info(self) -> DeviceInfo | None:

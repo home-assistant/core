@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
@@ -54,10 +54,9 @@ async def async_setup_entry(
                 entities.append(
                     EnOceanSensor(
                         eurid,
-                        f"{entity.id}.{observable.value}",
+                        entity.id,
                         gateway,
                         observable,
-                        entity.id,
                         entity_category=EntityCategory.DIAGNOSTIC
                         if entity.entity_type == EntityType.METADATA
                         else None,
@@ -72,7 +71,6 @@ async def async_setup_entry(
                 entity.id,
                 gateway,
                 observable,
-                entity.id,
                 entity_category=LIB_ENTITY_CATEGORY_MAP.get(entity.category),
             )
         )
@@ -89,16 +87,15 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         entity_key: str,
         gateway: Gateway,
         observable: Observable,
-        eep_entity_id: str,
         entity_category: EntityCategory | None = None,
     ) -> None:
         """Initialize the EnOcean sensor."""
         super().__init__(address, entity_key, gateway)
         self._observable = observable
-        self._eep_entity_id = eep_entity_id
-        # Override the translation key set by the base class: use the observable's
-        # value string (e.g. "temperature") rather than the full entity_key which
-        # may contain a dot (e.g. "sensor_entity.temperature").
+        # entity_key is the EEP entity id; unique_id needs the observable suffix
+        # to be distinct when a device entity exposes multiple observables.
+        self._attr_unique_id = f"{address}.{entity_key}.{observable.value}"
+        # Use the observable name as translation key (e.g. "temperature").
         self._attr_translation_key = observable.value
         self._attr_entity_category = entity_category
         self._attr_device_class = _OBSERVABLE_TO_DEVICE_CLASS.get(observable)
@@ -110,14 +107,9 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         else:
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
-    @callback
-    def _on_observation(self, observation: Observation) -> None:
-        """Handle an incoming observation."""
-        if (
-            observation.device != self.address
-            or observation.entity != self._eep_entity_id
-            or self._observable not in observation.values
-        ):
+    def _update_from_observation(self, observation: Observation) -> None:
+        """Update sensor state from a matched observation."""
+        if self._observable not in observation.values:
             return
 
         value = observation.values[self._observable]
