@@ -8,6 +8,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
 from datetime import datetime, timedelta
+from enum import Enum
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
@@ -57,7 +58,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, location as loc_helper
 from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.translation import async_translate_state
+from homeassistant.helpers.translation import (
+    async_translate_state,
+    async_translate_state_attr,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import convert, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -805,6 +809,48 @@ class StateTranslated:
     def __repr__(self) -> str:
         """Representation of Translated state."""
         return "<template StateTranslated>"
+
+
+class StateAttrTranslated:
+    """Class to represent a translated state attribute value in a template."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self._hass = hass
+
+    def __call__(self, entity_id: str, attribute: str) -> Any:
+        """Retrieve translated state attribute value if available."""
+        state = _get_state_if_valid(self._hass, entity_id)
+
+        if state is None:
+            return None
+
+        attr_value = state.attributes.get(attribute)
+        if attr_value is None:
+            return None
+
+        if not isinstance(attr_value, str | Enum):
+            return attr_value
+
+        domain = state.domain
+        device_class = state.attributes.get("device_class")
+        entry = er.async_get(self._hass).async_get(entity_id)
+        platform = None if entry is None else entry.platform
+        translation_key = None if entry is None else entry.translation_key
+
+        return async_translate_state_attr(
+            self._hass,
+            str(attr_value),
+            domain,
+            platform,
+            translation_key,
+            device_class,
+            attribute,
+        )
+
+    def __repr__(self) -> str:
+        """Representation of Translated state attribute."""
+        return "<template StateAttrTranslated>"
 
 
 class DomainStates:
@@ -1989,6 +2035,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "is_state",
                 "state_attr",
+                "state_attr_translated",
                 "state_translated",
                 "states",
             ]
@@ -2036,9 +2083,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["is_state"] = hassfunction(is_state)
         self.globals["state_attr"] = hassfunction(state_attr)
+        self.globals["state_attr_translated"] = StateAttrTranslated(hass)
         self.globals["state_translated"] = StateTranslated(hass)
         self.globals["states"] = AllStates(hass)
         self.filters["state_attr"] = self.globals["state_attr"]
+        self.filters["state_attr_translated"] = self.globals["state_attr_translated"]
         self.filters["state_translated"] = self.globals["state_translated"]
         self.filters["states"] = self.globals["states"]
         self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
@@ -2047,7 +2096,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(
-            obj, (AllStates, StateTranslated)
+            obj, (AllStates, StateAttrTranslated, StateTranslated)
         ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):

@@ -35,7 +35,7 @@ file-read-backwards==2.0.0
 fnv-hash-fast==2.0.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==5.10.2
+habluetooth==5.11.1
 hass-nabucasa==2.0.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
@@ -68,7 +68,7 @@ SQLAlchemy==2.0.41
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
-ulid-transform==2.0.2
+ulid-transform==2.2.0
 urllib3>=2.0
 uv==0.10.6
 voluptuous-openapi==0.2.0

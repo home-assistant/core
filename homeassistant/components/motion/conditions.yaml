@@ -1,0 +1,24 @@
+.condition_common_fields: &condition_common_fields
+  behavior:
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: condition_behavior
+        options:
+          - all
+          - any
+
+is_detected:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: motion
+
+is_not_detected:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: motion

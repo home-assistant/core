@@ -40,36 +40,19 @@ async def test_button_triggers_gated_by_labs_flag(
         (
             "button.pressed",
             [
-                {"included": {"state": None, "attributes": {}}, "count": 0},
                 {
-                    "included": {
+                    "included_state": {"state": None, "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {
                         "state": "2021-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
-                        "state": "2022-01-01T23:59:59+00:00",
-                        "attributes": {},
-                    },
-                    "count": 1,
-                },
-            ],
-        ),
-        (
-            "button.pressed",
-            [
-                {"included": {"state": "foo", "attributes": {}}, "count": 0},
-                {
-                    "included": {
-                        "state": "2021-01-01T23:59:59+00:00",
-                        "attributes": {},
-                    },
-                    "count": 1,
-                },
-                {
-                    "included": {
+                    "included_state": {
                         "state": "2022-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
@@ -81,25 +64,54 @@ async def test_button_triggers_gated_by_labs_flag(
             "button.pressed",
             [
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {"state": "foo", "attributes": {}},
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
+                        "state": "2021-01-01T23:59:59+00:00",
+                        "attributes": {},
+                    },
+                    "count": 1,
+                },
+                {
+                    "included_state": {
+                        "state": "2022-01-01T23:59:59+00:00",
+                        "attributes": {},
+                    },
+                    "count": 1,
+                },
+            ],
+        ),
+        (
+            "button.pressed",
+            [
+                {
+                    "included_state": {
+                        "state": STATE_UNAVAILABLE,
+                        "attributes": {},
+                    },
+                    "count": 0,
+                },
+                {
+                    "included_state": {
                         "state": "2021-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 0,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2022-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 1,
                 },
                 {
-                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "included_state": {
+                        "state": STATE_UNAVAILABLE,
+                        "attributes": {},
+                    },
                     "count": 0,
                 },
             ],
@@ -107,22 +119,28 @@ async def test_button_triggers_gated_by_labs_flag(
         (
             "button.pressed",
             [
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
                 {
-                    "included": {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
+                {
+                    "included_state": {
                         "state": "2021-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 1,
                 },
                 {
-                    "included": {
+                    "included_state": {
                         "state": "2022-01-01T23:59:59+00:00",
                         "attributes": {},
                     },
                     "count": 1,
                 },
-                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+                {
+                    "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
+                    "count": 0,
+                },
             ],
         ),
     ],
@@ -138,17 +156,17 @@ async def test_button_state_trigger(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the button state trigger fires when targeted button state changes."""
-    other_entity_ids = set(target_buttons["included"]) - {entity_id}
+    other_entity_ids = set(target_buttons["included_entities"]) - {entity_id}
 
     # Set all buttons, including the tested button, to the initial state
-    for eid in target_buttons["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_buttons["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]

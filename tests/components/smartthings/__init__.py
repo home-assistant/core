@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 DEVICE_FIXTURES = [
     "aq_sensor_3_ikea",
+    "aqara_g350",
     "aeotec_ms6",
     "da_ac_air_000001",
     "da_ac_air_01011",
@@ -73,6 +74,7 @@ DEVICE_FIXTURES = [
     "da_wm_dw_01011",
     "da_rvc_normal_000001",
     "da_rvc_map_01011",
+    "da_vc_stick_01001",
     "da_ks_microwave_0101x",
     "da_ks_cooktop_000001",
     "da_ks_cooktop_31001",
