@@ -21,14 +21,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ESPHomeDashboardConfigEntry
-from .const import DOMAIN
+from .const import DEFAULT_PORT, DOMAIN, ESPHOME_CHANGELOG_URL
 from .coordinator import ESPHomeDashboardCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.components.esphome import RuntimeEntryData
-
-# ESPHome native API default port (same as esphome.const.DEFAULT_PORT)
-DEFAULT_PORT = 6053
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,14 +112,7 @@ class ESPHomeDashboardUpdateEntity(
 
     _attr_has_entity_name = True
     _attr_name = "Firmware"
-
-    @property
-    def entity_picture(self) -> str:
-        """Return the entity picture to use in the frontend.
-
-        Use ESPHome brand icon since this integration is part of the ESPHome brand.
-        """
-        return "https://brands.home-assistant.io/_/esphome/icon.png"
+    _attr_release_url = ESPHOME_CHANGELOG_URL
 
     def __init__(
         self,
@@ -317,9 +307,11 @@ class ESPHomeDashboardUpdateEntity(
 
         # Enable install feature if device has an address for OTA
         if self._address:
-            self._attr_supported_features = UpdateEntityFeature.INSTALL
+            self._attr_supported_features = (
+                UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+            )
         else:
-            self._attr_supported_features = UpdateEntityFeature(0)
+            self._attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
 
     @property
     def installed_version(self) -> str | None:
@@ -343,6 +335,29 @@ class ESPHomeDashboardUpdateEntity(
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._device_name in self.coordinator.data
+
+    async def async_release_notes(self) -> str | None:
+        """Return release notes for the latest ESPHome version."""
+        installed = self.installed_version
+        latest = self.latest_version
+        if not latest:
+            return None
+
+        notes = f"## ESPHome {latest}\n\n"
+        if installed and installed != latest:
+            notes += f"Updating from **{installed}** to **{latest}**.\n\n"
+
+        # Link to the version-specific changelog page
+        # ESPHome uses major.minor.0 for changelog URLs
+        parts = latest.split(".")
+        if len(parts) >= 2:
+            changelog_version = f"{parts[0]}.{parts[1]}.0"
+            notes += (
+                f"See the full changelog at "
+                f"{ESPHOME_CHANGELOG_URL}{changelog_version}.html"
+            )
+
+        return notes
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

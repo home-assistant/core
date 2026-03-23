@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import aiohttp
@@ -13,9 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_SCAN_INTERVAL
 
-SCAN_INTERVAL = timedelta(minutes=5)
+_LOGGER = logging.getLogger(__name__)
 
 
 class ESPHomeDashboardCoordinator(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
@@ -32,7 +31,7 @@ class ESPHomeDashboardCoordinator(DataUpdateCoordinator[dict[str, ConfiguredDevi
             hass,
             _LOGGER,
             name="ESPHome Dashboard",
-            update_interval=SCAN_INTERVAL,
+            update_interval=DEFAULT_SCAN_INTERVAL,
             config_entry=config_entry,
         )
         self.api = api

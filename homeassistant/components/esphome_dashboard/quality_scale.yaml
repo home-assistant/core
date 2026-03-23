@@ -4,7 +4,9 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: done
+    comment: 15-minute interval; ESPHome updates only available on dashboard updates.
   brands: done
   common-modules: done
   config-flow-test-coverage: done

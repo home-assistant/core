@@ -4,11 +4,11 @@ from datetime import timedelta
 
 DOMAIN = "esphome_dashboard"
 
-# Configuration
-CONF_URL = "url"
-
 # Defaults
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 
-# Platforms
-PLATFORMS = ["update"]
+# ESPHome native API default port (same as esphome.const.DEFAULT_PORT)
+DEFAULT_PORT = 6053
+
+# ESPHome changelog base URL
+ESPHOME_CHANGELOG_URL = "https://esphome.io/changelog/"

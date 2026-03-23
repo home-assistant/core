@@ -10,7 +10,7 @@ from homeassistant.components.esphome_dashboard.const import DOMAIN
 from homeassistant.components.esphome_dashboard.update import (
     ESPHomeDashboardUpdateEntity,
 )
-from homeassistant.components.update import SERVICE_INSTALL
+from homeassistant.components.update import SERVICE_INSTALL, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_URL, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -349,8 +349,11 @@ async def test_update_entity_no_address_no_install_support(
     # Entity should exist but install feature should not be enabled (no address)
     state = hass.states.get("update.test_device_firmware")
     assert state is not None
-    # No install feature when there's no address
-    assert state.attributes.get("supported_features", 0) == 0
+    # No install feature when there's no address, but release notes are available
+    assert (
+        state.attributes.get("supported_features", 0)
+        == UpdateEntityFeature.RELEASE_NOTES
+    )
 
 
 async def test_update_entity_install_address_cleared(
@@ -1314,3 +1317,33 @@ async def test_fetch_device_version_no_address(
 
         # APIClient should NOT have been called since address is None
         mock_api_client_class.assert_not_called()
+
+
+async def test_release_notes(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test release notes are generated for update entities."""
+    entity: ESPHomeDashboardUpdateEntity = hass.data["update"].get_entity(
+        "update.test_device_firmware"
+    )
+    assert entity is not None
+
+    # Entity has an update available (2023.12.0 -> 2024.1.0)
+    notes = await entity.async_release_notes()
+    assert notes is not None
+    assert "ESPHome 2024.1.0" in notes
+    assert "2023.12.0" in notes
+    assert "2024.1.0" in notes
+    assert "https://esphome.io/changelog/2024.1.0.html" in notes
+
+    # Entity with no update (same versions)
+    entity2: ESPHomeDashboardUpdateEntity = hass.data["update"].get_entity(
+        "update.test_device_2_firmware"
+    )
+    assert entity2 is not None
+    notes2 = await entity2.async_release_notes()
+    assert notes2 is not None
+    assert "ESPHome 2023.11.0" in notes2
+    # When versions match, no "Updating from" line
+    assert "Updating from" not in notes2
