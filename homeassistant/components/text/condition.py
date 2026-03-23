@@ -1,5 +1,7 @@
 """Provides conditions for texts."""
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
@@ -45,7 +47,8 @@ class TextIsEqualToCondition(EntityConditionBase):
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
         super().__init__(hass, config)
-        assert config.options
+        if TYPE_CHECKING:
+            assert config.options
         self._value: str = config.options[CONF_VALUE]
 
     def is_valid_state(self, entity_state: State) -> bool:
