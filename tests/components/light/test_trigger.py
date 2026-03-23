@@ -20,6 +20,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_ignores_limit_entities_with_wrong_unit,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -422,4 +423,53 @@ async def test_light_state_attribute_trigger_behavior_last(
         trigger=trigger,
         trigger_options=trigger_options,
         states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "limit_entities"),
+    [
+        (
+            "light.brightness_changed",
+            {
+                CONF_ABOVE: "sensor.brightness_above",
+                CONF_BELOW: "sensor.brightness_below",
+            },
+            ["sensor.brightness_above", "sensor.brightness_below"],
+        ),
+        (
+            "light.brightness_crossed_threshold",
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: "sensor.brightness_lower",
+                CONF_UPPER_LIMIT: "sensor.brightness_upper",
+            },
+            ["sensor.brightness_lower", "sensor.brightness_upper"],
+        ),
+    ],
+)
+async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger: str,
+    trigger_options: dict[str, Any],
+    limit_entities: list[str],
+) -> None:
+    """Test numerical triggers do not fire if limit entities have the wrong unit."""
+    await assert_trigger_ignores_limit_entities_with_wrong_unit(
+        hass,
+        service_calls=service_calls,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        entity_id="light.test_light",
+        entity_state=STATE_ON,
+        reset_attributes={ATTR_BRIGHTNESS: 0},
+        trigger_attributes={ATTR_BRIGHTNESS: 128},
+        limit_entities=[
+            (limit_entities[0], "10"),
+            (limit_entities[1], "90"),
+        ],
+        correct_unit="%",
+        wrong_unit="lx",
     )

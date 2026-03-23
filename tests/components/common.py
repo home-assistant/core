@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_CONDITION,
@@ -1160,3 +1161,78 @@ async def assert_trigger_behavior_last(
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
+
+
+async def assert_trigger_ignores_limit_entities_with_wrong_unit(
+    hass: HomeAssistant,
+    *,
+    service_calls: list[ServiceCall],
+    trigger: str,
+    trigger_options: dict[str, Any],
+    entity_id: str,
+    entity_state: str,
+    reset_attributes: dict[str, Any],
+    trigger_attributes: dict[str, Any],
+    limit_entities: list[tuple[str, str]],
+    correct_unit: str,
+    wrong_unit: str,
+) -> None:
+    """Test that a trigger does not fire when limit entities have the wrong unit.
+
+    Verifies that ALL limit entities must have the correct unit_of_measurement
+    for the trigger to fire. Limit entities are fixed one at a time; the trigger
+    should only fire once all of them have the correct unit.
+
+    Args:
+        trigger: The trigger key (e.g. "light.brightness_crossed_threshold").
+        trigger_options: Trigger options dict (must already contain the limit
+            entity IDs as values).
+        entity_id: The entity being observed by the trigger.
+        entity_state: The state string for the observed entity (e.g. STATE_ON).
+        reset_attributes: Attributes to set on the entity before re-triggering.
+        trigger_attributes: Attributes that should cause the trigger to fire.
+        limit_entities: List of (entity_id, value) tuples for the limit entities.
+        correct_unit: The unit that the trigger expects (e.g. "%").
+        wrong_unit: A unit that the trigger should reject (e.g. "lx").
+
+    """
+    # Set up entity in triggering state
+    hass.states.async_set(entity_id, entity_state, trigger_attributes)
+    # Set up all limit entities with the wrong unit
+    for limit_entity_id, limit_value in limit_entities:
+        hass.states.async_set(
+            limit_entity_id,
+            limit_value,
+            {ATTR_UNIT_OF_MEASUREMENT: wrong_unit},
+        )
+    await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]})
+
+    # Cycle entity state - should NOT fire (all limit entities have wrong unit)
+    hass.states.async_set(entity_id, entity_state, reset_attributes)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, entity_state, trigger_attributes)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Fix limit entities one at a time; trigger should not fire until all are fixed
+    for i, (limit_entity_id, limit_value) in enumerate(limit_entities):
+        hass.states.async_set(
+            limit_entity_id,
+            limit_value,
+            {ATTR_UNIT_OF_MEASUREMENT: correct_unit},
+        )
+        await hass.async_block_till_done()
+
+        hass.states.async_set(entity_id, entity_state, reset_attributes)
+        await hass.async_block_till_done()
+        hass.states.async_set(entity_id, entity_state, trigger_attributes)
+        await hass.async_block_till_done()
+
+        if i < len(limit_entities) - 1:
+            # Not all limits fixed yet - should not fire
+            assert len(service_calls) == 0
+        else:
+            # All limits fixed - should fire
+            assert len(service_calls) == 1

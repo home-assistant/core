@@ -30,10 +30,10 @@ BRIGHTNESS_DOMAIN_SPECS = {
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "brightness_changed": make_entity_numerical_state_changed_trigger(
-        BRIGHTNESS_DOMAIN_SPECS
+        BRIGHTNESS_DOMAIN_SPECS, valid_unit="%"
     ),
     "brightness_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        BRIGHTNESS_DOMAIN_SPECS
+        BRIGHTNESS_DOMAIN_SPECS, valid_unit="%"
     ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
     "turned_on": make_entity_target_state_trigger(DOMAIN, STATE_ON),
