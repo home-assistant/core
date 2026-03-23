@@ -121,6 +121,9 @@
           "suspended": "Suspended"
         }
       },
+      "container_uptime": {
+        "name": "Uptime"
+      },
       "node_cpu": {
         "name": "CPU usage"
       },
@@ -145,6 +148,9 @@
           "offline": "Offline",
           "online": "Online"
         }
+      },
+      "node_uptime": {
+        "name": "Uptime"
       },
       "vm_cpu": {
         "name": "CPU usage"
@@ -171,6 +177,9 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
+      },
+      "vm_uptime": {
+        "name": "Uptime"
       }
     }
   },
