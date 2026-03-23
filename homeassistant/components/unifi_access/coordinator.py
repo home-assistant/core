@@ -233,36 +233,42 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         elif ws_state.lock == "unlocked":
             updates["door_lock_relay_status"] = "unlock"
 
-        if door_id in door_lock_rules:
-            if "remain_lock" in ws_state.model_fields_set:
-                updated_lock_rule = (
-                    _ws_rule_status_to_lock_rule_status(ws_state.remain_lock)
-                    if ws_state.remain_lock is not None
-                    else DoorLockRuleStatus()
-                )
-            elif "remain_unlock" in ws_state.model_fields_set:
-                updated_lock_rule = (
-                    _ws_rule_status_to_lock_rule_status(ws_state.remain_unlock)
-                    if ws_state.remain_unlock is not None
-                    else DoorLockRuleStatus()
-                )
+        lock_rule_updated = False
+        if "remain_lock" in ws_state.model_fields_set:
+            lock_rule_updated = True
+            updated_lock_rule = (
+                _ws_rule_status_to_lock_rule_status(ws_state.remain_lock)
+                if ws_state.remain_lock is not None
+                else DoorLockRuleStatus()
+            )
+        elif "remain_unlock" in ws_state.model_fields_set:
+            lock_rule_updated = True
+            updated_lock_rule = (
+                _ws_rule_status_to_lock_rule_status(ws_state.remain_unlock)
+                if ws_state.remain_unlock is not None
+                else DoorLockRuleStatus()
+            )
 
-        if not updates and updated_lock_rule == current_lock_rule:
+        if not updates and (
+            not lock_rule_updated or updated_lock_rule == current_lock_rule
+        ):
             return
 
         updated_door = current_door.with_updates(**updates) if updates else current_door
-        if updated_lock_rule != current_lock_rule:
+        supports_lock_rules = self.data.supports_lock_rules
+        if lock_rule_updated and updated_lock_rule != current_lock_rule:
             door_lock_rules = {
                 **door_lock_rules,
                 door_id: updated_lock_rule or DoorLockRuleStatus(),
             }
+            supports_lock_rules = True
 
         self.async_set_updated_data(
             UnifiAccessData(
                 doors={**self.data.doors, door_id: updated_door},
                 emergency=self.data.emergency,
                 door_lock_rules=door_lock_rules,
-                supports_lock_rules=self.data.supports_lock_rules,
+                supports_lock_rules=supports_lock_rules,
                 lock_rule_support_complete=self.data.lock_rule_support_complete,
             )
         )
@@ -298,16 +304,10 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
-        door_entry = insights.data.metadata.door
-        if isinstance(door_entry, list):
-            if not door_entry:
-                return
-            door = door_entry[0]
-        else:
-            door = door_entry
-        if not door:
-            return
-        if not door.id:
+        door_entries = insights.data.metadata.door
+        if not isinstance(door_entries, list):
+            door_entries = [door_entries]
+        if not door_entries:
             return
         event_type = (
             "access_granted" if insights.data.result == "ACCESS" else "access_denied"
@@ -319,7 +319,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["authentication"] = insights.data.metadata.authentication.display_name
         if insights.data.result:
             attrs["result"] = insights.data.result
-        self._dispatch_door_event(door.id, "access", event_type, attrs)
+        for door in door_entries:
+            if door.id:
+                self._dispatch_door_event(door.id, "access", event_type, attrs)
 
     def get_lock_rule_status(self, door_id: str) -> DoorLockRuleStatus | None:
         """Return the current lock rule status for a door."""

@@ -8,7 +8,7 @@ from unifi_access_api import Door, DoorLockRuleType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
@@ -24,19 +24,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Access sensor entities."""
     coordinator = entry.runtime_data
-    if coordinator.data.supports_lock_rules:
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_lock_rule_sensors() -> None:
+        new_door_ids = sorted(set(coordinator.data.door_lock_rules) - added_doors)
+        if not new_door_ids:
+            return
+
         async_add_entities(
-            sensor_class(coordinator, door)
-            for door_id, door in coordinator.data.doors.items()
-            if (
-                not coordinator.data.lock_rule_support_complete
-                or door_id in coordinator.data.door_lock_rules
-            )
+            sensor_class(coordinator, coordinator.data.doors[door_id])
+            for door_id in new_door_ids
+            if door_id in coordinator.data.doors
             for sensor_class in (
                 UnifiAccessDoorLockRuleSensor,
                 UnifiAccessDoorLockRuleEndTimeSensor,
             )
         )
+        added_doors.update(new_door_ids)
+
+    _async_add_lock_rule_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_lock_rule_sensors))
 
 
 class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):

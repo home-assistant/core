@@ -38,6 +38,13 @@ def _get_ws_handlers(
     return mock_client.start_websocket.call_args[0][0]
 
 
+@pytest.fixture(autouse=True)
+def only_event_platform() -> Callable[[], None]:
+    """Limit setup to the event platform for event tests."""
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.EVENT]):
+        yield
+
+
 async def test_event_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -153,11 +160,13 @@ async def test_access_event(
         data=InsightsAddData.model_construct(
             event_type="access.door.unlock",
             result=result,
-            metadata=InsightsMetadata.model_construct(
-                door=InsightsMetadataEntry(
-                    id=door_id,
-                    display_name="Door",
-                ),
+            metadata=InsightsMetadata(
+                door=[
+                    InsightsMetadataEntry(
+                        id=door_id,
+                        display_name="Door",
+                    )
+                ],
                 actor=InsightsMetadataEntry(
                     display_name=actor,
                 ),
@@ -226,8 +235,8 @@ async def test_insights_no_door_id_ignored(
         data=InsightsAddData.model_construct(
             event_type="access.door.unlock",
             result="ACCESS",
-            metadata=InsightsMetadata.model_construct(
-                door=InsightsMetadataEntry(id="", display_name=""),
+            metadata=InsightsMetadata(
+                door=[InsightsMetadataEntry(id="", display_name="")],
             ),
         ),
     )
@@ -266,11 +275,13 @@ async def test_access_event_result_mapping(
         data=InsightsAddData.model_construct(
             event_type="access.door.unlock",
             result=result,
-            metadata=InsightsMetadata.model_construct(
-                door=InsightsMetadataEntry(
-                    id="door-001",
-                    display_name="Front Door",
-                ),
+            metadata=InsightsMetadata(
+                door=[
+                    InsightsMetadataEntry(
+                        id="door-001",
+                        display_name="Front Door",
+                    )
+                ],
             ),
         ),
     )
@@ -285,6 +296,72 @@ async def test_access_event_result_mapping(
     assert "authentication" not in state.attributes
     assert state.attributes.get("result") == expected_result_attr
     assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+async def test_insights_empty_door_list_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test insights event with empty door list is ignored."""
+    handlers = _get_ws_handlers(mock_client)
+
+    insights_msg = InsightsAdd(
+        event="access.logs.insights.add",
+        data=InsightsAddData(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            metadata=InsightsMetadata(door=[]),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](insights_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_insights_multiple_doors(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test insights event with multiple doors dispatches events for each."""
+    handlers = _get_ws_handlers(mock_client)
+
+    insights_msg = InsightsAdd(
+        event="access.logs.insights.add",
+        data=InsightsAddData(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            metadata=InsightsMetadata(
+                door=[
+                    InsightsMetadataEntry(id="door-001", display_name="Front Door"),
+                    InsightsMetadataEntry(id="door-002", display_name="Back Door"),
+                ],
+                actor=InsightsMetadataEntry(display_name="John Doe"),
+                authentication=InsightsMetadataEntry(display_name="NFC"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](insights_msg)
+    await hass.async_block_till_done()
+
+    front_state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert front_state is not None
+    assert front_state.attributes["event_type"] == "access_granted"
+    assert front_state.attributes["actor"] == "John Doe"
+    assert front_state.state == "2025-01-01T00:00:00.000+00:00"
+
+    back_state = hass.states.get(BACK_DOOR_ACCESS_ENTITY)
+    assert back_state is not None
+    assert back_state.attributes["event_type"] == "access_granted"
+    assert back_state.attributes["actor"] == "John Doe"
+    assert back_state.state == "2025-01-01T00:00:00.000+00:00"
 
 
 async def test_unload_entry_removes_listeners(
