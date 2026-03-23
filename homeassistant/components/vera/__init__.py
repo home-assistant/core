@@ -8,9 +8,7 @@ import logging
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EXCLUDE,
@@ -21,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .common import (
     ControllerData,
@@ -35,41 +32,7 @@ from .const import CONF_CONTROLLER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VERA_ID_LIST_SCHEMA = vol.Schema([int])
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CONTROLLER): cv.url,
-                    vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-                    vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
-    """Set up for Vera controllers."""
-    hass.data[DOMAIN] = {}
-
-    if not (config := base_config.get(DOMAIN)):
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

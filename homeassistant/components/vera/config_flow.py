@@ -12,7 +12,6 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
@@ -21,7 +20,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
@@ -129,31 +127,6 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
                 "sample_ip": "http://192.168.1.161:3480",
                 "documentation_url": "https://www.home-assistant.io/integrations/vera/",
             },
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle a flow initialized by import."""
-
-        # If there are entities with the legacy unique_id, then this imported config
-        # should also use the legacy unique_id for entity creation.
-        entity_registry = er.async_get(self.hass)
-        use_legacy_unique_id = (
-            len(
-                [
-                    entry
-                    for entry in entity_registry.entities.values()
-                    if entry.platform == DOMAIN and entry.unique_id.isdigit()
-                ]
-            )
-            > 0
-        )
-
-        return await self.async_step_finish(
-            {
-                **import_data,
-                CONF_SOURCE: SOURCE_IMPORT,
-                CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id,
-            }
         )
 
     async def async_step_finish(self, config: dict[str, Any]) -> ConfigFlowResult:
