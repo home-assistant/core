@@ -1068,16 +1068,9 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Update intent slots to include any transformations done by the schemas
         intent_obj.slots = slots
 
-        response = await self.async_handle_states(
+        return await self.async_handle_states(
             intent_obj, match_result, match_constraints, match_preferences
         )
-
-        # Make the matched states available in the response
-        response.async_set_states(
-            matched_states=match_result.states, unmatched_states=[]
-        )
-
-        return response
 
     async def async_handle_states(
         self,
