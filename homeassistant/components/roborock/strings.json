@@ -596,6 +596,7 @@
           "rinsing": "Rinsing",
           "soaking": "Soaking",
           "spinning": "Spinning",
+          "standby": "[%key:common::state::standby%]",
           "under_delay_start": "Delayed start",
           "waiting_for_aftercare": "Waiting for aftercare",
           "washing": "Washing",
