@@ -21,7 +21,7 @@ EXCLUDED_SKILLS = {"github-pr-reviewer"}
 COPILOT_SPECIFIC_INSTRUCTIONS = """
 # Copilot code review instructions
 
-- Start review comments with a short one sentence summary of the solution.
+- Start review comments with a short, one-sentence summary of the suggested fix.
 - Do not add comments about code style, formatting or linting issues.
 """
 
