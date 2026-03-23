@@ -7,7 +7,11 @@ from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from homeassistant.components.bsblan.const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -151,6 +155,7 @@ async def test_full_user_flow_implementation(
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )
@@ -326,6 +331,7 @@ async def test_zeroconf_discovery(
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )
@@ -393,6 +399,7 @@ async def test_zeroconf_discovery_no_mac_requires_auth(
             CONF_PASSKEY: None,
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
+            CONF_HEATING_CIRCUITS: [1],
         },
         "00:80:41:19:69:90",
     )
@@ -425,6 +432,7 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
             CONF_PASSKEY: None,
             CONF_USERNAME: None,
             CONF_PASSWORD: None,
+            CONF_HEATING_CIRCUITS: [1],
         },
         "00:80:41:19:69:90",
     )
@@ -569,6 +577,7 @@ async def test_zeroconf_discovery_connection_error_recovery(
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )
@@ -624,6 +633,7 @@ async def test_connection_error_recovery(
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )

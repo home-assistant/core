@@ -410,7 +410,6 @@ async def test_dual_circuit_climate_entities(
     mock_config_entry_dual_circuit: MockConfigEntry,
 ) -> None:
     """Test that dual-circuit config creates two climate entities with correct IDs."""
-    mock_bsblan.get_available_circuits.return_value = [1, 2]
     await setup_with_selected_platforms(
         hass, mock_config_entry_dual_circuit, [Platform.CLIMATE]
     )

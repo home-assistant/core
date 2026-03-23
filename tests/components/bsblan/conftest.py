@@ -15,7 +15,11 @@ from bsblan import (
 )
 import pytest
 
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from homeassistant.components.bsblan.const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_fixture
@@ -33,6 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         unique_id="00:80:41:19:69:90",
     )
@@ -50,6 +55,7 @@ def mock_config_entry_dual_circuit() -> MockConfigEntry:
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1, 2],
         },
         unique_id="00:80:41:19:69:90",
     )
@@ -99,7 +105,7 @@ def mock_bsblan() -> Generator[MagicMock]:
         )
         # mock get_temperature_unit property
         bsblan.get_temperature_unit = "°C"
-        # Default: single circuit
+        # Default: single circuit (for config flow tests)
         bsblan.get_available_circuits.return_value = [1]
 
         yield bsblan
