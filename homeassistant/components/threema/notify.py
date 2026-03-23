@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
@@ -14,8 +12,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import ThreemaConfigEntry
 from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
 from .const import CONF_GATEWAY_ID, CONF_RECIPIENT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -64,9 +60,6 @@ class ThreemaNotifyEntity(NotifyEntity):
         try:
             await client.send_text_message(self._recipient_id, text)
         except ThreemaAuthError as err:
-            _LOGGER.warning(
-                "Authentication failed sending message; check your Gateway credentials"
-            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_error",
