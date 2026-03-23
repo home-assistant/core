@@ -76,6 +76,7 @@ from .automation import (
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
+    number_or_entity,
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
@@ -565,33 +566,12 @@ def _validate_unit_set_if_range_numerical[_T: dict[str, Any]](
     return _validate_unit_set_if_range_numerical_impl
 
 
-_NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
-    {
-        vol.Required("active_choice"): vol.In(["number", "entity"]),
-        vol.Optional("entity"): cv.entity_id,
-        vol.Optional("number"): vol.Coerce(float),
-    }
-)
-
-
-def _validate_number_or_entity(value: dict | float | str) -> float | str:
-    """Validate number or entity selector result."""
-    if isinstance(value, dict):
-        _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["active_choice"]]  # type: ignore[no-any-return]
-    return value
-
-
-_number_or_entity = vol.All(
-    _validate_number_or_entity, vol.Any(vol.Coerce(float), cv.entity_id)
-)
-
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): vol.All(
             {
-                vol.Optional(CONF_ABOVE): _number_or_entity,
-                vol.Optional(CONF_BELOW): _number_or_entity,
+                vol.Optional(CONF_ABOVE): number_or_entity,
+                vol.Optional(CONF_BELOW): number_or_entity,
             },
             _validate_range(CONF_ABOVE, CONF_BELOW),
         )
@@ -771,8 +751,8 @@ def make_numerical_state_changed_with_unit_schema(
         {
             vol.Required(CONF_OPTIONS, default={}): vol.All(
                 {
-                    vol.Optional(CONF_ABOVE): _number_or_entity,
-                    vol.Optional(CONF_BELOW): _number_or_entity,
+                    vol.Optional(CONF_ABOVE): number_or_entity,
+                    vol.Optional(CONF_BELOW): number_or_entity,
                     vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
                 },
                 _validate_range(CONF_ABOVE, CONF_BELOW),
@@ -835,8 +815,8 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                     [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
                 ),
-                vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
-                vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
+                vol.Optional(CONF_LOWER_LIMIT): number_or_entity,
+                vol.Optional(CONF_UPPER_LIMIT): number_or_entity,
                 vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
             },
             _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
@@ -920,8 +900,8 @@ def make_numerical_state_crossed_threshold_with_unit_schema(
                     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                         [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
                     ),
-                    vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
-                    vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
+                    vol.Optional(CONF_LOWER_LIMIT): number_or_entity,
+                    vol.Optional(CONF_UPPER_LIMIT): number_or_entity,
                     vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
                     vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
                 },

@@ -1,0 +1,81 @@
+{
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted batteries.",
+    "condition_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_charging": {
+      "description": "Tests if one or more batteries are charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is charging"
+    },
+    "is_low": {
+      "description": "Tests if one or more batteries are low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is low"
+    },
+    "is_not_charging": {
+      "description": "Tests if one or more batteries are not charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is not charging"
+    },
+    "is_not_low": {
+      "description": "Tests if one or more batteries are not low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is not low"
+    },
+    "percentage": {
+      "description": "Tests the percentage of one or more batteries.",
+      "fields": {
+        "above": {
+          "description": "Require the percentage to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the percentage to be below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Battery percentage"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    }
+  },
+  "title": "Battery"
+}

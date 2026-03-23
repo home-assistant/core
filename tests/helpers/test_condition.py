@@ -1,5 +1,6 @@
 """Test the condition helper."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 import io
 from typing import Any
@@ -19,9 +20,15 @@ from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ABOVE,
+    CONF_BELOW,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -33,14 +40,21 @@ from homeassistant.helpers import (
     entity_registry as er,
     trace,
 )
-from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.automation import (
+    DomainSpec,
+    move_top_level_schema_fields_to_options,
+)
 from homeassistant.helpers.condition import (
+    ATTR_BEHAVIOR,
+    BEHAVIOR_ALL,
+    BEHAVIOR_ANY,
     Condition,
     ConditionChecker,
     async_validate_condition_config,
+    make_entity_numerical_condition,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -2993,3 +3007,248 @@ async def test_subscribe_conditions_no_conditions(
     assert await async_setup_component(hass, "light", {})
     await hass.async_block_till_done()
     assert condition_events == []
+
+
+_DEFAULT_DOMAIN_SPECS = {"test": DomainSpec()}
+
+
+async def _setup_numerical_condition(
+    hass: HomeAssistant,
+    condition_options: dict[str, Any],
+    entity_ids: str | list[str],
+    domain_specs: Mapping[str, DomainSpec] | None = None,
+    valid_unit: str | None | UndefinedType = UNDEFINED,
+) -> condition.ConditionCheckerType:
+    """Set up a numerical condition via a mock platform and return the test."""
+    condition_cls = make_entity_numerical_condition(
+        domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: condition_options,
+    }
+
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+    return test
+
+
+@pytest.mark.parametrize(
+    ("condition_options", "state_value", "expected"),
+    [
+        # above only
+        ({CONF_ABOVE: 50}, "75", True),
+        ({CONF_ABOVE: 50}, "50", False),
+        ({CONF_ABOVE: 50}, "25", False),
+        # below only
+        ({CONF_BELOW: 50}, "25", True),
+        ({CONF_BELOW: 50}, "50", False),
+        ({CONF_BELOW: 50}, "75", False),
+        # above and below (range)
+        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "50", True),
+        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "20", False),
+        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "80", False),
+        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "10", False),
+        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "90", False),
+    ],
+)
+async def test_numerical_condition_thresholds(
+    hass: HomeAssistant,
+    condition_options: dict[str, Any],
+    state_value: str,
+    expected: bool,
+) -> None:
+    """Test numerical condition above/below thresholds."""
+    test = await _setup_numerical_condition(
+        hass,
+        condition_options=condition_options,
+        entity_ids="test.entity_1",
+    )
+
+    hass.states.async_set("test.entity_1", state_value)
+    assert test(hass) is expected
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    ["cat", STATE_UNAVAILABLE, STATE_UNKNOWN],
+)
+async def test_numerical_condition_invalid_state(
+    hass: HomeAssistant, state_value: str
+) -> None:
+    """Test numerical condition with non-numeric or unavailable state values."""
+    test = await _setup_numerical_condition(
+        hass,
+        condition_options={CONF_ABOVE: 50},
+        entity_ids="test.entity_1",
+    )
+
+    hass.states.async_set("test.entity_1", state_value)
+    assert test(hass) is False
+
+
+async def test_numerical_condition_attribute_value_source(
+    hass: HomeAssistant,
+) -> None:
+    """Test numerical condition reads from attribute when value_source is set."""
+    test = await _setup_numerical_condition(
+        hass,
+        domain_specs={"test": DomainSpec(value_source="brightness")},
+        condition_options={CONF_ABOVE: 100},
+        entity_ids="test.entity_1",
+    )
+
+    # Attribute above threshold -> True
+    hass.states.async_set("test.entity_1", "on", {"brightness": 200})
+    assert test(hass) is True
+
+    # Attribute below threshold -> False
+    hass.states.async_set("test.entity_1", "on", {"brightness": 50})
+    assert test(hass) is False
+
+    # Missing attribute -> False
+    hass.states.async_set("test.entity_1", "on", {})
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    ("valid_unit", "entity_unit", "expected"),
+    [
+        # valid_unit="%" — only matching unit passes
+        ("%", "%", True),
+        ("%", "°C", False),
+        ("%", None, False),
+        # valid_unit=None — only entities without unit pass
+        (None, None, True),
+        (None, "%", False),
+        # valid_unit=UNDEFINED (default) — any unit passes
+        (UNDEFINED, None, True),
+        (UNDEFINED, "%", True),
+        (UNDEFINED, "°C", True),
+    ],
+)
+async def test_numerical_condition_valid_unit(
+    hass: HomeAssistant,
+    valid_unit: str | None | UndefinedType,
+    entity_unit: str | None,
+    expected: bool,
+) -> None:
+    """Test numerical condition valid_unit filtering."""
+    test = await _setup_numerical_condition(
+        hass,
+        condition_options={CONF_ABOVE: 50},
+        entity_ids="test.entity_1",
+        valid_unit=valid_unit,
+    )
+
+    attrs = {ATTR_UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
+    hass.states.async_set("test.entity_1", "75", attrs)
+    assert test(hass) is expected
+
+
+@pytest.mark.parametrize(
+    ("behavior", "one_match_expected"),
+    [
+        (BEHAVIOR_ANY, True),
+        (BEHAVIOR_ALL, False),
+    ],
+)
+async def test_numerical_condition_behavior(
+    hass: HomeAssistant,
+    behavior: str,
+    one_match_expected: bool,
+) -> None:
+    """Test numerical condition with behavior any/all."""
+    test = await _setup_numerical_condition(
+        hass,
+        condition_options={CONF_ABOVE: 50, ATTR_BEHAVIOR: behavior},
+        entity_ids=["test.entity_1", "test.entity_2"],
+    )
+
+    # Both above -> True for any and all
+    hass.states.async_set("test.entity_1", "75")
+    hass.states.async_set("test.entity_2", "80")
+    assert test(hass) is True
+
+    # Only one above -> depends on behavior
+    hass.states.async_set("test.entity_2", "25")
+    assert test(hass) is one_match_expected
+
+    # Neither above -> False for any and all
+    hass.states.async_set("test.entity_1", "25")
+    assert test(hass) is False
+
+
+async def test_numerical_condition_schema_requires_above_or_below(
+    hass: HomeAssistant,
+) -> None:
+    """Test numerical condition schema requires at least above or below."""
+    condition_cls = make_entity_numerical_condition({"test": DomainSpec()})
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_OPTIONS: {},
+    }
+    with pytest.raises(vol.Invalid):
+        await async_validate_condition_config(hass, config)
+
+
+@pytest.mark.parametrize(
+    ("above", "below"),
+    [
+        (10.0, 10.0),
+        (20.0, 10.0),
+    ],
+)
+async def test_numerical_condition_schema_above_must_be_less_than_below(
+    hass: HomeAssistant,
+    above: float,
+    below: float,
+) -> None:
+    """Test numerical condition schema rejects above >= below."""
+    condition_cls = make_entity_numerical_condition({"test": DomainSpec()})
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_OPTIONS: {CONF_ABOVE: above, CONF_BELOW: below},
+    }
+    with pytest.raises(vol.Invalid, match="can never be above"):
+        await async_validate_condition_config(hass, config)

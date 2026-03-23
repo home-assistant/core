@@ -214,6 +214,8 @@ build.json @home-assistant/supervisor
 /tests/components/balboa/ @garbled1 @natekspencer
 /homeassistant/components/bang_olufsen/ @mj23000
 /tests/components/bang_olufsen/ @mj23000
+/homeassistant/components/battery/ @home-assistant/core
+/tests/components/battery/ @home-assistant/core
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
 /homeassistant/components/beewi_smartclim/ @alemuro
