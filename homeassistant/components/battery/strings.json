@@ -1,6 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted battery devices to trigger on.",
+    "trigger_behavior_description": "The behavior of the targeted batteries to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
   "selector": {
@@ -29,7 +29,7 @@
   "title": "Battery",
   "triggers": {
     "low": {
-      "description": "Triggers when one or more batteries become low.",
+      "description": "Triggers after one or more batteries become low.",
       "fields": {
         "behavior": {
           "description": "[%key:component::battery::common::trigger_behavior_description%]",
@@ -39,7 +39,7 @@
       "name": "Battery low"
     },
     "not_low": {
-      "description": "Triggers when one or more batteries are no longer low.",
+      "description": "Triggers after one or more batteries are no longer low.",
       "fields": {
         "behavior": {
           "description": "[%key:component::battery::common::trigger_behavior_description%]",
@@ -85,7 +85,7 @@
       "name": "Battery percentage crossed threshold"
     },
     "started_charging": {
-      "description": "Triggers when one or more batteries start charging.",
+      "description": "Triggers after one or more batteries start charging.",
       "fields": {
         "behavior": {
           "description": "[%key:component::battery::common::trigger_behavior_description%]",
@@ -95,7 +95,7 @@
       "name": "Battery started charging"
     },
     "stopped_charging": {
-      "description": "Triggers when one or more batteries stop charging.",
+      "description": "Triggers after one or more batteries stop charging.",
       "fields": {
         "behavior": {
           "description": "[%key:component::battery::common::trigger_behavior_description%]",
