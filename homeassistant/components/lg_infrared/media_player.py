@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from infrared_protocols.codes.lg.tv import LGTVCode, make_command as make_lg_tv_command
 
 from homeassistant.components.infrared import async_send_command
@@ -19,6 +21,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LGDeviceType
+
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -70,9 +76,16 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
         def _async_ir_state_changed(event: Event[EventStateChangedData]) -> None:
             """Handle infrared entity state changes."""
             new_state = event.data["new_state"]
-            self._attr_available = (
+            ir_available = (
                 new_state is not None and new_state.state != STATE_UNAVAILABLE
             )
+            if ir_available != self.available:
+                _LOGGER.info(
+                    "Infrared entity is %s",
+                    "available" if ir_available else "unavailable",
+                )
+
+            self._attr_available = ir_available
             self.async_write_ha_state()
 
         self.async_on_remove(

@@ -8,40 +8,19 @@ rules:
     status: exempt
     comment: |
       This integration does not poll.
-  brands:
-    status: exempt
-    comment: |
-      This is a proof of concept integration, brand assets will be added later.
-  common-modules:
-    status: exempt
-    comment: |
-      This integration is simple and does not share patterns with others.
-  config-flow-test-coverage:
-    status: exempt
-    comment: |
-      This is a proof of concept integration, config flow tests will be added later.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description:
-    status: exempt
-    comment: |
-      This is a proof of concept integration, documentation will be added later.
-  docs-installation-instructions:
-    status: exempt
-    comment: |
-      This is a proof of concept integration, documentation will be added later.
-  docs-removal-instructions:
-    status: exempt
-    comment: |
-      This is a proof of concept integration, documentation will be added later.
-  entity-event-setup:
-    status: exempt
-    comment: |
-      This integration does not subscribe to events.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data:
@@ -52,22 +31,26 @@ rules:
   test-before-setup:
     status: exempt
     comment: |
-      Setup validation is handled by checking emitter existence in remote.py.
+      This integration only proxies commands through an existing infrared
+      entity, so there is no separate connection to validate during setup.
   unique-config-entry: done
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not register custom actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
-  integration-owner: todo
-  log-when-unavailable: todo
-  parallel-updates: todo
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage: todo
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: todo
@@ -79,11 +62,14 @@ rules:
     status: exempt
     comment: |
       This integration is configured manually via config flow.
-  docs-data-update: todo
+  docs-data-update:
+    status: exempt
+    comment: |
+      This integration does not fetch data from devices.
   docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
@@ -102,9 +88,12 @@ rules:
     status: exempt
     comment: |
       The remote entity is the primary entity and should be enabled by default.
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      This integration does not use custom icons.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
@@ -119,9 +108,9 @@ rules:
   async-dependency:
     status: exempt
     comment: |
-      This integration only depends on ir_proxy which is part of Home Assistant.
+      This integration has no external dependencies.
   inject-websession:
     status: exempt
     comment: |
       This integration does not make HTTP requests.
-  strict-typing: todo
+  strict-typing: done
