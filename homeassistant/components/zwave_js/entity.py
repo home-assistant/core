@@ -55,6 +55,7 @@ class ZWaveBaseEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
+    info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo
 
     def __init__(
         self,
