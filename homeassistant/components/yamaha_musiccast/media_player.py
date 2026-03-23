@@ -44,9 +44,6 @@ from .entity import MusicCastDeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def _humanize_sound_mode(raw: str) -> str:
-    return raw.replace("_", " ").title()
-
 
 MUSIC_PLAYER_BASE_SUPPORT = (
     MediaPlayerEntityFeature.SHUFFLE_SET
@@ -207,7 +204,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     def sound_mode(self):
         """Return the current sound mode."""
         sound_program_id = self.coordinator.data.zones[self._zone_id].sound_program
-        return self.coordinator.data.sound_program_names[sound_program_id]
+        return self.coordinator.data.sound_program_names.get(sound_program_id)
 
     @property
     def sound_mode_list(self):
