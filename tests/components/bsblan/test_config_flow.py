@@ -164,6 +164,49 @@ async def test_full_user_flow_implementation(
     assert len(mock_bsblan.device.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [BSBLANError, TimeoutError],
+)
+async def test_circuit_discovery_failure_falls_back_to_default(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+) -> None:
+    """Test that circuit discovery failure falls back to single circuit."""
+    mock_bsblan.initialize.side_effect = side_effect
+
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_create_entry_result(
+        result,
+        "BSB-LAN",
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
+
+
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
     result = await _init_user_flow(hass)

@@ -350,7 +350,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await bsblan.initialize()
             self.circuits = await bsblan.get_available_circuits()
-        except BSBLANError:
+        except BSBLANError, TimeoutError:
             LOGGER.debug(
                 "Circuit discovery not available for %s, defaulting to single circuit",
                 self.host,
