@@ -405,12 +405,14 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        raw = {
-            _humanize_sound_mode(m): m
-            for m in self.coordinator.data.zones[self._zone_id].sound_program_list
-            if m
-        }.get(sound_mode, sound_mode)
-        await self.coordinator.musiccast.select_sound_mode(self._zone_id, raw)
+        sound_programs = self.coordinator.data.sound_program_names.items()
+        sound_program_id = next(
+            (k for k, v in sound_programs if v == sound_mode),
+            None,
+        )
+        await self.coordinator.musiccast.select_sound_mode(
+            self._zone_id, sound_program_id
+        )
 
     @property
     def media_image_url(self):
