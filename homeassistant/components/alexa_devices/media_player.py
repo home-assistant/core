@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Final
 
 from aioamazondevices.structures import (
-    AmazonDevice,
     AmazonMediaControls,
     AmazonMediaState,
     AmazonMusicSource,
@@ -46,10 +44,6 @@ STANDARD_SUPPORTED_FEATURES = (
 @dataclass(frozen=True, kw_only=True)
 class AmazonDevicesMediaPlayerEntityDescription(MediaPlayerEntityDescription):
     """Describes an Alexa Devices media player entity."""
-
-    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online
-    )
 
 
 MEDIA_PLAYERS: Final = (
@@ -110,16 +104,6 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         """Initialize."""
         self._prev_volume: int = 30  # TBD
         super().__init__(coordinator, serial_num, description)
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            self.entity_description.is_available_fn(
-                self.device, self.entity_description.key
-            )
-            and super().available
-        )
 
     @property
     def media_state(self) -> AmazonMediaState | None:
