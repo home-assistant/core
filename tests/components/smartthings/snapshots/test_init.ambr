@@ -103,8 +103,16 @@
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
+        'bluetooth',
+        '68:3a:48:50:1a:77',
+      ),
+      tuple(
         'mac',
         '68:3a:48:50:1a:75',
+      ),
+      tuple(
+        'mac',
+        '68:3a:48:50:1a:76',
       ),
       tuple(
         'zigbee',
@@ -166,6 +174,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[aqara_g350]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '148dcc52-0ddd-496b-b7ac-3721d0da5fb1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'G350',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'a4367b4d2bbfde94',
+    'sw_version': '4.5.20',
     'via_device_id': None,
   })
 # ---
@@ -1200,6 +1239,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_vc_stick_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'A-VSWW-TP1-23-VS9700',
+    'model_id': 'VS28C9784QK/WA',
+    'name': 'Stick vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'A-VSWW-TP1-23-VS9700_51250514',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_wm_dw_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -1259,6 +1329,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'DA_DW_TP1_21_COMMON_30250513',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_wm_mf_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '42e80b4d-24c4-a810-11b3-f90375c56a39',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'AMF-WW-TP1-22-COMMON',
+    'model_id': None,
+    'name': 'Filtro in microfibra',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AMF-WW-TP1-22-COMMON_30230323',
     'via_device_id': None,
   })
 # ---

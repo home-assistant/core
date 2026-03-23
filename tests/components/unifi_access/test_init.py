@@ -22,7 +22,7 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -55,7 +55,7 @@ async def test_setup_entry(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (ApiAuthError(), ConfigEntryState.SETUP_RETRY),
+        (ApiAuthError(), ConfigEntryState.SETUP_ERROR),
         (ApiConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
     ],
 )
@@ -74,16 +74,30 @@ async def test_setup_entry_error(
 
     assert mock_config_entry.state is expected_state
 
+    if expected_state is ConfigEntryState.SETUP_ERROR:
+        assert any(
+            flow["context"]["source"] == SOURCE_REAUTH
+            for flow in hass.config_entries.flow.async_progress()
+        )
+
 
 @pytest.mark.parametrize(
-    ("failing_method", "exception"),
+    ("failing_method", "exception", "expected_state"),
     [
-        ("get_doors", ApiAuthError()),
-        ("get_doors", ApiConnectionError("Connection failed")),
-        ("get_doors", ApiError("API error")),
-        ("get_emergency_status", ApiAuthError()),
-        ("get_emergency_status", ApiConnectionError("Connection failed")),
-        ("get_emergency_status", ApiError("API error")),
+        ("get_doors", ApiAuthError(), ConfigEntryState.SETUP_ERROR),
+        (
+            "get_doors",
+            ApiConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        ("get_doors", ApiError("API error"), ConfigEntryState.SETUP_RETRY),
+        ("get_emergency_status", ApiAuthError(), ConfigEntryState.SETUP_ERROR),
+        (
+            "get_emergency_status",
+            ApiConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        ("get_emergency_status", ApiError("API error"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_coordinator_update_error(
@@ -92,6 +106,7 @@ async def test_coordinator_update_error(
     mock_client: MagicMock,
     failing_method: str,
     exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test coordinator handles update errors from get_doors or get_emergency_status."""
     getattr(mock_client, failing_method).side_effect = exception
@@ -99,7 +114,13 @@ async def test_coordinator_update_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
+
+    if expected_state is ConfigEntryState.SETUP_ERROR:
+        assert any(
+            flow["context"]["source"] == SOURCE_REAUTH
+            for flow in hass.config_entries.flow.async_progress()
+        )
 
 
 async def test_unload_entry(
