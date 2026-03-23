@@ -32,9 +32,9 @@
               filter:
                 - domain: input_number
                   unit_of_measurement: "%"
-                - domain: sensor
-                  unit_of_measurement: "%"
                 - domain: number
+                  unit_of_measurement: "%"
+                - domain: sensor
                   unit_of_measurement: "%"
       translation_key: number_or_entity
 
