@@ -273,6 +273,8 @@ build.json @home-assistant/supervisor
 /tests/components/cambridge_audio/ @noahhusby
 /homeassistant/components/camera/ @home-assistant/core
 /tests/components/camera/ @home-assistant/core
+/homeassistant/components/casper_glow/ @mikeodr
+/tests/components/casper_glow/ @mikeodr
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
 /homeassistant/components/ccm15/ @ocalvo
@@ -947,6 +949,8 @@ build.json @home-assistant/supervisor
 /tests/components/lg_thinq/ @LG-ThinQ-Integration
 /homeassistant/components/libre_hardware_monitor/ @Sab44
 /tests/components/libre_hardware_monitor/ @Sab44
+/homeassistant/components/lichess/ @aryanhasgithub
+/tests/components/lichess/ @aryanhasgithub
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/liebherr/ @mettolen
@@ -1699,6 +1703,8 @@ build.json @home-assistant/supervisor
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/teltonika/ @karlbeecken
 /tests/components/teltonika/ @karlbeecken
+/homeassistant/components/temperature/ @home-assistant/core
+/tests/components/temperature/ @home-assistant/core
 /homeassistant/components/template/ @Petro31 @home-assistant/core
 /tests/components/template/ @Petro31 @home-assistant/core
 /homeassistant/components/tesla_fleet/ @Bre77
