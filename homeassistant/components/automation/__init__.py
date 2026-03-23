@@ -138,6 +138,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "schedule",
     "siren",
     "switch",
+    "text",
     "vacuum",
     "window",
 }

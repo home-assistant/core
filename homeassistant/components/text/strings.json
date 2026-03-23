@@ -1,4 +1,24 @@
 {
+  "common": {
+    "condition_behavior_description": "The behavior of the targeted texts to check.",
+    "condition_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_equal_to": {
+      "description": "Tests if one or more texts are equal to a specified value.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::text::common::condition_behavior_description%]",
+          "name": "[%key:component::text::common::condition_behavior_name%]"
+        },
+        "value": {
+          "description": "The value to compare the text to.",
+          "name": "Value"
+        }
+      },
+      "name": "Text is equal to"
+    }
+  },
   "device_automation": {
     "action_type": {
       "set_value": "Set value for {entity_name}"
@@ -27,6 +47,14 @@
         "pattern": {
           "name": "Pattern"
         }
+      }
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
       }
     }
   },
