@@ -56,11 +56,11 @@ class MealieImageView(HomeAssistantView):
                 if response.status != HTTPStatus.OK:
                     return web.Response(status=HTTPStatus.NOT_FOUND)
                 data = await response.read()
-                content_type = response.headers.get("Content-Type", "image/webp")
+                content_type = response.content_type or "image/webp"
                 headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
                 return web.Response(
                     body=data, content_type=content_type, headers=headers
                 )
-        except ClientError:
+        except ClientError, TimeoutError:
             _LOGGER.exception("Error fetching Mealie image for recipe %s", recipe_id)
             return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)

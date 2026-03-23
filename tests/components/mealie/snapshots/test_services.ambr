@@ -3219,7 +3219,7 @@
       'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
       'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
       'household_id': None,
-      'image': 'SuPW',
+      'image': '/api/mealie_image_proxy/01J0BC4QM2YBRP6H5G933CETT7/fada9582-709b-46aa-b384-d5952123ad93',
       'ingredients': list([
         dict({
           'display': '1 130g dark couverture chocolate (min. 55% cocoa content)',

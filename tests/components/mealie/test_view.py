@@ -1,5 +1,6 @@
 """Tests for the Mealie image proxy view."""
 
+import asyncio
 from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
@@ -113,6 +114,24 @@ async def test_view_returns_unavailable_on_client_error(
 ) -> None:
     """Test that the view returns 503 when a network error occurs."""
     aioclient_mock.get(IMAGE_URL, exc=ClientError)
+
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.get(PROXY_URL)
+
+    assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+async def test_view_returns_unavailable_on_timeout(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the view returns 503 when a timeout occurs."""
+    aioclient_mock.get(IMAGE_URL, exc=asyncio.TimeoutError)
 
     await setup_integration(hass, mock_config_entry)
 

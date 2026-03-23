@@ -37,6 +37,7 @@ from .const import (
     ATTR_START_DATE,
     ATTR_URL,
     DOMAIN,
+    LOGGER as _LOGGER,
     MEALIE_IMAGE_PROXY_PATH,
 )
 from .coordinator import MealieConfigEntry
@@ -118,6 +119,9 @@ def _get_image_base_url(hass: HomeAssistant) -> str:
     try:
         return get_url(hass, allow_internal=False)
     except NoURLAvailableError:
+        _LOGGER.warning(
+            "No external URL available; Mealie image proxy URLs will be relative"
+        )
         return ""
 
 
@@ -252,8 +256,12 @@ async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="connection_error",
         ) from err
+    recipe_dict = asdict(recipe)
+    _inject_recipe_image_url(
+        _get_image_base_url(call.hass), entry.entry_id, recipe_dict
+    )
     if call.return_response:
-        return {"recipe": asdict(recipe)}
+        return {"recipe": recipe_dict}
     return None
 
 
