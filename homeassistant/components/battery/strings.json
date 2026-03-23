@@ -49,7 +49,7 @@
       "name": "Battery not low"
     },
     "percentage_changed": {
-      "description": "Triggers when the battery level changes.",
+      "description": "Triggers after the battery level changes.",
       "fields": {
         "above": {
           "description": "Only trigger when battery level is above this value.",
@@ -63,7 +63,7 @@
       "name": "Battery level changed"
     },
     "percentage_crossed_threshold": {
-      "description": "Triggers when the battery level crosses a threshold.",
+      "description": "Triggers after the battery level of one or more batteries crosses a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::battery::common::trigger_behavior_description%]",
