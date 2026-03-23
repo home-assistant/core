@@ -7,19 +7,10 @@ import pytest
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
-    CONF_CONDITION,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_TARGET,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import (
-    async_from_config as async_condition_from_config,
-)
 
 from tests.components.common import (
     ConditionStateDescription,
@@ -28,9 +19,13 @@ from tests.components.common import (
     assert_condition_gated_by_labs_flag,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
+    parametrize_numerical_condition_above_below_all,
+    parametrize_numerical_condition_above_below_any,
     parametrize_target_entities,
     target_entities,
 )
+
+_BATTERY_UNIT_ATTRS = {ATTR_UNIT_OF_MEASUREMENT: "%"}
 
 
 @pytest.fixture
@@ -182,119 +177,73 @@ async def test_battery_binary_condition_behavior_all(
     )
 
 
-_BATTERY_ATTRS = {ATTR_DEVICE_CLASS: "battery", ATTR_UNIT_OF_MEASUREMENT: "%"}
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("sensor"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    parametrize_numerical_condition_above_below_any(
+        "battery.percentage",
+        device_class="battery",
+        unit_attributes=_BATTERY_UNIT_ATTRS,
+    ),
+)
+async def test_battery_percentage_condition_behavior_any(
+    hass: HomeAssistant,
+    target_sensors: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the battery percentage condition with 'any' behavior."""
+    await assert_condition_behavior_any(
+        hass,
+        target_entities=target_sensors,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
-    ("above", "below", "true_values", "false_values"),
-    [
-        (20, None, ["21", "50", "100"], ["0", "10", "20"]),
-        (None, 80, ["0", "50", "79"], ["80", "90", "100"]),
-        (20, 80, ["21", "50", "79"], ["0", "20", "80", "100"]),
-    ],
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("sensor"),
 )
-@pytest.mark.parametrize("domain", ["sensor", "number"])
-async def test_battery_percentage_condition(
-    hass: HomeAssistant,
-    above: float | None,
-    below: float | None,
-    true_values: list[str],
-    false_values: list[str],
-    domain: str,
-) -> None:
-    """Test the battery percentage condition with above/below thresholds."""
-    entity_id = f"{domain}.test_battery"
-
-    hass.states.async_set(entity_id, "50", _BATTERY_ATTRS)
-    await hass.async_block_till_done()
-
-    options: dict[str, Any] = {"behavior": "any"}
-    if above is not None:
-        options[CONF_ABOVE] = above
-    if below is not None:
-        options[CONF_BELOW] = below
-
-    condition = await async_condition_from_config(
-        hass,
-        {
-            CONF_CONDITION: "battery.percentage",
-            CONF_TARGET: {CONF_ENTITY_ID: [entity_id]},
-            CONF_OPTIONS: options,
-        },
-    )
-
-    for value in true_values:
-        hass.states.async_set(entity_id, value, _BATTERY_ATTRS)
-        await hass.async_block_till_done()
-        assert condition(hass) is True, f"Expected True for {value}"
-
-    for value in false_values:
-        hass.states.async_set(entity_id, value, _BATTERY_ATTRS)
-        await hass.async_block_till_done()
-        assert condition(hass) is False, f"Expected False for {value}"
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    parametrize_numerical_condition_above_below_all(
+        "battery.percentage",
+        device_class="battery",
+        unit_attributes=_BATTERY_UNIT_ATTRS,
+    ),
+)
 async def test_battery_percentage_condition_behavior_all(
     hass: HomeAssistant,
+    target_sensors: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
 ) -> None:
     """Test the battery percentage condition with 'all' behavior."""
-    entity_1 = "sensor.battery_1"
-    entity_2 = "sensor.battery_2"
-
-    hass.states.async_set(entity_1, "10", _BATTERY_ATTRS)
-    hass.states.async_set(entity_2, "10", _BATTERY_ATTRS)
-    await hass.async_block_till_done()
-
-    condition = await async_condition_from_config(
+    await assert_condition_behavior_all(
         hass,
-        {
-            CONF_CONDITION: "battery.percentage",
-            CONF_TARGET: {CONF_ENTITY_ID: [entity_1, entity_2]},
-            CONF_OPTIONS: {"behavior": "all", CONF_ABOVE: 50},
-        },
+        target_entities=target_sensors,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
     )
-
-    # Both below threshold
-    assert condition(hass) is False
-
-    # Only one above threshold - should not match with 'all'
-    hass.states.async_set(entity_1, "90", _BATTERY_ATTRS)
-    await hass.async_block_till_done()
-    assert condition(hass) is False
-
-    # Both above threshold - should match
-    hass.states.async_set(entity_2, "90", _BATTERY_ATTRS)
-    await hass.async_block_till_done()
-    assert condition(hass) is True
-
-    # One drops below again
-    hass.states.async_set(entity_1, "30", _BATTERY_ATTRS)
-    await hass.async_block_till_done()
-    assert condition(hass) is False
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-async def test_battery_percentage_condition_invalid_state(
-    hass: HomeAssistant,
-) -> None:
-    """Test the battery percentage condition with non-numeric states."""
-    entity_id = "sensor.test_battery"
-
-    hass.states.async_set(entity_id, "50", _BATTERY_ATTRS)
-    await hass.async_block_till_done()
-
-    condition = await async_condition_from_config(
-        hass,
-        {
-            CONF_CONDITION: "battery.percentage",
-            CONF_TARGET: {CONF_ENTITY_ID: [entity_id]},
-            CONF_OPTIONS: {"behavior": "any", CONF_ABOVE: 20},
-        },
-    )
-
-    for value in ("unavailable", "unknown", "abc"):
-        hass.states.async_set(entity_id, value, _BATTERY_ATTRS)
-        await hass.async_block_till_done()
-        assert condition(hass) is False, f"Expected False for '{value}'"

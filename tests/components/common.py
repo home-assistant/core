@@ -836,14 +836,18 @@ async def create_target_condition(
     condition: str,
     target: dict,
     behavior: str,
+    condition_options: dict[str, Any] | None = None,
 ) -> ConditionCheckerTypeOptional:
     """Create a target condition."""
+    options: dict[str, Any] = {"behavior": behavior}
+    if condition_options:
+        options.update(condition_options)
     return await async_condition_from_config(
         hass,
         {
             CONF_CONDITION: condition,
             CONF_TARGET: target,
-            CONF_OPTIONS: {"behavior": behavior},
+            CONF_OPTIONS: options,
         },
     )
 
@@ -946,11 +950,12 @@ async def assert_condition_behavior_any(
         set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
-    condition = await create_target_condition(
+    cond = await create_target_condition(
         hass,
         condition=condition,
         target=condition_target_config,
         behavior="any",
+        condition_options=condition_options,
     )
 
     for state in states:
@@ -962,18 +967,18 @@ async def assert_condition_behavior_any(
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert condition(hass) is False
+        assert cond(hass) is False
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
+        assert cond(hass) == state["condition_true"]
 
         # Set other included entities to the included state to verify that
         # they don't change the condition evaluation
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
+        assert cond(hass) == state["condition_true"]
 
 
 async def assert_condition_behavior_all(
@@ -998,11 +1003,12 @@ async def assert_condition_behavior_all(
         set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
-    condition = await create_target_condition(
+    cond = await create_target_condition(
         hass,
         condition=condition,
         target=condition_target_config,
         behavior="all",
+        condition_options=condition_options,
     )
 
     for state in states:
@@ -1011,7 +1017,7 @@ async def assert_condition_behavior_all(
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
+        assert cond(hass) == state["condition_true_first_entity"]
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
@@ -1020,7 +1026,7 @@ async def assert_condition_behavior_all(
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
 
-        assert condition(hass) == state["condition_true"]
+        assert cond(hass) == state["condition_true"]
 
 
 async def assert_trigger_behavior_any(
@@ -1160,3 +1166,141 @@ async def assert_trigger_behavior_last(
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
+
+
+def parametrize_numerical_condition_above_below_any(
+    condition: str,
+    *,
+    device_class: str,
+    condition_options: dict[str, Any] | None = None,
+    unit_attributes: dict | None = None,
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize above/below threshold test cases for numerical conditions.
+
+    Unlike parametrize_numerical_attribute_changed_trigger_states, this is for
+    entities where the tracked numerical value is in state.state (e.g. sensor
+    entities), not in an attribute.
+
+    Returns a list of tuples with (condition, condition_options, states).
+    """
+    from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
+
+    required_filter_attributes = {ATTR_DEVICE_CLASS: device_class}
+    condition_options = condition_options or {}
+    unit_attributes = unit_attributes or {}
+
+    return [
+        *parametrize_condition_states_any(
+            condition=condition,
+            condition_options={CONF_ABOVE: 20, **condition_options},
+            target_states=[
+                ("21", unit_attributes),
+                ("50", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            other_states=[
+                ("0", unit_attributes),
+                ("10", unit_attributes),
+                ("20", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
+        ),
+        *parametrize_condition_states_any(
+            condition=condition,
+            condition_options={CONF_BELOW: 80, **condition_options},
+            target_states=[
+                ("0", unit_attributes),
+                ("50", unit_attributes),
+                ("79", unit_attributes),
+            ],
+            other_states=[
+                ("80", unit_attributes),
+                ("90", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
+        ),
+        *parametrize_condition_states_any(
+            condition=condition,
+            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            target_states=[
+                ("21", unit_attributes),
+                ("50", unit_attributes),
+                ("79", unit_attributes),
+            ],
+            other_states=[
+                ("0", unit_attributes),
+                ("20", unit_attributes),
+                ("80", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
+        ),
+    ]
+
+
+def parametrize_numerical_condition_above_below_all(
+    condition: str,
+    *,
+    device_class: str,
+    condition_options: dict[str, Any] | None = None,
+    unit_attributes: dict | None = None,
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize above/below threshold test cases for numerical conditions with 'all' behavior.
+
+    Returns a list of tuples with (condition, condition_options, states).
+    """
+    from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
+
+    required_filter_attributes = {ATTR_DEVICE_CLASS: device_class}
+    condition_options = condition_options or {}
+    unit_attributes = unit_attributes or {}
+
+    return [
+        *parametrize_condition_states_all(
+            condition=condition,
+            condition_options={CONF_ABOVE: 20, **condition_options},
+            target_states=[
+                ("21", unit_attributes),
+                ("50", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            other_states=[
+                ("0", unit_attributes),
+                ("10", unit_attributes),
+                ("20", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
+        ),
+        *parametrize_condition_states_all(
+            condition=condition,
+            condition_options={CONF_BELOW: 80, **condition_options},
+            target_states=[
+                ("0", unit_attributes),
+                ("50", unit_attributes),
+                ("79", unit_attributes),
+            ],
+            other_states=[
+                ("80", unit_attributes),
+                ("90", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
+        ),
+        *parametrize_condition_states_all(
+            condition=condition,
+            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            target_states=[
+                ("21", unit_attributes),
+                ("50", unit_attributes),
+                ("79", unit_attributes),
+            ],
+            other_states=[
+                ("0", unit_attributes),
+                ("20", unit_attributes),
+                ("80", unit_attributes),
+                ("100", unit_attributes),
+            ],
+            required_filter_attributes=required_filter_attributes,
+        ),
+    ]
