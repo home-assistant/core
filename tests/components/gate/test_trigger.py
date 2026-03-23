@@ -4,13 +4,12 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
     TriggerStateDescription,
-    arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
@@ -63,7 +62,7 @@ async def test_gate_triggers_gated_by_labs_flag(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "gate"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: CoverDeviceClass.GATE},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -81,7 +80,7 @@ async def test_gate_triggers_gated_by_labs_flag(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "gate"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: CoverDeviceClass.GATE},
             trigger_from_none=False,
         ),
     ],
@@ -133,7 +132,7 @@ async def test_gate_trigger_cover_behavior_any(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "gate"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: CoverDeviceClass.GATE},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -151,7 +150,7 @@ async def test_gate_trigger_cover_behavior_any(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "gate"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: CoverDeviceClass.GATE},
             trigger_from_none=False,
         ),
     ],
@@ -203,7 +202,7 @@ async def test_gate_trigger_cover_behavior_first(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "gate"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: CoverDeviceClass.GATE},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
@@ -221,7 +220,7 @@ async def test_gate_trigger_cover_behavior_first(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            required_filter_attributes={ATTR_DEVICE_CLASS: "gate"},
+            required_filter_attributes={ATTR_DEVICE_CLASS: CoverDeviceClass.GATE},
             trigger_from_none=False,
         ),
     ],
@@ -249,88 +248,3 @@ async def test_gate_trigger_cover_behavior_last(
         trigger_options=trigger_options,
         states=states,
     )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    (
-        "trigger_key",
-        "cover_initial",
-        "cover_initial_is_closed",
-        "cover_target",
-        "cover_target_is_closed",
-    ),
-    [
-        (
-            "gate.opened",
-            CoverState.CLOSED,
-            True,
-            CoverState.OPEN,
-            False,
-        ),
-        (
-            "gate.closed",
-            CoverState.OPEN,
-            False,
-            CoverState.CLOSED,
-            True,
-        ),
-    ],
-)
-async def test_gate_trigger_excludes_non_gate_device_class(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    trigger_key: str,
-    cover_initial: str,
-    cover_initial_is_closed: bool,
-    cover_target: str,
-    cover_target_is_closed: bool,
-) -> None:
-    """Test gate trigger does not fire for entities without device_class gate."""
-    entity_id_cover_gate = "cover.test_gate"
-    entity_id_cover_garage = "cover.test_garage"
-
-    # Set initial states
-    hass.states.async_set(
-        entity_id_cover_gate,
-        cover_initial,
-        {ATTR_DEVICE_CLASS: "gate", ATTR_IS_CLOSED: cover_initial_is_closed},
-    )
-    hass.states.async_set(
-        entity_id_cover_garage,
-        cover_initial,
-        {ATTR_DEVICE_CLASS: "garage", ATTR_IS_CLOSED: cover_initial_is_closed},
-    )
-    await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass,
-        trigger_key,
-        {},
-        {
-            CONF_ENTITY_ID: [
-                entity_id_cover_gate,
-                entity_id_cover_garage,
-            ]
-        },
-    )
-
-    # Gate cover changes - should trigger
-    hass.states.async_set(
-        entity_id_cover_gate,
-        cover_target,
-        {ATTR_DEVICE_CLASS: "gate", ATTR_IS_CLOSED: cover_target_is_closed},
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_cover_gate
-    service_calls.clear()
-
-    # Garage cover changes - should NOT trigger (wrong device class)
-    hass.states.async_set(
-        entity_id_cover_garage,
-        cover_target,
-        {ATTR_DEVICE_CLASS: "garage", ATTR_IS_CLOSED: cover_target_is_closed},
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 0

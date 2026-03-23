@@ -950,9 +950,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaHaSwitch."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = dpcode_wrapper
 
     @property
