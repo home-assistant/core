@@ -164,7 +164,7 @@ async def test_air_quality_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test air quality trigger fires for binary_sensor entities with device_class gas."""
+    """Test air quality triggers fire for binary_sensor entities with gas, CO, and smoke device classes."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
