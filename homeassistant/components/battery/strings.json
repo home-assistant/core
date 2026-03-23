@@ -48,7 +48,7 @@
       "description": "Tests the percentage of one or more batteries.",
       "fields": {
         "above": {
-          "description": "The minimum battery percentage threshold.",
+          "description": "Require the percentage to be above this value.",
           "name": "Above"
         },
         "behavior": {
@@ -56,7 +56,7 @@
           "name": "[%key:component::battery::common::condition_behavior_name%]"
         },
         "below": {
-          "description": "The maximum battery percentage threshold.",
+          "description": "Require the percentage to be below this value.",
           "name": "Below"
         }
       },
