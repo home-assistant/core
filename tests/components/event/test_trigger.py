@@ -260,7 +260,7 @@ async def test_event_state_trigger(
     trigger_options: dict,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the event trigger fires targeted event entity state changes."""
+    """Test that the event trigger fires when an event entity receives a matching event."""
     other_entity_ids = set(target_events["included_entities"]) - {entity_id}
 
     # Set all events to the initial state
