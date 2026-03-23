@@ -168,10 +168,6 @@
         "below": {
           "description": "Only trigger when nitrous oxide level is below this value.",
           "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
         }
       },
       "name": "Nitrous oxide level changed"
@@ -190,10 +186,6 @@
         "threshold_type": {
           "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
         },
         "upper_limit": {
           "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
@@ -344,10 +336,6 @@
         "below": {
           "description": "Only trigger when PM10 level is below this value.",
           "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
         }
       },
       "name": "PM10 level changed"
@@ -367,10 +355,6 @@
           "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
         },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
         "upper_limit": {
           "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
@@ -388,10 +372,6 @@
         "below": {
           "description": "Only trigger when PM1 level is below this value.",
           "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
         }
       },
       "name": "PM1 level changed"
@@ -411,10 +391,6 @@
           "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
         },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
         "upper_limit": {
           "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
@@ -432,10 +408,6 @@
         "below": {
           "description": "Only trigger when PM2.5 level is below this value.",
           "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
         }
       },
       "name": "PM2.5 level changed"
@@ -455,10 +427,6 @@
           "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
         },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
         "upper_limit": {
           "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
@@ -476,10 +444,6 @@
         "below": {
           "description": "Only trigger when PM4 level is below this value.",
           "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
         }
       },
       "name": "PM4 level changed"
@@ -498,10 +462,6 @@
         "threshold_type": {
           "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
         },
         "upper_limit": {
           "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
