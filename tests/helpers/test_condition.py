@@ -1,5 +1,6 @@
 """Test the condition helper."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 import io
 from typing import Any
@@ -40,7 +41,7 @@ from homeassistant.helpers import (
     trace,
 )
 from homeassistant.helpers.automation import (
-    NumericalDomainSpec,
+    DomainSpec,
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
@@ -3010,19 +3011,19 @@ async def test_subscribe_conditions_no_conditions(
 
 # --- EntityNumericalConditionBase tests ---
 
-_SIMPLE_DOMAIN_SPECS = {"test": NumericalDomainSpec()}
+_DEFAULT_DOMAIN_SPECS = {"test": DomainSpec()}
 
 
 async def _setup_numerical_condition(
     hass: HomeAssistant,
     condition_options: dict[str, Any],
     entity_ids: str | list[str],
-    domain_specs: dict[str, NumericalDomainSpec] | None = None,
+    domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> condition.ConditionCheckerType:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
-        domain_specs or _SIMPLE_DOMAIN_SPECS, valid_unit
+        domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
     )
 
     async def async_get_conditions(
@@ -3110,7 +3111,7 @@ async def test_numerical_condition_attribute_value_source(
     """Test numerical condition reads from attribute when value_source is set."""
     test = await _setup_numerical_condition(
         hass,
-        domain_specs={"test": NumericalDomainSpec(value_source="brightness")},
+        domain_specs={"test": DomainSpec(value_source="brightness")},
         condition_options={CONF_ABOVE: 100},
         entity_ids="test.entity_1",
     )
@@ -3125,58 +3126,6 @@ async def test_numerical_condition_attribute_value_source(
 
     # Missing attribute -> False
     hass.states.async_set("test.entity_1", "on", {})
-    assert test(hass) is False
-
-
-async def test_numerical_condition_value_converter(hass: HomeAssistant) -> None:
-    """Test numerical condition applies value_converter on attribute and state."""
-    # Converter on attribute value
-    test = await _setup_numerical_condition(
-        hass,
-        domain_specs={
-            "test": NumericalDomainSpec(
-                value_source="raw_value",
-                value_converter=lambda x: x * 2,
-            ),
-        },
-        condition_options={CONF_ABOVE: 50},
-        entity_ids="test.entity_1",
-    )
-
-    # Raw value 30, converted to 60 -> above 50 -> True
-    hass.states.async_set("test.entity_1", "on", {"raw_value": 30})
-    assert test(hass) is True
-
-    # Raw value 20, converted to 40 -> not above 50 -> False
-    hass.states.async_set("test.entity_1", "on", {"raw_value": 20})
-    assert test(hass) is False
-
-    # Raw value 25, converted to 50 -> equal, not strictly above -> False
-    hass.states.async_set("test.entity_1", "on", {"raw_value": 25})
-    assert test(hass) is False
-
-
-async def test_numerical_condition_value_converter_on_state(
-    hass: HomeAssistant,
-) -> None:
-    """Test numerical condition applies value_converter on state (no value_source)."""
-    test = await _setup_numerical_condition(
-        hass,
-        domain_specs={
-            "test": NumericalDomainSpec(
-                value_converter=lambda x: x / 255 * 100,
-            ),
-        },
-        condition_options={CONF_ABOVE: 50},
-        entity_ids="test.entity_1",
-    )
-
-    # State 200, converted to ~78.4 -> above 50 -> True
-    hass.states.async_set("test.entity_1", "200")
-    assert test(hass) is True
-
-    # State 100, converted to ~39.2 -> not above 50 -> False
-    hass.states.async_set("test.entity_1", "100")
     assert test(hass) is False
 
 
@@ -3252,7 +3201,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
     hass: HomeAssistant,
 ) -> None:
     """Test numerical condition schema requires at least above or below."""
-    condition_cls = make_entity_numerical_condition({"test": NumericalDomainSpec()})
+    condition_cls = make_entity_numerical_condition({"test": DomainSpec()})
 
     async def async_get_conditions(
         hass: HomeAssistant,
