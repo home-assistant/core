@@ -29,7 +29,7 @@
   "title": "Humidity",
   "triggers": {
     "changed": {
-      "description": "Triggers when the relative humidity changes.",
+      "description": "Triggers after one or more relative humidity values change.",
       "fields": {
         "above": {
           "description": "Only trigger when relative humidity is above this value.",
@@ -43,7 +43,7 @@
       "name": "Relative humidity changed"
     },
     "crossed_threshold": {
-      "description": "Triggers when the relative humidity crosses a threshold.",
+      "description": "Triggers after one or more relative humidity values cross a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::humidity::common::trigger_behavior_description%]",

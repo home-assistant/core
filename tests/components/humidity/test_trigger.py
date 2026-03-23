@@ -13,8 +13,19 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
-from homeassistant.const import STATE_ON
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ABOVE,
+    CONF_BELOW,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.trigger import (
+    CONF_LOWER_LIMIT,
+    CONF_THRESHOLD_TYPE,
+    CONF_UPPER_LIMIT,
+    ThresholdType,
+)
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -22,6 +33,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_ignores_limit_entities_with_wrong_unit,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_numerical_state_value_changed_trigger_states,
@@ -81,10 +93,14 @@ async def test_humidity_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_changed_trigger_states(
-            "humidity.changed", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.changed",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
@@ -122,7 +138,9 @@ async def test_humidity_trigger_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
@@ -160,7 +178,9 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
@@ -564,4 +584,53 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
         trigger=trigger,
         trigger_options=trigger_options,
         states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "limit_entities"),
+    [
+        (
+            "humidity.changed",
+            {
+                CONF_ABOVE: "sensor.humidity_above",
+                CONF_BELOW: "sensor.humidity_below",
+            },
+            ["sensor.humidity_above", "sensor.humidity_below"],
+        ),
+        (
+            "humidity.crossed_threshold",
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: "sensor.humidity_lower",
+                CONF_UPPER_LIMIT: "sensor.humidity_upper",
+            },
+            ["sensor.humidity_lower", "sensor.humidity_upper"],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_humidity_trigger_ignores_limit_entity_with_wrong_unit(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger: str,
+    trigger_options: dict[str, Any],
+    limit_entities: list[str],
+) -> None:
+    """Test humidity triggers do not fire if limit entity unit is not %."""
+    await assert_trigger_ignores_limit_entities_with_wrong_unit(
+        hass,
+        service_calls=service_calls,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        entity_id="climate.test_climate",
+        entity_state=HVACMode.AUTO,
+        reset_attributes={CLIMATE_ATTR_CURRENT_HUMIDITY: 0},
+        trigger_attributes={CLIMATE_ATTR_CURRENT_HUMIDITY: 50},
+        limit_entities=[
+            (limit_entities[0], "10"),
+            (limit_entities[1], "90"),
+        ],
+        correct_unit="%",
+        wrong_unit="g/m³",
     )
