@@ -139,11 +139,13 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "schedule",
     "siren",
     "switch",
+    "text",
     "vacuum",
     "window",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
     "button",

@@ -161,9 +161,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         dpcode_wrapper: DeviceWrapper[tuple[str, dict[str, Any] | None]],
     ) -> None:
         """Init Tuya event entity."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = dpcode_wrapper
         self._attr_event_types = dpcode_wrapper.options
 
