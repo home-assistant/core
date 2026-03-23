@@ -45,9 +45,11 @@ def _get_lowest_price_day_time(
     if hour is None:
         return None
     # After 18:00 the day period is over; use tomorrow's date
-    base = dt_util.start_of_local_day()
-    if now_h >= 18:
-        base += timedelta(days=1)
+    base = (
+        dt_util.start_of_local_day(dt_util.now() + timedelta(days=1))
+        if now_h >= 18
+        else dt_util.start_of_local_day()
+    )
     return base.replace(hour=hour)
 
 
@@ -113,7 +115,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         value_fn=lambda api, data: (
             # Hours 0-5 are early morning of the *next* day; use tomorrow's date
             (
-                dt_util.start_of_local_day() + timedelta(days=1)
+                dt_util.start_of_local_day(dt_util.now() + timedelta(days=1))
                 if hour < 6
                 else dt_util.start_of_local_day()
             ).replace(hour=hour)

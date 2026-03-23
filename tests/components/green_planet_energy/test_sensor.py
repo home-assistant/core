@@ -95,6 +95,6 @@ async def test_lowest_price_day_uses_tomorrow_after_18(
     state_dt = dt_util.parse_datetime(time_state.state)
     assert state_dt is not None
     local_dt = state_dt.astimezone(dt_util.DEFAULT_TIME_ZONE)
-    tomorrow_local = dt_util.start_of_local_day() + timedelta(days=1)
+    tomorrow_local = dt_util.start_of_local_day(dt_util.now() + timedelta(days=1))
     assert local_dt.date() == tomorrow_local.date()
     assert local_dt.hour == 10
