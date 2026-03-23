@@ -18,6 +18,12 @@ AGENTS_FILE = Path("AGENTS.md")
 OUTPUT_FILE = Path(".github/copilot-instructions.md")
 
 EXCLUDED_SKILLS = {"github-pr-reviewer"}
+COPILOT_SPECIFIC_INSTRUCTIONS = """
+# Copilot code review instructions
+
+- Start review comments with a short, one-sentence summary of the suggested fix.
+- Do not add comments about code style, formatting or linting issues.
+"""
 
 
 def gather_skills() -> list[tuple[str, Path]]:
@@ -66,7 +72,7 @@ def generate_output() -> str:
         print(f"Error: {AGENTS_FILE} not found")
         sys.exit(1)
 
-    output_parts: list[str] = [GENERATED_MESSAGE]
+    output_parts: list[str] = [GENERATED_MESSAGE, COPILOT_SPECIFIC_INSTRUCTIONS]
 
     # Add AGENTS.md content
     agents_content = AGENTS_FILE.read_text()
