@@ -70,8 +70,6 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
                                 },
                             )
             # Manual entry selected, show manual entry form
-        else:
-            raise ValueError("user_input cannot be None here")
         return self.async_show_form(
             step_id="manual", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
@@ -89,6 +87,7 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         host_str = str(host)
+        device = None  # initialise device variable to None so that it is in scope after the Try block, whether or not the discovery by IP is successful.
         try:
             device = await self._discover_device_by_ip(host_str)
         except Exception:
