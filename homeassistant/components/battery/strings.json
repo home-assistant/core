@@ -45,7 +45,7 @@
       "name": "Battery is not low"
     },
     "percentage": {
-      "description": "Tests if the battery percentage of one or more devices is above a threshold, below a threshold, or in a range of values.",
+      "description": "Tests the percentage of one or more batteries.",
       "fields": {
         "above": {
           "description": "The minimum battery percentage threshold.",
