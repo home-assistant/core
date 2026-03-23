@@ -9,8 +9,8 @@ from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
 )
+from tuya_device_handlers.device_wrapper.extended import DPCodeRoundedIntegerWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.humidifier import (
@@ -27,16 +27,6 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .util import ActionDPCodeNotFoundError, get_dpcode
-
-
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
-    """An integer that always rounds its value."""
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        """Read and round the device status."""
-        if (value := super().read_device_status(device)) is None:
-            return None
-        return round(value)
 
 
 @dataclass(frozen=True)
@@ -104,7 +94,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         description,
-                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        current_humidity_wrapper=DPCodeRoundedIntegerWrapper.find_dpcode(
                             device, description.current_humidity
                         ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
@@ -115,7 +105,7 @@ async def async_setup_entry(
                             description.dpcode or description.key,
                             prefer_function=True,
                         ),
-                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        target_humidity_wrapper=DPCodeRoundedIntegerWrapper.find_dpcode(
                             device, description.humidity, prefer_function=True
                         ),
                     )
@@ -147,9 +137,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         target_humidity_wrapper: DeviceWrapper[int] | None = None,
     ) -> None:
         """Init Tuya (de)humidifier."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
 
         self._current_humidity_wrapper = current_humidity_wrapper
         self._mode_wrapper = mode_wrapper
