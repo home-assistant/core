@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from threema.gateway import GatewayError
+
 from homeassistant.components.threema.client import ThreemaAuthError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -39,7 +41,9 @@ async def test_setup_entry_connection_error(
         connection = MagicMock()
         connection.__aenter__ = AsyncMock(return_value=connection)
         connection.__aexit__ = AsyncMock(return_value=None)
-        connection.get_credits = AsyncMock(side_effect=Exception("Connection refused"))
+        connection.get_credits = AsyncMock(
+            side_effect=GatewayError("Connection refused")
+        )
         connection_class.return_value = connection
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

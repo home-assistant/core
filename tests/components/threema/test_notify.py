@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from threema.gateway import GatewayError
 from threema.gateway.exception import GatewayServerError
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -86,6 +87,7 @@ async def test_send_message_simple(
     )
 
     mock_send.simple.assert_called_once()
+    mock_send.simple.return_value.send.assert_awaited_once()
 
 
 async def test_send_message_e2e(
@@ -127,6 +129,7 @@ async def test_send_message_e2e(
     )
 
     mock_send.e2e.assert_called_once()
+    mock_send.e2e.return_value.send.assert_awaited_once()
 
 
 async def test_send_message_auth_error(
@@ -177,7 +180,7 @@ async def test_send_message_send_error(
         "homeassistant.components.threema.client.SimpleTextMessage", autospec=True
     ) as simple_mock:
         simple_instance = MagicMock()
-        simple_instance.send = AsyncMock(side_effect=Exception("Network error"))
+        simple_instance.send = AsyncMock(side_effect=GatewayError("Network error"))
         simple_mock.return_value = simple_instance
 
         await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
