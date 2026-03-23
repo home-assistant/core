@@ -1539,6 +1539,88 @@ async def test_numerical_state_attribute_changed_error_handling(
         assert len(service_calls) == 0
 
 
+async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that entity limits with wrong unit are rejected."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
+                {"test": NumericalDomainSpec(value_source="test_attribute")},
+                valid_unit="%",
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 20})
+
+    options = {
+        CONF_OPTIONS: {CONF_ABOVE: "sensor.above", CONF_BELOW: "sensor.below"},
+    }
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.attribute_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                }
+                | options,
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+
+    assert len(service_calls) == 0
+
+    # Test the trigger works with correct unit on limit entities
+    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("sensor.below", "90", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # Test the trigger does not fire when the above sensor has wrong unit
+    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the above sensor has no unit
+    hass.states.async_set("sensor.above", "10")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Reset the above sensor to correct unit
+    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+
+    # Test the trigger does not fire when the below sensor has wrong unit
+    hass.states.async_set("sensor.below", "90", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the below sensor has no unit
+    hass.states.async_set("sensor.below", "90")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+
 async def test_numerical_state_attribute_changed_with_unit_error_handling(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -2279,6 +2361,92 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert len(service_calls) == 0
+
+
+async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_validation(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that entity limits with wrong unit are rejected for crossed threshold."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+                {"test": NumericalDomainSpec(value_source="test_attribute")},
+                valid_unit="%",
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+
+    options = {
+        CONF_OPTIONS: {
+            CONF_THRESHOLD_TYPE: "between",
+            CONF_LOWER_LIMIT: "sensor.lower",
+            CONF_UPPER_LIMIT: "sensor.upper",
+        },
+    }
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.crossed_threshold",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                }
+                | options,
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+
+    assert len(service_calls) == 0
+
+    # Test the trigger works with correct unit on limit entities
+    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("sensor.upper", "90", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # Test the trigger does not fire when the lower sensor has wrong unit
+    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the lower sensor has no unit
+    hass.states.async_set("sensor.lower", "10")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Reset the lower sensor to correct unit
+    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+
+    # Test the trigger does not fire when the upper sensor has wrong unit
+    hass.states.async_set("sensor.upper", "90", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the upper sensor has no unit
+    hass.states.async_set("sensor.upper", "90")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
 
 
 async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handling(
