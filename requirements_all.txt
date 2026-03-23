@@ -1892,7 +1892,7 @@ py-sucks==0.9.11
 py-synologydsm-api==2.7.3
 
 # homeassistant.components.unifi_access
-py-unifi-access==1.1.0
+py-unifi-access==1.1.3
 
 # homeassistant.components.atome
 pyAtome==0.1.1

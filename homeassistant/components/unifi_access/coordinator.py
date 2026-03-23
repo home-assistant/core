@@ -212,9 +212,6 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
-        door = insights.data.metadata.door
-        if not door.id:
-            return
         event_type = (
             "access_granted" if insights.data.result == "ACCESS" else "access_denied"
         )
@@ -225,7 +222,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["authentication"] = insights.data.metadata.authentication.display_name
         if insights.data.result:
             attrs["result"] = insights.data.result
-        self._dispatch_door_event(door.id, "access", event_type, attrs)
+        for door in insights.data.metadata.door:
+            if door.id:
+                self._dispatch_door_event(door.id, "access", event_type, attrs)
 
     @callback
     def _dispatch_door_event(
