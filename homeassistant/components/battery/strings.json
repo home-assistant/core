@@ -49,7 +49,7 @@
       "name": "Battery not low"
     },
     "percentage_changed": {
-      "description": "Triggers after the battery level changes.",
+      "description": "Triggers after the battery level of one or more batteries changes.",
       "fields": {
         "above": {
           "description": "Only trigger when battery level is above this value.",
