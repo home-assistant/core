@@ -407,7 +407,7 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
-aiotedee==0.2.25
+aiotedee==0.2.27
 
 # homeassistant.components.tractive
 aiotractive==1.0.0
@@ -833,7 +833,7 @@ eternalegypt==0.0.18
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==1.1.3
+evohome-async==1.2.0
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -1013,7 +1013,7 @@ greeclimate==2.1.1
 greeneye_monitor==3.0.3
 
 # homeassistant.components.green_planet_energy
-greenplanet-energy-api==0.1.4
+greenplanet-energy-api==0.1.10
 
 # homeassistant.components.pure_energie
 gridnet==5.0.1
@@ -1046,7 +1046,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.10.2
+habluetooth==5.11.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1509,7 +1509,7 @@ openwebifpy==4.3.1
 opower==0.17.1
 
 # homeassistant.components.oralb
-oralb-ble==1.0.2
+oralb-ble==1.1.0
 
 # homeassistant.components.orvibo
 orvibo==1.1.2
@@ -2077,7 +2077,7 @@ pyrail==0.4.1
 pyrainbird==6.1.1
 
 # homeassistant.components.playstation_network
-pyrate-limiter==4.0.2
+pyrate-limiter==4.1.0
 
 # homeassistant.components.risco
 pyrisco==0.6.7
@@ -2256,7 +2256,7 @@ python-pooldose==0.8.6
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.25.0
+python-roborock==5.0.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2547,7 +2547,7 @@ srpenergy==1.3.6
 starline==0.1.5
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.3
+starlink-grpc-core==1.2.4
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -2639,7 +2639,7 @@ toonapi==0.3.0
 total-connect-client==2025.12.2
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.3
+tplink-omada-client==1.5.6
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -2792,7 +2792,7 @@ wiim==0.1.0
 wled==0.21.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.23
+wolf-comm==0.0.48
 
 # homeassistant.components.wsdot
 wsdot==0.0.1
@@ -2801,7 +2801,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.6.0
+xiaomi-ble==1.10.0
 
 # homeassistant.components.knx
 xknx==3.15.0
@@ -2832,7 +2832,7 @@ yalexs==9.2.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.6.1
+yolink-api==0.6.3
 
 # homeassistant.components.youless
 youless-api==2.2.0

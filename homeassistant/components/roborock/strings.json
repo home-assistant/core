@@ -84,6 +84,9 @@
       }
     },
     "button": {
+      "empty_dustbin": {
+        "name": "Empty dustbin"
+      },
       "pause": {
         "name": "Pause"
       },
