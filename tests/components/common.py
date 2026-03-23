@@ -1195,9 +1195,7 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
 
     """
     # Set up entity in triggering state
-    hass.states.async_set(
-        entity_id, trigger_state["state"], trigger_state["attributes"]
-    )
+    set_or_remove_state(hass, entity_id, trigger_state)
     # Set up all limit entities with the wrong unit
     for limit_entity_id, limit_value in limit_entities:
         hass.states.async_set(
@@ -1210,11 +1208,9 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
     await arm_trigger(hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]})
 
     # Cycle entity state - should NOT fire (all limit entities have wrong unit)
-    hass.states.async_set(entity_id, reset_state["state"], reset_state["attributes"])
+    set_or_remove_state(hass, entity_id, reset_state)
     await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, trigger_state["state"], trigger_state["attributes"]
-    )
+    set_or_remove_state(hass, entity_id, trigger_state)
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
@@ -1227,13 +1223,9 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
         )
         await hass.async_block_till_done()
 
-        hass.states.async_set(
-            entity_id, reset_state["state"], reset_state["attributes"]
-        )
+        set_or_remove_state(hass, entity_id, reset_state)
         await hass.async_block_till_done()
-        hass.states.async_set(
-            entity_id, trigger_state["state"], trigger_state["attributes"]
-        )
+        set_or_remove_state(hass, entity_id, trigger_state)
         await hass.async_block_till_done()
 
         if i < len(limit_entities) - 1:
