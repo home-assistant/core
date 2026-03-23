@@ -8,7 +8,7 @@ from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
-    TriggerStateDescription,
+    BasicTriggerStateDescription,
     arm_trigger,
     assert_trigger_gated_by_labs_flag,
     parametrize_target_entities,
@@ -22,17 +22,14 @@ TEST_TRIGGER_STATES = [
         [
             {
                 "included_state": {"state": None, "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             {
                 "included_state": {"state": "bar", "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             {
                 "included_state": {"state": "baz", "attributes": {}},
-                "excluded_state": {},
                 "count": 1,
             },
         ],
@@ -42,17 +39,14 @@ TEST_TRIGGER_STATES = [
         [
             {
                 "included_state": {"state": "foo", "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             {
                 "included_state": {"state": "bar", "attributes": {}},
-                "excluded_state": {},
                 "count": 1,
             },
             {
                 "included_state": {"state": "baz", "attributes": {}},
-                "excluded_state": {},
                 "count": 1,
             },
         ],
@@ -62,18 +56,15 @@ TEST_TRIGGER_STATES = [
         [
             {
                 "included_state": {"state": "foo", "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             # empty string
             {
                 "included_state": {"state": "", "attributes": {}},
-                "excluded_state": {},
                 "count": 1,
             },
             {
                 "included_state": {"state": "baz", "attributes": {}},
-                "excluded_state": {},
                 "count": 1,
             },
         ],
@@ -83,22 +74,18 @@ TEST_TRIGGER_STATES = [
         [
             {
                 "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             {
                 "included_state": {"state": "bar", "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             {
                 "included_state": {"state": "baz", "attributes": {}},
-                "excluded_state": {},
                 "count": 1,
             },
             {
                 "included_state": {"state": STATE_UNAVAILABLE, "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
         ],
@@ -108,22 +95,18 @@ TEST_TRIGGER_STATES = [
         [
             {
                 "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             {
                 "included_state": {"state": "bar", "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
             {
                 "included_state": {"state": "baz", "attributes": {}},
-                "excluded_state": {},
                 "count": 1,
             },
             {
                 "included_state": {"state": STATE_UNKNOWN, "attributes": {}},
-                "excluded_state": {},
                 "count": 0,
             },
         ],
@@ -165,7 +148,7 @@ async def test_text_state_trigger(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[TriggerStateDescription],
+    states: list[BasicTriggerStateDescription],
 ) -> None:
     """Test that the text state trigger fires when targeted text state changes."""
     other_entity_ids = set(target_texts["included_entities"]) - {entity_id}
@@ -208,7 +191,7 @@ async def test_input_text_state_trigger(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[TriggerStateDescription],
+    states: list[BasicTriggerStateDescription],
 ) -> None:
     """Test that the `text.changed` trigger fires when any input_text entity's state changes."""
     other_entity_ids = set(target_input_texts["included_entities"]) - {entity_id}
