@@ -89,16 +89,16 @@
     "so2_crossed_threshold": {
       "trigger": "mdi:factory"
     },
-    "vocs_changed": {
+    "voc_changed": {
       "trigger": "mdi:air-filter"
     },
-    "vocs_crossed_threshold": {
+    "voc_crossed_threshold": {
       "trigger": "mdi:air-filter"
     },
-    "vocs_ratio_changed": {
+    "voc_ratio_changed": {
       "trigger": "mdi:air-filter"
     },
-    "vocs_ratio_crossed_threshold": {
+    "voc_ratio_crossed_threshold": {
       "trigger": "mdi:air-filter"
     }
   }
