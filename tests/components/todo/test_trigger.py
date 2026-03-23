@@ -278,11 +278,22 @@ async def test_item_change_triggers(
     )
 
 
+@pytest.mark.parametrize(
+    ("action_method", "item_summary", "expected_trigger_platform"),
+    [
+        (_add_item, "new_item", "todo.item_added"),
+        (_complete_item, "loaded_item", "todo.item_completed"),
+        (_remove_item, "loaded_item", "todo.item_removed"),
+    ],
+)
 @pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_item_change_triggers_ignore_initial_unavailable(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     todo_lists: tuple[MockTodoListEntity, MockTodoListEntity],
+    action_method: Any,
+    item_summary: str,
+    expected_trigger_platform: str,
 ) -> None:
     """Test triggers do not fire when items load for the first time."""
     entity, _ = todo_lists
@@ -294,19 +305,17 @@ async def test_item_change_triggers_ignore_initial_unavailable(
 
     entity._attr_todo_items = [
         TodoItem(
-            summary="loaded_item",
-            uid="loaded_id",
-            status=TodoItemStatus.NEEDS_ACTION,
+            summary="loaded_item", uid="loaded_id", status=TodoItemStatus.NEEDS_ACTION
         )
     ]
     entity.async_write_ha_state()
     await hass.async_block_till_done()
     _assert_service_calls(service_calls, [])
 
-    await _add_item(hass, TODO_ENTITY_ID1, "new_item")
+    await action_method(hass, TODO_ENTITY_ID1, item_summary)
     _assert_service_calls(
         service_calls,
-        [{"platform": "todo.item_added", "entity_id": TODO_ENTITY_ID1}],
+        [{"platform": expected_trigger_platform, "entity_id": TODO_ENTITY_ID1}],
     )
 
 
