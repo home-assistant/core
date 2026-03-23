@@ -37,7 +37,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PASSKEY, DOMAIN, LOGGER
+from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DOMAIN, LOGGER
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
@@ -113,16 +113,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         # the connection by fetching firmware version
         await bsblan.initialize()
 
-        # Discover available heating circuits from device
-        try:
-            circuits = await bsblan.get_available_circuits()
-        except BSBLANError as err:
-            LOGGER.debug(
-                "Circuit discovery not available for %s, defaulting to single circuit: %s",
-                entry.data[CONF_HOST],
-                err,
-            )
-            circuits = [1]
+        # Read available heating circuits from config entry data
+        # (discovered during config flow, defaults to [1] for old entries)
+        circuits: list[int] = entry.data.get(CONF_HEATING_CIRCUITS, [1])
 
         # Fetch required device metadata in parallel for faster startup
         device, info = await asyncio.gather(

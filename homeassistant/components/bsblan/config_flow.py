@@ -15,13 +15,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_PASSKEY, DEFAULT_PORT, DOMAIN
+from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DEFAULT_PORT, DOMAIN, LOGGER
 
 
 class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLAN config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
@@ -31,6 +32,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.passkey: str | None = None
         self.username: str | None = None
         self.password: str | None = None
+        self.circuits: list[int] = [1]
         self._auth_required = True
 
     async def async_step_user(
@@ -323,6 +325,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSKEY: self.passkey,
                 CONF_USERNAME: self.username,
                 CONF_PASSWORD: self.password,
+                CONF_HEATING_CIRCUITS: self.circuits,
             },
         )
 
@@ -343,6 +346,17 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         bsblan = BSBLAN(config, session)
         device = await bsblan.device()
         retrieved_mac = device.MAC
+
+        # Discover available heating circuits
+        try:
+            await bsblan.initialize()
+            self.circuits = await bsblan.get_available_circuits()
+        except BSBLANError:
+            LOGGER.debug(
+                "Circuit discovery not available for %s, defaulting to single circuit",
+                self.host,
+            )
+            self.circuits = [1]
 
         # Handle unique ID assignment based on whether MAC was available from zeroconf
         if not self.mac:
