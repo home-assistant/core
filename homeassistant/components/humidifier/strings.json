@@ -200,14 +200,14 @@
   "title": "Humidifier",
   "triggers": {
     "mode_changed": {
-      "description": "Triggers after the mode of one or more humidifiers changes.",
+      "description": "Triggers after the operation mode of one or more humidifiers changes.",
       "fields": {
         "behavior": {
           "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
           "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
         },
         "mode": {
-          "description": "The modes to trigger on.",
+          "description": "The operation modes to trigger on.",
           "name": "Mode"
         }
       },
