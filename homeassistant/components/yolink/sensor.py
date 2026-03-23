@@ -17,6 +17,7 @@ from yolink.const import (
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
+    ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
     ATTR_DEVICE_MULTI_OUTLET,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_OUTLET,
@@ -45,6 +46,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -117,6 +119,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_SPRINKLER,
     ATTR_DEVICE_SPRINKLER_V2,
     ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
+    ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
 ]
 
 BATTERY_POWER_SENSOR = [
@@ -140,6 +143,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_SMOKE_ALARM,
     ATTR_DEVICE_SPRINKLER_V2,
     ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
+    ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
 ]
 
 MCU_DEV_TEMPERATURE_SENSOR = [
@@ -198,7 +202,10 @@ def parse_data_humidity(device: YoLinkDevice, data: dict) -> int | None:
 
 def parse_data_temperature(device: YoLinkDevice, data: dict) -> float | None:
     """Parse temperature data."""
-    if device.device_type == ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR:
+    if device.device_type in (
+        ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
+        ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
+    ):
         return (
             state.get("temperature")
             if (state := data.get("state")) is not None
@@ -245,6 +252,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
                 ATTR_DEVICE_TH_SENSOR,
                 ATTR_DEVICE_SOIL_TH_SENSOR,
                 ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
+                ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
             ]
         ),
         value=parse_data_temperature,
@@ -396,6 +404,19 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         ),
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: data.get("coreTemperature"),
+    ),
+    YoLinkSensorEntityDescription(
+        key="co",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR
+        ),
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            state.get("co") if (state := data.get("state")) is not None else None
+        ),
     ),
 )
 
