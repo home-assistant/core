@@ -1,6 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted illuminance sensors to trigger on.",
+    "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
   "selector": {
