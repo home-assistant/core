@@ -30,6 +30,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -77,6 +78,7 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
     DomainSpec,
+    NumericalDomainSpec,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
@@ -96,7 +98,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -473,10 +475,11 @@ NUMERICAL_CONDITION_SCHEMA = vol.Schema(
 )
 
 
-class EntityNumericalConditionBase(EntityConditionBase):
+class EntityNumericalConditionBase(EntityConditionBase[NumericalDomainSpec]):
     """Condition for numerical state comparisons with above/below thresholds."""
 
     _schema = NUMERICAL_CONDITION_SCHEMA
+    _valid_unit: str | None | UndefinedType = UNDEFINED
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the numerical condition."""
@@ -485,10 +488,30 @@ class EntityNumericalConditionBase(EntityConditionBase):
         self._above: float | None = config.options.get(CONF_ABOVE)
         self._below: float | None = config.options.get(CONF_BELOW)
 
+    def _is_valid_unit(self, unit: str | None) -> bool:
+        """Check if the given unit is valid for this condition."""
+        if isinstance(self._valid_unit, UndefinedType):
+            return True
+        return unit == self._valid_unit
+
+    def _get_converter(self, entity_state: State) -> Callable[[float], float]:
+        """Get the value converter for an entity."""
+        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        if domain_spec.value_converter is not None:
+            return domain_spec.value_converter
+        return lambda x: x
+
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
+        if not self._is_valid_unit(
+            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        ):
+            return False
+
         try:
-            value = float(self._get_tracked_value(entity_state))
+            value = self._get_converter(entity_state)(
+                float(self._get_tracked_value(entity_state))
+            )
         except TypeError, ValueError:
             return False
 
@@ -500,15 +523,21 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
 
 def make_entity_numerical_condition(
-    domain_specs: Mapping[str, DomainSpec] | str,
+    domain_specs: Mapping[str, NumericalDomainSpec] | str,
+    valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalConditionBase]:
     """Create a condition for numerical state comparisons."""
-    specs = _normalize_domain_specs(domain_specs)
+    specs: Mapping[str, NumericalDomainSpec]
+    if isinstance(domain_specs, str):
+        specs = {domain_specs: NumericalDomainSpec()}
+    else:
+        specs = domain_specs
 
     class CustomCondition(EntityNumericalConditionBase):
         """Condition for numerical state."""
 
         _domain_specs = specs
+        _valid_unit = valid_unit
 
     return CustomCondition
 
