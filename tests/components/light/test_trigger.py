@@ -456,7 +456,7 @@ async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
     trigger_options: dict[str, Any],
     limit_entities: list[str],
 ) -> None:
-    """Test numerical triggers do not fire if limit entity in in wrong unit."""
+    """Test numerical triggers do not fire if limit entities have the wrong unit."""
     await assert_trigger_ignores_limit_entities_with_wrong_unit(
         hass,
         service_calls=service_calls,
