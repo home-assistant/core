@@ -178,9 +178,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, _: Mapping[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauth if credentials become invalid."""
         return await self.async_step_reauth_confirm()
 
