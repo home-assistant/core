@@ -13,7 +13,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': '256',
+    'hw_version': '1.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -30,7 +30,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'sw_version': '300',
+    'sw_version': '1.44',
     'via_device_id': None,
   })
 # ---

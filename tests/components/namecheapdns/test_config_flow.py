@@ -5,8 +5,14 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 import pytest
 
-from homeassistant.components.namecheapdns.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.namecheapdns.const import DOMAIN, UPDATE_URL
+from homeassistant.components.namecheapdns.helpers import AuthFailed
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -16,6 +22,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("mock_namecheap")
@@ -173,6 +180,7 @@ async def test_reconfigure(
         (ValueError, "unknown"),
         (False, "update_failed"),
         (ClientError, "cannot_connect"),
+        (AuthFailed, "invalid_auth"),
     ],
 )
 async def test_reconfigure_errors(
@@ -208,3 +216,120 @@ async def test_reconfigure_errors(
     assert result["reason"] == "reconfigure_successful"
 
     assert config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_namecheap")
+async def test_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reauth flow."""
+    aioclient_mock.get(
+        UPDATE_URL,
+        params=TEST_USER_INPUT,
+        text="<interface-response><ErrCount>0</ErrCount></interface-response>",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "text_error"),
+    [
+        (ValueError, "unknown"),
+        (False, "update_failed"),
+        (ClientError, "cannot_connect"),
+        (AuthFailed, "invalid_auth"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_namecheap: AsyncMock,
+    side_effect: Exception | bool,
+    text_error: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test we handle errors."""
+    aioclient_mock.get(
+        UPDATE_URL,
+        params=TEST_USER_INPUT,
+        text="<interface-response><ErrCount>0</ErrCount></interface-response>",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_namecheap.side_effect = [side_effect]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    mock_namecheap.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_initiate_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test authentication error initiates reauth flow."""
+
+    aioclient_mock.get(
+        UPDATE_URL,
+        params=TEST_USER_INPUT,
+        text="<interface-response><ErrCount>1</ErrCount><errors><Err1>Passwords do not match</Err1></errors></interface-response>",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == config_entry.entry_id

@@ -280,6 +280,7 @@
   "selector": {
     "type": {
       "options": {
+        "first_available": "First available",
         "last": "Most recently updated",
         "max": "Maximum",
         "mean": "Arithmetic mean",

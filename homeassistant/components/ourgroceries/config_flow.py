@@ -39,7 +39,7 @@ class OurGroceriesConfigFlow(ConfigFlow, domain=DOMAIN):
             og = OurGroceries(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
             try:
                 await og.login()
-            except (TimeoutError, ClientError):
+            except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidLoginException:
                 errors["base"] = "invalid_auth"

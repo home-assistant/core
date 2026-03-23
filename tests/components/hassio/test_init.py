@@ -1,18 +1,33 @@
 """The tests for the hassio component."""
 
+from dataclasses import replace
 from datetime import timedelta
 import os
+from pathlib import PurePath
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonsStats
+from aiohasupervisor.models import (
+    AddonsStats,
+    AddonStage,
+    AddonState,
+    CIFSMountResponse,
+    HomeAssistantOptions,
+    InstalledAddon,
+    InstalledAddonComplete,
+    MountsInfo,
+    MountState,
+    MountType,
+    MountUsage,
+    SupervisorOptions,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import frontend
+from homeassistant.components import frontend, hassio
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
@@ -25,12 +40,18 @@ from homeassistant.components.hassio.const import (
     HASSIO_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -38,135 +59,42 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
-@pytest.fixture
-def extra_os_info():
-    """Extra os/info."""
-    return {}
-
-
-@pytest.fixture
-def os_info(extra_os_info):
-    """Mock os/info."""
-    return {
-        "json": {
-            "result": "ok",
-            "data": {"version_latest": "1.0.0", "version": "1.0.0", **extra_os_info},
-        }
-    }
-
-
 @pytest.fixture(autouse=True)
 def mock_all(
     aioclient_mock: AiohttpClientMocker,
-    os_info: AsyncMock,
     store_info: AsyncMock,
     addon_info: AsyncMock,
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
     resolution_info: AsyncMock,
     jobs_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    homeassistant_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    addons_list: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    homeassistant_stats: AsyncMock,
+    supervisor_stats: AsyncMock,
+    addon_installed: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {
-                "supervisor": "222",
-                "homeassistant": "0.110.0",
-                "hassos": "1.2.3",
-            },
-        },
+    addons_list.return_value[0] = replace(
+        addons_list.return_value[0],
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        state=AddonState.STOPPED,
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
-            },
-        },
+    addons_list.return_value[1] = replace(
+        addons_list.return_value[1],
+        version="1.0.0",
+        version_latest="1.0.0",
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        **os_info,
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={
-            "result": "ok",
-            "data": {
-                "version_latest": "1.0.0",
-                "version": "1.0.0",
-                "auto_update": True,
-                "addons": [
-                    {
-                        "name": "test",
-                        "slug": "test",
-                        "state": "stopped",
-                        "update_available": False,
-                        "version": "1.0.0",
-                        "version_latest": "1.0.0",
-                        "repository": "core",
-                        "icon": False,
-                    },
-                    {
-                        "name": "test2",
-                        "slug": "test2",
-                        "state": "stopped",
-                        "update_available": False,
-                        "version": "1.0.0",
-                        "version_latest": "1.0.0",
-                        "repository": "core",
-                        "icon": False,
-                    },
-                ],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
+    addon_installed.return_value.state = AddonState.STOPPED
 
     async def mock_addon_stats(addon: str) -> AddonsStats:
         """Mock addon stats for test and test2."""
@@ -195,22 +123,27 @@ def mock_all(
     addon_stats.side_effect = mock_addon_stats
 
     def mock_addon_info(slug: str):
-        addon_info.return_value.auto_update = slug == "test"
-        return addon_info.return_value
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
+        if slug == "test":
+            addon.name = "test"
+            addon.slug = "test"
+            addon.url = "https://github.com/home-assistant/addons/test"
+            addon.auto_update = True
+        else:
+            addon.name = "test2"
+            addon.slug = "test2"
+            addon.url = "https://github.com"
+            addon.auto_update = False
+
+        return addon
 
     addon_info.side_effect = mock_addon_info
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/network/info",
-        json={
-            "result": "ok",
-            "data": {
-                "host_internet": True,
-                "supervisor_internet": True,
-            },
-        },
     )
 
 
@@ -225,7 +158,7 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
 
@@ -256,6 +189,7 @@ async def test_setup_api_panel(
         },
         "url_path": "hassio",
         "require_admin": True,
+        "show_in_sidebar": True,
         "config_panel_domain": None,
     }
 
@@ -277,6 +211,7 @@ async def test_setup_app_panel(hass: HomeAssistant) -> None:
         "config": None,
         "url_path": "app",
         "require_admin": False,
+        "show_in_sidebar": True,
         "config_panel_domain": None,
     }
 
@@ -294,10 +229,27 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 9999
-    assert "watchdog" not in aioclient_mock.mock_calls[0][2]
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
+    )
+
+
+async def test_setup_api_push_api_data_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with error while pushing core config data to API."""
+    supervisor_client.homeassistant.set_options.side_effect = SupervisorError("boom")
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
+        await hass.async_block_till_done()
+
+    assert result
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert "Failed to update Home Assistant options in Supervisor: boom" in caplog.text
 
 
 async def test_setup_api_push_api_data_server_host(
@@ -315,10 +267,10 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 9999
-    assert not aioclient_mock.mock_calls[0][2]["watchdog"]
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY, watchdog=False)
+    )
 
 
 async def test_setup_api_push_api_data_default(
@@ -336,10 +288,13 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 8123
-    refresh_token = aioclient_mock.mock_calls[0][2]["refresh_token"]
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=8123, refresh_token=ANY)
+    )
+    refresh_token = (
+        supervisor_client.homeassistant.set_options.mock_calls[0].args[0].refresh_token
+    )
     hassio_user = await hass.auth.async_get_user(
         hass_storage[STORAGE_KEY]["data"]["hassio_user"]
     )
@@ -417,10 +372,10 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
-    assert not aioclient_mock.mock_calls[0][2]["ssl"]
-    assert aioclient_mock.mock_calls[0][2]["port"] == 8123
-    assert aioclient_mock.mock_calls[0][2]["refresh_token"] == token.token
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
+    )
 
 
 async def test_setup_core_push_config(
@@ -436,14 +391,36 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
-    assert aioclient_mock.mock_calls[1][2]["timezone"] == "testzone"
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    supervisor_client.supervisor.set_options.assert_called_once_with(
+        SupervisorOptions(timezone="testzone")
+    )
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
         await hass.config.async_update(time_zone="America/New_York", country="US")
     await hass.async_block_till_done()
-    assert aioclient_mock.mock_calls[-1][2]["timezone"] == "America/New_York"
-    assert aioclient_mock.mock_calls[-1][2]["country"] == "US"
+    supervisor_client.supervisor.set_options.assert_called_with(
+        SupervisorOptions(timezone="America/New_York", country="US")
+    )
+
+
+async def test_setup_core_push_config_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with error while pushing supervisor config data to API."""
+    hass.config.time_zone = "testzone"
+    supervisor_client.supervisor.set_options.side_effect = SupervisorError("boom")
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {"hassio": {}})
+        await hass.async_block_till_done()
+
+    assert result
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert "Failed to update Supervisor options: boom" in caplog.text
 
 
 async def test_setup_hassio_no_additional_data(
@@ -460,7 +437,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
@@ -490,10 +467,17 @@ async def test_warn_when_cannot_connect(
 async def test_service_register(hass: HomeAssistant) -> None:
     """Check if service will be setup."""
     assert await async_setup_component(hass, "hassio", {})
+    # New app services
+    assert hass.services.has_service("hassio", "app_start")
+    assert hass.services.has_service("hassio", "app_stop")
+    assert hass.services.has_service("hassio", "app_restart")
+    assert hass.services.has_service("hassio", "app_stdin")
+    # Legacy addon services (deprecated)
     assert hass.services.has_service("hassio", "addon_start")
     assert hass.services.has_service("hassio", "addon_stop")
     assert hass.services.has_service("hassio", "addon_restart")
     assert hass.services.has_service("hassio", "addon_stdin")
+    # Other services
     assert hass.services.has_service("hassio", "host_shutdown")
     assert hass.services.has_service("hassio", "host_reboot")
     assert hass.services.has_service("hassio", "host_reboot")
@@ -501,16 +485,20 @@ async def test_service_register(hass: HomeAssistant) -> None:
     assert hass.services.has_service("hassio", "backup_partial")
     assert hass.services.has_service("hassio", "restore_full")
     assert hass.services.has_service("hassio", "restore_partial")
+    assert hass.services.has_service("hassio", "mount_reload")
 
 
+@pytest.mark.parametrize(
+    "app_or_addon",
+    ["app", "addon"],
+)
 @pytest.mark.freeze_time("2021-11-13 11:48:00")
 async def test_service_calls(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
     supervisor_client: AsyncMock,
-    addon_installed: AsyncMock,
     supervisor_is_connected: AsyncMock,
+    app_or_addon: str,
 ) -> None:
     """Call service and check the API calls behind that."""
     supervisor_is_connected.side_effect = SupervisorError
@@ -534,22 +522,28 @@ async def test_service_calls(
         "http://127.0.0.1/backups/test/restore/partial", json={"result": "ok"}
     )
 
-    await hass.services.async_call("hassio", "addon_start", {"addon": "test"})
-    await hass.services.async_call("hassio", "addon_stop", {"addon": "test"})
-    await hass.services.async_call("hassio", "addon_restart", {"addon": "test"})
     await hass.services.async_call(
-        "hassio", "addon_stdin", {"addon": "test", "input": "test"}
+        "hassio", f"{app_or_addon}_start", {app_or_addon: "test"}
+    )
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_stop", {app_or_addon: "test"}
+    )
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_restart", {app_or_addon: "test"}
+    )
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_stdin", {app_or_addon: "test", "input": "test"}
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 24
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 27
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 26
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 29
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -557,14 +551,15 @@ async def test_service_calls(
         "backup_partial",
         {
             "homeassistant": True,
-            "addons": ["test"],
+            "apps": ["test"],
             "folders": ["ssl"],
             "password": "123456",
         },
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 28
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
+    # API receives "addons" even when we pass "apps"
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "homeassistant": True,
@@ -582,14 +577,15 @@ async def test_service_calls(
         {
             "slug": "test",
             "homeassistant": False,
-            "addons": ["test"],
+            "apps": ["test"],
             "folders": ["ssl"],
             "password": "123456",
         },
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 33
+    # API receives "addons" even when we pass "apps"
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -608,7 +604,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 34
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -624,7 +620,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 32
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 35
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "location": None,
@@ -643,17 +639,22 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 34
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 37
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
     }
 
 
+@pytest.mark.parametrize(
+    "app_or_addon",
+    ["app", "addon"],
+)
 async def test_invalid_service_calls(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     supervisor_is_connected: AsyncMock,
+    app_or_addon: str,
 ) -> None:
     """Call service with invalid input and check that it raises."""
     supervisor_is_connected.side_effect = SupervisorError
@@ -663,49 +664,89 @@ async def test_invalid_service_calls(
 
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio", "addon_start", {"addon": "does_not_exist"}
+            "hassio", f"{app_or_addon}_start", {app_or_addon: "does_not_exist"}
         )
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio", "addon_stdin", {"addon": "does_not_exist", "input": "test"}
+            "hassio",
+            f"{app_or_addon}_stdin",
+            {app_or_addon: "does_not_exist", "input": "test"},
         )
 
 
-async def test_addon_service_call_with_complex_slug(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_is_connected: AsyncMock,
-) -> None:
-    """Addon slugs can have ., - and _, confirm that passes validation."""
-    supervisor_mock_data = {
-        "version_latest": "1.0.0",
-        "version": "1.0.0",
-        "auto_update": True,
-        "addons": [
-            {
-                "name": "test.a_1-2",
-                "slug": "test.a_1-2",
-                "state": "stopped",
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "repository": "core",
-                "icon": False,
-            },
-        ],
-    }
-    supervisor_is_connected.side_effect = SupervisorError
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_supervisor_info",
-            return_value=supervisor_mock_data,
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            "backup_partial",
+            {"apps": ["test"], "addons": ["test"]},
         ),
-    ):
+        (
+            "restore_partial",
+            {"apps": ["test"], "addons": ["test"], "slug": "test"},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("addon_installed")
+async def test_service_calls_apps_addons_exclusive(
+    hass: HomeAssistant,
+    supervisor_is_connected: AsyncMock,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test that apps and addons parameters are mutually exclusive."""
+    supervisor_is_connected.side_effect = SupervisorError
+    with patch.dict(os.environ, MOCK_ENVIRON):
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-    await hass.services.async_call("hassio", "addon_start", {"addon": "test.a_1-2"})
+    with pytest.raises(
+        Invalid, match="two or more values in the same group of exclusion"
+    ):
+        await hass.services.async_call("hassio", service, service_data)
+
+
+@pytest.mark.parametrize(
+    "app_or_addon",
+    ["app", "addon"],
+)
+@pytest.mark.usefixtures("aioclient_mock")
+async def test_addon_service_call_with_complex_slug(
+    hass: HomeAssistant,
+    supervisor_is_connected: AsyncMock,
+    app_or_addon: str,
+    addons_list: AsyncMock,
+) -> None:
+    """Addon slugs can have ., - and _, confirm that passes validation."""
+    addons_list.return_value = [
+        InstalledAddon(
+            detached=False,
+            advanced=False,
+            available=True,
+            build=False,
+            description="",
+            homeassistant=None,
+            icon=False,
+            logo=False,
+            name="test.a_1-2",
+            repository="core",
+            slug="test.a_1-2",
+            stage=AddonStage.STABLE,
+            update_available=False,
+            url="https://github.com",
+            version_latest="1.0.0",
+            version="1.0.0",
+            state=AddonState.STOPPED,
+        )
+    ]
+    supervisor_is_connected.side_effect = SupervisorError
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_start", {app_or_addon: "test.a_1-2"}
+    )
 
 
 @pytest.mark.usefixtures("hassio_env")
@@ -724,12 +765,12 @@ async def test_service_calls_core(
     await hass.services.async_call("homeassistant", "stop")
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 6
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
 
     await hass.services.async_call("homeassistant", "check_config")
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 6
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
 
     with patch(
         "homeassistant.config.async_check_ha_config_file", return_value=None
@@ -738,7 +779,7 @@ async def test_service_calls_core(
         await hass.async_block_till_done()
         assert mock_check_config.called
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 7
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 21
 
 
 @pytest.mark.usefixtures("addon_installed")
@@ -768,157 +809,79 @@ async def test_migration_off_hassio(hass: HomeAssistant) -> None:
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 
-@pytest.mark.usefixtures("addon_installed")
+@pytest.mark.usefixtures("addon_installed", "supervisor_info")
 async def test_device_registry_calls(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    addons_list: AsyncMock,
+    os_info: AsyncMock,
 ) -> None:
     """Test device registry entries for hassio."""
-    supervisor_mock_data = {
-        "version": "1.0.0",
-        "version_latest": "1.0.0",
-        "auto_update": True,
-        "addons": [
-            {
-                "name": "test",
-                "state": "started",
-                "slug": "test",
-                "installed": True,
-                "icon": False,
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "repository": "test",
-                "url": "https://github.com/home-assistant/addons/test",
-            },
-            {
-                "name": "test2",
-                "state": "started",
-                "slug": "test2",
-                "installed": True,
-                "icon": False,
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "url": "https://github.com",
-            },
-        ],
-    }
-    os_mock_data = {
-        "board": "odroid-n2",
-        "boot": "A",
-        "update_available": False,
-        "version": "5.12",
-        "version_latest": "5.12",
-    }
+    addons_list.return_value[0] = replace(
+        addons_list.return_value[0],
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+    )
+    addons_list.return_value[1] = replace(
+        addons_list.return_value[1],
+        version="1.0.0",
+        version_latest="1.0.0",
+        state=AddonState.STARTED,
+    )
+    os_info.return_value = replace(
+        os_info.return_value,
+        board="odroid-n2",
+        boot="A",
+        version="5.12",
+        version_latest="5.12",
+    )
 
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_supervisor_info",
-            return_value=supervisor_mock_data,
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_os_info",
-            return_value=os_mock_data,
-        ),
-    ):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert len(device_registry.devices) == 6
 
-    supervisor_mock_data = {
-        "version": "1.0.0",
-        "version_latest": "1.0.0",
-        "auto_update": True,
-        "addons": [
-            {
-                "name": "test2",
-                "state": "started",
-                "slug": "test2",
-                "installed": True,
-                "icon": False,
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "url": "https://github.com",
-            },
-        ],
-    }
+    addons_list.return_value.pop(0)
 
     # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.get_supervisor_info",
-            return_value=supervisor_mock_data,
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_os_info",
-            return_value=os_mock_data,
-        ),
-    ):
-        async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(device_registry.devices) == 5
+    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(device_registry.devices) == 5
 
-        async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(device_registry.devices) == 5
+    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(device_registry.devices) == 5
 
-    supervisor_mock_data = {
-        "version": "1.0.0",
-        "version_latest": "1.0.0",
-        "auto_update": True,
-        "addons": [
-            {
-                "name": "test2",
-                "slug": "test2",
-                "state": "started",
-                "installed": True,
-                "icon": False,
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "url": "https://github.com",
-            },
-            {
-                "name": "test3",
-                "slug": "test3",
-                "state": "stopped",
-                "installed": True,
-                "icon": False,
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "url": "https://github.com",
-            },
-        ],
-    }
+    addons_list.return_value.append(
+        InstalledAddon(
+            detached=False,
+            advanced=False,
+            available=True,
+            build=False,
+            description="",
+            homeassistant=None,
+            icon=False,
+            logo=False,
+            name="test3",
+            repository="core",
+            slug="test3",
+            stage=AddonStage.STABLE,
+            update_available=False,
+            url="https://github.com",
+            version_latest="1.0.0",
+            version="1.0.0",
+            state=AddonState.STOPPED,
+        )
+    )
 
     # Test that when addon is added, next update will reload the entry so we register
     # a new device
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.get_supervisor_info",
-            return_value=supervisor_mock_data,
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_os_info",
-            return_value=os_mock_data,
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            return_value={
-                "supervisor": "222",
-                "homeassistant": "0.110.0",
-                "hassos": None,
-            },
-        ),
-    ):
-        async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
-        await hass.async_block_till_done()
-        assert len(device_registry.devices) == 5
+    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
+    await hass.async_block_till_done()
+    assert len(device_registry.devices) == 5
 
 
 @pytest.mark.usefixtures("addon_installed")
@@ -926,7 +889,7 @@ async def test_coordinator_updates(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, supervisor_client: AsyncMock
 ) -> None:
     """Test coordinator updates."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
@@ -943,8 +906,8 @@ async def test_coordinator_updates(
     supervisor_client.refresh_updates.assert_not_called()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -965,8 +928,8 @@ async def test_coordinator_updates(
     supervisor_client.refresh_updates.reset_mock()
     supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -991,7 +954,7 @@ async def test_coordinator_updates_stats_entities_enabled(
     supervisor_client: AsyncMock,
 ) -> None:
     """Test coordinator updates with stats entities enabled."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
@@ -1014,8 +977,8 @@ async def test_coordinator_updates_stats_entities_enabled(
     supervisor_client.refresh_updates.assert_not_called()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -1035,8 +998,8 @@ async def test_coordinator_updates_stats_entities_enabled(
     supervisor_client.refresh_updates.reset_mock()
     supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -1055,28 +1018,31 @@ async def test_coordinator_updates_stats_entities_enabled(
 
 
 @pytest.mark.parametrize(
-    ("extra_os_info", "integration"),
+    ("board", "integration"),
     [
-        ({"board": "green"}, "homeassistant_green"),
-        ({"board": "odroid-c2"}, "hardkernel"),
-        ({"board": "odroid-c4"}, "hardkernel"),
-        ({"board": "odroid-n2"}, "hardkernel"),
-        ({"board": "odroid-xu4"}, "hardkernel"),
-        ({"board": "rpi2"}, "raspberry_pi"),
-        ({"board": "rpi3"}, "raspberry_pi"),
-        ({"board": "rpi3-64"}, "raspberry_pi"),
-        ({"board": "rpi4"}, "raspberry_pi"),
-        ({"board": "rpi4-64"}, "raspberry_pi"),
-        ({"board": "yellow"}, "homeassistant_yellow"),
+        ("green", "homeassistant_green"),
+        ("odroid-c2", "hardkernel"),
+        ("odroid-c4", "hardkernel"),
+        ("odroid-n2", "hardkernel"),
+        ("odroid-xu4", "hardkernel"),
+        ("rpi2", "raspberry_pi"),
+        ("rpi3", "raspberry_pi"),
+        ("rpi3-64", "raspberry_pi"),
+        ("rpi4", "raspberry_pi"),
+        ("rpi4-64", "raspberry_pi"),
+        ("yellow", "homeassistant_yellow"),
     ],
 )
 async def test_setup_hardware_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
-    integration,
+    os_info: AsyncMock,
+    board: str,
+    integration: str,
 ) -> None:
     """Test setup initiates hardware integration."""
+    os_info.return_value = replace(os_info.return_value, board=board)
 
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
@@ -1084,12 +1050,16 @@ async def test_setup_hardware_integration(
             f"homeassistant.components.{integration}.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.homeassistant_yellow.config_flow.probe_silabs_firmware_info",
+            return_value=None,
+        ),
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1135,7 +1105,7 @@ async def test_deprecated_installation_issue_os_armv7(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1144,8 +1114,8 @@ async def test_deprecated_installation_issue_os_armv7(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1198,7 +1168,7 @@ async def test_deprecated_installation_issue_32bit_os(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1207,8 +1177,8 @@ async def test_deprecated_installation_issue_32bit_os(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1259,7 +1229,7 @@ async def test_deprecated_installation_issue_32bit_supervised(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1268,8 +1238,8 @@ async def test_deprecated_installation_issue_32bit_supervised(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1324,7 +1294,7 @@ async def test_deprecated_installation_issue_64bit_supervised(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1333,8 +1303,8 @@ async def test_deprecated_installation_issue_64bit_supervised(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1385,7 +1355,7 @@ async def test_deprecated_installation_issue_supported_board(
             return_value={"hassos": True, "arch": "aarch64"},
         ),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1394,8 +1364,8 @@ async def test_deprecated_installation_issue_supported_board(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1409,3 +1379,150 @@ async def test_deprecated_installation_issue_supported_board(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+async def mount_reload_test_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> dr.DeviceEntry:
+    """Set up mount reload test and return the device entry."""
+    supervisor_client.mounts.info = AsyncMock(
+        return_value=MountsInfo(
+            default_backup_mount=None,
+            mounts=[
+                CIFSMountResponse(
+                    share="files",
+                    server="1.2.3.4",
+                    name="NAS",
+                    type=MountType.CIFS,
+                    usage=MountUsage.SHARE,
+                    read_only=False,
+                    state=MountState.ACTIVE,
+                    user_path=PurePath("/share/nas"),
+                )
+            ],
+        )
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mount_NAS")})
+    assert device is not None
+    return device
+
+
+async def test_mount_reload_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    await hass.services.async_call(
+        "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+    )
+    supervisor_client.mounts.reload_mount.assert_awaited_once_with("NAS")
+
+
+async def test_mount_reload_action_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call failure."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    supervisor_client.mounts.reload_mount = AsyncMock(
+        side_effect=SupervisorError("test failure")
+    )
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Failed to reload mount NAS: test failure"
+
+
+async def test_mount_reload_unknown_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with unknown device ID."""
+    await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": "1234"}, blocking=True
+        )
+    assert str(exc.value) == "Device ID not found"
+
+
+async def test_mount_reload_no_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with an unnamed device."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    device_registry.async_update_device(device.id, name=None)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_invalid_model(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with an invalid model."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    device_registry.async_update_device(device.id, model=None)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_not_supervisor_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with a device not belonging to the supervisor."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "test")},
+        name=device.name,
+        model=device.model,
+    )
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device2.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_selector_matches_device_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test that the model name in the selector of mount reload is valid."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    services = load_yaml_dict(f"{hassio.__path__[0]}/services.yaml")
+    assert (
+        services["mount_reload"]["fields"]["device_id"]["selector"]["device"]["filter"][
+            "model"
+        ]
+        == device.model
+    )

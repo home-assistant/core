@@ -28,6 +28,10 @@
           "description": "Custom name for the downloaded file.",
           "name": "Filename"
         },
+        "headers": {
+          "description": "Additional custom HTTP headers.",
+          "name": "Headers"
+        },
         "overwrite": {
           "description": "Overwrite file if it exists.",
           "name": "Overwrite"

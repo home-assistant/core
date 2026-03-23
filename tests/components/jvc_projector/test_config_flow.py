@@ -1,6 +1,7 @@
 """Tests for JVC Projector config flow."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
 import pytest
@@ -16,6 +17,16 @@ from . import MOCK_HOST, MOCK_PASSWORD, MOCK_PORT
 from tests.common import MockConfigEntry
 
 TARGET = "homeassistant.components.jvc_projector.config_flow.JvcProjector"
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.jvc_projector.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)

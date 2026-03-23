@@ -21,7 +21,7 @@ async def fetch_latest_carbon_intensity(
     em: ElectricityMaps,
     config: Mapping[str, Any],
 ) -> HomeAssistantCarbonIntensityResponse:
-    """Fetch the latest carbon intensity based on country code or location coordinates."""
+    """Fetch the latest carbon intensity based on zone key or location coordinates."""
     request: CoordinatesRequest | ZoneRequest = CoordinatesRequest(
         lat=config.get(CONF_LATITUDE, hass.config.latitude),
         lon=config.get(CONF_LONGITUDE, hass.config.longitude),

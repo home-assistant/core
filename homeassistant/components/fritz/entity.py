@@ -33,11 +33,9 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
         )
 
     @property
-    def ip_address(self) -> str | None:
+    def ip_address(self) -> str:
         """Return the primary ip address of the device."""
-        if self._mac:
-            return self._avm_wrapper.devices[self._mac].ip_address
-        return None
+        return self._avm_wrapper.devices[self._mac].ip_address
 
     @property
     def mac_address(self) -> str:
@@ -45,20 +43,13 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
         return self._mac
 
     @property
-    def hostname(self) -> str | None:
+    def hostname(self) -> str:
         """Return hostname of the device."""
-        if self._mac:
-            return self._avm_wrapper.devices[self._mac].hostname
-        return None
+        return self._avm_wrapper.devices[self._mac].hostname
 
     async def async_process_update(self) -> None:
         """Update device."""
         raise NotImplementedError
-
-    async def async_on_demand_update(self) -> None:
-        """Update state."""
-        await self.async_process_update()
-        self.async_write_ha_state()
 
 
 class FritzBoxBaseEntity:

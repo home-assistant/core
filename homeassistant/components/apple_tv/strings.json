@@ -62,6 +62,13 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "keyboard_focused": {
+        "name": "Keyboard focus"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

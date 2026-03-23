@@ -80,7 +80,7 @@ If the code communicates with devices, web services, or third-party tools:
       Updated and included derived files by running: `python3 -m script.hassfest`.
 - [ ] New or updated dependencies have been added to `requirements_all.txt`.  
       Updated by running `python3 -m script.gen_requirements_all`.
-- [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
+- [ ] For the updated dependencies a diff between library versions and ideally a link to the changelog/release notes is added to the PR description.
 
 <!--
   This project is very active and we have a high turnover of pull requests.

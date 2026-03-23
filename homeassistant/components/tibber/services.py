@@ -42,7 +42,7 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="no_config_entry",
         )
-    tibber_connection = entries[0].runtime_data.tibber_connection
+    tibber_connection = await entries[0].runtime_data.async_get_client(call.hass)
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")

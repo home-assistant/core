@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, TRANSLATED_ERRORS
 from .coordinator import (
+    TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
@@ -24,6 +25,7 @@ class TessieBaseEntity(
         TessieStateUpdateCoordinator
         | TessieEnergySiteInfoCoordinator
         | TessieEnergySiteLiveCoordinator
+        | TessieEnergyHistoryCoordinator
     ]
 ):
     """Parent class for Tessie entities."""
@@ -34,12 +36,15 @@ class TessieBaseEntity(
         self,
         coordinator: TessieStateUpdateCoordinator
         | TessieEnergySiteInfoCoordinator
-        | TessieEnergySiteLiveCoordinator,
+        | TessieEnergySiteLiveCoordinator
+        | TessieEnergyHistoryCoordinator,
         key: str,
+        data_key: str | None = None,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
 
         self.key = key
+        self.data_key = data_key or key
         self._attr_translation_key = key
         super().__init__(coordinator)
         self._async_update_attrs()
@@ -47,11 +52,11 @@ class TessieBaseEntity(
     @property
     def _value(self) -> Any:
         """Return value from coordinator data."""
-        return self.coordinator.data.get(self.key)
+        return self.coordinator.data.get(self.data_key)
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""
-        return self.coordinator.data.get(key or self.key, default)
+        return self.coordinator.data.get(key or self.data_key, default)
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -70,6 +75,7 @@ class TessieEntity(TessieBaseEntity):
         self,
         vehicle: TessieVehicleData,
         key: str,
+        data_key: str | None = None,
     ) -> None:
         """Initialize common aspects of a Tessie vehicle entity."""
         self.vin = vehicle.vin
@@ -78,12 +84,7 @@ class TessieEntity(TessieBaseEntity):
         self._attr_unique_id = f"{vehicle.vin}-{key}"
         self._attr_device_info = vehicle.device
 
-        super().__init__(vehicle.data_coordinator, key)
-
-    @property
-    def _value(self) -> Any:
-        """Return value from coordinator data."""
-        return self.coordinator.data.get(self.key)
+        super().__init__(vehicle.data_coordinator, key, data_key)
 
     def set(self, *args: Any) -> None:
         """Set a value in coordinator data."""
@@ -127,13 +128,31 @@ class TessieEnergyEntity(TessieBaseEntity):
         data: TessieEnergyData,
         coordinator: TessieEnergySiteInfoCoordinator | TessieEnergySiteLiveCoordinator,
         key: str,
+        data_key: str | None = None,
     ) -> None:
         """Initialize common aspects of a Tessie energy site entity."""
         self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(coordinator, key)
+        super().__init__(coordinator, key, data_key)
+
+
+class TessieEnergyHistoryEntity(TessieBaseEntity):
+    """Parent class for Tessie energy site history entities."""
+
+    def __init__(
+        self,
+        data: TessieEnergyData,
+        key: str,
+        data_key: str | None = None,
+    ) -> None:
+        """Initialize common aspects of a Tessie energy history entity."""
+        self.api = data.api
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+        assert data.history_coordinator
+        super().__init__(data.history_coordinator, key, data_key)
 
 
 class TessieWallConnectorEntity(TessieBaseEntity):
@@ -144,6 +163,7 @@ class TessieWallConnectorEntity(TessieBaseEntity):
         data: TessieEnergyData,
         din: str,
         key: str,
+        data_key: str | None = None,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
         self.din = din
@@ -153,10 +173,10 @@ class TessieWallConnectorEntity(TessieBaseEntity):
             manufacturer="Tesla",
             name="Wall Connector",
             via_device=(DOMAIN, str(data.id)),
-            serial_number=din.split("-")[-1],
+            serial_number=din.rsplit("-", maxsplit=1)[-1],
         )
         assert data.live_coordinator
-        super().__init__(data.live_coordinator, key)
+        super().__init__(data.live_coordinator, key, data_key)
 
     @property
     def _value(self) -> int:

@@ -50,9 +50,11 @@ MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="moveDetected",
     device_class=BinarySensorDeviceClass.MOTION,
     value_fn=(
-        lambda data: data.get("moveDetected") is True
-        or data.get("detectionState") == "DETECTED"
-        or data.get("detected") is True
+        lambda data: (
+            data.get("moveDetected") is True
+            or data.get("detectionState") == "DETECTED"
+            or data.get("detected") is True
+        )
     ),
 )
 
@@ -97,6 +99,14 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         DOOR_OPEN_DESCRIPTION,
     ),
     "Smart Lock Vision Pro": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Lock Vision": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Lock Vision Pro": (
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),

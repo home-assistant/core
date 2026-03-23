@@ -683,12 +683,8 @@ class ZHAGatewayProxy(EventBase):
                     ATTR_NWK: str(event.device_info.nwk),
                     ATTR_IEEE: str(event.device_info.ieee),
                     DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
-                    ATTR_MODEL: (
-                        event.device_info.model
-                        if event.device_info.model
-                        else UNKNOWN_MODEL
-                    ),
-                    ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
+                    ATTR_MODEL: (event.device_info.model or UNKNOWN_MODEL),
+                    ATTR_MANUFACTURER: manuf or UNKNOWN_MANUFACTURER,
                     ATTR_SIGNATURE: event.device_info.signature,
                 },
             },
@@ -1157,6 +1153,8 @@ def convert_to_zcl_values(
             continue
         value = fields[field.name]
         if issubclass(field.type, enum.Flag) and isinstance(value, list):
+            # Zigpy internal bitmap types are int subclasses as well
+            assert issubclass(field.type, int)
             new_value = 0
 
             for flag in value:

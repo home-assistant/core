@@ -1,0 +1,20 @@
+.condition_common: &condition_common
+  target:
+    entity:
+      domain: media_player
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+is_off: *condition_common
+is_on: *condition_common
+is_not_playing: *condition_common
+is_paused: *condition_common
+is_playing: *condition_common

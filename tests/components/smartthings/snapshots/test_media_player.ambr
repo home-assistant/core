@@ -1,8 +1,64 @@
 # serializer version: 1
+# name: test_all_entities[da_rvc_map_01011][media_player.robot_vacuum-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.robot_vacuum',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 284045>,
+    'translation_key': None,
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][media_player.robot_vacuum-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum',
+      'is_volume_muted': False,
+      'repeat': <RepeatMode.ALL: 'all'>,
+      'supported_features': <MediaPlayerEntityFeature: 284045>,
+      'volume_level': 0.2,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.robot_vacuum',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[hw_q80r_soundbar][media_player.soundbar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
@@ -72,8 +128,9 @@
 # ---
 # name: test_all_entities[im_speaker_ai_0001][media_player.galaxy_home_mini-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -128,8 +185,9 @@
 # ---
 # name: test_all_entities[sonos_player][media_player.elliots_rum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -184,8 +242,9 @@
 # ---
 # name: test_all_entities[vd_network_audio_002s][media_player.soundbar_living-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -239,10 +298,11 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[vd_network_audio_003s][media_player.soundbar-entry]
+# name: test_all_entities[vd_network_audio_003s][media_player.soundbar_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -253,7 +313,7 @@
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'media_player.soundbar',
+    'entity_id': 'media_player.soundbar_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -276,15 +336,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[vd_network_audio_003s][media_player.soundbar-state]
+# name: test_all_entities[vd_network_audio_003s][media_player.soundbar_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
-      'friendly_name': 'Soundbar',
+      'friendly_name': 'Soundbar 1',
       'supported_features': <MediaPlayerEntityFeature: 1420>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.soundbar',
+    'entity_id': 'media_player.soundbar_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -293,8 +353,9 @@
 # ---
 # name: test_all_entities[vd_stv_2017_k][media_player.tv_samsung_8_series_49-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([

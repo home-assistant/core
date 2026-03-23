@@ -5,20 +5,25 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID, CONF_STATE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
 )
 from homeassistant.helpers.template import Template
 
-from .const import CONF_DURATION, CONF_END, CONF_START, PLATFORMS
+from .const import (
+    CONF_DURATION,
+    CONF_END,
+    CONF_MIN_STATE_DURATION,
+    CONF_START,
+    PLATFORMS,
+    SECTION_ADVANCED_SETTINGS,
+)
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
 
@@ -38,8 +43,14 @@ async def async_setup_entry(
     end: str | None = entry.options.get(CONF_END)
 
     duration: timedelta | None = None
+    min_state_duration: timedelta
     if duration_dict := entry.options.get(CONF_DURATION):
         duration = timedelta(**duration_dict)
+    advanced_settings = entry.options.get(SECTION_ADVANCED_SETTINGS, {})
+    if min_state_duration_dict := advanced_settings.get(CONF_MIN_STATE_DURATION):
+        min_state_duration = timedelta(**min_state_duration_dict)
+    else:
+        min_state_duration = timedelta(0)
 
     history_stats = HistoryStats(
         hass,
@@ -48,17 +59,11 @@ async def async_setup_entry(
         Template(start, hass) if start else None,
         Template(end, hass) if end else None,
         duration,
+        min_state_duration,
     )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, entry, entry.title)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
-
-    # This can be removed in HA Core 2026.2
-    async_remove_stale_devices_links_keep_entity_device(
-        hass,
-        entry.entry_id,
-        entry.options[CONF_ENTITY_ID],
-    )
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
@@ -114,6 +119,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 )
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=2
+        )
+        if config_entry.minor_version < 3:
+            # Set the state class to measurement for backward compatibility
+            options[CONF_STATE_CLASS] = SensorStateClass.MEASUREMENT
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(

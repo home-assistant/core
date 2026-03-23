@@ -54,7 +54,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
 
         try:
             new_unique_id = await async_validate_api(hass, api_key)
-        except (AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError):
+        except AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError:
             return False
 
         LOGGER.debug("Migrate Sensibo config entry unique id to %s", new_unique_id)

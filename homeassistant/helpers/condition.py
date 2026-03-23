@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable
+from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -17,6 +17,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Final,
+    Literal,
     Protocol,
     TypedDict,
     Unpack,
@@ -75,6 +76,8 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
+    DomainSpec,
+    filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -172,14 +175,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[CONDITION_DESCRIPTION_CACHE] = {}
         hass.data[CONDITION_DISABLED_CONDITIONS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
@@ -330,12 +334,11 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityStateConditionBase(Condition):
-    """State condition."""
+class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
+    """Base class for entity conditions."""
 
-    _domain: str
+    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
-    _states: set[str]
 
     @override
     @classmethod
@@ -355,26 +358,33 @@ class EntityStateConditionBase(Condition):
         self._behavior = config.options[ATTR_BEHAVIOR]
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
-        }
+        """Filter entities matching any of the domain specs."""
+        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
+
+    @abc.abstractmethod
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
 
     @override
     async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
 
-        def check_any_match_state(states: list[str]) -> bool:
-            """Test if any entity match the state."""
-            return any(state in self._states for state in states)
+        def check_any_match_state(states: list[State]) -> bool:
+            """Test if any entity matches the state."""
+            return any(self.is_valid_state(state) for state in states)
 
-        def check_all_match_state(states: list[str]) -> bool:
+        def check_all_match_state(states: list[State]) -> bool:
             """Test if all entities match the state."""
-            return all(state in self._states for state in states)
+            return all(self.is_valid_state(state) for state in states)
 
-        matcher: Callable[[list[str]], bool]
+        matcher: Callable[[list[State]], bool]
         if self._behavior == BEHAVIOR_ANY:
             matcher = check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
@@ -390,7 +400,7 @@ class EntityStateConditionBase(Condition):
             )
             filtered_entity_ids = self.entity_filter(referenced_entity_ids)
             entity_states = [
-                _state.state
+                _state
                 for entity_id in filtered_entity_ids
                 if (_state := self._hass.states.get(entity_id))
                 and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
@@ -400,10 +410,35 @@ class EntityStateConditionBase(Condition):
         return test_state
 
 
+class EntityStateConditionBase(EntityConditionBase):
+    """State condition."""
+
+    _states: set[str]
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return self._get_tracked_value(entity_state) in self._states
+
+
+def _normalize_domain_specs(
+    domain_specs: Mapping[str, DomainSpec] | str,
+) -> Mapping[str, DomainSpec]:
+    """Normalize domain_specs argument to a Mapping."""
+    if isinstance(domain_specs, str):
+        return {domain_specs: DomainSpec()}
+    return domain_specs
+
+
 def make_entity_state_condition(
-    domain: str, states: str | set[str]
+    domain_specs: Mapping[str, DomainSpec] | str,
+    states: str | set[str],
 ) -> type[EntityStateConditionBase]:
-    """Create a condition for entity state changes to specific state(s)."""
+    """Create a condition for entity state changes to specific state(s).
+
+    domain_specs can be a string (domain name) for simple state-based conditions,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain conditions.
+    """
+    specs = _normalize_domain_specs(domain_specs)
 
     if isinstance(states, str):
         states_set = {states}
@@ -413,7 +448,7 @@ def make_entity_state_condition(
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
-        _domain = domain
+        _domain_specs = specs
         _states = states_set
 
     return CustomCondition
@@ -1346,13 +1381,18 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
         if entity_ids is not None:
             referenced.update(entity_ids)
 
+        if target_entities := _get_targets_from_condition_config(
+            config, CONF_ENTITY_ID
+        ):
+            referenced.update(target_entities)
+
     return referenced
 
 
 @callback
 def async_extract_devices(config: ConfigType | Template) -> set[str]:
     """Extract devices from a condition."""
-    referenced = set()
+    referenced: set[str] = set()
     to_process = deque([config])
 
     while to_process:
@@ -1366,13 +1406,55 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
             to_process.extend(config["conditions"])
             continue
 
-        if condition != "device":
+        if condition == "device":
+            if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+                referenced.add(device_id)
             continue
 
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            referenced.add(device_id)
+        if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
+            referenced.update(target_devices)
 
     return referenced
+
+
+@callback
+def async_extract_targets(
+    config: ConfigType | Template,
+    target_type: Literal["area_id", "floor_id", "label_id"],
+) -> set[str]:
+    """Extract targets from a condition."""
+    referenced: set[str] = set()
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "not", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        if targets := _get_targets_from_condition_config(config, target_type):
+            referenced.update(targets)
+
+    return referenced
+
+
+@callback
+def _get_targets_from_condition_config(
+    config: ConfigType,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a condition target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets
 
 
 def _load_conditions_file(integration: Integration) -> dict[str, Any]:
