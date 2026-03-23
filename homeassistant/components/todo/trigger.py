@@ -99,7 +99,13 @@ class ItemChangeListener(TargetEntityChangeTracker):
 
         self._unsubscribe_listeners = []
         for entity_id in tracked_entities:
-            entity = get_entity(self._hass, entity_id)
+            try:
+                entity = get_entity(self._hass, entity_id)
+            except HomeAssistantError:
+                _LOGGER.debug(
+                    "Skipping entity %s: not found or not a todo entity", entity_id
+                )
+                continue
             self._entity_listener(entity_id, entity.todo_items)
             unsub = entity.async_subscribe_updates(
                 functools.partial(_listener_wrapper, entity_id)

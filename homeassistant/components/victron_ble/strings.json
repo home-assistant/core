@@ -8,10 +8,15 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "invalid_access_token": "Invalid encryption key for instant readout",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "Device not supported",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "invalid_access_token": "Invalid encryption key for instant readout"
+      "invalid_access_token": "Invalid encryption key for instant readout",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "flow_title": "{title}",
     "step": {
@@ -23,6 +28,15 @@
           "access_token": "The encryption key for instant readout may be found in the VictronConnect app under Settings > Product info > Instant readout details > Encryption data > Encryption Key."
         },
         "title": "{title}"
+      },
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:component::victron_ble::config::step::access_token::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::victron_ble::config::step::access_token::data_description::access_token%]"
+        },
+        "description": "The encryption key for {title} is invalid or has changed. Please enter the correct key."
       },
       "user": {
         "data": {
