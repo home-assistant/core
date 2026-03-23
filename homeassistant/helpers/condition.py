@@ -97,6 +97,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
+from .trigger import _number_or_entity
 from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
@@ -322,15 +323,14 @@ ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
-STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-        [BEHAVIOR_ANY, BEHAVIOR_ALL]
-    ),
-}
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): STATE_CONDITION_OPTIONS_SCHEMA,
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                [BEHAVIOR_ANY, BEHAVIOR_ALL]
+            ),
+        },
     }
 )
 
@@ -455,21 +455,19 @@ def make_entity_state_condition(
     return CustomCondition
 
 
-NUMERICAL_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-        [BEHAVIOR_ANY, BEHAVIOR_ALL]
-    ),
-    vol.Optional(CONF_ABOVE): vol.Coerce(float),
-    vol.Optional(CONF_BELOW): vol.Coerce(float),
-}
-
-
 def _validate_above_below(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that above < below when both are set."""
-    above: float | None = config.get(CONF_ABOVE)
-    below: float | None = config.get(CONF_BELOW)
-    if above is not None and below is not None and above >= below:
-        raise vol.Invalid(f"'above' ({above}) must be less than 'below' ({below})")
+    above = config.get(CONF_ABOVE)
+    below = config.get(CONF_BELOW)
+    if above is None or below is None:
+        return config
+    if isinstance(above, str) or isinstance(below, str):
+        return config
+    if above >= below:
+        raise vol.Invalid(
+            f"A value can never be above {above} and below {below} at the same"
+            " time. You probably want two different conditions."
+        )
     return config
 
 
@@ -477,7 +475,13 @@ NUMERICAL_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
         vol.Required(CONF_OPTIONS): vol.All(
-            NUMERICAL_CONDITION_OPTIONS_SCHEMA,
+            {
+                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                    [BEHAVIOR_ANY, BEHAVIOR_ALL]
+                ),
+                vol.Optional(CONF_ABOVE): _number_or_entity,
+                vol.Optional(CONF_BELOW): _number_or_entity,
+            },
             cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
             _validate_above_below,
         ),
@@ -494,15 +498,31 @@ class EntityNumericalConditionBase(EntityConditionBase):
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the numerical condition."""
         super().__init__(hass, config)
-        assert config.options is not None
-        self._above: float | None = config.options.get(CONF_ABOVE)
-        self._below: float | None = config.options.get(CONF_BELOW)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._above: float | str | None = config.options.get(CONF_ABOVE)
+        self._below: float | str | None = config.options.get(CONF_BELOW)
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this condition."""
         if isinstance(self._valid_unit, UndefinedType):
             return True
         return unit == self._valid_unit
+
+    def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
+        """Get numerical value from float or entity state."""
+        if isinstance(entity_or_float, str):
+            if not (ref_state := self._hass.states.get(entity_or_float)):
+                return None
+            if not self._is_valid_unit(
+                ref_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            ):
+                return None
+            try:
+                return float(ref_state.state)
+            except TypeError, ValueError:
+                return None
+        return entity_or_float
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
@@ -516,10 +536,16 @@ class EntityNumericalConditionBase(EntityConditionBase):
         except TypeError, ValueError:
             return False
 
-        if self._above is not None and value <= self._above:
-            return False
-        if self._below is not None and value >= self._below:
-            return False
+        if self._above is not None:
+            if (above := self._get_numerical_value(self._above)) is None:
+                return False
+            if value <= above:
+                return False
+        if self._below is not None:
+            if (below := self._get_numerical_value(self._below)) is None:
+                return False
+            if value >= below:
+                return False
         return True
 
 

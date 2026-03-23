@@ -3252,5 +3252,5 @@ async def test_numerical_condition_schema_above_must_be_less_than_below(
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {CONF_ABOVE: above, CONF_BELOW: below},
     }
-    with pytest.raises(vol.Invalid, match="must be less than"):
+    with pytest.raises(vol.Invalid, match="can never be above"):
         await async_validate_condition_config(hass, config)
