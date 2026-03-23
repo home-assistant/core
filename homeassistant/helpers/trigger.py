@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine, Hashable, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 import functools
@@ -337,9 +337,7 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec, StateT: Hashable = str](
-    Trigger
-):
+class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpecT]
@@ -364,10 +362,6 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec, StateT: Hashable =
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
-
-    @abc.abstractmethod
-    def _get_tracked_value(self, state: State) -> StateT | None:
-        """Get the tracked value from a state based on the DomainSpec."""
 
     @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
@@ -452,7 +446,7 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec, StateT: Hashable =
 
 
 class StringEntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](
-    EntityTriggerBase[DomainSpecT, str]
+    EntityTriggerBase[DomainSpecT]
 ):
     """Trigger for string based entity state changes."""
 
@@ -614,9 +608,7 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityNumericalStateTriggerBase(
-    EntityTriggerBase[NumericalDomainSpec, float | None]
-):
+class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 
     def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
