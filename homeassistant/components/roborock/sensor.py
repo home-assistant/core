@@ -88,17 +88,6 @@ class RoborockSensorDescriptionQ10(SensorEntityDescription):
     value_fn: Callable[[Q10StatusTrait], StateType]
 
 
-def _q10_error_value_fn(status: Q10StatusTrait) -> str | None:
-    fault = getattr(status, "fault", None)
-    if fault is None:
-        return None
-    if isinstance(fault, str):
-        return fault
-    try:
-        return RoborockErrorCode(fault).name
-    except (ValueError, TypeError):
-        _LOGGER.debug("Unknown Roborock error code reported for Q10: %s", fault)
-        return None
 
 
 def _dock_error_value_fn(state: DeviceState) -> str | None:
