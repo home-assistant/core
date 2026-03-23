@@ -208,7 +208,7 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result["type"] is FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_auth"
 
 
@@ -238,7 +238,7 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result["type"] is FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "cannot_connect"
 
 
@@ -273,7 +273,7 @@ async def test_reauthentication_rate_limit_exceeded(hass: HomeAssistant) -> None
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result["type"] is FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "rate_limit_exceeded"
 
 
@@ -303,7 +303,7 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result["type"] is FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "unknown"
 
 
