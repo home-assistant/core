@@ -7,7 +7,7 @@
     },
     "error": {
       "cannot_connect": "Cannot connect — no data received from the device. Verify the IP address and that the EARN-E is powered on.",
-      "unknown": "An unexpected error occurred."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "discovery_confirm": {
