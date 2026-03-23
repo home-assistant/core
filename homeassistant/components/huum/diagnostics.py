@@ -22,14 +22,10 @@ async def async_get_config_entry_diagnostics(
 
     result: dict[str, Any] = {
         "entry": {
-            "data": async_redact_data(entry.data, TO_REDACT),
-            "options": dict(entry.options),
-            "entry_id": entry.entry_id,
             "version": entry.version,
         },
         "coordinator": {
             "last_update_success": coordinator.last_update_success,
-            "update_interval": str(coordinator.update_interval),
             "last_exception": (
                 str(coordinator.last_exception) if coordinator.last_exception else None
             ),

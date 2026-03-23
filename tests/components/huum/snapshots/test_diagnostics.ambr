@@ -4,7 +4,6 @@
     'coordinator': dict({
       'last_exception': None,
       'last_update_success': True,
-      'update_interval': '0:00:30',
     }),
     'data': dict({
       'config': 3,
@@ -35,13 +34,6 @@
       'temperature': 30,
     }),
     'entry': dict({
-      'data': dict({
-        'password': '**REDACTED**',
-        'username': '**REDACTED**',
-      }),
-      'entry_id': 'AABBCC112233',
-      'options': dict({
-      }),
       'version': 1,
     }),
   })

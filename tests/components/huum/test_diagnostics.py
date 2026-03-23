@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_with_selected_platforms
@@ -31,10 +31,6 @@ async def test_diagnostics(
     )
 
     assert diagnostics == snapshot
-    assert diagnostics["entry"]["data"][CONF_USERNAME] == "**REDACTED**"
-    assert diagnostics["entry"]["data"][CONF_PASSWORD] == "**REDACTED**"
-    assert diagnostics["data"]["sauna_name"] == "**REDACTED**"
-    assert diagnostics["data"]["payment_end_date"] == "**REDACTED**"
 
 
 async def test_diagnostics_without_coordinator_data(
@@ -52,7 +48,6 @@ async def test_diagnostics_without_coordinator_data(
         hass, hass_client, mock_config_entry
     )
 
-    assert diagnostics["entry"]["data"][CONF_USERNAME] == "**REDACTED**"
-    assert diagnostics["entry"]["data"][CONF_PASSWORD] == "**REDACTED**"
     assert diagnostics["coordinator"]["last_update_success"] is True
+    assert diagnostics["coordinator"]["last_exception"] is None
     assert "data" not in diagnostics
