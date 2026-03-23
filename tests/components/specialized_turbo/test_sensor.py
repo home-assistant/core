@@ -189,10 +189,10 @@ def test_assist_level_name_turbo() -> None:
 
 
 def test_assist_level_name_unknown_int() -> None:
-    """Test assist level name with unknown int value."""
+    """Test assist level name with unknown int returns None."""
     snap = TelemetrySnapshot()
     snap.motor.assist_level = 99
-    assert _assist_level_name(snap) == "99"
+    assert _assist_level_name(snap) is None
 
 
 # --- Sensor description metadata ---

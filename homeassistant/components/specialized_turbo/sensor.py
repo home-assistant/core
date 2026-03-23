@@ -57,7 +57,7 @@ def _assist_level_name(snap: TelemetrySnapshot) -> str | None:
         return None
     if isinstance(level, AssistLevel):
         return level.name.lower()
-    return str(level)
+    return None
 
 
 SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
