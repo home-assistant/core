@@ -91,40 +91,39 @@ class ThreemaAPIClient:
         Returns the message ID on success.
         Raises ThreemaSendError on failure.
         """
-        try:
-            async with self._get_connection() as conn:
-                if self.private_key:
-                    _LOGGER.debug("Sending E2E encrypted message to %s", recipient_id)
-                    message = TextMessage(
-                        connection=conn,
-                        to_id=recipient_id,
-                        text=text,
-                    )
-                else:
-                    _LOGGER.debug("Sending simple message to %s", recipient_id)
-                    message = SimpleTextMessage(
-                        connection=conn,
-                        to_id=recipient_id,
-                        text=text,
-                    )
+        async with self._get_connection() as conn:
+            if self.private_key:
+                _LOGGER.debug("Sending E2E encrypted message to %s", recipient_id)
+                message = TextMessage(
+                    connection=conn,
+                    to_id=recipient_id,
+                    text=text,
+                )
+            else:
+                _LOGGER.debug("Sending simple message to %s", recipient_id)
+                message = SimpleTextMessage(
+                    connection=conn,
+                    to_id=recipient_id,
+                    text=text,
+                )
 
+            try:
                 message_id: str = await message.send()
-                _LOGGER.debug("Message sent to %s (ID: %s)", recipient_id, message_id)
-                return message_id
-        except GatewayServerError as err:
-            if err.status == _HTTP_UNAUTHORIZED:
-                raise ThreemaAuthError("Invalid Threema Gateway credentials") from err
-            raise ThreemaSendError(
-                f"Gateway server error sending message to {recipient_id}: {err}"
-            ) from err
-        except GatewayError as err:
-            raise ThreemaSendError(
-                f"Gateway error sending message to {recipient_id}: {err}"
-            ) from err
-        except Exception as err:
-            raise ThreemaSendError(
-                f"Failed to send message to {recipient_id}: {err}"
-            ) from err
+            except GatewayServerError as err:
+                if err.status == _HTTP_UNAUTHORIZED:
+                    raise ThreemaAuthError(
+                        "Invalid Threema Gateway credentials"
+                    ) from err
+                raise ThreemaSendError(
+                    f"Gateway server error sending message to {recipient_id}: {err}"
+                ) from err
+            except GatewayError as err:
+                raise ThreemaSendError(
+                    f"Gateway error sending message to {recipient_id}: {err}"
+                ) from err
+
+        _LOGGER.debug("Message sent to %s (ID: %s)", recipient_id, message_id)
+        return message_id
 
 
 def generate_key_pair() -> tuple[str, str]:
