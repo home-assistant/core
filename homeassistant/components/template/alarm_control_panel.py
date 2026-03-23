@@ -80,6 +80,16 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
+SCRIPT_FIELDS = (
+    CONF_ARM_AWAY_ACTION,
+    CONF_ARM_CUSTOM_BYPASS_ACTION,
+    CONF_ARM_HOME_ACTION,
+    CONF_ARM_NIGHT_ACTION,
+    CONF_ARM_VACATION_ACTION,
+    CONF_DISARM_ACTION,
+    CONF_TRIGGER_ACTION,
+)
+
 DEFAULT_NAME = "Template Alarm Control Panel"
 
 ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
@@ -152,6 +162,7 @@ async def async_setup_entry(
         StateAlarmControlPanelEntity,
         ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA,
         True,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -172,6 +183,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_ALARM_CONTROL_PANELS,
+        script_options=SCRIPT_FIELDS,
     )
 
 

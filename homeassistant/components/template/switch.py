@@ -57,11 +57,16 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Switch"
 
+SCRIPT_FIELDS = (
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+)
+
 SWITCH_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
     }
 )
 
@@ -109,6 +114,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_SWITCHES,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -125,6 +131,7 @@ async def async_setup_entry(
         StateSwitchEntity,
         SWITCH_CONFIG_ENTRY_SCHEMA,
         True,
+        script_options=SCRIPT_FIELDS,
     )
 
 
