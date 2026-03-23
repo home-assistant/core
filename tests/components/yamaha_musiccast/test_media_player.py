@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiomusiccast.musiccast_data import MusicCastData, MusicCastZoneData
 import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -22,7 +23,6 @@ ENTITY_ID = "media_player.test_musiccast"
 @pytest.fixture
 def mock_device():
     """Return a mock MusicCastDevice with minimal data populated."""
-    from aiomusiccast.musiccast_data import MusicCastData, MusicCastZoneData
 
     zone = MusicCastZoneData()
     zone.name = "Main Zone"
