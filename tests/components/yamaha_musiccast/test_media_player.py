@@ -1,5 +1,6 @@
 """Tests for the yamaha_musiccast media player."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiomusiccast.musiccast_data import MusicCastData, MusicCastZoneData
@@ -18,6 +19,19 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 ENTITY_ID = "media_player.test_musiccast"
+
+
+@pytest.fixture(autouse=True)
+def silent_ssdp_scanner() -> Generator[None]:
+    """Prevent actual SSDP traffic during tests."""
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch("homeassistant.components.ssdp.Server._async_start_upnp_servers"),
+        patch("homeassistant.components.ssdp.Server._async_stop_upnp_servers"),
+    ):
+        yield
 
 
 @pytest.fixture
