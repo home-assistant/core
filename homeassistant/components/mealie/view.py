@@ -37,7 +37,7 @@ class MealieImageView(HomeAssistantView):
 
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry is None or entry.domain != DOMAIN:
-            _LOGGER.warning("Image proxy request for unknown config entry %s", entry_id)
+            _LOGGER.debug("Image proxy request for unknown config entry %s", entry_id)
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         host = entry.data[CONF_HOST]
