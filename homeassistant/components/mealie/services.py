@@ -179,7 +179,7 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     for item in mealplan_list:
         if recipe := item.get("recipe"):
             _inject_recipe_image_url(base_url, entry.entry_id, recipe)
-    return {"mealplan": mealplan_list}  # type: ignore[dict-item]
+    return {"mealplan": mealplan_list}
 
 
 async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
