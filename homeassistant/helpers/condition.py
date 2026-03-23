@@ -463,12 +463,23 @@ NUMERICAL_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
     vol.Optional(CONF_BELOW): vol.Coerce(float),
 }
 
+
+def _validate_above_below(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that above < below when both are set."""
+    above: float | None = config.get(CONF_ABOVE)
+    below: float | None = config.get(CONF_BELOW)
+    if above is not None and below is not None and above >= below:
+        raise vol.Invalid(f"'above' ({above}) must be less than 'below' ({below})")
+    return config
+
+
 NUMERICAL_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
         vol.Required(CONF_OPTIONS): vol.All(
             NUMERICAL_CONDITION_OPTIONS_SCHEMA,
             cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
+            _validate_above_below,
         ),
     }
 )

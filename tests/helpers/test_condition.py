@@ -3220,3 +3220,37 @@ async def test_numerical_condition_schema_requires_above_or_below(
     }
     with pytest.raises(vol.Invalid):
         await async_validate_condition_config(hass, config)
+
+
+@pytest.mark.parametrize(
+    ("above", "below"),
+    [
+        (10.0, 10.0),
+        (20.0, 10.0),
+    ],
+)
+async def test_numerical_condition_schema_above_must_be_less_than_below(
+    hass: HomeAssistant,
+    above: float,
+    below: float,
+) -> None:
+    """Test numerical condition schema rejects above >= below."""
+    condition_cls = make_entity_numerical_condition({"test": DomainSpec()})
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_OPTIONS: {CONF_ABOVE: above, CONF_BELOW: below},
+    }
+    with pytest.raises(vol.Invalid, match="must be less than"):
+        await async_validate_condition_config(hass, config)
