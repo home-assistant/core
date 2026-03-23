@@ -10,10 +10,18 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ABOVE,
+    CONF_BELOW,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.trigger import (
+    CONF_LOWER_LIMIT,
+    CONF_THRESHOLD_TYPE,
+    CONF_UPPER_LIMIT,
+    ThresholdType,
+)
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -21,6 +29,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_ignores_limit_entities_with_wrong_unit,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -472,4 +481,56 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_last(
         trigger=trigger,
         trigger_options=trigger_options,
         states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "limit_entities"),
+    [
+        (
+            "moisture.changed",
+            {
+                CONF_ABOVE: "sensor.moisture_above",
+                CONF_BELOW: "sensor.moisture_below",
+            },
+            ["sensor.moisture_above", "sensor.moisture_below"],
+        ),
+        (
+            "moisture.crossed_threshold",
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: "sensor.moisture_lower",
+                CONF_UPPER_LIMIT: "sensor.moisture_upper",
+            },
+            ["sensor.moisture_lower", "sensor.moisture_upper"],
+        ),
+    ],
+)
+async def test_moisture_trigger_ignores_limit_entity_with_wrong_unit(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger: str,
+    trigger_options: dict[str, Any],
+    limit_entities: list[str],
+) -> None:
+    """Test numerical triggers do not fire if limit entities have the wrong unit."""
+    moisture_attrs = {
+        ATTR_DEVICE_CLASS: SensorDeviceClass.MOISTURE,
+        ATTR_UNIT_OF_MEASUREMENT: "%",
+    }
+    await assert_trigger_ignores_limit_entities_with_wrong_unit(
+        hass,
+        service_calls=service_calls,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        entity_id="sensor.test_moisture",
+        reset_state={"state": "0", "attributes": moisture_attrs},
+        trigger_state={"state": "50", "attributes": moisture_attrs},
+        limit_entities=[
+            (limit_entities[0], "10"),
+            (limit_entities[1], "90"),
+        ],
+        correct_unit="%",
+        wrong_unit="g/m³",
     )
