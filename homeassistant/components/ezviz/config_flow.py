@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_SERIAL,
@@ -39,9 +40,11 @@ from .const import (
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
+    CONF_SCAN_INTERVAL,
     CONF_SESSION_ID,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
     DOMAIN,
     EU_URL,
@@ -296,13 +299,13 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 return await self._validate_and_create_camera_rtsp(user_input)
 
-            except InvalidHost, InvalidURL:
+            except (InvalidHost, InvalidURL):
                 errors["base"] = "invalid_host"
 
             except EzvizAuthVerificationCode:
                 errors["base"] = "mfa_required"
 
-            except PyEzvizError, AuthTestResultFailed:
+            except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
             except Exception:
@@ -357,13 +360,13 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     _validate_and_create_auth, user_input
                 )
 
-            except InvalidHost, InvalidURL:
+            except (InvalidHost, InvalidURL):
                 errors["base"] = "invalid_host"
 
             except EzvizAuthVerificationCode:
                 errors["base"] = "mfa_required"
 
-            except PyEzvizError, AuthTestResultFailed:
+            except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
             except Exception:
@@ -402,6 +405,12 @@ class EzvizOptionsFlowHandler(OptionsFlowWithReload):
 
         options = vol.Schema(
             {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=5, max=300)),
                 vol.Optional(
                     CONF_TIMEOUT,
                     default=self.config_entry.options.get(

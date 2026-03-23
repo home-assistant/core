@@ -69,7 +69,7 @@ SWITCH_TYPES: dict[int, EzvizSwitchEntityDescription] = {
         key="29",
         translation_key="all_day_video_recording",
         device_class=SwitchDeviceClass.SWITCH,
-        supported_ext=str(SupportExt.SupportFulldayRecord.value),
+        supported_ext=str(SupportExt.SupportFullDayRecord.value),
     ),
     32: EzvizSwitchEntityDescription(
         key="32",

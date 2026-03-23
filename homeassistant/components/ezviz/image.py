@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, NON_CAMERA_DEVICE_CATEGORIES
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
@@ -37,7 +37,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        EzvizLastMotion(hass, coordinator, camera) for camera in coordinator.data
+        EzvizLastMotion(hass, coordinator, camera)
+        for camera in coordinator.data
+        if coordinator.data[camera].get("device_category") not in NON_CAMERA_DEVICE_CATEGORIES
     )
 
 

@@ -137,6 +137,12 @@
       },
       "wan_ip": {
         "name": "WAN IP"
+      },
+      "zigbee_signal": {
+        "name": "Zigbee signal"
+      },
+      "siren_alarm_volume": {
+        "name": "Siren alarm volume"
       }
     },
     "siren": {
@@ -187,6 +193,7 @@
     "step": {
       "init": {
         "data": {
+          "scan_interval": "Polling interval (seconds)",
           "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras",
           "timeout": "Request timeout (seconds)"
         }
@@ -211,6 +218,20 @@
     "wake_device": {
       "description": "Wakes a camera from sleep mode. Especially useful for battery cameras.",
       "name": "Wake camera"
+    },
+    "set_polling_interval": {
+      "description": "Temporarily sets a fast polling interval for near-real-time sensor updates, then automatically restores the default interval after the specified duration.",
+      "fields": {
+        "interval": {
+          "description": "Polling interval in seconds during the burst window (1–15 s).",
+          "name": "Interval"
+        },
+        "duration": {
+          "description": "How long (in seconds) to keep the fast polling interval before reverting to the default (1–240 s, max 4 min).",
+          "name": "Duration"
+        }
+      },
+      "name": "Set polling interval"
     }
   }
 }

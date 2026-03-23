@@ -42,9 +42,13 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
+    CAMERA_DEVICE_CATEGORIES = {"IPC", "BatteryCamera", "BDoorBell", "CatEye", "XVR", "COMMON"}
+
     camera_entities = []
 
     for camera, value in coordinator.data.items():
+        if value.get("device_category") not in CAMERA_DEVICE_CATEGORIES:
+            continue
         camera_rtsp_entry = [
             item
             for item in hass.config_entries.async_entries(DOMAIN)

@@ -11,8 +11,12 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+import logging
+
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -66,6 +70,17 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="last_alarm_type_name",
         translation_key="last_alarm_type_name",
     ),
+    "zigbee_signal": SensorEntityDescription(
+        key="zigbee_signal",
+        translation_key="zigbee_signal",
+        entity_registry_enabled_default=False,
+    ),
+    "siren_alarm_volume": SensorEntityDescription(
+        key="siren_alarm_volume",
+        translation_key="siren_alarm_volume",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
@@ -76,6 +91,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
     coordinator = entry.runtime_data
+
+    _LOGGER.debug(
+        "sensor setup: %d devices in coordinator.data, keys per device:",
+        len(coordinator.data),
+    )
+    for camera in coordinator.data:
+        matching = {
+            k: v for k, v in coordinator.data[camera].items()
+            if k in SENSOR_TYPES
+        }
+        _LOGGER.debug(
+            "  %s (%s): matching sensor keys=%s",
+            camera,
+            coordinator.data[camera].get("device_category"),
+            {k: v for k, v in matching.items()},
+        )
 
     async_add_entities(
         [

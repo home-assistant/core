@@ -10,20 +10,25 @@ from pyezvizapi.exceptions import (
     InvalidURL,
     PyEzvizError,
 )
+import voluptuous as vol
 
 from homeassistant.const import CONF_TIMEOUT, CONF_TYPE, CONF_URL, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
+    CONF_SCAN_INTERVAL,
     CONF_SESSION_ID,
     DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    SERVICE_SET_POLLING_INTERVAL,
 )
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 
@@ -87,12 +92,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> boo
             raise ConfigEntryNotReady from error
 
         coordinator = EzvizDataUpdateCoordinator(
-            hass, entry, api=ezviz_client, api_timeout=entry.options[CONF_TIMEOUT]
+            hass,
+            entry,
+            api=ezviz_client,
+            api_timeout=entry.options[CONF_TIMEOUT],
+            scan_interval=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
         )
 
         await coordinator.async_config_entry_first_refresh()
 
         entry.runtime_data = coordinator
+
+        await coordinator.start_mqtt()
 
     # Check EZVIZ cloud account entity is present, reload cloud account entities for camera entity change to take effect.
     # Cameras are accessed via local RTSP stream with unique credentials per camera.
@@ -108,12 +119,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> boo
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
 
+    if sensor_type == ATTR_TYPE_CLOUD and not hass.services.has_service(
+        DOMAIN, SERVICE_SET_POLLING_INTERVAL
+    ):
+        async def _handle_set_polling_interval(call: ServiceCall) -> None:
+            interval = call.data["interval"]
+            duration = call.data["duration"]
+            for item in hass.config_entries.async_loaded_entries(domain=DOMAIN):
+                if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
+                    coord: EzvizDataUpdateCoordinator = item.runtime_data
+                    await coord.set_burst_interval(interval, duration)
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_POLLING_INTERVAL,
+            _handle_set_polling_interval,
+            schema=vol.Schema(
+                {
+                    vol.Required("interval", default=1): vol.All(
+                        cv.positive_int, vol.Range(min=1, max=15)
+                    ),
+                    vol.Required("duration", default=60): vol.All(
+                        cv.positive_int, vol.Range(min=1, max=240)
+                    ),
+                }
+            ),
+        )
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> bool:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_TYPE]
+
+    if sensor_type == ATTR_TYPE_CLOUD and hasattr(entry, "runtime_data"):
+        coordinator: EzvizDataUpdateCoordinator = entry.runtime_data
+        await coordinator.stop_mqtt()
 
     return await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_BY_TYPE[sensor_type]
