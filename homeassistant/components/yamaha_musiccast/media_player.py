@@ -44,7 +44,6 @@ from .entity import MusicCastDeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-
 MUSIC_PLAYER_BASE_SUPPORT = (
     MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.REPEAT_SET
