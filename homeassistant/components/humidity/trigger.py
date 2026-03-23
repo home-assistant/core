@@ -39,9 +39,11 @@ HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "changed": make_entity_numerical_state_changed_trigger(HUMIDITY_DOMAIN_SPECS),
+    "changed": make_entity_numerical_state_changed_trigger(
+        HUMIDITY_DOMAIN_SPECS, valid_unit="%"
+    ),
     "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        HUMIDITY_DOMAIN_SPECS
+        HUMIDITY_DOMAIN_SPECS, valid_unit="%"
     ),
 }
 
