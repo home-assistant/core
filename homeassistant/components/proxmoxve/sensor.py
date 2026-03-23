@@ -179,6 +179,28 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["running", "stopped", "suspended"],
     ),
+    ProxmoxVMSensorEntityDescription(
+        key="vm_netin",
+        translation_key="vm_netin",
+        value_fn=lambda data: data["netin"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxVMSensorEntityDescription(
+        key="vm_netout",
+        translation_key="vm_netout",
+        value_fn=lambda data: data["netout"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
@@ -246,6 +268,28 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         value_fn=lambda data: data["status"],
         device_class=SensorDeviceClass.ENUM,
         options=["running", "stopped", "suspended"],
+    ),
+    ProxmoxContainerSensorEntityDescription(
+        key="container_netin",
+        translation_key="container_netin",
+        value_fn=lambda data: data["netin"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxContainerSensorEntityDescription(
+        key="container_netout",
+        translation_key="container_netout",
+        value_fn=lambda data: data["netout"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
