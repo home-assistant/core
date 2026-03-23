@@ -1802,7 +1802,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezvizapi==1.0.4.5
+pyezvizapi @ git+https://github.com/srescio/pyEzvizApi.git@feature/detector-device-support
 
 # homeassistant.components.fibaro
 pyfibaro==0.8.3

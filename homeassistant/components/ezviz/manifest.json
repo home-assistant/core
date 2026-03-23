@@ -7,5 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/ezviz",
   "iot_class": "cloud_polling",
   "loggers": ["paho_mqtt", "pyezvizapi"],
-  "requirements": ["pyezvizapi==1.0.4.5"]
+  "requirements": [
+    "pyezvizapi @ git+https://github.com/srescio/pyEzvizApi.git@feature/detector-device-support"
+  ]
 }
