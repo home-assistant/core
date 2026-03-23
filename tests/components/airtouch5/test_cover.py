@@ -1,6 +1,9 @@
 """Tests for the Airtouch5 cover platform."""
 
+<<<<<<< HEAD
 from asyncio import sleep
+=======
+>>>>>>> ed88036ce95 (removing fragile list index)
 from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
@@ -93,19 +96,24 @@ async def test_cover_callbacks(
     mock_airtouch_discovery: AsyncMock,
 ) -> None:
     """Test the callbacks of the Airtouch5 covers."""
+
+    # Patch migration to avoid race conditions with minor_version
     with patch(
         "homeassistant.components.airtouch5.async_migrate_entry",
         new=AsyncMock(return_value=True),
     ):
+        # Setup the integration normally
         await setup_integration(hass, mock_config_entry)
 
-        # We find the callback method on the mock client
-        zone_status_callback: Callable[[dict[int, ZoneStatusZone]], None] = (
-            mock_airtouch5_client.zone_status_callbacks[2]
+        # Get the registered zone status callback
+        zone_status_callback: Callable[[dict[int, ZoneStatusZone]], None] = next(
+            cb
+            for cb in mock_airtouch5_client.zone_status_callbacks
+            if getattr(cb.__self__, "entity_id", "").startswith(COVER_ENTITY_ID)
         )
 
-        # Define a method to simply call it
-        async def _call_zone_status_callback(open_percentage: int) -> None:
+        # Helper to trigger the callback and let HA process updates
+        async def _trigger_callback(open_percentage: float) -> None:
             zsz = ZoneStatusZone(
                 zone_power_state=ZonePowerState.ON,
                 zone_number=1,
@@ -118,18 +126,27 @@ async def test_cover_callbacks(
                 is_low_battery=False,
             )
             zone_status_callback({1: zsz})
+            # Ensure Home Assistant finishes processing
             await hass.async_block_till_done()
 
+<<<<<<< HEAD
         # And call it to effectively launch the callback as the server would do
 
         # Partly open
         await _call_zone_status_callback(0.7)
         await sleep(0.01)  # let the loop process state updates
+=======
+        # Test various positions
+
+        # Partly open (70%)
+        await _trigger_callback(0.7)
+>>>>>>> ed88036ce95 (removing fragile list index)
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.OPEN
         assert state.attributes.get(ATTR_CURRENT_POSITION) == 70
 
+<<<<<<< HEAD
     # Fully open
     await _call_zone_status_callback(1)
     state = hass.states.get(COVER_ENTITY_ID)
@@ -140,14 +157,30 @@ async def test_cover_callbacks(
         # Fully closed
         await _call_zone_status_callback(0.0)
         await sleep(0.01)  # let the loop process state updates
+=======
+        # Fully open (100%)
+        await _trigger_callback(1)
+        state = hass.states.get(COVER_ENTITY_ID)
+        assert state
+        assert state.state == CoverState.OPEN
+        assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
+
+        # Fully closed (0%)
+        await _trigger_callback(0.0)
+>>>>>>> ed88036ce95 (removing fragile list index)
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.CLOSED
         assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
+<<<<<<< HEAD
         # Partly reopened
         await _call_zone_status_callback(0.3)
         await sleep(0.01)  # let the loop process state updates
+=======
+        # Partly reopened (30%)
+        await _trigger_callback(0.3)
+>>>>>>> ed88036ce95 (removing fragile list index)
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.OPEN
