@@ -41,7 +41,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Threema Gateway."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 1
 
     @classmethod
     @callback
