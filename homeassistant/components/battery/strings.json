@@ -69,6 +69,12 @@
         "all": "All",
         "any": "Any"
       }
+    },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
     }
   },
   "title": "Battery"

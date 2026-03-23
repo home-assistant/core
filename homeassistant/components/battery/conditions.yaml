@@ -14,6 +14,25 @@
             - all
             - any
 
+.number_or_entity: &number_or_entity
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              unit_of_measurement: "%"
+        entity:
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_number
+                  - number
+                  - sensor
+      translation_key: number_or_entity
+
 is_low: *condition_common
 
 is_not_low: *condition_common
@@ -43,15 +62,5 @@ percentage:
         device_class: battery
   fields:
     behavior: *condition_behavior
-    above:
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-    below:
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
+    above: *number_or_entity
+    below: *number_or_entity
