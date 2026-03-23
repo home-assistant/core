@@ -5,7 +5,12 @@ from unittest.mock import patch
 from aiopyarr import exceptions
 import pytest
 
-from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.radarr.const import (
+    CONF_UPCOMING_DAYS,
+    DEFAULT_NAME,
+    DEFAULT_UPCOMING_DAYS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -216,3 +221,34 @@ async def test_full_user_flow_implementation(
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
     assert result["data"][CONF_URL] == "http://192.168.1.189:7887/test"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the options flow."""
+    entry = await setup_integration(hass, aioclient_mock)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_UPCOMING_DAYS: 7}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {CONF_UPCOMING_DAYS: 7}
+
+
+async def test_options_flow_defaults(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the options flow shows the current default."""
+    entry = await setup_integration(hass, aioclient_mock)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    schema = result["data_schema"]
+    assert schema({}) == {CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS}

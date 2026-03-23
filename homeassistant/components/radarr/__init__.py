@@ -13,7 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS, DOMAIN
 from .coordinator import (
     CalendarUpdateCoordinator,
     DiskSpaceDataUpdateCoordinator,
@@ -40,6 +40,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bool:
     """Set up Radarr from a config entry."""
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS}
+        )
+
     host_configuration = PyArrHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
         verify_ssl=entry.data[CONF_VERIFY_SSL],

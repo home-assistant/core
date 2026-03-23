@@ -2,7 +2,12 @@
 
 import pytest
 
-from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.radarr.const import (
+    CONF_UPCOMING_DAYS,
+    DEFAULT_NAME,
+    DEFAULT_UPCOMING_DAYS,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,6 +28,15 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_setup_sets_default_options(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup adds default options for existing entries."""
+    entry = await setup_integration(hass, aioclient_mock)
+
+    assert entry.options == {CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS}
 
 
 async def test_async_setup_entry_not_ready(

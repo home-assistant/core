@@ -12,18 +12,36 @@ from aiopyarr.radarr_client import RadarrClient
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
+from .const import (
+    CONF_UPCOMING_DAYS,
+    DEFAULT_NAME,
+    DEFAULT_UPCOMING_DAYS,
+    DEFAULT_URL,
+    DOMAIN,
+)
 
 
 class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Radarr."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> RadarrOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return RadarrOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -118,3 +136,28 @@ async def validate_input(
         return await radarr.async_try_zeroconf()
     await radarr.async_get_system_status()
     return None
+
+
+class RadarrOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle Radarr options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, int] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Radarr options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_UPCOMING_DAYS,
+                        default=self.config_entry.options.get(
+                            CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=365)),
+                }
+            ),
+        )
