@@ -135,7 +135,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 client = ThreemaAPIClient(
                     self.hass,
                     gateway_id=gateway_id,
-                    api_secret=user_input[CONF_API_SECRET],
+                    api_secret=self._api_secret,
                     private_key=self._private_key,
                 )
 
