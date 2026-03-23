@@ -78,7 +78,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             # Try to get device info without authentication to minimize discovery popup
             config = BSBLANConfig(host=self.host, port=self.port)
             session = async_get_clientsession(self.hass)
-            bsblan = BSBLAN(config, session)
+            bsblan = BSBLAN(config=config, session=session)
             try:
                 device = await bsblan.device()
             except BSBLANError:
@@ -342,7 +342,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             password=self.password,
         )
         session = async_get_clientsession(self.hass)
-        bsblan = BSBLAN(config, session)
+        bsblan = BSBLAN(config=config, session=session)
         device = await bsblan.device()
         retrieved_mac = device.MAC
 

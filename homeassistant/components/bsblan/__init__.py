@@ -106,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
     # create BSBLAN client
     session = async_get_clientsession(hass)
-    bsblan = BSBLAN(config, session)
+    bsblan = BSBLAN(config=config, session=session)
 
     try:
         # Initialize the client first - this sets up internal caches and validates
