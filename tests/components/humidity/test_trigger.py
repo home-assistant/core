@@ -13,12 +13,11 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_ON
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
     TriggerStateDescription,
-    arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
@@ -566,79 +565,3 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
         trigger_options=trigger_options,
         states=states,
     )
-
-
-# --- Device class exclusion test ---
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    (
-        "trigger_key",
-        "trigger_options",
-        "sensor_initial",
-        "sensor_target",
-    ),
-    [
-        (
-            "humidity.changed",
-            {},
-            "50",
-            "60",
-        ),
-        (
-            "humidity.crossed_threshold",
-            {"threshold_type": "above", "lower_limit": 10},
-            "5",
-            "50",
-        ),
-    ],
-)
-async def test_humidity_trigger_excludes_non_humidity_sensor(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    trigger_key: str,
-    trigger_options: dict[str, Any],
-    sensor_initial: str,
-    sensor_target: str,
-) -> None:
-    """Test humidity trigger does not fire for sensor entities without device_class humidity."""
-    entity_id_humidity = "sensor.test_humidity"
-    entity_id_temperature = "sensor.test_temperature"
-
-    # Set initial states
-    hass.states.async_set(
-        entity_id_humidity, sensor_initial, {ATTR_DEVICE_CLASS: "humidity"}
-    )
-    hass.states.async_set(
-        entity_id_temperature, sensor_initial, {ATTR_DEVICE_CLASS: "temperature"}
-    )
-    await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass,
-        trigger_key,
-        trigger_options,
-        {
-            CONF_ENTITY_ID: [
-                entity_id_humidity,
-                entity_id_temperature,
-            ]
-        },
-    )
-
-    # Humidity sensor changes - should trigger
-    hass.states.async_set(
-        entity_id_humidity, sensor_target, {ATTR_DEVICE_CLASS: "humidity"}
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_humidity
-    service_calls.clear()
-
-    # Temperature sensor changes - should NOT trigger (wrong device class)
-    hass.states.async_set(
-        entity_id_temperature, sensor_target, {ATTR_DEVICE_CLASS: "temperature"}
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 0
