@@ -13,7 +13,12 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ENTITY_ID,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
@@ -82,10 +87,14 @@ async def test_humidity_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_changed_trigger_states(
-            "humidity.changed", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.changed",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
@@ -123,7 +132,9 @@ async def test_humidity_trigger_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
@@ -161,7 +172,9 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
