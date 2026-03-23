@@ -574,8 +574,8 @@
       },
       "name": "Sulphur dioxide level crossed threshold"
     },
-    "vocs_changed": {
-      "description": "Triggers after one or more volatile organic compounds levels change.",
+    "voc_changed": {
+      "description": "Triggers after one or more volatile organic compound levels change.",
       "fields": {
         "above": {
           "description": "Only trigger when volatile organic compounds level is above this value.",
@@ -592,7 +592,7 @@
       },
       "name": "Volatile organic compounds level changed"
     },
-    "vocs_crossed_threshold": {
+    "voc_crossed_threshold": {
       "description": "Triggers after one or more volatile organic compounds levels cross a threshold.",
       "fields": {
         "behavior": {
@@ -618,8 +618,8 @@
       },
       "name": "Volatile organic compounds level crossed threshold"
     },
-    "vocs_ratio_changed": {
-      "description": "Triggers after one or more volatile organic compounds ratios change.",
+    "voc_ratio_changed": {
+      "description": "Triggers after one or more volatile organic compound ratios change.",
       "fields": {
         "above": {
           "description": "Only trigger when volatile organic compounds ratio is above this value.",
@@ -636,7 +636,7 @@
       },
       "name": "Volatile organic compounds ratio changed"
     },
-    "vocs_ratio_crossed_threshold": {
+    "voc_ratio_crossed_threshold": {
       "description": "Triggers after one or more volatile organic compounds ratios cross a threshold.",
       "fields": {
         "behavior": {
