@@ -143,6 +143,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
     "button",
