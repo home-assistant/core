@@ -454,7 +454,6 @@
           "charging_complete": "Charging complete",
           "charging_problem": "Charging problem",
           "cleaning": "Cleaning",
-          "creating_map": "[%key:component::roborock::entity::sensor::status::state::creating_map%]",
           "detaching_the_mop": "Detaching the mop",
           "device_offline": "Device offline",
           "docking": "Docking",
