@@ -22,7 +22,6 @@
   "selector": {
     "device_type": {
       "options": {
-        "hifi": "Hi-Fi",
         "tv": "TV"
       }
     }
