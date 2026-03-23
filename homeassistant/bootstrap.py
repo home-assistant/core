@@ -241,12 +241,14 @@ DEFAULT_INTEGRATIONS = {
     *BASE_PLATFORMS,
     #
     # Integrations providing triggers and conditions for base platforms:
+    "air_quality",
     "door",
     "garage_door",
     "gate",
     "humidity",
     "motion",
     "occupancy",
+    "temperature",
     "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
