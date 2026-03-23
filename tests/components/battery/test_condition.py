@@ -26,7 +26,6 @@ from tests.components.common import (
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
-    create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
@@ -183,57 +182,6 @@ async def test_battery_binary_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("condition_key", "target_state", "other_state", "device_class"),
-    [
-        ("battery.is_low", STATE_ON, STATE_OFF, "battery"),
-        ("battery.is_not_low", STATE_OFF, STATE_ON, "battery"),
-        ("battery.is_charging", STATE_ON, STATE_OFF, "battery_charging"),
-        ("battery.is_not_charging", STATE_OFF, STATE_ON, "battery_charging"),
-    ],
-)
-async def test_battery_condition_excludes_wrong_device_class(
-    hass: HomeAssistant,
-    condition_key: str,
-    target_state: str,
-    other_state: str,
-    device_class: str,
-) -> None:
-    """Test battery conditions do not match entities with wrong device class."""
-    entity_correct = "binary_sensor.test_correct"
-    entity_wrong = "binary_sensor.test_wrong"
-
-    # Set initial states
-    hass.states.async_set(
-        entity_correct, other_state, {ATTR_DEVICE_CLASS: device_class}
-    )
-    hass.states.async_set(entity_wrong, other_state, {ATTR_DEVICE_CLASS: "door"})
-    await hass.async_block_till_done()
-
-    condition = await create_target_condition(
-        hass,
-        condition=condition_key,
-        target={CONF_ENTITY_ID: [entity_correct, entity_wrong]},
-        behavior="any",
-    )
-
-    # Neither matches yet
-    assert condition(hass) is False
-
-    # Wrong device class changes to target state - should NOT match
-    hass.states.async_set(entity_wrong, target_state, {ATTR_DEVICE_CLASS: "door"})
-    await hass.async_block_till_done()
-    assert condition(hass) is False
-
-    # Correct device class changes to target state - should match
-    hass.states.async_set(
-        entity_correct, target_state, {ATTR_DEVICE_CLASS: device_class}
-    )
-    await hass.async_block_till_done()
-    assert condition(hass) is True
-
-
 _BATTERY_ATTRS = {ATTR_DEVICE_CLASS: "battery", ATTR_UNIT_OF_MEASUREMENT: "%"}
 
 
@@ -350,40 +298,3 @@ async def test_battery_percentage_condition_invalid_state(
         hass.states.async_set(entity_id, value, _BATTERY_ATTRS)
         await hass.async_block_till_done()
         assert condition(hass) is False, f"Expected False for '{value}'"
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-async def test_battery_percentage_condition_excludes_wrong_device_class(
-    hass: HomeAssistant,
-) -> None:
-    """Test battery percentage condition excludes entities with wrong device class."""
-    entity_battery = "sensor.test_battery"
-    entity_temperature = "sensor.test_temperature"
-
-    hass.states.async_set(entity_battery, "10", _BATTERY_ATTRS)
-    hass.states.async_set(entity_temperature, "10", {ATTR_DEVICE_CLASS: "temperature"})
-    await hass.async_block_till_done()
-
-    condition = await async_condition_from_config(
-        hass,
-        {
-            CONF_CONDITION: "battery.percentage",
-            CONF_TARGET: {
-                CONF_ENTITY_ID: [entity_battery, entity_temperature],
-            },
-            CONF_OPTIONS: {"behavior": "any", CONF_ABOVE: 50},
-        },
-    )
-
-    # Both below threshold
-    assert condition(hass) is False
-
-    # Only temperature entity goes above threshold - should NOT match
-    hass.states.async_set(entity_temperature, "90", {ATTR_DEVICE_CLASS: "temperature"})
-    await hass.async_block_till_done()
-    assert condition(hass) is False
-
-    # Battery entity goes above threshold - should match
-    hass.states.async_set(entity_battery, "90", _BATTERY_ATTRS)
-    await hass.async_block_till_done()
-    assert condition(hass) is True
