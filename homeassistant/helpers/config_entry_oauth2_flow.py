@@ -439,7 +439,6 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
-        # Not sure if I need to keep this, but for now I do to be in line with other implementations
         return str(URL(self.authorize_url))
 
     def _device_authorization_data(self) -> dict[str, str]:
@@ -531,16 +530,16 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
                 _LOGGER.error("Error resolving OAuth token: %s", err)
                 raise DeviceFlowError from err
 
-            # The RFC describes that the endpoint should return 400 when the user hasn't authorized yet, but some providers (like github....) return 200 with an error key in the response.
             match response.get("error"):
-                # Maybe should make constants out of these.
                 case "authorization_pending":
-                    _LOGGER.info("User has not authorized device yet. Continue polling")
+                    _LOGGER.debug(
+                        "User has not authorized device yet. Continue polling"
+                    )
                 case "slow_down":
                     # See if the API sends a new interval.
                     # Else, resort back to RFC's suggestion of increasing interval by 5 seconds
                     interval = response.get("interval", interval + 5)
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "API asked to slow down. Increasing polling interval to %s",
                         interval,
                     )
@@ -555,27 +554,70 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         return cast(dict, response)
 
     async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
+        """Make a token request.
+
+        Raises OAuth2TokenRequestError on token request failure.
+        """
         session = async_get_clientsession(self.hass)
 
         data["client_id"] = self.client_id
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
-        resp = await session.post(self.token_url, data=data)
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except ClientError, JSONDecodeError:
-                error_response = {}
-            error_code = error_response.get("error", "unknown")
-            error_description = error_response.get("error_description", "unknown error")
-            _LOGGER.error(
-                "Token request for %s failed (%s): %s",
-                self.domain,
-                error_code,
-                error_description,
-            )
-        resp.raise_for_status()
+
+        try:
+            resp = await session.post(self.token_url, data=data)
+            if resp.status >= 400:
+                error_body = ""
+                try:
+                    error_body = await resp.text()
+                    error_data = json.loads(error_body)
+                    error_code = error_data.get("error", "unknown error")
+                    error_description = error_data.get("error_description")
+                    detail = (
+                        f"{error_code}: {error_description}"
+                        if error_description
+                        else error_code
+                    )
+                except ClientError, ValueError, AttributeError:
+                    detail = error_body[:200] if error_body else "unknown error"
+                _LOGGER.debug(
+                    "Token request for %s failed (%s): %s",
+                    self._domain,
+                    resp.status,
+                    detail,
+                )
+            resp.raise_for_status()
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self._domain,
+            ) from err
+
         return cast(dict, await resp.json())
 
 
@@ -632,7 +674,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         if not implementations:
             if self.DOMAIN in await async_get_application_credentials(self.hass):
                 return self.async_abort(reason="missing_credentials")
-            # How to handle the default client ID. For now, I just set it manually
             return self.async_abort(reason="missing_configuration")
 
         req = http.current_request.get()
@@ -836,9 +877,6 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
             if self.login_task.exception():
                 self.device_flow_error = self.login_task.exception()
                 return self.async_show_progress_done(next_step_id="device_flow_error")
-            # The idea is that once the task is done, we move to the next step
-            # A generic one so integrations can follow up with their desired logic
-            # Open for suggestions here
             self.device_token = self.login_task.result()
             return self.async_show_progress_done(next_step_id="device_flow_complete")
 

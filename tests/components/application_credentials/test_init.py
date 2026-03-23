@@ -80,6 +80,9 @@ async def setup_application_credentials_integration(
         async_get_authorization_server=AsyncMock(return_value=authorization_server),
     )
     del mock_platform_impl.async_get_auth_implementation  # return False on hasattr
+    del (
+        mock_platform_impl.async_get_device_flow_authorization_server
+    )  # return False on hasattr
     del mock_platform_impl.async_get_description_placeholders  # return False on hasattr
     mock_platform(
         hass,
@@ -666,6 +669,7 @@ async def test_websocket_without_authorization_server(
     # Platform does not implemenent async_get_authorization_server
     platform = Mock()
     del platform.async_get_authorization_server
+    del platform.async_get_device_flow_authorization_server
     del platform.async_get_auth_implementation
     mock_platform(
         hass,
