@@ -19,7 +19,7 @@ LABS_PREVIEW_FEATURES = {
         },
     },
     "frontend": {
-        "windows_98": {
+        "retro": {
             "feedback_url": "",
             "learn_more_url": "",
             "report_issue_url": "",
