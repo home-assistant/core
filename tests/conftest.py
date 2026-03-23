@@ -123,7 +123,6 @@ from .typing import (
 if TYPE_CHECKING:
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
-    from homeassistant.auth.models import RefreshToken
     from homeassistant.components import recorder
 
 
@@ -2009,17 +2008,9 @@ async def hassio_stubs(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
-) -> RefreshToken:
+) -> None:
     """Create mock hassio http client."""
     with (
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_api",
-            return_value={"result": "ok"},
-        ) as hass_api,
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_config",
-            return_value={"result": "ok"},
-        ),
         patch(
             "homeassistant.components.hassio.HassIO.get_ingress_panels",
             return_value={"panels": []},
@@ -2029,8 +2020,6 @@ async def hassio_stubs(
         ),
     ):
         await async_setup_component(hass, "hassio", {})
-
-    return hass_api.call_args[0][1]
 
 
 @pytest.fixture

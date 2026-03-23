@@ -143,6 +143,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
     "button",
@@ -156,7 +157,6 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "gate",
     "humidifier",
     "humidity",
-    "input_boolean",
     "lawn_mower",
     "light",
     "lock",
@@ -170,6 +170,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "select",
     "siren",
     "switch",
+    "temperature",
     "text",
     "update",
     "vacuum",

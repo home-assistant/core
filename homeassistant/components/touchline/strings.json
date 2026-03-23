@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Roth Touchline controller."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Home Assistant could not connect to the Roth Touchline controller while importing your YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",
+      "title": "Roth Touchline YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "An unknown error occurred while importing your Roth Touchline YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",
+      "title": "Roth Touchline YAML configuration import issue"
+    }
+  }
+}
