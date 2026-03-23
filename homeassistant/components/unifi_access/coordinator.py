@@ -140,30 +140,37 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         except TimeoutError as err:
             raise UpdateFailed("Timeout communicating with UniFi Access API") from err
 
-        supports_lock_rules = self.data.supports_lock_rules if self.data else True
-        door_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
-        if supports_lock_rules:
-            try:
-                async with asyncio.timeout(10):
-                    lock_rules = await asyncio.gather(
-                        *(self.client.get_door_lock_rule(door.id) for door in doors)
-                    )
-                    door_lock_rules = {
-                        door.id: rule
-                        for door, rule in zip(doors, lock_rules, strict=True)
-                    }
-            except ApiNotFoundError:
-                supports_lock_rules = False
-                door_lock_rules = {}
-            except (ApiAuthError, ApiConnectionError, ApiError, TimeoutError) as err:
-                _LOGGER.debug("Could not fetch door lock rules: %s", err)
+        door_lock_rules: dict[str, DoorLockRuleStatus] = {}
+        try:
+            async with asyncio.timeout(10):
+                lock_rules = await asyncio.gather(
+                    *(self._async_get_door_lock_rule(door.id) for door in doors)
+                )
+                door_lock_rules = {
+                    door.id: rule
+                    for door, rule in zip(doors, lock_rules, strict=True)
+                    if rule is not None
+                }
+        except (ApiAuthError, ApiConnectionError, ApiError, TimeoutError) as err:
+            _LOGGER.debug("Could not fetch door lock rules: %s", err)
+            if self.data:
+                door_lock_rules = self.data.door_lock_rules.copy()
 
         return UnifiAccessData(
             doors={door.id: door for door in doors},
             emergency=emergency,
             door_lock_rules=door_lock_rules,
-            supports_lock_rules=supports_lock_rules,
+            supports_lock_rules=bool(door_lock_rules),
         )
+
+    async def _async_get_door_lock_rule(
+        self, door_id: str
+    ) -> DoorLockRuleStatus | None:
+        """Fetch the lock rule for a single door if supported."""
+        try:
+            return await self.client.get_door_lock_rule(door_id)
+        except ApiNotFoundError:
+            return None
 
     def _on_ws_connect(self) -> None:
         """Handle WebSocket connection established."""
@@ -214,7 +221,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         elif ws_state.lock == "unlocked":
             updates["door_lock_relay_status"] = "unlock"
 
-        if self.data.supports_lock_rules:
+        if door_id in door_lock_rules:
             if "remain_lock" in ws_state.model_fields_set:
                 updated_lock_rule = (
                     _ws_rule_status_to_lock_rule_status(ws_state.remain_lock)

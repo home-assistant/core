@@ -109,6 +109,31 @@ async def test_sensor_not_created_when_lock_rules_unsupported(
     assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY) is None
 
 
+async def test_sensor_created_for_supported_doors_only(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test lock rule sensors are created only for doors that support them."""
+
+    async def mock_get_door_lock_rule(door_id: str) -> DoorLockRuleStatus:
+        if door_id == "door-001":
+            return DoorLockRuleStatus(
+                type=DoorLockRuleType.KEEP_LOCK, ended_time=1700000000
+            )
+        raise ApiNotFoundError
+
+    mock_client.get_door_lock_rule = AsyncMock(side_effect=mock_get_door_lock_rule)
+
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_ENTITY) is not None
+    assert hass.states.get(FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY) is not None
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_ENTITY) is None
+    assert hass.states.get(BACK_DOOR_LOCK_RULE_END_TIME_ENTITY) is None
+
+
 async def test_sensor_lock_rule_websocket_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

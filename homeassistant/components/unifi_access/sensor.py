@@ -27,7 +27,8 @@ async def async_setup_entry(
     if coordinator.data.supports_lock_rules:
         async_add_entities(
             sensor_class(coordinator, door)
-            for door in coordinator.data.doors.values()
+            for door_id, door in coordinator.data.doors.items()
+            if door_id in coordinator.data.door_lock_rules
             for sensor_class in (
                 UnifiAccessDoorLockRuleSensor,
                 UnifiAccessDoorLockRuleEndTimeSensor,
