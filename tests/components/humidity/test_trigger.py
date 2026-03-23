@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -81,10 +82,10 @@ async def test_humidity_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_changed_trigger_states(
-            "humidity.changed", "humidity"
+            "humidity.changed", device_class=SensorDeviceClass.HUMIDITY
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", "humidity"
+            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
         ),
     ],
 )
@@ -122,7 +123,7 @@ async def test_humidity_trigger_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", "humidity"
+            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
         ),
     ],
 )
@@ -160,7 +161,7 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", "humidity"
+            "humidity.crossed_threshold", device_class=SensorDeviceClass.HUMIDITY
         ),
     ],
 )
