@@ -654,7 +654,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
 class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
-    _base_unit: str  # Base unit for the tracked value
+    _base_unit: str | None  # Base unit for the tracked value
     _manual_limit_unit: str | None  # Unit of above/below limits when numbers
     _unit_converter: type[BaseUnitConverter]
 
@@ -1053,6 +1053,40 @@ def make_entity_numerical_state_crossed_threshold_trigger(
 
         _domain_specs = domain_specs
         _valid_unit = valid_unit
+
+    return CustomTrigger
+
+
+def make_entity_numerical_state_changed_with_unit_trigger(
+    domain_specs: Mapping[str, NumericalDomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalStateChangedTriggerWithUnitBase]:
+    """Create a trigger for numerical state value change."""
+
+    class CustomTrigger(EntityNumericalStateChangedTriggerWithUnitBase):
+        """Trigger for numerical state value changes."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
+
+    return CustomTrigger
+
+
+def make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+    domain_specs: Mapping[str, NumericalDomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalStateCrossedThresholdTriggerWithUnitBase]:
+    """Create a trigger for numerical state value crossing a threshold."""
+
+    class CustomTrigger(EntityNumericalStateCrossedThresholdTriggerWithUnitBase):
+        """Trigger for numerical state value crossing a threshold."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
 
     return CustomTrigger
 
