@@ -121,7 +121,6 @@ def test_get_state_combinations() -> None:
 def test_helper_functions() -> None:
     """Test helper functions directly."""
 
-
     # _compute_ratio - zero download
     assert _compute_ratio(100, 0) is None
 
