@@ -26,9 +26,9 @@
               filter:
                 - domain: input_number
                   unit_of_measurement: "%"
-                - domain: sensor
-                  device_class: moisture
                 - domain: number
+                  device_class: moisture
+                - domain: sensor
                   device_class: moisture
       translation_key: number_or_entity
 
@@ -51,6 +51,8 @@
 
 .trigger_numerical_target: &trigger_numerical_target
   entity:
+    - domain: number
+      device_class: moisture
     - domain: sensor
       device_class: moisture
 
