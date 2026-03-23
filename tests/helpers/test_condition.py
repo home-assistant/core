@@ -3009,8 +3009,6 @@ async def test_subscribe_conditions_no_conditions(
     assert condition_events == []
 
 
-# --- EntityNumericalConditionBase tests ---
-
 _DEFAULT_DOMAIN_SPECS = {"test": DomainSpec()}
 
 
