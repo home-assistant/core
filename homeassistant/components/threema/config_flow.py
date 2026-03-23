@@ -123,12 +123,14 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 self._gateway_id = gateway_id
-                self._api_secret = user_input[CONF_API_SECRET]
+                self._api_secret = user_input[CONF_API_SECRET].strip()
 
-                if user_input.get(CONF_PRIVATE_KEY):
-                    self._private_key = user_input[CONF_PRIVATE_KEY]
-                if user_input.get(CONF_PUBLIC_KEY):
-                    self._public_key = user_input[CONF_PUBLIC_KEY]
+                private_key = user_input.get(CONF_PRIVATE_KEY, "").strip() or None
+                if private_key:
+                    self._private_key = private_key
+                public_key = user_input.get(CONF_PUBLIC_KEY, "").strip() or None
+                if public_key:
+                    self._public_key = public_key
 
                 client = ThreemaAPIClient(
                     self.hass,
@@ -190,12 +192,13 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
-            private_key_input = user_input.get(CONF_PRIVATE_KEY) or None
+            api_secret = user_input[CONF_API_SECRET].strip()
+            private_key_input = user_input.get(CONF_PRIVATE_KEY, "").strip() or None
 
             client = ThreemaAPIClient(
                 self.hass,
                 gateway_id=reauth_entry.data[CONF_GATEWAY_ID],
-                api_secret=user_input[CONF_API_SECRET],
+                api_secret=api_secret,
                 private_key=private_key_input
                 or reauth_entry.data.get(CONF_PRIVATE_KEY),
             )
@@ -213,7 +216,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(reauth_entry.data[CONF_GATEWAY_ID])
                 self._abort_if_unique_id_mismatch()
                 data_updates: dict[str, str] = {
-                    CONF_API_SECRET: user_input[CONF_API_SECRET],
+                    CONF_API_SECRET: api_secret,
                 }
                 if private_key_input:
                     data_updates[CONF_PRIVATE_KEY] = private_key_input
