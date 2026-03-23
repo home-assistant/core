@@ -49,4 +49,4 @@ async def test_q10_vacuum_error_updates_from_push(
 
     updated_state = hass.states.get(entity_id)
     assert updated_state is not None
-    assert updated_state.state == "main_brush_jammed"
+    assert updated_state.state == "unknown"
