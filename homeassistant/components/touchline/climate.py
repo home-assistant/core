@@ -18,6 +18,7 @@ from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -138,11 +139,25 @@ class Touchline(ClimateEntity):
         self._attr_name = None
         self._current_operation_mode = None
         self._attr_preset_mode = None
+        self._device_id = None
+        self._controller_id = None
+        self._attr_unique_id = None
+        self._attr_device_info = None
 
     def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
         self._attr_name = self.unit.get_name()
+        self._device_id = self.unit.get_device_id()
+        self._controller_id = self.unit.get_controller_id()
+        self._attr_unique_id = f"{self._controller_id}_{self._device_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=self._attr_name,
+            manufacturer="Roth",
+            via_device=(DOMAIN, self._controller_id),
+            suggested_area=self._attr_name,
+        )
         self._attr_current_temperature = self.unit.get_current_temperature()
         self._attr_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
