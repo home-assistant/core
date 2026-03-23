@@ -25,6 +25,49 @@
     }
   },
   "entity": {
+    "fan": {
+      "extract": {
+        "name": "Extract fan",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "boost": "Boost",
+              "night": "Night"
+            }
+          }
+        }
+      },
+      "supply": {
+        "name": "Supply fan",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "boost": "[%key:component::prana::entity::fan::extract::state_attributes::preset_mode::state::boost%]",
+              "night": "[%key:component::prana::entity::fan::extract::state_attributes::preset_mode::state::night%]"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "display_brightness": {
+        "name": "Display brightness"
+      }
+    },
+    "sensor": {
+      "inside_temperature": {
+        "name": "Inside temperature"
+      },
+      "inside_temperature_2": {
+        "name": "Inside temperature 2"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "outside_temperature_2": {
+        "name": "Outside temperature 2"
+      }
+    },
     "switch": {
       "auto": {
         "name": "Auto"
