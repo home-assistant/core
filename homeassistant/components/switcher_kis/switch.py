@@ -2,21 +2,29 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import time, timedelta
 from typing import Any, cast
 
 from aioswitcher.api import Command
+from aioswitcher.api.messages import SwitcherGetSchedulesResponse
 from aioswitcher.device import (
     DeviceCategory,
     DeviceState,
     ShutterChildLock,
     SwitcherShutter,
 )
+from aioswitcher.schedule import Days
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,7 +33,15 @@ from homeassistant.helpers.typing import VolDictType
 from . import SwitcherConfigEntry
 from .const import (
     CONF_AUTO_OFF,
+    CONF_SCHEDULE_DAYS,
+    CONF_SCHEDULE_END_TIME,
+    CONF_SCHEDULE_ID,
+    CONF_SCHEDULE_START_TIME,
     CONF_TIMER_MINUTES,
+    DOMAIN,
+    SERVICE_CREATE_SCHEDULE_NAME,
+    SERVICE_DELETE_SCHEDULE_NAME,
+    SERVICE_GET_SCHEDULES_NAME,
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_TURN_ON_WITH_TIMER_NAME,
     SIGNAL_DEVICE_ADD,
@@ -49,6 +65,28 @@ SERVICE_TURN_ON_WITH_TIMER_SCHEMA: VolDictType = {
     ),
 }
 
+DAYS_MAPPING: dict[str, Days] = {
+    "monday": Days.MONDAY,
+    "tuesday": Days.TUESDAY,
+    "wednesday": Days.WEDNESDAY,
+    "thursday": Days.THURSDAY,
+    "friday": Days.FRIDAY,
+    "saturday": Days.SATURDAY,
+    "sunday": Days.SUNDAY,
+}
+
+SERVICE_CREATE_SCHEDULE_SCHEMA: VolDictType = {
+    vol.Required(CONF_SCHEDULE_START_TIME): cv.time,
+    vol.Required(CONF_SCHEDULE_END_TIME): cv.time,
+    vol.Optional(CONF_SCHEDULE_DAYS, default=[]): vol.All(
+        cv.ensure_list, [vol.In(DAYS_MAPPING)]
+    ),
+}
+
+SERVICE_DELETE_SCHEDULE_SCHEMA: VolDictType = {
+    vol.Required(CONF_SCHEDULE_ID): vol.All(str, vol.In([str(i) for i in range(8)])),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -69,6 +107,28 @@ async def async_setup_entry(
         SERVICE_TURN_ON_WITH_TIMER_NAME,
         SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
         "async_turn_on_with_timer_service",
+        entity_device_classes=(SwitchDeviceClass.SWITCH,),
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_GET_SCHEDULES_NAME,
+        {},
+        "async_get_schedules_service",
+        entity_device_classes=(SwitchDeviceClass.SWITCH,),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_CREATE_SCHEDULE_NAME,
+        SERVICE_CREATE_SCHEDULE_SCHEMA,
+        "async_create_schedule_service",
+        entity_device_classes=(SwitchDeviceClass.SWITCH,),
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_DELETE_SCHEDULE_NAME,
+        SERVICE_DELETE_SCHEDULE_SCHEMA,
+        "async_delete_schedule_service",
         entity_device_classes=(SwitchDeviceClass.SWITCH,),
     )
 
@@ -161,6 +221,46 @@ class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
         await self._async_call_api(API_CONTROL_DEVICE, Command.ON, timer_minutes)
         self._attr_is_on = self.control_result = True
         self.async_write_ha_state()
+
+    async def async_get_schedules_service(self) -> ServiceResponse:
+        """Return all schedules configured on the device."""
+        response = cast(
+            SwitcherGetSchedulesResponse,
+            await self._async_call_api("get_schedules"),
+        )
+        return {
+            "schedules": [
+                {
+                    "schedule_id": s.schedule_id,
+                    "recurring": s.recurring,
+                    "days": [d.name.lower() for d in s.days],
+                    "start_time": s.start_time,
+                    "end_time": s.end_time,
+                    "duration": s.duration,
+                }
+                for s in response.schedules
+            ]
+        }
+
+    async def async_create_schedule_service(
+        self, start_time: time, end_time: time, days: list[str]
+    ) -> None:
+        """Create a new schedule on the device."""
+        if end_time <= start_time:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schedule_end_time_not_after_start_time",
+            )
+        await self._async_call_api(
+            "create_schedule",
+            start_time.strftime("%H:%M"),
+            end_time.strftime("%H:%M"),
+            {DAYS_MAPPING[d] for d in days},
+        )
+
+    async def async_delete_schedule_service(self, schedule_id: str) -> None:
+        """Delete a schedule from the device by its ID."""
+        await self._async_call_api("delete_schedule", schedule_id)
 
 
 class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):

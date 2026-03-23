@@ -24,6 +24,15 @@
     }
   },
   "services": {
+    "create_schedule": {
+      "service": "mdi:calendar-plus"
+    },
+    "delete_schedule": {
+      "service": "mdi:calendar-remove"
+    },
+    "get_schedules": {
+      "service": "mdi:calendar-clock"
+    },
     "set_auto_off": {
       "service": "mdi:progress-clock"
     },

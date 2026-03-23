@@ -78,7 +78,57 @@
       }
     }
   },
+  "exceptions": {
+    "schedule_end_time_not_after_start_time": {
+      "message": "The schedule end time must be after the start time."
+    }
+  },
+  "selector": {
+    "days": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
+    }
+  },
   "services": {
+    "create_schedule": {
+      "description": "Creates a new schedule on the Switcher device.",
+      "fields": {
+        "days": {
+          "description": "Days for a recurring schedule. Leave empty for a one-time schedule.",
+          "name": "Days"
+        },
+        "end_time": {
+          "description": "Schedule end time in HH:MM format.",
+          "name": "End time"
+        },
+        "start_time": {
+          "description": "Schedule start time in HH:MM format.",
+          "name": "Start time"
+        }
+      },
+      "name": "Create schedule"
+    },
+    "delete_schedule": {
+      "description": "Deletes a schedule from the Switcher device.",
+      "fields": {
+        "schedule_id": {
+          "description": "ID of the schedule to delete (0–7). Use Get schedules to find existing IDs.",
+          "name": "Schedule ID"
+        }
+      },
+      "name": "Delete schedule"
+    },
+    "get_schedules": {
+      "description": "Retrieves all schedules configured on the Switcher device.",
+      "name": "Get schedules"
+    },
     "set_auto_off": {
       "description": "Updates Switcher device auto-off setting.",
       "fields": {

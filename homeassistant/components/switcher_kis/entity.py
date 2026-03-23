@@ -38,8 +38,10 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
     def _update_data(self) -> None:
         """Update data from device."""
 
-    async def _async_call_api(self, api: str, *args: Any, **kwargs: Any) -> None:
-        """Call Switcher API."""
+    async def _async_call_api(
+        self, api: str, *args: Any, **kwargs: Any
+    ) -> SwitcherBaseResponse:
+        """Call Switcher API and return the response."""
         _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
         response: SwitcherBaseResponse | None = None
         error = None
@@ -63,3 +65,5 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
                 f"Call api for {self.name} failed, api: '{api}', "
                 f"args: {args}, response/error: {response or error}"
             )
+
+        return response
