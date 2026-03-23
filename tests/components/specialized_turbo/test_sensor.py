@@ -212,9 +212,9 @@ def test_all_descriptions_have_translation_key() -> None:
     """Test that descriptions without device class have a translation key."""
     for desc in SENSOR_DESCRIPTIONS:
         if desc.device_class is None or desc.device_class == SensorDeviceClass.ENUM:
-            assert (
-                desc.translation_key is not None
-            ), f"{desc.key} missing translation_key"
+            assert desc.translation_key is not None, (
+                f"{desc.key} missing translation_key"
+            )
 
 
 def test_value_fn_returns_none_for_empty_snapshot() -> None:

@@ -23,9 +23,7 @@ def _make_coordinator(
         "homeassistant.components.specialized_turbo.coordinator.ActiveBluetoothDataUpdateCoordinator.__init__",
         return_value=None,
     ):
-        coord = SpecializedTurboCoordinator(
-            hass, address=MOCK_ADDRESS, pin=pin
-        )
+        coord = SpecializedTurboCoordinator(hass, address=MOCK_ADDRESS, pin=pin)
     coord.hass = hass
     coord.async_update_listeners = MagicMock()
     return coord

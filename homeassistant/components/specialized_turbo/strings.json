@@ -51,8 +51,8 @@
       "assist_level": {
         "name": "Assist level",
         "state": {
-          "off": "Off",
           "eco": "Eco",
+          "off": "Off",
           "trail": "Trail",
           "turbo": "Turbo"
         }
