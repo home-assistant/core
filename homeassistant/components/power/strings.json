@@ -29,14 +29,14 @@
   "title": "Power",
   "triggers": {
     "changed": {
-      "description": "Triggers after one or more power consumption values change.",
+      "description": "Triggers after one or more power values change.",
       "fields": {
         "above": {
-          "description": "Only trigger when power consumption is above this value.",
+          "description": "Only trigger when power is above this value.",
           "name": "Above"
         },
         "below": {
-          "description": "Only trigger when power consumption is below this value.",
+          "description": "Only trigger when power is below this value.",
           "name": "Below"
         },
         "unit": {
@@ -47,7 +47,7 @@
       "name": "Power changed"
     },
     "crossed_threshold": {
-      "description": "Triggers after one or more power consumption values cross a threshold.",
+      "description": "Triggers after one or more power values cross a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::power::common::trigger_behavior_description%]",
