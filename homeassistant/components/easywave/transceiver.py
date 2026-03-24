@@ -244,7 +244,7 @@ class RX11Transceiver:
                     )
                     self.hw_version = None
                     self.fw_version = None
-        except _SERIAL_ERRORS as e:
+        except _SERIAL_OR_OS_ERRORS as e:
             _LOGGER.debug("Could not refresh USB identity: %s", e)
 
     async def disconnect(self) -> None:
