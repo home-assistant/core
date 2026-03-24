@@ -428,3 +428,70 @@ async def test_well_known_auth_info(
         "response_types_supported": ["code"],
         "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
     }
+
+
+@pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+@pytest.mark.parametrize(
+    ("config", "expected_response"),
+    [
+        (
+            {
+                "internal_url": "http://192.168.1.100:8123",
+                # Current request matches external url
+                "external_url": "https://example.com",
+            },
+            {
+                "resource": "https://example.com",
+                "authorization_servers": ["https://example.com"],
+                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+            },
+        ),
+        (
+            {
+                # Current request matches internal url
+                "internal_url": "https://example.com",
+                "external_url": "https://other.com",
+            },
+            {
+                "resource": "https://example.com",
+                "authorization_servers": ["https://example.com"],
+                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+            },
+        ),
+    ],
+    ids=["external_url", "internal_url"],
+)
+async def test_well_known_protected_resource(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    config: dict[str, str],
+    expected_response: dict[str, Any],
+) -> None:
+    """Test the well-known OAuth protected resource metadata endpoint per RFC9728."""
+    await async_process_ha_core_config(hass, config)
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.get(
+        "/.well-known/oauth-protected-resource",
+    )
+    assert resp.status == 200
+    assert await resp.json() == expected_response
+
+
+@pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+async def test_well_known_protected_resource_no_url(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test the protected resource metadata returns 404 when no URL is configured."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": "https://other.com",
+            "external_url": "https://again.com",
+        },
+    )
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.get(
+        "/.well-known/oauth-protected-resource",
+    )
+    assert resp.status == 404

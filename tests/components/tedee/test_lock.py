@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
 from aiotedee import TedeeLock, TedeeLockState
-from aiotedee.exception import (
+from aiotedee.exceptions import (
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
