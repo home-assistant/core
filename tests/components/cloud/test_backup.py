@@ -12,10 +12,12 @@ from hass_nabucasa.files import FilesError, StorageType
 import pytest
 
 from homeassistant.components.backup import (
+    DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
     AgentBackup,
     Folder,
+    UploadBackupEvent,
 )
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
@@ -368,7 +370,7 @@ async def test_agents_upload_on_progress(
     hass_client: ClientSessionGenerator,
     cloud: Mock,
 ) -> None:
-    """Test agent upload backup calls on_progress callback."""
+    """Test agent upload backup emits UploadBackupEvent via on_progress."""
     client = await hass_client()
     backup_data = "test"
     backup_id = "test-backup"
@@ -394,6 +396,15 @@ async def test_agents_upload_on_progress(
 
     cloud.files.upload.side_effect = mock_upload
 
+    manager = hass.data[DATA_MANAGER]
+    events: list[UploadBackupEvent] = []
+
+    def _collect(event: Any) -> None:
+        if isinstance(event, UploadBackupEvent):
+            events.append(event)
+
+    unsub = manager.async_subscribe_events(_collect)
+
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
@@ -411,11 +422,15 @@ async def test_agents_upload_on_progress(
             data={"file": StringIO(backup_data)},
         )
 
+    unsub()
+
     assert resp.status == 201
-    cloud.files.upload.assert_called_once()
-    call_kwargs = cloud.files.upload.call_args.kwargs
-    assert "on_progress" in call_kwargs
-    assert call_kwargs["on_progress"] is not None
+    cloud_events = [e for e in events if e.agent_id == "cloud.cloud"]
+    assert len(cloud_events) >= 2
+    assert cloud_events[0].uploaded_bytes == 2
+    assert cloud_events[0].total_bytes == len(backup_data)
+    assert cloud_events[-1].uploaded_bytes == len(backup_data)
+    assert cloud_events[-1].total_bytes == len(backup_data)
 
 
 @pytest.mark.parametrize("side_effect", [FilesError("Boom!"), CloudError("Boom!")])
