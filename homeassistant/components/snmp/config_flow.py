@@ -37,6 +37,7 @@ from .const import (
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
     DOMAIN,
     MAP_AUTH_PROTOCOLS,
@@ -95,10 +96,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     context_name = data.get(CONF_CONTEXT_NAME)
 
     try:
-        target = await UdpTransportTarget.create((host, port))
+        target = await UdpTransportTarget.create((host, port), timeout=DEFAULT_TIMEOUT)
     except PySnmpError as err1:
         try:
-            target = await Udp6TransportTarget.create((host, port))
+            target = await Udp6TransportTarget.create(
+                (host, port), timeout=DEFAULT_TIMEOUT
+            )
         except PySnmpError as err2:
             raise CannotConnect(f"{err1} / {err2}") from None
     except Exception as err:  # pylint: disable=broad-except
