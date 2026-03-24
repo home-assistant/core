@@ -114,6 +114,12 @@ def decrypt_payload_legacy(key: str, ciphertext: bytes) -> JsonValueType | None:
     )
 
 
+async def async_is_local_only_user(hass: HomeAssistant, user_id: str) -> bool:
+    """Return True if the user is local only."""
+    user = await hass.auth.async_get_user(user_id)
+    return user is not None and user.local_only
+
+
 def registration_context(registration: Mapping[str, Any]) -> Context:
     """Generate a context from a request."""
     return Context(user_id=registration[CONF_USER_ID])
