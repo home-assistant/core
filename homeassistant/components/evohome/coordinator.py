@@ -150,11 +150,8 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             ) from err
 
         except ec2.ApiRequestFailedError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="api_call_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            self.logger.error(err)
+            return None
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
             await self.async_request_refresh()  # hass.async_create_task() won't help

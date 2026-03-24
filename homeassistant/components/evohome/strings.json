@@ -1,8 +1,5 @@
 {
   "exceptions": {
-    "api_call_failed": {
-      "message": "The Evohome API call failed: {error}"
-    },
     "invalid_system_mode": {
       "message": "The requested system mode is not supported: {error}"
     },

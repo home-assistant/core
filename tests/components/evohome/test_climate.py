@@ -216,32 +216,6 @@ async def test_ctl_invalid_system_mode(
     assert exc_info.value.translation_key == "invalid_system_mode"
 
 
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_api_request_failed(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test translated exception when the client API request fails."""
-
-    with (
-        patch(
-            "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.ApiRequestFailedError("Request failed", status=500),
-        ),
-        pytest.raises(ServiceValidationError) as exc_info,
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-            },
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_key == "api_call_failed"
-
-
 @pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_ctl_turn_on(
     hass: HomeAssistant,
