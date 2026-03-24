@@ -173,7 +173,7 @@
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
         }
       },
-      "name": "Arm away"
+      "name": "Arm alarm away"
     },
     "alarm_arm_custom_bypass": {
       "description": "Arms an alarm while allowing to bypass a custom area.",
@@ -183,7 +183,7 @@
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
         }
       },
-      "name": "Arm with custom bypass"
+      "name": "Arm alarm with custom bypass"
     },
     "alarm_arm_home": {
       "description": "Arms an alarm in the home mode.",
@@ -193,7 +193,7 @@
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
         }
       },
-      "name": "Arm home"
+      "name": "Arm alarm home"
     },
     "alarm_arm_night": {
       "description": "Arms an alarm in the night mode.",
@@ -203,7 +203,7 @@
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
         }
       },
-      "name": "Arm night"
+      "name": "Arm alarm night"
     },
     "alarm_arm_vacation": {
       "description": "Arms an alarm in the vacation mode.",
@@ -213,7 +213,7 @@
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
         }
       },
-      "name": "Arm vacation"
+      "name": "Arm alarm vacation"
     },
     "alarm_disarm": {
       "description": "Disarms an alarm.",
@@ -223,7 +223,7 @@
           "name": "Code"
         }
       },
-      "name": "Disarm"
+      "name": "Disarm alarm"
     },
     "alarm_trigger": {
       "description": "Triggers an alarm manually.",
@@ -233,7 +233,7 @@
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
         }
       },
-      "name": "Trigger"
+      "name": "Trigger alarm"
     }
   },
   "title": "Alarm control panel",
