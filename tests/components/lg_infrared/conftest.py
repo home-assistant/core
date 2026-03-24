@@ -79,7 +79,7 @@ def mock_make_lg_tv_command() -> Generator[None]:
     rather than the raw NEC timings.
     """
     with patch(
-        "homeassistant.components.lg_infrared.media_player.make_lg_tv_command",
+        "homeassistant.components.lg_infrared.entity.make_lg_tv_command",
         side_effect=lambda code, **kwargs: code,
     ):
         yield
