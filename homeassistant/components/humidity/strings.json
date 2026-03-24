@@ -1,9 +1,37 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted entities.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "value": {
+      "description": "Tests if a relative humidity value is above a threshold, below a threshold, or in a range of values.",
+      "fields": {
+        "above": {
+          "description": "Require the relative humidity to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::humidity::common::condition_behavior_description%]",
+          "name": "[%key:component::humidity::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the relative humidity to be below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Relative humidity"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "number_or_entity": {
       "choices": {
         "entity": "Entity",

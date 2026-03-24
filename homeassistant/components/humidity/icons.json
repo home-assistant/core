@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "value": {
+      "condition": "mdi:water-percent"
+    }
+  },
   "triggers": {
     "changed": {
       "trigger": "mdi:water-percent"
