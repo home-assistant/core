@@ -124,18 +124,18 @@
           "name": "Areas"
         }
       },
-      "name": "Clean vacuum cleaner area"
+      "name": "Clean area with vacuum cleaner"
     },
     "clean_spot": {
       "description": "Tells a vacuum cleaner to do a spot clean-up.",
-      "name": "Spot clean vacuum cleaner"
+      "name": "Spot clean with vacuum cleaner"
     },
     "locate": {
       "description": "Locates a vacuum cleaner.",
       "name": "Locate vacuum cleaner"
     },
     "pause": {
-      "description": "Pauses a vacuum cleaner.",
+      "description": "Pauses a vacuum cleaner's current task.",
       "name": "Pause vacuum cleaner"
     },
     "return_to_base": {
@@ -154,7 +154,7 @@
           "name": "Parameters"
         }
       },
-      "name": "Send vacuum cleaner command"
+      "name": "Send command to vacuum cleaner"
     },
     "set_fan_speed": {
       "description": "Sets the fan speed of a vacuum cleaner.",
@@ -167,15 +167,15 @@
       "name": "Set vacuum cleaner fan speed"
     },
     "start": {
-      "description": "Starts or resumes a vacuum cleaner.",
+      "description": "Starts or resumes a vacuum cleaner's cleaning task.",
       "name": "Start vacuum cleaner"
     },
     "start_pause": {
-      "description": "Starts, pauses, or resumes a vacuum cleaner.",
+      "description": "Starts, pauses, or resumes a vacuum cleaner's cleaning task.",
       "name": "Start/pause vacuum cleaner"
     },
     "stop": {
-      "description": "Stops a vacuum cleaner.",
+      "description": "Stops a vacuum cleaner's current task.",
       "name": "Stop vacuum cleaner"
     },
     "toggle": {
