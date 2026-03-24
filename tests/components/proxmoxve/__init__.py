@@ -25,16 +25,15 @@ AUDIT_PERMISSIONS = {
 }
 
 POWER_PERMISSIONS = {
+    "/": {"VM.PowerMgmt": 1},
     "/nodes": {"VM.PowerMgmt": 1},
     "/vms": {"VM.PowerMgmt": 1},
-    "/": {
-        "VM.PowerMgmt": 1,
-    },
+    "/vms/101": {"VM.PowerMgmt": 0},
 }
 
 MERGED_PERMISSIONS = {
-    key: value | POWER_PERMISSIONS.get(key, {})
-    for key, value in AUDIT_PERMISSIONS.items()
+    key: {**AUDIT_PERMISSIONS.get(key, {}), **POWER_PERMISSIONS.get(key, {})}
+    for key in set(AUDIT_PERMISSIONS) | set(POWER_PERMISSIONS)
 }
 
 

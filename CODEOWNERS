@@ -214,6 +214,8 @@ build.json @home-assistant/supervisor
 /tests/components/balboa/ @garbled1 @natekspencer
 /homeassistant/components/bang_olufsen/ @mj23000
 /tests/components/bang_olufsen/ @mj23000
+/homeassistant/components/battery/ @home-assistant/core
+/tests/components/battery/ @home-assistant/core
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
 /homeassistant/components/beewi_smartclim/ @alemuro
@@ -273,6 +275,8 @@ build.json @home-assistant/supervisor
 /tests/components/cambridge_audio/ @noahhusby
 /homeassistant/components/camera/ @home-assistant/core
 /tests/components/camera/ @home-assistant/core
+/homeassistant/components/casper_glow/ @mikeodr
+/tests/components/casper_glow/ @mikeodr
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
 /homeassistant/components/ccm15/ @ocalvo
@@ -782,6 +786,8 @@ build.json @home-assistant/supervisor
 /tests/components/igloohome/ @keithle888
 /homeassistant/components/ign_sismologia/ @exxamalte
 /tests/components/ign_sismologia/ @exxamalte
+/homeassistant/components/illuminance/ @home-assistant/core
+/tests/components/illuminance/ @home-assistant/core
 /homeassistant/components/image/ @home-assistant/core
 /tests/components/image/ @home-assistant/core
 /homeassistant/components/image_processing/ @home-assistant/core
@@ -947,6 +953,8 @@ build.json @home-assistant/supervisor
 /tests/components/lg_thinq/ @LG-ThinQ-Integration
 /homeassistant/components/libre_hardware_monitor/ @Sab44
 /tests/components/libre_hardware_monitor/ @Sab44
+/homeassistant/components/lichess/ @aryanhasgithub
+/tests/components/lichess/ @aryanhasgithub
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/liebherr/ @mettolen
@@ -1305,6 +1313,8 @@ build.json @home-assistant/supervisor
 /tests/components/poolsense/ @haemishkyd
 /homeassistant/components/portainer/ @erwindouna
 /tests/components/portainer/ @erwindouna
+/homeassistant/components/power/ @home-assistant/core
+/tests/components/power/ @home-assistant/core
 /homeassistant/components/powerfox/ @klaasnicolaas
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerfox_local/ @klaasnicolaas
@@ -1563,8 +1573,8 @@ build.json @home-assistant/supervisor
 /tests/components/sma/ @kellerza @rklomp @erwindouna
 /homeassistant/components/smappee/ @bsmappee
 /tests/components/smappee/ @bsmappee
-/homeassistant/components/smarla/ @explicatis @rlint-explicatis
-/tests/components/smarla/ @explicatis @rlint-explicatis
+/homeassistant/components/smarla/ @explicatis @johannes-exp
+/tests/components/smarla/ @explicatis @johannes-exp
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
 /homeassistant/components/smartthings/ @joostlek
@@ -1699,6 +1709,8 @@ build.json @home-assistant/supervisor
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/teltonika/ @karlbeecken
 /tests/components/teltonika/ @karlbeecken
+/homeassistant/components/temperature/ @home-assistant/core
+/tests/components/temperature/ @home-assistant/core
 /homeassistant/components/template/ @Petro31 @home-assistant/core
 /tests/components/template/ @Petro31 @home-assistant/core
 /homeassistant/components/tesla_fleet/ @Bre77
@@ -1831,8 +1843,8 @@ build.json @home-assistant/supervisor
 /tests/components/vegehub/ @thulrus
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
-/homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio @wollew
-/tests/components/velux/ @Julius2342 @DeerMaximum @pawlizio @wollew
+/homeassistant/components/velux/ @Julius2342 @pawlizio @wollew
+/tests/components/velux/ @Julius2342 @pawlizio @wollew
 /homeassistant/components/venstar/ @garbled1 @jhollowe
 /tests/components/venstar/ @garbled1 @jhollowe
 /homeassistant/components/versasense/ @imstevenxyz
@@ -1915,6 +1927,8 @@ build.json @home-assistant/supervisor
 /tests/components/whois/ @frenck
 /homeassistant/components/wiffi/ @mampfes
 /tests/components/wiffi/ @mampfes
+/homeassistant/components/wiim/ @Linkplay2020
+/tests/components/wiim/ @Linkplay2020
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
 /homeassistant/components/window/ @home-assistant/core
