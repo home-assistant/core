@@ -11,7 +11,7 @@ from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -115,7 +115,12 @@ async def test_coordinator_update_relogin_detects_password_change(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
+        for flow in flows
+    )
 
 
 async def test_coordinator_update_when_unreachable(
