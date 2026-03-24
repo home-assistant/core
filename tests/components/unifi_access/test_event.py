@@ -189,12 +189,12 @@ async def test_access_event(
 
 
 @pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
-async def test_access_event_with_single_door_metadata(
+async def test_access_event_minimal_metadata(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access events work when metadata contains a single door entry."""
+    """Test access events work with minimal metadata (no actor or authentication)."""
     handlers = _get_ws_handlers(mock_client)
 
     insights_msg = InsightsAdd(
