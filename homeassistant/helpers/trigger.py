@@ -1295,7 +1295,10 @@ async def _async_get_trigger_platform(
 
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
-    platform = _PLATFORM_ALIASES.get(platform, platform)
+    # Only apply aliases for old-style triggers (no sub_type).
+    # New-style triggers (e.g. "event.received") use the integration domain directly.
+    if len(platform_and_sub_type) == 1:
+        platform = _PLATFORM_ALIASES.get(platform, platform)
 
     if automation.is_disabled_experimental_trigger(hass, platform):
         raise vol.Invalid(

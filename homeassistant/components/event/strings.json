@@ -21,5 +21,17 @@
       "name": "Motion"
     }
   },
-  "title": "Event"
+  "title": "Event",
+  "triggers": {
+    "received": {
+      "description": "Triggers after one or more event entities receive a matching event.",
+      "fields": {
+        "event_type": {
+          "description": "The event types to trigger on.",
+          "name": "Event type"
+        }
+      },
+      "name": "Event received"
+    }
+  }
 }
