@@ -106,5 +106,6 @@ class UnifiAccessEmergencySwitch(UnifiAccessHubEntity, SwitchEntity):
                 UnifiAccessData(
                     doors=self.coordinator.data.doors,
                     emergency=new_status,
+                    door_thumbnails=self.coordinator.data.door_thumbnails,
                 )
             )

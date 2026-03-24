@@ -62,6 +62,11 @@
         }
       }
     },
+    "image": {
+      "door_thumbnail": {
+        "name": "Thumbnail"
+      }
+    },
     "switch": {
       "evacuation": {
         "name": "Evacuation"
