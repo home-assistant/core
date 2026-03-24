@@ -251,6 +251,7 @@ DEFAULT_INTEGRATIONS = {
     "moisture",
     "motion",
     "occupancy",
+    "power",
     "temperature",
     "window",
 }

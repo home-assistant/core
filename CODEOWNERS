@@ -947,6 +947,8 @@ build.json @home-assistant/supervisor
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/letpot/ @jpelgrom
 /tests/components/letpot/ @jpelgrom
+/homeassistant/components/lg_infrared/ @home-assistant/core
+/tests/components/lg_infrared/ @home-assistant/core
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
@@ -1315,6 +1317,8 @@ build.json @home-assistant/supervisor
 /tests/components/poolsense/ @haemishkyd
 /homeassistant/components/portainer/ @erwindouna
 /tests/components/portainer/ @erwindouna
+/homeassistant/components/power/ @home-assistant/core
+/tests/components/power/ @home-assistant/core
 /homeassistant/components/powerfox/ @klaasnicolaas
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerfox_local/ @klaasnicolaas
@@ -1600,6 +1604,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli
 /tests/components/solarlog/ @Ernst79 @dontinelli
+/homeassistant/components/solarman/ @solarmanpv
+/tests/components/solarman/ @solarmanpv
 /homeassistant/components/solax/ @squishykid @Darsstar
 /tests/components/solax/ @squishykid @Darsstar
 /homeassistant/components/soma/ @ratsept

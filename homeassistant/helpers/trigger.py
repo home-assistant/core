@@ -515,8 +515,10 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
         )
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state is not the same as the expected origin state."""
-        return bool(self._get_tracked_value(state) != self._from_state)
+        """Check if the new state is valid."""
+        return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN) and bool(
+            self._get_tracked_value(state) != self._from_state
+        )
 
 
 def _validate_range[_T: dict[str, Any]](
