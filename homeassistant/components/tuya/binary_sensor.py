@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.binary_sensor import DPCodeBitmapBitWrapper
-from tuya_device_handlers.device_wrapper.common import (
-    DPCodeBooleanWrapper,
-    DPCodeWrapper,
+from tuya_device_handlers.device_wrapper.binary_sensor import (
+    DPCodeBitmapBitWrapper,
+    DPCodeInSetWrapper,
 )
+from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.binary_sensor import (
@@ -317,6 +317,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             entity_category=EntityCategory.DIAGNOSTIC,
             on_value="alarm",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     ),
     DeviceCategory.WK: (
         TuyaBinarySensorEntityDescription(
@@ -376,29 +381,10 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
 }
 
 
-class _CustomDPCodeWrapper(DPCodeWrapper[bool]):
-    """Custom DPCode Wrapper to check for values in a set."""
-
-    _valid_values: set[bool | float | int | str]
-
-    def __init__(
-        self, dpcode: str, valid_values: set[bool | float | int | str]
-    ) -> None:
-        """Init CustomDPCodeBooleanWrapper."""
-        super().__init__(dpcode)
-        self._valid_values = valid_values
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := device.status.get(self.dpcode)) is None:
-            return None
-        return raw_value in self._valid_values
-
-
 def _get_dpcode_wrapper(
     device: CustomerDevice,
     description: TuyaBinarySensorEntityDescription,
-) -> DPCodeWrapper | None:
+) -> DeviceWrapper[bool] | None:
     """Get DPCode wrapper for an entity description."""
     dpcode = description.dpcode or description.key
     if description.bitmap_key is not None:
@@ -412,7 +398,7 @@ def _get_dpcode_wrapper(
     # Legacy / compatibility
     if dpcode not in device.status:
         return None
-    return _CustomDPCodeWrapper(
+    return DPCodeInSetWrapper(
         dpcode,
         description.on_value
         if isinstance(description.on_value, set)
@@ -463,9 +449,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya binary sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = dpcode_wrapper
 
     @property

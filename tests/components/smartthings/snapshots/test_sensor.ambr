@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[aeotec_home_energy_meter_gen5][sensor.aeotec_energy_monitor_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -58,8 +59,9 @@
 # ---
 # name: test_all_entities[aeotec_home_energy_meter_gen5][sensor.aeotec_energy_monitor_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -115,8 +117,9 @@
 # ---
 # name: test_all_entities[aeotec_home_energy_meter_gen5][sensor.aeotec_energy_monitor_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -168,8 +171,9 @@
 # ---
 # name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -219,8 +223,9 @@
 # ---
 # name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -273,8 +278,9 @@
 # ---
 # name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -327,8 +333,9 @@
 # ---
 # name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -384,8 +391,9 @@
 # ---
 # name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_uv_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -436,8 +444,9 @@
 # ---
 # name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -490,8 +499,9 @@
 # ---
 # name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -544,8 +554,9 @@
 # ---
 # name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -601,8 +612,9 @@
 # ---
 # name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -655,8 +667,9 @@
 # ---
 # name: test_all_entities[aux_ac][sensor.aux_a_c_on_off_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -712,8 +725,9 @@
 # ---
 # name: test_all_entities[base_electric_meter][sensor.aeon_energy_monitor_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -769,8 +783,9 @@
 # ---
 # name: test_all_entities[base_electric_meter][sensor.aeon_energy_monitor_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -826,8 +841,9 @@
 # ---
 # name: test_all_entities[bosch_radiator_thermostat_ii][sensor.radiator_thermostat_ii_m_wohnzimmer_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -877,8 +893,9 @@
 # ---
 # name: test_all_entities[bosch_radiator_thermostat_ii][sensor.radiator_thermostat_ii_m_wohnzimmer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -934,8 +951,9 @@
 # ---
 # name: test_all_entities[c2c_arlo_pro_3_switch][sensor.2nd_floor_hallway_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -997,8 +1015,9 @@
 # ---
 # name: test_all_entities[c2c_arlo_pro_3_switch][sensor.2nd_floor_hallway_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1048,8 +1067,9 @@
 # ---
 # name: test_all_entities[centralite][sensor.dimmer_debian_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1105,8 +1125,9 @@
 # ---
 # name: test_all_entities[contact_sensor][sensor.front_door_open_closed_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1156,8 +1177,9 @@
 # ---
 # name: test_all_entities[contact_sensor][sensor.front_door_open_closed_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1211,10 +1233,830 @@
     'state': '15.0',
   })
 # ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_air_quality-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_air_quality',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Air quality',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_quality',
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_airQualitySensor_airQuality_airQuality',
+    'unit_of_measurement': 'CAQI',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_air_quality-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air purifier Air quality',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'CAQI',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_air_quality',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_odor_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_odor_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Odor sensor',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Odor sensor',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'odor_sensor',
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_odorSensor_odorLevel_odorLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_odor_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air purifier Odor sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_odor_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_pm1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM1',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
+    'original_icon': None,
+    'original_name': 'PM1',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm1',
+      'friendly_name': 'Air purifier PM1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_pm1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM10',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_dustSensor_dustLevel_dustLevel',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': 'Air purifier PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm10_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_pm10_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM10 health concern',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM10 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm10_health_concern',
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_dustHealthConcern_dustHealthConcern_dustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm10_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Air purifier PM10 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_pm10_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm1_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_pm1_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM1 health concern',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM1 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm1_health_concern',
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_veryFineDustHealthConcern_veryFineDustHealthConcern_veryFineDustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm1_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Air purifier PM1 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_pm1_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM2.5',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_dustSensor_fineDustLevel_fineDustLevel',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': 'Air purifier PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm2_5_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_purifier_pm2_5_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM2.5 health concern',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM2.5 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm25_health_concern',
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_fineDustHealthConcern_fineDustHealthConcern_fineDustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm2_5_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Air purifier PM2.5 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_pm2_5_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_air_quality-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_filter_air_quality',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Air quality',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_quality',
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_airQualitySensor_airQuality_airQuality',
+    'unit_of_measurement': 'CAQI',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_air_quality-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air filter Air quality',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'CAQI',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_filter_air_quality',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_filter_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Air filter Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_filter_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '221.878',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_filter_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy difference',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Air filter Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_filter_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.004',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_filter_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy saved',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Air filter Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_filter_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_filter_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Air filter Power',
+      'power_consumption_end': '2026-03-09T20:53:57Z',
+      'power_consumption_start': '2026-03-09T20:42:57Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_filter_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_filter_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][sensor.air_filter_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Air filter Power energy',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_filter_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1266,8 +2108,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1320,8 +2163,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1374,8 +2218,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_odor_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1423,8 +2268,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1477,8 +2323,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1531,8 +2378,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1598,8 +2446,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1665,8 +2514,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1719,8 +2569,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1786,8 +2637,9 @@
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1843,8 +2695,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1900,8 +2753,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1957,8 +2811,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2014,8 +2869,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2068,8 +2924,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2127,8 +2984,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2184,8 +3042,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2241,8 +3100,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2291,8 +3151,9 @@
 # ---
 # name: test_all_entities[da_ac_ehs_01001][sensor.heat_pump_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2348,8 +3209,9 @@
 # ---
 # name: test_all_entities[da_ac_ehs_01001][sensor.heat_pump_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2405,8 +3267,9 @@
 # ---
 # name: test_all_entities[da_ac_ehs_01001][sensor.heat_pump_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2462,8 +3325,9 @@
 # ---
 # name: test_all_entities[da_ac_ehs_01001][sensor.heat_pump_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2521,8 +3385,9 @@
 # ---
 # name: test_all_entities[da_ac_ehs_01001][sensor.heat_pump_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2578,8 +3443,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2635,8 +3501,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2692,8 +3559,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2749,8 +3617,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2803,8 +3672,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2862,8 +3732,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2919,8 +3790,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2976,8 +3848,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3026,8 +3899,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3083,8 +3957,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3140,8 +4015,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3197,8 +4073,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3251,8 +4128,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3310,8 +4188,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3367,8 +4246,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3424,8 +4304,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3474,8 +4355,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3531,8 +4413,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3588,8 +4471,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3645,8 +4529,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3699,8 +4584,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3758,8 +4644,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3815,8 +4702,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3872,8 +4760,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3922,8 +4811,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3975,8 +4865,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4029,8 +4920,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4083,8 +4975,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4140,8 +5033,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_000001][sensor.table_de_cuisson_operating_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4199,8 +5093,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_1_heating_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4260,8 +5155,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4309,8 +5205,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_2_heating_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4370,8 +5267,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4419,8 +5317,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_3_heating_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4480,8 +5379,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_3_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4529,8 +5429,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_4_heating_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4590,8 +5491,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_burner_4_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4639,8 +5541,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_operating_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4700,8 +5603,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4753,8 +5657,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4810,8 +5715,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4867,8 +5773,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4924,8 +5831,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_filter_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4977,8 +5885,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5031,8 +5940,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5085,8 +5995,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm10_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5152,8 +6063,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm1_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5219,8 +6131,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5273,8 +6186,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm2_5_health_concern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5340,8 +6254,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5399,8 +6314,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5456,8 +6372,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5506,8 +6423,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5595,8 +6513,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5656,8 +6575,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_oven_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5769,8 +6689,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5823,8 +6744,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5880,8 +6802,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][sensor.oven_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5930,8 +6853,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][sensor.oven_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6019,8 +6943,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][sensor.oven_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6080,8 +7005,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][sensor.oven_oven_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6193,8 +7119,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][sensor.oven_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6247,8 +7174,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][sensor.oven_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6304,8 +7232,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6354,8 +7283,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6443,8 +7373,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6504,8 +7435,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_oven_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6617,8 +7549,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_second_cavity_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6667,8 +7600,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_second_cavity_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6756,8 +7690,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_second_cavity_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6817,8 +7752,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_second_cavity_oven_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6930,8 +7866,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_second_cavity_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6984,8 +7921,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_second_cavity_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7041,8 +7979,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7095,8 +8034,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7152,8 +8092,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7202,8 +8143,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7291,8 +8233,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7352,8 +8295,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_operating_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7411,8 +8355,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_oven_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7524,8 +8469,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_second_cavity_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7574,8 +8520,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_second_cavity_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7663,8 +8610,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_second_cavity_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7724,8 +8672,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_second_cavity_oven_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7837,8 +8786,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_second_cavity_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7891,8 +8841,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_second_cavity_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7948,8 +8899,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8002,8 +8954,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8059,8 +9012,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8109,8 +9063,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8166,8 +9121,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8223,8 +9179,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8280,8 +9237,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8369,8 +9327,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8430,8 +9389,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_oven_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8543,8 +9503,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8602,8 +9563,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8659,8 +9621,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8713,8 +9676,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8770,8 +9734,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8827,8 +9792,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8884,8 +9850,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8941,8 +9908,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8998,8 +9966,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9055,8 +10024,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9114,8 +10084,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -9171,8 +10142,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_water_filter_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9224,8 +10196,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9281,8 +10254,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -9338,8 +10312,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9395,8 +10370,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9452,8 +10428,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9509,8 +10486,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9568,8 +10546,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -9625,8 +10604,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_water_filter_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9678,8 +10658,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9735,8 +10716,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -9792,8 +10774,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9849,8 +10832,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9906,8 +10890,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9963,8 +10948,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10022,8 +11008,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -10079,8 +11066,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_water_filter_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10132,8 +11120,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10189,8 +11178,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -10246,8 +11236,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10303,8 +11294,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10362,8 +11354,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -10419,8 +11412,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10579,8 +11573,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10630,8 +11625,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_cleaning_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -10697,8 +11693,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10754,8 +11751,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -10811,8 +11809,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10868,8 +11867,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_movement-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -10945,8 +11945,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11004,8 +12005,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -11061,8 +12063,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_turbo_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11124,8 +12127,9 @@
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11175,8 +12179,9 @@
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_cleaning_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11242,8 +12247,9 @@
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_movement-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11319,8 +12325,9 @@
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_turbo_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11382,8 +12389,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11439,8 +12447,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -11496,8 +12505,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11553,8 +12563,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11612,8 +12623,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -11669,8 +12681,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_valve_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11728,8 +12741,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11785,8 +12799,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -11842,8 +12857,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11899,8 +12915,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11958,8 +12975,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -12015,8 +13033,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_valve_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12074,8 +13093,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12131,8 +13151,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -12188,8 +13209,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12245,8 +13267,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12304,8 +13327,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -12361,8 +13385,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_valve_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12418,10 +13443,355 @@
     'state': 'room',
   })
 # ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stick_vacuum_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_battery_battery_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Stick vacuum Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stick_vacuum_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Stick vacuum Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.004',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stick_vacuum_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy difference',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Stick vacuum Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.003',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stick_vacuum_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy saved',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Stick vacuum Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stick_vacuum_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Stick vacuum Power',
+      'power_consumption_end': '2026-03-21T15:41:41Z',
+      'power_consumption_start': '2026-03-21T15:35:31Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stick_vacuum_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Stick vacuum Power energy',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12470,8 +13840,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12527,8 +13898,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -12584,8 +13956,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -12641,8 +14014,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12716,8 +14090,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12777,8 +14152,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12836,8 +14212,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -12893,8 +14270,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12943,8 +14321,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13000,8 +14379,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -13057,8 +14437,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13114,8 +14495,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -13189,8 +14571,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -13250,8 +14633,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13309,8 +14693,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -13366,8 +14751,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_water_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13421,10 +14807,195 @@
     'state': '1336.2',
   })
 # ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_job_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'filtering',
+        'bypassing',
+        'waiting',
+        'stopping',
+        'sensing',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.filtro_in_microfibra_job_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Job state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Job state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'microfiber_filter_job_state',
+    'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_samsungce.microfiberFilterOperatingState_microfiberFilterJobState_microfiberFilterJobState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_job_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Filtro in microfibra Job state',
+      'options': list([
+        'none',
+        'filtering',
+        'bypassing',
+        'waiting',
+        'stopping',
+        'sensing',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filtro_in_microfibra_job_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'waiting',
+  })
+# ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_operating_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ready',
+        'running',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.filtro_in_microfibra_operating_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operating state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'microfiber_filter_operating_state',
+    'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_samsungce.microfiberFilterOperatingState_operatingState_operatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_operating_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Filtro in microfibra Operating state',
+      'options': list([
+        'ready',
+        'running',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filtro_in_microfibra_operating_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_water_filter_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.filtro_in_microfibra_water_filter_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water filter usage',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water filter usage',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_filter_usage',
+    'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_water_filter_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Filtro in microfibra Water filter usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filtro_in_microfibra_water_filter_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '78',
+  })
+# ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13473,8 +15044,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13530,8 +15102,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -13587,8 +15160,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13644,8 +15218,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -13729,8 +15304,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -13790,8 +15366,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13849,8 +15426,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -13906,8 +15484,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13956,8 +15535,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14013,8 +15593,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14070,8 +15651,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14127,8 +15709,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -14212,8 +15795,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -14273,8 +15857,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14332,8 +15917,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14389,8 +15975,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14439,8 +16026,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14496,8 +16084,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14553,8 +16142,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14610,8 +16200,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -14695,8 +16286,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -14756,8 +16348,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14815,8 +16408,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -14872,8 +16466,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14922,8 +16517,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14979,8 +16575,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -15036,8 +16633,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15093,8 +16691,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -15178,8 +16777,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -15239,8 +16839,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15298,8 +16899,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -15355,8 +16957,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -15405,8 +17008,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15462,8 +17066,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -15519,8 +17124,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15576,8 +17182,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -15663,8 +17270,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -15724,8 +17332,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15783,8 +17392,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -15840,8 +17450,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -15890,8 +17501,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -15947,8 +17559,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -16004,8 +17617,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16061,8 +17675,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -16148,8 +17763,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -16209,8 +17825,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16268,8 +17885,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -16325,8 +17943,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16375,8 +17994,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16432,8 +18052,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -16489,8 +18110,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy_saved-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16546,8 +18168,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -16633,8 +18256,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -16694,8 +18318,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16753,8 +18378,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_power_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -16810,8 +18436,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16867,8 +18494,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100001][sensor.washer_1_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16917,8 +18545,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100001][sensor.washer_1_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -17004,8 +18633,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100001][sensor.washer_1_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -17065,8 +18695,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17115,8 +18746,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -17202,8 +18834,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -17263,8 +18896,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_completion_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17313,8 +18947,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_job_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -17400,8 +19035,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_machine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -17461,8 +19097,9 @@
 # ---
 # name: test_all_entities[ecobee_sensor][sensor.child_bedroom_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17518,8 +19155,9 @@
 # ---
 # name: test_all_entities[ecobee_thermostat][sensor.main_floor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17572,8 +19210,9 @@
 # ---
 # name: test_all_entities[ecobee_thermostat][sensor.main_floor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17629,8 +19268,9 @@
 # ---
 # name: test_all_entities[ecobee_thermostat_offline][sensor.downstairs_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17683,8 +19323,9 @@
 # ---
 # name: test_all_entities[ecobee_thermostat_offline][sensor.downstairs_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17736,8 +19377,9 @@
 # ---
 # name: test_all_entities[gas_detector][sensor.gas_detector_link_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17788,8 +19430,9 @@
 # ---
 # name: test_all_entities[gas_detector][sensor.gas_detector_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17842,8 +19485,9 @@
 # ---
 # name: test_all_entities[gas_meter][sensor.gas_meter_gas-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -17902,8 +19546,9 @@
 # ---
 # name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -17959,8 +19604,9 @@
 # ---
 # name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_calorific-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18008,8 +19654,9 @@
 # ---
 # name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18058,8 +19705,9 @@
 # ---
 # name: test_all_entities[generic_ef00_v1][sensor.thermostat_kuche_link_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18110,8 +19758,9 @@
 # ---
 # name: test_all_entities[generic_ef00_v1][sensor.thermostat_kuche_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18164,8 +19813,9 @@
 # ---
 # name: test_all_entities[generic_ef00_v1][sensor.thermostat_kuche_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18221,8 +19871,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][sensor.livingroom_smart_switch_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18272,8 +19923,9 @@
 # ---
 # name: test_all_entities[heatit_ztrm3_thermostat][sensor.hall_thermostat_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18329,8 +19981,9 @@
 # ---
 # name: test_all_entities[heatit_ztrm3_thermostat][sensor.hall_thermostat_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18386,8 +20039,9 @@
 # ---
 # name: test_all_entities[heatit_ztrm3_thermostat][sensor.hall_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18443,8 +20097,9 @@
 # ---
 # name: test_all_entities[ikea_kadrilj][sensor.kitchen_ikea_kadrilj_window_blind_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18492,10 +20147,286 @@
     'state': '37',
   })
 # ---
+# name: test_all_entities[ikea_leak_battery][sensor.waschkeller_feuchtigkeitssensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.waschkeller_feuchtigkeitssensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4496dbbd-db7b-4b72-89a8-208ed9482832_main_battery_battery_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[ikea_leak_battery][sensor.waschkeller_feuchtigkeitssensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Waschkeller Feuchtigkeitssensor Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.waschkeller_feuchtigkeitssensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_all_entities[ikea_motion_illuminance_battery][sensor.gaderobe_bewegungsmelder_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gaderobe_bewegungsmelder_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '6f730725-d8c9-4d06-bac6-7dd96a3c75d8_main_battery_battery_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[ikea_motion_illuminance_battery][sensor.gaderobe_bewegungsmelder_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Gaderobe Bewegungsmelder Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gaderobe_bewegungsmelder_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_all_entities[ikea_motion_illuminance_battery][sensor.gaderobe_bewegungsmelder_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gaderobe_bewegungsmelder_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Illuminance',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '6f730725-d8c9-4d06-bac6-7dd96a3c75d8_main_illuminanceMeasurement_illuminance_illuminance',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_all_entities[ikea_motion_illuminance_battery][sensor.gaderobe_bewegungsmelder_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Gaderobe Bewegungsmelder Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gaderobe_bewegungsmelder_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_all_entities[ikea_plug_powermeter][sensor.ikea_plug_powermeter_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikea_plug_powermeter_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '9be7ea22-975e-41f0-bc3c-e811a6fb1289_main_energyMeter_energy_energy',
+    'unit_of_measurement': 'kWh',
+  })
+# ---
+# name: test_all_entities[ikea_plug_powermeter][sensor.ikea_plug_powermeter_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'IKEA Plug Powermeter Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikea_plug_powermeter_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.004',
+  })
+# ---
+# name: test_all_entities[ikea_plug_powermeter][sensor.ikea_plug_powermeter_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikea_plug_powermeter_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '9be7ea22-975e-41f0-bc3c-e811a6fb1289_main_powerMeter_power_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_all_entities[ikea_plug_powermeter][sensor.ikea_plug_powermeter_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'IKEA Plug Powermeter Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikea_plug_powermeter_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_all_entities[lumi][sensor.outdoor_temp_atmospheric_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18554,8 +20485,9 @@
 # ---
 # name: test_all_entities[lumi][sensor.outdoor_temp_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18605,8 +20537,9 @@
 # ---
 # name: test_all_entities[lumi][sensor.outdoor_temp_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18659,8 +20592,9 @@
 # ---
 # name: test_all_entities[lumi][sensor.outdoor_temp_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18714,10 +20648,243 @@
     'state': '24.4444444444444',
   })
 # ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.waschkeller_trockner_plug_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e95e4c85-4f9e-4961-9656-4632821ce8c6_main_energyMeter_energy_energy',
+    'unit_of_measurement': 'Wh',
+  })
+# ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Waschkeller Trockner Plug Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'Wh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.waschkeller_trockner_plug_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9233.836',
+  })
+# ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.waschkeller_trockner_plug_energy_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e95e4c85-4f9e-4961-9656-4632821ce8c6_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Waschkeller Trockner Plug Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.waschkeller_trockner_plug_energy_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.233836',
+  })
+# ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.waschkeller_trockner_plug_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy difference',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': 'e95e4c85-4f9e-4961-9656-4632821ce8c6_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Waschkeller Trockner Plug Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.waschkeller_trockner_plug_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.waschkeller_trockner_plug_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e95e4c85-4f9e-4961-9656-4632821ce8c6_main_powerMeter_power_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_all_entities[meross_plug][sensor.waschkeller_trockner_plug_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Waschkeller Trockner Plug Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.waschkeller_trockner_plug_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18767,8 +20934,9 @@
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -18824,8 +20992,9 @@
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_x_coordinate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18873,8 +21042,9 @@
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_y_coordinate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18922,8 +21092,9 @@
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_z_coordinate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -18971,8 +21142,9 @@
 # ---
 # name: test_all_entities[sensi_thermostat][sensor.thermostat_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19025,8 +21197,9 @@
 # ---
 # name: test_all_entities[sensi_thermostat][sensor.thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19082,8 +21255,9 @@
 # ---
 # name: test_all_entities[sensibo_airconditioner_1][sensor.office_air_conditioner_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19131,8 +21305,9 @@
 # ---
 # name: test_all_entities[sensibo_airconditioner_1][sensor.office_cooling_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19185,8 +21360,9 @@
 # ---
 # name: test_all_entities[tesla_powerwall][sensor.powerwall_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19236,8 +21412,9 @@
 # ---
 # name: test_all_entities[tplink_p110][sensor.spulmaschine_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19293,8 +21470,9 @@
 # ---
 # name: test_all_entities[tplink_p110][sensor.spulmaschine_energy_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -19350,8 +21528,9 @@
 # ---
 # name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19403,8 +21582,9 @@
 # ---
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_tv_channel-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19452,8 +21632,9 @@
 # ---
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_tv_channel_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19501,8 +21682,9 @@
 # ---
 # name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19552,8 +21734,9 @@
 # ---
 # name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -19609,8 +21792,9 @@
 # ---
 # name: test_all_entities[virtual_water_sensor][sensor.virtual_water_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19660,8 +21844,9 @@
 # ---
 # name: test_all_entities[yale_push_button_deadbolt_lock][sensor.basement_door_lock_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
