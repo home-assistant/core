@@ -41,7 +41,7 @@
           "name": "Item name"
         }
       },
-      "name": "Add item"
+      "name": "Add to-do list item"
     },
     "get_items": {
       "description": "Gets items on a to-do list.",
@@ -51,11 +51,11 @@
           "name": "Status"
         }
       },
-      "name": "Get items"
+      "name": "Get to-do list items"
     },
     "remove_completed_items": {
       "description": "Removes all to-do list items that have been completed.",
-      "name": "Remove completed items"
+      "name": "Remove completed to-do list items"
     },
     "remove_item": {
       "description": "Removes an existing to-do list item by its name or UID.",
@@ -65,7 +65,7 @@
           "name": "[%key:component::todo::services::update_item::fields::item::name%]"
         }
       },
-      "name": "Remove item"
+      "name": "Remove to-do list item"
     },
     "update_item": {
       "description": "Updates an existing to-do list item based on its name or UID.",
@@ -95,7 +95,7 @@
           "name": "Set status"
         }
       },
-      "name": "Update item"
+      "name": "Update to-do list item"
     }
   },
   "title": "To-do list"

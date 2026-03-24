@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_weather[weather.la_clusaz-entry]
+# name: test_weather[weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'weather',
     'entity_category': None,
-    'entity_id': 'weather.la_clusaz',
+    'entity_id': 'weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -36,11 +36,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_weather[weather.la_clusaz-state]
+# name: test_weather[weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'La Clusaz',
+      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz',
       'humidity': 75,
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 988.7,
@@ -55,7 +55,7 @@
       'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'weather.la_clusaz',
+    'entity_id': 'weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
