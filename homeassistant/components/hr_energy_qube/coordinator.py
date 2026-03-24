@@ -11,7 +11,7 @@ from python_qube_heatpump.models import QubeState
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -31,7 +31,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
         super().__init__(
             hass,
             _LOGGER,
-            name="hr_energy_qube",
+            name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             config_entry=entry,
         )

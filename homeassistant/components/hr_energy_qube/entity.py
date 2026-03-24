@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import QubeConfigEntry
 from .const import DOMAIN
 from .coordinator import QubeCoordinator
+
+if TYPE_CHECKING:
+    from . import QubeConfigEntry
 
 
 class QubeEntity(CoordinatorEntity[QubeCoordinator]):
