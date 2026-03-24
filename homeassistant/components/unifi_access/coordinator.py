@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 from typing import Any, cast
 
@@ -30,7 +30,6 @@ from unifi_access_api.models.websocket import (
     V2LocationState,
     V2LocationUpdate,
     WebsocketMessage,
-    WsDoorLockRuleStatus,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -66,16 +65,6 @@ class UnifiAccessData:
     supports_lock_rules: bool
     lock_rule_support_complete: bool
     door_thumbnails: dict[str, ThumbnailInfo]
-
-
-def _ws_rule_status_to_lock_rule_status(
-    ws_rule_status: WsDoorLockRuleStatus,
-) -> DoorLockRuleStatus:
-    """Convert websocket lock rule data to the API status model."""
-    return DoorLockRuleStatus(
-        type=ws_rule_status.type,
-        ended_time=ws_rule_status.until,
-    )
 
 
 class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
@@ -262,14 +251,14 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             if "remain_lock" in ws_state.model_fields_set:
                 lock_rule_updated = True
                 updated_lock_rule = (
-                    _ws_rule_status_to_lock_rule_status(ws_state.remain_lock)
+                    ws_state.remain_lock.to_door_lock_rule_status()
                     if ws_state.remain_lock is not None
                     else DoorLockRuleStatus()
                 )
             elif "remain_unlock" in ws_state.model_fields_set:
                 lock_rule_updated = True
                 updated_lock_rule = (
-                    _ws_rule_status_to_lock_rule_status(ws_state.remain_unlock)
+                    ws_state.remain_unlock.to_door_lock_rule_status()
                     if ws_state.remain_unlock is not None
                     else DoorLockRuleStatus()
                 )
@@ -300,13 +289,12 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             supports_lock_rules = True
 
         self.async_set_updated_data(
-            UnifiAccessData(
+            replace(
+                self.data,
                 doors={**self.data.doors, door_id: updated_door},
-                emergency=self.data.emergency,
                 door_lock_rules=door_lock_rules,
                 unconfirmed_lock_rule_doors=unconfirmed_lock_rule_doors,
                 supports_lock_rules=supports_lock_rules,
-                lock_rule_support_complete=self.data.lock_rule_support_complete,
                 door_thumbnails=new_thumbnails,
             )
         )
@@ -317,17 +305,12 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             return
         update = cast(SettingUpdate, msg)
         self.async_set_updated_data(
-            UnifiAccessData(
-                doors=self.data.doors,
+            replace(
+                self.data,
                 emergency=EmergencyStatus(
                     evacuation=update.data.evacuation,
                     lockdown=update.data.lockdown,
                 ),
-                door_lock_rules=self.data.door_lock_rules,
-                unconfirmed_lock_rule_doors=self.data.unconfirmed_lock_rule_doors,
-                supports_lock_rules=self.data.supports_lock_rules,
-                lock_rule_support_complete=self.data.lock_rule_support_complete,
-                door_thumbnails=self.data.door_thumbnails,
             )
         )
 
@@ -345,8 +328,6 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
         door_entries = insights.data.metadata.door
-        if not isinstance(door_entries, list):
-            door_entries = [door_entries]
         if not door_entries:
             return
         event_type = (

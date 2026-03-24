@@ -53,8 +53,7 @@ async def test_event_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test event entities are created with expected state."""
-    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.EVENT]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -195,7 +194,7 @@ async def test_access_event_with_single_door_metadata(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access events still work when the websocket door metadata is not a list."""
+    """Test access events work when metadata contains a single door entry."""
     handlers = _get_ws_handlers(mock_client)
 
     insights_msg = InsightsAdd(
@@ -204,10 +203,12 @@ async def test_access_event_with_single_door_metadata(
             event_type="access.door.unlock",
             result="ACCESS",
             metadata=InsightsMetadata.model_construct(
-                door=InsightsMetadataEntry(
-                    id="door-001",
-                    display_name="Front Door",
-                ),
+                door=[
+                    InsightsMetadataEntry(
+                        id="door-001",
+                        display_name="Front Door",
+                    )
+                ],
             ),
         ),
     )
