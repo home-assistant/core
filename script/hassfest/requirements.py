@@ -723,8 +723,8 @@ def check_dependency_files(
         for file in files(pkg) or ():
             if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
                 top_level.add(top)
-            if (name := str(file)).lower() in FORBIDDEN_FILE_NAMES or name.endswith(
-                ".pth"
+            if (name := str(file)).lower() in FORBIDDEN_FILE_NAMES or (
+                name.endswith(".pth") and len(file.parts) == 1
             ):
                 file_names.add(name)
         results = _PackageFilesCheckResult(
