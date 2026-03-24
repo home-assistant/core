@@ -27,12 +27,12 @@ async def async_setup_entry(
             eurid,
             entity.id,
             gateway,
-            entity.option_spec,
+            entity.config_spec,
             LIB_ENTITY_CATEGORY_MAP.get(entity.category),
         )
         for eurid, spec in gateway.device_specs.items()
         for entity in spec.entities
-        if entity.entity_type == EntityType.OPTION_ENUM
+        if entity.entity_type == EntityType.CONFIG_ENUM
     )
 
 
@@ -59,8 +59,12 @@ class EnOceanSelect(EnOceanEntity, SelectEntity, RestoreEntity):
         if (last_state := await self.async_get_last_state()) is not None:
             if last_state.state in self._attr_options:
                 self._attr_current_option = last_state.state
+        self.gateway.set_device_config(
+            self.address, self.entity_key, self._attr_current_option
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         self._attr_current_option = option
+        self.gateway.set_device_config(self.address, self.entity_key, option)
         self.async_write_ha_state()

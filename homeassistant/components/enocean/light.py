@@ -6,7 +6,13 @@ from typing import Any
 
 from enocean_async import Dim, EntityType, Gateway, Observable, Observation
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_TRANSITION,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -35,6 +41,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     def _update_from_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
@@ -48,16 +55,27 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on or dim the light."""
         brightness: int = kwargs.get(ATTR_BRIGHTNESS, 255)
-        # Convert HA brightness 0–255 to 0–100 %.
+        transition: float = kwargs.get(ATTR_TRANSITION, 0)
         await self.gateway.send_command(
             self.address,
-            Dim(dim_value=brightness * 100 / 255, entity_id=self.entity_key),
+            Dim(
+                # Convert HA brightness 0–255 to 0–100 %.
+                dim_value=brightness * 100 / 255,
+                ramp_time=round(transition),
+                entity_id=self.entity_key,
+            ),
         )
 
-    async def async_turn_off(self, **_kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
+        transition: float = kwargs.get(ATTR_TRANSITION, 0)
         await self.gateway.send_command(
             self.address,
             # Use Dim(0) rather than Switch so the dimmer's ramp mechanism is used.
-            Dim(dim_value=0, switch_on=False, entity_id=self.entity_key),
+            Dim(
+                dim_value=0,
+                switch_on=False,
+                ramp_time=round(transition),
+                entity_id=self.entity_key,
+            ),
         )

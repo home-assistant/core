@@ -26,12 +26,12 @@ async def async_setup_entry(
             eurid,
             entity.id,
             gateway,
-            entity.option_spec,
+            entity.config_spec,
             LIB_ENTITY_CATEGORY_MAP.get(entity.category),
         )
         for eurid, spec in gateway.device_specs.items()
         for entity in spec.entities
-        if entity.entity_type == EntityType.OPTION_NUMBER
+        if entity.entity_type == EntityType.CONFIG_NUMBER
     )
 
 
@@ -62,8 +62,12 @@ class EnOceanNumber(EnOceanEntity, RestoreNumber):
         await super().async_added_to_hass()
         if (last_data := await self.async_get_last_number_data()) is not None:
             self._attr_native_value = last_data.native_value
+        self.gateway.set_device_config(
+            self.address, self.entity_key, self._attr_native_value
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Store the new value."""
         self._attr_native_value = value
+        self.gateway.set_device_config(self.address, self.entity_key, value)
         self.async_write_ha_state()
