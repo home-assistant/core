@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device
 
 from homeassistant import config_entries
+from homeassistant.components.earn_e_p1.const import CONF_SERIAL
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -48,7 +49,7 @@ async def test_user_flow_discovery_succeeds(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"EARN-E P1 ({MOCK_HOST})"
-    assert result["data"] == {CONF_HOST: MOCK_HOST, "serial": MOCK_SERIAL}
+    assert result["data"] == {CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
     assert result["result"].unique_id == MOCK_SERIAL
 
 
@@ -70,7 +71,7 @@ async def test_user_flow_discovery_no_serial_validates(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["serial"] == MOCK_SERIAL
+    assert result["data"][CONF_SERIAL] == MOCK_SERIAL
 
 
 async def test_user_flow_discovery_no_serial_validate_fails(
@@ -83,6 +84,24 @@ async def test_user_flow_discovery_no_serial_validate_fails(
         )
 
     with patch(VALIDATE_PATH, return_value=None):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_user_flow_discovery_no_serial_oserror(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test discovery without serial aborts on OSError during validation."""
+    with patch(DISCOVER_PATH, return_value=_mock_device(serial=None)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    with patch(VALIDATE_PATH, side_effect=OSError("Address in use")):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
@@ -122,7 +141,7 @@ async def test_manual_entry_validation_succeeds(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"EARN-E P1 ({MOCK_HOST})"
-    assert result["data"] == {CONF_HOST: MOCK_HOST, "serial": MOCK_SERIAL}
+    assert result["data"] == {CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
     assert result["result"].unique_id == MOCK_SERIAL
 
 
@@ -187,86 +206,150 @@ async def test_manual_entry_unexpected_error(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_reconfigure_succeeds(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
+async def test_manual_entry_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test reconfigure flow with new IP."""
-    new_host = "192.168.1.200"
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    with patch(VALIDATE_PATH, return_value=_mock_device(host=new_host)):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: new_host}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_HOST] == new_host
-    assert mock_config_entry.data["serial"] == MOCK_SERIAL
-
-
-async def test_reconfigure_port_in_use_skips_validation(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
-) -> None:
-    """Test reconfigure when port is in use preserves existing serial."""
-    new_host = "192.168.1.200"
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    with patch(VALIDATE_PATH, side_effect=OSError("Address in use")):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: new_host}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_HOST] == new_host
-    assert mock_config_entry.data["serial"] == MOCK_SERIAL
-
-
-async def test_reconfigure_unexpected_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
-) -> None:
-    """Test reconfigure with unexpected error shows unknown error."""
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    with patch(VALIDATE_PATH, side_effect=RuntimeError("boom")):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_reconfigure_duplicate_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
-) -> None:
-    """Test reconfigure aborts when new IP matches existing entry."""
-    other_host = "192.168.1.50"
-    other_serial = "E0099999999999999"
-
-    other_entry = MockConfigEntry(
+    """Test manual entry aborts when device is already configured."""
+    existing = MockConfigEntry(
         domain=DOMAIN,
-        title="Other",
-        data={CONF_HOST: other_host, "serial": other_serial},
-        unique_id=other_serial,
+        title=f"EARN-E P1 ({MOCK_HOST})",
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL},
+        unique_id=MOCK_SERIAL,
     )
-    other_entry.add_to_hass(hass)
+    existing.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch(DISCOVER_PATH, return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    with patch(
-        VALIDATE_PATH,
-        return_value=_mock_device(host=other_host, serial=other_serial),
-    ):
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: other_host}
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_discovery_confirm_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test discovery confirm aborts when device is already configured."""
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST})",
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL},
+        unique_id=MOCK_SERIAL,
+    )
+    existing.add_to_hass(hass)
+
+    with patch(DISCOVER_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_discover_uses_shared_listener(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_listener: MagicMock
+) -> None:
+    """Test _async_discover uses shared listener when available."""
+    mock_listener.discover = AsyncMock(return_value=[_mock_device()])
+    hass.data[DOMAIN] = mock_listener
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    mock_listener.discover.assert_called_once()
+
+
+async def test_discover_without_shared_listener(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test _async_discover uses library discover when no shared listener."""
+    with patch(
+        "homeassistant.components.earn_e_p1.config_flow.discover",
+        return_value=[_mock_device()],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+
+async def test_discover_without_shared_listener_oserror(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test _async_discover returns None on OSError when no shared listener."""
+    with patch(
+        "homeassistant.components.earn_e_p1.config_flow.discover",
+        side_effect=OSError("Address in use"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_validate_uses_shared_listener(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_listener: MagicMock
+) -> None:
+    """Test _async_validate_host uses shared listener when available."""
+    mock_listener.discover = AsyncMock(return_value=[])
+    mock_listener.validate = AsyncMock(return_value=_mock_device())
+    hass.data[DOMAIN] = mock_listener
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_listener.validate.assert_called_once()
+
+
+async def test_validate_without_shared_listener(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test _async_validate_host uses library validate when no shared listener."""
+    with patch(
+        "homeassistant.components.earn_e_p1.config_flow.discover",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.earn_e_p1.config_flow.validate",
+        return_value=_mock_device(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -35,7 +35,6 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self.host = host
-        self.data = {}
         self.serial = serial
         self.identifier = serial
         self.model: str | None = None

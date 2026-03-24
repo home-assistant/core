@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 from homeassistant.components.earn_e_p1.coordinator import EarnEP1Coordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -48,10 +46,10 @@ async def test_sensor_unavailable_without_data(
     assert state.state == "unavailable"
 
 
-async def test_sensor_unavailable_when_key_missing(
+async def test_sensor_value_none_when_key_missing(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test sensor is unavailable when its specific key is missing from data."""
+    """Test sensor returns unknown when its key is missing from data."""
     coordinator = await _setup_integration(hass, mock_config_entry)
 
     coordinator.async_set_updated_data({"power_delivered": 1.0})
@@ -59,7 +57,7 @@ async def test_sensor_unavailable_when_key_missing(
 
     state = hass.states.get("sensor.earn_e_p1_meter_power_exported")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
 
 async def test_sensor_native_value(
@@ -89,15 +87,7 @@ async def test_device_info(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test device info is correct."""
-    original_init = EarnEP1Coordinator.__init__
-
-    def _init_with_device_info(self, *args, **kwargs):
-        original_init(self, *args, **kwargs)
-        self.model = "P1-Monitor"
-        self.sw_version = "1.2.3"
-
-    with patch.object(EarnEP1Coordinator, "__init__", _init_with_device_info):
-        coordinator = await _setup_integration(hass, mock_config_entry)
+    coordinator = await _setup_integration(hass, mock_config_entry)
 
     coordinator.async_set_updated_data({"power_delivered": 1.0})
     await hass.async_block_till_done()
@@ -107,14 +97,12 @@ async def test_device_info(
     assert device is not None
     assert device.name == "EARN-E P1 Meter"
     assert device.manufacturer == "EARN-E"
-    assert device.model == "P1-Monitor"
-    assert device.sw_version == "1.2.3"
 
 
 async def test_sensor_unique_id_uses_serial(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test that sensor unique_id uses serial when available."""
+    """Test that sensor unique_id uses serial with the data key."""
     coordinator = await _setup_integration(hass, mock_config_entry)
 
     coordinator.async_set_updated_data({"power_delivered": 1.0})
@@ -123,4 +111,17 @@ async def test_sensor_unique_id_uses_serial(
     entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.earn_e_p1_meter_power_imported")
     assert entry is not None
-    assert entry.unique_id == f"{MOCK_SERIAL}_power_imported"
+    assert entry.unique_id == f"{MOCK_SERIAL}_power_delivered"
+
+
+async def test_wifi_rssi_disabled_by_default(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that Wi-Fi RSSI sensor is disabled by default."""
+    await _setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.earn_e_p1_meter_wi_fi_rssi")
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

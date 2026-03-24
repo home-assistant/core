@@ -3,3 +3,4 @@
 from __future__ import annotations
 
 DOMAIN = "earn_e_p1"
+CONF_SERIAL = "serial"

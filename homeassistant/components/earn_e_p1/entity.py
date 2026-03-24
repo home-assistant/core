@@ -14,13 +14,11 @@ class EarnEP1Entity(CoordinatorEntity[EarnEP1Coordinator]):
 
     _attr_has_entity_name = True
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.identifier)},
+    def __init__(self, coordinator: EarnEP1Coordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.identifier)},
             name="EARN-E P1 Meter",
             manufacturer="EARN-E",
-            model=self.coordinator.model,
-            sw_version=self.coordinator.sw_version,
         )

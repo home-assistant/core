@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This EARN-E P1 meter is already configured.",
-      "cannot_connect": "Cannot connect — no data received from the device.",
-      "reconfigure_successful": "Reconfiguration successful."
+      "cannot_connect": "Cannot connect — no data received from the device."
     },
     "error": {
       "cannot_connect": "Cannot connect — no data received from the device. Verify the IP address and that the EARN-E is powered on.",
@@ -13,16 +12,6 @@
       "discovery_confirm": {
         "description": "An EARN-E P1 meter was found at **{host}**.",
         "title": "Discovered EARN-E P1 meter"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "IP address"
-        },
-        "data_description": {
-          "host": "The new local IP address of your EARN-E P1 meter."
-        },
-        "description": "Update the IP address of your EARN-E energy monitor.",
-        "title": "Reconfigure EARN-E P1 meter"
       },
       "user": {
         "data": {

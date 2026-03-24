@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CONF_SERIAL, DOMAIN
 from .coordinator import EarnEP1Coordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -20,7 +20,7 @@ type EarnEP1ConfigEntry = ConfigEntry[EarnEP1Coordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> bool:
     """Set up EARN-E P1 Meter from a config entry."""
     host = entry.data[CONF_HOST]
-    serial = entry.data["serial"]
+    serial = entry.data[CONF_SERIAL]
 
     # Get or create shared listener
     if DOMAIN not in hass.data:
