@@ -53,7 +53,7 @@ PyChromecast==14.0.10
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.8.0
+PyFronius==0.8.2
 
 # homeassistant.components.pyload
 PyLoadAPI==2.0.0
@@ -181,7 +181,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==13.0.1
+aioamazondevices==13.3.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -264,7 +264,7 @@ aioguardian==2026.01.1
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.4.2
+aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.33.0
@@ -407,7 +407,7 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
-aiotedee==0.2.27
+aiotedee==0.3.0
 
 # homeassistant.components.tractive
 aiotractive==1.0.1
@@ -1093,7 +1093,7 @@ holidays==0.84
 home-assistant-frontend==20260312.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.3.3
+home-assistant-intents==2026.3.24
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
@@ -1171,7 +1171,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==1.0.0
+infrared-protocols==1.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -2521,6 +2521,9 @@ solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
 solarlog_cli==0.7.0
+
+# homeassistant.components.solarman
+solarman-opendata==0.0.3
 
 # homeassistant.components.solax
 solax==3.2.3

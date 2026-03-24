@@ -24,7 +24,7 @@ from .const import (
     SAMPLE_WIDTH,
     SAMPLES_PER_CHUNK,
 )
-from .error import PipelineNotFound
+from .error import PipelineError, PipelineNotFound
 from .pipeline import (
     AudioSettings,
     Pipeline,
@@ -137,5 +137,21 @@ async def async_pipeline_from_audio_stream(
                 audio_settings=audio_settings or AudioSettings(),
             ),
         )
-        await pipeline_input.validate()
+        try:
+            await pipeline_input.validate()
+        except PipelineError as err:
+            pipeline_input.run.start(
+                conversation_id=session.conversation_id,
+                device_id=device_id,
+                satellite_id=satellite_id,
+            )
+            pipeline_input.run.process_event(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {"code": err.code, "message": err.message},
+                )
+            )
+            await pipeline_input.run.end()
+            return
+
         await pipeline_input.execute()

@@ -473,6 +473,24 @@ def parametrize_trigger_states(
                 )
             ),
         ),
+        # Transition from other state to unavailable / unknown
+        (
+            trigger,
+            trigger_options,
+            list(
+                itertools.chain.from_iterable(
+                    (
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(invalid_state, 0),
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(target_state, 1),
+                    )
+                    for invalid_state in invalid_states
+                    for target_state in target_states
+                    for other_state in other_states
+                )
+            ),
+        ),
         # Initial state unavailable / unknown + extra invalid states
         (
             trigger,

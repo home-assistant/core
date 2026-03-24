@@ -129,6 +129,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "garage_door",
     "gate",
     "humidifier",
+    "humidity",
     "illuminance",
     "lawn_mower",
     "light",
@@ -142,6 +143,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "switch",
     "text",
     "vacuum",
+    "water_heater",
     "window",
 }
 
