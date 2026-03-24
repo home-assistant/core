@@ -117,18 +117,16 @@ async def test_stop_on_homeassistant_stop(
 async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_victron_hub_library: MagicMock,
     connect_exception: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup cleanup when hub start fails after platform forwarding."""
     mock_config_entry.add_to_hass(hass)
+    mock_victron_hub_library.return_value.connect.side_effect = connect_exception
 
-    with patch(
-        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
-        side_effect=connect_exception,
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
     assert mock_config_entry.runtime_data.new_metric_callbacks == {}
