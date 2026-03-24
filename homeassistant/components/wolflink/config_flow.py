@@ -96,7 +96,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> WolfLinkOptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> "WolfLinkOptionsFlow":
         """Get the options flow for this handler."""
         return WolfLinkOptionsFlow()
 
@@ -110,7 +110,15 @@ class WolfLinkOptionsFlow(OptionsFlowWithReload):
         """Manage Wolf SmartSet options."""
         errors: dict[str, str] = {}
 
-        wolf_client = self.config_entry.runtime_data.wolf_client
+        runtime_data = getattr(self.config_entry, "runtime_data", None)
+        wolf_client: WolfClient | None = None
+        if runtime_data is not None:
+            wolf_client = getattr(runtime_data, "wolf_client", None)
+
+        if wolf_client is None:
+            username: str = self.config_entry.data[CONF_USERNAME]
+            password: str = self.config_entry.data[CONF_PASSWORD]
+            wolf_client = WolfClient(username, password)
         try:
             devices = await wolf_client.fetch_system_list()
         except ConnectError:

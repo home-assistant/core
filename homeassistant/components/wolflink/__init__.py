@@ -111,6 +111,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 new_unique_id,
                 entry.entry_id,
             )
+            await hass.config_entries.async_remove(entry.entry_id)
             return False
 
         new_data = {
