@@ -761,18 +761,21 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                 )
         self._attr_native_value = value
 
-        if (data_unit := self._get_unit_of_measurement(self.data.unit)) is not None:
+        if (
+            data_unit := self._get_unit_of_measurement(self.data.unit)
+        ) is not None and isinstance(self.data.value, (int, float)):
             # For different from description's unit
             self._attr_native_unit_of_measurement = data_unit
 
         _LOGGER.debug(
-            "[%s:%s] update status: %s -> %s, options:%s, unit:%s",
+            "[%s:%s] update status: %s -> %s, options:%s, unit:%s, type:%s",
             self.coordinator.device_name,
             self.property_id,
             self.data.value,
             self.native_value,
             self.options,
             self.native_unit_of_measurement,
+            type(self.data.value),
         )
 
     def _get_duration(self, data: time, unit: str | None) -> float | None:
