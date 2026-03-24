@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
@@ -248,7 +249,7 @@ async def test_migrate_entry_fails_for_future_version(
 async def test_migrate_deprecated_air_purifier_sensor_type(
     hass: HomeAssistant,
     old_sensor_type: str,
-    service_info,
+    service_info: BluetoothServiceInfoBleak,
     expected_sensor_type: str,
 ) -> None:
     """Test that deprecated air_purifier sensor types are migrated via BLE advertisement."""
