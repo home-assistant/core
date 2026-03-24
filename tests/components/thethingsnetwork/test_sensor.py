@@ -1,7 +1,8 @@
 """Define tests for the The Things Network sensor."""
 
-import logging
 from unittest.mock import AsyncMock
+
+import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
@@ -145,7 +146,7 @@ async def test_sensor_invalid_attributes(
     entity_registry: er.EntityRegistry,
     mock_ttnclient,
     mock_config_entry,
-    caplog: logging.LoggerAdapter,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that invalid decoder attributes log warnings but still create entities."""
     mock_ttnclient.return_value.fetch_data = AsyncMock(
@@ -175,9 +176,7 @@ async def test_sensor_attr_fields_filtered(
     await init_integration(hass, mock_config_entry)
 
     # Attribute fields should NOT create entities
-    assert not entity_registry.async_get(
-        f"sensor.{DEVICE_ID}__sensor_attr_batv_unit"
-    )
+    assert not entity_registry.async_get(f"sensor.{DEVICE_ID}__sensor_attr_batv_unit")
     assert not entity_registry.async_get(
         f"sensor.{DEVICE_ID}__sensor_attr_batv_device_class"
     )

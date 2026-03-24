@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import CONF_APP_ID, DOMAIN
+from .coordinator import TTNCoordinator
 from .entity import TTNEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +110,7 @@ def _extract_sensor_attr(
                 continue
 
             field_name = remainder[: -(len(attr_key) + 1)]
-            sensor_attr.setdefault(field_name, {})[attr_key] = value.value
+            sensor_attr.setdefault(field_name, {})[attr_key] = value.value  # type: ignore[literal-required]
             break
 
     return sensor_attr
@@ -195,7 +196,7 @@ class TtnDataSensor(TTNEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: TTNCoordinator,
         app_id: str,
         ttn_value: TTNSensorValue,
         attr: SensorAttrDict,
@@ -207,19 +208,13 @@ class TtnDataSensor(TTNEntity, SensorEntity):
         if unit := attr.get("unit"):
             self._attr_native_unit_of_measurement = unit
 
-        if device_class := _parse_enum(
-            SensorDeviceClass, attr.get("device_class")
-        ):
+        if device_class := _parse_enum(SensorDeviceClass, attr.get("device_class")):
             self._attr_device_class = device_class
 
-        if state_class := _parse_enum(
-            SensorStateClass, attr.get("state_class")
-        ):
+        if state_class := _parse_enum(SensorStateClass, attr.get("state_class")):
             self._attr_state_class = state_class
 
-        if entity_category := _parse_enum(
-            EntityCategory, attr.get("entity_category")
-        ):
+        if entity_category := _parse_enum(EntityCategory, attr.get("entity_category")):
             self._attr_entity_category = entity_category
 
         if precision := attr.get("suggested_display_precision"):
