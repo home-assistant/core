@@ -7,7 +7,9 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: missing data descriptions
   dependency-transparency: done
   docs-actions:
     status: exempt
