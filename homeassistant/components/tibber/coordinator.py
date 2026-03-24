@@ -292,26 +292,26 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             self.hass
         )
         active_homes = tibber_connection.get_homes(only_active=True)
+
+        today_start = dt_util.start_of_local_day()
+        today_end = today_start + timedelta(days=1)
+
+        def _has_prices_today(home: tibber.TibberHome) -> bool:
+            """Return True if the home has any prices today."""
+            for start in home.price_total:
+                _LOGGER.error("Home %s has price %s", home.home_id, start)
+                start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
+                if today_start <= start_dt < today_end:
+                    return True
+            return False
+
+        homes_to_update = [home for home in active_homes if not _has_prices_today(home)]
+
         try:
             await asyncio.gather(
                 tibber_connection.fetch_consumption_data_active_homes(),
                 tibber_connection.fetch_production_data_active_homes(),
             )
-
-            today_start = dt_util.start_of_local_day()
-            today_end = today_start + timedelta(days=1)
-
-            def _has_prices_today(home: tibber.TibberHome) -> bool:
-                """Return True if the home has any prices today."""
-                for start in home.price_total:
-                    start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
-                    if today_start <= start_dt < today_end:
-                        return True
-                return False
-
-            homes_to_update = [
-                home for home in active_homes if not _has_prices_today(home)
-            ]
 
             if homes_to_update:
                 await asyncio.gather(
