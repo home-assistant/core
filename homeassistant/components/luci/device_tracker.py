@@ -2,107 +2,72 @@
 
 from __future__ import annotations
 
-import logging
+from typing import Any
 
-from openwrt_luci_rpc import OpenWrtRpc
-import voluptuous as vol
+from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from .coordinator import LuciConfigEntry, LuciCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
+PARALLEL_UPDATES = 0
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> LuciDeviceScanner | None:
-    """Validate the configuration and return a Luci scanner."""
-    scanner = LuciDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LuciConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker for OpenWrt (luci) component."""
+    coordinator = entry.runtime_data
+    tracked: set[str] = set()
 
-    return scanner if scanner.success_init else None
+    @callback
+    def _async_add_new_entities() -> None:
+        """Add new tracker entities from the router."""
+        new_entities: list[LuciScannerEntity] = []
+        for mac, device in coordinator.data.items():
+            if mac not in tracked:
+                tracked.add(mac)
+                new_entities.append(LuciScannerEntity(coordinator, mac, device))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _async_add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 
-class LuciDeviceScanner(DeviceScanner):
-    """Scanner for devices connected to an OpenWrt router."""
+class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
+    """Representation of a device connected to an OpenWrt router."""
 
-    def __init__(self, config):
-        """Initialize the scanner."""
+    _attr_has_entity_name = True
 
-        self.router = OpenWrtRpc(
-            config[CONF_HOST],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_SSL],
-            config[CONF_VERIFY_SSL],
-        )
+    def __init__(
+        self,
+        coordinator: LuciCoordinator,
+        mac: str,
+        device: dict[str, Any],
+    ) -> None:
+        """Initialize the scanner entity."""
+        super().__init__(coordinator)
+        self._mac = mac
+        self._attr_unique_id = mac
+        self._attr_mac_address = mac
+        self._attr_hostname = device.get("hostname")
+        self._attr_ip_address = device.get("ip")
+        self._attr_name = device.get("hostname") or mac
 
-        self.last_results = {}
-        self.success_init = self.router.is_logged_in()
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the router."""
+        return self._mac in self.coordinator.data
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        return [device.mac for device in self.last_results]
-
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        return next(
-            (result.hostname for result in self.last_results if result.mac == device),
-            None,
-        )
-
-    def get_extra_attributes(self, device):
-        """Get extra attributes of a device.
-
-        Some known extra attributes that may be returned in the device tuple
-        include MAC address (mac), network device (dev), IP address
-        (ip), reachable status (reachable), associated router
-        (host), hostname if known (hostname) among others.
-        """
-        if not (
-            device := next(
-                (result for result in self.last_results if result.mac == device), None
-            )
-        ):
-            return {}
-        return device._asdict()
-
-    def _update_info(self):
-        """Check the Luci router for devices."""
-        result = self.router.get_all_connected_devices(only_reachable=True)
-
-        _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
-
-        self.last_results = [
-            device
-            for device in result
-            if not hasattr(self.router.router.owrt_version, "release")
-            or not self.router.router.owrt_version.release
-            or self.router.router.owrt_version.release[0] < 19
-            or device.reachable
-        ]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self._mac in self.coordinator.data:
+            device = self.coordinator.data[self._mac]
+            self._attr_hostname = device.get("hostname")
+            self._attr_ip_address = device.get("ip")
+        super()._handle_coordinator_update()

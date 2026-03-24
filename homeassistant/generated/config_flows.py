@@ -406,6 +406,7 @@ FLOWS = {
         "london_underground",
         "lookin",
         "loqed",
+        "luci",
         "luftdaten",
         "lunatone",
         "lupusec",
