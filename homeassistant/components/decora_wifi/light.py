@@ -132,12 +132,12 @@ class DecoraWifiLight(LightEntity):
         return self._switch.serial
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the dimmer switch."""
         return int(self._switch.brightness * 255 / 100)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._switch.power == "ON"
 

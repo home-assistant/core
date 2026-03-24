@@ -85,6 +85,40 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             data=import_config,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Splunk integration."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors = await self._async_validate_input(user_input)
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                    title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_TOKEN): str,
+                        vol.Required(CONF_HOST): str,
+                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                        vol.Optional(CONF_SSL, default=False): bool,
+                        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+                        vol.Optional(CONF_NAME): str,
+                    }
+                ),
+                self._get_reconfigure_entry().data,
+            ),
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:

@@ -22,13 +22,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import KrakenData
 from .const import (
     CONF_TRACKED_ASSET_PAIRS,
     DISPATCH_CONFIG_UPDATED,
     DOMAIN,
     KrakenResponse,
 )
+from .coordinator import KrakenData
 
 _LOGGER = logging.getLogger(__name__)
 

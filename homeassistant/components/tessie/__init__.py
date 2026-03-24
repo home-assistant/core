@@ -18,7 +18,11 @@ from tessie_api import get_state_of_all_vehicles
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -65,8 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     except ClientResponseError as e:
         if e.status == HTTPStatus.UNAUTHORIZED:
             raise ConfigEntryAuthFailed from e
-        _LOGGER.error("Setup failed, unable to connect to Tessie: %s", e)
-        return False
+        raise ConfigEntryError("Setup failed, unable to connect to Tessie") from e
     except ClientError as e:
         raise ConfigEntryNotReady from e
 

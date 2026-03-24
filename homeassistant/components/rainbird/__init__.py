@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 import aiohttp
-from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.async_client import AsyncRainbirdController, create_controller
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
 from homeassistant.const import (
@@ -26,7 +27,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN
+from .const import CONF_SERIAL_NUMBER, DOMAIN, TIMEOUT_SECONDS
 from .coordinator import (
     RainbirdScheduleUpdateCoordinator,
     RainbirdUpdateCoordinator,
@@ -77,13 +78,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     clientsession = async_create_clientsession()
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 
-    controller = AsyncRainbirdController(
-        AsyncRainbirdClient(
-            clientsession,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PASSWORD],
-        )
-    )
+    try:
+        async with asyncio.timeout(TIMEOUT_SECONDS):
+            controller = await create_controller(
+                clientsession,
+                entry.data[CONF_HOST],
+                entry.data[CONF_PASSWORD],
+            )
+    except TimeoutError as err:
+        raise ConfigEntryNotReady from err
+    except RainbirdAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except RainbirdApiException as err:
+        raise ConfigEntryNotReady from err
 
     if not (await _async_fix_unique_id(hass, controller, entry)):
         return False

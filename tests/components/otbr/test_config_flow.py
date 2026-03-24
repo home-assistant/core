@@ -10,6 +10,9 @@ import pytest
 import python_otbr_api
 
 from homeassistant.components import otbr
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_callback,
 )
@@ -1010,7 +1013,7 @@ async def test_hassio_discovery_reload(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
     """Test the hassio discovery flow."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     aioclient_mock.get(
         "http://core-openthread-border-router:8081/node/dataset/active", text=""

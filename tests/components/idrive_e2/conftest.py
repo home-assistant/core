@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Generator
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -53,9 +53,11 @@ def mock_client(agent_backup: AgentBackup) -> Generator[AsyncMock]:
         client = create_client.return_value
 
         tar_file, metadata_file = suggested_filenames(agent_backup)
-        client.list_objects_v2.return_value = {
-            "Contents": [{"Key": tar_file}, {"Key": metadata_file}]
-        }
+        # Mock the paginator for list_objects_v2
+        client.get_paginator = MagicMock()
+        client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+            {"Contents": [{"Key": tar_file}, {"Key": metadata_file}]}
+        ]
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
         client.list_buckets.return_value = {

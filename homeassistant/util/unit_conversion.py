@@ -477,7 +477,7 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1000000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
         CONCENTRATION_GRAMS_PER_CUBIC_METER: 1.0,
     }
@@ -494,12 +494,14 @@ class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "nitrogen_dioxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_PARTS_PER_MILLION: 1e6,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 

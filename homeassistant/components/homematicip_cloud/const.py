@@ -18,6 +18,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
     Platform.VALVE,
     Platform.WEATHER,

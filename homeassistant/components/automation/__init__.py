@@ -120,41 +120,64 @@ NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
+    "battery",
     "climate",
+    "cover",
     "device_tracker",
+    "door",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "motion",
+    "occupancy",
     "person",
+    "schedule",
     "siren",
     "switch",
+    "text",
     "vacuum",
+    "window",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
-    "binary_sensor",
     "button",
     "climate",
     "cover",
     "device_tracker",
+    "door",
+    "event",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
+    "humidity",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "motion",
+    "occupancy",
     "person",
+    "remote",
     "scene",
+    "schedule",
+    "select",
     "siren",
     "switch",
+    "temperature",
     "text",
     "update",
     "vacuum",
+    "water_heater",
+    "window",
 }
 
 
@@ -363,8 +386,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
         await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
         if automation_id := service_call.data.get(CONF_ID):
             await _async_process_single_config(hass, conf, component, automation_id)
         else:

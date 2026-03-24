@@ -7,11 +7,15 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+
 jobs:
   add-no-stale:
+    name: Add no-stale label
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      issues: write # To add labels to issues
     if: >-
       github.event.issue.type.name == 'Task'
       || github.event.issue.type.name == 'Epic'
@@ -29,10 +33,11 @@ jobs:
             });
 
   check-authorization:
+    name: Check authorization
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      issues: write
+      contents: read # To read CODEOWNERS file
+      issues: write # To comment on, label, and close issues
     # Only run if this is a Task issue type (from the issue form)
     if: github.event.issue.type.name == 'Task'
     steps:

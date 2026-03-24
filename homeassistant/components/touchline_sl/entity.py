@@ -35,4 +35,8 @@ class TouchlineSLZoneEntity(CoordinatorEntity[TouchlineSLModuleCoordinator]):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self.zone_id in self.coordinator.data.zones
+        return (
+            super().available
+            and self.zone_id in self.coordinator.data.zones
+            and self.zone.alarm is None
+        )
