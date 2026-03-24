@@ -661,7 +661,7 @@ async def test_state_updates_zone(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.konnected_445566_zone_1").state == "off"
+    assert hass.states.get("binary_sensor.konnected_alarm_panel_konnected_445566_zone_1").state == "off"
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
@@ -672,7 +672,7 @@ async def test_state_updates_zone(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.konnected_445566_zone_1").state == "on"
+    assert hass.states.get("binary_sensor.konnected_alarm_panel_konnected_445566_zone_1").state == "on"
 
     # Test updating sht sensor
     resp = await client.post(
@@ -684,9 +684,9 @@ async def test_state_updates_zone(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.konnected_445566_sensor_4_humidity").state == "20"
+    assert hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_humidity").state == "20"
     assert (
-        hass.states.get("sensor.konnected_445566_sensor_4_temperature").state == "22.0"
+        hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_temperature").state == "22.0"
     )
 
     resp = await client.post(
@@ -698,9 +698,9 @@ async def test_state_updates_zone(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.konnected_445566_sensor_4_humidity").state == "23"
+    assert hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_humidity").state == "23"
     assert (
-        hass.states.get("sensor.konnected_445566_sensor_4_temperature").state == "25.0"
+        hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_temperature").state == "25.0"
     )
 
     # Test updating ds sensor
@@ -713,7 +713,7 @@ async def test_state_updates_zone(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.temper_temperature").state == "32.0"
+    assert hass.states.get("sensor.konnected_alarm_panel_temper_temperature").state == "32.0"
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
@@ -724,7 +724,7 @@ async def test_state_updates_zone(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.temper_temperature").state == "42.0"
+    assert hass.states.get("sensor.konnected_alarm_panel_temper_temperature").state == "42.0"
 
 
 async def test_state_updates_pin(
@@ -818,7 +818,7 @@ async def test_state_updates_pin(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.konnected_445566_zone_1").state == "off"
+    assert hass.states.get("binary_sensor.konnected_alarm_panel_konnected_445566_zone_1").state == "off"
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
@@ -829,7 +829,7 @@ async def test_state_updates_pin(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.konnected_445566_zone_1").state == "on"
+    assert hass.states.get("binary_sensor.konnected_alarm_panel_konnected_445566_zone_1").state == "on"
 
     # Test updating sht sensor
     resp = await client.post(
@@ -841,9 +841,9 @@ async def test_state_updates_pin(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.konnected_445566_sensor_4_humidity").state == "20"
+    assert hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_humidity").state == "20"
     assert (
-        hass.states.get("sensor.konnected_445566_sensor_4_temperature").state == "22.0"
+        hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_temperature").state == "22.0"
     )
 
     resp = await client.post(
@@ -855,9 +855,9 @@ async def test_state_updates_pin(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.konnected_445566_sensor_4_humidity").state == "23"
+    assert hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_humidity").state == "23"
     assert (
-        hass.states.get("sensor.konnected_445566_sensor_4_temperature").state == "25.0"
+        hass.states.get("sensor.konnected_alarm_panel_konnected_445566_sensor_4_temperature").state == "25.0"
     )
 
     # Test updating ds sensor
@@ -870,7 +870,7 @@ async def test_state_updates_pin(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.temper_temperature").state == "32.0"
+    assert hass.states.get("sensor.konnected_alarm_panel_temper_temperature").state == "32.0"
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
@@ -881,4 +881,4 @@ async def test_state_updates_pin(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.temper_temperature").state == "42.0"
+    assert hass.states.get("sensor.konnected_alarm_panel_temper_temperature").state == "42.0"
