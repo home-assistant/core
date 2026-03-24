@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from tuya_device_handlers.device_wrapper.alarm_control_panel import (
-    AlarmActionWrapper,
-    AlarmChangedByWrapper,
-    AlarmStateWrapper,
+from tuya_device_handlers.definition.alarm_control_panel import (
+    TuyaAlarmControlPanelDefinition,
+    get_default_definition,
 )
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.helpers.homeassistant import (
     TuyaAlarmControlPanelAction,
     TuyaAlarmControlPanelState,
 )
-from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.alarm_control_panel import (
@@ -29,18 +26,14 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
-    DeviceCategory.MAL: (
-        AlarmControlPanelEntityDescription(
-            key=DPCode.MASTER_MODE,
-            name="Alarm",
-        ),
+ALARM: dict[DeviceCategory, AlarmControlPanelEntityDescription] = {
+    DeviceCategory.MAL: AlarmControlPanelEntityDescription(
+        key=DPCode.MASTER_MODE,
+        name="Alarm",
     ),
-    DeviceCategory.WG2: (
-        AlarmControlPanelEntityDescription(
-            key=DPCode.MASTER_MODE,
-            name="Alarm",
-        ),
+    DeviceCategory.WG2: AlarmControlPanelEntityDescription(
+        key=DPCode.MASTER_MODE,
+        name="Alarm",
     ),
 }
 
@@ -72,28 +65,11 @@ async def async_setup_entry(
         entities: list[TuyaAlarmEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := ALARM.get(device.category):
-                entities.extend(
-                    TuyaAlarmEntity(
-                        device,
-                        manager,
-                        description,
-                        action_wrapper=AlarmActionWrapper(
-                            master_mode.dpcode, master_mode
-                        ),
-                        changed_by_wrapper=AlarmChangedByWrapper.find_dpcode(
-                            device, DPCode.ALARM_MSG
-                        ),
-                        state_wrapper=AlarmStateWrapper(
-                            master_mode.dpcode, master_mode
-                        ),
-                    )
-                    for description in descriptions
-                    if (
-                        master_mode := EnumTypeInformation.find_dpcode(
-                            device, DPCode.MASTER_MODE, prefer_function=True
-                        )
-                    )
+            if (description := ALARM.get(device.category)) and (
+                definition := get_default_definition(device)
+            ):
+                entities.append(
+                    TuyaAlarmEntity(device, manager, description, definition)
                 )
         async_add_entities(entities)
 
@@ -115,23 +91,20 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: AlarmControlPanelEntityDescription,
-        *,
-        action_wrapper: DeviceWrapper[TuyaAlarmControlPanelAction],
-        changed_by_wrapper: DeviceWrapper[str] | None,
-        state_wrapper: DeviceWrapper[TuyaAlarmControlPanelState],
+        definition: TuyaAlarmControlPanelDefinition,
     ) -> None:
         """Init Tuya Alarm."""
         super().__init__(device, device_manager, description)
-        self._action_wrapper = action_wrapper
-        self._changed_by_wrapper = changed_by_wrapper
-        self._state_wrapper = state_wrapper
+        self._action_wrapper = definition.action_wrapper
+        self._changed_by_wrapper = definition.changed_by_wrapper
+        self._state_wrapper = definition.state_wrapper
 
         # Determine supported modes
-        if TuyaAlarmControlPanelAction.ARM_HOME in action_wrapper.options:
+        if TuyaAlarmControlPanelAction.ARM_HOME in definition.action_wrapper.options:
             self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-        if TuyaAlarmControlPanelAction.ARM_AWAY in action_wrapper.options:
+        if TuyaAlarmControlPanelAction.ARM_AWAY in definition.action_wrapper.options:
             self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
-        if TuyaAlarmControlPanelAction.TRIGGER in action_wrapper.options:
+        if TuyaAlarmControlPanelAction.TRIGGER in definition.action_wrapper.options:
             self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
