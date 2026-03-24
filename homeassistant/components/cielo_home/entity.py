@@ -31,12 +31,14 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         self._client = coordinator.client
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
         self._device_api: CieloDeviceAPI | None = None
 
     @property
     def client(self) -> CieloDeviceAPI:
-        """Return a per-device API wrapper."""
+        """Return a per-device API wrapper bound to latest device data.
+
+        By keeping it as a property, we ensure the wrapper always references the latest device object while still reusing the same wrapper instance.
+        """
         dev = self.device_data
         if dev is None:
             raise HomeAssistantError(
@@ -65,7 +67,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         return bool(dev and dev.device_status)
 
 
-class CieloDeviceBaseEntity(CieloBaseEntity):
+class CieloDeviceEntity(CieloBaseEntity):
     """Representation of a Cielo Device."""
 
     def __init__(

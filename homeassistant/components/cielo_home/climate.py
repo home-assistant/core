@@ -20,9 +20,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CIELO_ERRORS, LOGGER, TIMEOUT
 from .coordinator import CieloDataUpdateCoordinator, CieloHomeConfigEntry
-from .entity import CieloDeviceBaseEntity
+from .entity import CieloDeviceEntity
 
-_T = TypeVar("_T", bound="CieloDeviceBaseEntity")
+_T = TypeVar("_T", bound="CieloDeviceEntity")
 _P = ParamSpec("_P")
 
 PARALLEL_UPDATES = 0
@@ -68,7 +68,9 @@ def async_handle_api_call(
         except CIELO_ERRORS as err:
             if isinstance(err, TimeoutError):
                 raise HomeAssistantError("API call timed out") from err
-            raise HomeAssistantError(str(err)) from err
+            if isinstance(err, ConnectionError):
+                raise HomeAssistantError("Network error during API call") from err
+            raise HomeAssistantError("Unable to perform API call") from err
 
         LOGGER.debug(
             "API call result for entity %s: type=%s keys=%s",
@@ -95,7 +97,7 @@ def async_handle_api_call(
     return wrap_api_call
 
 
-class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
+class CieloClimate(CieloDeviceEntity, ClimateEntity):
     """Representation of a Cielo Smart AC Controller."""
 
     _attr_name = None
@@ -108,7 +110,10 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
 
     @property
     def temperature_unit(self) -> str:
-        """Return the unit of temperature in Home Assistant format."""
+        """Return the unit of temperature in Home Assistant format.
+
+        It can change over time based on the device settings, so we fetch it dynamically from the client.
+        """
         unit = self.client.temperature_unit()
 
         if not unit:
@@ -121,7 +126,6 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
         if normalized in {"f", "°f", "fahrenheit"}:
             return UnitOfTemperature.FAHRENHEIT
 
-        # Fallback to Celsius if the unit is unrecognized
         return UnitOfTemperature.CELSIUS
 
     @property
@@ -166,48 +170,16 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
 
     @property
     def hvac_mode(self) -> HVACMode | None:
-        """Return the current HVAC mode.
-
-        The backend may return either a Home Assistant HVACMode value or an
-        integration-specific string. In both cases we normalize to HVACMode
-        for consistency with HA climate expectations and UI icons.
-        """
+        """Return the current HVAC mode."""
         mode = self.client.hvac_mode()
-
-        if isinstance(mode, HVACMode) or mode is None:
-            return mode
-
-        if isinstance(mode, str):
-            return CIELO_TO_HA_HVAC.get(mode)
-
-        return None
+        return CIELO_TO_HA_HVAC.get(mode)
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available HVAC modes.
+        """Return the list of available HVAC modes."""
+        modes = self.client.hvac_modes() or []
 
-        Device HVAC modes may be provided by the backend either as
-        HVACMode values or as integration-specific strings. We normalize
-        them to Home Assistant HVACMode values using the CIELO_TO_HA_HVAC
-        mapping when needed to ensure the entity exposes only HA-compatible
-        HVAC modes.
-        """
-        modes = self.client.hvac_modes()
-
-        if not modes:
-            return []
-
-        # If the backend already returns HVACMode values, expose them
-        # directly without additional mapping.
-        first_mode = modes[0]
-        if isinstance(first_mode, HVACMode):
-            return list(modes)
-
-        return [
-            CIELO_TO_HA_HVAC[m]
-            for m in modes
-            if isinstance(m, str) and m in CIELO_TO_HA_HVAC
-        ]
+        return [CIELO_TO_HA_HVAC[m] for m in modes if m in CIELO_TO_HA_HVAC]
 
     @property
     def current_temperature(self) -> float | None:
@@ -255,7 +227,7 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
         """Return the list of available swing modes.
 
         Swing modes are normalized in the backend to snake_case values
-        compatible with Home Assistant (e.g. "auto", "swing", "pos1", "pos2").
+        compatible with Home Assistant (e.g. "auto", "swing", "position_1", "position_2").
         These values align with the integration translations so HA can display
         proper labels and icons.
         """
@@ -290,12 +262,9 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @async_handle_api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        filtered_kwargs = {
-            key: value for key, value in kwargs.items() if key != "entity_id"
-        }
         return await self.client.async_set_temperature(
             self.temperature_unit,
-            **filtered_kwargs,
+            **kwargs,
         )
 
     @async_handle_api_call

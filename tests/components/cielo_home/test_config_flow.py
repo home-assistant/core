@@ -28,7 +28,7 @@ def _devices_payload(parsed: dict | None) -> MagicMock:
 async def test_full_config_flow_success(hass: HomeAssistant) -> None:
     """Test successful config flow with valid API key."""
     mock_client = MagicMock()
-    mock_client.username = "test-user"
+    mock_client.user_id = "test-user"
     mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
     mock_client.get_devices_data = AsyncMock(
         return_value=_devices_payload({"dev1": MagicMock()})
@@ -54,7 +54,7 @@ async def test_full_config_flow_success(hass: HomeAssistant) -> None:
 async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) -> None:
     """Test the flow aborts when the account is already configured."""
     mock_client = MagicMock()
-    mock_client.username = "test-user"
+    mock_client.user_id = "test-user"
     mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
     mock_client.get_devices_data = AsyncMock(
         return_value=_devices_payload({"dev1": MagicMock()})
@@ -102,7 +102,7 @@ async def test_form_error_mapping(
     (your flow does both in validation).
     """
     mock_client = MagicMock()
-    mock_client.username = "test-user"
+    mock_client.user_id = "test-user"
     mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
     mock_client.get_devices_data = AsyncMock(side_effect=api_error)
 
@@ -125,7 +125,7 @@ async def test_form_error_mapping_invalid_auth(hass: HomeAssistant) -> None:
     """Test AuthenticationError maps to invalid_auth."""
 
     mock_client = MagicMock()
-    mock_client.username = "test-user"
+    mock_client.user_id = "test-user"
     mock_client.get_or_refresh_token = AsyncMock(side_effect=AuthenticationError)
     mock_client.get_devices_data = AsyncMock(
         return_value=_devices_payload({"dev1": MagicMock()})

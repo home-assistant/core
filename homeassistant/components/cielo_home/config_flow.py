@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any, Final
 
 from aiohttp import ClientError
@@ -56,9 +55,9 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             token = await self.client.get_or_refresh_token()
 
-            username = self.client.username
-            if not username:
-                return {"base": "no_username"}
+            user_id = self.client.user_id
+            if not user_id:
+                return {"base": "no_user_id"}
 
             devices = await self.client.get_devices_data()
             if not devices.parsed:
@@ -94,9 +93,9 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_TOKEN] = token
                 assert self.client is not None
 
-                username = self.client.username
-                if username:
-                    await self.async_set_unique_id(username)
+                user_id = self.client.user_id
+                if user_id:
+                    await self.async_set_unique_id(user_id)
                     self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -107,57 +106,6 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Show the user form
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
-            errors=errors,
-            description_placeholders={
-                "url": "https://www.home-assistant.io/integrations/cielo_home"
-            },
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle configuration re-authentication."""
-        entry_id = self.context.get("entry_id")
-        if entry_id is None:
-            return self.async_abort(reason="unknown")
-
-        self._reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
-        if self._reauth_entry is None:
-            return self.async_abort(reason="unknown")
-
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: Mapping[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm re-authentication with a new API key."""
-        errors: dict[str, str] = {}
-
-        if user_input:
-            api_key = user_input[CONF_API_KEY].strip()
-
-            validation_result = await self._async_validate_api_key(api_key)
-
-            if "base" in validation_result:
-                errors = validation_result
-            else:
-                token: str = validation_result[CONF_TOKEN]
-                assert self._reauth_entry is not None
-
-                new_data = {
-                    **self._reauth_entry.data,
-                    CONF_API_KEY: api_key,
-                    CONF_TOKEN: token,
-                }
-
-                return self.async_update_reload_and_abort(
-                    self._reauth_entry,
-                    data=new_data,
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
             data_schema=DATA_SCHEMA,
             errors=errors,
             description_placeholders={

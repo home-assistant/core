@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["cieloconnectapi"],
   "quality_scale": "bronze",
-  "requirements": ["cielo-connect-api==1.0.5"]
+  "requirements": ["cielo-connect-api==1.0.6"]
 }

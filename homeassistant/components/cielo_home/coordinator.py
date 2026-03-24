@@ -53,6 +53,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             name=DOMAIN,
             config_entry=entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            # The debouncer prevents multiple rapid refresh requests from triggering repeated full data fetches from the backend.
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
@@ -67,9 +68,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         except (TimeoutError, CieloError, ClientError) as err:
             raise UpdateFailed(err) from err
 
-        raw = dict(data.raw or {})
-        parsed = dict(data.parsed or {})
-        return CieloData(raw=raw, parsed=parsed)
+        return CieloData(raw=data.raw, parsed=data.parsed)
 
     async def async_apply_action_result(
         self, device_id: str, data: dict[str, Any]
