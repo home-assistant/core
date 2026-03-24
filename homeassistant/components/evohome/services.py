@@ -130,7 +130,7 @@ def setup_service_functions(
 
         # No additional validation for RESET_SYSTEM here, as the library method invoked
         # via that service call may be able to emulate the reset even if the system
-        # doesn't support auto_with_reset natively
+        # doesn't support AutoWithReset natively
 
         if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(coordinator.tcs, call.data)
