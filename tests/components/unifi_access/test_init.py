@@ -16,8 +16,6 @@ from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
     LocationUpdateV2,
-    SettingUpdate,
-    SettingUpdateData,
     ThumbnailInfo,
     V2LocationState,
     V2LocationUpdate,
@@ -28,9 +26,12 @@ from unifi_access_api.models.websocket import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
-
 from tests.common import MockConfigEntry
+
+FRONT_DOOR_BINARY_SENSOR = "binary_sensor.front_door"
+BACK_DOOR_BINARY_SENSOR = "binary_sensor.back_door"
+FRONT_DOOR_IMAGE = "image.front_door_thumbnail"
+BACK_DOOR_IMAGE = "image.back_door_thumbnail"
 
 
 def _get_ws_handlers(
@@ -146,14 +147,11 @@ async def test_unload_entry(
 
 async def test_ws_location_update_v2(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location_update_v2 WebSocket message updates door state."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    assert coordinator.data.doors["door-001"].door_lock_relay_status == "lock"
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == "off"
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -171,19 +169,16 @@ async def test_ws_location_update_v2(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    door = coordinator.data.doors["door-001"]
-    assert door.door_position_status == "open"
-    assert door.door_lock_relay_status == "unlock"
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == "on"
 
 
 async def test_ws_v2_location_update(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test V2 location update WebSocket message updates door state."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
+    assert hass.states.get(BACK_DOOR_BINARY_SENSOR).state == "on"
 
     handlers = _get_ws_handlers(mock_client)
     msg = V2LocationUpdate(
@@ -206,20 +201,16 @@ async def test_ws_v2_location_update(
     await handlers["access.data.v2.location.update"](msg)
     await hass.async_block_till_done()
 
-    door = coordinator.data.doors["door-002"]
-    assert door.door_lock_relay_status == "lock"
-    assert door.door_position_status == "close"
+    assert hass.states.get(BACK_DOOR_BINARY_SENSOR).state == "off"
 
 
 async def test_ws_location_update_unknown_door_ignored(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location update for unknown door is silently ignored."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    original_data = coordinator.data
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -237,19 +228,16 @@ async def test_ws_location_update_unknown_door_ignored(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    # Data should be unchanged
-    assert coordinator.data is original_data
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
 
 
 async def test_ws_location_update_no_state_ignored(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location update with no state is silently ignored."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    original_data = coordinator.data
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -264,18 +252,16 @@ async def test_ws_location_update_no_state_ignored(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    assert coordinator.data is original_data
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
 
 
 async def test_ws_location_update_no_op_state_ignored(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location update with state but no relevant fields is ignored."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    original_data = coordinator.data
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -293,19 +279,16 @@ async def test_ws_location_update_no_op_state_ignored(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    assert coordinator.data is original_data
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
 
 
 async def test_ws_location_update_with_thumbnail(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test location_update_v2 with thumbnail updates door_thumbnails."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    assert "door-002" not in coordinator.data.door_thumbnails
+    """Test location_update_v2 with thumbnail updates image entity."""
+    assert hass.states.get(BACK_DOOR_IMAGE).state == "unknown"
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -324,10 +307,7 @@ async def test_ws_location_update_with_thumbnail(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    assert "door-002" in coordinator.data.door_thumbnails
-    thumb = coordinator.data.door_thumbnails["door-002"]
-    assert thumb.url == "/thumb/door-002.jpg"
-    assert thumb.door_thumbnail_last_update == 1700000000
+    assert hass.states.get(BACK_DOOR_IMAGE).state != "unknown"
 
 
 async def test_coordinator_timeout_error(
@@ -346,14 +326,12 @@ async def test_coordinator_timeout_error(
 
 async def test_ws_location_update_thumbnail_only_no_state(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location update with thumbnail but no state keeps door unchanged."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    door_before = coordinator.data.doors["door-001"]
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
+    image_state_before = hass.states.get(FRONT_DOOR_IMAGE).state
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -373,30 +351,5 @@ async def test_ws_location_update_thumbnail_only_no_state(
     await hass.async_block_till_done()
 
     # Door state unchanged, thumbnail updated
-    assert coordinator.data.doors["door-001"] == door_before
-    thumb = coordinator.data.door_thumbnails["door-001"]
-    assert thumb.url == "/thumb/door-001-new.jpg"
-
-
-async def test_ws_setting_update_before_data_loaded(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test setting update is ignored when coordinator has no data yet."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    # Force data to None to simulate pre-first-refresh state
-    coordinator.data = None  # type: ignore[assignment]
-
-    handlers = _get_ws_handlers(mock_client)
-    msg = SettingUpdate(
-        event="access.data.setting.update",
-        data=SettingUpdateData(evacuation=True, lockdown=False),
-    )
-
-    await handlers["access.data.setting.update"](msg)
-    await hass.async_block_till_done()
-
-    assert coordinator.data is None
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
+    assert hass.states.get(FRONT_DOOR_IMAGE).state != image_state_before

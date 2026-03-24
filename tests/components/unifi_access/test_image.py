@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from unifi_access_api.models.websocket import ThumbnailInfo
+from unifi_access_api.models.websocket import (
+    LocationUpdateData,
+    LocationUpdateV2,
+    ThumbnailInfo,
+    WebsocketMessage,
+)
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -21,6 +26,13 @@ from tests.typing import ClientSessionGenerator
 
 FRONT_DOOR_IMAGE = "image.front_door_thumbnail"
 BACK_DOOR_IMAGE = "image.back_door_thumbnail"
+
+
+def _get_ws_handlers(
+    mock_client: MagicMock,
+) -> dict[str, Callable[[WebsocketMessage], Awaitable[None]]]:
+    """Extract WebSocket handlers from mock client."""
+    return mock_client.start_websocket.call_args[0][0]
 
 
 @pytest.fixture(autouse=True)
@@ -98,25 +110,25 @@ async def test_handle_coordinator_update_sets_image_last_updated(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test _handle_coordinator_update sets image_last_updated from thumbnail."""
-    coordinator = init_integration.runtime_data
-
+    """Test WS thumbnail update sets image_last_updated from thumbnail."""
     # Back door starts without thumbnail
     state_before = hass.states.get(BACK_DOOR_IMAGE)
     assert state_before is not None
     assert state_before.state == "unknown"
 
-    coordinator.async_set_updated_data(
-        coordinator.data.__class__(
-            doors=coordinator.data.doors,
-            emergency=coordinator.data.emergency,
-            door_thumbnails={
-                **coordinator.data.door_thumbnails,
-                "door-002": ThumbnailInfo(
+    handlers = _get_ws_handlers(mock_client)
+    await handlers["access.data.device.location_update_v2"](
+        LocationUpdateV2(
+            event="access.data.device.location_update_v2",
+            data=LocationUpdateData(
+                id="door-002",
+                location_type="DOOR",
+                state=None,
+                thumbnail=ThumbnailInfo(
                     url="/thumb/door-002.jpg",
                     door_thumbnail_last_update=1700000000,
                 ),
-            },
+            ),
         )
     )
     await hass.async_block_till_done()
@@ -126,17 +138,18 @@ async def test_handle_coordinator_update_sets_image_last_updated(
     assert state_after.state != "unknown"
 
     # Second update with a newer timestamp should change image_last_updated
-    coordinator.async_set_updated_data(
-        coordinator.data.__class__(
-            doors=coordinator.data.doors,
-            emergency=coordinator.data.emergency,
-            door_thumbnails={
-                **coordinator.data.door_thumbnails,
-                "door-002": ThumbnailInfo(
+    await handlers["access.data.device.location_update_v2"](
+        LocationUpdateV2(
+            event="access.data.device.location_update_v2",
+            data=LocationUpdateData(
+                id="door-002",
+                location_type="DOOR",
+                state=None,
+                thumbnail=ThumbnailInfo(
                     url="/thumb/door-002-v2.jpg",
                     door_thumbnail_last_update=1700001000,
                 ),
-            },
+            ),
         )
     )
     await hass.async_block_till_done()
