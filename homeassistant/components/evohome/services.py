@@ -68,10 +68,10 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     )
 
 
-def _validate_set_system_mode_params(call: ServiceCall, tcs: ControlSystem) -> None:
+def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
     """Validate that a set_system_mode service call is properly formed."""
 
-    mode = call.data[ATTR_MODE]
+    mode = data[ATTR_MODE]
     evo_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
 
     # Validation occurs here, instead of in the library, because it uses a slightly
@@ -86,21 +86,21 @@ def _validate_set_system_mode_params(call: ServiceCall, tcs: ControlSystem) -> N
         )
 
     if not mode_info[SZ_CAN_BE_TEMPORARY]:
-        if ATTR_DURATION in call.data or ATTR_PERIOD in call.data:
+        if ATTR_DURATION in data or ATTR_PERIOD in data:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mode_cant_be_temporary",
                 translation_placeholders={ATTR_MODE: mode},
             )
 
-    elif mode_info[SZ_TIMING_MODE] == S2_DURATION and ATTR_PERIOD in call.data:
+    elif mode_info[SZ_TIMING_MODE] == S2_DURATION and ATTR_PERIOD in data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_period",
             translation_placeholders={ATTR_MODE: mode},
         )
 
-    elif mode_info[SZ_TIMING_MODE] == S2_PERIOD and ATTR_DURATION in call.data:
+    elif mode_info[SZ_TIMING_MODE] == S2_PERIOD and ATTR_DURATION in data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_duration",
@@ -128,7 +128,7 @@ def setup_service_functions(
         # doesn't support auto_with_reset natively
 
         if call.service == EvoService.SET_SYSTEM_MODE:
-            _validate_set_system_mode_params(call, coordinator.tcs)
+            _validate_set_system_mode_params(coordinator.tcs, call.data)
 
         payload = {
             "unique_id": coordinator.tcs.id,
