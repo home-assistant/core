@@ -54,7 +54,7 @@ class WaterHeaterOnCondition(EntityConditionBase):
     _domain_specs = {DOMAIN: DomainSpec()}
 
     def is_valid_state(self, entity_state: State) -> bool:
-        """Check if the state matches the expected operation mode."""
+        """Check if the water heater is in a non-off state."""
         return entity_state.state != STATE_OFF
 
 
