@@ -1183,6 +1183,9 @@
       "click_mode": {
         "name": "Click mode"
       },
+      "color_temperature_channel": {
+        "name": "Color temperature channel"
+      },
       "control_type": {
         "name": "Control type"
       },
