@@ -36,13 +36,14 @@
       "container_memory": {
         "default": "mdi:memory"
       },
+      "container_memory_percentage": {
+        "default": "mdi:memory"
+      },
       "container_netin": {
         "default": "mdi:download-network"
       },
       "container_netout": {
         "default": "mdi:upload-network"
-      "container_memory_percentage": {
-        "default": "mdi:memory"
       },
       "container_status": {
         "default": "mdi:server"
@@ -89,13 +90,14 @@
       "vm_memory": {
         "default": "mdi:memory"
       },
+      "vm_memory_percentage": {
+        "default": "mdi:memory"
+      },
       "vm_netin": {
         "default": "mdi:download-network"
       },
       "vm_netout": {
         "default": "mdi:upload-network"
-      "vm_memory_percentage": {
-        "default": "mdi:memory"
       },
       "vm_status": {
         "default": "mdi:server"
