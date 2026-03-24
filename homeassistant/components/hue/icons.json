@@ -29,12 +29,6 @@
     },
     "hue_activate_scene": {
       "service": "mdi:palette"
-    },
-    "capture_group_scene": {
-      "service": "mdi:palette"
-    },
-    "restore_group_scene": {
-      "service": "mdi:palette"
     }
   }
 }
