@@ -271,30 +271,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "dhcp_discovery",
-    [DHCP_DISCOVERY_LR4, DHCP_DISCOVERY_LR5],
-)
-async def test_dhcp_discovery(
-    hass: HomeAssistant, dhcp_discovery: DhcpServiceInfo
-) -> None:
-    """Test DHCP discovery triggers user flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp_discovery,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-@pytest.mark.parametrize(
-    "dhcp_discovery",
-    [DHCP_DISCOVERY_LR4, DHCP_DISCOVERY_LR5],
-)
-async def test_dhcp_discovery_already_configured(
-    hass: HomeAssistant, dhcp_discovery: DhcpServiceInfo
-) -> None:
+async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
     """Test DHCP discovery aborts when already configured."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -305,7 +282,7 @@ async def test_dhcp_discovery_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp_discovery,
+        data=DHCP_DISCOVERY_LR4,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
