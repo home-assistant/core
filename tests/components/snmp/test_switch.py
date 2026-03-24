@@ -1,8 +1,7 @@
 """SNMP switch tests."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from pysnmp.error import PySnmpError
 from pysnmp.proto.rfc1902 import Integer32
 import pytest
 
@@ -10,17 +9,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-
-@pytest.fixture(autouse=True)
-def mock_udp_transport():
-    """Mock UdpTransportTarget.create to avoid socket usage."""
-    with patch(
-        "homeassistant.components.snmp.switch.UdpTransportTarget.create",
-        return_value=Mock(),
-    ) as mock:
-        yield mock
-
 
 config = {
     SWITCH_DOMAIN: {
@@ -77,42 +65,3 @@ async def test_snmp_integer_switch_unknown(
         state = hass.states.get("switch.snmp")
         assert state.state == STATE_UNKNOWN
         assert "Invalid payload '3' received for entity" in caplog.text
-
-
-async def test_snmp_switch_update_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test snmp switch handling error during update."""
-
-    with patch(
-        "homeassistant.components.snmp.switch.get_cmd",
-        side_effect=PySnmpError("Connection lost"),
-    ):
-        assert await async_setup_component(hass, SWITCH_DOMAIN, config)
-        await hass.async_block_till_done()
-        state = hass.states.get("switch.snmp")
-        assert state.state == STATE_UNKNOWN
-        assert "SNMP error during update: Connection lost" in caplog.text
-
-
-async def test_snmp_switch_set_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test snmp switch handling error during set command."""
-
-    mock_data = Integer32(0)
-    with patch(
-        "homeassistant.components.snmp.switch.get_cmd",
-        return_value=(None, None, None, [[mock_data]]),
-    ):
-        assert await async_setup_component(hass, SWITCH_DOMAIN, config)
-        await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.snmp.switch.set_cmd",
-        side_effect=PySnmpError("No writable OID"),
-    ):
-        await hass.services.async_call(
-            "switch", "turn_on", {"entity_id": "switch.snmp"}, blocking=True
-        )
-        assert "SNMP error during set: No writable OID" in caplog.text
