@@ -148,7 +148,10 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
-        return self._attr_entity_registry_enabled_default
+        return (
+            self._attr_entity_registry_enabled_default
+            or super().entity_registry_enabled_default
+        )
 
     @property
     def unique_id(self) -> str:

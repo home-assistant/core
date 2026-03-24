@@ -291,3 +291,48 @@ async def test_device_tracker_name_resolves_to_mac_address(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "00_11_22_33_44_55"
+
+
+async def test_device_tracker_enabled_if_device_exists(
+    hass: HomeAssistant, mock_walk, mock_get_cmd
+) -> None:
+    """Test that an entity is enabled if its device already exists in the registry.
+
+    This verifies the 'or super().entity_registry_enabled_default' logic.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "community": "public",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Pre-register the device in the registry with a valid config entry
+    other_entry = MockConfigEntry(domain="other_integration")
+    other_entry.add_to_hass(hass)
+    dr_reg = dr.async_get(hass)
+    dr_reg.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
+    )
+
+    with patch(
+        "homeassistant.components.snmp.UdpTransportTarget.create",
+        return_value=Mock(),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
+    )
+    assert entity_id is not None
+
+    # Entity should be enabled because the device already existed
+    reg_entry = ent_reg.async_get(entity_id)
+    assert reg_entry is not None
+    assert reg_entry.disabled_by is None
