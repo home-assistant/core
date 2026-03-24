@@ -670,7 +670,9 @@ def check_dependency_files(
         for file in files(pkg) or ():
             if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
                 top_level.add(top)
-            if (name := str(file)).lower() in FORBIDDEN_FILE_NAMES:
+            if (name := str(file)).lower() in FORBIDDEN_FILE_NAMES or name.endswith(
+                ".pth"
+            ):
                 file_names.add(name)
         results = _PackageFilesCheckResult(
             top_level=FORBIDDEN_PACKAGE_NAMES & top_level,
@@ -687,7 +689,8 @@ def check_dependency_files(
             f"Package {pkg} has a forbidden top level directory '{dir_name}' in {package}",
         )
     for file_name in results["file_names"]:
-        integration.add_error(
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
             "requirements",
             f"Package {pkg} has a forbidden file '{file_name}' in {package}",
         )
