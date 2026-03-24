@@ -1,7 +1,7 @@
 """Configuration for Huum tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from huum.const import SaunaStatus
 from huum.schemas import HuumStatusResponse, SaunaConfig
