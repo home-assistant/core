@@ -17,6 +17,7 @@ from homeassistant.components.lg_infrared.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_INFRARED_ENTITY_ID, MockInfraredEntity
@@ -107,18 +108,19 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("entity_name", "expected_title"),
     [
-        ("Test IR transmitter", "LG TV via Test IR transmitter"),
+        (None, "LG TV via Test IR transmitter"),
         ("AC IR emitter", "LG TV via AC IR emitter"),
     ],
 )
 async def test_user_flow_title_from_entity_name(
     hass: HomeAssistant,
-    mock_infrared_entity: MockInfraredEntity,
-    entity_name: str,
+    entity_registry: er.EntityRegistry,
+    entity_name: str | None,
     expected_title: str,
 ) -> None:
     """Test config entry title uses the entity name."""
-    mock_infrared_entity.name = entity_name
+    entity_registry.async_update_entity(MOCK_INFRARED_ENTITY_ID, name=entity_name)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
