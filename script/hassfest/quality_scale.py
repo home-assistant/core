@@ -130,7 +130,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "agent_dvr",
     "airly",
     "airnow",
-    "airq",
     "airthings",
     "airthings_ble",
     "airtouch4",
