@@ -10,11 +10,16 @@ from google_air_quality_api.exceptions import GoogleAirQualityApiError
 from google_air_quality_api.model import AirQualityCurrentConditionsData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_COUNTRY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CUSTOM_LOCAL_AQI_OPTIONS, DOMAIN
+from .const import (
+    CONF_ENABLE_CUSTOM_LAQI,
+    CUSTOM_LAQI,
+    CUSTOM_LOCAL_AQI_OPTIONS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,11 +56,9 @@ class GoogleAirQualityUpdateCoordinator(
         self.long = subentry.data[CONF_LONGITUDE]
         self.custom_local_aqi: str | None = None
         self.region_code: str | None = None
-        if subentry.data.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get("enable_custom_laqi"):
-            self.custom_local_aqi = subentry.data[CUSTOM_LOCAL_AQI_OPTIONS][
-                "custom_laqi"
-            ]
-            self.region_code = subentry.data[CUSTOM_LOCAL_AQI_OPTIONS].get("country")
+        if subentry.data.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get(CONF_ENABLE_CUSTOM_LAQI):
+            self.custom_local_aqi = subentry.data[CUSTOM_LOCAL_AQI_OPTIONS][CUSTOM_LAQI]
+            self.region_code = subentry.data[CUSTOM_LOCAL_AQI_OPTIONS].get(CONF_COUNTRY)
 
     async def _async_update_data(self) -> AirQualityCurrentConditionsData:
         """Fetch air quality data for this coordinate."""

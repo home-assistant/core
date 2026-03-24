@@ -6,6 +6,7 @@ from google_air_quality_api.exceptions import GoogleAirQualityApiError
 import pytest
 
 from homeassistant.components.google_air_quality.const import (
+    CONF_ENABLE_CUSTOM_LAQI,
     CONF_REFERRER,
     CUSTOM_LAQI,
     CUSTOM_LOCAL_AQI_OPTIONS,
@@ -15,6 +16,7 @@ from homeassistant.components.google_air_quality.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
@@ -303,10 +305,10 @@ async def test_subentry_flow(
                 CONF_LATITUDE: 30.1,
                 CONF_LONGITUDE: 40.1,
             },
-            "custom_local_aqi_options": {
-                "country": "DE",
-                "custom_laqi": "deu_uba",
-                "enable_custom_laqi": False,
+            CUSTOM_LOCAL_AQI_OPTIONS: {
+                CONF_COUNTRY: "DE",
+                CUSTOM_LAQI: "deu_uba",
+                CONF_ENABLE_CUSTOM_LAQI: False,
             },
         },
     )
@@ -432,8 +434,8 @@ async def test_create_entry_with_custom_laqi(
             CONF_API_KEY: "test-api-key",
             CONF_LOCATION: {CONF_LATITUDE: 10.1, CONF_LONGITUDE: 20.1},
             CUSTOM_LOCAL_AQI_OPTIONS: {
-                "country": "DE",
-                "enable_custom_laqi": True,
+                CONF_COUNTRY: "DE",
+                CONF_ENABLE_CUSTOM_LAQI: True,
             },
         },
     )
@@ -447,9 +449,9 @@ async def test_create_entry_with_custom_laqi(
             CONF_API_KEY: "test-api-key",
             CONF_LOCATION: {CONF_LATITUDE: 10.1, CONF_LONGITUDE: 20.1},
             CUSTOM_LOCAL_AQI_OPTIONS: {
-                "country": "DE",
+                CONF_COUNTRY: "DE",
                 CUSTOM_LAQI: "deu_lubw",
-                "enable_custom_laqi": True,
+                CONF_ENABLE_CUSTOM_LAQI: True,
             },
         },
     )
@@ -470,9 +472,9 @@ async def test_create_entry_with_custom_laqi(
         CONF_LATITUDE: 10.1,
         CONF_LONGITUDE: 20.1,
         CUSTOM_LOCAL_AQI_OPTIONS: {
-            "country": "DE",
+            CONF_COUNTRY: "DE",
             CUSTOM_LAQI: "deu_lubw",
-            "enable_custom_laqi": True,
+            CONF_ENABLE_CUSTOM_LAQI: True,
         },
     }
     assert len(mock_setup_entry.mock_calls) == 1

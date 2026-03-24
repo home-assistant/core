@@ -204,7 +204,6 @@ async def async_setup_entry(
 
     for subentry_id, subentry in entry.subentries.items():
         coordinator = coordinators[subentry_id]
-        _LOGGER.debug("subentry.data: %s", subentry.data)
         async_add_entities(
             (
                 AirQualitySensorEntity(coordinator, description, subentry_id, subentry)

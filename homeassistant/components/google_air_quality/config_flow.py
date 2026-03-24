@@ -21,6 +21,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
@@ -39,6 +40,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_ENABLE_CUSTOM_LAQI,
     CONF_REFERRER,
     CUSTOM_LAQI,
     CUSTOM_LOCAL_AQI_OPTIONS,
@@ -73,7 +75,7 @@ async def _validate_input(
         enable_custom_laqi = custom_options.get("enable_custom_laqi")
 
         if enable_custom_laqi:
-            country = custom_options.get("country")
+            country = custom_options.get(CONF_COUNTRY)
             custom_laqi = custom_options.get(CUSTOM_LAQI)
 
             # When custom LAQI is enabled, both country and custom_laqi must be provided
@@ -118,9 +120,9 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
             vol.Optional(CUSTOM_LOCAL_AQI_OPTIONS): section(
                 vol.Schema(
                     {
-                        vol.Required("enable_custom_laqi", default=False): bool,
+                        vol.Required(CONF_ENABLE_CUSTOM_LAQI, default=False): bool,
                         vol.Optional(
-                            "country", default=hass.config.country
+                            CONF_COUNTRY, default=hass.config.country
                         ): CountrySelector(),
                         vol.Optional(CUSTOM_LAQI): SelectSelector(
                             SelectSelectorConfig(
@@ -193,7 +195,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
             if await _validate_input(user_input, api, errors, description_placeholders):
                 subentry_data = dict(user_input[CONF_LOCATION])
                 custom_opts = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS)
-                if custom_opts and custom_opts.get("enable_custom_laqi"):
+                if custom_opts and custom_opts.get(CONF_ENABLE_CUSTOM_LAQI):
                     subentry_data[CUSTOM_LOCAL_AQI_OPTIONS] = custom_opts
                 return self.async_create_entry(
                     title="Google Air Quality",
