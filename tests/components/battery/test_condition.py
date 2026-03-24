@@ -190,7 +190,7 @@ async def test_battery_binary_condition_behavior_all(
         unit_attributes=_BATTERY_UNIT_ATTRS,
     ),
 )
-async def test_battery_percentage_condition_behavior_any(
+async def test_battery_is_level_condition_behavior_any(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     condition_target_config: dict,
@@ -200,7 +200,7 @@ async def test_battery_percentage_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the battery percentage condition with 'any' behavior."""
+    """Test the battery is_level condition with 'any' behavior."""
     await assert_condition_behavior_any(
         hass,
         target_entities=target_sensors,
@@ -226,7 +226,7 @@ async def test_battery_percentage_condition_behavior_any(
         unit_attributes=_BATTERY_UNIT_ATTRS,
     ),
 )
-async def test_battery_percentage_condition_behavior_all(
+async def test_battery_is_level_condition_behavior_all(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     condition_target_config: dict,
@@ -236,7 +236,7 @@ async def test_battery_percentage_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the battery percentage condition with 'all' behavior."""
+    """Test the battery is_level condition with 'all' behavior."""
     await assert_condition_behavior_all(
         hass,
         target_entities=target_sensors,
