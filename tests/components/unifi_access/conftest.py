@@ -60,6 +60,8 @@ def _make_door(
     name: str = "Front Door",
     lock_status: DoorLockRelayStatus = DoorLockRelayStatus.LOCK,
     position_status: DoorPositionStatus = DoorPositionStatus.CLOSE,
+    door_thumbnail: str | None = None,
+    door_thumbnail_last_update: int | None = None,
 ) -> Door:
     """Create a mock Door object."""
     return Door(
@@ -67,11 +69,18 @@ def _make_door(
         name=name,
         door_lock_relay_status=lock_status,
         door_position_status=position_status,
+        door_thumbnail=door_thumbnail,
+        door_thumbnail_last_update=door_thumbnail_last_update,
     )
 
 
 MOCK_DOORS = [
-    _make_door("door-001", "Front Door"),
+    _make_door(
+        "door-001",
+        "Front Door",
+        door_thumbnail="/preview/front_door.png",
+        door_thumbnail_last_update=1700000000,
+    ),
     _make_door(
         "door-002",
         "Back Door",
@@ -103,6 +112,7 @@ def mock_client() -> Generator[MagicMock]:
         client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
         client.set_emergency_status = AsyncMock()
         client.unlock_door = AsyncMock()
+        client.get_thumbnail = AsyncMock(return_value=b"")
         client.close = AsyncMock()
         client.start_websocket = MagicMock()
         yield client

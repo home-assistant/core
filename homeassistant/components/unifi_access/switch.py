@@ -114,5 +114,6 @@ class UnifiAccessEmergencySwitch(UnifiAccessHubEntity, SwitchEntity):
                     lock_rule_support_complete=(
                         self.coordinator.data.lock_rule_support_complete
                     ),
+                    door_thumbnails=self.coordinator.data.door_thumbnails,
                 )
             )
