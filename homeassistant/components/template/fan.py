@@ -87,6 +87,15 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Fan"
 
+SCRIPT_FIELDS = (
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_SET_DIRECTION_ACTION,
+    CONF_SET_OSCILLATING_ACTION,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SET_PRESET_MODE_ACTION,
+)
+
 FAN_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DIRECTION): cv.template,
@@ -159,6 +168,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_FANS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -174,6 +184,7 @@ async def async_setup_entry(
         async_add_entities,
         StateFanEntity,
         FAN_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 

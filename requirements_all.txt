@@ -422,7 +422,7 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
-aiotedee==0.2.25
+aiotedee==0.2.27
 
 # homeassistant.components.tractive
 aiotractive==1.0.0
@@ -1137,7 +1137,7 @@ greeclimate==2.1.1
 greeneye_monitor==3.0.3
 
 # homeassistant.components.green_planet_energy
-greenplanet-energy-api==0.1.4
+greenplanet-energy-api==0.1.10
 
 # homeassistant.components.greenwave
 greenwavereality==0.5.1
@@ -1226,7 +1226,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260312.0
+home-assistant-frontend==20260312.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.3
@@ -1717,7 +1717,7 @@ openwrt-ubus-rpc==0.0.2
 opower==0.17.1
 
 # homeassistant.components.oralb
-oralb-ble==1.0.2
+oralb-ble==1.1.0
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2563,7 +2563,7 @@ python-gitlab==1.6.0
 python-google-drive-api==0.1.0
 
 # homeassistant.components.google_weather
-python-google-weather-api==0.0.4
+python-google-weather-api==0.0.6
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
@@ -2984,7 +2984,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.3
+starlink-grpc-core==1.2.4
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -3106,7 +3106,7 @@ total-connect-client==2025.12.2
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.3
+tplink-omada-client==1.5.6
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3274,7 +3274,7 @@ wirelesstagpy==0.8.1
 wled==0.21.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.23
+wolf-comm==0.0.48
 
 # homeassistant.components.wsdot
 wsdot==0.0.1
@@ -3283,7 +3283,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.6.0
+xiaomi-ble==1.10.0
 
 # homeassistant.components.knx
 xknx==3.15.0
@@ -3320,7 +3320,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.6.1
+yolink-api==0.6.3
 
 # homeassistant.components.youless
 youless-api==2.2.0
