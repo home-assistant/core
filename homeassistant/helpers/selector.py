@@ -1361,15 +1361,17 @@ def _validate_numeric_threshold_active_choice(
     data: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate that active_choice matches an existing key in the entry."""
-    active_choice = data.get("active_choice")
-    if active_choice is not None and active_choice not in data:
-        raise vol.Invalid(
-            f"active_choice is '{active_choice}' but '{active_choice}' key is missing"
-        )
-    if active_choice is None and "number" in data and "entity" in data:
+    if "active_choice" not in data and "number" in data and "entity" in data:
         raise vol.Invalid(
             "Value entry contains both 'number' and 'entity';"
             " set 'active_choice' to disambiguate"
+        )
+    if "active_choice" not in data:
+        return data
+    active_choice = data["active_choice"]
+    if active_choice not in data:
+        raise vol.Invalid(
+            f"active_choice is '{active_choice}' but '{active_choice}' key is missing"
         )
     return data
 
@@ -1454,8 +1456,10 @@ def _validate_numeric_threshold_unit[_T: dict[str, Any]](
         else:
             entries = (value.get("value_min", {}), value.get("value_max", {}))
         for entry in entries:
-            unit = entry.get("unit_of_measurement")
-            if unit is not None and unit not in allowed_units:
+            if "unit_of_measurement" not in entry:
+                continue
+            unit = entry["unit_of_measurement"]
+            if unit not in allowed_units:
                 raise vol.Invalid(
                     f"Invalid unit_of_measurement '{unit}',"
                     f" expected one of {allowed_units}"
@@ -1482,9 +1486,9 @@ def _validate_numeric_threshold_number_range[_T: dict[str, Any]](
         else:
             entries = (value.get("value_min", {}), value.get("value_max", {}))
         for entry in entries:
-            number = entry.get("number")
-            if number is None:
+            if "number" not in entry:
                 continue
+            number = entry["number"]
             if min_value is not None and number < min_value:
                 raise vol.Invalid(
                     f"Value {number} is less than the minimum {min_value}"
