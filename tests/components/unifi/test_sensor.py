@@ -1835,7 +1835,7 @@ async def test_device_temperature_with_missing_value(
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

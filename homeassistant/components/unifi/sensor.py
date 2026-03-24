@@ -308,6 +308,17 @@ def async_device_temperatures_value_fn(
 
 
 @callback
+def async_device_temperatures_available_fn(
+    temperature_name: str, hub: UnifiHub, obj_id: str
+) -> bool:
+    """Determine if a device temperature has a value."""
+    device = hub.api.devices[obj_id]
+    if not async_device_available_fn(hub, obj_id):
+        return False
+    return _device_temperature(temperature_name, device.temperatures or []) is not None
+
+
+@callback
 def async_device_temperatures_supported_fn(
     temperature_name: str, hub: UnifiHub, obj_id: str
 ) -> bool:
@@ -347,7 +358,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             entity_registry_enabled_default=False,
             api_handler_fn=lambda api: api.devices,
-            available_fn=async_device_available_fn,
+            available_fn=partial(async_device_temperatures_available_fn, name),
             device_info_fn=async_device_device_info_fn,
             name_fn=lambda device: f"{device.name} {name} Temperature",
             object_fn=lambda api, obj_id: api.devices[obj_id],
