@@ -46,7 +46,7 @@ def test_invalid_base_schema(schema) -> None:
 
 def _test_selector(
     selector_type: str,
-    schema: dict,
+    schema: dict | None,
     valid_selections: Iterable[Any],
     invalid_selections: Iterable[Any],
     converter: Callable[[Any], Any] | None = None,
@@ -616,7 +616,7 @@ def test_number_selector_schema_error(schema) -> None:
     ],
 )
 def test_numeric_threshold_selector_schema(
-    schema: dict[str, Any],
+    schema: dict[str, Any] | None,
     valid_selections: tuple[Any, ...],
     invalid_selections: tuple[Any, ...],
 ) -> None:
@@ -651,6 +651,19 @@ def test_numeric_threshold_selector_schema(
                 },
             },
             {"type": "above", "value": {"number": 5.0, "unit_of_measurement": "°C"}},
+        ),
+        # active_choice "entity": keep only entity, drop number and unit_of_measurement
+        (
+            {
+                "type": "below",
+                "value": {
+                    "active_choice": "entity",
+                    "entity": "sensor.temperature",
+                    "number": 10,
+                    "unit_of_measurement": "°C",
+                },
+            },
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
         ),
         # active_choice "entity": keep only entity, drop unit_of_measurement
         (
