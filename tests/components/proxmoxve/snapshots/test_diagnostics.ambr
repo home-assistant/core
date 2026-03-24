@@ -3,7 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'auth_providers': 'pam',
+        'auth_method': 'pam',
         'host': '**REDACTED**',
         'nodes': list([
           dict({

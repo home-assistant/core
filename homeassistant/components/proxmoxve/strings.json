@@ -31,7 +31,7 @@
       },
       "reconfigure": {
         "data": {
-          "auth_providers": "[%key:component::proxmoxve::config::step::user::data::auth_providers%]",
+          "auth_method": "[%key:component::proxmoxve::config::step::user::data::auth_method%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "token": "[%key:component::proxmoxve::config::step::user::data::token%]",
@@ -39,7 +39,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "auth_providers": "[%key:component::proxmoxve::config::step::user::data_description::auth_providers%]",
+          "auth_method": "[%key:component::proxmoxve::config::step::user::data_description::auth_method%]",
           "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
           "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
           "token": "[%key:component::proxmoxve::config::step::user::data_description::token%]",
@@ -67,7 +67,7 @@
       },
       "user": {
         "data": {
-          "auth_providers": "Authentication provider",
+          "auth_method": "Authentication method",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "token": "Use an API token",
@@ -75,7 +75,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "auth_providers": "The authentication realm for the Proxmox VE server (default: 'pam')",
+          "auth_method": "Select authentication provider for your Proxmox VE server",
           "host": "The hostname or IP address of your Proxmox VE server",
           "port": "The port of your Proxmox VE server (default: 8006)",
           "token": "Enable to use an API token or leave disabled to authenticate with a password",
@@ -276,7 +276,7 @@
     }
   },
   "selector": {
-    "auth_providers": {
+    "auth_method": {
       "options": {
         "other": "Use another realm (specified in the next step)",
         "pam": "Linux user - PAM standard authentication",

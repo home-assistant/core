@@ -11,7 +11,7 @@ import pytest
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
-from homeassistant.components.proxmoxve import CONF_HOST, CONF_REALM
+from homeassistant.components.proxmoxve import CONF_AUTH_METHOD, CONF_HOST, CONF_REALM
 from homeassistant.components.proxmoxve.const import (
     CONF_NODES,
     CONF_TOKEN,
@@ -20,13 +20,7 @@ from homeassistant.components.proxmoxve.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
-from homeassistant.const import (
-    CONF_AUTH_PROVIDERS,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -41,7 +35,7 @@ from tests.common import MockConfigEntry
 
 # Regular PAM user authentication + password
 MOCK_USER_STEP = {
-    CONF_AUTH_PROVIDERS: "pam",
+    CONF_AUTH_METHOD: "pam",
     CONF_HOST: "127.0.0.1",
     CONF_USERNAME: "test_user",
     CONF_VERIFY_SSL: True,
@@ -67,7 +61,7 @@ MOCK_USER_AUTH_STEP_TOKEN = {
 # Other authentication method (e.g. LDAP) with realm
 MOCK_USER_STEP_OTHER = {
     **MOCK_USER_STEP,
-    CONF_AUTH_PROVIDERS: "other",
+    CONF_AUTH_METHOD: "other",
 }
 
 MOCK_USER_AUTH_STEP_OTHER = {
@@ -78,7 +72,7 @@ MOCK_USER_AUTH_STEP_OTHER = {
 # Other authentication method with realm and token
 MOCK_USER_STEP_OTHER_TOKEN = {
     **MOCK_USER_STEP_TOKEN,
-    CONF_AUTH_PROVIDERS: "other",
+    CONF_AUTH_METHOD: "other",
 }
 
 MOCK_USER_AUTH_STEP_OTHER_TOKEN = {

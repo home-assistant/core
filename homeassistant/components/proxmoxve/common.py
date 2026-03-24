@@ -3,16 +3,16 @@
 from collections.abc import Mapping
 from typing import Any
 
-from homeassistant.const import CONF_AUTH_PROVIDERS, CONF_USERNAME
+from homeassistant.const import CONF_USERNAME
 
-from .const import AUTH_OTHER, CONF_REALM
+from .const import AUTH_OTHER, CONF_AUTH_METHOD, CONF_REALM
 
 
 def sanitize_config_entry(input_data: Mapping[str, Any]) -> dict[str, Any]:
     """Sanitize the user ID and realm in config_entry data."""
     data = dict(input_data)
     username = data[CONF_USERNAME].split("@")[0]
-    provider = data[CONF_AUTH_PROVIDERS]
+    provider = data[CONF_AUTH_METHOD]
 
     realm = provider.lower()
     if provider == AUTH_OTHER:

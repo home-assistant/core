@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.proxmoxve.const import (
+    CONF_AUTH_METHOD,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
@@ -16,7 +17,6 @@ from homeassistant.components.proxmoxve.const import (
     DOMAIN,
 )
 from homeassistant.const import (
-    CONF_AUTH_PROVIDERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -34,7 +34,7 @@ from tests.common import (
 )
 
 MOCK_TEST_CONFIG_BASE = {
-    CONF_AUTH_PROVIDERS: "pam",
+    CONF_AUTH_METHOD: "pam",
     CONF_HOST: "127.0.0.1",
     CONF_PORT: 8006,
     CONF_REALM: "pam",
@@ -63,7 +63,7 @@ MOCK_TEST_TOKEN_CONFIG = {
 
 MOCK_TEST_OTHER_CONFIG = {
     **MOCK_TEST_CONFIG,
-    CONF_AUTH_PROVIDERS: "other",
+    CONF_AUTH_METHOD: "other",
     CONF_REALM: "test_realm",
     CONF_USERNAME: "test_user@test_realm",
 }
@@ -73,7 +73,7 @@ MOCK_TEST_TOKEN_OTHER_CONFIG = {
     CONF_TOKEN: True,
     CONF_TOKEN_ID: "test_token_id",
     CONF_TOKEN_SECRET: "test_token_secret",
-    CONF_AUTH_PROVIDERS: "other",
+    CONF_AUTH_METHOD: "other",
     CONF_REALM: "test_realm",
     CONF_USERNAME: "test_user@test_realm",
 }

@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    CONF_AUTH_PROVIDERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -33,6 +32,7 @@ from .common import sanitize_config_entry
 from .const import (
     AUTH_METHODS,
     AUTH_OTHER,
+    CONF_AUTH_METHOD,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
@@ -50,10 +50,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 BASE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_AUTH_PROVIDERS, default=DEFAULT_REALM): SelectSelector(
+        vol.Required(CONF_AUTH_METHOD, default=DEFAULT_REALM): SelectSelector(
             SelectSelectorConfig(
                 options=AUTH_METHODS,
-                translation_key=CONF_AUTH_PROVIDERS,
+                translation_key=CONF_AUTH_METHOD,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
@@ -208,8 +208,8 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial reconfiguration step."""
         self._entry = self._get_reconfigure_entry()
         suggested_values = {
-            CONF_AUTH_PROVIDERS: self._entry.data.get(
-                CONF_AUTH_PROVIDERS, self._entry.data.get(CONF_REALM, DEFAULT_REALM)
+            CONF_AUTH_METHOD: self._entry.data.get(
+                CONF_AUTH_METHOD, self._entry.data.get(CONF_REALM, DEFAULT_REALM)
             ),
             CONF_HOST: self._entry.data[CONF_HOST],
             CONF_USERNAME: self._entry.data[CONF_USERNAME].split("@")[0],
@@ -244,7 +244,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             _, errors = await self._validate_input(self._data)
             # Discard password/token from data to avoid storing
             data_kwargs = {
-                CONF_PASSWORD: self._data[CONF_PASSWORD],
+                CONF_PASSWORD: self._data.get(CONF_PASSWORD),
                 CONF_TOKEN_ID: None,
                 CONF_TOKEN_SECRET: None,
             }
@@ -258,7 +258,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     self._entry,
                     data_updates={
-                        CONF_AUTH_PROVIDERS: self._data[CONF_AUTH_PROVIDERS],
+                        CONF_AUTH_METHOD: self._data[CONF_AUTH_METHOD],
                         CONF_HOST: self._data[CONF_HOST],
                         CONF_USERNAME: self._data[CONF_USERNAME],
                         CONF_PORT: self._data[CONF_PORT],
@@ -342,7 +342,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = PASSWORD_SCHEMA
         if data.get(CONF_TOKEN):
             schema = TOKEN_SCHEMA
-        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
+        if data.get(CONF_AUTH_METHOD) == AUTH_OTHER:
             schema = schema.extend({vol.Required(CONF_REALM): cv.string})
         return schema
 
@@ -357,7 +357,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_TOKEN_ID: data[CONF_TOKEN_ID],
                 CONF_TOKEN_SECRET: data[CONF_TOKEN_SECRET],
             }
-        if data.get(CONF_AUTH_PROVIDERS) == AUTH_OTHER:
+        if data.get(CONF_AUTH_METHOD) == AUTH_OTHER:
             updates[CONF_REALM] = data.get(CONF_REALM, DEFAULT_REALM)
         return updates
 

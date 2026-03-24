@@ -10,6 +10,7 @@ from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve.const import (
     AUTH_PAM,
+    CONF_AUTH_METHOD,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
@@ -23,7 +24,6 @@ from homeassistant.components.proxmoxve.coordinator import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    CONF_AUTH_PROVIDERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -257,5 +257,5 @@ async def test_migration_v2_to_v3(
     await hass.async_block_till_done()
 
     assert entry.version == 3
-    assert entry.data[CONF_AUTH_PROVIDERS] == AUTH_PAM
+    assert entry.data[CONF_AUTH_METHOD] == AUTH_PAM
     assert entry.data[CONF_REALM] == AUTH_PAM

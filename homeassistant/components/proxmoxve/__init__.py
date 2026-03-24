@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    CONF_AUTH_PROVIDERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -29,6 +28,7 @@ from .const import (
     AUTH_OTHER,
     AUTH_PAM,
     AUTH_PVE,
+    CONF_AUTH_METHOD,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
@@ -63,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_PASSWORD): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                         vol.Required(
-                            CONF_AUTH_PROVIDERS, default=DEFAULT_REALM
+                            CONF_AUTH_METHOD, default=DEFAULT_REALM
                         ): cv.string,
                         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
                         vol.Optional(CONF_TOKEN, default=False): cv.boolean,
@@ -192,9 +192,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
         realm = data[CONF_REALM].lower()
 
         # If the realm is one of the base providers, set the provider to match the realm.
-        data[CONF_AUTH_PROVIDERS] = (
-            realm if realm in (AUTH_PAM, AUTH_PVE) else AUTH_OTHER
-        )
+        data[CONF_AUTH_METHOD] = realm if realm in (AUTH_PAM, AUTH_PVE) else AUTH_OTHER
         data.setdefault(CONF_TOKEN, False)
 
         hass.config_entries.async_update_entry(entry, data=data, version=3)
