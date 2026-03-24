@@ -71,6 +71,7 @@ CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRECIPITATION = "is_precipitation"
 CONF_IS_PRECIPITATION_INTENSITY = "is_precipitation_intensity"
 CONF_IS_PRESSURE = "is_pressure"
+CONF_IS_RADON = "is_radon"
 CONF_IS_SPEED = "is_speed"
 CONF_IS_REACTIVE_ENERGY = "is_reactive_energy"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
@@ -134,6 +135,7 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
     ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
+    SensorDeviceClass.RADON: [{CONF_TYPE: CONF_IS_RADON}],
     SensorDeviceClass.REACTIVE_ENERGY: [{CONF_TYPE: CONF_IS_REACTIVE_ENERGY}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
@@ -203,6 +205,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PRECIPITATION,
                     CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,
+                    CONF_IS_RADON,
                     CONF_IS_REACTIVE_ENERGY,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,

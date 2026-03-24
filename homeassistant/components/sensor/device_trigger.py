@@ -70,6 +70,7 @@ CONF_POWER_FACTOR = "power_factor"
 CONF_PRECIPITATION = "precipitation"
 CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
+CONF_RADON = "radon"
 CONF_REACTIVE_ENERGY = "reactive_energy"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
@@ -133,6 +134,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_PRECIPITATION_INTENSITY}
     ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
+    SensorDeviceClass.RADON: [{CONF_TYPE: CONF_RADON}],
     SensorDeviceClass.REACTIVE_ENERGY: [{CONF_TYPE: CONF_REACTIVE_ENERGY}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
@@ -203,6 +205,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PRECIPITATION,
                     CONF_PRECIPITATION_INTENSITY,
                     CONF_PRESSURE,
+                    CONF_RADON,
                     CONF_REACTIVE_ENERGY,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,

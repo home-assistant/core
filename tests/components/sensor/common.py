@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.const import DEVICE_CLASS_STATE_CLASSES
 from homeassistant.const import (
+    CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -86,6 +87,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.PRECIPITATION: UnitOfPrecipitationDepth.MILLIMETERS,
     SensorDeviceClass.PRECIPITATION_INTENSITY: UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
+    SensorDeviceClass.RADON: CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
     SensorDeviceClass.REACTIVE_ENERGY: UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,

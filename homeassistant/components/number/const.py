@@ -8,6 +8,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -362,6 +363,13 @@ class NumberDeviceClass(StrEnum):
     - `inH₂O`
     """
 
+    RADON = "radon"
+    """Radon.
+
+    Unit of measurement:
+    - `Bq/m³`
+    """
+
     REACTIVE_ENERGY = "reactive_energy"
     """Reactive energy.
 
@@ -574,6 +582,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
+    NumberDeviceClass.RADON: {CONCENTRATION_BECQUERELS_PER_CUBIC_METER},
     NumberDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
     NumberDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     NumberDeviceClass.SIGNAL_STRENGTH: {

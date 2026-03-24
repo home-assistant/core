@@ -8,6 +8,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -376,6 +377,13 @@ class SensorDeviceClass(StrEnum):
     - `inH₂O`
     """
 
+    RADON = "radon"
+    """Radon.
+
+    Unit of measurement:
+    - `Bq/m³`
+    """
+
     REACTIVE_ENERGY = "reactive_energy"
     """Reactive energy.
 
@@ -669,6 +677,9 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.RADON: {
+        CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+    },
     SensorDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
     SensorDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     SensorDeviceClass.SIGNAL_STRENGTH: {
@@ -802,6 +813,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.RADON: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_ENERGY: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,

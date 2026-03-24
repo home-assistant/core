@@ -3124,6 +3124,7 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
         SensorDeviceClass.PM4,
+        SensorDeviceClass.RADON,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
         SensorDeviceClass.TIMESTAMP,
