@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+
 from .conftest import make_mock_module, make_mock_zone
 
 from tests.common import MockConfigEntry
@@ -52,5 +53,3 @@ async def test_climate_zone_unavailable_on_alarm(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
