@@ -1,5 +1,6 @@
 {
   "domain": "level",
-  "name": "Level",
+  "name": "Level Lock",
+  "integrations": ["levelhome"],
   "iot_standards": ["matter"]
 }
