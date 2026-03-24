@@ -47,8 +47,10 @@ class SupportedModels(StrEnum):
     HUB3 = "hub3"
     LOCK_LITE = "lock_lite"
     LOCK_ULTRA = "lock_ultra"
-    AIR_PURIFIER = "air_purifier"
-    AIR_PURIFIER_TABLE = "air_purifier_table"
+    AIR_PURIFIER_JP = "air_purifier_jp"
+    AIR_PURIFIER_US = "air_purifier_us"
+    AIR_PURIFIER_TABLE_JP = "air_purifier_table_jp"
+    AIR_PURIFIER_TABLE_US = "air_purifier_table_us"
     EVAPORATIVE_HUMIDIFIER = "evaporative_humidifier"
     FLOOR_LAMP = "floor_lamp"
     STRIP_LIGHT_3 = "strip_light_3"
@@ -90,8 +92,10 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
     SwitchbotModel.LOCK_LITE: SupportedModels.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA: SupportedModels.LOCK_ULTRA,
-    SwitchbotModel.AIR_PURIFIER: SupportedModels.AIR_PURIFIER,
-    SwitchbotModel.AIR_PURIFIER_TABLE: SupportedModels.AIR_PURIFIER_TABLE,
+    SwitchbotModel.AIR_PURIFIER_JP: SupportedModels.AIR_PURIFIER_JP,
+    SwitchbotModel.AIR_PURIFIER_US: SupportedModels.AIR_PURIFIER_US,
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP: SupportedModels.AIR_PURIFIER_TABLE_JP,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US: SupportedModels.AIR_PURIFIER_TABLE_US,
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: SupportedModels.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP: SupportedModels.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3: SupportedModels.STRIP_LIGHT_3,
@@ -134,8 +138,10 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_PRO,
     SwitchbotModel.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA,
-    SwitchbotModel.AIR_PURIFIER,
-    SwitchbotModel.AIR_PURIFIER_TABLE,
+    SwitchbotModel.AIR_PURIFIER_JP,
+    SwitchbotModel.AIR_PURIFIER_US,
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US,
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3,
@@ -159,8 +165,10 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.LOCK_LITE: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_ULTRA: switchbot.SwitchbotLock,
-    SwitchbotModel.AIR_PURIFIER: switchbot.SwitchbotAirPurifier,
-    SwitchbotModel.AIR_PURIFIER_TABLE: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_JP: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_US: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US: switchbot.SwitchbotAirPurifier,
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
     SwitchbotModel.FLOOR_LAMP: switchbot.SwitchbotStripLight3,
     SwitchbotModel.STRIP_LIGHT_3: switchbot.SwitchbotStripLight3,
@@ -178,6 +186,11 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
     str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()
 }
+
+# Deprecated sensor type values used before pySwitchbot 2.0.0.
+# AIR_PURIFIER and AIR_PURIFIER_TABLE were split into JP/US variants.
+DEPRECATED_SENSOR_TYPE_AIR_PURIFIER = "air_purifier"
+DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE = "air_purifier_table"
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
