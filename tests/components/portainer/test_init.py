@@ -325,6 +325,7 @@ async def test_new_endpoint_callback(
 
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
@@ -355,6 +356,7 @@ async def test_new_container_callback(
 
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -382,6 +384,7 @@ async def test_new_stack_callback(
 
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)

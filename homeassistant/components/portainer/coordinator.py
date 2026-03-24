@@ -276,6 +276,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     ) -> None:
         """Add new endpoints, remove non-existing endpoints."""
         current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
+        self.known_endpoints &= current_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
         if new_endpoints:
             _LOGGER.debug("New endpoints found: %s", new_endpoints)
