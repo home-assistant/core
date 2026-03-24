@@ -1,6 +1,5 @@
 """HTTP specific constants."""
 
-import socket
 from typing import Final
 
 from aiohttp.web import Request
@@ -13,10 +12,13 @@ KEY_HASS_USER: Final = "hass_user"
 KEY_HASS_REFRESH_TOKEN_ID: Final = "hass_refresh_token_id"
 
 
-def is_unix_socket_request(request: Request) -> bool:
-    """Check if request arrived over a Unix socket."""
+def is_supervisor_unix_socket_request(request: Request) -> bool:
+    """Check if request arrived over the Supervisor Unix socket."""
     if (transport := request.transport) is None:
         return False
-    if (sock := transport.get_extra_info("socket")) is None:
+    if (http := request.app[KEY_HASS].http) is None or (
+        supervisor_path := http.supervisor_unix_socket_path
+    ) is None:
         return False
-    return bool(sock.family == socket.AF_UNIX)
+    sockname: str | None = transport.get_extra_info("sockname")
+    return sockname == str(supervisor_path)

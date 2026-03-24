@@ -386,15 +386,15 @@ async def test_unix_socket_auth_bypass(
 
     with (
         patch(
-            "homeassistant.components.http.ban.is_unix_socket_request",
+            "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.http.auth.is_unix_socket_request",
+            "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.websocket_api.http.is_unix_socket_request",
+            "homeassistant.components.websocket_api.http.is_supervisor_unix_socket_request",
             return_value=True,
         ),
     ):

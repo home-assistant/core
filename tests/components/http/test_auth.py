@@ -676,7 +676,8 @@ async def test_unix_socket_auth_with_supervisor_user(
     client = await aiohttp_client(app)
 
     with patch(
-        "homeassistant.components.http.auth.is_unix_socket_request", return_value=True
+        "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+        return_value=True,
     ):
         req = await client.get("/")
     assert req.status == HTTPStatus.OK
@@ -694,7 +695,8 @@ async def test_unix_socket_auth_without_supervisor_user(
     client = await aiohttp_client(app)
 
     with patch(
-        "homeassistant.components.http.auth.is_unix_socket_request", return_value=True
+        "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+        return_value=True,
     ):
         req = await client.get("/")
     assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
@@ -715,7 +717,8 @@ async def test_unix_socket_auth_caches_user_id(
     client = await aiohttp_client(app)
 
     with patch(
-        "homeassistant.components.http.auth.is_unix_socket_request", return_value=True
+        "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+        return_value=True,
     ):
         # First request triggers user lookup
         req = await client.get("/")
@@ -724,7 +727,7 @@ async def test_unix_socket_auth_caches_user_id(
     # Second request should use cached user ID
     with (
         patch(
-            "homeassistant.components.http.auth.is_unix_socket_request",
+            "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
             return_value=True,
         ),
         patch.object(

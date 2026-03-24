@@ -14,7 +14,7 @@ from aiohttp import WSMsgType, web
 from aiohttp.http_websocket import WebSocketWriter
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.http.const import is_unix_socket_request
+from homeassistant.components.http.const import is_supervisor_unix_socket_request
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -389,10 +389,10 @@ class WebSocketHandler:
         """Handle the auth phase of the websocket connection."""
         request = self._request
 
-        if is_unix_socket_request(request):
+        if is_supervisor_unix_socket_request(request):
             # Unix socket requests are pre-authenticated by the HTTP
             # auth middleware — skip the token exchange.
-            connection = await auth.async_handle_unix_socket()
+            connection = await auth.async_handle_supervisor_unix_socket()
         else:
             await send_bytes_text(AUTH_REQUIRED_MESSAGE)
 

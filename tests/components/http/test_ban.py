@@ -492,7 +492,8 @@ async def test_unix_socket_skips_ban_check(
 
     # Unix socket requests should bypass ban checks
     with patch(
-        "homeassistant.components.http.ban.is_unix_socket_request", return_value=True
+        "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
+        return_value=True,
     ):
         resp = await client.get("/")
     assert resp.status == HTTPStatus.NOT_FOUND

@@ -38,7 +38,7 @@ from .const import (
     KEY_AUTHENTICATED,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
-    is_unix_socket_request,
+    is_supervisor_unix_socket_request,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -221,7 +221,7 @@ async def async_setup_auth(  # noqa: C901
 
     supervisor_user_id: str | None = None
 
-    async def async_authenticate_unix_socket(request: Request) -> bool:
+    async def async_authenticate_supervisor_unix_socket(request: Request) -> bool:
         """Authenticate a request from a Unix socket as the Supervisor user.
 
         The Unix Socket is dedicated and only available to Supervisor. To
@@ -261,8 +261,8 @@ async def async_setup_auth(  # noqa: C901
         """Authenticate as middleware."""
         authenticated = False
 
-        if is_unix_socket_request(request):
-            authenticated = await async_authenticate_unix_socket(request)
+        if is_supervisor_unix_socket_request(request):
+            authenticated = await async_authenticate_supervisor_unix_socket(request)
             auth_type = "unix socket"
 
         elif hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(

@@ -69,7 +69,7 @@ class AuthPhase:
         # send_bytes_text will directly send a message to the client.
         self._send_bytes_text = send_bytes_text
 
-    async def async_handle_unix_socket(self) -> ActiveConnection:
+    async def async_handle_supervisor_unix_socket(self) -> ActiveConnection:
         """Handle a pre-authenticated Unix socket connection."""
         conn = ActiveConnection(
             self._logger,

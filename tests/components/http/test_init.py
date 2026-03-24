@@ -770,7 +770,7 @@ async def test_unix_socket_started_with_supervisor(
 
     mock_create_sock.assert_called_once()
     mock_create_unix.assert_called_once_with(ANY, sock=mock_sock, backlog=128)
-    assert hass.http.unix_site is not None
+    assert hass.http.supervisor_site is not None
 
 
 async def test_unix_socket_not_started_without_supervisor(
@@ -786,7 +786,7 @@ async def test_unix_socket_not_started_without_supervisor(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert hass.http.unix_site is None
+    assert hass.http.supervisor_site is None
 
 
 async def test_unix_socket_rejected_relative_path(
@@ -806,5 +806,5 @@ async def test_unix_socket_rejected_relative_path(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert hass.http.unix_site is None
+    assert hass.http.supervisor_site is None
     assert "path must be absolute" in caplog.text
