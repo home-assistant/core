@@ -556,6 +556,19 @@ def test_number_selector_schema_error(schema) -> None:
                     "type": "above",
                     "value": {"active_choice": "invalid", "number": 10},
                 },  # Invalid active_choice
+                {
+                    "type": "above",
+                    "value": {"active_choice": "number", "entity": "sensor.foo"},
+                },  # active_choice "number" but only entity key present
+                {
+                    "type": "above",
+                    "value": {"active_choice": "entity", "number": 10},
+                },  # active_choice "entity" but only number key present
+                {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 10},
+                },  # value_min > value_max
             ),
         ),
         (
@@ -566,13 +579,25 @@ def test_number_selector_schema_error(schema) -> None:
                     "value_min": {"number": 10},
                     "value_max": {"number": 20},
                 },
+                {
+                    "type": "above",
+                    "value": {"number": 10, "unit_of_measurement": "°C"},
+                },
             ),
-            (),
+            (
+                {
+                    "type": "above",
+                    "value": {"number": 10, "unit_of_measurement": "K"},
+                },  # Unit not in allowed list
+            ),
         ),
         (
             {"number": {"min": 0, "max": 100}},
             ({"type": "above", "value": {"number": 50}},),
-            (),
+            (
+                {"type": "above", "value": {"number": -1}},  # Below min
+                {"type": "above", "value": {"number": 101}},  # Above max
+            ),
         ),
         (
             {"entity": {"domain": "sensor"}},

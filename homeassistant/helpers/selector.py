@@ -1357,6 +1357,18 @@ def _extract_numeric_threshold_entry(data: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _validate_numeric_threshold_active_choice(
+    data: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate that active_choice matches an existing key in the entry."""
+    active_choice = data.get("active_choice")
+    if active_choice is not None and active_choice not in data:
+        raise vol.Invalid(
+            f"active_choice is '{active_choice}' but '{active_choice}' key is missing"
+        )
+    return data
+
+
 _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -1373,28 +1385,112 @@ _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
         vol.Schema({vol.Required("entity"): object}, extra=vol.ALLOW_EXTRA),
         msg="Value entry must contain at least one of 'number' or 'entity'",
     ),
+    _validate_numeric_threshold_active_choice,
     _extract_numeric_threshold_entry,
 )
 
-_NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Required("type"): vol.In(
-                [NumericThresholdType.ABOVE, NumericThresholdType.BELOW]
-            ),
-            vol.Required("value"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
-        }
+
+def _validate_numeric_threshold_range[_T: dict[str, Any]](value: _T) -> _T:
+    """Validate that value_min is not greater than value_max for numeric entries."""
+    threshold_type = value.get("type")
+    if threshold_type not in (
+        NumericThresholdType.BETWEEN,
+        NumericThresholdType.OUTSIDE,
+    ):
+        return value
+    min_entry = value.get("value_min", {})
+    max_entry = value.get("value_max", {})
+    min_number = min_entry.get("number")
+    max_number = max_entry.get("number")
+    if min_number is not None and max_number is not None and min_number > max_number:
+        raise vol.Invalid(
+            f"value_min ({min_number}) must not be greater than"
+            f" value_max ({max_number})"
+        )
+    return value
+
+
+_NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.All(
+    vol.Any(
+        vol.Schema(
+            {
+                vol.Required("type"): vol.In(
+                    [NumericThresholdType.ABOVE, NumericThresholdType.BELOW]
+                ),
+                vol.Required("value"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+            }
+        ),
+        vol.Schema(
+            {
+                vol.Required("type"): vol.In(
+                    [NumericThresholdType.BETWEEN, NumericThresholdType.OUTSIDE]
+                ),
+                vol.Required("value_min"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+                vol.Required("value_max"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+            }
+        ),
     ),
-    vol.Schema(
-        {
-            vol.Required("type"): vol.In(
-                [NumericThresholdType.BETWEEN, NumericThresholdType.OUTSIDE]
-            ),
-            vol.Required("value_min"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
-            vol.Required("value_max"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
-        }
-    ),
+    _validate_numeric_threshold_range,
 )
+
+
+def _validate_numeric_threshold_unit[_T: dict[str, Any]](
+    allowed_units: list[str],
+) -> Callable[[_T], _T]:
+    """Generate a validator that checks unit_of_measurement against an allowed list."""
+
+    def _validate(value: _T) -> _T:
+        threshold_type = value.get("type")
+        if threshold_type in (
+            NumericThresholdType.ABOVE,
+            NumericThresholdType.BELOW,
+        ):
+            entries: tuple[dict[str, Any], ...] = (value.get("value", {}),)
+        else:
+            entries = (value.get("value_min", {}), value.get("value_max", {}))
+        for entry in entries:
+            unit = entry.get("unit_of_measurement")
+            if unit is not None and unit not in allowed_units:
+                raise vol.Invalid(
+                    f"Invalid unit_of_measurement '{unit}',"
+                    f" expected one of {allowed_units}"
+                )
+        return value
+
+    return _validate
+
+
+def _validate_numeric_threshold_number_range[_T: dict[str, Any]](
+    number_config: dict[str, Any],
+) -> Callable[[_T], _T]:
+    """Generate a validator that checks numeric values against min/max config."""
+    min_value: float | None = number_config.get("min")
+    max_value: float | None = number_config.get("max")
+
+    def _validate(value: _T) -> _T:
+        threshold_type = value.get("type")
+        if threshold_type in (
+            NumericThresholdType.ABOVE,
+            NumericThresholdType.BELOW,
+        ):
+            entries: tuple[dict[str, Any], ...] = (value.get("value", {}),)
+        else:
+            entries = (value.get("value_min", {}), value.get("value_max", {}))
+        for entry in entries:
+            number = entry.get("number")
+            if number is None:
+                continue
+            if min_value is not None and number < min_value:
+                raise vol.Invalid(
+                    f"Value {number} is less than the minimum {min_value}"
+                )
+            if max_value is not None and number > max_value:
+                raise vol.Invalid(
+                    f"Value {number} is greater than the maximum {max_value}"
+                )
+        return value
+
+    return _validate
 
 
 @SELECTORS.register("numeric_threshold")
@@ -1419,7 +1515,12 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        return _NUMERIC_THRESHOLD_VALUE_SCHEMA(data)
+        validators: list[Callable[[Any], Any]] = [_NUMERIC_THRESHOLD_VALUE_SCHEMA]
+        if allowed_units := self.config.get("unit_of_measurement"):
+            validators.append(_validate_numeric_threshold_unit(allowed_units))
+        if number_config := cast(dict[str, Any] | None, self.config.get("number")):
+            validators.append(_validate_numeric_threshold_number_range(number_config))
+        return vol.All(*validators)(data)
 
 
 class ObjectSelectorField(TypedDict, total=False):
