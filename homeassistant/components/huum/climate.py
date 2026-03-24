@@ -58,12 +58,18 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
     @property
     def min_temp(self) -> int:
         """Return configured minimal temperature."""
-        return self.coordinator.data.sauna_config.min_temp or CONFIG_DEFAULT_MIN_TEMP
+        sauna_config = self.coordinator.data.sauna_config
+        if sauna_config is None:
+            return CONFIG_DEFAULT_MIN_TEMP
+        return sauna_config.min_temp or CONFIG_DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> int:
         """Return configured maximum temperature."""
-        return self.coordinator.data.sauna_config.max_temp or CONFIG_DEFAULT_MAX_TEMP
+        sauna_config = self.coordinator.data.sauna_config
+        if sauna_config is None:
+            return CONFIG_DEFAULT_MAX_TEMP
+        return sauna_config.max_temp or CONFIG_DEFAULT_MAX_TEMP
 
     @property
     def hvac_mode(self) -> HVACMode:

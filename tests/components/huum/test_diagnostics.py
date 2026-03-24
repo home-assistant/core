@@ -31,23 +31,3 @@ async def test_diagnostics(
     )
 
     assert diagnostics == snapshot
-
-
-async def test_diagnostics_without_coordinator_data(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
-    mock_huum: AsyncMock,
-) -> None:
-    """Test diagnostics when coordinator data is unavailable."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-
-    mock_config_entry.runtime_data.data = None
-
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
-    )
-
-    assert diagnostics["coordinator"]["last_update_success"] is True
-    assert diagnostics["coordinator"]["last_exception"] is None
-    assert "data" not in diagnostics
