@@ -17,7 +17,9 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -60,11 +62,18 @@ async def async_setup_entry(
     """Set up Touchline devices from a config entry."""
     host = entry.data[CONF_HOST]
 
-    devices = [
-        Touchline(PyTouchline(id=device_id, url=host))
-        for device_id in range(entry.runtime_data.number_of_devices)
-    ]
-    async_add_entities(devices, True)
+    devices = []
+    for device_id in range(entry.runtime_data.number_of_devices):
+        device = PyTouchline(id=device_id, url=host)
+        try:
+            await hass.async_add_executor_job(device.update)
+        except (OSError, ConnectionError, TimeoutError) as err:
+            raise ConfigEntryNotReady(
+                f"Error while connecting to Touchline controller at {host}"
+            ) from err
+        devices.append(Touchline(device))
+
+    async_add_entities(devices)
 
 
 async def async_setup_platform(
@@ -135,14 +144,25 @@ class Touchline(ClimateEntity):
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
-        self._attr_name = None
-        self._current_operation_mode = None
-        self._attr_preset_mode = None
+        self._attr_name = self.unit.get_name()
+        self._device_id = self.unit.get_device_id()
+        self._controller_id = self.unit.get_controller_id()
+        self._attr_unique_id = f"{self._controller_id}_{self._device_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._attr_name,
+            manufacturer="Roth",
+        )
+        self._attr_current_temperature = self.unit.get_current_temperature()
+        self._attr_target_temperature = self.unit.get_target_temperature()
+        self._current_operation_mode = HVACMode.HEAT
+        self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
+            (self.unit.get_operation_mode(), self.unit.get_week_program())
+        )
 
     def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
-        self._attr_name = self.unit.get_name()
         self._attr_current_temperature = self.unit.get_current_temperature()
         self._attr_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(

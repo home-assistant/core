@@ -56,13 +56,14 @@ from homeassistant.helpers.condition import (
     EntityNumericalConditionWithUnitBase,
     async_validate_condition_config,
     make_entity_numerical_condition,
+    make_entity_numerical_condition_with_unit,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
+from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
@@ -3283,23 +3284,6 @@ async def test_numerical_condition_schema_above_must_be_less_than_below(
     }
     with pytest.raises(vol.Invalid, match="can never be above"):
         await async_validate_condition_config(hass, config)
-
-
-def make_entity_numerical_condition_with_unit(
-    domain_specs: Mapping[str, DomainSpec],
-    base_unit: str,
-    unit_converter: type[BaseUnitConverter],
-) -> type[EntityNumericalConditionWithUnitBase]:
-    """Create a condition for numerical state comparisons with unit conversion."""
-
-    class CustomCondition(EntityNumericalConditionWithUnitBase):
-        """Condition for numerical state with unit conversion."""
-
-        _domain_specs = domain_specs
-        _base_unit = base_unit
-        _unit_converter = unit_converter
-
-    return CustomCondition
 
 
 async def _setup_numerical_condition_with_unit(

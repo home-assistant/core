@@ -1,9 +1,41 @@
 {
   "common": {
+    "condition_behavior_description": "How the power value should match on the targeted entities.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_value": {
+      "description": "Tests the power value of one or more entities.",
+      "fields": {
+        "above": {
+          "description": "Require the power to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::power::common::condition_behavior_description%]",
+          "name": "[%key:component::power::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the power to be below this value.",
+          "name": "Below"
+        },
+        "unit": {
+          "description": "All values will be converted to this unit when evaluating the condition.",
+          "name": "Unit of measurement"
+        }
+      },
+      "name": "Power value"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "number_or_entity": {
       "choices": {
         "entity": "Entity",
