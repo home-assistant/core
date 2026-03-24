@@ -2120,6 +2120,7 @@ NO_QUALITY_SCALE = [
     "homeassistant_sky_connect",
     "homeassistant_yellow",
     "humidity",
+    "illuminance",
     "image_upload",
     "input_boolean",
     "input_button",

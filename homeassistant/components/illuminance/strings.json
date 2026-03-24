@@ -1,0 +1,88 @@
+{
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "selector": {
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    },
+    "trigger_threshold_type": {
+      "options": {
+        "above": "Above",
+        "below": "Below",
+        "between": "Between",
+        "outside": "Outside"
+      }
+    }
+  },
+  "title": "Illuminance",
+  "triggers": {
+    "changed": {
+      "description": "Triggers after one or more illuminance values change.",
+      "fields": {
+        "above": {
+          "description": "Only trigger when illuminance is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when illuminance is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Illuminance changed"
+    },
+    "cleared": {
+      "description": "Triggers after one or more light sensors stop detecting light.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::illuminance::common::trigger_behavior_description%]",
+          "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Light cleared"
+    },
+    "crossed_threshold": {
+      "description": "Triggers after one or more illuminance values cross a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::illuminance::common::trigger_behavior_description%]",
+          "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "The lower limit of the threshold.",
+          "name": "Lower limit"
+        },
+        "threshold_type": {
+          "description": "The type of threshold to use.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "The upper limit of the threshold.",
+          "name": "Upper limit"
+        }
+      },
+      "name": "Illuminance crossed threshold"
+    },
+    "detected": {
+      "description": "Triggers after one or more light sensors start detecting light.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::illuminance::common::trigger_behavior_description%]",
+          "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Light detected"
+    }
+  }
+}

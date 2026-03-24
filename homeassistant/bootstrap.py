@@ -247,6 +247,7 @@ DEFAULT_INTEGRATIONS = {
     "garage_door",
     "gate",
     "humidity",
+    "illuminance",
     "motion",
     "occupancy",
     "temperature",
