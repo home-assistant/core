@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import make_mock_module, make_mock_zone
@@ -39,7 +39,7 @@ async def test_battery_sensor_no_battery(
     mock_config_entry: MockConfigEntry,
     mock_touchlinesl_client: MagicMock,
 ) -> None:
-    """Test that the battery sensor is unknown for wired zones with no battery."""
+    """Test that no battery sensor is created for wired zones without a battery."""
     zone = make_mock_zone()
     zone.battery_level = None
     module = make_mock_module([zone])
@@ -49,9 +49,7 @@ async def test_battery_sensor_no_battery(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(BATTERY_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert hass.states.get(BATTERY_ENTITY_ID) is None
 
 
 @pytest.mark.parametrize("alarm", ["no_communication", "sensor_damaged"])

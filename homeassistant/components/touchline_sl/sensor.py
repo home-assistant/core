@@ -28,6 +28,7 @@ class TouchlineSLSensorEntityDescription(SensorEntityDescription):
     """Describes a Touchline SL sensor entity."""
 
     value_fn: Callable[[Zone], int | None]
+    exists_fn: Callable[[Zone], bool] = lambda _: True
 
 
 SENSORS: tuple[TouchlineSLSensorEntityDescription, ...] = (
@@ -39,6 +40,7 @@ SENSORS: tuple[TouchlineSLSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda zone: zone.battery_level,
+        exists_fn=lambda zone: zone.battery_level is not None,
     ),
 )
 
@@ -57,6 +59,7 @@ async def async_setup_entry(
         for coordinator in coordinators
         for zone_id in coordinator.data.zones
         for description in SENSORS
+        if description.exists_fn(coordinator.data.zones[zone_id])
     )
 
 
