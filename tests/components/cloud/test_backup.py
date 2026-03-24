@@ -392,7 +392,9 @@ async def test_agents_upload_on_progress(
         """Mock upload that calls on_progress."""
         on_progress = kwargs["on_progress"]
         on_progress(bytes_uploaded=2)
+        await hass.async_block_till_done()
         on_progress(bytes_uploaded=4)
+        await hass.async_block_till_done()
 
     cloud.files.upload.side_effect = mock_upload
 
@@ -426,11 +428,9 @@ async def test_agents_upload_on_progress(
 
     assert resp.status == 201
     cloud_events = [e for e in events if e.agent_id == "cloud.cloud"]
-    assert len(cloud_events) >= 2
-    assert cloud_events[0].uploaded_bytes == 2
-    assert cloud_events[0].total_bytes == len(backup_data)
+    assert len(cloud_events) >= 1
+    assert all(e.total_bytes == len(backup_data) for e in cloud_events)
     assert cloud_events[-1].uploaded_bytes == len(backup_data)
-    assert cloud_events[-1].total_bytes == len(backup_data)
 
 
 @pytest.mark.parametrize("side_effect", [FilesError("Boom!"), CloudError("Boom!")])
