@@ -389,6 +389,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
     """Representation of a template weathers features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _state_option = CONF_CONDITION
     _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
@@ -399,8 +400,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
         """Initialize the features."""
 
         # Required options
-        self.setup_template(
-            CONF_CONDITION,
+        self.setup_state_template(
             "_attr_condition",
             template_validators.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
         )
