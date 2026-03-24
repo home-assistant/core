@@ -99,7 +99,8 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
             # call_device will check result, fail by raise YoLinkClientError
             resp: BRDP = await self.device.call_device(request)
         except YoLinkAuthFailError as yl_auth_err:
-            raise ConfigEntryAuthFailed from yl_auth_err
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(yl_auth_err) from yl_auth_err
         except YoLinkClientError as yl_client_err:
             raise HomeAssistantError(yl_client_err) from yl_client_err
         else:

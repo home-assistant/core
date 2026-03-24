@@ -1,7 +1,9 @@
 """Tests for the YoLink Local integration."""
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from collections.abc import Generator
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from yolink.device import YoLinkDevice
@@ -14,17 +16,17 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
-CONF_NET_ID = "net_id"
-DOMAIN = "yolink_local"
+CONF_NET_ID: str = "net_id"
+DOMAIN: str = "yolink_local"
 
 
 # Test data
-TEST_HOST = "192.168.1.100"
-TEST_NET_ID = "test_net_id_123"
-TEST_CLIENT_ID = "test_client_id"
-TEST_CLIENT_SECRET = "test_client_secret"
+TEST_HOST: str = "192.168.1.100"
+TEST_NET_ID: str = "test_net_id_123"
+TEST_CLIENT_ID: str = "test_client_id"
+TEST_CLIENT_SECRET: str = "test_client_secret"
 
-TEST_CONFIG_DATA = {
+TEST_CONFIG_DATA: dict[str, str] = {
     CONF_HOST: TEST_HOST,
     CONF_NET_ID: TEST_NET_ID,
     CONF_CLIENT_ID: TEST_CLIENT_ID,
@@ -33,12 +35,12 @@ TEST_CONFIG_DATA = {
 
 
 @pytest.fixture
-def mock_yolink_client():
+def mock_yolink_client() -> Generator[Mock]:
     """Mock YoLinkLocalHubClient."""
     with patch(
         "homeassistant.components.yolink_local.YoLinkLocalHubClient"
     ) as mock_client_class:
-        client = Mock()
+        client: Mock = Mock()
         client.async_setup = AsyncMock()
         client.get_devices = Mock(return_value=[])
         client.async_unload = AsyncMock()
@@ -47,9 +49,9 @@ def mock_yolink_client():
 
 
 @pytest.fixture
-def mock_device():
+def mock_device() -> Mock:
     """Create a mock YoLink device."""
-    device = Mock(spec=YoLinkDevice)
+    device: Mock = Mock(spec=YoLinkDevice)
     device.device_id = "device_123"
     device.paired_device_id = None
     device.device_type = "DoorSensor"
@@ -58,15 +60,15 @@ def mock_device():
 
 
 @pytest.fixture
-def mock_paired_devices():
+def mock_paired_devices() -> tuple[Mock, Mock]:
     """Create a pair of mock YoLink devices (parent and child)."""
-    parent = Mock(spec=YoLinkDevice)
+    parent: Mock = Mock(spec=YoLinkDevice)
     parent.device_id = "parent_device"
     parent.paired_device_id = None
     parent.device_type = "Hub"
     parent.name = "Test Hub"
 
-    child = Mock(spec=YoLinkDevice)
+    child: Mock = Mock(spec=YoLinkDevice)
     child.device_id = "child_device"
     child.paired_device_id = "parent_device"
     child.device_type = "Sensor"
@@ -76,12 +78,12 @@ def mock_paired_devices():
 
 
 @pytest.fixture
-def mock_coordinator():
+def mock_coordinator() -> Generator[MagicMock]:
     """Mock YoLinkLocalCoordinator."""
     with patch(
         "homeassistant.components.yolink_local.YoLinkLocalCoordinator"
     ) as mock_coord_class:
-        coordinator = Mock()
+        coordinator: Mock = Mock()
         coordinator.async_config_entry_first_refresh = AsyncMock()
         coordinator.data = {}
         mock_coord_class.return_value = coordinator
@@ -89,12 +91,15 @@ def mock_coordinator():
 
 
 async def test_async_setup_entry_success(
-    hass: HomeAssistant, mock_yolink_client, mock_device, mock_coordinator
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
+    mock_device: Mock,
+    mock_coordinator: MagicMock,
 ) -> None:
     """Test successful setup of entry."""
     mock_yolink_client.get_devices.return_value = [mock_device]
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,
@@ -110,6 +115,8 @@ async def test_async_setup_entry_success(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data is not None
 
+    client: Any
+    coordinators: dict[str, Any]
     client, coordinators = entry.runtime_data
     assert client == mock_yolink_client
     assert "device_123" in coordinators
@@ -121,13 +128,18 @@ async def test_async_setup_entry_success(
 
 
 async def test_async_setup_entry_with_paired_devices(
-    hass: HomeAssistant, mock_yolink_client, mock_paired_devices, mock_coordinator
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
+    mock_paired_devices: tuple[Mock, Mock],
+    mock_coordinator: MagicMock,
 ) -> None:
     """Test setup with paired devices."""
+    parent: Mock
+    child: Mock
     parent, child = mock_paired_devices
     mock_yolink_client.get_devices.return_value = [parent, child]
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,
@@ -144,7 +156,7 @@ async def test_async_setup_entry_with_paired_devices(
     assert mock_coordinator.call_count == 2
 
     # Verify parent coordinator was created with paired device
-    calls = mock_coordinator.call_args_list
+    calls: list[Any] = mock_coordinator.call_args_list
     # First call should be for parent device
     assert calls[0][0][2] == parent  # device parameter
     assert calls[0][0][3] == child  # paired_device parameter
@@ -155,14 +167,15 @@ async def test_async_setup_entry_with_paired_devices(
 
 
 async def test_async_setup_entry_auth_failure(
-    hass: HomeAssistant, mock_yolink_client
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
 ) -> None:
     """Test setup fails with authentication error."""
     mock_yolink_client.async_setup.side_effect = YoLinkAuthFailError(
         code="10001", desc="Auth failed"
     )
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,
@@ -170,7 +183,7 @@ async def test_async_setup_entry_auth_failure(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.yolink_local.LocalHubMessageListener"):
-        result = await hass.config_entries.async_setup(entry.entry_id)
+        result: bool = await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert result is False
@@ -178,14 +191,15 @@ async def test_async_setup_entry_auth_failure(
 
 
 async def test_async_setup_entry_client_error(
-    hass: HomeAssistant, mock_yolink_client
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
 ) -> None:
     """Test setup fails with client error."""
     mock_yolink_client.async_setup.side_effect = YoLinkClientError(
         code="10002", desc="Client error"
     )
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,
@@ -193,7 +207,7 @@ async def test_async_setup_entry_client_error(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.yolink_local.LocalHubMessageListener"):
-        result = await hass.config_entries.async_setup(entry.entry_id)
+        result: bool = await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert result is False
@@ -201,13 +215,13 @@ async def test_async_setup_entry_client_error(
 
 
 async def test_async_setup_entry_timeout(
-    hass: HomeAssistant, mock_yolink_client
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
 ) -> None:
     """Test setup fails with timeout."""
-
     mock_yolink_client.async_setup.side_effect = asyncio.TimeoutError
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,
@@ -215,7 +229,7 @@ async def test_async_setup_entry_timeout(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.yolink_local.LocalHubMessageListener"):
-        result = await hass.config_entries.async_setup(entry.entry_id)
+        result: bool = await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert result is False
@@ -223,7 +237,10 @@ async def test_async_setup_entry_timeout(
 
 
 async def test_async_setup_entry_coordinator_not_ready(
-    hass: HomeAssistant, mock_yolink_client, mock_device, mock_coordinator
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
+    mock_device: Mock,
+    mock_coordinator: MagicMock,
 ) -> None:
     """Test setup continues when coordinator first refresh fails."""
     mock_yolink_client.get_devices.return_value = [mock_device]
@@ -231,7 +248,7 @@ async def test_async_setup_entry_coordinator_not_ready(
         ConfigEntryNotReady("Not ready")
     )
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,
@@ -248,12 +265,15 @@ async def test_async_setup_entry_coordinator_not_ready(
 
 
 async def test_async_unload_entry_success(
-    hass: HomeAssistant, mock_yolink_client, mock_device, mock_coordinator
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
+    mock_device: Mock,
+    mock_coordinator: MagicMock,
 ) -> None:
     """Test successful unload of entry."""
     mock_yolink_client.get_devices.return_value = [mock_device]
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,
@@ -275,12 +295,15 @@ async def test_async_unload_entry_success(
 
 
 async def test_async_unload_entry_without_runtime_data(
-    hass: HomeAssistant, mock_yolink_client, mock_device, mock_coordinator
+    hass: HomeAssistant,
+    mock_yolink_client: Mock,
+    mock_device: Mock,
+    mock_coordinator: MagicMock,
 ) -> None:
     """Test unload when runtime_data is None."""
     mock_yolink_client.get_devices.return_value = [mock_device]
 
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         unique_id=TEST_NET_ID,

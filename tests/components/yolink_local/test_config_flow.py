@@ -1,6 +1,8 @@
 """Tests for the YoLink Local config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from collections.abc import Generator
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientError
 import pytest
@@ -19,12 +21,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 # Test data
-TEST_HOST = "192.168.1.100"
-TEST_NET_ID = "test_net_id_123"
-TEST_CLIENT_ID = "test_client_id"
-TEST_CLIENT_SECRET = "test_client_secret"
+TEST_HOST: str = "192.168.1.100"
+TEST_NET_ID: str = "test_net_id_123"
+TEST_CLIENT_ID: str = "test_client_id"
+TEST_CLIENT_SECRET: str = "test_client_secret"
 
-TEST_USER_INPUT = {
+TEST_USER_INPUT: dict[str, str] = {
     CONF_HOST: TEST_HOST,
     CONF_NET_ID: TEST_NET_ID,
     CONF_CLIENT_ID: TEST_CLIENT_ID,
@@ -33,12 +35,12 @@ TEST_USER_INPUT = {
 
 
 @pytest.fixture
-def mock_yolink_client_success():
+def mock_yolink_client_success() -> Generator[MagicMock]:
     """Mock successful YoLinkLocalHubClient."""
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(return_value=True)
         mock_client.return_value = client_instance
         yield mock_client
@@ -46,7 +48,7 @@ def mock_yolink_client_success():
 
 async def test_form_display(hass: HomeAssistant) -> None:
     """Test that the form is displayed correctly."""
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
@@ -55,10 +57,12 @@ async def test_form_display(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_setup_entry, mock_yolink_client_success
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_yolink_client_success: MagicMock,
 ) -> None:
     """Test successful user flow."""
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
@@ -75,16 +79,19 @@ async def test_user_flow_success(
     assert result["result"].unique_id == f"yolink_local_{TEST_NET_ID}"
 
 
-async def test_user_flow_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_user_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test connection error handling."""
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(side_effect=ClientError())
         mock_client.return_value = client_instance
 
-        result = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
@@ -98,16 +105,19 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant, mock_setup_entry) -
         assert result["step_id"] == "user"
 
 
-async def test_user_flow_invalid_auth(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_user_flow_invalid_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test invalid authentication handling."""
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(return_value=False)
         mock_client.return_value = client_instance
 
-        result = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
@@ -122,19 +132,20 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant, mock_setup_entry) -> 
 
 
 async def test_user_flow_unexpected_exception(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test unexpected exception handling."""
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(
             side_effect=Exception("Unexpected error")
         )
         mock_client.return_value = client_instance
 
-        result = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
@@ -149,11 +160,13 @@ async def test_user_flow_unexpected_exception(
 
 
 async def test_user_flow_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry, mock_yolink_client_success
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_yolink_client_success: MagicMock,
 ) -> None:
     """Test duplicate config entry detection."""
     # Create an existing entry
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
@@ -161,7 +174,7 @@ async def test_user_flow_duplicate_entry(
     entry.add_to_hass(hass)
 
     # Start a new flow
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
@@ -182,11 +195,11 @@ async def test_validate_input_success(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(return_value=True)
         mock_client.return_value = client_instance
 
-        result = await validate_input(hass, TEST_USER_INPUT)
+        result: dict[str, str] = await validate_input(hass, TEST_USER_INPUT)
 
         assert result == {"title": "YoLink Local Hub"}
         mock_client.assert_called_once()
@@ -195,11 +208,10 @@ async def test_validate_input_success(hass: HomeAssistant) -> None:
 
 async def test_validate_input_client_error(hass: HomeAssistant) -> None:
     """Test validate_input with ClientError."""
-
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(side_effect=ClientError())
         mock_client.return_value = client_instance
 
@@ -209,11 +221,10 @@ async def test_validate_input_client_error(hass: HomeAssistant) -> None:
 
 async def test_validate_input_invalid_auth(hass: HomeAssistant) -> None:
     """Test validate_input with invalid authentication."""
-
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(return_value=False)
         mock_client.return_value = client_instance
 
@@ -222,18 +233,19 @@ async def test_validate_input_invalid_auth(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_retry_after_error(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that user can retry after an error."""
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         # First attempt fails
         client_instance.authenticate = AsyncMock(return_value=False)
         mock_client.return_value = client_instance
 
-        result = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
@@ -258,11 +270,13 @@ async def test_user_flow_retry_after_error(
 
 
 async def test_reauth_flow_success(
-    hass: HomeAssistant, mock_setup_entry, mock_yolink_client_success
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_yolink_client_success: MagicMock,
 ) -> None:
     """Test successful reauthentication flow."""
     # Create an existing entry
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
@@ -270,7 +284,7 @@ async def test_reauth_flow_success(
     entry.add_to_hass(hass)
 
     # Initialize reauth flow
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
@@ -284,7 +298,7 @@ async def test_reauth_flow_success(
     assert result["errors"] == {}
 
     # Submit reauth with updated credentials
-    updated_input = TEST_USER_INPUT.copy()
+    updated_input: dict[str, str] = TEST_USER_INPUT.copy()
     updated_input[CONF_CLIENT_SECRET] = "new_client_secret"
 
     result = await hass.config_entries.flow.async_configure(
@@ -297,11 +311,12 @@ async def test_reauth_flow_success(
 
 
 async def test_reauth_flow_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth connection error handling."""
     # Create an existing entry
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
@@ -309,7 +324,7 @@ async def test_reauth_flow_cannot_connect(
     entry.add_to_hass(hass)
 
     # Initialize reauth flow
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
@@ -321,7 +336,7 @@ async def test_reauth_flow_cannot_connect(
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(side_effect=ClientError())
         mock_client.return_value = client_instance
 
@@ -335,10 +350,13 @@ async def test_reauth_flow_cannot_connect(
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth_flow_invalid_auth(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_reauth_flow_invalid_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test reauth invalid authentication handling."""
     # Create an existing entry
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
@@ -346,7 +364,7 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant, mock_setup_entry) -
     entry.add_to_hass(hass)
 
     # Initialize reauth flow
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
@@ -358,7 +376,7 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant, mock_setup_entry) -
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(return_value=False)
         mock_client.return_value = client_instance
 
@@ -373,11 +391,12 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant, mock_setup_entry) -
 
 
 async def test_reauth_flow_unexpected_exception(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth unexpected exception handling."""
     # Create an existing entry
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
@@ -385,7 +404,7 @@ async def test_reauth_flow_unexpected_exception(
     entry.add_to_hass(hass)
 
     # Initialize reauth flow
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
@@ -397,7 +416,7 @@ async def test_reauth_flow_unexpected_exception(
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(
             side_effect=Exception("Unexpected error")
         )
@@ -414,11 +433,13 @@ async def test_reauth_flow_unexpected_exception(
 
 
 async def test_reauth_flow_retry_after_error(
-    hass: HomeAssistant, mock_setup_entry, mock_yolink_client_success
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_yolink_client_success: MagicMock,
 ) -> None:
     """Test that user can retry reauth after an error."""
     # Create an existing entry
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
@@ -426,7 +447,7 @@ async def test_reauth_flow_retry_after_error(
     entry.add_to_hass(hass)
 
     # Initialize reauth flow
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
@@ -439,7 +460,7 @@ async def test_reauth_flow_retry_after_error(
     with patch(
         "homeassistant.components.yolink_local.config_flow.YoLinkLocalHubClient"
     ) as mock_client:
-        client_instance = Mock()
+        client_instance: Mock = Mock()
         client_instance.authenticate = AsyncMock(return_value=False)
         mock_client.return_value = client_instance
 
@@ -452,7 +473,7 @@ async def test_reauth_flow_retry_after_error(
         assert result["errors"] == {"base": "invalid_auth"}
 
     # Second attempt succeeds
-    updated_input = TEST_USER_INPUT.copy()
+    updated_input: dict[str, str] = TEST_USER_INPUT.copy()
     updated_input[CONF_CLIENT_SECRET] = "new_client_secret"
 
     result = await hass.config_entries.flow.async_configure(
@@ -465,11 +486,12 @@ async def test_reauth_flow_retry_after_error(
 
 
 async def test_reauth_flow_form_display_with_defaults(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that reauth form displays with correct defaults."""
     # Create an existing entry
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
@@ -477,7 +499,7 @@ async def test_reauth_flow_form_display_with_defaults(
     entry.add_to_hass(hass)
 
     # Initialize reauth flow
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
