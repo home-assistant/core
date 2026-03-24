@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.common import DPCodeEnumWrapper
-from tuya_device_handlers.device_wrapper.vacuum import (
-    VacuumActionWrapper,
-    VacuumActivityWrapper,
+from tuya_device_handlers.definition.vacuum import (
+    TuyaVacuumDefinition,
+    get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
     TuyaVacuumAction,
@@ -26,7 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .entity import TuyaEntity
 
 _TUYA_TO_HA_ACTIVITY_MAPPINGS = {
@@ -55,15 +53,7 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if device.category == DeviceCategory.SD:
                 entities.append(
-                    TuyaVacuumEntity(
-                        device,
-                        manager,
-                        action_wrapper=VacuumActionWrapper.find_dpcode(device),
-                        activity_wrapper=VacuumActivityWrapper.find_dpcode(device),
-                        fan_speed_wrapper=DPCodeEnumWrapper.find_dpcode(
-                            device, DPCode.SUCTION, prefer_function=True
-                        ),
-                    )
+                    TuyaVacuumEntity(device, manager, get_default_definition(device))
                 )
         async_add_entities(entities)
 
@@ -83,37 +73,34 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        *,
-        action_wrapper: DeviceWrapper[TuyaVacuumAction] | None,
-        activity_wrapper: DeviceWrapper[TuyaVacuumActivity] | None,
-        fan_speed_wrapper: DeviceWrapper[str] | None,
+        definition: TuyaVacuumDefinition,
     ) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
-        self._action_wrapper = action_wrapper
-        self._activity_wrapper = activity_wrapper
-        self._fan_speed_wrapper = fan_speed_wrapper
+        self._action_wrapper = definition.action_wrapper
+        self._activity_wrapper = definition.activity_wrapper
+        self._fan_speed_wrapper = definition.fan_speed_wrapper
 
         self._attr_fan_speed_list = []
         self._attr_supported_features = VacuumEntityFeature.SEND_COMMAND
 
-        if action_wrapper:
-            if TuyaVacuumAction.PAUSE in action_wrapper.options:
+        if definition.action_wrapper:
+            if TuyaVacuumAction.PAUSE in definition.action_wrapper.options:
                 self._attr_supported_features |= VacuumEntityFeature.PAUSE
-            if TuyaVacuumAction.RETURN_TO_BASE in action_wrapper.options:
+            if TuyaVacuumAction.RETURN_TO_BASE in definition.action_wrapper.options:
                 self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
-            if TuyaVacuumAction.LOCATE in action_wrapper.options:
+            if TuyaVacuumAction.LOCATE in definition.action_wrapper.options:
                 self._attr_supported_features |= VacuumEntityFeature.LOCATE
-            if TuyaVacuumAction.START in action_wrapper.options:
+            if TuyaVacuumAction.START in definition.action_wrapper.options:
                 self._attr_supported_features |= VacuumEntityFeature.START
-            if TuyaVacuumAction.STOP in action_wrapper.options:
+            if TuyaVacuumAction.STOP in definition.action_wrapper.options:
                 self._attr_supported_features |= VacuumEntityFeature.STOP
 
-        if activity_wrapper:
+        if definition.activity_wrapper:
             self._attr_supported_features |= VacuumEntityFeature.STATE
 
-        if fan_speed_wrapper:
-            self._attr_fan_speed_list = fan_speed_wrapper.options
+        if definition.fan_speed_wrapper:
+            self._attr_fan_speed_list = definition.fan_speed_wrapper.options
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
     @property
