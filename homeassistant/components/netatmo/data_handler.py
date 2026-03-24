@@ -186,7 +186,9 @@ class NetatmoDataHandler:
         We do up to BATCH_SIZE calls in one update in order
         to minimize the calls on the api service.
         """
-        for data_class in list(islice(self._queue, 0, BATCH_SIZE * self._interval_factor)):
+        for data_class in list(
+            islice(self._queue, 0, BATCH_SIZE * self._interval_factor)
+        ):
             if data_class.next_scan > time():
                 continue
 
