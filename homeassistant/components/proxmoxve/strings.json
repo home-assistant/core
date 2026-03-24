@@ -116,6 +116,12 @@
       "container_memory_percentage": {
         "name": "Memory usage percentage"
       },
+      "container_netin": {
+        "name": "Network input"
+      },
+      "container_netout": {
+        "name": "Network output"
+      },
       "container_status": {
         "name": "Status",
         "state": {
@@ -178,6 +184,12 @@
       },
       "vm_memory_percentage": {
         "name": "Memory usage percentage"
+      },
+      "vm_netin": {
+        "name": "Network input"
+      },
+      "vm_netout": {
+        "name": "Network output"
       },
       "vm_status": {
         "name": "Status",
