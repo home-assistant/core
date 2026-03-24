@@ -15,53 +15,91 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
         },
         "data_description": {
-          "password": "The new password for the Proxmox VE server"
+          "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
         },
-        "description": "The connection to the Proxmox VE server requires re-authentication. Please enter your password to continue.",
+        "description": "The connection to the Proxmox VE server requires re-authentication. Please update your credentials to continue.",
         "title": "Re-authenticate Proxmox VE integration"
       },
       "reconfigure": {
         "data": {
+          "auth_method": "[%key:component::proxmoxve::config::step::user::data::auth_method%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::user::data::realm%]",
+          "token": "[%key:component::proxmoxve::config::step::user::data::token%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
+          "auth_method": "[%key:component::proxmoxve::config::step::user::data_description::auth_method%]",
           "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
-          "password": "[%key:component::proxmoxve::config::step::user::data_description::password%]",
           "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::user::data_description::realm%]",
+          "token": "[%key:component::proxmoxve::config::step::user::data_description::token%]",
           "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
           "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"
         },
         "description": "Use the following form to reconfigure your Proxmox VE server connection.",
         "title": "Reconfigure Proxmox VE integration"
       },
+      "reconfigure_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
+        },
+        "data_description": {
+          "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
+        },
+        "description": "[%key:component::proxmoxve::config::step::user_auth::description%]",
+        "title": "[%key:component::proxmoxve::config::step::user_auth::title%]"
+      },
       "user": {
         "data": {
+          "auth_method": "Authentication method",
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "realm": "Realm",
+          "token": "Use an API token",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
+          "auth_method": "Select authentication provider for your Proxmox VE server",
           "host": "The hostname or IP address of your Proxmox VE server",
-          "password": "The password for the Proxmox VE server",
           "port": "The port of your Proxmox VE server (default: 8006)",
-          "realm": "The authentication realm for the Proxmox VE server (default: 'pam')",
+          "token": "Enable to use an API token or leave disabled to authenticate with a password",
           "username": "The username for the Proxmox VE server",
           "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "Enter your Proxmox VE server details to set up the integration.",
         "title": "Connect to Proxmox VE"
+      },
+      "user_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "Realm",
+          "token_id": "Token ID",
+          "token_value": "Secret"
+        },
+        "data_description": {
+          "password": "The password for the user",
+          "realm": "Specify your authentication realm",
+          "token_id": "The name given to the API token",
+          "token_value": "The secret generated for the API token"
+        },
+        "description": "Enter your credentials to authenticate with Proxmox VE.",
+        "title": "Proxmox VE credentials"
       }
     }
   },
@@ -265,6 +303,15 @@
     "deprecated_yaml_import_issue_ssl_error": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    }
+  },
+  "selector": {
+    "auth_method": {
+      "options": {
+        "other": "Use another realm (specified in the next step)",
+        "pam": "Linux user - PAM standard authentication",
+        "pve": "Proxmox user - Proxmox VE authentication server"
+      }
     }
   }
 }

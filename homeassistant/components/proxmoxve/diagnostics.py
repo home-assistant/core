@@ -10,8 +10,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import ProxmoxConfigEntry
+from .const import CONF_TOKEN_SECRET
 
-TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_HOST]
+TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_TOKEN_SECRET]
 
 
 async def async_get_config_entry_diagnostics(

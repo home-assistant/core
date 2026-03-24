@@ -25,10 +25,17 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    AUTH_OTHER,
+    AUTH_PAM,
+    AUTH_PVE,
+    CONF_AUTH_METHOD,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
+    CONF_TOKEN,
+    CONF_TOKEN_ID,
+    CONF_TOKEN_SECRET,
     CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
@@ -53,9 +60,15 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
                         vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_PASSWORD): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Required(
+                            CONF_AUTH_METHOD, default=DEFAULT_REALM
+                        ): cv.string,
                         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
+                        vol.Optional(CONF_TOKEN, default=False): cv.boolean,
+                        vol.Optional(CONF_TOKEN_ID): cv.string,
+                        vol.Optional(CONF_TOKEN_SECRET): cv.string,
                         vol.Optional(
                             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                         ): cv.boolean,
@@ -172,6 +185,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
             )
 
         hass.config_entries.async_update_entry(entry, version=2)
+
+    # Migration for additional configuration options added to support API tokens
+    if entry.version < 3:
+        data = dict(entry.data)
+        realm = data[CONF_REALM].lower()
+
+        # If the realm is one of the base providers, set the provider to match the realm.
+        data[CONF_AUTH_METHOD] = realm if realm in (AUTH_PAM, AUTH_PVE) else AUTH_OTHER
+        data.setdefault(CONF_TOKEN, False)
+
+        hass.config_entries.async_update_entry(entry, data=data, version=3)
 
     return True
 
