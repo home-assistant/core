@@ -36,15 +36,15 @@
   "services": {
     "decrement": {
       "description": "Decrements the value of an input number by 1 step.",
-      "name": "Decrement"
+      "name": "Decrement input number"
     },
     "increment": {
       "description": "Increments the value of an input number by 1 step.",
-      "name": "Increment"
+      "name": "Increment input number"
     },
     "reload": {
       "description": "Reloads helpers from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload input numbers"
     },
     "set_value": {
       "description": "Sets the value of an input number.",
@@ -54,7 +54,7 @@
           "name": "Value"
         }
       },
-      "name": "Set"
+      "name": "Set input number value"
     }
   },
   "title": "Input number"

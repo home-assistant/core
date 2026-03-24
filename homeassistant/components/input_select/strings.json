@@ -19,55 +19,55 @@
   "services": {
     "reload": {
       "description": "Reloads helpers from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload input selects"
     },
     "select_first": {
-      "description": "Selects the first option.",
-      "name": "First"
+      "description": "Selects the first option of an input select.",
+      "name": "Select first input select option"
     },
     "select_last": {
-      "description": "Selects the last option.",
-      "name": "Last"
+      "description": "Selects the last option of an input select.",
+      "name": "Select last input select option"
     },
     "select_next": {
-      "description": "Selects the next option.",
+      "description": "Selects the next option of an input select.",
       "fields": {
         "cycle": {
           "description": "If the option should cycle from the last to the first option on the list.",
           "name": "Cycle"
         }
       },
-      "name": "Next"
+      "name": "Select next input select option"
     },
     "select_option": {
-      "description": "Selects an option.",
+      "description": "Selects an option of an input select.",
       "fields": {
         "option": {
           "description": "Option to be selected.",
           "name": "Option"
         }
       },
-      "name": "Select"
+      "name": "Select input select option"
     },
     "select_previous": {
-      "description": "Selects the previous option.",
+      "description": "Selects the previous option of an input select.",
       "fields": {
         "cycle": {
           "description": "If the option should cycle from the first to the last option on the list.",
           "name": "[%key:component::input_select::services::select_next::fields::cycle::name%]"
         }
       },
-      "name": "Previous"
+      "name": "Select previous input select option"
     },
     "set_options": {
-      "description": "Sets the options.",
+      "description": "Sets the options of an input select.",
       "fields": {
         "options": {
           "description": "List of options.",
           "name": "Options"
         }
       },
-      "name": "Set options"
+      "name": "Set input select options"
     }
   },
   "title": "Input select"
