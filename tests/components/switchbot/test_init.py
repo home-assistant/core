@@ -5,17 +5,25 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 
 from . import (
+    AIR_PURIFIER_PM25_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
+    AIR_PURIFIER_VOC_SERVICE_INFO,
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
@@ -211,3 +219,83 @@ async def test_migrate_entry_fails_for_future_version(
     # Entry should not be loaded due to failed migration
     assert entry.version == 2
     assert entry.minor_version == 1
+
+
+@pytest.mark.parametrize(
+    ("old_sensor_type", "service_info", "expected_sensor_type"),
+    [
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+            AIR_PURIFIER_VOC_SERVICE_INFO,
+            "air_purifier_jp",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+            AIR_PURIFIER_PM25_SERVICE_INFO,
+            "air_purifier_us",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+            AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
+            "air_purifier_table_jp",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+            AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
+            "air_purifier_table_us",
+        ),
+    ],
+)
+async def test_migrate_deprecated_air_purifier_sensor_type(
+    hass: HomeAssistant,
+    old_sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    expected_sensor_type: str,
+) -> None:
+    """Test that deprecated air_purifier sensor types are migrated via BLE advertisement."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: old_sensor_type,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_SENSOR_TYPE] == expected_sensor_type
+
+
+async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
+    hass: HomeAssistant,
+) -> None:
+    """Test deprecated air_purifier type entry is not loaded when device is out of range."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # sensor_type unchanged and entry not loaded; will retry when device advertises
+    assert entry.data[CONF_SENSOR_TYPE] == DEPRECATED_SENSOR_TYPE_AIR_PURIFIER
+    assert entry.state is ConfigEntryState.SETUP_RETRY
