@@ -6,7 +6,7 @@
     "is_not_detected": {
       "condition": "mdi:brightness-4"
     },
-    "value": {
+    "is_value": {
       "condition": "mdi:brightness-percent"
     }
   },

@@ -51,7 +51,7 @@ async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
     [
         "illuminance.is_detected",
         "illuminance.is_not_detected",
-        "illuminance.value",
+        "illuminance.is_value",
     ],
 )
 async def test_illuminance_conditions_gated_by_labs_flag(
@@ -159,7 +159,7 @@ async def test_illuminance_binary_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_any(
-        "illuminance.value",
+        "illuminance.is_value",
         device_class="illuminance",
         unit_attributes=_ILLUMINANCE_UNIT_ATTRS,
     ),
@@ -195,7 +195,7 @@ async def test_illuminance_value_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_all(
-        "illuminance.value",
+        "illuminance.is_value",
         device_class="illuminance",
         unit_attributes=_ILLUMINANCE_UNIT_ATTRS,
     ),
@@ -231,7 +231,7 @@ async def test_illuminance_value_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_any(
-        "illuminance.value",
+        "illuminance.is_value",
         device_class="illuminance",
         unit_attributes=_ILLUMINANCE_UNIT_ATTRS,
     ),
@@ -267,7 +267,7 @@ async def test_illuminance_value_number_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_all(
-        "illuminance.value",
+        "illuminance.is_value",
         device_class="illuminance",
         unit_attributes=_ILLUMINANCE_UNIT_ATTRS,
     ),

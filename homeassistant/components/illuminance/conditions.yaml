@@ -39,7 +39,7 @@ is_detected: *condition_common
 
 is_not_detected: *condition_common
 
-value:
+is_value:
   target:
     entity:
       - domain: sensor

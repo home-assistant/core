@@ -32,7 +32,9 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_not_detected": make_entity_state_condition(
         ILLUMINANCE_DETECTED_DOMAIN_SPECS, STATE_OFF
     ),
-    "value": make_entity_numerical_condition(ILLUMINANCE_VALUE_DOMAIN_SPECS, LIGHT_LUX),
+    "is_value": make_entity_numerical_condition(
+        ILLUMINANCE_VALUE_DOMAIN_SPECS, LIGHT_LUX
+    ),
 }
 
 
