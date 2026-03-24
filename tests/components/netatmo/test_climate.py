@@ -735,6 +735,32 @@ async def test_service_schedule_thermostats(
     assert "summer is not a valid schedule" in caplog.text
 
 
+async def test_service_set_schedule_updates_select_entity(
+    hass: HomeAssistant, config_entry, netatmo_auth: AsyncMock
+) -> None:
+    """Test that set_schedule service updates select entity state via internal signal."""
+    with selected_platforms([Platform.CLIMATE, "select"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    climate_entity_livingroom = "climate.livingroom"
+    select_entity = "select.myhome"
+
+    assert hass.states.get(select_entity).state == "Default"
+
+    with patch("pyatmo.home.Home.async_switch_schedule"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULE,
+            {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "Winter"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # Select entity must reflect the new schedule immediately via SIGNAL_SCHEDULE_CHANGED
+    assert hass.states.get(select_entity).state == "Winter"
+
+
 async def test_service_preset_mode_with_end_time_thermostats(
     hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, netatmo_auth
 ) -> None:
