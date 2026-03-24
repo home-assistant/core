@@ -26,6 +26,7 @@ def mock_transceiver() -> MagicMock:
     transceiver.connect = AsyncMock(return_value=True)
     transceiver.reconnect = AsyncMock(return_value=True)
     transceiver.disconnect = AsyncMock()
+    transceiver.dispose = AsyncMock()
     transceiver.set_disconnect_callback = MagicMock()
     return transceiver
 
@@ -257,10 +258,10 @@ async def test_async_shutdown(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
 ) -> None:
-    """Test clean shutdown disconnects transceiver."""
+    """Test clean shutdown disposes transceiver."""
     await coordinator.async_shutdown()
 
-    mock_transceiver.disconnect.assert_awaited_once()
+    mock_transceiver.dispose.assert_awaited_once()
 
 
 async def test_async_shutdown_error(
@@ -268,9 +269,9 @@ async def test_async_shutdown_error(
     mock_transceiver: MagicMock,
 ) -> None:
     """Test shutdown handles errors gracefully."""
-    mock_transceiver.disconnect = AsyncMock(side_effect=OSError("port busy"))
+    mock_transceiver.dispose = AsyncMock(side_effect=OSError("port busy"))
 
     # Should not raise
     await coordinator.async_shutdown()
 
-    mock_transceiver.disconnect.assert_awaited_once()
+    mock_transceiver.dispose.assert_awaited_once()

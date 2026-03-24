@@ -848,6 +848,9 @@ eagle100==0.1.1
 # homeassistant.components.easyenergy
 easyenergy==2.2.0
 
+# homeassistant.components.easywave
+easywave-home-control==0.1.1
+
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
 

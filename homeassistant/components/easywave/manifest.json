@@ -9,7 +9,7 @@
   "iot_class": "local_polling",
   "loggers": ["serial"],
   "quality_scale": "bronze",
-  "requirements": ["pyserial==3.5"],
+  "requirements": ["pyserial==3.5", "easywave-home-control==0.1.1"],
   "single_config_entry": true,
   "usb": [
     {

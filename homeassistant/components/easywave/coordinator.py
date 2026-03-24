@@ -145,7 +145,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and disconnect transceiver."""
         try:
-            await self.transceiver.disconnect()
+            await self.transceiver.dispose()
             _LOGGER.debug("Coordinator shutdown complete")
         except (OSError, TimeoutError) as err:
             _LOGGER.error("Error during coordinator shutdown: %s", err)

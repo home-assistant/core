@@ -8,17 +8,24 @@ import contextlib
 import logging
 import time
 
+from easywave_home_control import RX11Device, RX11ErrorCode
 import serial
 import serial.tools.list_ports
 
 from homeassistant.core import HomeAssistant
 
 from .const import SUPPORTED_USB_IDS
-from .rx_module import _SERIAL_ERRORS, ErrorCode, RxModule
 
 _LOGGER = logging.getLogger(__name__)
 
-_SERIAL_VALUE_ERRORS: tuple[type[Exception], ...] = (*_SERIAL_ERRORS, ValueError)
+_SERIAL_ERRORS: tuple[type[Exception], ...] = (
+    serial.SerialException,
+    serial.SerialTimeoutException,
+)
+_SERIAL_OR_OS_ERRORS: tuple[type[Exception], ...] = (
+    *_SERIAL_ERRORS,
+    OSError,
+)
 
 
 class RX11Transceiver:
@@ -29,12 +36,7 @@ class RX11Transceiver:
 
     Implements connection health monitoring and graceful disconnect/reconnect
     callbacks for notifying listeners of connection state changes.
-
-    Pattern based on github.com/eldateas/HomeAssistant-Integration
     """
-
-    # Serial connection parameters
-    BAUDRATE = 115200
 
     # Connection health
     HEALTH_CHECK_INTERVAL = 30.0  # seconds
@@ -47,8 +49,6 @@ class RX11Transceiver:
 
         # USB device identification (for device swap detection)
         self.usb_serial_number: str | None = None
-        self.usb_vid: int | None = None
-        self.usb_pid: int | None = None
 
         # Version information
         self.hw_version: str | None = None
@@ -56,11 +56,10 @@ class RX11Transceiver:
 
         # Connection tracking
         self._last_disconnect_time: float | None = None
-        self._hardware_error = False
         self._reconnect_attempts = 0
 
-        # RxModule instance for protocol communication
-        self._rxmodule: RxModule | None = None
+        # Device instance for protocol communication (async)
+        self._device: RX11Device | None = None
 
         # Callbacks for connection state changes
         self._disconnect_callback: Callable[[], None] | None = None
@@ -88,17 +87,18 @@ class RX11Transceiver:
                 _LOGGER.error("Error in disconnect callback: %s", err)
 
     async def connect(self) -> bool:
-        """Connect to RX11 transceiver using RxModule protocol.
+        """Connect to RX11 transceiver using RX11Device.
 
         1. Searches for RX11 device by VID/PID
-        2. Creates RxModule instance
-        3. Connects and starts serial handler thread
-        4. Waits for startup tolerance to expire
-        5. Queries hardware/firmware versions
-        6. Starts health check
+        2. Creates RX11Device instance
+        3. Connects and queries device info
+        4. Starts health check
 
         Returns True if connected, False if device not found/error.
         """
+        if self._disposed:
+            return False
+
         async with self._lock:
             if self.is_connected:
                 _LOGGER.debug("Already connected to RX11")
@@ -112,7 +112,6 @@ class RX11Transceiver:
                         return True
 
                 # Configured path failed or not set — search by VID/PID
-
                 port_info = await self.hass.async_add_executor_job(
                     self._find_usb_device
                 )
@@ -121,88 +120,74 @@ class RX11Transceiver:
                     if self._reconnect_attempts == 0:
                         _LOGGER.warning("EASYWAVE device not found")
                     self.is_connected = False
-                    self._hardware_error = True
                     return False
 
-                device_path, serial_number, vid, pid = port_info
+                device_path, serial_number = port_info
                 self.device_path = device_path
                 self.usb_serial_number = serial_number
-                self.usb_vid = vid
-                self.usb_pid = pid
                 self._reconnect_attempts = 0
-                self._hardware_error = False
 
-                # Connect using RxModule (replaces old serial connection logic)
+                # Connect using RX11Device
                 if not await self._try_connect_to_path(device_path):
                     if self._reconnect_attempts == 0:
                         _LOGGER.warning("Failed to connect to RX11 at %s", device_path)
                     self.is_connected = False
-                    self._hardware_error = True
                     return False
 
             except _SERIAL_ERRORS as err:
                 _LOGGER.debug("Cannot connect to RX11: %s", err)
                 self.is_connected = False
-                self._hardware_error = True
                 return False
             else:
                 return True
 
     async def _try_connect_to_path(self, device_path: str) -> bool:
-        """Try to connect to RX11 at a specific path using RxModule protocol.
+        """Try to connect to RX11 at a specific path using RX11Device.
 
         Follows the proven connect sequence:
-        1. RxModule.connect() — opens serial, drains buffer, starts handler thread
-        2. Short settle time — let serial interface stabilize
-        3. flush_serial_buffer() — remove any remaining stale data
-        4. Query versions with retry — verify connection is alive
+        1. RX11Device() — creates RX11Device instance
+        2. RX11Device.connect() — connects and starts serial handler thread
+        3. Short settle time — let serial interface stabilize
+        4. Query device info — verify connection is alive
         5. Start health check
 
         Returns True if connection successful, False otherwise.
         """
         try:
-            # Create RxModule instance
-            self._rxmodule = RxModule(port=device_path, baudrate=self.BAUDRATE)
+            # Create RX11Device instance directly
+            self._device = RX11Device(port=device_path)
 
-            # Connect RxModule (blocking - runs in executor)
-            connect_success = await self.hass.async_add_executor_job(
-                self._rxmodule.connect
-            )
+            if not self._device:
+                return False
 
-            if not connect_success:
-                if self._rxmodule:
-                    with contextlib.suppress(*_SERIAL_ERRORS):
-                        await self.hass.async_add_executor_job(self._rxmodule.dispose)
-                    self._rxmodule = None
+            # Connect to the device - this opens the serial connection and starts the handler thread
+            connect_ok = await self._device.connect()
+            if not connect_ok:
+                _LOGGER.warning("Failed to connect RX11Device at %s", device_path)
+                if self._device:
+                    with contextlib.suppress(*_SERIAL_ERRORS, OSError):
+                        await self._device.disconnect()
+                    self._device = None
                 return False
 
             self.is_connected = True
             self.device_path = device_path
 
-            # Register disconnect callback so the serial handler thread
-            # can notify us immediately when USB is unplugged.
-            self._rxmodule.set_disconnect_callback(self._on_rxmodule_disconnect)
-
             # Wait for serial interface to be fully ready (avoid race conditions)
             # This matches the HACS settle time that prevents startup errors
-            await asyncio.sleep(0.8)
-
-            # Final buffer flush right before version queries to remove any
-            # stale data that arrived during the settle window
-            await self.hass.async_add_executor_job(self._rxmodule.flush_serial_buffer)
+            await asyncio.sleep(1.5)
 
             # Fetch versions BEFORE starting any continuous receive loops
-            # Both queries use synchronous request/response matching
             versions_ok = await self._ensure_versions_fetched()
             if not versions_ok:
                 _LOGGER.warning(
                     "Failed to query RX11 versions at %s; disconnecting",
                     device_path,
                 )
-                if self._rxmodule:
-                    with contextlib.suppress(*_SERIAL_ERRORS):
-                        await self.hass.async_add_executor_job(self._rxmodule.dispose)
-                    self._rxmodule = None
+                if self._device:
+                    with contextlib.suppress(*_SERIAL_ERRORS, OSError):
+                        await self._device.disconnect()
+                    self._device = None
                 self.is_connected = False
                 self.device_path = None
                 return False
@@ -215,21 +200,24 @@ class RX11Transceiver:
                 self.fw_version or "unknown",
             )
 
+            # Setup device callbacks for library-detected disconnects
+            self._setup_device_callbacks()
+
             # Start health check
             await self._start_health_check()
 
-        except _SERIAL_ERRORS as err:
+        except _SERIAL_OR_OS_ERRORS as err:
             _LOGGER.warning("Error connecting to RX11 at %s: %s", device_path, err)
-            if self._rxmodule:
-                with contextlib.suppress(*_SERIAL_ERRORS):
-                    await self.hass.async_add_executor_job(self._rxmodule.dispose)
-                self._rxmodule = None
+            if self._device:
+                with contextlib.suppress(*_SERIAL_ERRORS, OSError):
+                    await self._device.disconnect()
+                self._device = None
             return False
         else:
             return True
 
     async def _refresh_usb_identity(self) -> None:
-        """Read actual USB serial/VID/PID from the connected port and update identity."""
+        """Read USB serial number from the connected port and update identity."""
         if not self.device_path:
             return
         try:
@@ -241,13 +229,11 @@ class RX11Transceiver:
                 return None
 
             port = await self.hass.async_add_executor_job(_scan)
-            if port and port.vid and port.pid:
+            if port:
                 old_serial = self.usb_serial_number
                 self.usb_serial_number = (
                     port.serial_number or self.usb_serial_number or "unknown"
                 )
-                self.usb_vid = port.vid
-                self.usb_pid = port.pid
                 if old_serial and old_serial != self.usb_serial_number:
                     _LOGGER.info(
                         "Device swap detected: %s -> %s",
@@ -261,18 +247,20 @@ class RX11Transceiver:
 
     async def disconnect(self) -> None:
         """Disconnect from the RX11 transceiver."""
-        if self._disposed:
-            return
-
         async with self._lock:
             # Stop health check
             await self._stop_health_check()
 
-            # Disconnect RxModule
-            if self._rxmodule:
-                with contextlib.suppress(*_SERIAL_ERRORS):
-                    await self.hass.async_add_executor_job(self._rxmodule.dispose)
-                self._rxmodule = None
+            # Clear device callbacks
+            if self._device:
+                self._device.set_disconnect_callback(None)
+                self._device.set_reconnect_callback(None)
+
+            # Disconnect device
+            if self._device:
+                with contextlib.suppress(*_SERIAL_ERRORS, OSError):
+                    await self._device.disconnect()
+                self._device = None
 
             self.is_connected = False
             self._last_disconnect_time = time.time()
@@ -281,11 +269,11 @@ class RX11Transceiver:
         """Dispose of resources and clean up."""
         if self._disposed:
             return
-        await self.disconnect()
         self._disposed = True
+        await self.disconnect()
 
     async def _start_health_check(self) -> None:
-        """Start health check task for RxModule connection monitoring."""
+        """Start health check task for device connection monitoring."""
         if self._health_check_task:
             return  # Already running
 
@@ -305,84 +293,114 @@ class RX11Transceiver:
                 await task
 
     async def _health_check_loop(self) -> None:
-        """Monitor RxModule connection health.
-
-        Checks if module is still in good state. If connection fails,
-        marks as disconnected.
-        """
+        """Monitor device connection health using periodic ping requests."""
         try:
+            consecutive_failures = 0
+            max_consecutive_failures = 3
+
             while not self._health_check_stopping:
                 try:
                     await asyncio.sleep(self.HEALTH_CHECK_INTERVAL)
 
-                    if not self.is_connected or not self._rxmodule:
+                    if not self.is_connected or not self._device:
+                        consecutive_failures = 0
                         continue
 
-                    # Check if RxModule is still healthy
-                    if not self._rxmodule.is_connected or not self._rxmodule.state_good:
-                        _LOGGER.warning("RxModule health check failed")
-                        await self._handle_rxmodule_disconnect()
-                        break
+                    # Health check: Ping device to verify connection is active
+                    connected = False
+                    with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
+                        connected = await self._device.ping_request()
+
+                    if connected:
+                        consecutive_failures = 0
+                        _LOGGER.debug("Device health check passed")
+                    else:
+                        consecutive_failures += 1
+                        _LOGGER.warning(
+                            "Device health check failed (%d/%d)",
+                            consecutive_failures,
+                            max_consecutive_failures,
+                        )
+
+                        if consecutive_failures >= max_consecutive_failures:
+                            _LOGGER.error(
+                                "Device health check failed %d times, disconnecting",
+                                max_consecutive_failures,
+                            )
+                            await self._handle_device_disconnect()
+                            break
 
                 except asyncio.CancelledError:
                     break
-                except _SERIAL_ERRORS as e:
+                except _SERIAL_OR_OS_ERRORS as e:
                     _LOGGER.debug("Error in health check: %s", e)
                     await asyncio.sleep(1.0)
         finally:
             self._health_check_task = None
 
-    async def _handle_rxmodule_disconnect(self) -> None:
-        """Handle RxModule disconnect on the Home Assistant event loop."""
+    def _setup_device_callbacks(self) -> None:
+        """Setup device disconnect/reconnect callbacks."""
+        if self._device:
+            # RxModule calls these when errors occur
+            self._device.set_disconnect_callback(self._on_device_disconnect)
+            self._device.set_reconnect_callback(self._on_device_reconnect)
+
+    def _on_device_disconnect(self) -> None:
+        """Handle device disconnect detected by RxModule."""
+        _LOGGER.warning("Device disconnect detected by RxModule")
+        self.hass.async_create_task(self._handle_device_disconnect())
+
+    def _on_device_reconnect(self) -> None:
+        """Handle device reconnect detected by RxModule."""
+        _LOGGER.info("Device reconnect detected by RxModule")
+
+    async def _handle_device_disconnect(self) -> None:
+        """Handle device disconnect on the Home Assistant event loop."""
         async with self._lock:
             if not self.is_connected:
                 return
             self.is_connected = False
-            self._hardware_error = True
 
         self._notify_disconnect()
 
-        # Schedule full cleanup (stop health check, dispose RxModule) outside
+        # Schedule full cleanup (stop health check, dispose device) outside
         # the lock to avoid deadlocks.
         async def _cleanup_disconnect() -> None:
-            """Perform full cleanup after an RxModule-initiated disconnect."""
+            """Perform full cleanup after a device-initiated disconnect."""
             await self.disconnect()
 
         self.hass.async_create_background_task(
-            _cleanup_disconnect(), "easywave rxmodule disconnect cleanup"
+            _cleanup_disconnect(), "easywave device disconnect cleanup"
         )
-
-    def _on_rxmodule_disconnect(self) -> None:
-        """Called from RxModule serial handler thread on USB disconnect."""
-
-        # Marshal the actual disconnect handling back onto the HA event loop
-        # to avoid unsynchronized cross-thread state changes.
-        def _schedule_disconnect() -> None:
-            self.hass.async_create_background_task(
-                self._handle_rxmodule_disconnect(), "easywave rxmodule disconnect"
-            )
-
-        self.hass.loop.call_soon_threadsafe(_schedule_disconnect)
 
     async def _ensure_versions_fetched(self) -> bool:
         """Ensure hardware and firmware versions are fetched.
 
-        Both version queries use synchronous request/response matching.
-        Includes retry with buffer flush between attempts, matching the
-        proven HACS approach.
+        Uses RxModule query methods to get hardware and firmware versions.
+        Includes retry with sleep between attempts.
 
         Returns True if at least one version was obtained successfully.
         """
-        if not self._rxmodule:
+        if not self._device:
             return False
 
         # Query hardware version with retry
         hw_version = None
         for attempt in range(3):
-            hw = await self.hass.async_add_executor_job(self._query_hw_version)
-            if hw and hw not in {"unknown", "error"}:
-                hw_version = hw
-                break
+            try:
+                result, hw_bytes = await self._device.query_hw_version(timeout=5.0)
+                if result == RX11ErrorCode.SUCCESS:
+                    # Find null terminator and decode
+                    null_idx = hw_bytes.find(0)
+                    if null_idx >= 0:
+                        hw_bytes = hw_bytes[:null_idx]
+                    hw_str = hw_bytes.decode("ascii", errors="ignore").strip()
+                    if hw_str:
+                        hw_version = hw_str
+                        break
+            except _SERIAL_OR_OS_ERRORS:
+                pass
+
             if attempt < 2:
                 wait_time = 0.5 * (attempt + 1)
                 _LOGGER.debug(
@@ -391,18 +409,22 @@ class RX11Transceiver:
                     wait_time,
                 )
                 await asyncio.sleep(wait_time)
-                # Flush serial buffer before retry to clear remaining stale data
-                await self.hass.async_add_executor_job(
-                    self._rxmodule.flush_serial_buffer
-                )
 
         # Query firmware version with retry
         fw_version = None
         for attempt in range(3):
-            fw = await self.hass.async_add_executor_job(self._query_fw_version)
-            if fw and fw not in {"unknown", "error"}:
-                fw_version = fw
-                break
+            try:
+                result, major, minor, incomplete = await self._device.query_fw_version(
+                    timeout=5.0
+                )
+                if result == RX11ErrorCode.SUCCESS:
+                    fw_version = f"{major}.{minor}"
+                    if incomplete:
+                        fw_version += " (incomplete)"
+                    break
+            except _SERIAL_OR_OS_ERRORS:
+                pass
+
             if attempt < 2:
                 wait_time = 0.5 * (attempt + 1)
                 _LOGGER.debug(
@@ -411,9 +433,6 @@ class RX11Transceiver:
                     wait_time,
                 )
                 await asyncio.sleep(wait_time)
-                await self.hass.async_add_executor_job(
-                    self._rxmodule.flush_serial_buffer
-                )
 
         self.hw_version = hw_version or "unknown"
         self.fw_version = fw_version or "unknown"
@@ -423,56 +442,13 @@ class RX11Transceiver:
             return False
         return True
 
-    def _query_hw_version(self) -> str | None:
-        """Query hardware version (blocking)."""
-        if not self._rxmodule:
-            return None
-        try:
-            result, hw_bytes = self._rxmodule.query_hw_version(timeout=5.0)
-            if result == ErrorCode.SUCCESS:
-                # Find null terminator and decode
-                null_idx = hw_bytes.find(0)
-                if null_idx >= 0:
-                    hw_bytes = hw_bytes[:null_idx]
-                hw_str = hw_bytes.decode("ascii", errors="ignore").strip()
-                if hw_str:
-                    return hw_str
-            elif result == ErrorCode.ERR_FAILSTATE:
-                _LOGGER.debug("HW query: device in failstate")
-            else:
-                _LOGGER.debug("HW query failed: 0x%02x", result)
-        except _SERIAL_VALUE_ERRORS as e:
-            _LOGGER.debug("HW query exception: %s", e)
-        return None
-
-    def _query_fw_version(self) -> str | None:
-        """Query firmware version (blocking). Returns fw_version string or None."""
-        if not self._rxmodule:
-            return None
-        try:
-            result, major, minor, incomplete = self._rxmodule.query_fw_version(
-                timeout=5.0
-            )
-            if result == ErrorCode.SUCCESS:
-                version = f"{major}.{minor}"
-                if incomplete:
-                    version += " (incomplete)"
-                return version
-            if result == ErrorCode.ERR_FAILSTATE:
-                _LOGGER.debug("FW query: device in failstate")
-            else:
-                _LOGGER.debug("FW query failed: 0x%02x", result)
-        except _SERIAL_VALUE_ERRORS as e:
-            _LOGGER.debug("FW query exception: %s", e)
-        return None
-
-    def _find_usb_device(self) -> tuple[str, str, int, int] | None:
+    def _find_usb_device(self) -> tuple[str, str] | None:
         """Find EASYWAVE device by VID/PID.
 
         This is a blocking call and should only be executed in an executor.
         Searches through all supported device types.
 
-        Returns: (device_path, serial_number, vid, pid) or None if not found
+        Returns: (device_path, serial_number) or None if not found
         """
         ports = list(serial.tools.list_ports.comports())
 
@@ -483,8 +459,6 @@ class RX11Transceiver:
                     return (
                         port.device,
                         port.serial_number or "unknown",
-                        port.vid or 0,
-                        port.pid or 0,
                     )
 
         return None
@@ -494,7 +468,7 @@ class RX11Transceiver:
         try:
             test_port = serial.Serial(
                 port=port_path,
-                baudrate=self.BAUDRATE,
+                baudrate=115200,
                 timeout=0.5,
             )
             test_port.close()
@@ -515,6 +489,9 @@ class RX11Transceiver:
         Returns:
             True if connection successful, False otherwise
         """
+        if self._disposed:
+            return False
+
         try:
             # Add delay if recently disconnected to allow device to reset
             if self._last_disconnect_time:
