@@ -2,11 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.cielo_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.components.cielo_home.const import DOMAIN
+
 from tests.common import MockConfigEntry
 
 

@@ -36,6 +36,7 @@ CIELO_TO_HA_HVAC: dict[str, HVACMode] = {
     "heat_cool": HVACMode.HEAT_COOL,
     "off": HVACMode.OFF,
 }
+HA_TO_CIELO_HVAC: dict[HVACMode, str] = {v: k for k, v in CIELO_TO_HA_HVAC.items()}
 
 
 async def async_setup_entry(
@@ -68,8 +69,6 @@ def async_handle_api_call(
         except CIELO_ERRORS as err:
             if isinstance(err, TimeoutError):
                 raise HomeAssistantError("API call timed out") from err
-            if isinstance(err, ConnectionError):
-                raise HomeAssistantError("Network error during API call") from err
             raise HomeAssistantError("Unable to perform API call") from err
 
         LOGGER.debug(
@@ -172,14 +171,13 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         mode = self.client.hvac_mode()
-        return CIELO_TO_HA_HVAC.get(mode)
+        return CIELO_TO_HA_HVAC.get(mode, mode)
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
         modes = self.client.hvac_modes() or []
-
-        return [CIELO_TO_HA_HVAC[m] for m in modes if m in CIELO_TO_HA_HVAC]
+        return [CIELO_TO_HA_HVAC.get(m, m) for m in modes]
 
     @property
     def current_temperature(self) -> float | None:
@@ -227,7 +225,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         """Return the list of available swing modes.
 
         Swing modes are normalized in the backend to snake_case values
-        compatible with Home Assistant (e.g. "auto", "swing", "position_1", "position_2").
+        compatible with Home Assistant (e.g. "auto", "swing").
         These values align with the integration translations so HA can display
         proper labels and icons.
         """
@@ -280,7 +278,8 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
     @async_handle_api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
-        return await self.client.async_set_hvac_mode(hvac_mode)
+        cielo_mode = HA_TO_CIELO_HVAC.get(hvac_mode)
+        return await self.client.async_set_hvac_mode(cielo_mode)
 
     @async_handle_api_call
     async def async_set_swing_mode(self, swing_mode: str) -> None:
