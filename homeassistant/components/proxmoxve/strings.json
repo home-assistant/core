@@ -98,8 +98,8 @@
           "token_id": "The name given to the API token",
           "token_value": "The secret generated for the API token"
         },
-        "description": "Enter your Proxmox VE server details to set up the integration.",
-        "title": "Connect to Proxmox VE"
+        "description": "Enter your credentials to authenticate with Proxmox VE.",
+        "title": "Proxmox VE credentials"
       }
     }
   },

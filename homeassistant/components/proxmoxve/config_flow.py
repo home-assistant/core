@@ -184,7 +184,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reauth: ask for new password and validate."""
+        """Handle reauth: ask for updated credentials and validate."""
         errors: dict[str, str] = {}
         self._entry = self._get_reauth_entry()
         if user_input is not None:
