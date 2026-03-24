@@ -14,10 +14,7 @@ from homeassistant.const import CONF_ADDRESS, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DATA_COORDINATOR,
@@ -27,6 +24,7 @@ from .const import (
     ESIID,
     METER_NUMBER,
 )
+from .coordinator import SmartMeterTexasCoordinator
 
 
 async def async_setup_entry(
@@ -44,7 +42,9 @@ async def async_setup_entry(
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+class SmartMeterTexasSensor(
+    CoordinatorEntity[SmartMeterTexasCoordinator], RestoreEntity, SensorEntity
+):
     """Representation of an Smart Meter Texas sensor."""
 
     _attr_device_class = SensorDeviceClass.ENERGY
@@ -52,7 +52,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_available = False
 
-    def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, meter: Meter, coordinator: SmartMeterTexasCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.meter = meter

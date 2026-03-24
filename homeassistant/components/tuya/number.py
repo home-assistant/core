@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeIntegerWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
@@ -25,7 +27,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DeviceWrapper, DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -491,9 +492,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         dpcode_wrapper: DeviceWrapper[float],
     ) -> None:
         """Init Tuya sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = dpcode_wrapper
 
         self._attr_native_max_value = dpcode_wrapper.max_value

@@ -7,11 +7,100 @@
       "reset": {
         "default": "mdi:restart"
       },
+      "shutdown": {
+        "default": "mdi:power"
+      },
       "start": {
         "default": "mdi:play"
       },
       "stop": {
         "default": "mdi:stop"
+      }
+    },
+    "sensor": {
+      "container_cpu": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "container_disk": {
+        "default": "mdi:harddisk"
+      },
+      "container_max_cpu": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "container_max_disk": {
+        "default": "mdi:harddisk"
+      },
+      "container_max_memory": {
+        "default": "mdi:memory"
+      },
+      "container_memory": {
+        "default": "mdi:memory"
+      },
+      "container_memory_percentage": {
+        "default": "mdi:memory"
+      },
+      "container_netin": {
+        "default": "mdi:download-network"
+      },
+      "container_netout": {
+        "default": "mdi:upload-network"
+      },
+      "container_status": {
+        "default": "mdi:server"
+      },
+      "node_cpu": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "node_disk": {
+        "default": "mdi:harddisk"
+      },
+      "node_max_cpu": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "node_max_disk": {
+        "default": "mdi:harddisk"
+      },
+      "node_max_memory": {
+        "default": "mdi:memory"
+      },
+      "node_memory": {
+        "default": "mdi:memory"
+      },
+      "node_memory_percentage": {
+        "default": "mdi:memory"
+      },
+      "node_status": {
+        "default": "mdi:server"
+      },
+      "vm_cpu": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "vm_disk": {
+        "default": "mdi:harddisk"
+      },
+      "vm_max_cpu": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "vm_max_disk": {
+        "default": "mdi:harddisk"
+      },
+      "vm_max_memory": {
+        "default": "mdi:memory"
+      },
+      "vm_memory": {
+        "default": "mdi:memory"
+      },
+      "vm_memory_percentage": {
+        "default": "mdi:memory"
+      },
+      "vm_netin": {
+        "default": "mdi:download-network"
+      },
+      "vm_netout": {
+        "default": "mdi:upload-network"
+      },
+      "vm_status": {
+        "default": "mdi:server"
       }
     }
   }

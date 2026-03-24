@@ -1,13 +1,15 @@
 """Common stuff for Fritz!Tools tests."""
 
+from __future__ import annotations
+
 from collections.abc import Generator
+from copy import deepcopy
 import logging
+from typing import Any
 from unittest.mock import MagicMock, patch
 
-from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
-from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
 from homeassistant.components.fritz.coordinator import FritzConnectionCached
@@ -17,83 +19,101 @@ from .const import (
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_DATA,
     MOCK_MODELNAME,
-    MOCK_STATUS_AVM_DEVICE_LOG_DATA,
     MOCK_STATUS_CONNECTION_DATA,
-    MOCK_STATUS_DEVICE_INFO_DATA,
 )
 
 LOGGER = logging.getLogger(__name__)
 
 
-class FritzServiceMock(Service):
+class FritzServiceMock:
     """Service mocking."""
 
-    def __init__(self, serviceId: str, actions: dict) -> None:
+    def __init__(self, actions: list[str]) -> None:
         """Init Service mock."""
-        super().__init__()
-        self._actions = actions
-        self.serviceId = serviceId
+        self.actions = actions
 
 
 class FritzConnectionMock:
     """FritzConnection mocking."""
 
-    def __init__(self, services) -> None:
+    def __init__(self, fc_data: dict[str, dict[str, Any]]) -> None:
         """Init Mocking class."""
+        self._fc_data: dict[str, dict[str, Any]]
+        self.services: dict[str, FritzServiceMock]
+
+        self._call_cache: dict[str, dict[str, Any]] = {}
         self.modelname = MOCK_MODELNAME
-        self.call_action = self._call_action
-        self._services = services
-        self.services = {
-            srv: FritzServiceMock(serviceId=srv, actions=actions)
-            for srv, actions in services.items()
-        }
+        self._side_effect: Exception | None = None
+
+        self._service_normalization(fc_data)
+
         LOGGER.debug("-" * 80)
         LOGGER.debug("FritzConnectionMock - services: %s", self.services)
 
-    def call_action_side_effect(self, side_effect=None) -> None:
-        """Set or unset a side_effect for call_action."""
-        if side_effect is not None:
-            self.call_action = MagicMock(side_effect=side_effect)
-        else:
-            self.call_action = self._call_action
+    def _service_normalization(self, fc_data: dict[str, dict[str, Any]]) -> None:
+        """Normalize service name."""
+        self._fc_data = deepcopy(fc_data)
+        self.services = {
+            service.replace(":", ""): FritzServiceMock(list(actions.keys()))
+            for service, actions in fc_data.items()
+        }
 
-    def override_services(self, services) -> None:
-        """Overrire services data."""
-        self._services = services
+    def call_action_side_effect(self, side_effect: Exception | None) -> None:
+        """Set or unset a side_effect for call_action."""
+        self._side_effect = side_effect
+
+    def override_services(self, fc_data: dict[str, dict[str, Any]]) -> None:
+        """Override services data."""
+        self._service_normalization(fc_data)
 
     def clear_cache(self) -> None:
         """Mock clear_cache method."""
         return FritzConnectionCached.clear_cache(self)
 
-    def _call_action(self, service: str, action: str, **kwargs):
+    def call_action(self, service: str, action: str, **kwargs: Any) -> Any:
+        """Simulate TR-064 call with service name normalization."""
         LOGGER.debug(
             "_call_action service: %s, action: %s, **kwargs: %s",
             service,
             action,
             {**kwargs},
         )
-        if ":" in service:
-            service, number = service.split(":", 1)
-            service = service + number
-        elif not service[-1].isnumeric():
-            service = service + "1"
+        if self._side_effect:
+            raise self._side_effect
 
+        normalized = service
+        if service not in self._fc_data:
+            # tolerate DeviceInfo1 <-> DeviceInfo:1 and similar
+            if (
+                (":" in service and (alt := service.replace(":", "")) in self._fc_data)
+                or (alt := f"{service}1") in self._fc_data
+                or (alt := f"{service}:1") in self._fc_data
+                or (
+                    service.endswith("1")
+                    and ":" not in service
+                    and (alt := f"{service[:-1]}:1") in self._fc_data
+                )
+            ):
+                normalized = alt
+
+        action_data = self._fc_data.get(normalized, {}).get(action, {})
         if kwargs:
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
+            if isinstance(action_data, dict) and index in action_data:
+                return action_data[index]
 
-            return self._services[service][action][index]
-        return self._services[service][action]
+        return action_data
 
 
 @pytest.fixture(name="fc_data")
-def fc_data_mock() -> dict[str, dict]:
+def fc_data_mock() -> dict[str, dict[str, Any]]:
     """Fixture for default fc_data."""
-    return MOCK_FB_SERVICES
+    return deepcopy(MOCK_FB_SERVICES)
 
 
 @pytest.fixture
-def fc_class_mock(fc_data: dict[str, dict]) -> Generator[FritzConnectionMock]:
+def fc_class_mock(fc_data: dict[str, dict[str, Any]]) -> Generator[MagicMock]:
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
         "homeassistant.components.fritz.coordinator.FritzConnectionCached",
@@ -138,19 +158,9 @@ def fs_class_mock() -> Generator[type[FritzStatus]]:
             "get_default_connection_service",
             MagicMock(return_value=MOCK_STATUS_CONNECTION_DATA),
         ),
-        patch.object(
-            FritzStatus,
-            "get_device_info",
-            MagicMock(return_value=ArgumentNamespace(MOCK_STATUS_DEVICE_INFO_DATA)),
-        ),
         patch.object(FritzStatus, "get_monitor_data", MagicMock(return_value={})),
         patch.object(
             FritzStatus, "get_cpu_temperatures", MagicMock(return_value=[42, 38])
-        ),
-        patch.object(
-            FritzStatus,
-            "get_avm_device_log",
-            MagicMock(return_value=MOCK_STATUS_AVM_DEVICE_LOG_DATA),
         ),
         patch.object(FritzStatus, "has_wan_enabled", True),
     ):
