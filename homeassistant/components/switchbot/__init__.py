@@ -30,6 +30,8 @@ from .const import (
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
     DOMAIN,
     ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
@@ -187,6 +189,40 @@ CLASS_BY_DEVICE = {
 _LOGGER = logging.getLogger(__name__)
 
 
+def _migrate_deprecated_air_purifier_type(
+    hass: HomeAssistant, entry: SwitchbotConfigEntry
+) -> bool:
+    """Migrate deprecated air purifier sensor types introduced before pySwitchbot 2.0.0.
+
+    The old library used a single AIR_PURIFIER/AIR_PURIFIER_TABLE type; the new
+    library distinguishes by region (JP/US). The correct type can be detected from
+    the BLE advertisement local name without connecting or using encryption keys.
+
+    Returns True if migration succeeded, False if device is not in range yet.
+    """
+    address: str = entry.data[CONF_ADDRESS]
+    if service_info := bluetooth.async_last_service_info(
+        hass, address.upper(), connectable=True
+    ):
+        parsed_adv = switchbot.parse_advertisement_data(
+            service_info.device, service_info.advertisement
+        )
+        if (
+            parsed_adv
+            and (adv_model := parsed_adv.data.get("modelName"))
+            in CONNECTABLE_SUPPORTED_MODEL_TYPES
+        ):
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_SENSOR_TYPE: str(CONNECTABLE_SUPPORTED_MODEL_TYPES[adv_model]),
+                },
+            )
+            return True
+    return False
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Switchbot Devices component."""
     async_setup_services(hass)
@@ -205,6 +241,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_ADDRESS: mac},
+        )
+
+    # Migrate deprecated air purifier sensor types introduced before pySwitchbot 2.0.0.
+    if entry.data.get(CONF_SENSOR_TYPE) in (
+        DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+        DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+    ) and not _migrate_deprecated_air_purifier_type(hass, entry):
+        # Device was not in range; retry when it starts advertising again.
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found_error",
+            translation_placeholders={
+                "sensor_type": entry.data[CONF_SENSOR_TYPE],
+                "address": entry.data[CONF_ADDRESS],
+            },
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]

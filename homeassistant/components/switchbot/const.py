@@ -187,6 +187,11 @@ HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
     str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()
 }
 
+# Deprecated sensor type values used before pySwitchbot 2.0.0.
+# AIR_PURIFIER and AIR_PURIFIER_TABLE were split into JP/US variants.
+DEPRECATED_SENSOR_TYPE_AIR_PURIFIER = "air_purifier"
+DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE = "air_purifier_table"
+
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
 DEFAULT_LOCK_NIGHTLATCH = False
