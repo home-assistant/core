@@ -17,6 +17,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -705,6 +706,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
     DUSTER_CLOTH = "duster_cloth"
+    EC_CURRENT = "ec_current"
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
@@ -784,6 +786,7 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
+    ORP_CURRENT = "orp_current"
     OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
@@ -796,6 +799,7 @@ class DPCode(StrEnum):
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
+    PH_CURRENT = "ph_current"
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
     PM10 = "pm10"
@@ -1166,6 +1170,20 @@ UNITS = (
         unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
+    ),
+    UnitOfMeasurement(
+        unit="",
+        aliases={"ph"},
+        device_classes={
+            SensorDeviceClass.PH,
+        },
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfConductivity.MICROSIEMENS_PER_CM,
+        aliases={"us"},
+        device_classes={
+            SensorDeviceClass.CONDUCTIVITY,
+        },
     ),
 )
 
