@@ -372,7 +372,7 @@ async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) 
             CONF_ABOVE: "sensor.above",
             CONF_BELOW: "sensor.below",
         },
-        limit_entities=(["sensor.above", "sensor.below"]),
+        limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[
             (
                 {"state": "75", "attributes": _unit_fahrenheit},  # ≈23.9°C

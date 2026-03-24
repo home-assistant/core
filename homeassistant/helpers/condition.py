@@ -78,12 +78,14 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
+    CONF_UNIT,
     DomainSpec,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
     number_or_entity,
+    validate_unit_set_if_range_numerical,
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
@@ -527,7 +529,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked value from a state, with unit validation for state-based values."""
-        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
                 entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -572,9 +574,6 @@ def make_entity_numerical_condition(
     return CustomCondition
 
 
-CONF_UNIT: Final = "unit"
-
-
 def _make_numerical_condition_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
 ) -> vol.Schema:
@@ -593,6 +592,7 @@ def _make_numerical_condition_with_unit_schema(
                 },
                 cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
                 _validate_above_below,
+                validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
             ),
         }
     )
@@ -615,10 +615,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
-        if hasattr(cls, "_unit_converter"):
-            cls._schema = _make_numerical_condition_with_unit_schema(
-                cls._unit_converter
-            )
+        cls._schema = _make_numerical_condition_with_unit_schema(cls._unit_converter)
 
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the unit of an entity from its state."""
@@ -647,7 +644,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked numerical value from a state."""
-        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        domain_spec = self._domain_specs[entity_state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
             raw_value = entity_state.state
@@ -682,23 +679,6 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
             if value >= below:
                 return False
         return True
-
-
-def make_entity_numerical_condition_with_unit(
-    domain_specs: Mapping[str, DomainSpec],
-    base_unit: str,
-    unit_converter: type[BaseUnitConverter],
-) -> type[EntityNumericalConditionWithUnitBase]:
-    """Create a condition for numerical state comparisons with unit conversion."""
-
-    class CustomCondition(EntityNumericalConditionWithUnitBase):
-        """Condition for numerical state with unit conversion."""
-
-        _domain_specs = domain_specs
-        _base_unit = base_unit
-        _unit_converter = unit_converter
-
-    return CustomCondition
 
 
 class ConditionProtocol(Protocol):

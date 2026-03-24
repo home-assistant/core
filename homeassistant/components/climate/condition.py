@@ -14,7 +14,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from .const import ATTR_HUMIDITY, ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
 
 
-class _ClimateTargetTemperatureConditionMixin(EntityNumericalConditionWithUnitBase):
+class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
     """Mixin for climate target temperature conditions with unit conversion."""
 
     _base_unit = UnitOfTemperature.CELSIUS
@@ -25,10 +25,6 @@ class _ClimateTargetTemperatureConditionMixin(EntityNumericalConditionWithUnitBa
         """Get the temperature unit of a climate entity from its state."""
         # Climate entities convert temperatures to the system unit via show_temp
         return self._hass.config.units.temperature_unit
-
-
-class ClimateTargetTemperatureCondition(_ClimateTargetTemperatureConditionMixin):
-    """Condition for climate target temperature."""
 
 
 CONDITIONS: dict[str, type[Condition]] = {
