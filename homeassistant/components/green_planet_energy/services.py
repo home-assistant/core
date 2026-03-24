@@ -59,13 +59,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="no_config_entry",
             )
 
-        entry = entries[0]
-        if entry.state is not ConfigEntryState.LOADED:
+        loaded_entries = [
+            entry for entry in entries if entry.state is ConfigEntryState.LOADED
+        ]
+        if not loaded_entries:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_loaded",
             )
+        if len(loaded_entries) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="multiple_config_entries",
+            )
 
+        entry = loaded_entries[0]
         coordinator: GreenPlanetEnergyUpdateCoordinator = entry.runtime_data
         data = coordinator.data
         hours: float = call.data[ATTR_HOURS]
