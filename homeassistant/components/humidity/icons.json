@@ -1,6 +1,6 @@
 {
   "conditions": {
-    "value": {
+    "is_value": {
       "condition": "mdi:water-percent"
     }
   },

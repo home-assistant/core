@@ -6,7 +6,7 @@
     "trigger_behavior_name": "Behavior"
   },
   "conditions": {
-    "value": {
+    "is_value": {
       "description": "Tests if a relative humidity value is above a threshold, below a threshold, or in a range of values.",
       "fields": {
         "above": {

@@ -57,7 +57,7 @@ async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "condition",
     [
-        "humidity.value",
+        "humidity.is_value",
     ],
 )
 async def test_humidity_conditions_gated_by_labs_flag(
@@ -75,7 +75,7 @@ async def test_humidity_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_any(
-        "humidity.value",
+        "humidity.is_value",
         device_class="humidity",
         unit_attributes=_HUMIDITY_UNIT_ATTRS,
     ),
@@ -111,7 +111,7 @@ async def test_humidity_sensor_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_all(
-        "humidity.value",
+        "humidity.is_value",
         device_class="humidity",
         unit_attributes=_HUMIDITY_UNIT_ATTRS,
     ),
@@ -147,7 +147,7 @@ async def test_humidity_sensor_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_any(
-        "humidity.value",
+        "humidity.is_value",
         device_class="humidity",
         unit_attributes=_HUMIDITY_UNIT_ATTRS,
     ),
@@ -183,7 +183,7 @@ async def test_humidity_number_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_all(
-        "humidity.value",
+        "humidity.is_value",
         device_class="humidity",
         unit_attributes=_HUMIDITY_UNIT_ATTRS,
     ),
@@ -219,7 +219,7 @@ async def test_humidity_number_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_attribute_condition_above_below_any(
-        "humidity.value",
+        "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
@@ -255,7 +255,7 @@ async def test_humidity_climate_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_attribute_condition_above_below_all(
-        "humidity.value",
+        "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
@@ -291,7 +291,7 @@ async def test_humidity_climate_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_attribute_condition_above_below_any(
-        "humidity.value",
+        "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
@@ -327,7 +327,7 @@ async def test_humidity_humidifier_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_attribute_condition_above_below_all(
-        "humidity.value",
+        "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
