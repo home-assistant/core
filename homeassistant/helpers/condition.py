@@ -55,7 +55,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -364,7 +364,7 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
