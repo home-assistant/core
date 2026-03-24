@@ -24,10 +24,12 @@
           selector:
             entity:
               filter:
-                domain:
-                  - input_number
-                  - number
-                  - sensor
+                - domain: input_number
+                  unit_of_measurement: "%"
+                - domain: number
+                  device_class: humidity
+                - domain: sensor
+                  device_class: humidity
       translation_key: number_or_entity
 
 .trigger_threshold_type: &trigger_threshold_type

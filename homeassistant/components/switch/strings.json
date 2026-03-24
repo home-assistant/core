@@ -87,15 +87,15 @@
   "services": {
     "toggle": {
       "description": "Toggles a switch on/off.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle switch"
     },
     "turn_off": {
-      "description": "Turns a switch off.",
-      "name": "[%key:common::action::turn_off%]"
+      "description": "Turns off a switch.",
+      "name": "Turn off switch"
     },
     "turn_on": {
-      "description": "Turns a switch on.",
-      "name": "[%key:common::action::turn_on%]"
+      "description": "Turns on a switch.",
+      "name": "Turn on switch"
     }
   },
   "title": "Switch",
