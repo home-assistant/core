@@ -410,7 +410,7 @@ aiotankerkoenig==0.5.1
 aiotedee==0.2.27
 
 # homeassistant.components.tractive
-aiotractive==1.0.0
+aiotractive==1.0.1
 
 # homeassistant.components.unifi
 aiounifi==88
@@ -1277,7 +1277,7 @@ lojack-api==0.7.1
 london-tube-status==0.5
 
 # homeassistant.components.loqed
-loqedAPI==2.1.10
+loqedAPI==2.1.11
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -2660,7 +2660,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.13
+tuya-device-handlers==0.0.14
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
