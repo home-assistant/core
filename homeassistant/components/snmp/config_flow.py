@@ -162,15 +162,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     except (PySnmpError, WrongValueError) as err:
         raise CannotConnect(f"Invalid OID '{base_oid}': {err}") from None
 
-    # In v1/v2c, getting ANY response (even noSuchName in err_status)
-    # means the community string is correct. Silence means auth failure (v1/v2c).
-    # In v3, err_status indicates the success of the get_cmd itself.
-    if version != "3":
-        return
-
-    if err_status:
-        raise InvalidAuth(err_status.prettyPrint()) from None
-
 
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SNMP."""

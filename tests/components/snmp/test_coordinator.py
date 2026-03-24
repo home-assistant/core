@@ -171,3 +171,146 @@ async def test_coordinator_walk_errindication(
     ):
         await coordinator._async_update_data()
     assert excinfo.value.__cause__ is exc
+
+
+async def test_coordinator_host_info_no_space(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test host info fetching where sysDescr has no spaces."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
+    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+
+    with patch(
+        "homeassistant.components.snmp.coordinator.get_cmd",
+        return_value=(
+            None,
+            None,
+            None,
+            [("oid1", "DescriptionWithoutSpace"), ("oid2", "sys_name")],
+        ),
+    ):
+        await coordinator._async_fetch_host_info()
+        assert coordinator.manufacturer is None
+        assert coordinator.model == "DescriptionWithoutSpace"
+
+
+async def test_coordinator_walk_errstatus(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test handling of errstatus during walk."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
+    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    coordinator.model = "Test"
+
+    mock_err_status = Mock()
+    mock_err_status.prettyPrint.return_value = "noSuchName"
+
+    async def mock_walk_status_error(*args, **kwargs):
+        yield None, mock_err_status, 1, [("oid", "val")]
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk_status_error,
+        ),
+        pytest.raises(UpdateFailed, match="SNMP error: noSuchName at oid"),
+    ):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_invalid_mac_length(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test ignoring MAC addresses with invalid length."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
+    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    coordinator.model = "Test"
+
+    oid = Mock()
+    oid.asTuple.return_value = (1, 1, 1, 1, 0)
+    val = OctetString(b"too_short")
+
+    async def mock_walk(*args, **kwargs):
+        yield None, None, None, [(oid, val)]
+
+    with patch(
+        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        data = await coordinator._async_update_data()
+        assert not data
+
+
+async def test_coordinator_mac_processing_exception(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test handling of exceptions during MAC processing."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
+    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    coordinator.model = "Test"
+
+    oid = Mock()
+    oid.asTuple.return_value = (1, 1, 1, 1, 0)
+    val = Mock()
+    val.asOctets.side_effect = AttributeError
+
+    async def mock_walk(*args, **kwargs):
+        yield None, None, None, [(oid, val)]
+
+    with patch(
+        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        data = await coordinator._async_update_data()
+        assert not data
+
+
+async def test_coordinator_host_info_with_space(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test host info fetching where sysDescr has spaces."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
+    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+
+    with patch(
+        "homeassistant.components.snmp.coordinator.get_cmd",
+        return_value=(
+            None,
+            None,
+            None,
+            [("oid1", "Manufacturer Model"), ("oid2", "sys_name")],
+        ),
+    ):
+        await coordinator._async_fetch_host_info()
+        assert coordinator.manufacturer == "Manufacturer"
+        assert coordinator.model == "Model"
+
+
+async def test_coordinator_auto_fetch_host_info(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test that host info is automatically fetched if model is None."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
+    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    assert coordinator.model is None
+
+    oid = Mock()
+    oid.asTuple.return_value = (1, 1, 1, 1, 0)
+    val = OctetString(binascii.unhexlify("001122334455"))
+
+    async def mock_walk(*args, **kwargs):
+        yield None, None, None, [(oid, val)]
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(None, None, None, [("oid1", "Descr"), ("oid2", "sys_name")]),
+        ) as mock_get_info,
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+    ):
+        await coordinator._async_update_data()
+        mock_get_info.assert_called_once()
+        assert coordinator.model == "Descr"
