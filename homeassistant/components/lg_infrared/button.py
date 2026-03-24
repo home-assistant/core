@@ -119,7 +119,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up LG IR buttons from config entry."""
     infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
-    device_type = entry.data.get(CONF_DEVICE_TYPE, LGDeviceType.TV)
+    device_type = entry.data[CONF_DEVICE_TYPE]
     if device_type == LGDeviceType.TV:
         async_add_entities(
             LgIrButton(entry, infrared_entity_id, description)

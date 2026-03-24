@@ -1,504 +1,4 @@
 # serializer version: 1
-# name: test_entities[button.lg_tv_0-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_0',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '0',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '0',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_0',
-    'unique_id': '01JTEST0000000000000000000_num_0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_0-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 0',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_0',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '1',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '1',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_1',
-    'unique_id': '01JTEST0000000000000000000_num_1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 1',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '2',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '2',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_2',
-    'unique_id': '01JTEST0000000000000000000_num_2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 2',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '3',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '3',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_3',
-    'unique_id': '01JTEST0000000000000000000_num_3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 3',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '4',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '4',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_4',
-    'unique_id': '01JTEST0000000000000000000_num_4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 4',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '5',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '5',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_5',
-    'unique_id': '01JTEST0000000000000000000_num_5',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 5',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '6',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '6',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_6',
-    'unique_id': '01JTEST0000000000000000000_num_6',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 6',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '7',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '7',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_7',
-    'unique_id': '01JTEST0000000000000000000_num_7',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 7',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '8',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '8',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_8',
-    'unique_id': '01JTEST0000000000000000000_num_8',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 8',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.lg_tv_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_tv_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': '9',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': '9',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'num_9',
-    'unique_id': '01JTEST0000000000000000000_num_9',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.lg_tv_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV 9',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_tv_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_entities[button.lg_tv_back-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1143,6 +643,506 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 0',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 0',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_0',
+    'unique_id': '01JTEST0000000000000000000_num_0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 1',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_1',
+    'unique_id': '01JTEST0000000000000000000_num_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 2',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_2',
+    'unique_id': '01JTEST0000000000000000000_num_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 3',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 3',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_3',
+    'unique_id': '01JTEST0000000000000000000_num_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 4',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 4',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_4',
+    'unique_id': '01JTEST0000000000000000000_num_4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 4',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 5',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 5',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_5',
+    'unique_id': '01JTEST0000000000000000000_num_5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 5',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 6',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 6',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_6',
+    'unique_id': '01JTEST0000000000000000000_num_6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 6',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_7-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_7',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 7',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 7',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_7',
+    'unique_id': '01JTEST0000000000000000000_num_7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_7-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 7',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_7',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_8-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_8',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 8',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 8',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_8',
+    'unique_id': '01JTEST0000000000000000000_num_8',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_8-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 8',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_8',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_number_9-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_number_9',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number 9',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number 9',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'num_9',
+    'unique_id': '01JTEST0000000000000000000_num_9',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_number_9-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LG TV Number 9',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_number_9',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
