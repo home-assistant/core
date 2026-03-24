@@ -1,0 +1,15 @@
+{
+  "domain": "yolink_local",
+  "name": "YoLink Local",
+  "codeowners": ["@matrixd2"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/yolink_local",
+  "homekit": {},
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["yolink-api==0.6.3"],
+  "ssdp": [],
+  "zeroconf": []
+}

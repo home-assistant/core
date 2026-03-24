@@ -828,6 +828,7 @@ FLOWS = {
         "yardian",
         "yeelight",
         "yolink",
+        "yolink_local",
         "youless",
         "youtube",
         "zamg",
