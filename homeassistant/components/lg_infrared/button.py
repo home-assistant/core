@@ -140,7 +140,6 @@ class LgIrButton(LgIrEntity, ButtonEntity):
     ) -> None:
         """Initialize LG IR button."""
         super().__init__(entry, infrared_entity_id, unique_id_suffix=description.key)
-        self._infrared_entity_id = infrared_entity_id
         self.entity_description = description
 
     async def async_press(self) -> None:
