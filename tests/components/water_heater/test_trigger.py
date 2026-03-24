@@ -12,7 +12,7 @@ from homeassistant.components.water_heater import (
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
