@@ -28,6 +28,9 @@
       "latest_tag": {
         "default": "mdi:tag"
       },
+      "merged_pulls_count": {
+        "default": "mdi:source-merge"
+      },
       "pulls_count": {
         "default": "mdi:source-pull"
       },

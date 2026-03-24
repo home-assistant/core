@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[switch.cambridge_audio_cxnv2_early_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -48,10 +49,61 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[switch.cambridge_audio_cxnv2_equalizer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.cambridge_audio_cxnv2_equalizer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Equalizer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Equalizer',
+    'platform': 'cambridge_audio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'equalizer',
+    'unique_id': '0020c2d8-equalizer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.cambridge_audio_cxnv2_equalizer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cambridge Audio CXNv2 Equalizer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.cambridge_audio_cxnv2_equalizer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[switch.cambridge_audio_cxnv2_pre_amp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,8 +151,9 @@
 # ---
 # name: test_all_entities[switch.cambridge_audio_cxnv2_room_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

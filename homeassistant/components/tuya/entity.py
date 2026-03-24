@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
-from .models import DeviceWrapper
 
 
 class TuyaEntity(Entity):
@@ -20,13 +20,21 @@ class TuyaEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
+    def __init__(
+        self,
+        device: CustomerDevice,
+        device_manager: Manager,
+        description: EntityDescription | None = None,
+    ) -> None:
         """Init TuyaHaEntity."""
         self._attr_unique_id = f"tuya.{device.id}"
         # TuyaEntity initialize mq can subscribe
         device.set_up = True
         self.device = device
         self.device_manager = device_manager
+        if description:
+            self._attr_unique_id = f"tuya.{device.id}{description.key}"
+            self.entity_description = description
 
     @property
     def device_info(self) -> DeviceInfo:

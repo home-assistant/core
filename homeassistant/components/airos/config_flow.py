@@ -7,6 +7,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from airos.airos6 import AirOS6
+from airos.airos8 import AirOS8
 from airos.discovery import airos_discover_devices
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
@@ -17,6 +19,7 @@ from airos.exceptions import (
     AirOSKeyDataMissingError,
     AirOSListenerError,
 )
+from airos.helpers import DetectDeviceData, async_get_firmware_data
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -34,11 +37,13 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     DEFAULT_SSL,
@@ -51,9 +56,10 @@ from .const import (
     MAC_ADDRESS,
     SECTION_ADVANCED_SETTINGS,
 )
-from .coordinator import AirOS8
 
 _LOGGER = logging.getLogger(__name__)
+
+AirOSDeviceDetect = AirOS8 | AirOS6
 
 # Discovery duration in seconds, airOS announces every 20 seconds
 DISCOVER_INTERVAL: int = 30
@@ -90,7 +96,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
-        self.airos_device: AirOS8
+        self.airos_device: AirOSDeviceDetect
         self.errors: dict[str, str] = {}
         self.discovered_devices: dict[str, dict[str, Any]] = {}
         self.discovery_abort_reason: str | None = None
@@ -133,16 +139,14 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             verify_ssl=config_data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL],
         )
 
-        airos_device = AirOS8(
-            host=config_data[CONF_HOST],
-            username=config_data[CONF_USERNAME],
-            password=config_data[CONF_PASSWORD],
-            session=session,
-            use_ssl=config_data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
-        )
         try:
-            await airos_device.login()
-            airos_data = await airos_device.status()
+            device_data: DetectDeviceData = await async_get_firmware_data(
+                host=config_data[CONF_HOST],
+                username=config_data[CONF_USERNAME],
+                password=config_data[CONF_PASSWORD],
+                session=session,
+                use_ssl=config_data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
+            )
 
         except (
             AirOSConnectionSetupError,
@@ -157,14 +161,14 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during credential validation")
             self.errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(airos_data.derived.mac)
+            await self.async_set_unique_id(device_data["mac"])
 
             if self.source in [SOURCE_REAUTH, SOURCE_RECONFIGURE]:
                 self._abort_if_unique_id_mismatch()
             else:
                 self._abort_if_unique_id_configured()
 
-            return {"title": airos_data.host.hostname, "data": config_data}
+            return {"title": device_data["hostname"], "data": config_data}
 
         return None
 
@@ -391,6 +395,18 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 await asyncio.sleep(1)
         except asyncio.CancelledError:
             pass
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Automatically handle a DHCP discovered IP change."""
+        ip_address = discovery_info.ip
+        # python-airos defaults to upper for derived mac_address
+        normalized_mac = format_mac(discovery_info.macaddress).upper()
+        await self.async_set_unique_id(normalized_mac)
+
+        self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
+        return self.async_abort(reason="unreachable")
 
     async def async_step_discovery_no_devices(
         self, user_input: dict[str, Any] | None = None

@@ -39,15 +39,15 @@ PRESET_MODES = [
     PRESET_NONE,
 ]
 
-# Mapping from Home Assistant HVACMode to BSB-Lan integer values
-# BSB-Lan uses: 0=off, 1=auto, 2=eco/reduced, 3=heat/comfort
+# Mapping from Home Assistant HVACMode to BSB-LAN integer values
+# BSB-LAN uses: 0=off, 1=auto, 2=eco/reduced, 3=heat/comfort
 HA_TO_BSBLAN_HVAC_MODE: Final[dict[HVACMode, int]] = {
     HVACMode.OFF: 0,
     HVACMode.AUTO: 1,
     HVACMode.HEAT: 3,
 }
 
-# Mapping from BSB-Lan integer values to Home Assistant HVACMode
+# Mapping from BSB-LAN integer values to Home Assistant HVACMode
 BSBLAN_TO_HA_HVAC_MODE: Final[dict[int, HVACMode]] = {
     0: HVACMode.OFF,
     1: HVACMode.AUTO,
@@ -69,7 +69,6 @@ async def async_setup_entry(
 class BSBLANClimate(BSBLanEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     # Determine preset modes
     _attr_supported_features = (
@@ -91,10 +90,11 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         self._attr_unique_id = f"{format_mac(data.device.MAC)}-climate"
 
         # Set temperature range if available, otherwise use Home Assistant defaults
-        if data.static.min_temp is not None and data.static.min_temp.value is not None:
-            self._attr_min_temp = data.static.min_temp.value
-        if data.static.max_temp is not None and data.static.max_temp.value is not None:
-            self._attr_max_temp = data.static.max_temp.value
+        if (static := data.static) is not None:
+            if (min_temp := static.min_temp) is not None and min_temp.value is not None:
+                self._attr_min_temp = min_temp.value
+            if (max_temp := static.max_temp) is not None and max_temp.value is not None:
+                self._attr_max_temp = max_temp.value
         self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
 
     @property
@@ -138,7 +138,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        # BSB-Lan mode 2 is eco/reduced mode
+        # BSB-LAN mode 2 is eco/reduced mode
         if self._hvac_mode_value == 2:
             return PRESET_ECO
         return PRESET_NONE
@@ -163,7 +163,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         if ATTR_HVAC_MODE in kwargs:
             data[ATTR_HVAC_MODE] = HA_TO_BSBLAN_HVAC_MODE[kwargs[ATTR_HVAC_MODE]]
         if ATTR_PRESET_MODE in kwargs:
-            # eco preset uses BSB-Lan mode 2, none preset uses mode 1 (auto)
+            # eco preset uses BSB-LAN mode 2, none preset uses mode 1 (auto)
             if kwargs[ATTR_PRESET_MODE] == PRESET_ECO:
                 data[ATTR_HVAC_MODE] = 2
             elif kwargs[ATTR_PRESET_MODE] == PRESET_NONE:

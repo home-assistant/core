@@ -241,6 +241,14 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
 
 
 @pytest.mark.parametrize(
+    ("backup", "password"),
+    [
+        ("backup_with_database.tar", None),
+        ("backup_with_database_protected_v2.tar", "hunter2"),
+        ("backup_with_database_protected_v3.tar", "hunter2"),
+    ],
+)
+@pytest.mark.parametrize(
     (
         "restore_backup_content",
         "expected_kept_files",
@@ -287,6 +295,8 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
     ],
 )
 def test_restore_backup(
+    backup: str,
+    password: str | None,
     restore_backup_content: backup_restore.RestoreBackupFileContent,
     expected_kept_files: set[str],
     expected_restored_files: set[str],
@@ -321,9 +331,7 @@ def test_restore_backup(
     for f in existing_files:
         (tmp_path / f).write_text("before_restore")
 
-    get_fixture_path(
-        "core/backup_restore/empty_backup_database_included.tar", None
-    ).copy(backup_file_path)
+    get_fixture_path(f"core/backup_restore/{backup}", None).copy(backup_file_path)
 
     files_before_restore = get_files(tmp_path)
     assert files_before_restore == {
@@ -341,6 +349,7 @@ def test_restore_backup(
         kept_files_data[file] = (tmp_path / file).read_bytes()
 
     restore_backup_content.backup_file_path = backup_file_path
+    restore_backup_content.password = password
 
     with (
         mock.patch(
@@ -378,7 +387,7 @@ def test_restore_backup_filter_files(tmp_path: Path) -> None:
     backup_file_path = tmp_path / "backups" / "test.tar"
     backup_file_path.parent.mkdir()
     get_fixture_path(
-        "core/backup_restore/empty_backup_database_included.tar", None
+        "core/backup_restore/malicious_backup_with_database.tar", None
     ).copy(backup_file_path)
 
     with (
@@ -440,9 +449,9 @@ def test_remove_backup_file_after_restore(
     """Test removing a backup file after restore."""
     backup_file_path = tmp_path / "backups" / "test.tar"
     backup_file_path.parent.mkdir()
-    get_fixture_path(
-        "core/backup_restore/empty_backup_database_included.tar", None
-    ).copy(backup_file_path)
+    get_fixture_path("core/backup_restore/backup_with_database.tar", None).copy(
+        backup_file_path
+    )
 
     with (
         mock.patch(

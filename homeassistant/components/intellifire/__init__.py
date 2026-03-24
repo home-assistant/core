@@ -6,6 +6,7 @@ import asyncio
 
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
+from intellifire4py.const import IntelliFireApiMode
 from intellifire4py.model import IntelliFireCommonFireplaceData
 
 from homeassistant.const import (
@@ -20,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
+    API_MODE_LOCAL,
     CONF_AUTH_COOKIE,
     CONF_CONTROL_MODE,
     CONF_READ_MODE,
@@ -55,8 +57,10 @@ def _construct_common_data(
         serial=entry.data[CONF_SERIAL],
         api_key=entry.data[CONF_API_KEY],
         ip_address=entry.data[CONF_IP_ADDRESS],
-        read_mode=entry.options[CONF_READ_MODE],
-        control_mode=entry.options[CONF_CONTROL_MODE],
+        read_mode=IntelliFireApiMode(entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)),
+        control_mode=IntelliFireApiMode(
+            entry.options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+        ),
     )
 
 
@@ -97,12 +101,34 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(
                 config_entry,
                 data=new,
-                options={CONF_READ_MODE: "local", CONF_CONTROL_MODE: "local"},
+                options={
+                    CONF_READ_MODE: API_MODE_LOCAL,
+                    CONF_CONTROL_MODE: API_MODE_LOCAL,
+                },
                 unique_id=new[CONF_SERIAL],
                 version=1,
-                minor_version=2,
+                minor_version=3,
             )
-            LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
+            LOGGER.debug("Migration to 1.3 successful")
+
+        if config_entry.minor_version < 3:
+            # Migrate old option keys (cloud_read, cloud_control) to new keys
+            old_options = config_entry.options
+            new_options = {
+                CONF_READ_MODE: old_options.get(
+                    "cloud_read", old_options.get(CONF_READ_MODE, API_MODE_LOCAL)
+                ),
+                CONF_CONTROL_MODE: old_options.get(
+                    "cloud_control", old_options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+                ),
+            }
+            hass.config_entries.async_update_entry(
+                config_entry,
+                options=new_options,
+                version=1,
+                minor_version=3,
+            )
+            LOGGER.debug("Migration to 1.3 successful (options keys renamed)")
 
     return True
 
@@ -139,7 +165,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
+
+
+async def async_update_options(
+    hass: HomeAssistant, entry: IntellifireConfigEntry
+) -> None:
+    """Handle options update."""
+    coordinator: IntellifireDataUpdateCoordinator = entry.runtime_data
+
+    new_read_mode = IntelliFireApiMode(
+        entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)
+    )
+    new_control_mode = IntelliFireApiMode(
+        entry.options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+    )
+
+    fireplace = coordinator.fireplace
+    current_read_mode = fireplace.read_mode
+    current_control_mode = fireplace.control_mode
+
+    # Only update modes that actually changed
+    if new_read_mode != current_read_mode:
+        LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
+        await fireplace.set_read_mode(new_read_mode)
+
+    if new_control_mode != current_control_mode:
+        LOGGER.debug(
+            "Updating control mode: %s -> %s", current_control_mode, new_control_mode
+        )
+        await fireplace.set_control_mode(new_control_mode)
+
+    # Refresh data with new mode settings
+    await coordinator.async_request_refresh()
 
 
 async def _async_wait_for_initialization(

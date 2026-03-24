@@ -44,7 +44,7 @@ def mock_whois() -> Generator[MagicMock]:
     """Return a mocked query."""
     with (
         patch(
-            "homeassistant.components.whois.whois_query",
+            "homeassistant.components.whois.coordinator.whois_query",
         ) as whois_mock,
         patch("homeassistant.components.whois.config_flow.whois.query", new=whois_mock),
     ):
@@ -90,7 +90,7 @@ def mock_whois_missing_some_attrs() -> Generator[Mock]:
             self.statuses = ["OK"]
 
     with patch(
-        "homeassistant.components.whois.whois_query", LimitedWhoisMock
+        "homeassistant.components.whois.coordinator.whois_query", LimitedWhoisMock
     ) as whois_mock:
         yield whois_mock
 

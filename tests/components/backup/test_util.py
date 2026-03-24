@@ -131,32 +131,75 @@ def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -
 
 
 @pytest.mark.parametrize(
-    ("backup", "password", "validation_result"),
+    ("backup", "password", "validation_result", "expected_messages"),
     [
         # Backup not protected, no password provided -> validation passes
-        (Path("backup_v2_compressed.tar"), None, True),
-        (Path("backup_v2_uncompressed.tar"), None, True),
+        (Path("backup_compressed.tar"), None, True, []),
+        (Path("backup_uncompressed.tar"), None, True, []),
         # Backup not protected, password provided -> validation fails
-        (Path("backup_v2_compressed.tar"), "hunter2", False),
-        (Path("backup_v2_uncompressed.tar"), "hunter2", False),
+        (Path("backup_compressed.tar"), "hunter2", False, ["Invalid password"]),
+        (Path("backup_uncompressed.tar"), "hunter2", False, ["Invalid password"]),
         # Backup protected, correct password provided -> validation passes
-        (Path("backup_v2_compressed_protected.tar"), "hunter2", True),
-        (Path("backup_v2_uncompressed_protected.tar"), "hunter2", True),
+        (Path("backup_compressed_protected_v2.tar"), "hunter2", True, []),
+        (Path("backup_uncompressed_protected_v2.tar"), "hunter2", True, []),
+        (Path("backup_compressed_protected_v3.tar"), "hunter2", True, []),
+        (Path("backup_uncompressed_protected_v3.tar"), "hunter2", True, []),
         # Backup protected, no password provided -> validation fails
-        (Path("backup_v2_compressed_protected.tar"), None, False),
-        (Path("backup_v2_uncompressed_protected.tar"), None, False),
+        (Path("backup_compressed_protected_v2.tar"), None, False, ["Invalid password"]),
+        (
+            Path("backup_uncompressed_protected_v2.tar"),
+            None,
+            False,
+            ["Invalid password"],
+        ),
+        (Path("backup_compressed_protected_v3.tar"), None, False, ["Invalid password"]),
+        (
+            Path("backup_uncompressed_protected_v3.tar"),
+            None,
+            False,
+            ["Invalid password"],
+        ),
         # Backup protected, wrong password provided -> validation fails
-        (Path("backup_v2_compressed_protected.tar"), "wrong_password", False),
-        (Path("backup_v2_uncompressed_protected.tar"), "wrong_password", False),
+        (
+            Path("backup_compressed_protected_v2.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
+        (
+            Path("backup_uncompressed_protected_v2.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
+        (
+            Path("backup_compressed_protected_v3.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
+        (
+            Path("backup_uncompressed_protected_v3.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
     ],
 )
 def test_validate_password(
-    password: str | None, backup: Path, validation_result: bool
+    password: str | None,
+    backup: Path,
+    validation_result: bool,
+    expected_messages: list[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating a password."""
     test_backups = get_fixture_path("test_backups", DOMAIN)
 
     assert validate_password(test_backups / backup, password) == validation_result
+    for message in expected_messages:
+        assert message in caplog.text
+    assert "Unexpected error validating password" not in caplog.text
 
 
 @pytest.mark.parametrize("password", [None, "hunter2"])

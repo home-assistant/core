@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
+from .common import sanitize_userid
 from .const import (
     CONF_CONTAINERS,
     CONF_NODE,
@@ -48,22 +49,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _sanitize_userid(data: dict[str, Any]) -> str:
-    """Sanitize the user ID."""
-    return (
-        data[CONF_USERNAME]
-        if "@" in data[CONF_USERNAME]
-        else f"{data[CONF_USERNAME]}@{data[CONF_REALM]}"
-    )
-
-
 def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the user input and fetch data (sync, for executor)."""
     try:
         client = ProxmoxAPI(
             data[CONF_HOST],
             port=data[CONF_PORT],
-            user=_sanitize_userid(data),
+            user=sanitize_userid(data),
             password=data[CONF_PASSWORD],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
@@ -74,16 +66,20 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         raise ProxmoxSSLError from err
     except ConnectTimeout as err:
         raise ProxmoxConnectTimeout from err
-    except (ResourceException, requests.exceptions.ConnectionError) as err:
+    except ResourceException as err:
         raise ProxmoxNoNodesFound from err
+    except requests.exceptions.ConnectionError as err:
+        raise ProxmoxConnectionError from err
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
         try:
             vms = client.nodes(node["node"]).qemu.get()
             containers = client.nodes(node["node"]).lxc.get()
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
+        except ResourceException as err:
             raise ProxmoxNoNodesFound from err
+        except requests.exceptions.ConnectionError as err:
+            raise ProxmoxConnectionError from err
 
         nodes_data.append(
             {
@@ -197,18 +193,30 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the user input. Return nodes data and/or errors."""
         errors: dict[str, str] = {}
         proxmox_nodes: list[dict[str, Any]] = []
+        err: ProxmoxError | None = None
         try:
             proxmox_nodes = await self.hass.async_add_executor_job(
                 _get_nodes_data, user_input
             )
-        except ProxmoxConnectTimeout:
+        except ProxmoxConnectTimeout as exc:
             errors["base"] = "connect_timeout"
-        except ProxmoxAuthenticationError:
+            err = exc
+        except ProxmoxAuthenticationError as exc:
             errors["base"] = "invalid_auth"
-        except ProxmoxSSLError:
+            err = exc
+        except ProxmoxSSLError as exc:
             errors["base"] = "ssl_error"
-        except ProxmoxNoNodesFound:
+            err = exc
+        except ProxmoxNoNodesFound as exc:
             errors["base"] = "no_nodes_found"
+            err = exc
+        except ProxmoxConnectionError as exc:
+            errors["base"] = "cannot_connect"
+            err = exc
+
+        if err is not None:
+            _LOGGER.debug("Error: %s: %s", errors["base"], err)
+
         return proxmox_nodes, errors
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
@@ -227,6 +235,8 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ssl_error")
         except ProxmoxNoNodesFound:
             return self.async_abort(reason="no_nodes_found")
+        except ProxmoxConnectionError:
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=import_data[CONF_HOST],
@@ -234,17 +244,25 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ProxmoxNoNodesFound(HomeAssistantError):
+class ProxmoxError(HomeAssistantError):
+    """Base class for Proxmox VE errors."""
+
+
+class ProxmoxNoNodesFound(ProxmoxError):
     """Error to indicate no nodes found."""
 
 
-class ProxmoxConnectTimeout(HomeAssistantError):
+class ProxmoxConnectTimeout(ProxmoxError):
     """Error to indicate a connection timeout."""
 
 
-class ProxmoxSSLError(HomeAssistantError):
+class ProxmoxSSLError(ProxmoxError):
     """Error to indicate an SSL error."""
 
 
-class ProxmoxAuthenticationError(HomeAssistantError):
+class ProxmoxAuthenticationError(ProxmoxError):
     """Error to indicate an authentication error."""
+
+
+class ProxmoxConnectionError(ProxmoxError):
+    """Error to indicate a connection error."""

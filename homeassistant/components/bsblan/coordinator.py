@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for the BSB-Lan integration."""
+"""DataUpdateCoordinator for the BSB-LAN integration."""
 
 from __future__ import annotations
 
@@ -29,8 +29,13 @@ if TYPE_CHECKING:
 
 # Filter lists for optimized API calls - only fetch parameters we actually use
 # This significantly reduces response time (~0.2s per parameter saved)
-STATE_INCLUDE = ["current_temperature", "target_temperature", "hvac_mode"]
-SENSOR_INCLUDE = ["current_temperature", "outside_temperature"]
+STATE_INCLUDE = [
+    "current_temperature",
+    "target_temperature",
+    "hvac_mode",
+    "hvac_action",
+]
+SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
@@ -57,7 +62,7 @@ class BSBLanSlowData:
 
 
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
-    """Base BSB-Lan coordinator."""
+    """Base BSB-LAN coordinator."""
 
     config_entry: BSBLanConfigEntry
 
@@ -69,7 +74,7 @@ class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
         name: str,
         update_interval: timedelta,
     ) -> None:
-        """Initialize the BSB-Lan coordinator."""
+        """Initialize the BSB-LAN coordinator."""
         super().__init__(
             hass,
             logger=LOGGER,
@@ -81,7 +86,7 @@ class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
 
 
 class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
-    """The BSB-Lan fast update coordinator for frequently changing data."""
+    """The BSB-LAN fast update coordinator for frequently changing data."""
 
     def __init__(
         self,
@@ -89,7 +94,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
-        """Initialize the BSB-Lan fast coordinator."""
+        """Initialize the BSB-LAN fast coordinator."""
         super().__init__(
             hass,
             config_entry,
@@ -99,7 +104,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         )
 
     async def _async_update_data(self) -> BSBLanFastData:
-        """Fetch fast-changing data from the BSB-Lan device."""
+        """Fetch fast-changing data from the BSB-LAN device."""
         try:
             # Client is already initialized in async_setup_entry
             # Use include filtering to only fetch parameters we actually use
@@ -110,12 +115,15 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
-                "Authentication failed for BSB-Lan device"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_auth_error",
             ) from err
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST]
             raise UpdateFailed(
-                f"Error while establishing connection with BSB-Lan device at {host}"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_connection_error",
+                translation_placeholders={"host": host},
             ) from err
 
         return BSBLanFastData(
@@ -126,7 +134,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
 
 
 class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
-    """The BSB-Lan slow update coordinator for infrequently changing data."""
+    """The BSB-LAN slow update coordinator for infrequently changing data."""
 
     def __init__(
         self,
@@ -134,7 +142,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
-        """Initialize the BSB-Lan slow coordinator."""
+        """Initialize the BSB-LAN slow coordinator."""
         super().__init__(
             hass,
             config_entry,
@@ -144,7 +152,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         )
 
     async def _async_update_data(self) -> BSBLanSlowData:
-        """Fetch slow-changing data from the BSB-Lan device."""
+        """Fetch slow-changing data from the BSB-LAN device."""
         try:
             # Client is already initialized in async_setup_entry
             # Use include filtering to only fetch parameters we actually use

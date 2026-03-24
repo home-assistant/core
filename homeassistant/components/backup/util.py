@@ -16,6 +16,7 @@ from typing import IO, Any, cast
 
 import aiohttp
 from securetar import (
+    InvalidPasswordError,
     SecureTarArchive,
     SecureTarError,
     SecureTarFile,
@@ -165,7 +166,7 @@ def validate_password(path: Path, password: str | None) -> bool:
             ):
                 # If we can read the tar file, the password is correct
                 return True
-        except tarfile.ReadError, SecureTarReadError:
+        except tarfile.ReadError, InvalidPasswordError, SecureTarReadError:
             LOGGER.debug("Invalid password")
             return False
         except Exception:  # noqa: BLE001
@@ -192,13 +193,14 @@ def validate_password_stream(
         for obj in input_archive.tar:
             if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
                 continue
-            with input_archive.extract_tar(obj) as decrypted:
-                if decrypted.plaintext_size is None:
-                    raise UnsupportedSecureTarVersion
-                try:
+            try:
+                with input_archive.extract_tar(obj) as decrypted:
+                    if decrypted.plaintext_size is None:
+                        raise UnsupportedSecureTarVersion
                     decrypted.read(1)  # Read a single byte to trigger the decryption
-                except SecureTarReadError as err:
-                    raise IncorrectPassword from err
+            except (InvalidPasswordError, SecureTarReadError) as err:
+                raise IncorrectPassword from err
+            else:
                 return
     raise BackupEmpty
 
@@ -244,6 +246,8 @@ def decrypt_backup(
         except (DecryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error decrypting backup: %s", err)
             error = err
+        except Abort:
+            raise
         except Exception as err:  # noqa: BLE001
             LOGGER.exception("Unexpected error when decrypting backup: %s", err)
             error = err
@@ -330,8 +334,10 @@ def encrypt_backup(
         except (EncryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error encrypting backup: %s", err)
             error = err
+        except Abort:
+            raise
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Unexpected error when decrypting backup: %s", err)
+            LOGGER.exception("Unexpected error when encrypting backup: %s", err)
             error = err
         else:
             # Pad the output stream to the requested minimum size

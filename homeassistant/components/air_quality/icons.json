@@ -3,5 +3,103 @@
     "_": {
       "default": "mdi:air-filter"
     }
+  },
+  "triggers": {
+    "co2_changed": {
+      "trigger": "mdi:molecule-co2"
+    },
+    "co2_crossed_threshold": {
+      "trigger": "mdi:molecule-co2"
+    },
+    "co_changed": {
+      "trigger": "mdi:molecule-co"
+    },
+    "co_cleared": {
+      "trigger": "mdi:check-circle"
+    },
+    "co_crossed_threshold": {
+      "trigger": "mdi:molecule-co"
+    },
+    "co_detected": {
+      "trigger": "mdi:molecule-co"
+    },
+    "gas_cleared": {
+      "trigger": "mdi:check-circle"
+    },
+    "gas_detected": {
+      "trigger": "mdi:gas-cylinder"
+    },
+    "n2o_changed": {
+      "trigger": "mdi:factory"
+    },
+    "n2o_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "no2_changed": {
+      "trigger": "mdi:factory"
+    },
+    "no2_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "no_changed": {
+      "trigger": "mdi:factory"
+    },
+    "no_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "ozone_changed": {
+      "trigger": "mdi:weather-sunny-alert"
+    },
+    "ozone_crossed_threshold": {
+      "trigger": "mdi:weather-sunny-alert"
+    },
+    "pm10_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm10_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "pm1_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm1_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "pm25_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm25_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "pm4_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm4_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "smoke_cleared": {
+      "trigger": "mdi:check-circle"
+    },
+    "smoke_detected": {
+      "trigger": "mdi:smoke-detector-variant"
+    },
+    "so2_changed": {
+      "trigger": "mdi:factory"
+    },
+    "so2_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "voc_changed": {
+      "trigger": "mdi:air-filter"
+    },
+    "voc_crossed_threshold": {
+      "trigger": "mdi:air-filter"
+    },
+    "voc_ratio_changed": {
+      "trigger": "mdi:air-filter"
+    },
+    "voc_ratio_crossed_threshold": {
+      "trigger": "mdi:air-filter"
+    }
   }
 }

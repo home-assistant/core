@@ -1,4 +1,4 @@
-"""Tests for the BSB-Lan climate platform."""
+"""Tests for the BSB-LAN climate platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
@@ -45,6 +45,21 @@ async def test_celsius_fahrenheit(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_climate_entity_loads_without_static_values(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the climate entity still loads when static values are unavailable."""
+    mock_bsblan.static_values.side_effect = BSBLANError("General error")
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["current_temperature"] is not None
+
+
 async def test_climate_entity_properties(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
@@ -69,7 +84,7 @@ async def test_climate_entity_properties(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["temperature"] == 23.5
 
-    # Test hvac_mode - BSB-Lan returns integer: 1=auto
+    # Test hvac_mode - BSB-LAN returns integer: 1=auto
     mock_hvac_mode = MagicMock()
     mock_hvac_mode.value = 1  # auto mode
     mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
@@ -81,7 +96,7 @@ async def test_climate_entity_properties(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
 
-    # Test preset_mode - BSB-Lan mode 2 is eco/reduced
+    # Test preset_mode - BSB-LAN mode 2 is eco/reduced
     mock_hvac_mode.value = 2  # eco mode
 
     freezer.tick(timedelta(minutes=1))
@@ -278,7 +293,7 @@ async def test_async_set_preset_mode_success(
     """Test setting preset mode via service call."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    # patch hvac_mode with integer value (BSB-Lan returns integers)
+    # patch hvac_mode with integer value (BSB-LAN returns integers)
     mock_hvac_mode = MagicMock()
     mock_hvac_mode.value = hvac_mode_int
     mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode

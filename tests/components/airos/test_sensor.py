@@ -22,9 +22,10 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_airos_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_airos_client: AsyncMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test all entities."""
     await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
@@ -46,6 +47,7 @@ async def test_sensor_update_exception_handling(
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     freezer: FrozenDateTimeFactory,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test entity update data handles exceptions."""
     await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
