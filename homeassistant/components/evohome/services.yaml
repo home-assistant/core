@@ -13,7 +13,9 @@ set_system_mode:
             - "Away"
             - "Custom"
             - "DayOff"
+            - "Heat"
             - "HeatingOff"
+            - "Off"
     period:
       example: '{"days": 28}'
       selector:
