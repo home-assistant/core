@@ -215,6 +215,8 @@ class NetatmoDataHandler:
     @callback
     def async_force_update(self, signal_name: str) -> None:
         """Prioritize data retrieval for given data class entry."""
+        if signal_name not in self.publisher:
+            return
         self.publisher[signal_name].next_scan = time()
         self._queue.rotate(-(self._queue.index(self.publisher[signal_name])))
 
