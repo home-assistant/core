@@ -76,6 +76,16 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
+SCRIPT_FIELDS = (
+    SERVICE_CLEAN_SPOT,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
+)
+
 VACUUM_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_BATTERY_LEVEL): cv.template,
@@ -150,6 +160,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_VACUUMS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -165,6 +176,7 @@ async def async_setup_entry(
         async_add_entities,
         TemplateStateVacuumEntity,
         VACUUM_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -207,6 +219,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -216,7 +229,6 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         # List of valid fan speeds
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self.setup_state_template(
-            CONF_STATE,
             "_attr_activity",
             template_validators.strenum(self, CONF_STATE, VacuumActivity),
         )

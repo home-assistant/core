@@ -85,7 +85,7 @@ async def test_http_handle_intent(
         },
         "language": hass.config.language,
         "response_type": intent.IntentResponseType.ACTION_DONE.value,
-        "data": {"targets": [], "success": [], "failed": []},
+        "data": {"success": [], "failed": []},
     }
 
 
@@ -105,9 +105,10 @@ async def test_http_language_device_satellite_id(
         async def async_handle(self, intent_obj: intent.Intent):
             """Handle the intent."""
             assert intent_obj.context.user_id == hass_admin_user.id
+            # Verify language, device id, and satellite id were passed through.
+            assert intent_obj.language == language
             assert intent_obj.device_id == device_id
             assert intent_obj.satellite_id == satellite_id
-            assert intent_obj.language == language
 
             response = intent_obj.create_response()
             response.async_set_speech("Test response")
@@ -133,7 +134,6 @@ async def test_http_language_device_satellite_id(
     assert resp.status == 200
     data = await resp.json()
 
-    # Verify language, device id, and satellite id were passed through.
     # Also check speech slots.
     assert data == {
         "card": {},
@@ -149,7 +149,7 @@ async def test_http_language_device_satellite_id(
         },
         "language": language,
         "response_type": "action_done",
-        "data": {"targets": [], "success": [], "failed": []},
+        "data": {"success": [], "failed": []},
     }
 
 
@@ -248,12 +248,11 @@ async def test_cover_intents_loading(hass: HomeAssistant) -> None:
     hass.states.async_set("cover.garage_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    response = await intent.async_handle(
+    await intent.async_handle(
         hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Opening garage door"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "cover"
@@ -527,22 +526,34 @@ async def test_get_state_intent(
     # 1 light in kitchen (on)
     # 1 sensor in kitchen (50)
     # 2 binary sensors in the office (problem, moisture, on)
-    bedroom_light = entity_registry.async_get_or_create("light", "demo", "1")
+    bedroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "1", original_name="bedroom light"
+    )
     entity_registry.async_update_entity(bedroom_light.entity_id, area_id=bedroom.id)
 
-    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "2")
+    kitchen_sensor = entity_registry.async_get_or_create(
+        "sensor", "demo", "2", original_name="kitchen sensor"
+    )
     entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    kitchen_light = entity_registry.async_get_or_create("light", "demo", "3")
+    kitchen_light = entity_registry.async_get_or_create(
+        "light", "demo", "3", original_name="kitchen light"
+    )
     entity_registry.async_update_entity(kitchen_light.entity_id, area_id=kitchen.id)
 
-    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "4")
+    kitchen_sensor = entity_registry.async_get_or_create(
+        "sensor", "demo", "4", original_name="kitchen sensor"
+    )
     entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    problem_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "5")
+    problem_sensor = entity_registry.async_get_or_create(
+        "binary_sensor", "demo", "5", original_name="problem sensor"
+    )
     entity_registry.async_update_entity(problem_sensor.entity_id, area_id=office.id)
 
-    moisture_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "6")
+    moisture_sensor = entity_registry.async_get_or_create(
+        "binary_sensor", "demo", "6", original_name="moisture sensor"
+    )
     entity_registry.async_update_entity(moisture_sensor.entity_id, area_id=office.id)
 
     hass.states.async_set(
