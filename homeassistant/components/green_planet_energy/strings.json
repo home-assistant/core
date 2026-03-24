@@ -43,8 +43,26 @@
     "api_error": {
       "message": "API error: {error}"
     },
+    "config_entry_not_loaded": {
+      "message": "This integration instance is not currently loaded"
+    },
     "connection_error": {
       "message": "Connection error: {error}"
+    },
+    "no_config_entry": {
+      "message": "No matching integration instance was found"
+    }
+  },
+  "services": {
+    "get_prices": {
+      "description": "Returns raw 15-minute electricity price slots for the next N hours. Slots beyond the API horizon are omitted.",
+      "fields": {
+        "hours": {
+          "description": "How many hours of price data to return, starting from the current 15-minute slot. Minimum 0.25, maximum 24.",
+          "name": "Hours"
+        }
+      },
+      "name": "Get prices"
     }
   }
 }

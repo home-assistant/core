@@ -1,0 +1,10 @@
+get_prices:
+  fields:
+    hours:
+      required: true
+      selector:
+        number:
+          min: 0.25
+          max: 24
+          step: 0.25
+          unit_of_measurement: h
