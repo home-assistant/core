@@ -400,7 +400,19 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
 
 
 class DeviceFlowImplementation(AbstractOAuth2Implementation):
-    """Device Flow OAuth2 implementation (RFC 8628)."""
+    """Device Flow OAuth2 implementation (RFC 8628).
+
+    The call sequence is:
+    1. Call async_register_device to start the flow. The returned dict is the
+       raw device authorization response (RFC 8628, 3.2).
+       An optional interval (default 5 sec.) controls the polling frequency.
+    2. Display user_code and verification_uri to the user so they can
+       authorize on a device.
+    3. Pass the entire response dict from step 1 directly to
+       async_check_device_activation, which polls the token endpoint using
+       device_code until the user approves, the code expires, or an
+       unrecoverable error occurs
+    """
 
     def __init__(
         self,
@@ -453,30 +465,66 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         )
         return data
 
-    async def async_register_device(self) -> dict:
+    async def async_register_device(self) -> dict[str, Any]:
         """Register the device and return the device code response."""
         session = async_get_clientsession(self.hass)
 
-        _LOGGER.debug("Sending device authorization request to %s", self.authorize_url)
-        resp = await session.post(
-            self.authorize_url,
-            data=self._device_authorization_data(),
-            headers={"Accept": "application/json"},
-        )
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except ClientError, JSONDecodeError:
-                error_response = {}
-            error_code = error_response.get("error", "unknown")
-            error_description = error_response.get("error_description", "unknown error")
-            _LOGGER.error(
-                "Device authorization request for %s failed (%s): %s",
-                self.domain,
-                error_code,
-                error_description,
+        try:
+            _LOGGER.debug(
+                "Sending device authorization request to %s", self.authorize_url
             )
-        resp.raise_for_status()
+            resp = await session.post(
+                self.authorize_url,
+                data=self._device_authorization_data(),
+                headers={"Accept": "application/json"},
+            )
+            if resp.status >= 400:
+                try:
+                    error_response = await resp.json()
+                except ClientError, JSONDecodeError:
+                    error_response = {}
+                error_code = error_response.get("error", "unknown")
+                error_description = error_response.get(
+                    "error_description", "unknown error"
+                )
+                _LOGGER.error(
+                    "Device authorization request for %s failed (%s): %s",
+                    self.domain,
+                    error_code,
+                    error_description,
+                )
+            resp.raise_for_status()
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self._domain,
+            ) from err
+
         return cast(dict, await resp.json())
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:

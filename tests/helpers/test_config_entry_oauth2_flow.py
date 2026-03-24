@@ -8,6 +8,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -935,6 +936,85 @@ async def test_device_flow_login_task_exceptions(
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_exception"),
+    [
+        (HTTPStatus.TOO_MANY_REQUESTS, OAuth2TokenRequestTransientError),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, OAuth2TokenRequestTransientError),
+        (HTTPStatus.UNAUTHORIZED, OAuth2TokenRequestReauthError),
+        (HTTPStatus.BAD_REQUEST, OAuth2TokenRequestReauthError),
+    ],
+)
+async def test_device_flow_register_device_http_errors(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+    expected_exception: type,
+) -> None:
+    """Test async_register_device raises the correct exception on HTTP errors."""
+    aioclient_mock.post(AUTHORIZE_URL, status=status)
+
+    with pytest.raises(expected_exception):
+        await device_impl.async_register_device()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {"client_id": CLIENT_ID}
+
+
+@pytest.mark.parametrize(
+    ("error_response", "expected_exception"),
+    [
+        (
+            {"error": "access_denied"},
+            config_entry_oauth2_flow.DeviceFlowUnauthorized,
+        ),
+        (
+            {"error": "expired_token"},
+            config_entry_oauth2_flow.DeviceFlowTimeout,
+        ),
+    ],
+)
+async def test_device_flow_check_activation_error_responses(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    error_response: dict[str, Any],
+    expected_exception: type,
+) -> None:
+    """Test async_check_device_activation raises correct exception on error responses."""
+    aioclient_mock.post(TOKEN_URL, json=error_response)
+
+    with pytest.raises(expected_exception):
+        await device_impl.async_check_device_activation(
+            {
+                "device_code": "device-code",
+                "expires_in": 60,
+                "interval": 0,
+            }
+        )
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_device_flow_check_activation_client_error(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test async_check_device_activation raises DeviceFlowError on connection error."""
+    aioclient_mock.post(TOKEN_URL, exc=ClientError())
+
+    with pytest.raises(config_entry_oauth2_flow.DeviceFlowError):
+        await device_impl.async_check_device_activation(
+            {
+                "device_code": "device-code",
+                "expires_in": 60,
+                "interval": 0,
+            }
+        )
 
 
 async def test_device_flow_register_timeout(
