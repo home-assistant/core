@@ -185,3 +185,106 @@ async def test_options_flow_cannot_connect(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_flow_success(hass: HomeAssistant) -> None:
+    """Test reauth flow succeeds with valid credentials for the same account."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        data=CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        return_value=[MOCK_DEVICE],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: CONFIG[CONF_USERNAME],
+                CONF_PASSWORD: "new-password",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
+    """Test reauth flow shows error on invalid credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        data=CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        side_effect=InvalidAuth,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: CONFIG[CONF_USERNAME],
+                CONF_PASSWORD: "wrong-password",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth_flow_wrong_account(hass: HomeAssistant) -> None:
+    """Test reauth flow shows error when credentials belong to a different account."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        data=CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        return_value=[MOCK_DEVICE],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "different-username",
+                CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "wrong_account"}

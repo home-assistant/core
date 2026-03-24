@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for the Wolf SmartSet Service integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -19,15 +21,15 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type WolfLinkConfigEntry = ConfigEntry[WolfLinkData]
+
+
 @dataclass
 class WolfLinkData:
-    """Data for the Wolf SmartSet Service integration."""
+    """Runtime data for the WolfLink integration."""
 
     wolf_client: WolfClient
     coordinators: list[WolfLinkCoordinator]
-
-
-type WolfLinkConfigEntry = ConfigEntry[WolfLinkData]
 
 
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):

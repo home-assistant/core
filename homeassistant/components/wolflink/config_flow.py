@@ -1,6 +1,8 @@
 """Config flow for Wolf SmartSet Service integration."""
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from httpcore import ConnectError
 import voluptuous as vol
@@ -95,6 +97,48 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="devices", data_schema=data_schema)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            wolf_client = WolfClient(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            try:
+                await wolf_client.fetch_system_list()
+            except ConnectError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                reauth_entry = self._get_reauth_entry()
+                if user_input[CONF_USERNAME].lower() != reauth_entry.unique_id:
+                    errors["base"] = "wrong_account"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        },
+                    )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=USER_SCHEMA,
+            errors=errors,
+        )
 
     @staticmethod
     @callback

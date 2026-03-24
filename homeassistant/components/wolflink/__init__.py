@@ -36,7 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         devices = await wolf_client.fetch_system_list()
     except InvalidAuth as exception:
-        raise ConfigEntryAuthFailed("Invalid credentials") from exception
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from exception
     except (FetchFailed, RequestError) as exception:
         raise ConfigEntryNotReady(
             f"Error fetching system list: {exception}"
@@ -55,7 +57,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device.id,
             device.gateway,
         )
-        parameters = await fetch_parameters_init(wolf_client, device.gateway, device.id)
+        try:
+            parameters = await fetch_parameters(wolf_client, device.gateway, device.id)
+        except InvalidAuth as exception:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from exception
+        except (FetchFailed, RequestError) as exception:
+            raise ConfigEntryNotReady(
+                f"Error communicating with API: {exception}"
+            ) from exception
         coordinator = WolfLinkCoordinator(
             hass,
             entry,
@@ -104,11 +115,27 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # Step 2: migrate version 1.x → 2.1 (strip device keys, set username unique_id)
         new_unique_id = entry.data[CONF_USERNAME].lower()
+        # Preserve the device_id from old per-device entry data into options
+        old_device_id = entry.data.get("device_id")
+        new_options: dict = dict(entry.options)
+        if old_device_id is not None and CONF_DEVICES not in new_options:
+            new_options[CONF_DEVICES] = [str(old_device_id)]
+
         existing = hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, new_unique_id
         )
         if existing is not None and existing.entry_id != entry.entry_id:
-            # A migrated entry for this account already exists; remove this duplicate
+            # A migrated entry for this account already exists; merge device IDs
+            # from this duplicate into the surviving entry before removing it.
+            if old_device_id is not None:
+                surviving_devices = list(existing.options.get(CONF_DEVICES, []))
+                str_id = str(old_device_id)
+                if str_id not in surviving_devices:
+                    surviving_devices.append(str_id)
+                    hass.config_entries.async_update_entry(
+                        existing,
+                        options={**existing.options, CONF_DEVICES: surviving_devices},
+                    )
             _LOGGER.warning(
                 "Removing duplicate wolflink entry for account %s (entry %s)",
                 new_unique_id,
@@ -125,24 +152,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             unique_id=new_unique_id,
             data=new_data,
+            options=new_options,
             version=2,
             minor_version=1,
         )
 
     return True
-
-
-async def fetch_parameters_init(
-    client: WolfClient,
-    gateway_id: int,
-    device_id: int,
-):
-    """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
-    try:
-        return await fetch_parameters(client, gateway_id, device_id)
-    except InvalidAuth as exception:
-        raise ConfigEntryAuthFailed("Invalid credentials") from exception
-    except (FetchFailed, RequestError) as exception:
-        raise ConfigEntryNotReady(
-            f"Error communicating with API: {exception}"
-        ) from exception

@@ -66,6 +66,8 @@ async def test_unique_id_migration(
     }
     # Device identifiers should have been converted to strings during migration
     assert device_registry.async_get(device_id).identifiers == {(DOMAIN, "1234")}
+    # The old device_id should have been preserved in options
+    assert config_entry.options == {CONF_DEVICES: ["1234"]}
 
 
 async def test_migration_v1_2_to_v2(
@@ -104,6 +106,37 @@ async def test_migration_v1_2_to_v2(
         CONF_USERNAME: CONFIG[CONF_USERNAME],
         CONF_PASSWORD: CONFIG[CONF_PASSWORD],
     }
+    # The old device_id should have been preserved in options
+    assert config_entry.options == {CONF_DEVICES: ["1234"]}
+
+
+async def test_migration_v1_no_device_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from version 1.x without a device_id leaves options unchanged."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={
+            CONF_USERNAME: CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+            # no device_id key
+        },
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.WolfClient", autospec=True
+    ) as wolflink_mock:
+        wolflink_mock.return_value.fetch_system_list.side_effect = RequestError(
+            "Unable to fetch system list"
+        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.version == 2
+    assert config_entry.options == {}
 
 
 async def test_migration_duplicate_entries(
@@ -139,21 +172,15 @@ async def test_migration_duplicate_entries(
     entry_a.add_to_hass(hass)
     entry_b.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.wolflink.WolfClient", autospec=True
-        ) as wolflink_mock,
-    ):
-        wolflink_mock.return_value.fetch_system_list.side_effect = RequestError(
-            "Unable to fetch"
-        )
-        await hass.config_entries.async_setup(entry_a.entry_id)
+    result_a = await async_migrate_entry(hass, entry_a)
+    result_b = await async_migrate_entry(hass, entry_b)
 
-        result = await async_migrate_entry(hass, entry_b)
-
+    assert result_a is True
     assert entry_a.version == 2
     assert entry_a.unique_id == CONFIG[CONF_USERNAME].lower()
-    assert result is False
+    assert result_b is False
+    # entry_b's device_id (9999) should have been merged into entry_a's options
+    assert set(entry_a.options.get(CONF_DEVICES, [])) == {"1234", "9999"}
 
 
 async def test_setup_multi_device(
