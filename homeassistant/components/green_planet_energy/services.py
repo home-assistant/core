@@ -31,6 +31,9 @@ SERVICE_GET_PRICES_SCHEMA = vol.Schema(
             lambda v: v
             if abs(v * 4 - round(v * 4)) < 1e-9
             else vol.Invalid("hours must be a multiple of 0.25 (15 minutes)"),
+            lambda v: v
+            if abs(v * 4 - round(v * 4)) < 1e-9
+            else vol.Invalid("hours must be a multiple of 0.25 (15 minutes)"),
         ),
     }
 )
