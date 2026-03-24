@@ -137,9 +137,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         target_humidity_wrapper: DeviceWrapper[int] | None = None,
     ) -> None:
         """Init Tuya (de)humidifier."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
 
         self._current_humidity_wrapper = current_humidity_wrapper
         self._mode_wrapper = mode_wrapper

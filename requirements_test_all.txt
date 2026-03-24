@@ -407,10 +407,14 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
+<<<<<<< tedee/0.3.0
 aiotedee==0.3.0
+=======
+aiotedee==0.2.27
+>>>>>>> dev
 
 # homeassistant.components.tractive
-aiotractive==1.0.0
+aiotractive==1.0.1
 
 # homeassistant.components.unifi
 aiounifi==88
@@ -833,7 +837,7 @@ eternalegypt==0.0.18
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==1.1.3
+evohome-async==1.2.0
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -1013,7 +1017,7 @@ greeclimate==2.1.1
 greeneye_monitor==3.0.3
 
 # homeassistant.components.green_planet_energy
-greenplanet-energy-api==0.1.4
+greenplanet-energy-api==0.1.10
 
 # homeassistant.components.pure_energie
 gridnet==5.0.1
@@ -1046,13 +1050,13 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.10.2
+habluetooth==5.11.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==2.0.0
+hass-nabucasa==2.2.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1090,7 +1094,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260312.0
+home-assistant-frontend==20260312.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.3
@@ -1509,7 +1513,7 @@ openwebifpy==4.3.1
 opower==0.17.1
 
 # homeassistant.components.oralb
-oralb-ble==1.0.2
+oralb-ble==1.1.0
 
 # homeassistant.components.orvibo
 orvibo==1.1.2
@@ -1641,7 +1645,7 @@ py-sucks==0.9.11
 py-synologydsm-api==2.7.3
 
 # homeassistant.components.unifi_access
-py-unifi-access==1.1.0
+py-unifi-access==1.1.3
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -1925,7 +1929,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.liebherr
-pyliebherrhomeapi==0.4.0
+pyliebherrhomeapi==0.4.1
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
@@ -2077,7 +2081,7 @@ pyrail==0.4.1
 pyrainbird==6.1.1
 
 # homeassistant.components.playstation_network
-pyrate-limiter==4.0.2
+pyrate-limiter==4.1.0
 
 # homeassistant.components.risco
 pyrisco==0.6.7
@@ -2256,7 +2260,7 @@ python-pooldose==0.8.6
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.25.0
+python-roborock==5.0.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2290,6 +2294,9 @@ pytile==2024.12.0
 
 # homeassistant.components.tomorrowio
 pytomorrowio==0.3.6
+
+# homeassistant.components.touchline
+pytouchline_extended==0.4.5
 
 # homeassistant.components.touchline_sl
 pytouchlinesl==0.6.0
@@ -2639,7 +2646,7 @@ toonapi==0.3.0
 total-connect-client==2025.12.2
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.3
+tplink-omada-client==1.5.6
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -2690,7 +2697,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.1.2
+universal-silabs-flasher==1.0.2
 
 # homeassistant.components.upb
 upb-lib==0.6.1
@@ -2792,7 +2799,7 @@ wiim==0.1.0
 wled==0.21.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.23
+wolf-comm==0.0.48
 
 # homeassistant.components.wsdot
 wsdot==0.0.1
@@ -2801,7 +2808,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.6.0
+xiaomi-ble==1.10.0
 
 # homeassistant.components.knx
 xknx==3.15.0
@@ -2832,7 +2839,7 @@ yalexs==9.2.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.6.1
+yolink-api==0.6.3
 
 # homeassistant.components.youless
 youless-api==2.2.0

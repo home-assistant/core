@@ -104,6 +104,9 @@
       "fs_usage": {
         "name": "Filesystem usage"
       },
+      "psram_usage": {
+        "name": "PSRAM usage"
+      },
       "ram_usage": {
         "name": "RAM usage"
       },

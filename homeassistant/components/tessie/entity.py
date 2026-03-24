@@ -4,7 +4,7 @@ from abc import abstractmethod
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -103,8 +103,11 @@ class TessieEntity(TessieBaseEntity):
                 api_key=self._api_key,
                 **kargs,
             )
-        except ClientResponseError as e:
-            raise HomeAssistantError from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
         if response["result"] is False:
             name: str = getattr(self, "name", self.entity_id)
             reason: str = response.get("reason", "unknown")
