@@ -263,7 +263,7 @@ async def async_setup_auth(  # noqa: C901
 
         if is_supervisor_unix_socket_request(request):
             authenticated = await async_authenticate_supervisor_unix_socket(request)
-            auth_type = "unix socket"
+            auth_type = "supervisor unix socket"
 
         elif hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
             request
@@ -284,7 +284,7 @@ async def async_setup_auth(  # noqa: C901
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
-                request.remote or "unknown",
+                request.remote or "unknown remote",
                 request.path,
                 auth_type,
             )

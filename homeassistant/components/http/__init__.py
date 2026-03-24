@@ -244,7 +244,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             supervisor_unix_socket_path = socket_path
         else:
             _LOGGER.error(
-                "Invalid unix socket path %s: path must be absolute", socket_env
+                "Invalid Supervisor Unix socket path %s: path must be absolute",
+                socket_env,
             )
 
     server = HomeAssistantHTTP(
@@ -704,7 +705,7 @@ class HomeAssistantHTTP:
                     )
                 except OSError as err:
                     _LOGGER.warning(
-                        "Could not remove unix socket %s: %s",
+                        "Could not remove Supervisor unix socket %s: %s",
                         self.supervisor_unix_socket_path,
                         err,
                     )
