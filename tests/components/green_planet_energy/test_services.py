@@ -174,6 +174,14 @@ async def test_get_prices_quarter_hour(
     assert result["hours_requested"] == 0.25
 
 
+async def test_get_prices_non_quarter_hour_rejected(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    frozen_now: datetime,
+) -> None:
+    """Non-0.25-multiple hour values are rejected by the service schema."""
+    with pytest.raises(HomeAssistantError):
+        await _call_get_prices(hass, 0.3)
 async def test_get_prices_max_hours(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
