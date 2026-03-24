@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "chess_daily_rating": {
+        "default": "mdi:chart-line"
+      },
+      "followers": {
+        "default": "mdi:account-multiple"
+      },
+      "total_daily_draw": {
+        "default": "mdi:chess-pawn"
+      },
+      "total_daily_lost": {
+        "default": "mdi:chess-pawn"
+      },
+      "total_daily_won": {
+        "default": "mdi:chess-pawn"
+      }
+    }
+  }
+}

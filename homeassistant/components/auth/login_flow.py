@@ -115,6 +115,7 @@ def async_setup(
 ) -> None:
     """Component to allow users to login."""
     hass.http.register_view(WellKnownOAuthInfoView)
+    hass.http.register_view(WellKnownProtectedResourceView)
     hass.http.register_view(AuthProvidersView)
     hass.http.register_view(LoginFlowIndexView(hass.auth.login_flow, store_result))
     hass.http.register_view(LoginFlowResourceView(hass.auth.login_flow, store_result))
@@ -152,6 +153,32 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             metadata["issuer"] = url_prefix
 
         return self.json(metadata)
+
+
+class WellKnownProtectedResourceView(HomeAssistantView):
+    """View to host the OAuth2 Protected Resource Metadata per RFC9728."""
+
+    requires_auth = False
+    url = "/.well-known/oauth-protected-resource"
+    name = "well-known/oauth-protected-resource"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Return the protected resource metadata."""
+        hass = request.app[KEY_HASS]
+        try:
+            url_prefix = get_url(hass, require_current_request=True)
+        except NoURLAvailableError:
+            return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
+
+        return self.json(
+            {
+                "resource": url_prefix,
+                "authorization_servers": [url_prefix],
+                "resource_documentation": (
+                    "https://developers.home-assistant.io/docs/auth_api"
+                ),
+            }
+        )
 
 
 class AuthProvidersView(HomeAssistantView):

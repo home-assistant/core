@@ -114,6 +114,7 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     has_thermostat = True
     has_blind = False
     holiday_active = False
+    boost_active = False
     lock = "fake_locked"
     present = True
     summer_active = False

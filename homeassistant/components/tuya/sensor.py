@@ -1233,6 +1233,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    DeviceCategory.WG2: (*BATTERY_SENSORS,),
     DeviceCategory.WK: (*BATTERY_SENSORS,),
     DeviceCategory.WKCZ: (
         TuyaSensorEntityDescription(
@@ -1683,9 +1684,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         dpcode_wrapper: DeviceWrapper[StateType],
     ) -> None:
         """Init Tuya sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = dpcode_wrapper
 
         if description.native_unit_of_measurement is None:

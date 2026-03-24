@@ -9,7 +9,6 @@ from tesla_fleet_api.tessie import EnergySite
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .coordinator import (
-    TessieBatteryHealthCoordinator,
     TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
@@ -42,6 +41,5 @@ class TessieVehicleData:
     """Data for a Tessie vehicle."""
 
     data_coordinator: TessieStateUpdateCoordinator
-    battery_coordinator: TessieBatteryHealthCoordinator
     device: DeviceInfo
     vin: str

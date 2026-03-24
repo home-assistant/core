@@ -1,7 +1,7 @@
 {
   "domain": "velux",
   "name": "Velux",
-  "codeowners": ["@Julius2342", "@DeerMaximum", "@pawlizio", "@wollew"],
+  "codeowners": ["@Julius2342", "@pawlizio", "@wollew"],
   "config_flow": true,
   "dhcp": [
     {
@@ -14,5 +14,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyvlx"],
   "quality_scale": "silver",
-  "requirements": ["pyvlx==0.2.30"]
+  "requirements": ["pyvlx==0.2.32"]
 }

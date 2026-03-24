@@ -14,12 +14,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation
+from homeassistant.const import PERCENTAGE, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
+from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -103,6 +105,25 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxNodeSensorEntityDescription(
+        key="node_memory_percentage",
+        translation_key="node_memory_percentage",
+        value_fn=lambda data: int(data.node["mem"]) / int(data.node["maxmem"]) * 100,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxNodeSensorEntityDescription(
+        key="node_uptime",
+        translation_key="node_uptime",
+        value_fn=lambda data: data.node["uptime"],
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxNodeSensorEntityDescription(
         key="node_status",
         translation_key="node_status",
         value_fn=lambda data: data.node["status"],
@@ -149,6 +170,25 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxVMSensorEntityDescription(
+        key="vm_memory_percentage",
+        translation_key="vm_memory_percentage",
+        value_fn=lambda data: int(data["mem"]) / int(data["maxmem"]) * 100,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxVMSensorEntityDescription(
+        key="vm_uptime",
+        translation_key="vm_uptime",
+        value_fn=lambda data: data["uptime"],
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxVMSensorEntityDescription(
         key="vm_disk",
         translation_key="vm_disk",
         value_fn=lambda data: data["disk"],
@@ -176,6 +216,28 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         value_fn=lambda data: data["status"],
         device_class=SensorDeviceClass.ENUM,
         options=["running", "stopped", "suspended"],
+    ),
+    ProxmoxVMSensorEntityDescription(
+        key="vm_netin",
+        translation_key="vm_netin",
+        value_fn=lambda data: data["netin"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ProxmoxVMSensorEntityDescription(
+        key="vm_netout",
+        translation_key="vm_netout",
+        value_fn=lambda data: data["netout"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -217,6 +279,25 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxContainerSensorEntityDescription(
+        key="container_memory_percentage",
+        translation_key="container_memory_percentage",
+        value_fn=lambda data: int(data["mem"]) / int(data["maxmem"]) * 100,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxContainerSensorEntityDescription(
+        key="container_uptime",
+        translation_key="container_uptime",
+        value_fn=lambda data: data["uptime"],
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxContainerSensorEntityDescription(
         key="container_disk",
         translation_key="container_disk",
         value_fn=lambda data: data["disk"],
@@ -244,6 +325,28 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         value_fn=lambda data: data["status"],
         device_class=SensorDeviceClass.ENUM,
         options=["running", "stopped", "suspended"],
+    ),
+    ProxmoxContainerSensorEntityDescription(
+        key="container_netin",
+        translation_key="container_netin",
+        value_fn=lambda data: data["netin"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ProxmoxContainerSensorEntityDescription(
+        key="container_netout",
+        translation_key="container_netout",
+        value_fn=lambda data: data["netout"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -320,18 +423,6 @@ class ProxmoxNodeSensor(ProxmoxNodeEntity, SensorEntity):
 
     entity_description: ProxmoxNodeSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxNodeSensorEntityDescription,
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, node_data)
-        self.entity_description = entity_description
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
-
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
@@ -343,19 +434,6 @@ class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
 
     entity_description: ProxmoxVMSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxVMSensorEntityDescription,
-        vm_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox VM sensor."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, vm_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
-
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
@@ -366,19 +444,6 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
     """Represents a Proxmox VE container sensor."""
 
     entity_description: ProxmoxContainerSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxContainerSensorEntityDescription,
-        container_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox container sensor."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, container_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:

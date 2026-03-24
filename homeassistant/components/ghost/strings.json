@@ -1,7 +1,10 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Ghost site is already configured."
+      "already_configured": "This Ghost site is already configured.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The provided credentials belong to a different Ghost site."
     },
     "error": {
       "cannot_connect": "Failed to connect to Ghost. Please check your URL.",
@@ -10,6 +13,27 @@
       "unknown": "An unexpected error occurred."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "admin_api_key": "[%key:component::ghost::config::step::user::data::admin_api_key%]"
+        },
+        "data_description": {
+          "admin_api_key": "[%key:component::ghost::config::step::user::data_description::admin_api_key%]"
+        },
+        "description": "Your API key for {title} is invalid. [Create a new integration key]({setup_url}) to reauthenticate.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "admin_api_key": "[%key:component::ghost::config::step::user::data::admin_api_key%]",
+          "api_url": "[%key:component::ghost::config::step::user::data::api_url%]"
+        },
+        "data_description": {
+          "admin_api_key": "[%key:component::ghost::config::step::user::data_description::admin_api_key%]",
+          "api_url": "[%key:component::ghost::config::step::user::data_description::api_url%]"
+        },
+        "description": "Update the configuration for your Ghost integration. [Create a custom integration]({setup_url}) to get your API URL and Admin API key."
+      },
       "user": {
         "data": {
           "admin_api_key": "Admin API key",
@@ -19,7 +43,7 @@
           "admin_api_key": "The Admin API key for your Ghost integration",
           "api_url": "The API URL for your Ghost integration"
         },
-        "description": "[Create a custom integration]({docs_url}) to get your API URL and Admin API key.",
+        "description": "[Create a custom integration]({setup_url}) to get your API URL and Admin API key.",
         "title": "Connect to Ghost"
       }
     }
