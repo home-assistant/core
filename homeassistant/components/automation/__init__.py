@@ -167,6 +167,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "motion",
     "occupancy",
     "person",
+    "power",
     "remote",
     "scene",
     "schedule",

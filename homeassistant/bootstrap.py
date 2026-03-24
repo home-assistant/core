@@ -250,6 +250,7 @@ DEFAULT_INTEGRATIONS = {
     "illuminance",
     "motion",
     "occupancy",
+    "power",
     "temperature",
     "window",
 }

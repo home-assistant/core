@@ -2140,6 +2140,7 @@ NO_QUALITY_SCALE = [
     "occupancy",
     "onboarding",
     "panel_custom",
+    "power",
     "proxy",
     "python_script",
     "raspberry_pi",

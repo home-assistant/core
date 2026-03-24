@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:flash"
+    },
+    "crossed_threshold": {
+      "trigger": "mdi:flash"
+    }
+  }
+}

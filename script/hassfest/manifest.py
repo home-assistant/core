@@ -110,6 +110,7 @@ NO_IOT_CLASS = [
     "onboarding",
     "panel_custom",
     "plant",
+    "power",
     "profiler",
     "proxy",
     "python_script",

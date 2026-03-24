@@ -1,0 +1,87 @@
+.trigger_common_fields:
+  behavior: &trigger_behavior
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+.number_or_entity: &number_or_entity
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "mW"
+                    - "W"
+                    - "kW"
+                    - "MW"
+                    - "GW"
+                    - "TW"
+                    - "BTU/h"
+                - domain: sensor
+                  device_class: power
+                - domain: number
+                  device_class: power
+      translation_key: number_or_entity
+
+.trigger_threshold_type: &trigger_threshold_type
+  required: true
+  default: above
+  selector:
+    select:
+      options:
+        - above
+        - below
+        - between
+        - outside
+      translation_key: trigger_threshold_type
+
+.trigger_unit: &trigger_unit
+  required: false
+  selector:
+    select:
+      options:
+        - "mW"
+        - "W"
+        - "kW"
+        - "MW"
+        - "GW"
+        - "TW"
+        - "BTU/h"
+
+.trigger_target: &trigger_target
+  entity:
+    - domain: number
+      device_class: power
+    - domain: sensor
+      device_class: power
+
+changed:
+  target: *trigger_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+    unit: *trigger_unit
+
+crossed_threshold:
+  target: *trigger_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
+    unit: *trigger_unit
