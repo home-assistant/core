@@ -400,7 +400,7 @@
           "name": "[%key:component::light::common::field_xy_color_name%]"
         }
       },
-      "name": "[%key:common::action::toggle%]",
+      "name": "Toggle light",
       "sections": {
         "advanced_fields": {
           "name": "[%key:component::light::common::section_advanced_fields_name%]"
@@ -419,7 +419,7 @@
           "name": "[%key:component::light::common::field_transition_name%]"
         }
       },
-      "name": "[%key:common::action::turn_off%]",
+      "name": "Turn off light",
       "sections": {
         "advanced_fields": {
           "name": "[%key:component::light::common::section_advanced_fields_name%]"
@@ -494,7 +494,7 @@
           "name": "[%key:component::light::common::field_xy_color_name%]"
         }
       },
-      "name": "[%key:common::action::turn_on%]",
+      "name": "Turn on light",
       "sections": {
         "advanced_fields": {
           "name": "[%key:component::light::common::section_advanced_fields_name%]"
