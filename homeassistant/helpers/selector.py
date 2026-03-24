@@ -1340,6 +1340,23 @@ class NumericThresholdActiveChoice(StrEnum):
     ENTITY = "entity"
 
 
+def _extract_numeric_threshold_entry(data: dict[str, Any]) -> dict[str, Any]:
+    """Extract only the relevant fields from a threshold value entry.
+
+    When active_choice is present, keep only the chosen field and
+    unit_of_measurement (only for the number choice), then drop active_choice.
+    """
+    active_choice = data.get("active_choice")
+    if active_choice is None:
+        return data
+    if active_choice == NumericThresholdActiveChoice.ENTITY:
+        return {"entity": data["entity"]}
+    result: dict[str, Any] = {"number": data["number"]}
+    if "unit_of_measurement" in data:
+        result["unit_of_measurement"] = data["unit_of_measurement"]
+    return result
+
+
 _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -1347,15 +1364,16 @@ _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
                 vol.Coerce(NumericThresholdActiveChoice), lambda val: val.value
             ),
             vol.Optional("number"): vol.Coerce(float),
-            vol.Optional("entity_id"): cv.entity_id,
+            vol.Optional("entity"): cv.entity_id,
             vol.Optional("unit_of_measurement"): str,
         }
     ),
     vol.Any(
         vol.Schema({vol.Required("number"): object}, extra=vol.ALLOW_EXTRA),
-        vol.Schema({vol.Required("entity_id"): object}, extra=vol.ALLOW_EXTRA),
-        msg="Value entry must contain at least one of 'number' or 'entity_id'",
+        vol.Schema({vol.Required("entity"): object}, extra=vol.ALLOW_EXTRA),
+        msg="Value entry must contain at least one of 'number' or 'entity'",
     ),
+    _extract_numeric_threshold_entry,
 )
 
 _NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.Any(

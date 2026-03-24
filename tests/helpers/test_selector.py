@@ -529,7 +529,7 @@ def test_number_selector_schema_error(schema) -> None:
             {},
             (
                 {"type": "above", "value": {"number": 10}},
-                {"type": "below", "value": {"entity_id": "sensor.temperature"}},
+                {"type": "below", "value": {"entity": "sensor.temperature"}},
                 {
                     "type": "between",
                     "value_min": {"number": 10},
@@ -538,19 +538,7 @@ def test_number_selector_schema_error(schema) -> None:
                 {
                     "type": "outside",
                     "value_min": {"number": 10},
-                    "value_max": {"entity_id": "sensor.max_temp"},
-                },
-                # active_choice field
-                {
-                    "type": "above",
-                    "value": {"active_choice": "number", "number": 10},
-                },
-                {
-                    "type": "below",
-                    "value": {
-                        "active_choice": "entity",
-                        "entity_id": "sensor.temperature",
-                    },
+                    "value_max": {"entity": "sensor.max_temp"},
                 },
             ),
             (
@@ -561,7 +549,7 @@ def test_number_selector_schema_error(schema) -> None:
                 {"type": "below"},  # Missing value
                 {"type": "between", "value_min": {"number": 10}},  # Missing value_max
                 {"type": "outside", "value_max": {"number": 20}},  # Missing value_min
-                {"type": "above", "value": {}},  # Entry missing number and entity_id
+                {"type": "above", "value": {}},  # Entry missing number and entity
                 {"type": "above", "value": {"number": 10}, "extra": "key"},
                 {"type": "invalid_type", "value": {"number": 10}},
                 {
@@ -588,12 +576,12 @@ def test_number_selector_schema_error(schema) -> None:
         ),
         (
             {"entity": {"domain": "sensor"}},
-            ({"type": "above", "value": {"entity_id": "sensor.temperature"}},),
+            ({"type": "above", "value": {"entity": "sensor.temperature"}},),
             (),
         ),
         (
             {"entity": [{"domain": "sensor"}, {"domain": "input_number"}]},
-            ({"type": "above", "value": {"entity_id": "sensor.temperature"}},),
+            ({"type": "above", "value": {"entity": "sensor.temperature"}},),
             (),
         ),
     ],
@@ -603,6 +591,72 @@ def test_numeric_threshold_selector_schema(
 ) -> None:
     """Test numeric threshold selector."""
     _test_selector("numeric_threshold", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("value_in", "value_out"),
+    [
+        # No active_choice: pass through unchanged
+        (
+            {"type": "above", "value": {"number": 10}},
+            {"type": "above", "value": {"number": 10.0}},
+        ),
+        (
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
+        ),
+        # active_choice "number": keep number + unit_of_measurement, drop rest
+        (
+            {"type": "above", "value": {"active_choice": "number", "number": 10}},
+            {"type": "above", "value": {"number": 10.0}},
+        ),
+        (
+            {
+                "type": "above",
+                "value": {
+                    "active_choice": "number",
+                    "number": 5,
+                    "unit_of_measurement": "°C",
+                },
+            },
+            {"type": "above", "value": {"number": 5.0, "unit_of_measurement": "°C"}},
+        ),
+        # active_choice "entity": keep only entity, drop unit_of_measurement
+        (
+            {
+                "type": "below",
+                "value": {
+                    "active_choice": "entity",
+                    "entity": "sensor.temperature",
+                    "unit_of_measurement": "°C",
+                },
+            },
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
+        ),
+        # active_choice in value_min / value_max
+        (
+            {
+                "type": "between",
+                "value_min": {"active_choice": "number", "number": 10},
+                "value_max": {
+                    "active_choice": "entity",
+                    "entity": "sensor.max_temp",
+                },
+            },
+            {
+                "type": "between",
+                "value_min": {"number": 10.0},
+                "value_max": {"entity": "sensor.max_temp"},
+            },
+        ),
+    ],
+)
+def test_numeric_threshold_selector_active_choice_extraction(
+    value_in: Any, value_out: Any
+) -> None:
+    """Test that active_choice is stripped and only the active field is kept."""
+    vol_schema = vol.Schema({"selection": selector.selector({"numeric_threshold": {}})})
+    assert vol_schema({"selection": value_in}) == {"selection": value_out}
 
 
 @pytest.mark.parametrize(
