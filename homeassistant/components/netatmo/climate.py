@@ -456,9 +456,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
-        for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES].get(
-            self.home.entity_id, {}
-        ).items():
+        for sid, schedule in (
+            self.hass.data[DOMAIN][DATA_SCHEDULES].get(self.home.entity_id, {}).items()
+        ):
             if schedule.name == schedule_name:
                 schedule_id = sid
                 break
