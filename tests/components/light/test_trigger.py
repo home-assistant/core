@@ -5,13 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import (
-    CONF_ABOVE,
-    CONF_BELOW,
-    CONF_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ABOVE, CONF_BELOW, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.trigger import (
     CONF_LOWER_LIMIT,
@@ -20,14 +14,15 @@ from homeassistant.helpers.trigger import (
     ThresholdType,
 )
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
-    arm_trigger,
     assert_trigger_behavior_any,
+    assert_trigger_behavior_first,
+    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_ignores_limit_entities_with_wrong_unit,
     parametrize_target_entities,
     parametrize_trigger_states,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -297,29 +292,17 @@ async def test_light_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
-    other_entity_ids = set(target_lights["included"]) - {entity_id}
-
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
-
-    for state in states[1:]:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        # Triggering other lights should not cause the trigger to fire again
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
+    await assert_trigger_behavior_first(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_lights,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -347,31 +330,17 @@ async def test_light_state_attribute_trigger_behavior_first(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the light state trigger fires when the first light state changes to a specific state."""
-    other_entity_ids = set(target_lights["included"]) - {entity_id}
-
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass, trigger, {"behavior": "first"} | trigger_options, trigger_target_config
+    await assert_trigger_behavior_first(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_lights,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
-
-    for state in states[1:]:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        # Triggering other lights should not cause the trigger to fire again
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -406,28 +375,17 @@ async def test_light_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
-    other_entity_ids = set(target_lights["included"]) - {entity_id}
-
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
-
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_lights,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -455,27 +413,63 @@ async def test_light_state_attribute_trigger_behavior_last(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the light state trigger fires when the last light state changes to a specific state."""
-    other_entity_ids = set(target_lights["included"]) - {entity_id}
-
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_lights,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
     )
 
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "limit_entities"),
+    [
+        (
+            "light.brightness_changed",
+            {
+                CONF_ABOVE: "sensor.brightness_above",
+                CONF_BELOW: "sensor.brightness_below",
+            },
+            ["sensor.brightness_above", "sensor.brightness_below"],
+        ),
+        (
+            "light.brightness_crossed_threshold",
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: "sensor.brightness_lower",
+                CONF_UPPER_LIMIT: "sensor.brightness_upper",
+            },
+            ["sensor.brightness_lower", "sensor.brightness_upper"],
+        ),
+    ],
+)
+async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger: str,
+    trigger_options: dict[str, Any],
+    limit_entities: list[str],
+) -> None:
+    """Test numerical triggers do not fire if limit entities have the wrong unit."""
+    await assert_trigger_ignores_limit_entities_with_wrong_unit(
+        hass,
+        service_calls=service_calls,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        entity_id="light.test_light",
+        entity_state=STATE_ON,
+        reset_attributes={ATTR_BRIGHTNESS: 0},
+        trigger_attributes={ATTR_BRIGHTNESS: 128},
+        limit_entities=[
+            (limit_entities[0], "10"),
+            (limit_entities[1], "90"),
+        ],
+        correct_unit="%",
+        wrong_unit="lx",
+    )
