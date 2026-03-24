@@ -193,6 +193,15 @@
     "invalid_auth_no_details": {
       "message": "Authentication failed for the Proxmox VE instance."
     },
+    "invalid_target_entity": {
+      "message": "The selected target `{entity_id}` is not a valid Proxmox VE VM or container."
+    },
+    "invalid_target_not_vm_or_container": {
+      "message": "The selected device is not a Proxmox VE VM or LXC container. Only VM and container devices are supported for snapshots."
+    },
+    "invalid_target_single": {
+      "message": "You must target exactly one Proxmox VE VM or container (device or entity)."
+    },
     "no_nodes_found": {
       "message": "No active nodes were found on the Proxmox VE server."
     },
@@ -205,6 +214,12 @@
     "permissions_error": {
       "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
     },
+    "snapshot_failed": {
+      "message": "Creating the snapshot failed while communicating with the Proxmox VE instance."
+    },
+    "snapshot_name_conflict": {
+      "message": "Could not create snapshot: all name variants for `{base_name}` are already taken."
+    },
     "ssl_error": {
       "message": "An SSL error occurred: {error}"
     },
@@ -213,6 +228,9 @@
     },
     "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
+    },
+    "version_entity_unavailable": {
+      "message": "The version entity `{entity_id}` is not available or has no version state."
     }
   },
   "issues": {
@@ -235,6 +253,34 @@
     "deprecated_yaml_import_issue_ssl_error": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    }
+  },
+  "services": {
+    "create_snapshot": {
+      "description": "Creates a snapshot on a VM or LXC container. The snapshot name is built from the VM name and the current date. Set `Version entity` to use a version string instead of the date — useful before upgrading.",
+      "fields": {
+        "description": {
+          "description": "Description stored with the snapshot. Defaults to 'Snapshot triggered from Home Assistant on YYYY-MM-DD' if left empty.",
+          "name": "Description"
+        },
+        "include_ram": {
+          "description": "Save the VM's RAM state in the snapshot. Only works for running VMs — stopped VMs and LXC containers do not support RAM snapshots.",
+          "name": "Include RAM"
+        },
+        "snapshot_name": {
+          "description": "Override the full snapshot name. If left empty, the name is built automatically from the VM name and the current date. Use only letters, numbers, underscores, and hyphens.",
+          "name": "Snapshot name"
+        },
+        "version_entity": {
+          "description": "Optional sensor entity whose state is used as the version string in the snapshot name (for example the Version integration `Local installation` sensor). If not set, the current date is used.",
+          "name": "Version entity"
+        },
+        "vm_name": {
+          "description": "Name of the VM used in the snapshot name. Leave empty to use the device name from Proxmox. Spaces and special characters are automatically replaced with underscores.",
+          "name": "VM name"
+        }
+      },
+      "name": "Create snapshot"
     }
   }
 }

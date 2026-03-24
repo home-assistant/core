@@ -1,11 +1,23 @@
 """Constants for ProxmoxVE."""
 
+from enum import StrEnum
+
+
+class ResourceType(StrEnum):
+    """Proxmox resource types that support snapshots."""
+
+    VM = "vm"
+    CONTAINER = "container"
+
+
 DOMAIN = "proxmoxve"
 CONF_REALM = "realm"
 CONF_NODE = "node"
 CONF_NODES = "nodes"
 CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
+
+SERVICE_CREATE_SNAPSHOT = "create_snapshot"
 
 NODE_ONLINE = "online"
 VM_CONTAINER_RUNNING = "running"

@@ -82,5 +82,10 @@
         "default": "mdi:server"
       }
     }
+  },
+  "services": {
+    "create_snapshot": {
+      "service": "mdi:archive"
+    }
   }
 }
