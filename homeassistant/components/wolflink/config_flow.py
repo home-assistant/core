@@ -12,6 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -75,6 +76,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         device_map = {str(d.id): d.name for d in self.fetched_systems}
         if user_input is not None:
             assert self.username is not None
+            assert self.password is not None
             return self.async_create_entry(
                 title=self.username,
                 data={
@@ -96,7 +98,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> "WolfLinkOptionsFlow":
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return WolfLinkOptionsFlow()
 
