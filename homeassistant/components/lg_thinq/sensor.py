@@ -761,11 +761,15 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                 )
         self._attr_native_value = value
 
-        if (
-            data_unit := self._get_unit_of_measurement(self.data.unit)
-        ) is not None and isinstance(self.data.value, (int, float)):
-            # For different from description's unit
-            self._attr_native_unit_of_measurement = data_unit
+        if isinstance(self.data.value, (int, float)):
+            if (data_unit := self._get_unit_of_measurement(self.data.unit)) is not None:
+                # For different from description's unit
+                self._attr_native_unit_of_measurement = data_unit
+        else:
+            # Clear unit when value is non-numeric to avoid treating it as numeric
+            self._attr_native_unit_of_measurement = (
+                self.entity_description.native_unit_of_measurement
+            )
 
         _LOGGER.debug(
             "[%s:%s] update status: %s -> %s, options:%s, unit:%s, type:%s",
