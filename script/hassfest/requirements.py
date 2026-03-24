@@ -236,16 +236,41 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     # - reasonX should be the name of the invalid dependency
     # https://github.com/jaraco/jaraco.net
     "abode": {"jaraco-abode": {"jaraco-net"}},
+    # https://github.com/Azure/azure-kusto-python/
+    "azure_data_explorer": {
+        # Legacy namespace packages, resolved with >=5.0.5
+        # azure_kusto_data-*-nspkg.pth
+        # azure_kusto_ingest-*-nspkg.pth
+        "homeassistant": {"azure-kusto-data", "azure-kusto-ingest"},
+    },
     # https://github.com/coinbase/coinbase-advanced-py
+    "cmus": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
+    "fitbit": {
+        # Setuptools - distutils-precedence.pth
+        "fitbit": {"setuptools"}
+    },
     "flume": {"homeassistant": {"pyflume"}},
     # https://github.com/fortinet-solutions-cse/fortiosapi
     "fortios": {"homeassistant": {"fortiosapi"}},
     # https://github.com/manzanotti/geniushub-client
     "geniushub": {"homeassistant": {"geniushub-client"}},
+    # https://github.com/costastf/locationsharinglib
+    "google_maps": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "locationsharinglib": {"coloredlogs"},
+    },
+    # https://github.com/NabuCasa/universal-silabs-flasher
+    "homeassistant_hardware": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "universal-silabs-flasher": {"coloredlogs"},
+    },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
     # https://github.com/danifus/pyzipper
@@ -257,11 +282,26 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     # https://github.com/timmo001/aiolyric
     "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
-    "microbees": {"homeassistant": {"microbeespy"}},
+    "microbees": {
+        "homeassistant": {"microbeespy"},
+        "microbeespy": {"setuptools"},
+    },
+    "mochad": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
+    "opnsense": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
+    "remote_rpi_gpio": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"}
+    },
     # https://github.com/sstallion/sensorpush-api
     "sensorpush_cloud": {
         "homeassistant": {"sensorpush-api"},
@@ -273,6 +313,14 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "watergate": {"homeassistant": {"watergate-local-api"}},
     # https://github.com/markusressel/xs1-api-client
     "xs1": {"homeassistant": {"xs1-api-client"}},
+    # https://github.com/zigpy/zigpy-znp
+    "zha": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"},
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        # https://github.com/xolox/python-coloredlogs/blob/15.0.1/coloredlogs.pth
+        "zigpy-znp": {"coloredlogs"},
+    },
 }
 
 PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
