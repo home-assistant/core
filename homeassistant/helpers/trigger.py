@@ -70,12 +70,15 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
 from .automation import (
+    CONF_UNIT,
     DomainSpec,
     NumericalDomainSpec,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
+    number_or_entity,
+    validate_unit_set_if_range_numerical,
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
@@ -84,7 +87,7 @@ from .target import (
     async_track_target_selector_state_change_event,
 )
 from .template import Template
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -512,8 +515,10 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
         )
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state is not the same as the expected origin state."""
-        return bool(self._get_tracked_value(state) != self._from_state)
+        """Check if the new state is valid."""
+        return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN) and bool(
+            self._get_tracked_value(state) != self._from_state
+        )
 
 
 def _validate_range[_T: dict[str, Any]](
@@ -544,54 +549,12 @@ def _validate_range[_T: dict[str, Any]](
     return _validate_range_impl
 
 
-CONF_UNIT: Final = "unit"
-
-
-def _validate_unit_set_if_range_numerical[_T: dict[str, Any]](
-    lower_limit: str, upper_limit: str
-) -> Callable[[_T], _T]:
-    """Validate that unit is set if upper or lower limit is numerical."""
-
-    def _validate_unit_set_if_range_numerical_impl(options: _T) -> _T:
-        if (
-            any(
-                opt in options and not isinstance(options[opt], str)
-                for opt in (lower_limit, upper_limit)
-            )
-        ) and options.get(CONF_UNIT) is None:
-            raise vol.Invalid("Unit must be specified when using numerical thresholds.")
-        return options
-
-    return _validate_unit_set_if_range_numerical_impl
-
-
-_NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
-    {
-        vol.Required("active_choice"): vol.In(["number", "entity"]),
-        vol.Optional("entity"): cv.entity_id,
-        vol.Optional("number"): vol.Coerce(float),
-    }
-)
-
-
-def _validate_number_or_entity(value: dict | float | str) -> float | str:
-    """Validate number or entity selector result."""
-    if isinstance(value, dict):
-        _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["active_choice"]]  # type: ignore[no-any-return]
-    return value
-
-
-_number_or_entity = vol.All(
-    _validate_number_or_entity, vol.Any(vol.Coerce(float), cv.entity_id)
-)
-
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): vol.All(
             {
-                vol.Optional(CONF_ABOVE): _number_or_entity,
-                vol.Optional(CONF_BELOW): _number_or_entity,
+                vol.Optional(CONF_ABOVE): number_or_entity,
+                vol.Optional(CONF_BELOW): number_or_entity,
             },
             _validate_range(CONF_ABOVE, CONF_BELOW),
         )
@@ -602,11 +565,22 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 
+    _valid_unit: str | None | UndefinedType = UNDEFINED
+
+    def _is_valid_unit(self, unit: str | None) -> bool:
+        """Check if the given unit is valid for this trigger."""
+        if isinstance(self._valid_unit, UndefinedType):
+            return True
+        return unit == self._valid_unit
+
     def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
         """Get numerical value from float or entity state."""
         if isinstance(entity_or_float, str):
             if not (state := self._hass.states.get(entity_or_float)):
                 # Entity not found
+                return None
+            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+                # Entity unit does not match the expected unit
                 return None
             try:
                 return float(state.state)
@@ -620,6 +594,8 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
         domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
+            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+                return None
             raw_value = state.state
         else:
             raw_value = state.attributes.get(domain_spec.value_source)
@@ -641,7 +617,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
 class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
-    _base_unit: str  # Base unit for the tracked value
+    _base_unit: str | None  # Base unit for the tracked value
     _manual_limit_unit: str | None  # Unit of above/below limits when numbers
     _unit_converter: type[BaseUnitConverter]
 
@@ -758,12 +734,12 @@ def make_numerical_state_changed_with_unit_schema(
         {
             vol.Required(CONF_OPTIONS, default={}): vol.All(
                 {
-                    vol.Optional(CONF_ABOVE): _number_or_entity,
-                    vol.Optional(CONF_BELOW): _number_or_entity,
+                    vol.Optional(CONF_ABOVE): number_or_entity,
+                    vol.Optional(CONF_BELOW): number_or_entity,
                     vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
                 },
                 _validate_range(CONF_ABOVE, CONF_BELOW),
-                _validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
+                validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
             )
         }
     )
@@ -822,8 +798,8 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                     [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
                 ),
-                vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
-                vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
+                vol.Optional(CONF_LOWER_LIMIT): number_or_entity,
+                vol.Optional(CONF_UPPER_LIMIT): number_or_entity,
                 vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
             },
             _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
@@ -907,14 +883,14 @@ def make_numerical_state_crossed_threshold_with_unit_schema(
                     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                         [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
                     ),
-                    vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
-                    vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
+                    vol.Optional(CONF_LOWER_LIMIT): number_or_entity,
+                    vol.Optional(CONF_UPPER_LIMIT): number_or_entity,
                     vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
                     vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
                 },
                 _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
                 _validate_limits_for_threshold_type,
-                _validate_unit_set_if_range_numerical(
+                validate_unit_set_if_range_numerical(
                     CONF_LOWER_LIMIT, CONF_UPPER_LIMIT
                 ),
             )
@@ -1016,6 +992,7 @@ def make_entity_origin_state_trigger(
 
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
+    valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
@@ -1023,12 +1000,14 @@ def make_entity_numerical_state_changed_trigger(
         """Trigger for numerical state value changes."""
 
         _domain_specs = domain_specs
+        _valid_unit = valid_unit
 
     return CustomTrigger
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
+    valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 
@@ -1036,6 +1015,41 @@ def make_entity_numerical_state_crossed_threshold_trigger(
         """Trigger for numerical state value crossing a threshold."""
 
         _domain_specs = domain_specs
+        _valid_unit = valid_unit
+
+    return CustomTrigger
+
+
+def make_entity_numerical_state_changed_with_unit_trigger(
+    domain_specs: Mapping[str, NumericalDomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalStateChangedTriggerWithUnitBase]:
+    """Create a trigger for numerical state value change."""
+
+    class CustomTrigger(EntityNumericalStateChangedTriggerWithUnitBase):
+        """Trigger for numerical state value changes."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
+
+    return CustomTrigger
+
+
+def make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+    domain_specs: Mapping[str, NumericalDomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalStateCrossedThresholdTriggerWithUnitBase]:
+    """Create a trigger for numerical state value crossing a threshold."""
+
+    class CustomTrigger(EntityNumericalStateCrossedThresholdTriggerWithUnitBase):
+        """Trigger for numerical state value crossing a threshold."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
 
     return CustomTrigger
 
@@ -1264,7 +1278,10 @@ async def _async_get_trigger_platform(
 
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
-    platform = _PLATFORM_ALIASES.get(platform, platform)
+    # Only apply aliases for old-style triggers (no sub_type).
+    # New-style triggers (e.g. "event.received") use the integration domain directly.
+    if len(platform_and_sub_type) == 1:
+        platform = _PLATFORM_ALIASES.get(platform, platform)
 
     if automation.is_disabled_experimental_trigger(hass, platform):
         raise vol.Invalid(
