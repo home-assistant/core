@@ -5,10 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.netatmo.const import (
-    DATA_SCHEDULES,
-    DOMAIN as NETATMO_DOMAIN,
-)
+from homeassistant.components.netatmo.const import DATA_SCHEDULES, DOMAIN
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -179,10 +176,8 @@ async def test_select_schedule_invalid_option(
 
     # Clear the schedule cache so the option lookup fails while HA still accepts the call
     home_id = "91763b24c43d3e344f424e8b"
-    original_schedules = (
-        hass.data[NETATMO_DOMAIN][DATA_SCHEDULES].get(home_id, {}).copy()
-    )
-    hass.data[NETATMO_DOMAIN][DATA_SCHEDULES][home_id] = {}
+    original_schedules = hass.data[DOMAIN][DATA_SCHEDULES].get(home_id, {}).copy()
+    hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {}
 
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_schedule:
         await hass.services.async_call(
@@ -197,4 +192,4 @@ async def test_select_schedule_invalid_option(
     assert "Default is not a valid schedule" in caplog.text
 
     # Restore schedule cache
-    hass.data[NETATMO_DOMAIN][DATA_SCHEDULES][home_id] = original_schedules
+    hass.data[DOMAIN][DATA_SCHEDULES][home_id] = original_schedules
