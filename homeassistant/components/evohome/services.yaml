@@ -16,6 +16,7 @@ set_system_mode:
             - "Heat"
             - "HeatingOff"
             - "Off"
+          custom_value: true
     period:
       example: '{"days": 28}'
       selector:
