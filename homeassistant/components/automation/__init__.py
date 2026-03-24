@@ -141,6 +141,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "schedule",
     "siren",
     "switch",
+    "temperature",
     "text",
     "vacuum",
     "water_heater",
