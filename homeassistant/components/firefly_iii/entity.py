@@ -44,7 +44,7 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
     ) -> None:
         """Initialize a Firefly account entity."""
         super().__init__(coordinator)
-        self._account = account
+        self._account_id = account.id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
@@ -58,13 +58,9 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
             f"{coordinator.config_entry.unique_id}_account_{account.id}_{key}"
         )
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        for account in self.coordinator.data.accounts:
-            if account.id == self._account.id:
-                self._account = account
-                break
-        super()._handle_coordinator_update()
+    @property
+    def _account(self) -> Account:
+        return self.coordinator.data.accounts[self._account_id]
 
 
 class FireflyCategoryBaseEntity(FireflyBaseEntity):
@@ -78,7 +74,7 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
     ) -> None:
         """Initialize a Firefly category entity."""
         super().__init__(coordinator)
-        self._category = category
+        self._category_id = category.id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
@@ -92,13 +88,9 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
             f"{coordinator.config_entry.unique_id}_category_{category.id}_{key}"
         )
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        for category in self.coordinator.data.category_details:
-            if category.id == self._category.id:
-                self._category = category
-                break
-        super()._handle_coordinator_update()
+    @property
+    def _category(self) -> Category:
+        return self.coordinator.data.category_details[self._category_id]
 
 
 class FireflyBudgetBaseEntity(FireflyBaseEntity):
@@ -112,7 +104,7 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
     ) -> None:
         """Initialize a Firefly budget entity."""
         super().__init__(coordinator)
-        self._budget = budget
+        self._budget_id = budget.id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
@@ -126,10 +118,6 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
             f"{coordinator.config_entry.unique_id}_budget_{budget.id}_{key}"
         )
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        for budget in self.coordinator.data.budgets:
-            if budget.id == self._budget.id:
-                self._budget = budget
-                break
-        super()._handle_coordinator_update()
+    @property
+    def _budget(self) -> Budget:
+        return self.coordinator.data.budgets[self._budget_id]
