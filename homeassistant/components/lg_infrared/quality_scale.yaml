@@ -81,7 +81,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: |
-      The remote entity is the primary entity and should be enabled by default.
+      No entities should be disabled by default.
   entity-translations: done
   exception-translations:
     status: exempt
