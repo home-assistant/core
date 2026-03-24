@@ -138,6 +138,7 @@ class CloudBackupAgent(BackupAgent):
                     base64md5hash=base64md5hash,
                     metadata=metadata,
                     size=size,
+                    on_progress=on_progress,
                 )
                 break
             except CloudApiNonRetryableError as err:
