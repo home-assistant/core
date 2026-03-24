@@ -69,7 +69,9 @@ def async_sign_path(
     if refresh_token_id is None:
         if use_content_user:
             refresh_token_id = hass.data[STORAGE_KEY]
-        elif connection := websocket_api.current_connection.get():
+        elif (
+            connection := websocket_api.current_connection.get()
+        ) and connection.refresh_token_id:
             refresh_token_id = connection.refresh_token_id
         elif (
             request := current_request.get()
