@@ -26,18 +26,14 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
-    DeviceCategory.MAL: (
-        AlarmControlPanelEntityDescription(
-            key=DPCode.MASTER_MODE,
-            name="Alarm",
-        ),
+ALARM: dict[DeviceCategory, AlarmControlPanelEntityDescription] = {
+    DeviceCategory.MAL: AlarmControlPanelEntityDescription(
+        key=DPCode.MASTER_MODE,
+        name="Alarm",
     ),
-    DeviceCategory.WG2: (
-        AlarmControlPanelEntityDescription(
-            key=DPCode.MASTER_MODE,
-            name="Alarm",
-        ),
+    DeviceCategory.WG2: AlarmControlPanelEntityDescription(
+        key=DPCode.MASTER_MODE,
+        name="Alarm",
     ),
 }
 
@@ -69,11 +65,11 @@ async def async_setup_entry(
         entities: list[TuyaAlarmEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := ALARM.get(device.category):
-                entities.extend(
+            if (description := ALARM.get(device.category)) and (
+                definition := get_default_definition(device)
+            ):
+                entities.append(
                     TuyaAlarmEntity(device, manager, description, definition)
-                    for description in descriptions
-                    if (definition := get_default_definition(device))
                 )
         async_add_entities(entities)
 
