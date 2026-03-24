@@ -21,6 +21,7 @@ from homeassistant.helpers.trigger import (
     make_entity_numerical_state_changed_with_unit_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
     make_entity_numerical_state_crossed_threshold_with_unit_trigger,
+    make_entity_target_state_trigger,
 )
 from homeassistant.util.unit_conversion import (
     CarbonMonoxideConcentrationConverter,
@@ -38,11 +39,9 @@ def _make_detected_trigger(
 ) -> type[EntityTargetStateTriggerBase]:
     """Create a detected trigger for a binary sensor device class."""
 
-    class DetectedTrigger(EntityTargetStateTriggerBase):
-        _domain_specs = {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}
-        _to_states = {STATE_ON}
-
-    return DetectedTrigger
+    return make_entity_target_state_trigger(
+        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}, STATE_ON
+    )
 
 
 def _make_cleared_trigger(
@@ -50,11 +49,9 @@ def _make_cleared_trigger(
 ) -> type[EntityTargetStateTriggerBase]:
     """Create a cleared trigger for a binary sensor device class."""
 
-    class ClearedTrigger(EntityTargetStateTriggerBase):
-        _domain_specs = {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}
-        _to_states = {STATE_OFF}
-
-    return ClearedTrigger
+    return make_entity_target_state_trigger(
+        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}, STATE_OFF
+    )
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
