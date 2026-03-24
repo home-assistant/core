@@ -392,7 +392,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         description: SelectEntityDescription,
         definition: TuyaSelectDefinition,
     ) -> None:
-        """Init Tuya sensor."""
+        """Initialize a Tuya select entity."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.select_wrapper
         self._attr_options = definition.select_wrapper.options

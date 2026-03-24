@@ -489,7 +489,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         description: NumberEntityDescription,
         definition: TuyaNumberDefinition,
     ) -> None:
-        """Init Tuya sensor."""
+        """Initialize a Tuya number entity."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.number_wrapper
 
