@@ -6,6 +6,9 @@
   "dhcp": [
     {
       "hostname": "litter-robot4"
+    },
+    {
+      "hostname": "whiskerrobots"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/litterrobot",

@@ -31,12 +31,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Lock Rule',
+    'object_id_base': 'Lock rule',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Lock Rule',
+    'original_name': 'Lock rule',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -50,7 +50,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Back Door Lock Rule',
+      'friendly_name': 'Back Door Lock rule',
       'options': list([
         'schedule',
         'keep_lock',
@@ -91,12 +91,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Rule End Time',
+    'object_id_base': 'Rule end time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Rule End Time',
+    'original_name': 'Rule end time',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -110,7 +110,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Back Door Rule End Time',
+      'friendly_name': 'Back Door Rule end time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.back_door_rule_end_time',
@@ -152,12 +152,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Lock Rule',
+    'object_id_base': 'Lock rule',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Lock Rule',
+    'original_name': 'Lock rule',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -171,7 +171,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Front Door Lock Rule',
+      'friendly_name': 'Front Door Lock rule',
       'options': list([
         'schedule',
         'keep_lock',
@@ -212,12 +212,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Rule End Time',
+    'object_id_base': 'Rule end time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Rule End Time',
+    'original_name': 'Rule end time',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -231,7 +231,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Front Door Rule End Time',
+      'friendly_name': 'Front Door Rule end time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.front_door_rule_end_time',
