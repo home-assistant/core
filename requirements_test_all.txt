@@ -2514,7 +2514,7 @@ solaredge-web==0.0.1
 solarlog_cli==0.7.0
 
 # homeassistant.components.solarman
-solarman-opendata==0.0.2
+solarman-opendata==0.0.3
 
 # homeassistant.components.solax
 solax==3.2.3
