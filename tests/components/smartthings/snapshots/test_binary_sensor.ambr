@@ -1975,8 +1975,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_100001][binary_sensor.kjoleskap_coolselect_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2025,8 +2026,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_100001][binary_sensor.kjoleskap_filter_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2075,8 +2077,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_100001][binary_sensor.kjoleskap_freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2125,8 +2128,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_100001][binary_sensor.kjoleskap_fridge_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
