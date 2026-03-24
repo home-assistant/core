@@ -76,9 +76,7 @@ rules:
   icon-translations:
     status: done
     comment: no custom icons, only default icons
-  reconfiguration-flow:
-    status: todo
-    comment: handle at least host change
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no known repair use case so far
