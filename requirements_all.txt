@@ -276,7 +276,7 @@ aioguardian==2026.01.1
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.4.2
+aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.33.0
