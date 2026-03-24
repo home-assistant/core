@@ -4,7 +4,7 @@ This centralizes listening to raw scene events and keeps lightweight
 dataclasses with the current active regular scene / smart scene and
 related metadata (mode, last recall, speed, brightness).
 
-Sensor and binary_sensor entities subscribe to the manager for updates
+Entities that track Hue scene activity subscribe to the manager for updates
 instead of each registering their own low-level event listener.
 """
 
