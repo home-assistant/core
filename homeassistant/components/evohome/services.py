@@ -85,7 +85,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
             translation_placeholders={ATTR_MODE: mode},
         )
 
-    # volutpuous schema ensures that duration and period are not both present
+    # voluptuous schema ensures that duration and period are not both present
 
     if not mode_info[SZ_CAN_BE_TEMPORARY]:
         if ATTR_DURATION in data or ATTR_PERIOD in data:
