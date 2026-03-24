@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation
+from homeassistant.const import PERCENTAGE, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -105,6 +105,25 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxNodeSensorEntityDescription(
+        key="node_memory_percentage",
+        translation_key="node_memory_percentage",
+        value_fn=lambda data: int(data.node["mem"]) / int(data.node["maxmem"]) * 100,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxNodeSensorEntityDescription(
+        key="node_uptime",
+        translation_key="node_uptime",
+        value_fn=lambda data: data.node["uptime"],
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxNodeSensorEntityDescription(
         key="node_status",
         translation_key="node_status",
         value_fn=lambda data: data.node["status"],
@@ -147,6 +166,25 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxVMSensorEntityDescription(
+        key="vm_memory_percentage",
+        translation_key="vm_memory_percentage",
+        value_fn=lambda data: int(data["mem"]) / int(data["maxmem"]) * 100,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxVMSensorEntityDescription(
+        key="vm_uptime",
+        translation_key="vm_uptime",
+        value_fn=lambda data: data["uptime"],
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -215,6 +253,25 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxContainerSensorEntityDescription(
+        key="container_memory_percentage",
+        translation_key="container_memory_percentage",
+        value_fn=lambda data: int(data["mem"]) / int(data["maxmem"]) * 100,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxContainerSensorEntityDescription(
+        key="container_uptime",
+        translation_key="container_uptime",
+        value_fn=lambda data: data["uptime"],
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),

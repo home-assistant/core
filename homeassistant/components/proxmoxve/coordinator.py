@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 class ProxmoxNodeData:
     """All resources for a single Proxmox node."""
 
-    node: dict[str, str] = field(default_factory=dict)
+    node: dict[str, Any] = field(default_factory=dict)
     vms: dict[int, dict[str, Any]] = field(default_factory=dict)
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
 

@@ -36,6 +36,9 @@
       "container_memory": {
         "default": "mdi:memory"
       },
+      "container_memory_percentage": {
+        "default": "mdi:memory"
+      },
       "container_status": {
         "default": "mdi:server"
       },
@@ -57,6 +60,9 @@
       "node_memory": {
         "default": "mdi:memory"
       },
+      "node_memory_percentage": {
+        "default": "mdi:memory"
+      },
       "node_status": {
         "default": "mdi:server"
       },
@@ -76,6 +82,9 @@
         "default": "mdi:memory"
       },
       "vm_memory": {
+        "default": "mdi:memory"
+      },
+      "vm_memory_percentage": {
         "default": "mdi:memory"
       },
       "vm_status": {

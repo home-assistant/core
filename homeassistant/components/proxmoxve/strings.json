@@ -113,6 +113,9 @@
       "container_memory": {
         "name": "Memory usage"
       },
+      "container_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
       "container_status": {
         "name": "Status",
         "state": {
@@ -120,6 +123,9 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
+      },
+      "container_uptime": {
+        "name": "Uptime"
       },
       "node_cpu": {
         "name": "CPU usage"
@@ -139,12 +145,18 @@
       "node_memory": {
         "name": "Memory usage"
       },
+      "node_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
       "node_status": {
         "name": "Status",
         "state": {
           "offline": "Offline",
           "online": "Online"
         }
+      },
+      "node_uptime": {
+        "name": "Uptime"
       },
       "vm_cpu": {
         "name": "CPU usage"
@@ -164,6 +176,9 @@
       "vm_memory": {
         "name": "Memory usage"
       },
+      "vm_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
       "vm_status": {
         "name": "Status",
         "state": {
@@ -171,6 +186,9 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
+      },
+      "vm_uptime": {
+        "name": "Uptime"
       }
     }
   },
