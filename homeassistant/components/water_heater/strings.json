@@ -1,7 +1,67 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted water heaters.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted water heaters to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more water heaters are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
+          "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Water heater is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more water heaters are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
+          "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Water heater is on"
+    },
+    "is_operation_mode": {
+      "description": "Tests if one or more water heaters are set to a specific operation mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
+          "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "operation_mode": {
+          "description": "The operation mode to check for.",
+          "name": "Operation mode"
+        }
+      },
+      "name": "Water heater operation mode"
+    },
+    "is_target_temperature": {
+      "description": "Tests the temperature setpoint of one or more water heaters.",
+      "fields": {
+        "above": {
+          "description": "Require the target temperature to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
+          "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the target temperature to be below this value.",
+          "name": "Below"
+        },
+        "unit": {
+          "description": "All values will be converted to this unit when evaluating the condition.",
+          "name": "Unit of measurement"
+        }
+      },
+      "name": "Water heater target temperature"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -59,6 +119,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "number_or_entity": {
       "choices": {
         "entity": "Entity",
