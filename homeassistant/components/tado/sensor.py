@@ -132,7 +132,6 @@ HOME_SENSORS = [
     ),
 ]
 
-
 TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="temperature",
     state_fn=lambda data: data.current_temp,
