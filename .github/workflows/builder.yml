@@ -224,7 +224,6 @@ jobs:
       matrix:
         machine:
           - generic-x86-64
-          - intel-nuc
           - khadas-vim3
           - odroid-c2
           - odroid-c4
@@ -246,10 +245,6 @@ jobs:
             arch: amd64
             runs-on: ubuntu-24.04
           - machine: qemux86-64
-            arch: amd64
-            runs-on: ubuntu-24.04
-          # TODO: remove, intel-nuc is a legacy name for x86-64, renamed in 2021
-          - machine: intel-nuc
             arch: amd64
             runs-on: ubuntu-24.04
     steps:
