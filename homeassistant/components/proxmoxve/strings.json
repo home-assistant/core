@@ -130,6 +130,9 @@
       },
       "stop_all": {
         "name": "Stop all"
+      },
+      "suspend_all": {
+        "name": "Suspend all"
       }
     },
     "sensor": {
