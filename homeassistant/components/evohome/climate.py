@@ -388,9 +388,16 @@ class EvoController(EvoClimateEntity):
     ) -> None:
         """Set a Controller to any of its native operating modes."""
         until = dt_util.as_utc(until) if until else None
-        await self.coordinator.call_client_api(
-            self._evo_device.set_mode(mode, until=until)
-        )
+        try:
+            await self.coordinator.call_client_api(
+                self._evo_device.set_mode(mode, until=until)
+            )
+        except evo.InvalidSystemModeError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_system_mode",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @property
     def hvac_mode(self) -> HVACMode:

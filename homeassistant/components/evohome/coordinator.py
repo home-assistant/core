@@ -26,10 +26,7 @@ from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT, EvoTcsConfigRe
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import DOMAIN
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -141,13 +138,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             result = await client_api
-
-        except ec2.InvalidSystemModeError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_system_mode",
-                translation_placeholders={"error": str(err)},
-            ) from err
 
         except ec2.ApiRequestFailedError as err:
             self.logger.error(err)
