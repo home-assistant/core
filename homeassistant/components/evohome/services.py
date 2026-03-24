@@ -73,6 +73,10 @@ def _validate_set_system_mode_params(call: ServiceCall, tcs: ControlSystem) -> N
     mode = call.data[ATTR_MODE]
     evo_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
 
+    # Validation occurs here, instead of in the library, because it uses a slightly
+    # different schema (until instead of duration/period) for the method invoked
+    # via this service call
+
     if (mode_info := evo_modes.get(mode)) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -118,7 +122,11 @@ def setup_service_functions(
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the Evohome system mode or reset the system."""
 
-        if call.service == EvoService.SET_SYSTEM_MODE:  # no validation for RESET_SYSTEM
+        # No validation for RESET_SYSTEM here (other than the schema), as the library
+        # method invoked via that service call may be able to emulate the reset even if
+        # the system doesn't support auto_with_reset natively
+
+        if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(call, coordinator.tcs)
 
         payload = {
