@@ -1,5 +1,6 @@
 """Define tests for the The Things Network sensor."""
 
+import logging
 from unittest.mock import AsyncMock
 
 import pytest
