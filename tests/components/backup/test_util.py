@@ -5,8 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 import dataclasses
-import io
-import json
 from pathlib import Path
 import tarfile
 from unittest.mock import Mock, patch
@@ -426,7 +424,7 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
 
 
 @pytest.mark.parametrize(
-    ("addons", "padding_size"),
+    ("addons", "padding_size", "encrypted_backup"),
     [
         (
             [
@@ -434,12 +432,14 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
             40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar",
         ),
         (
             [
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
             30720,  # 3 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.encrypted_skip_core2",
         ),
     ],
 )
@@ -447,11 +447,13 @@ async def test_encrypted_backup_streamer(
     hass: HomeAssistant,
     addons: list[AddonInfo],
     padding_size: int,
+    encrypted_backup: str,
 ) -> None:
-    """Test the encrypted backup streamer encrypts and decrypts correctly."""
+    """Test the encrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
+    encrypted_backup_path = get_fixture_path(encrypted_backup, DOMAIN)
     backup = AgentBackup(
         addons=addons,
         backup_id="1234",
@@ -475,54 +477,32 @@ async def test_encrypted_backup_streamer(
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
 
-    encryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+    # Patch os.urandom to return values matching the nonce used in the encrypted
+    # test backup. The backup has three inner tar files, but we need an extra nonce
+    # for a future planned supervisor.tar.
+    with patch("os.urandom") as mock_randbytes:
+        mock_randbytes.side_effect = (
+            bytes.fromhex("bd34ea6fc93b0614ce7af2b44b4f3957"),
+            bytes.fromhex("1296d6f7554e2cb629a3dc4082bae36c"),
+            bytes.fromhex("8b7a58e48faf2efb23845eb3164382e0"),
+            bytes.fromhex("00000000000000000000000000000000"),
+        )
+        encryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
 
-    assert encryptor.backup() == dataclasses.replace(
-        backup, protected=True, size=backup.size + len(expected_padding)
-    )
+        assert encryptor.backup() == dataclasses.replace(
+            backup, protected=True, size=backup.size + len(expected_padding)
+        )
 
-    encrypted_stream = await encryptor.open_stream()
-    encrypted_output = b""
-    async for chunk in encrypted_stream:
-        encrypted_output += chunk
-    await encryptor.wait()
+        encrypted_stream = await encryptor.open_stream()
+        encrypted_output = b""
+        async for chunk in encrypted_stream:
+            encrypted_output += chunk
+        await encryptor.wait()
 
-    # Verify the encrypted output has the expected size (original + padding).
-    assert len(encrypted_output) == backup.size + len(expected_padding)
-    # Verify the padding is null bytes at the end.
-    assert encrypted_output[-padding_size:] == expected_padding
-
-    # Verify the encrypted output can be decrypted back to the original.
-    encrypted_size = len(encrypted_output) - padding_size
-    encrypted_backup = dataclasses.replace(backup, protected=True, size=encrypted_size)
-
-    async def send_encrypted() -> AsyncIterator[bytes]:
-        for i in range(0, encrypted_size, 1024):
-            yield encrypted_output[i : i + 1024]
-
-    async def open_encrypted() -> AsyncIterator[bytes]:
-        return send_encrypted()
-
-    decryptor = DecryptedBackupStreamer(
-        hass, encrypted_backup, open_encrypted, "hunter2"
-    )
-    decrypted_stream = await decryptor.open_stream()
-    decrypted_output = b""
-    async for chunk in decrypted_stream:
-        decrypted_output += chunk
-    await decryptor.wait()
-
-    # Verify the decrypted output is valid tar content with the expected
-    # inner tar files. The decrypt process reverses encryption, setting
-    # protected back to False.
-    decrypted_tar = io.BytesIO(decrypted_output)
-    with tarfile.open(fileobj=decrypted_tar, mode="r:") as tar:
-        members = tar.getnames()
-        assert "./backup.json" in members
-        backup_json = json.loads(tar.extractfile("./backup.json").read())
-        assert backup_json["protected"] is False
-        for addon in addons:
-            assert any(addon.slug in m for m in members)
+    # Expect the output to match the stored encrypted backup file, with additional
+    # padding.
+    encrypted_backup_data = encrypted_backup_path.read_bytes()
+    assert encrypted_output == encrypted_backup_data + expected_padding
 
 
 async def test_encrypted_backup_streamer_interrupt_stuck_reader(
