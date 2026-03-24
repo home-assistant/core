@@ -1,13 +1,30 @@
 {
+  "conditions": {
+    "is_charging": {
+      "condition": "mdi:battery-charging"
+    },
+    "is_low": {
+      "condition": "mdi:battery-alert"
+    },
+    "is_not_charging": {
+      "condition": "mdi:battery"
+    },
+    "is_not_low": {
+      "condition": "mdi:battery"
+    },
+    "percentage": {
+      "condition": "mdi:battery-unknown"
+    }
+  },
   "triggers": {
     "low": {
-      "trigger": "mdi:battery-low"
+      "trigger": "mdi:battery-alert"
     },
     "not_low": {
-      "trigger": "mdi:battery-high"
+      "trigger": "mdi:battery"
     },
     "percentage_changed": {
-      "trigger": "mdi:battery-sync"
+      "trigger": "mdi:battery-unknown"
     },
     "percentage_crossed_threshold": {
       "trigger": "mdi:battery-alert"
@@ -16,7 +33,7 @@
       "trigger": "mdi:battery-charging"
     },
     "stopped_charging": {
-      "trigger": "mdi:battery-off"
+      "trigger": "mdi:battery"
     }
   }
 }
