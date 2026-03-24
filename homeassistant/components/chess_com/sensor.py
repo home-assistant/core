@@ -2,7 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from chess_com_api import PlayerStats
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -22,7 +24,7 @@ from .entity import ChessEntity
 class ChessEntityDescription(SensorEntityDescription):
     """Sensor description for Chess.com player."""
 
-    value_fn: Callable[[ChessData], float | None]
+    value_fn: Callable[[ChessData], float]
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -73,13 +75,13 @@ GAME_MODE_SENSORS: tuple[ChessModeEntityDescription, ...] = (
     ),
 )
 
-GAME_MODES: tuple[str, ...] = (
-    "chess_daily",
-    "chess_rapid",
-    "chess_bullet",
-    "chess_blitz",
-    "chess960_daily",
-)
+GAME_MODES: dict[str, Callable[[PlayerStats], dict[str, Any] | None]] = {
+    "chess_daily": lambda stats: stats.chess_daily,
+    "chess_rapid": lambda stats: stats.chess_rapid,
+    "chess_bullet": lambda stats: stats.chess_bullet,
+    "chess_blitz": lambda stats: stats.chess_blitz,
+    "chess960_daily": lambda stats: stats.chess960_daily,
+}
 
 
 async def async_setup_entry(
@@ -94,10 +96,10 @@ async def async_setup_entry(
         ChessPlayerSensor(coordinator, description) for description in PLAYER_SENSORS
     ]
 
-    for game_mode in GAME_MODES:
-        if getattr(coordinator.data.stats, game_mode) is not None:
+    for game_mode, stats_fn in GAME_MODES.items():
+        if stats_fn(coordinator.data.stats) is not None:
             entities.extend(
-                ChessGameModeSensor(coordinator, description, game_mode)
+                ChessGameModeSensor(coordinator, description, game_mode, stats_fn)
                 for description in GAME_MODE_SENSORS
             )
 
@@ -120,7 +122,7 @@ class ChessPlayerSensor(ChessEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}.{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
@@ -135,11 +137,12 @@ class ChessGameModeSensor(ChessEntity, SensorEntity):
         coordinator: ChessCoordinator,
         description: ChessModeEntityDescription,
         game_mode: str,
+        stats_fn: Callable[[PlayerStats], dict[str, Any] | None],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._game_mode = game_mode
+        self._stats_fn = stats_fn
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}.{game_mode}.{description.key}"
         )
@@ -148,6 +151,7 @@ class ChessGameModeSensor(ChessEntity, SensorEntity):
     @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
-        mode_data = getattr(self.coordinator.data.stats, self._game_mode)
-        assert mode_data is not None
+        mode_data = self._stats_fn(self.coordinator.data.stats)
+        if TYPE_CHECKING:
+            assert mode_data is not None
         return self.entity_description.value_fn(mode_data)
