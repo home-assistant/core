@@ -53,7 +53,7 @@ PyChromecast==14.0.10
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.8.0
+PyFronius==0.8.2
 
 # homeassistant.components.pyload
 PyLoadAPI==2.0.0
@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.19.3
 
 # homeassistant.components.switchbot
-PySwitchbot==1.1.0
+PySwitchbot==2.0.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -264,7 +264,7 @@ aioguardian==2026.01.1
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.4.2
+aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.33.0
@@ -407,7 +407,7 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
-aiotedee==0.2.27
+aiotedee==0.3.0
 
 # homeassistant.components.tractive
 aiotractive==1.0.1
@@ -1277,7 +1277,7 @@ lojack-api==0.7.1
 london-tube-status==0.5
 
 # homeassistant.components.loqed
-loqedAPI==2.1.10
+loqedAPI==2.1.11
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -2522,6 +2522,9 @@ solaredge-web==0.0.1
 # homeassistant.components.solarlog
 solarlog_cli==0.7.0
 
+# homeassistant.components.solarman
+solarman-opendata==0.0.3
+
 # homeassistant.components.solax
 solax==3.2.3
 
@@ -2660,7 +2663,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.13
+tuya-device-handlers==0.0.14
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
@@ -2693,7 +2696,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==1.0.2
+universal-silabs-flasher==1.0.3
 
 # homeassistant.components.upb
 upb-lib==0.6.1

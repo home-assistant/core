@@ -31,8 +31,9 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import (
     condition,
@@ -42,14 +43,17 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.automation import (
     DomainSpec,
+    NumericalDomainSpec,
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
+    CONF_UNIT,
     Condition,
     ConditionChecker,
+    EntityNumericalConditionWithUnitBase,
     async_validate_condition_config,
     make_entity_numerical_condition,
 )
@@ -58,6 +62,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
@@ -3127,6 +3132,32 @@ async def test_numerical_condition_attribute_value_source(
     assert test(hass) is False
 
 
+async def test_numerical_condition_attribute_value_source_skips_unit_check(
+    hass: HomeAssistant,
+) -> None:
+    """Test numerical condition with attribute value_source skips entity unit check.
+
+    When value_source is set, the entity itself may not have ATTR_UNIT_OF_MEASUREMENT
+    (e.g., climate target humidity). The valid_unit check should only apply to
+    state-based entities, not attribute-based ones.
+    """
+    test = await _setup_numerical_condition(
+        hass,
+        domain_specs={"test": DomainSpec(value_source="humidity")},
+        condition_options={CONF_ABOVE: 50},
+        entity_ids="test.entity_1",
+        valid_unit="%",
+    )
+
+    # Entity has no ATTR_UNIT_OF_MEASUREMENT but has the attribute value
+    # The unit check should be skipped for attribute-based value sources
+    hass.states.async_set("test.entity_1", "auto", {"humidity": 75})
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", "auto", {"humidity": 25})
+    assert test(hass) is False
+
+
 @pytest.mark.parametrize(
     ("valid_unit", "entity_unit", "expected"),
     [
@@ -3252,3 +3283,470 @@ async def test_numerical_condition_schema_above_must_be_less_than_below(
     }
     with pytest.raises(vol.Invalid, match="can never be above"):
         await async_validate_condition_config(hass, config)
+
+
+def make_entity_numerical_condition_with_unit(
+    domain_specs: Mapping[str, DomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalConditionWithUnitBase]:
+    """Create a condition for numerical state comparisons with unit conversion."""
+
+    class CustomCondition(EntityNumericalConditionWithUnitBase):
+        """Condition for numerical state with unit conversion."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
+
+    return CustomCondition
+
+
+async def _setup_numerical_condition_with_unit(
+    hass: HomeAssistant,
+    condition_options: dict[str, Any],
+    entity_ids: str | list[str],
+    domain_specs: Mapping[str, DomainSpec] | None = None,
+    base_unit: str = UnitOfTemperature.CELSIUS,
+    unit_converter: type = TemperatureConverter,
+) -> condition.ConditionCheckerType:
+    """Set up a numerical condition with unit conversion via a mock platform."""
+    condition_cls = make_entity_numerical_condition_with_unit(
+        domain_specs or _DEFAULT_DOMAIN_SPECS, base_unit, unit_converter
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: condition_options,
+    }
+
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+    return test
+
+
+@pytest.mark.parametrize(
+    ("condition_options", "state_value", "expected"),
+    [
+        # above in °F, state in °C (base unit)
+        # 75°F ≈ 23.89°C, so 25°C > 23.89°C → True
+        ({CONF_ABOVE: 75, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "25", True),
+        # 75°F ≈ 23.89°C, so 20°C < 23.89°C → False
+        ({CONF_ABOVE: 75, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "20", False),
+        # below in °F, state in °C
+        # 70°F ≈ 21.11°C, so 20°C < 21.11°C → True
+        ({CONF_BELOW: 70, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "20", True),
+        # 70°F ≈ 21.11°C, so 25°C > 21.11°C → False
+        ({CONF_BELOW: 70, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "25", False),
+        # above in °C (same as base), state in °C
+        ({CONF_ABOVE: 20, CONF_UNIT: UnitOfTemperature.CELSIUS}, "25", True),
+        ({CONF_ABOVE: 20, CONF_UNIT: UnitOfTemperature.CELSIUS}, "15", False),
+        # range with unit conversion
+        # 60°F ≈ 15.56°C, 80°F ≈ 26.67°C
+        (
+            {
+                CONF_ABOVE: 60,
+                CONF_BELOW: 80,
+                CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+            },
+            "20",
+            True,
+        ),
+        (
+            {
+                CONF_ABOVE: 60,
+                CONF_BELOW: 80,
+                CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+            },
+            "10",
+            False,
+        ),
+        (
+            {
+                CONF_ABOVE: 60,
+                CONF_BELOW: 80,
+                CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+            },
+            "30",
+            False,
+        ),
+    ],
+)
+async def test_numerical_condition_with_unit_thresholds(
+    hass: HomeAssistant,
+    condition_options: dict[str, Any],
+    state_value: str,
+    expected: bool,
+) -> None:
+    """Test numerical condition with unit conversion for numeric thresholds."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        condition_options=condition_options,
+        entity_ids="test.entity_1",
+    )
+
+    hass.states.async_set(
+        "test.entity_1",
+        state_value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    assert test(hass) is expected
+
+
+async def test_numerical_condition_with_unit_entity_reference(
+    hass: HomeAssistant,
+) -> None:
+    """Test numerical condition with unit conversion for entity reference limits."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        condition_options={
+            CONF_ABOVE: "sensor.temp_limit",
+            CONF_UNIT: UnitOfTemperature.CELSIUS,
+        },
+        entity_ids="test.entity_1",
+    )
+
+    # Entity reference in °F → converted to °C for comparison
+    # 75°F ≈ 23.89°C, 25°C > 23.89°C → True
+    hass.states.async_set(
+        "test.entity_1",
+        "25",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    hass.states.async_set(
+        "sensor.temp_limit",
+        "75",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+    )
+    assert test(hass) is True
+
+    # 75°F ≈ 23.89°C, 20°C < 23.89°C → False
+    hass.states.async_set(
+        "test.entity_1",
+        "20",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    assert test(hass) is False
+
+
+async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test numerical condition returns false when entity reference has incompatible unit."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        condition_options={
+            CONF_ABOVE: "sensor.bad_limit",
+            CONF_UNIT: UnitOfTemperature.CELSIUS,
+        },
+        entity_ids="test.entity_1",
+    )
+
+    hass.states.async_set(
+        "test.entity_1",
+        "25",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    # "%" is not a temperature unit → conversion fails → condition false
+    hass.states.async_set(
+        "sensor.bad_limit",
+        "75",
+        {ATTR_UNIT_OF_MEASUREMENT: "%"},
+    )
+    assert test(hass) is False
+
+
+async def test_numerical_condition_with_unit_tracked_value_conversion(
+    hass: HomeAssistant,
+) -> None:
+    """Test that tracked entity values are converted from entity unit to base unit."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        condition_options={
+            CONF_ABOVE: 20,
+            CONF_UNIT: UnitOfTemperature.CELSIUS,
+        },
+        entity_ids="test.entity_1",
+    )
+
+    # Entity reports in °F: 80°F ≈ 26.67°C > 20°C → True
+    hass.states.async_set(
+        "test.entity_1",
+        "80",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+    )
+    assert test(hass) is True
+
+    # Entity reports in °F: 50°F ≈ 10°C < 20°C → False
+    hass.states.async_set(
+        "test.entity_1",
+        "50",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+    )
+    assert test(hass) is False
+
+
+async def test_numerical_condition_with_unit_attribute_value_source(
+    hass: HomeAssistant,
+) -> None:
+    """Test numerical condition with unit conversion reads from attribute."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        domain_specs={
+            "test": NumericalDomainSpec(value_source="temperature"),
+        },
+        condition_options={
+            CONF_ABOVE: 75,
+            CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+        entity_ids="test.entity_1",
+    )
+
+    # 75°F ≈ 23.89°C, attribute=25°C > 23.89°C → True
+    hass.states.async_set(
+        "test.entity_1",
+        "on",
+        {
+            "temperature": 25,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+    )
+    assert test(hass) is True
+
+    # 75°F ≈ 23.89°C, attribute=20°C < 23.89°C → False
+    hass.states.async_set(
+        "test.entity_1",
+        "on",
+        {
+            "temperature": 20,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+    )
+    assert test(hass) is False
+
+    # Missing attribute → False
+    hass.states.async_set("test.entity_1", "on", {})
+    assert test(hass) is False
+
+
+async def test_numerical_condition_with_unit_get_entity_unit_override(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _get_entity_unit can be overridden for custom unit resolution."""
+
+    class CustomCondition(EntityNumericalConditionWithUnitBase):
+        """Condition that always reports entities as °F regardless of attributes."""
+
+        _domain_specs = {"test": NumericalDomainSpec(value_source="temperature")}
+        _base_unit = UnitOfTemperature.CELSIUS
+        _unit_converter = TemperatureConverter
+
+        def _get_entity_unit(self, entity_state: State) -> str | None:
+            return UnitOfTemperature.FAHRENHEIT
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": CustomCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: ["test.entity_1"]},
+        CONF_OPTIONS: {
+            CONF_ABOVE: 20,
+            CONF_UNIT: UnitOfTemperature.CELSIUS,
+        },
+    }
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+
+    # Entity attribute is 80 — _get_entity_unit returns °F,
+    # so 80°F ≈ 26.67°C > 20°C → True
+    hass.states.async_set("test.entity_1", "on", {"temperature": 80})
+    assert test(hass) is True
+
+    # Entity attribute is 50 — 50°F ≈ 10°C < 20°C → False
+    hass.states.async_set("test.entity_1", "on", {"temperature": 50})
+    assert test(hass) is False
+
+
+async def test_numerical_condition_with_unit_schema_accepts_valid_units(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the schema accepts valid temperature units."""
+    condition_cls = make_entity_numerical_condition_with_unit(
+        {"test": DomainSpec()}, UnitOfTemperature.CELSIUS, TemperatureConverter
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    # Valid unit
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_OPTIONS: {
+            CONF_ABOVE: 20,
+            CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    }
+    result = await async_validate_condition_config(hass, config)
+    assert result is not None
+
+
+async def test_numerical_condition_with_unit_schema_rejects_invalid_units(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the schema rejects invalid temperature units."""
+    condition_cls = make_entity_numerical_condition_with_unit(
+        {"test": DomainSpec()}, UnitOfTemperature.CELSIUS, TemperatureConverter
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    # Invalid unit
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_OPTIONS: {
+            CONF_ABOVE: 20,
+            CONF_UNIT: "%",
+        },
+    }
+    with pytest.raises(vol.Invalid):
+        await async_validate_condition_config(hass, config)
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    ["cat", STATE_UNAVAILABLE, STATE_UNKNOWN],
+)
+async def test_numerical_condition_with_unit_invalid_state(
+    hass: HomeAssistant, state_value: str
+) -> None:
+    """Test numerical condition with unit returns false for non-numeric state values."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        condition_options={
+            CONF_ABOVE: 50,
+            CONF_UNIT: UnitOfTemperature.CELSIUS,
+        },
+        entity_ids="test.entity_1",
+    )
+
+    hass.states.async_set(
+        "test.entity_1",
+        state_value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    assert test(hass) is False
+
+
+async def test_numerical_condition_with_unit_missing_entity_reference(
+    hass: HomeAssistant,
+) -> None:
+    """Test numerical condition returns false when entity reference does not exist."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        condition_options={
+            CONF_ABOVE: "sensor.nonexistent",
+            CONF_UNIT: UnitOfTemperature.CELSIUS,
+        },
+        entity_ids="test.entity_1",
+    )
+
+    hass.states.async_set(
+        "test.entity_1",
+        "25",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    ("behavior", "one_match_expected"),
+    [
+        (BEHAVIOR_ANY, True),
+        (BEHAVIOR_ALL, False),
+    ],
+)
+async def test_numerical_condition_with_unit_behavior(
+    hass: HomeAssistant,
+    behavior: str,
+    one_match_expected: bool,
+) -> None:
+    """Test numerical condition with unit conversion respects any/all behavior."""
+    test = await _setup_numerical_condition_with_unit(
+        hass,
+        condition_options={
+            CONF_ABOVE: 50,
+            ATTR_BEHAVIOR: behavior,
+            CONF_UNIT: UnitOfTemperature.CELSIUS,
+        },
+        entity_ids=["test.entity_1", "test.entity_2"],
+    )
+
+    # Both above → True for any and all
+    hass.states.async_set(
+        "test.entity_1",
+        "75",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    hass.states.async_set(
+        "test.entity_2",
+        "80",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    assert test(hass) is True
+
+    # Only one above → depends on behavior
+    hass.states.async_set(
+        "test.entity_2",
+        "25",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    assert test(hass) is one_match_expected
+
+    # Neither above → False for any and all
+    hass.states.async_set(
+        "test.entity_1",
+        "25",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    assert test(hass) is False
