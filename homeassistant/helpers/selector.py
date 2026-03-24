@@ -1366,6 +1366,11 @@ def _validate_numeric_threshold_active_choice(
         raise vol.Invalid(
             f"active_choice is '{active_choice}' but '{active_choice}' key is missing"
         )
+    if active_choice is None and "number" in data and "entity" in data:
+        raise vol.Invalid(
+            "Value entry contains both 'number' and 'entity';"
+            " set 'active_choice' to disambiguate"
+        )
     return data
 
 

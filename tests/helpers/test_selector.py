@@ -569,6 +569,10 @@ def test_number_selector_schema_error(schema) -> None:
                     "value_min": {"number": 20},
                     "value_max": {"number": 10},
                 },  # value_min > value_max
+                {
+                    "type": "above",
+                    "value": {"number": 10, "entity": "sensor.foo"},
+                },  # Both number and entity without active_choice
             ),
         ),
         (
@@ -612,7 +616,9 @@ def test_number_selector_schema_error(schema) -> None:
     ],
 )
 def test_numeric_threshold_selector_schema(
-    schema, valid_selections, invalid_selections
+    schema: dict[str, Any],
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
 ) -> None:
     """Test numeric threshold selector."""
     _test_selector("numeric_threshold", schema, valid_selections, invalid_selections)
