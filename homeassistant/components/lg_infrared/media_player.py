@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from infrared_protocols.codes.lg.tv import LGTVCode
 
 from homeassistant.components.media_player import (
@@ -18,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LGDeviceType
 from .entity import LgIrEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -57,7 +53,6 @@ class LgIrTvMediaPlayer(LgIrEntity, MediaPlayerEntity):
     def __init__(self, entry: ConfigEntry, infrared_entity_id: str) -> None:
         """Initialize LG IR media player."""
         super().__init__(entry, infrared_entity_id, unique_id_suffix="media_player")
-        self._infrared_entity_id = infrared_entity_id
         self._attr_state = MediaPlayerState.ON
 
     async def async_turn_on(self) -> None:
