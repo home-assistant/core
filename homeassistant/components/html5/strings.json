@@ -51,6 +51,36 @@
         }
       },
       "name": "Dismiss"
+    },
+    "html5": {
+      "description": "Sends a notification message using the HTML5 service.",
+      "fields": {
+        "message": {
+          "description": "The message to be sent.",
+          "name": "Message"
+        },
+        "target": {
+          "description": "An array of targets.",
+          "name": "Target"
+        },
+        "title": {
+          "description": "The title of the message (optional).",
+          "name": "Title"
+        },
+        "data": {
+          "description": "Extended information of notification.",
+          "name": "Data"
+        },
+        "actions": {
+          "description": "Array of actions.",
+          "name": "Actions"
+        },
+        "tag": {
+          "description": "Tag for identify notification.",
+          "name": "Tag"
+        }
+      },
+      "name": "Send a notification"
     }
   }
 }
