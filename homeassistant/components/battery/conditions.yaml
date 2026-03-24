@@ -53,7 +53,7 @@ is_not_charging:
   fields:
     behavior: *condition_behavior
 
-percentage:
+is_level:
   target:
     entity:
       - domain: sensor

@@ -37,7 +37,7 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_not_charging": make_entity_state_condition(
         BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF
     ),
-    "percentage": make_entity_numerical_condition(
+    "is_level": make_entity_numerical_condition(
         BATTERY_PERCENTAGE_DOMAIN_SPECS, PERCENTAGE
     ),
 }

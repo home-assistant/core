@@ -3,6 +3,9 @@
     "is_charging": {
       "condition": "mdi:battery-charging"
     },
+    "is_level": {
+      "condition": "mdi:battery-unknown"
+    },
     "is_low": {
       "condition": "mdi:battery-alert"
     },
@@ -11,9 +14,6 @@
     },
     "is_not_low": {
       "condition": "mdi:battery"
-    },
-    "percentage": {
-      "condition": "mdi:battery-unknown"
     }
   }
 }

@@ -14,6 +14,24 @@
       },
       "name": "Battery is charging"
     },
+    "is_level": {
+      "description": "Tests the battery level of one or more batteries.",
+      "fields": {
+        "above": {
+          "description": "Require the battery percentage to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the battery percentage to be below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Battery level"
+    },
     "is_low": {
       "description": "Tests if one or more batteries are low.",
       "fields": {
@@ -43,24 +61,6 @@
         }
       },
       "name": "Battery is not low"
-    },
-    "percentage": {
-      "description": "Tests the percentage of one or more batteries.",
-      "fields": {
-        "above": {
-          "description": "Require the percentage to be above this value.",
-          "name": "Above"
-        },
-        "behavior": {
-          "description": "[%key:component::battery::common::condition_behavior_description%]",
-          "name": "[%key:component::battery::common::condition_behavior_name%]"
-        },
-        "below": {
-          "description": "Require the percentage to be below this value.",
-          "name": "Below"
-        }
-      },
-      "name": "Battery percentage"
     }
   },
   "selector": {
