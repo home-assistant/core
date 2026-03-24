@@ -70,6 +70,7 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
 from .automation import (
+    CONF_UNIT,
     DomainSpec,
     NumericalDomainSpec,
     filter_by_domain_specs,
@@ -77,6 +78,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
     number_or_entity,
+    validate_unit_set_if_range_numerical,
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
@@ -545,27 +547,6 @@ def _validate_range[_T: dict[str, Any]](
     return _validate_range_impl
 
 
-CONF_UNIT: Final = "unit"
-
-
-def _validate_unit_set_if_range_numerical[_T: dict[str, Any]](
-    lower_limit: str, upper_limit: str
-) -> Callable[[_T], _T]:
-    """Validate that unit is set if upper or lower limit is numerical."""
-
-    def _validate_unit_set_if_range_numerical_impl(options: _T) -> _T:
-        if (
-            any(
-                opt in options and not isinstance(options[opt], str)
-                for opt in (lower_limit, upper_limit)
-            )
-        ) and options.get(CONF_UNIT) is None:
-            raise vol.Invalid("Unit must be specified when using numerical thresholds.")
-        return options
-
-    return _validate_unit_set_if_range_numerical_impl
-
-
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): vol.All(
@@ -756,7 +737,7 @@ def make_numerical_state_changed_with_unit_schema(
                     vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
                 },
                 _validate_range(CONF_ABOVE, CONF_BELOW),
-                _validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
+                validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
             )
         }
     )
@@ -907,7 +888,7 @@ def make_numerical_state_crossed_threshold_with_unit_schema(
                 },
                 _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
                 _validate_limits_for_threshold_type,
-                _validate_unit_set_if_range_numerical(
+                validate_unit_set_if_range_numerical(
                     CONF_LOWER_LIMIT, CONF_UPPER_LIMIT
                 ),
             )

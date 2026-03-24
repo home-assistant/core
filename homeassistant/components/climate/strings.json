@@ -55,6 +55,46 @@
         }
       },
       "name": "Climate-control device is on"
+    },
+    "target_humidity": {
+      "description": "Tests the humidity setpoint of one or more climate-control devices.",
+      "fields": {
+        "above": {
+          "description": "Require the target humidity to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the target humidity to be below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Climate-control device target humidity"
+    },
+    "target_temperature": {
+      "description": "Tests the temperature setpoint of one or more climate-control devices.",
+      "fields": {
+        "above": {
+          "description": "Require the target temperature to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the target temperature to be below this value.",
+          "name": "Below"
+        },
+        "unit": {
+          "description": "All values will be converted to this unit when evaluating the condition.",
+          "name": "Unit of measurement"
+        }
+      },
+      "name": "Climate-control device target temperature"
     }
   },
   "device_automation": {

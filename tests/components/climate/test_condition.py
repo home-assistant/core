@@ -5,9 +5,17 @@ from typing import Any
 import pytest
 
 from homeassistant.components.climate.const import (
+    ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     HVACAction,
     HVACMode,
+)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ABOVE,
+    CONF_BELOW,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 
@@ -16,12 +24,17 @@ from tests.components.common import (
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
+    assert_numerical_condition_unit_conversion,
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
+    parametrize_numerical_attribute_condition_above_below_all,
+    parametrize_numerical_attribute_condition_above_below_any,
     parametrize_target_entities,
     target_entities,
 )
+
+_TEMPERATURE_CONDITION_OPTIONS = {"unit": UnitOfTemperature.CELSIUS}
 
 
 @pytest.fixture
@@ -38,6 +51,8 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
         "climate.is_cooling",
         "climate.is_drying",
         "climate.is_heating",
+        "climate.target_humidity",
+        "climate.target_temperature",
     ],
 )
 async def test_climate_conditions_gated_by_labs_flag(
@@ -240,4 +255,142 @@ async def test_climate_attribute_condition_behavior_all(
         condition=condition,
         condition_options=condition_options,
         states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("climate"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    [
+        *parametrize_numerical_attribute_condition_above_below_any(
+            "climate.target_humidity",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+        ),
+        *parametrize_numerical_attribute_condition_above_below_any(
+            "climate.target_temperature",
+            HVACMode.AUTO,
+            ATTR_TEMPERATURE,
+            condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        ),
+    ],
+)
+async def test_climate_numerical_condition_behavior_any(
+    hass: HomeAssistant,
+    target_climates: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the climate numerical condition with the 'any' behavior."""
+    await assert_condition_behavior_any(
+        hass,
+        target_entities=target_climates,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("climate"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    [
+        *parametrize_numerical_attribute_condition_above_below_all(
+            "climate.target_humidity",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+        ),
+        *parametrize_numerical_attribute_condition_above_below_all(
+            "climate.target_temperature",
+            HVACMode.AUTO,
+            ATTR_TEMPERATURE,
+            condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        ),
+    ],
+)
+async def test_climate_numerical_condition_behavior_all(
+    hass: HomeAssistant,
+    target_climates: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the climate numerical condition with the 'all' behavior."""
+    await assert_condition_behavior_all(
+        hass,
+        target_entities=target_climates,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) -> None:
+    """Test that the climate numerical condition converts units correctly."""
+    _unit_celsius = {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
+    _unit_fahrenheit = {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
+    _unit_invalid = {ATTR_UNIT_OF_MEASUREMENT: "not_a_valid_unit"}
+
+    await assert_numerical_condition_unit_conversion(
+        hass,
+        condition="climate.target_temperature",
+        entity_id="climate.test",
+        pass_states=[{"state": HVACMode.AUTO, "attributes": {ATTR_TEMPERATURE: 25}}],
+        fail_states=[
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {ATTR_TEMPERATURE: 20},
+            }
+        ],
+        numerical_condition_options=[
+            {CONF_ABOVE: 75, CONF_BELOW: 90, "unit": UnitOfTemperature.FAHRENHEIT},
+            {CONF_ABOVE: 24, CONF_BELOW: 30, "unit": UnitOfTemperature.CELSIUS},
+        ],
+        limit_entity_condition_options={
+            CONF_ABOVE: "sensor.above",
+            CONF_BELOW: "sensor.below",
+        },
+        limit_entities=("sensor.above", "sensor.below"),
+        limit_entity_states=[
+            (
+                {"state": "75", "attributes": _unit_fahrenheit},  # ≈23.9°C
+                {"state": "90", "attributes": _unit_fahrenheit},  # ≈32.2°C
+            ),
+            (
+                {"state": "24", "attributes": _unit_celsius},
+                {"state": "30", "attributes": _unit_celsius},
+            ),
+        ],
+        invalid_limit_entity_states=[
+            (
+                {"state": "75", "attributes": _unit_invalid},
+                {"state": "90", "attributes": _unit_invalid},
+            ),
+            (
+                {"state": "24", "attributes": _unit_invalid},
+                {"state": "30", "attributes": _unit_invalid},
+            ),
+        ],
     )

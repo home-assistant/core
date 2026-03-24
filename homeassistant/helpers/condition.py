@@ -73,16 +73,19 @@ from homeassistant.loader import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.unit_conversion import BaseUnitConverter
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
+    CONF_UNIT,
     DomainSpec,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
     number_or_entity,
+    validate_unit_set_if_range_numerical,
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
@@ -524,13 +527,19 @@ class EntityNumericalConditionBase(EntityConditionBase):
                 return None
         return entity_or_float
 
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state, with unit validation for state-based values."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            if not self._is_valid_unit(
+                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            ):
+                return None
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
+
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
-        if not self._is_valid_unit(
-            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        ):
-            return False
-
         try:
             value = float(self._get_tracked_value(entity_state))
         except TypeError, ValueError:
@@ -563,6 +572,113 @@ def make_entity_numerical_condition(
         _valid_unit = valid_unit
 
     return CustomCondition
+
+
+def _make_numerical_condition_with_unit_schema(
+    unit_converter: type[BaseUnitConverter],
+) -> vol.Schema:
+    """Factory for numerical condition schema with unit option."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+            vol.Required(CONF_OPTIONS): vol.All(
+                {
+                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                        [BEHAVIOR_ANY, BEHAVIOR_ALL]
+                    ),
+                    vol.Optional(CONF_ABOVE): number_or_entity,
+                    vol.Optional(CONF_BELOW): number_or_entity,
+                    vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
+                },
+                cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
+                _validate_above_below,
+                validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
+            ),
+        }
+    )
+
+
+class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
+    """Condition for numerical state comparisons with unit conversion."""
+
+    _base_unit: str | None  # Base unit for the tracked value
+    _manual_limit_unit: str | None  # Unit of above/below limits when numbers
+    _unit_converter: type[BaseUnitConverter]
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the numerical condition with unit conversion."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._manual_limit_unit = config.options.get(CONF_UNIT)
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Create a schema."""
+        super().__init_subclass__(**kwargs)
+        cls._schema = _make_numerical_condition_with_unit_schema(cls._unit_converter)
+
+    def _get_entity_unit(self, entity_state: State) -> str | None:
+        """Get the unit of an entity from its state."""
+        return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
+        """Get numerical value from float or entity state."""
+        if isinstance(entity_or_float, (int, float)):
+            return self._unit_converter.convert(
+                entity_or_float, self._manual_limit_unit, self._base_unit
+            )
+
+        if not (_state := self._hass.states.get(entity_or_float)):
+            return None
+        try:
+            value = float(_state.state)
+        except TypeError, ValueError:
+            return None
+
+        try:
+            return self._unit_converter.convert(
+                value, _state.attributes.get(ATTR_UNIT_OF_MEASUREMENT), self._base_unit
+            )
+        except HomeAssistantError:
+            return None
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked numerical value from a state."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        raw_value: Any
+        if domain_spec.value_source is None:
+            raw_value = entity_state.state
+        else:
+            raw_value = entity_state.attributes.get(domain_spec.value_source)
+
+        try:
+            value = float(raw_value)
+        except TypeError, ValueError:
+            return None
+
+        try:
+            return self._unit_converter.convert(
+                value, self._get_entity_unit(entity_state), self._base_unit
+            )
+        except HomeAssistantError:
+            return None
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state is within the specified range."""
+        if (value := self._get_tracked_value(entity_state)) is None:
+            return False
+
+        if self._above is not None:
+            if (above := self._get_numerical_value(self._above)) is None:
+                return False
+            if value <= above:
+                return False
+        if self._below is not None:
+            if (below := self._get_numerical_value(self._below)) is None:
+                return False
+            if value >= below:
+                return False
+        return True
 
 
 class ConditionProtocol(Protocol):
