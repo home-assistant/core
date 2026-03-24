@@ -382,8 +382,7 @@ async def test_record_notification(
     state = hass.states.get("notify.test")
     assert state.state is STATE_UNKNOWN
 
-    job = hass.async_add_executor_job(entity._record_notification)
-    await job
+    await hass.async_add_executor_job(entity._record_notification)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("notify.test")
