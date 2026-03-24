@@ -125,6 +125,14 @@
         }
       }
     },
+    "select": {
+      "active_scene": {
+        "name": "Scene"
+      },
+      "active_smart_scene": {
+        "name": "Smart scene"
+      }
+    },
     "sensor": {
       "zigbee_connectivity": {
         "name": "Zigbee connectivity",

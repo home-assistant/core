@@ -68,6 +68,7 @@ async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2: Mock) -> None:
         "light",
         "binary_sensor",
         "event",
+        "select",
         "sensor",
         "switch",
         "scene",

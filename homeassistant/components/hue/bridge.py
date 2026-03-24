@@ -32,6 +32,7 @@ PLATFORMS_v2 = [
     Platform.EVENT,
     Platform.LIGHT,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
