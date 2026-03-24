@@ -1092,12 +1092,16 @@ async def test_dpi_switches(
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    assert hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
     mock_websocket_message(data=DPI_APP_DISABLED_EVENT)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_OFF
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_OFF
+    )
 
     # Remove app
     mock_websocket_message(data=DPI_GROUP_REMOVE_APP)
@@ -1115,7 +1119,9 @@ async def test_dpi_switches_add_second_app(
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
-    assert hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
     second_app_event = {
         "apps": [524292],
@@ -1129,7 +1135,9 @@ async def test_dpi_switches_add_second_app(
     mock_websocket_message(message=MessageKey.DPI_APP_ADDED, data=second_app_event)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
     add_second_app_to_group = {
         "_id": "5f976f4ae3c58f018ec7dff6",
@@ -1142,7 +1150,9 @@ async def test_dpi_switches_add_second_app(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_OFF
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_OFF
+    )
 
     second_app_event_enabled = {
         "apps": [524292],
@@ -1158,7 +1168,9 @@ async def test_dpi_switches_add_second_app(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
 
 @pytest.mark.parametrize(("traffic_rule_payload"), [([TRAFFIC_RULE])])

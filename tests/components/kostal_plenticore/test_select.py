@@ -118,4 +118,6 @@ async def test_select_battery_charging_usage_not_available(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not entity_registry.async_is_registered("select.scb_battery_charging_usage_mode")
+    assert not entity_registry.async_is_registered(
+        "select.scb_battery_charging_usage_mode"
+    )

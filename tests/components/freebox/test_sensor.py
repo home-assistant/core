@@ -25,8 +25,14 @@ async def test_network_speed(
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
-    assert hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state == "198.9"
-    assert hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state == "1440.0"
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state
+        == "198.9"
+    )
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state
+        == "1440.0"
+    )
 
     # Simulate a changed speed
     data_connection_get_status_changed = deepcopy(DATA_CONNECTION_GET_STATUS)
@@ -38,8 +44,14 @@ async def test_network_speed(
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state == "123.4"
-    assert hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state == "432.1"
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state
+        == "123.4"
+    )
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state
+        == "432.1"
+    )
 
 
 async def test_call(

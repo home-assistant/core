@@ -28,12 +28,21 @@ async def test_update(
 ) -> None:
     """Test updates."""
     await setup_version_integration(hass)
-    assert hass.states.get("sensor.home_assistant_version_local_installation").state == MOCK_VERSION
+    assert (
+        hass.states.get("sensor.home_assistant_version_local_installation").state
+        == MOCK_VERSION
+    )
 
     await mock_get_version_update(hass, freezer, version="1970.1.1")
-    assert hass.states.get("sensor.home_assistant_version_local_installation").state == "1970.1.1"
+    assert (
+        hass.states.get("sensor.home_assistant_version_local_installation").state
+        == "1970.1.1"
+    )
 
     assert "Error fetching version data" not in caplog.text
     await mock_get_version_update(hass, freezer, side_effect=HaVersionException)
-    assert hass.states.get("sensor.home_assistant_version_local_installation").state == "unavailable"
+    assert (
+        hass.states.get("sensor.home_assistant_version_local_installation").state
+        == "unavailable"
+    )
     assert "Error fetching version data" in caplog.text

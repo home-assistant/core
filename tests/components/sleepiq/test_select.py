@@ -100,7 +100,9 @@ async def test_single_foundation_preset(
     """Test the SleepIQ select entity for single foundation presets."""
     entry = await setup_platform(hass, SELECT_DOMAIN)
 
-    state = hass.states.get(f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset")
+    state = hass.states.get(
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset"
+    )
     assert state.state == PRESET_R_STATE
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (

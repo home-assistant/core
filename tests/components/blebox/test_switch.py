@@ -188,7 +188,10 @@ def switchbox_d_fixture():
     type(relay1).product = product
     type(relay2).product = product
 
-    return (features, ["switch.my_relays_switchboxd_0_relay", "switch.my_relays_switchboxd_1_relay"])
+    return (
+        features,
+        ["switch.my_relays_switchboxd_0_relay", "switch.my_relays_switchboxd_1_relay"],
+    )
 
 
 async def test_switchbox_d_init(

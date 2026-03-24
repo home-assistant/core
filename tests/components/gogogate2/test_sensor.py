@@ -215,12 +215,16 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     assert hass.states.get("cover.mycontroller_door2")
     assert hass.states.get("cover.mycontroller_door3")
     assert hass.states.get("sensor.mycontroller_door1_battery").state == "25"
-    assert dict(hass.states.get("sensor.mycontroller_door1_battery").attributes) == bat_attributes
+    assert (
+        dict(hass.states.get("sensor.mycontroller_door1_battery").attributes)
+        == bat_attributes
+    )
     assert hass.states.get("sensor.mycontroller_door2_battery") is None
     assert hass.states.get("sensor.mycontroller_door2_battery") is None
     assert hass.states.get("sensor.mycontroller_door1_temperature").state == "7.0"
     assert (
-        dict(hass.states.get("sensor.mycontroller_door1_temperature").attributes) == temp_attributes
+        dict(hass.states.get("sensor.mycontroller_door1_temperature").attributes)
+        == temp_attributes
     )
     assert hass.states.get("sensor.mycontroller_door2_temperature") is None
     assert hass.states.get("sensor.mycontroller_door3_temperature") is None
@@ -235,7 +239,9 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mycontroller_door1_battery").state == STATE_UNKNOWN
-    assert hass.states.get("sensor.mycontroller_door1_temperature").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("sensor.mycontroller_door1_temperature").state == STATE_UNKNOWN
+    )
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert not hass.states.async_entity_ids(DOMAIN)
@@ -297,15 +303,21 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mycontroller_door2_temperature") is None
     assert hass.states.get("sensor.mycontroller_door3_temperature") is None
     assert (
-        hass.states.get("sensor.mycontroller_door1_battery").attributes[ATTR_DEVICE_CLASS]
+        hass.states.get("sensor.mycontroller_door1_battery").attributes[
+            ATTR_DEVICE_CLASS
+        ]
         == SensorDeviceClass.BATTERY
     )
     assert (
-        hass.states.get("sensor.mycontroller_door1_temperature").attributes[ATTR_DEVICE_CLASS]
+        hass.states.get("sensor.mycontroller_door1_temperature").attributes[
+            ATTR_DEVICE_CLASS
+        ]
         == SensorDeviceClass.TEMPERATURE
     )
     assert (
-        hass.states.get("sensor.mycontroller_door1_temperature").attributes[ATTR_UNIT_OF_MEASUREMENT]
+        hass.states.get("sensor.mycontroller_door1_temperature").attributes[
+            ATTR_UNIT_OF_MEASUREMENT
+        ]
         == "°C"
     )
 
@@ -313,15 +325,24 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
 
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.mycontroller_door1_battery").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.mycontroller_door1_temperature").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.mycontroller_door1_battery").state == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.mycontroller_door1_temperature").state
+        == STATE_UNAVAILABLE
+    )
 
     api.async_info.side_effect = None
     api.async_info.return_value = sensor_response
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mycontroller_door1_battery").state == "35"
-    assert dict(hass.states.get("sensor.mycontroller_door1_battery").attributes) == bat_attributes
     assert (
-        dict(hass.states.get("sensor.mycontroller_door1_temperature").attributes) == temp_attributes
+        dict(hass.states.get("sensor.mycontroller_door1_battery").attributes)
+        == bat_attributes
+    )
+    assert (
+        dict(hass.states.get("sensor.mycontroller_door1_temperature").attributes)
+        == temp_attributes
     )

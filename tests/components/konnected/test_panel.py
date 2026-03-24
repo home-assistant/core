@@ -688,16 +688,35 @@ async def test_connect_retry(hass: HomeAssistant, mock_panel) -> None:
 
     # confirm switch is unavailable after initial attempt
     await hass.async_block_till_done()
-    assert hass.states.get("switch.konnected_alarm_panel_konnected_445566_actuator_6").state == "unavailable"
+    assert (
+        hass.states.get(
+            "switch.konnected_alarm_panel_konnected_445566_actuator_6"
+        ).state
+        == "unavailable"
+    )
 
     # confirm switch is unavailable after second attempt
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
-    await async_update_entity(hass, "switch.konnected_alarm_panel_konnected_445566_actuator_6")
-    assert hass.states.get("switch.konnected_alarm_panel_konnected_445566_actuator_6").state == "unavailable"
+    await async_update_entity(
+        hass, "switch.konnected_alarm_panel_konnected_445566_actuator_6"
+    )
+    assert (
+        hass.states.get(
+            "switch.konnected_alarm_panel_konnected_445566_actuator_6"
+        ).state
+        == "unavailable"
+    )
 
     # confirm switch is available after third attempt
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=21))
     await hass.async_block_till_done()
-    await async_update_entity(hass, "switch.konnected_alarm_panel_konnected_445566_actuator_6")
-    assert hass.states.get("switch.konnected_alarm_panel_konnected_445566_actuator_6").state == "unknown"
+    await async_update_entity(
+        hass, "switch.konnected_alarm_panel_konnected_445566_actuator_6"
+    )
+    assert (
+        hass.states.get(
+            "switch.konnected_alarm_panel_konnected_445566_actuator_6"
+        ).state
+        == "unknown"
+    )
