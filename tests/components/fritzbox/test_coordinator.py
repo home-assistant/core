@@ -231,7 +231,9 @@ async def test_coordinator_cleanup_ain_with_underscore(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    count_before = len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+    count_before = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
     assert count_before > 0
 
     # Remove device_normal to trigger cleanup_removed_devices()
