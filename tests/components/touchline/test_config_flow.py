@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.touchline.const import DOMAIN
@@ -17,7 +17,9 @@ TEST_DATA = {CONF_HOST: TEST_HOST}
 TEST_UNIQUE_ID = "controller-1"
 
 
-async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form_success(
+    hass: HomeAssistant, mock_pytouchline: MagicMock, mock_setup_entry: MagicMock
+) -> None:
     """Test successful user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -38,7 +40,9 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_pytouchline) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, mock_pytouchline: MagicMock
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -70,7 +74,9 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_pytouchline) -> Non
     assert result["result"].unique_id == TEST_UNIQUE_ID
 
 
-async def test_already_configured_by_host(hass: HomeAssistant) -> None:
+async def test_already_configured_by_host(
+    hass: HomeAssistant, mock_pytouchline: MagicMock
+) -> None:
     """Test abort when host is already configured."""
     MockConfigEntry(domain=DOMAIN, data=TEST_DATA).add_to_hass(hass)
 
@@ -88,7 +94,9 @@ async def test_already_configured_by_host(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_already_configured_by_unique_id(hass: HomeAssistant) -> None:
+async def test_already_configured_by_unique_id(
+    hass: HomeAssistant, mock_pytouchline: MagicMock
+) -> None:
     """Test abort when unique id is already configured."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -110,7 +118,9 @@ async def test_already_configured_by_unique_id(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_import_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_import_success(
+    hass: HomeAssistant, mock_pytouchline: MagicMock, mock_setup_entry: MagicMock
+) -> None:
     """Test YAML import creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -125,7 +135,9 @@ async def test_import_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_cannot_connect(hass: HomeAssistant, mock_pytouchline) -> None:
+async def test_import_cannot_connect(
+    hass: HomeAssistant, mock_pytouchline: MagicMock
+) -> None:
     """Test YAML import aborts when it cannot connect."""
     mock_pytouchline.get_number_of_devices.side_effect = ConnectionError
 
@@ -139,7 +151,9 @@ async def test_import_cannot_connect(hass: HomeAssistant, mock_pytouchline) -> N
     assert result["reason"] == "cannot_connect"
 
 
-async def test_import_already_configured(hass: HomeAssistant) -> None:
+async def test_import_already_configured(
+    hass: HomeAssistant, mock_pytouchline: MagicMock
+) -> None:
     """Test YAML import aborts when already configured."""
     MockConfigEntry(
         domain=DOMAIN,
