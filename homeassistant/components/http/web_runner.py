@@ -113,10 +113,10 @@ class HomeAssistantUnixSite(web.BaseSite):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             sock.bind(str(self._path))
+            self._path.chmod(0o600)
         except OSError:
             sock.close()
             raise
-        self._path.chmod(0o600)
         return sock
 
     async def start(self) -> None:
