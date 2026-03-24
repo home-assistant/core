@@ -1830,12 +1830,17 @@ async def test_device_temperature_with_missing_value(
     assert hass.states.get(entity_id).state == "66.0"
 
     # Remove temperature value from payload
-    device = device_payload[0]
+    device = deepcopy(device_payload[0])
     device["temperatures"][0].pop("value")
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # Send original payload again to verify sensor recovers
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
+
+    assert hass.states.get(entity_id).state == "66.0"
 
 
 @pytest.mark.parametrize(
