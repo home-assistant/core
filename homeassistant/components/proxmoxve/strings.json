@@ -15,15 +15,15 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "id": "[%key:component::proxmoxve::config::step::user_auth::data::id%]",
           "password": "[%key:common::config_flow::data::password%]",
           "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data::token_id%]",
           "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
         },
         "data_description": {
-          "id": "[%key:component::proxmoxve::config::step::user_auth::data_description::id%]",
           "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
           "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_id%]",
           "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
         },
         "description": "The connection to the Proxmox VE server requires re-authentication. Please update your credentials to continue.",
@@ -51,15 +51,15 @@
       },
       "reconfigure_auth": {
         "data": {
-          "id": "[%key:component::proxmoxve::config::step::user_auth::data::id%]",
           "password": "[%key:common::config_flow::data::password%]",
           "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data::token_id%]",
           "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
         },
         "data_description": {
-          "id": "[%key:component::proxmoxve::config::step::user_auth::data_description::id%]",
           "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
           "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_id%]",
           "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
         },
         "description": "[%key:component::proxmoxve::config::step::user_auth::description%]",
@@ -87,15 +87,15 @@
       },
       "user_auth": {
         "data": {
-          "id": "Token ID",
           "password": "[%key:common::config_flow::data::password%]",
           "realm": "Realm",
+          "token_id": "Token ID",
           "token_value": "Secret"
         },
         "data_description": {
-          "id": "The name given to the API token",
           "password": "The password for the user",
           "realm": "Specify your authentication realm",
+          "token_id": "The name given to the API token",
           "token_value": "The secret generated for the API token"
         },
         "description": "Enter your Proxmox VE server details to set up the integration.",
