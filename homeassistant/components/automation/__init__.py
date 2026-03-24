@@ -159,6 +159,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "gate",
     "humidifier",
     "humidity",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
@@ -166,6 +167,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "motion",
     "occupancy",
     "person",
+    "power",
     "remote",
     "scene",
     "schedule",
@@ -176,6 +178,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "text",
     "update",
     "vacuum",
+    "water_heater",
     "window",
 }
 

@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.19.3
 
 # homeassistant.components.switchbot
-PySwitchbot==1.1.0
+PySwitchbot==2.0.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -1277,7 +1277,7 @@ lojack-api==0.7.1
 london-tube-status==0.5
 
 # homeassistant.components.loqed
-loqedAPI==2.1.10
+loqedAPI==2.1.11
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -2660,7 +2660,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.13
+tuya-device-handlers==0.0.14
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
@@ -2693,7 +2693,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==1.0.2
+universal-silabs-flasher==1.0.3
 
 # homeassistant.components.upb
 upb-lib==0.6.1
