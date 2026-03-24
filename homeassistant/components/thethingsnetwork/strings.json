@@ -18,7 +18,7 @@
           "first_fetch_h": "Initial fetch period"
         },
         "data_description": {
-          "first_fetch_h": "How many hours of historical data to fetch on startup"
+          "first_fetch_h": "How many hours of historical data to fetch"
         }
       },
       "user": {
