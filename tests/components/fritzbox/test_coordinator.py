@@ -6,6 +6,7 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 from pyfritzhome import LoginError
+import pytest
 from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
@@ -297,6 +298,14 @@ async def test_coordinator_cleanup_preserves_trigger_entities(
     assert len(trigger_entities_after) == 1
 
 
+@pytest.mark.parametrize(
+    ("trigger", "side_effect", "switch_entity_count"),
+    [
+        (None, None, 0),
+        (None, HTTPError(), 0),
+        (FritzTriggerMock(), None, 1),
+    ],
+)
 async def test_coordinator_has_triggers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
