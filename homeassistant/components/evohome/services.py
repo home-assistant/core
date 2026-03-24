@@ -142,8 +142,6 @@ def setup_service_functions(
         }
         async_dispatcher_send(hass, DOMAIN, payload)
 
-    assert coordinator.tcs is not None  # mypy
-
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
     hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
