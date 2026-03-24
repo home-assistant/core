@@ -158,9 +158,7 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
 
     @property
     def name(self) -> str:
-        """Return the name of the device (IP or MAC address with underscores)."""
-        if ip := self.ip_address:
-            return ip
-
+        """Return the name of the device (MAC address with underscores)."""
+        # Format MAC address as entity name: 00:11:22:33:44:55 -> 00_11_22_33_44_55
         assert self._attr_mac_address is not None
         return self._attr_mac_address.replace(":", "_")

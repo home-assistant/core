@@ -255,3 +255,39 @@ async def test_device_tracker_device_registry_linking(
     assert reg_entry is not None
     assert reg_entry.device_id is None
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_device_tracker_name_resolves_to_mac_address(
+    hass: HomeAssistant, mock_walk, mock_get_cmd
+) -> None:
+    """Test that the entity name resolves to the expected MAC address format."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "community": "public",
+            CONF_IMPORTED_BY: "device_tracker",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Enable entity by setting legacy state
+    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
+
+    with patch(
+        "homeassistant.components.snmp.UdpTransportTarget.create",
+        return_value=Mock(),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "00_11_22_33_44_55"
