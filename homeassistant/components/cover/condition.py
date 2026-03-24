@@ -1,7 +1,7 @@
 """Provides conditions for covers."""
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.condition import Condition, EntityConditionBase
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
@@ -13,7 +13,7 @@ class CoverConditionBase(EntityConditionBase[CoverDomainSpec]):
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected cover state."""
-        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is not None:
             return (
                 entity_state.attributes.get(domain_spec.value_source)
