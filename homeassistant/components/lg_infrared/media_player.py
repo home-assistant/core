@@ -80,8 +80,9 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
             )
             if ir_available != self.available:
                 _LOGGER.info(
-                    "Infrared entity %s is %s",
+                    "Infrared entity %s for media player %s is %s",
                     self._infrared_entity_id,
+                    self.entity_id,
                     "available" if ir_available else "unavailable",
                 )
 
