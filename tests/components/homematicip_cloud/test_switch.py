@@ -229,11 +229,11 @@ async def test_hmip_wired_multi_switch(
 ) -> None:
     """Test HomematicipMultiSwitch."""
     entity_id = "switch.wired_schaltaktor_8_fach_fernseher_wohnzimmer"
-    entity_name = "Wired Schaltaktor - 8-fach Fernseher (Wohnzimmer)"
+    entity_name = "Wired Schaltaktor – 8-fach Fernseher (Wohnzimmer)"
     device_model = "HmIPW-DRS8"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[
-            "Wired Schaltaktor - 8-fach",
+            "Wired Schaltaktor – 8-fach",
         ]
     )
 

@@ -370,10 +370,10 @@ async def test_hmip_wired_multi_dimmer(
 ) -> None:
     """Test HomematicipMultiDimmer."""
     entity_id = "light.wired_dimmaktor_3_fach_kuche_raumlich_kuche"
-    entity_name = "Wired Dimmaktor - 3-fach (Küche) Raumlich (Küche)"
+    entity_name = "Wired Dimmaktor – 3-fach (Küche) Raumlich (Küche)"
     device_model = "HmIPW-DRD3"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["Wired Dimmaktor - 3-fach (Küche)"]
+        test_devices=["Wired Dimmaktor – 3-fach (Küche)"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
