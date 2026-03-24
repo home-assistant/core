@@ -353,12 +353,69 @@ async def test_agents_upload(
         base64md5hash=ANY,
         metadata=ANY,
         size=ANY,
+        on_progress=ANY,
     )
     metadata = cloud.files.upload.mock_calls[-1].kwargs["metadata"]
     assert metadata["backup_id"] == backup_id
 
     assert resp.status == 201
     assert f"Uploading backup {backup_id}" in caplog.text
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_upload_on_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    cloud: Mock,
+) -> None:
+    """Test agent upload backup calls on_progress callback."""
+    client = await hass_client()
+    backup_data = "test"
+    backup_id = "test-backup"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=True,
+        size=len(backup_data),
+    )
+
+    async def mock_upload(**kwargs: Any) -> None:
+        """Mock upload that calls on_progress."""
+        on_progress = kwargs["on_progress"]
+        on_progress(bytes_uploaded=2)
+        on_progress(bytes_uploaded=4)
+
+    cloud.files.upload.side_effect = mock_upload
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=cloud.cloud",
+            data={"file": StringIO(backup_data)},
+        )
+
+    assert resp.status == 201
+    cloud.files.upload.assert_called_once()
+    call_kwargs = cloud.files.upload.call_args.kwargs
+    assert "on_progress" in call_kwargs
+    assert call_kwargs["on_progress"] is not None
 
 
 @pytest.mark.parametrize("side_effect", [FilesError("Boom!"), CloudError("Boom!")])
