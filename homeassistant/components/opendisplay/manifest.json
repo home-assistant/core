@@ -13,6 +13,7 @@
   "documentation": "https://www.home-assistant.io/integrations/opendisplay",
   "integration_type": "device",
   "iot_class": "local_push",
+  "loggers": ["opendisplay"],
   "quality_scale": "silver",
   "requirements": ["py-opendisplay==5.5.0"]
 }

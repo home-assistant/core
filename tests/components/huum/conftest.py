@@ -1,7 +1,7 @@
 """Configuration for Huum tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from huum.const import SaunaStatus
 import pytest
@@ -16,6 +16,7 @@ from tests.common import MockConfigEntry
 def mock_huum() -> Generator[AsyncMock]:
     """Mock data from the API."""
     huum = AsyncMock()
+
     with (
         patch(
             "homeassistant.components.huum.config_flow.Huum.status",
@@ -38,8 +39,9 @@ def mock_huum() -> Generator[AsyncMock]:
         huum.config = 3
         huum.door_closed = True
         huum.temperature = 30
-        huum.sauna_name = 123456
+        huum.sauna_name = "Home sauna"
         huum.target_temperature = 80
+        huum.payment_end_date = "2026-12-31"
         huum.light = 1
         huum.humidity = 0
         huum.target_humidity = 5
@@ -50,6 +52,38 @@ def mock_huum() -> Generator[AsyncMock]:
         huum.sauna_config.min_temp = 40
         huum.sauna_config.max_timer = 0
         huum.sauna_config.min_timer = 0
+
+        def _to_dict() -> dict[str, object]:
+            return {
+                "status": huum.status,
+                "config": huum.config,
+                "door_closed": huum.door_closed,
+                "temperature": huum.temperature,
+                "sauna_name": huum.sauna_name,
+                "target_temperature": huum.target_temperature,
+                "start_date": None,
+                "end_date": None,
+                "duration": None,
+                "steamer_error": None,
+                "payment_end_date": huum.payment_end_date,
+                "is_private": None,
+                "show_modal": None,
+                "light": huum.light,
+                "humidity": huum.humidity,
+                "target_humidity": huum.target_humidity,
+                "remote_safety_state": None,
+                "sauna_config": {
+                    "child_lock": huum.sauna_config.child_lock,
+                    "max_heating_time": huum.sauna_config.max_heating_time,
+                    "min_heating_time": huum.sauna_config.min_heating_time,
+                    "max_temp": huum.sauna_config.max_temp,
+                    "min_temp": huum.sauna_config.min_temp,
+                    "max_timer": huum.sauna_config.max_timer,
+                    "min_timer": huum.sauna_config.min_timer,
+                },
+            }
+
+        huum.to_dict = Mock(side_effect=_to_dict)
         huum.turn_on = turn_on
         huum.toggle_light = toggle_light
 
