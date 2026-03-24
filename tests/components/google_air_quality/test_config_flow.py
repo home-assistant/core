@@ -303,9 +303,9 @@ async def test_subentry_flow(
                 CONF_LATITUDE: 30.1,
                 CONF_LONGITUDE: 40.1,
             },
-            "custom_local_aqi_options": {
+            CUSTOM_LOCAL_AQI_OPTIONS: {
                 "country": "DE",
-                "custom_laqi": "deu_uba",
+                CUSTOM_LAQI: "deu_uba",
                 "enable_custom_laqi": False,
             },
         },
