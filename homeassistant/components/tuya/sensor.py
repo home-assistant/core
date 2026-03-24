@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.common import (
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    DPCodeTypeInformationWrapper,
-    DPCodeWrapper,
+from tuya_device_handlers.definition.sensor import (
+    TuyaSensorDefinition,
+    get_default_definition,
 )
+from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
     ElectricityCurrentJsonWrapper,
@@ -21,7 +19,6 @@ from tuya_device_handlers.device_wrapper.sensor import (
     ElectricityVoltageRawWrapper,
     WindDirectionEnumWrapper,
 )
-from tuya_device_handlers.type_information import IntegerTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import (
@@ -1618,29 +1615,6 @@ SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 
 
-def _get_dpcode_wrapper(
-    device: CustomerDevice,
-    description: TuyaSensorEntityDescription,
-) -> DPCodeWrapper | None:
-    """Get DPCode wrapper for an entity description."""
-    dpcode = description.dpcode or description.key
-    wrapper: DPCodeWrapper | None
-
-    if description.wrapper_class:
-        for cls in description.wrapper_class:
-            if wrapper := cls.find_dpcode(device, dpcode):
-                return wrapper
-        return None
-
-    # Check for integer type first, using delta wrapper only for sum report_type
-    if type_information := IntegerTypeInformation.find_dpcode(device, dpcode):
-        if type_information.report_type == "sum":
-            return DeltaIntegerWrapper(type_information.dpcode, type_information)
-        return DPCodeIntegerWrapper(type_information.dpcode, type_information)
-
-    return DPCodeEnumWrapper.find_dpcode(device, dpcode)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -1657,9 +1631,15 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 entities.extend(
-                    TuyaSensorEntity(device, manager, description, dpcode_wrapper)
+                    TuyaSensorEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (dpcode_wrapper := _get_dpcode_wrapper(device, description))
+                    if (
+                        definition := get_default_definition(
+                            device,
+                            description.dpcode or description.key,
+                            description.wrapper_class,
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -1681,21 +1661,25 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
-        dpcode_wrapper: DeviceWrapper[StateType],
+        definition: TuyaSensorDefinition,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager, description)
-        self._dpcode_wrapper = dpcode_wrapper
+        self._dpcode_wrapper = definition.sensor_wrapper
 
         if description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
+            self._attr_native_unit_of_measurement = (
+                definition.sensor_wrapper.native_unit
+            )
         if description.suggested_unit_of_measurement is None:
-            self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
+            self._attr_suggested_unit_of_measurement = (
+                definition.sensor_wrapper.suggested_unit
+            )
         if (
             description.state_class is None
             # For integer type DPs with "sum" report type, we can assume it's a total
             # increasing sensor
-            and isinstance(dpcode_wrapper, DeltaIntegerWrapper)
+            and isinstance(definition.sensor_wrapper, DeltaIntegerWrapper)
         ):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
