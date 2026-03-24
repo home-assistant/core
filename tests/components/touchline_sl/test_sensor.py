@@ -52,6 +52,28 @@ async def test_battery_sensor_no_battery(
     assert hass.states.get(BATTERY_ENTITY_ID) is None
 
 
+async def test_battery_sensor_only_created_for_zones_with_battery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_touchlinesl_client: MagicMock,
+) -> None:
+    """Test that battery sensors are only created for wireless zones."""
+    wired_zone = make_mock_zone(zone_id=1, name="Wired Zone")
+    wired_zone.battery_level = None
+    wireless_zone = make_mock_zone(zone_id=2, name="Wireless Zone")
+    wireless_zone.battery_level = 75
+
+    module = make_mock_module([wired_zone, wireless_zone])
+    mock_touchlinesl_client.modules = AsyncMock(return_value=[module])
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wired_zone_battery") is None
+    assert hass.states.get("sensor.wireless_zone_battery") is not None
+
+
 @pytest.mark.parametrize("alarm", ["no_communication", "sensor_damaged"])
 async def test_battery_sensor_unavailable_on_alarm(
     hass: HomeAssistant,
