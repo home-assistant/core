@@ -17,6 +17,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -63,9 +64,14 @@ async def async_setup_entry(
 
     devices = []
     for device_id in range(entry.runtime_data.number_of_devices):
-        thermostat = PyTouchline(id=device_id, url=host)
-        await hass.async_add_executor_job(thermostat.update)
-        devices.append(Touchline(thermostat))
+        device = PyTouchline(id=device_id, url=host)
+        try:
+            await hass.async_add_executor_job(device.update)
+        except (OSError, ConnectionError, TimeoutError) as err:
+            raise ConfigEntryNotReady(
+                f"Error while connecting to Touchline controller at {host}"
+            ) from err
+        devices.append(Touchline(device))
 
     async_add_entities(devices)
 
