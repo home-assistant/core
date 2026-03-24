@@ -82,9 +82,10 @@ async def test_node_buttons(
     [
         ("button.pve1_start_all", "startall"),
         ("button.pve1_stop_all", "stopall"),
+        ("button.pve1_suspend_all", "suspendall"),
     ],
 )
-async def test_node_startall_stopall_buttons(
+async def test_node_all_actions_buttons(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
