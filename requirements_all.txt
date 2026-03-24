@@ -53,7 +53,7 @@ PyChromecast==14.0.10
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.8.0
+PyFronius==0.8.2
 
 # homeassistant.components.pyload
 PyLoadAPI==2.0.0
@@ -276,7 +276,7 @@ aioguardian==2026.01.1
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.4.2
+aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.33.0
@@ -422,7 +422,7 @@ aiosyncthing==0.7.1
 aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
-aiotedee==0.2.27
+aiotedee==0.3.0
 
 # homeassistant.components.tractive
 aiotractive==1.0.1
