@@ -2954,6 +2954,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hr_energy_qube": {
+      "name": "Qube heat pump",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "html5": {
       "name": "HTML5 Push Notifications",
       "integration_type": "hub",

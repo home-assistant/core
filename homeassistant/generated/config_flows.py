@@ -305,6 +305,7 @@ FLOWS = {
         "homewizard",
         "homeworks",
         "honeywell",
+        "hr_energy_qube",
         "html5",
         "huawei_lte",
         "hue",
