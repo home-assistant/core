@@ -367,6 +367,13 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescriptionB01(
+        key="battery",
+        value_fn=lambda data: data.battery,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
         key="side_brush_time_left",
         value_fn=lambda data: data.side_brush_time_left,
         device_class=SensorDeviceClass.DURATION,
