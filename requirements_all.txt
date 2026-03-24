@@ -425,7 +425,7 @@ aiotankerkoenig==0.5.1
 aiotedee==0.2.27
 
 # homeassistant.components.tractive
-aiotractive==1.0.0
+aiotractive==1.0.1
 
 # homeassistant.components.unifi
 aiounifi==88
@@ -1182,7 +1182,7 @@ habluetooth==5.11.1
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==2.0.0
+hass-nabucasa==2.2.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1229,7 +1229,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260312.0
+home-assistant-frontend==20260312.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.3
@@ -2251,7 +2251,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.liebherr
-pyliebherrhomeapi==0.4.0
+pyliebherrhomeapi==0.4.1
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
@@ -3193,7 +3193,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.1.2
+universal-silabs-flasher==1.0.2
 
 # homeassistant.components.upb
 upb-lib==0.6.1

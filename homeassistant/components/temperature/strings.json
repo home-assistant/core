@@ -29,7 +29,7 @@
   "title": "Temperature",
   "triggers": {
     "changed": {
-      "description": "Triggers when the temperature changes.",
+      "description": "Triggers after one or more temperatures change.",
       "fields": {
         "above": {
           "description": "Only trigger when temperature is above this value.",
@@ -47,7 +47,7 @@
       "name": "Temperature changed"
     },
     "crossed_threshold": {
-      "description": "Triggers when the temperature crosses a threshold.",
+      "description": "Triggers after one or more temperatures cross a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::temperature::common::trigger_behavior_description%]",

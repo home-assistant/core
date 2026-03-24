@@ -557,7 +557,7 @@ async def test_subentry_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert subentry.subentry_type == SUBENTRY_TYPE_ALLOWED_CHAT_IDS
-    assert subentry.title == "mock title (987654321)"
+    assert subentry.title == "mock title"
     assert subentry.unique_id == "987654321"
     assert subentry.data == {CONF_CHAT_ID: 987654321}
 
@@ -595,6 +595,22 @@ async def test_subentry_flow_chat_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    # test: network error
+
+    with patch("homeassistant.components.telegram_bot.bot.Bot.get_chat") as mock_bot:
+        mock_bot.side_effect = NetworkError("mock network error")
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_CHAT_ID: 1234567890},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "telegram_error"
+    assert result["description_placeholders"]["error_message"] == "mock network error"
 
     # test: chat not found
 
