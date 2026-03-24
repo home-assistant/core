@@ -118,7 +118,7 @@ SCHEMA_APP_DATA = vol.Schema(
         # without an environment is ambiguous (sandbox tokens fail on production).
         vol.Inclusive(
             ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN, "live_activity_push_to_start"
-        ): cv.string,
+        ): vol.All(cv.string, vol.Length(min=1)),
         vol.Inclusive(
             ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT,
             "live_activity_push_to_start",

@@ -809,7 +809,7 @@ async def webhook_scan_tag(
 @validate_schema(
     {
         vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
-        vol.Required(ATTR_PUSH_TOKEN): cv.string,
+        vol.Required(ATTR_PUSH_TOKEN): vol.All(cv.string, vol.Length(min=1)),
     }
 )
 async def webhook_update_live_activity_token(
