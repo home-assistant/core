@@ -1,11 +1,13 @@
 """Tests for ffmpeg proxy view."""
 
+import asyncio
 from collections.abc import Generator
 from http import HTTPStatus
 import io
+import logging
 import os
 import tempfile
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.request import pathname2url
 import wave
 
@@ -14,11 +16,16 @@ import mutagen
 import pytest
 
 from homeassistant.components import esphome
-from homeassistant.components.esphome.ffmpeg_proxy import async_create_proxy_url
+from homeassistant.components.esphome.ffmpeg_proxy import (
+    _MAX_STDERR_LINES,
+    async_create_proxy_url,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
+
+FFMPEG_PROXY = "homeassistant.components.esphome.ffmpeg_proxy"
 
 
 @pytest.fixture(name="wav_file_length")
@@ -119,6 +126,7 @@ async def test_proxy_view(
 async def test_ffmpeg_file_doesnt_exist(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ffmpeg conversion with a file that doesn't exist."""
     device_id = "1234"
@@ -135,6 +143,327 @@ async def test_ffmpeg_file_doesnt_exist(
     assert req.status == HTTPStatus.OK
     mp3_data = await req.content.read()
     assert not mp3_data
+
+    # ffmpeg failure should be logged at error level
+    assert "FFmpeg conversion failed for device" in caplog.text
+    assert device_id in caplog.text
+
+
+async def test_ffmpeg_error_stderr_truncated(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that ffmpeg stderr output is truncated in error logs."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    total_lines = _MAX_STDERR_LINES + 50
+    stderr_lines_data = [f"stderr line {i}\n".encode() for i in range(total_lines)] + [
+        b""
+    ]
+
+    async def _stdout_read(_size: int = -1) -> bytes:
+        """Yield to event loop so stderr collector can run, then return EOF."""
+        await asyncio.sleep(0)
+        return b""
+
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = _stdout_read
+    mock_proc.stderr.readline = AsyncMock(side_effect=stderr_lines_data)
+    mock_proc.returncode = 1
+
+    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        await req.content.read()
+
+    # Should log an error with stderr content
+    assert "FFmpeg conversion failed for device" in caplog.text
+
+    # Find the error message to verify truncation.
+    # We can't just check caplog.text because lines beyond the limit
+    # are still present at debug level from _collect_ffmpeg_stderr.
+    error_message = next(
+        r.message
+        for r in caplog.records
+        if r.levelno >= logging.ERROR and "FFmpeg conversion failed" in r.message
+    )
+
+    total_lines = _MAX_STDERR_LINES + 50
+
+    # The last _MAX_STDERR_LINES lines should be present
+    for i in range(total_lines - _MAX_STDERR_LINES, total_lines):
+        assert f"stderr line {i}" in error_message
+
+    # Early lines that were evicted should not be in the error log
+    assert "stderr line 0" not in error_message
+
+
+async def test_ffmpeg_error_redacts_sensitive_urls(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that sensitive query params are redacted in error logs."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    sensitive_url = (
+        "https://example.com/api/tts?authSig=secret123&token=abc456&other=keep"
+    )
+    stderr_lines_data = [
+        f"Error opening input file {sensitive_url}\n".encode(),
+        b"",
+    ]
+
+    async def _stdout_read(_size: int = -1) -> bytes:
+        await asyncio.sleep(0)
+        return b""
+
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = _stdout_read
+    mock_proc.stderr.readline = AsyncMock(side_effect=stderr_lines_data)
+    mock_proc.returncode = 1
+
+    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        await req.content.read()
+
+    error_message = next(
+        r.message
+        for r in caplog.records
+        if r.levelno >= logging.ERROR and "FFmpeg conversion failed" in r.message
+    )
+
+    assert "authSig=REDACTED" in error_message
+    assert "token=REDACTED" in error_message
+    assert "secret123" not in error_message
+    assert "abc456" not in error_message
+    assert "other=keep" in error_message
+
+
+async def test_ffmpeg_stderr_drain_timeout(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that stderr drain timeout is handled gracefully."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    never_finish: asyncio.Future[bytes] = asyncio.get_running_loop().create_future()
+
+    call_count = 0
+
+    async def _slow_stderr_readline() -> bytes:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return b"first error line\n"
+        # Block forever on second call so the drain times out
+        return await never_finish
+
+    async def _stdout_read(_size: int = -1) -> bytes:
+        await asyncio.sleep(0)
+        return b""
+
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = _stdout_read
+    mock_proc.stderr.readline = _slow_stderr_readline
+    mock_proc.returncode = 1
+
+    with (
+        patch("asyncio.create_subprocess_exec", return_value=mock_proc),
+        patch(f"{FFMPEG_PROXY}._STDERR_DRAIN_TIMEOUT", 0),
+    ):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        await req.content.read()
+
+    assert "FFmpeg conversion failed for device" in caplog.text
+    assert "first error line" in caplog.text
+
+
+async def test_ffmpeg_proc_wait_timeout(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that proc.wait() timeout is handled gracefully."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    async def _stdout_read(_size: int = -1) -> bytes:
+        await asyncio.sleep(0)
+        return b""
+
+    async def _proc_wait() -> None:
+        # Block forever so wait_for times out
+        await asyncio.Future()
+
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = _stdout_read
+    mock_proc.stderr.readline = AsyncMock(return_value=b"")
+    mock_proc.returncode = None
+    mock_proc.kill = MagicMock()
+    mock_proc.wait = _proc_wait
+
+    with (
+        patch("asyncio.create_subprocess_exec", return_value=mock_proc),
+        patch(f"{FFMPEG_PROXY}._PROC_WAIT_TIMEOUT", 0),
+        patch(f"{FFMPEG_PROXY}._STDERR_DRAIN_TIMEOUT", 0),
+    ):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        await req.content.read()
+
+    assert "Timed out waiting for ffmpeg process to exit" in caplog.text
+
+
+async def test_ffmpeg_cleanup_on_cancellation(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that ffmpeg process is killed when task is cancelled during cleanup."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    async def _stdout_read(_size: int = -1) -> bytes:
+        await asyncio.sleep(0)
+        return b""
+
+    async def _proc_wait() -> None:
+        # Simulate cancellation during proc.wait()
+        raise asyncio.CancelledError
+
+    mock_kill = MagicMock()
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = _stdout_read
+    mock_proc.stderr.readline = AsyncMock(return_value=b"")
+    mock_proc.returncode = None
+    mock_proc.kill = mock_kill
+    mock_proc.wait = _proc_wait
+
+    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        with pytest.raises(client_exceptions.ClientPayloadError):
+            await req.content.read()
+
+    # proc.kill should have been called (once in the initial check, once in the
+    # CancelledError handler)
+    assert mock_kill.call_count >= 1
+
+
+async def test_ffmpeg_unexpected_exception(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that unexpected exceptions during ffmpeg conversion are logged."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    async def _stdout_read_error(_size: int = -1) -> bytes:
+        raise RuntimeError("unexpected read error")
+
+    mock_proc = AsyncMock()
+    mock_proc.stdout.read = _stdout_read_error
+    mock_proc.stderr.readline = AsyncMock(return_value=b"")
+    mock_proc.returncode = 0
+
+    with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+        url = async_create_proxy_url(hass, device_id, "dummy-input", media_format="mp3")
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        await req.content.read()
+
+    assert "Unexpected error during ffmpeg conversion" in caplog.text
+
+
+async def test_max_conversions_kills_running_process(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that exceeding max conversions kills a running ffmpeg process."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    stdout_futures: list[asyncio.Future[bytes]] = []
+    mock_kills: list[MagicMock] = []
+    procs_started = asyncio.Event()
+    proc_count = 0
+
+    def _make_mock_proc(*_args: object, **_kwargs: object) -> AsyncMock:
+        """Create a mock ffmpeg process that blocks on stdout read."""
+        nonlocal proc_count
+        future: asyncio.Future[bytes] = hass.loop.create_future()
+        stdout_futures.append(future)
+        kill = MagicMock()
+        mock_kills.append(kill)
+
+        async def _stdout_read(_size: int = -1) -> bytes:
+            return await future
+
+        mock = AsyncMock()
+        mock.stdout.read = _stdout_read
+        mock.stderr.readline = AsyncMock(return_value=b"")
+        mock.returncode = None
+        mock.kill = kill
+        proc_count += 1
+        if proc_count >= 2:
+            procs_started.set()
+        return mock
+
+    with patch(
+        "asyncio.create_subprocess_exec",
+        side_effect=_make_mock_proc,
+    ):
+        url1 = async_create_proxy_url(hass, device_id, "url1", media_format="mp3")
+        url2 = async_create_proxy_url(hass, device_id, "url2", media_format="mp3")
+
+        # Start both HTTP requests — each spawns an ffmpeg process that blocks
+        task1 = hass.async_create_task(client.get(url1))
+        task2 = hass.async_create_task(client.get(url2))
+
+        # Wait until both ffmpeg processes have been created
+        await procs_started.wait()
+        assert len(mock_kills) == 2
+
+        # Creating a third conversion should kill the oldest running process
+        async_create_proxy_url(hass, device_id, "url3", media_format="mp3")
+        assert "Stopping existing ffmpeg process" in caplog.text
+        mock_kills[0].assert_called_once()
+
+        # Unblock stdout reads so background tasks can finish
+        for future in stdout_futures:
+            if not future.done():
+                future.set_result(b"")
+
+        await task1
+        await task2
 
 
 async def test_lingering_process(
