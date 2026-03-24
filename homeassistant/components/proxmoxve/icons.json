@@ -41,6 +41,8 @@
       },
       "container_netout": {
         "default": "mdi:upload-network"
+      "container_memory_percentage": {
+        "default": "mdi:memory"
       },
       "container_status": {
         "default": "mdi:server"
@@ -61,6 +63,9 @@
         "default": "mdi:memory"
       },
       "node_memory": {
+        "default": "mdi:memory"
+      },
+      "node_memory_percentage": {
         "default": "mdi:memory"
       },
       "node_status": {
@@ -89,6 +94,8 @@
       },
       "vm_netout": {
         "default": "mdi:upload-network"
+      "vm_memory_percentage": {
+        "default": "mdi:memory"
       },
       "vm_status": {
         "default": "mdi:server"
