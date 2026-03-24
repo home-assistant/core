@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Final
 
-import evohomeasync2 as ec2
+from evohomeasync2 import ControlSystem
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
 from evohomeasync2.schemas.const import S2_DURATION, S2_PERIOD
 import voluptuous as vol
@@ -67,7 +67,7 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     )
 
 
-def _validate_set_system_mode_params(call: ServiceCall, tcs: ec2.ControlSystem) -> None:
+def _validate_set_system_mode_params(call: ServiceCall, tcs: ControlSystem) -> None:
     """Validate that a set_system_mode service call is properly formed."""
 
     mode = call.data[ATTR_MODE]
