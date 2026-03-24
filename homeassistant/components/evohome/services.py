@@ -122,9 +122,9 @@ def setup_service_functions(
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the Evohome system mode or reset the system."""
 
-        # No validation for RESET_SYSTEM here (other than the schema), as the library
-        # method invoked via that service call may be able to emulate the reset even if
-        # the system doesn't support auto_with_reset natively
+        # No additional validation for RESET_SYSTEM here, as the library method invoked
+        # via that service call may be able to emulate the reset even if the system
+        # doesn't support auto_with_reset natively
 
         if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(call, coordinator.tcs)
