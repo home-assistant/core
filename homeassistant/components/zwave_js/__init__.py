@@ -777,26 +777,18 @@ class NodeEvents:
         self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_node_values(
-                    node, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_node_values(
+            node, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
         # add listeners to handle new values that get added later
         for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
-                    lambda event: self.hass.async_create_task(
-                        self.async_on_value_added(
-                            value_updates_disc_info, event["value"]
-                        )
+                    lambda event: self.async_on_value_added(
+                        value_updates_disc_info, event["value"]
                     ),
                 )
             )
@@ -860,7 +852,8 @@ class NodeEvents:
                 # an upstream bug, or the change has been reverted.
                 async_delete_issue(self.hass, DOMAIN, issue_id)
 
-    async def async_handle_discovery_info(
+    @callback
+    def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
         disc_info: PlatformZwaveDiscoveryInfo,
@@ -905,41 +898,32 @@ class NodeEvents:
             )
         )
 
-    async def async_on_value_added(
+    @callback
+    def async_on_value_added(
         self,
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
         value: Value,
     ) -> None:
         """Fire value updated event."""
-        async with self._node_locks[value.node.node_id]:
-            # If node isn't ready or a device for this node doesn't already
-            # exist, we can let the node ready event handler perform discovery.
-            # If a value has already been processed, we don't need to do it
-            # again
-            device_id = get_device_id(
-                self.controller_events.driver_events.driver, value.node
-            )
-            if (
-                not value.node.ready
-                or not (
-                    device := self.dev_reg.async_get_device(identifiers={device_id})
-                )
-                or value.value_id
-                in self.controller_events.discovered_value_ids[device.id]
-            ):
-                return
+        # If node isn't ready or a device for this node doesn't already
+        # exist, we can let the node ready event handler perform discovery.
+        # If a value has already been processed, we don't need to do it
+        # again
+        device_id = get_device_id(
+            self.controller_events.driver_events.driver, value.node
+        )
+        if (
+            not value.node.ready
+            or not (device := self.dev_reg.async_get_device(identifiers={device_id}))
+            or value.value_id in self.controller_events.discovered_value_ids[device.id]
+        ):
+            return
 
-            LOGGER.debug("Processing node %s added value %s", value.node, value)
-            await asyncio.gather(
-                *(
-                    self.async_handle_discovery_info(
-                        device, disc_info, value_updates_disc_info
-                    )
-                    for disc_info in async_discover_single_value(
-                        value, device, self.controller_events.discovered_value_ids
-                    )
-                )
-            )
+        LOGGER.debug("Processing node %s added value %s", value.node, value)
+        for disc_info in async_discover_single_value(
+            value, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback
     def async_on_value_notification(self, notification: ValueNotification) -> None:

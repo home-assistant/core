@@ -357,7 +357,7 @@ class ZWaveBaseEntity(Entity):
         value_updates_disc_info = node_events.value_updates_disc_info[
             value.node.node_id
         ]
-        await node_events.async_on_value_added(value_updates_disc_info, value)
+        node_events.async_on_value_added(value_updates_disc_info, value)
 
     @callback
     def get_zwave_value(
