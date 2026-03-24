@@ -12,7 +12,13 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -97,10 +103,10 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns tuple of (data dict, serial_number).
         """
-        host = user_input["host"]
-        connection_type = user_input["type"]
-        username = user_input.get("username")
-        password = user_input.get("password")
+        host = user_input[CONF_HOST]
+        connection_type = user_input[CONF_TYPE]
+        username = user_input.get(CONF_USERNAME)
+        password = user_input.get(CONF_PASSWORD)
 
         wifi = connection_type == CONNECTION_TYPES[1]
         kwargs: dict[str, Any] = {}
@@ -142,10 +148,10 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             raise CannotConnect(f"Connection failed: {err}") from err
 
         return {
-            "host": host,
-            "type": connection_type,
-            "username": username or "",
-            "password": password or "",
+            CONF_HOST: host,
+            CONF_TYPE: connection_type,
+            CONF_USERNAME: username or "",
+            CONF_PASSWORD: password or "",
         }, serial_number
 
     async def async_step_user(
@@ -155,8 +161,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            host = user_input["host"]
-            connection_type = user_input.get("type", CONNECTION_TYPES[0])
+            host = user_input[CONF_HOST]
+            connection_type = user_input.get(CONF_TYPE, CONNECTION_TYPES[0])
 
             # Store for next step if WiFi is selected
             self._host = host
@@ -169,7 +175,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             # For Ethernet, validate and create entry directly
             try:
                 data, serial_number = await self._async_validate_input(
-                    user_input={"host": host, "type": connection_type}
+                    user_input={CONF_HOST: host, CONF_TYPE: connection_type}
                 )
 
                 # Set unique_id if we got a serial number
@@ -178,7 +184,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured(updates=dict(data))
 
                 return self.async_create_entry(
-                    title=user_input.get("name", "SAJ Solar Inverter"), data=data
+                    title=user_input.get(CONF_NAME, "SAJ Solar Inverter"), data=data
                 )
             except ConfigEntryAuthFailed as err:
                 errors["base"] = "invalid_auth"
@@ -202,8 +208,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         """Define the schema for the user step (host and connection type)."""
         return vol.Schema(
             {
-                vol.Required("host"): str,
-                vol.Optional("type", default=CONNECTION_TYPES[0]): vol.In(
+                vol.Required(CONF_HOST): str,
+                vol.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): vol.In(
                     CONNECTION_TYPES
                 ),
             }
@@ -218,10 +224,10 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Combine data from both steps
             combined_input = {
-                "host": self._host,
-                "type": self._connection_type,
-                "username": user_input.get("username", None),
-                "password": user_input.get("password", None),
+                CONF_HOST: self._host,
+                CONF_TYPE: self._connection_type,
+                CONF_USERNAME: user_input.get(CONF_USERNAME, None),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD, None),
             }
 
             try:
@@ -257,8 +263,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         """Define the schema for device credentials step."""
         return vol.Schema(
             {
-                vol.Optional("username", default=""): str,
-                vol.Optional("password", default=""): str,
+                vol.Optional(CONF_USERNAME, default=""): str,
+                vol.Optional(CONF_PASSWORD, default=""): str,
             }
         )
 
@@ -419,10 +425,10 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     data, serial_number = await self._async_validate_input(
                         user_input={
-                            "host": self.discovery_info[CONF_HOST],
-                            "type": CONNECTION_TYPES[1],
-                            "username": user_input.get("username", ""),
-                            "password": user_input.get("password", ""),
+                            CONF_HOST: self.discovery_info[CONF_HOST],
+                            CONF_TYPE: CONNECTION_TYPES[1],
+                            CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
+                            CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
                         }
                     )
                     # Update discovery_info with validated data
@@ -452,8 +458,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         if is_wifi:
             data_schema = vol.Schema(
                 {
-                    vol.Optional("username", default=""): str,
-                    vol.Optional("password", default=""): str,
+                    vol.Optional(CONF_USERNAME, default=""): str,
+                    vol.Optional(CONF_PASSWORD, default=""): str,
                 }
             )
             self._set_confirm_only()
