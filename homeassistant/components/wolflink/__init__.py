@@ -12,15 +12,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .const import (
-    COORDINATOR,
-    DEVICE_GATEWAY,
-    DEVICE_ID,
-    DEVICE_NAME,
-    DOMAIN,
-    PARAMETERS,
-)
-from .coordinator import WolfLinkCoordinator, fetch_parameters
+from .const import CONF_DEVICES, DOMAIN
+from .coordinator import WolfLinkCoordinator, WolfLinkData, fetch_parameters
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    device_name = entry.data[DEVICE_NAME]
-    device_id = entry.data[DEVICE_ID]
-    gateway_id = entry.data[DEVICE_GATEWAY]
-    _LOGGER.debug(
-        "Setting up wolflink integration for device: %s (ID: %s, gateway: %s)",
-        device_name,
-        device_id,
-        gateway_id,
-    )
 
     wolf_client = WolfClient(
         username,
@@ -48,19 +32,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client=create_async_httpx_client(hass=hass, verify_ssl=False, timeout=20),
     )
 
-    parameters = await fetch_parameters_init(wolf_client, gateway_id, device_id)
+    try:
+        devices = await wolf_client.fetch_system_list()
+    except (FetchFailed, RequestError) as exception:
+        raise ConfigEntryNotReady(
+            f"Error fetching system list: {exception}"
+        ) from exception
 
-    coordinator = WolfLinkCoordinator(
-        hass, entry, wolf_client, parameters, gateway_id, device_id
+    # Default to all devices if options not yet set (e.g. during migration)
+    selected_ids = set(entry.options.get(CONF_DEVICES, [str(d.id) for d in devices]))
+
+    coordinators: list[WolfLinkCoordinator] = []
+    for device in devices:
+        if str(device.id) not in selected_ids:
+            continue
+        _LOGGER.debug(
+            "Setting up wolflink device: %s (ID: %s, gateway: %s)",
+            device.name,
+            device.id,
+            device.gateway,
+        )
+        parameters = await fetch_parameters_init(wolf_client, device.gateway, device.id)
+        coordinator = WolfLinkCoordinator(
+            hass,
+            entry,
+            wolf_client,
+            parameters,
+            device.gateway,
+            device.id,
+            device.name,
+        )
+        await coordinator.async_refresh()
+        coordinators.append(coordinator)
+
+    entry.runtime_data = WolfLinkData(
+        wolf_client=wolf_client, coordinators=coordinators
     )
-
-    await coordinator.async_refresh()
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
-    hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
-    hass.data[DOMAIN][entry.entry_id][DEVICE_ID] = device_id
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -69,40 +76,63 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    # convert unique_id to string
-    if entry.version == 1 and entry.minor_version == 1:
-        if isinstance(entry.unique_id, int):
-            hass.config_entries.async_update_entry(
-                entry, unique_id=str(entry.unique_id)
+    if entry.version == 1:
+        # Step 1: if minor_version == 1, convert integer unique_id and device registry identifiers to strings
+        if entry.minor_version == 1:
+            if isinstance(entry.unique_id, int):
+                device_registry = dr.async_get(hass)
+                for device in dr.async_entries_for_config_entry(
+                    device_registry, entry.entry_id
+                ):
+                    new_identifiers = {
+                        (DOMAIN, str(identifier[1]))
+                        if identifier[0] == DOMAIN
+                        else identifier
+                        for identifier in device.identifiers
+                    }
+                    device_registry.async_update_device(
+                        device.id, new_identifiers=new_identifiers
+                    )
+
+        # Step 2: migrate version 1.x → 2.1 (strip device keys, set username unique_id)
+        new_unique_id = entry.data[CONF_USERNAME].lower()
+        existing = hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, new_unique_id
+        )
+        if existing is not None and existing.entry_id != entry.entry_id:
+            # A migrated entry for this account already exists; remove this duplicate
+            _LOGGER.warning(
+                "Removing duplicate wolflink entry for account %s (entry %s)",
+                new_unique_id,
+                entry.entry_id,
             )
-            device_registry = dr.async_get(hass)
-            for device in dr.async_entries_for_config_entry(
-                device_registry, entry.entry_id
-            ):
-                new_identifiers = set()
-                for identifier in device.identifiers:
-                    if identifier[0] == DOMAIN:
-                        new_identifiers.add((DOMAIN, str(identifier[1])))
-                    else:
-                        new_identifiers.add(identifier)
-                device_registry.async_update_device(
-                    device.id, new_identifiers=new_identifiers
-                )
-        hass.config_entries.async_update_entry(entry, minor_version=2)
+            return False
+
+        new_data = {
+            CONF_USERNAME: entry.data[CONF_USERNAME],
+            CONF_PASSWORD: entry.data[CONF_PASSWORD],
+        }
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=new_unique_id,
+            data=new_data,
+            version=2,
+            minor_version=1,
+        )
 
     return True
 
 
-async def fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: int):
+async def fetch_parameters_init(
+    client: WolfClient,
+    gateway_id: int,
+    device_id: int,
+):
     """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
     try:
         return await fetch_parameters(client, gateway_id, device_id)

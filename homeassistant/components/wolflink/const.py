@@ -9,6 +9,8 @@ DEVICE_GATEWAY = "device_gateway"
 DEVICE_NAME = "device_name"
 MANUFACTURER = "WOLF GmbH"
 
+CONF_DEVICES = "devices"
+
 STATES = {
     "Ein": "ein",
     "Deaktiviert": "deaktiviert",

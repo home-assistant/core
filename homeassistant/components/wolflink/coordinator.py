@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Wolf SmartSet Service integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -17,26 +18,38 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class WolfLinkData:
+    """Data for the Wolf SmartSet Service integration."""
+
+    wolf_client: WolfClient
+    coordinators: list[WolfLinkCoordinator]
+
+
+type WolfLinkConfigEntry = ConfigEntry[WolfLinkData]
+
+
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
     """Class to manage fetching Wolf SmartSet data."""
 
-    config_entry: ConfigEntry
+    config_entry: WolfLinkConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WolfLinkConfigEntry,
         wolf_client: WolfClient,
         parameters: list[Parameter],
         gateway_id: int,
         device_id: int,
+        device_name: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{device_name}",
             update_interval=timedelta(seconds=60),
         )
         self._wolf_client = wolf_client
@@ -44,6 +57,17 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         self._gateway_id = gateway_id
         self._device_id = device_id
         self._refetch_parameters = False
+        self.device_name = device_name
+
+    @property
+    def parameters(self) -> list[Parameter]:
+        """Return the current list of parameters."""
+        return self._parameters
+
+    @property
+    def device_id(self) -> int:
+        """Return the device ID."""
+        return self._device_id
 
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:
         """Update all stored entities for Wolf SmartSet."""
@@ -57,7 +81,9 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
                 )
             if self._refetch_parameters:
                 self._parameters = await fetch_parameters(
-                    self._wolf_client, self._gateway_id, self._device_id
+                    self._wolf_client,
+                    self._gateway_id,
+                    self._device_id,
                 )
                 self._refetch_parameters = False
             values = {
@@ -92,7 +118,9 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
 
 
 async def fetch_parameters(
-    client: WolfClient, gateway_id: int, device_id: int
+    client: WolfClient,
+    gateway_id: int,
+    device_id: int,
 ) -> list[Parameter]:
     """Fetch all available parameters with usage of WolfClient.
 

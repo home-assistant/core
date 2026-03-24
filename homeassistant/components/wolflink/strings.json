@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,11 +9,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "device": {
+      "devices": {
         "data": {
-          "device_name": "[%key:common::config_flow::data::device%]"
+          "devices": "Devices to monitor"
         },
-        "title": "Select WOLF device"
+        "title": "Select WOLF devices"
       },
       "user": {
         "data": {
@@ -110,6 +110,21 @@
           "warmwasservorrang": "DHW priority",
           "zunden": "Ignition"
         }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "devices": "Devices to monitor"
+        },
+        "title": "Wolf SmartSet options"
       }
     }
   }

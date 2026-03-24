@@ -21,13 +21,9 @@ from wolf_comm import (
     Temperature,
     Value,
 )
+from wolf_comm.models import Device
 
-from homeassistant.components.wolflink.const import (
-    DEVICE_GATEWAY,
-    DEVICE_ID,
-    DEVICE_NAME,
-    DOMAIN,
-)
+from homeassistant.components.wolflink.const import CONF_DEVICES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -40,18 +36,18 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Wolf SmartSet",
+        title="test-username",
         domain=DOMAIN,
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            DEVICE_NAME: "test-device",
-            DEVICE_GATEWAY: "5678",
-            DEVICE_ID: "1234",
         },
-        unique_id="1234",
-        version=1,
-        minor_version=2,
+        options={
+            CONF_DEVICES: ["1234"],
+        },
+        unique_id="test-username",
+        version=2,
+        minor_version=1,
     )
 
 
@@ -68,6 +64,10 @@ def mock_wolflink() -> Generator[MagicMock]:
         ),
     ):
         wolflink = wolflink_mock.return_value
+
+        wolflink.fetch_system_list.return_value = [Device(1234, 5678, "test-device")]
+
+        wolflink.fetch_system_state_list.return_value = True
 
         wolflink.fetch_parameters.return_value = [
             EnergyParameter(

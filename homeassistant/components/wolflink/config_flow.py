@@ -8,10 +8,17 @@ from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import WolfClient
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
-from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN
+from .const import CONF_DEVICES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +30,13 @@ USER_SCHEMA = vol.Schema(
 class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wolf SmartSet Service."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     fetched_systems: list[Device]
 
     def __init__(self) -> None:
-        """Initialize with empty username and password."""
+        """Initialize."""
         self.username: str | None = None
         self.password: str | None = None
 
@@ -37,7 +44,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step to get connection parameters."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             wolf_client = WolfClient(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
@@ -54,42 +61,90 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.username = user_input[CONF_USERNAME]
                 self.password = user_input[CONF_PASSWORD]
-                return await self.async_step_device()
+                await self.async_set_unique_id(self.username.lower())
+                self._abort_if_unique_id_configured()
+                return await self.async_step_devices()
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    async def async_step_device(
-        self, user_input: dict[str, str] | None = None
+    async def async_step_devices(
+        self, user_input: dict[str, list[str]] | None = None
     ) -> ConfigFlowResult:
-        """Allow user to select device from devices connected to specified account."""
-        errors: dict[str, str] = {}
+        """Allow user to select which devices to monitor."""
+        device_map = {str(d.id): d.name for d in self.fetched_systems}
         if user_input is not None:
-            device_name = user_input[DEVICE_NAME]
-            system = [
-                device for device in self.fetched_systems if device.name == device_name
-            ]
-            device_id = system[0].id
-            await self.async_set_unique_id(str(device_id))
-            self._abort_if_unique_id_configured()
+            assert self.username is not None
             return self.async_create_entry(
-                title=user_input[DEVICE_NAME],
+                title=self.username,
                 data={
                     CONF_USERNAME: self.username,
                     CONF_PASSWORD: self.password,
-                    DEVICE_NAME: device_name,
-                    DEVICE_GATEWAY: system[0].gateway,
-                    DEVICE_ID: device_id,
+                },
+                options={
+                    CONF_DEVICES: user_input[CONF_DEVICES],
                 },
             )
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_DEVICES, default=list(device_map)): cv.multi_select(
+                    device_map
+                ),
+            }
+        )
+        return self.async_show_form(step_id="devices", data_schema=data_schema)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> WolfLinkOptionsFlow:
+        """Get the options flow for this handler."""
+        return WolfLinkOptionsFlow()
+
+
+class WolfLinkOptionsFlow(OptionsFlowWithReload):
+    """Handle Wolf SmartSet options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, list[str]] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Wolf SmartSet options."""
+        errors: dict[str, str] = {}
+
+        wolf_client = self.config_entry.runtime_data.wolf_client
+        try:
+            devices = await wolf_client.fetch_system_list()
+        except ConnectError:
+            errors["base"] = "cannot_connect"
+            devices = []
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+            devices = []
+        except Exception:
+            _LOGGER.exception("Unexpected exception fetching device list")
+            errors["base"] = "unknown"
+            devices = []
+
+        device_map = {str(d.id): d.name for d in devices}
+
+        if user_input is not None and not errors:
+            return self.async_create_entry(
+                data={CONF_DEVICES: user_input[CONF_DEVICES]}
+            )
+
+        # Filter out stale IDs no longer on the account
+        current_devices = [
+            dev_id
+            for dev_id in self.config_entry.options.get(CONF_DEVICES, list(device_map))
+            if dev_id in device_map
+        ]
 
         data_schema = vol.Schema(
             {
-                vol.Required(DEVICE_NAME): vol.In(
-                    [info.name for info in self.fetched_systems]
-                )
+                vol.Required(CONF_DEVICES, default=current_devices): cv.multi_select(
+                    device_map
+                ),
             }
         )
         return self.async_show_form(
-            step_id="device", data_schema=data_schema, errors=errors
+            step_id="init", data_schema=data_schema, errors=errors
         )
