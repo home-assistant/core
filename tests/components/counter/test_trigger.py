@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
+    BasicTriggerStateDescription,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,
@@ -127,7 +128,7 @@ async def test_counter_state_trigger(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any] | None,
-    states: list[TriggerStateDescription],
+    states: list[BasicTriggerStateDescription],
 ) -> None:
     """Test that the counter decrement and increment triggers fire correctly."""
     other_entity_ids = set(target_counters["included_entities"]) - {entity_id}
