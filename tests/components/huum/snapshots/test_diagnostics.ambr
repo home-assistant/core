@@ -13,7 +13,7 @@
       'humidity': 0,
       'is_private': None,
       'light': 1,
-      'payment_end_date': '**REDACTED**',
+      'payment_end_date': None,
       'remote_safety_state': None,
       'sauna_config': dict({
         'child_lock': 'OFF',

@@ -1,93 +1,54 @@
 """Configuration for Huum tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from huum.const import SaunaStatus
+from huum.schemas import HuumStatusResponse, SaunaConfig
 import pytest
 
 from homeassistant.components.huum.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_huum() -> Generator[AsyncMock]:
-    """Mock data from the API."""
-    huum = AsyncMock()
-
+def mock_huum_client() -> Generator[AsyncMock]:
+    """Mock the Huum API client."""
     with (
         patch(
-            "homeassistant.components.huum.config_flow.Huum.status",
-            return_value=huum,
+            "homeassistant.components.huum.coordinator.Huum",
+            autospec=True,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.huum.config_flow.Huum",
+            new=mock_cls,
         ),
-        patch(
-            "homeassistant.components.huum.coordinator.Huum.status",
-            return_value=huum,
-        ),
-        patch(
-            "homeassistant.components.huum.coordinator.Huum.turn_on",
-            return_value=huum,
-        ) as turn_on,
-        patch(
-            "homeassistant.components.huum.coordinator.Huum.toggle_light",
-            return_value=huum,
-        ) as toggle_light,
     ):
-        huum.status = SaunaStatus.ONLINE_NOT_HEATING
-        huum.config = 3
-        huum.door_closed = True
-        huum.temperature = 30
-        huum.sauna_name = "Home sauna"
-        huum.target_temperature = 80
-        huum.payment_end_date = "2026-12-31"
-        huum.light = 1
-        huum.humidity = 0
-        huum.target_humidity = 5
-        huum.sauna_config.child_lock = "OFF"
-        huum.sauna_config.max_heating_time = 3
-        huum.sauna_config.min_heating_time = 0
-        huum.sauna_config.max_temp = 110
-        huum.sauna_config.min_temp = 40
-        huum.sauna_config.max_timer = 0
-        huum.sauna_config.min_timer = 0
-
-        def _to_dict() -> dict[str, object]:
-            return {
-                "status": huum.status,
-                "config": huum.config,
-                "door_closed": huum.door_closed,
-                "temperature": huum.temperature,
-                "sauna_name": huum.sauna_name,
-                "target_temperature": huum.target_temperature,
-                "start_date": None,
-                "end_date": None,
-                "duration": None,
-                "steamer_error": None,
-                "payment_end_date": huum.payment_end_date,
-                "is_private": None,
-                "show_modal": None,
-                "light": huum.light,
-                "humidity": huum.humidity,
-                "target_humidity": huum.target_humidity,
-                "remote_safety_state": None,
-                "sauna_config": {
-                    "child_lock": huum.sauna_config.child_lock,
-                    "max_heating_time": huum.sauna_config.max_heating_time,
-                    "min_heating_time": huum.sauna_config.min_heating_time,
-                    "max_temp": huum.sauna_config.max_temp,
-                    "min_temp": huum.sauna_config.min_temp,
-                    "max_timer": huum.sauna_config.max_timer,
-                    "min_timer": huum.sauna_config.min_timer,
-                },
-            }
-
-        huum.to_dict = Mock(side_effect=_to_dict)
-        huum.turn_on = turn_on
-        huum.toggle_light = toggle_light
-
-        yield huum
+        client = mock_cls.return_value
+        client.status.return_value = HuumStatusResponse(
+            status=SaunaStatus.ONLINE_NOT_HEATING,
+            door_closed=True,
+            temperature=30,
+            sauna_name="123456",
+            target_temperature=80,
+            config=3,
+            light=1,
+            humidity=0,
+            target_humidity=5,
+            sauna_config=SaunaConfig(
+                child_lock="OFF",
+                max_heating_time=3,
+                min_heating_time=0,
+                max_temp=110,
+                min_temp=40,
+                max_timer=0,
+                min_timer=0,
+            ),
+        )
+        yield client
 
 
 @pytest.fixture
@@ -110,3 +71,32 @@ def mock_config_entry() -> MockConfigEntry:
         },
         entry_id="AABBCC112233",
     )
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [
+        Platform.BINARY_SENSOR,
+        Platform.CLIMATE,
+        Platform.LIGHT,
+        Platform.NUMBER,
+        Platform.SENSOR,
+    ]
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_huum_client: AsyncMock,
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up the Huum integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.huum.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
