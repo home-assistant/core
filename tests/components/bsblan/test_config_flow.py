@@ -172,7 +172,7 @@ async def test_circuit_discovery_failure_falls_back_to_default(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
     mock_setup_entry: AsyncMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
 ) -> None:
     """Test that circuit discovery failure falls back to single circuit."""
     mock_bsblan.initialize.side_effect = side_effect
@@ -1160,7 +1160,7 @@ async def test_reconfigure_flow_error_recovery(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     error: str,
 ) -> None:
     """Test reconfigure flow can recover from errors."""
