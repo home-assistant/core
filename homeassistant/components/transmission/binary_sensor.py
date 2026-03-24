@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
@@ -23,6 +24,8 @@ PARALLEL_UPDATES = 0
 class TransmissionBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe a Transmission binary sensor entity."""
 
+    is_on_fn: Callable[[TransmissionDataUpdateCoordinator], bool | None]
+
 
 BINARY_SENSOR_TYPES: tuple[TransmissionBinarySensorEntityDescription, ...] = (
     TransmissionBinarySensorEntityDescription(
@@ -30,6 +33,8 @@ BINARY_SENSOR_TYPES: tuple[TransmissionBinarySensorEntityDescription, ...] = (
         translation_key="port_forwarding",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda coordinator: coordinator.port_forwarding,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -40,7 +45,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Transmission binary sensors from a config entry."""
-    coordinator: TransmissionDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         TransmissionBinarySensor(coordinator, description)
@@ -56,4 +61,4 @@ class TransmissionBinarySensor(TransmissionEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if the port is open."""
-        return self.coordinator.port_forwarding
+        return self.entity_description.is_on_fn(self.coordinator)
