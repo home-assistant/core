@@ -553,12 +553,14 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
         """Update image URL."""
-        if queue and queue.current_item:
-            # image_url is provided by an music-assistant queue
-            image_url = self.mass.get_media_item_image_url(queue.current_item)
-        elif player.current_media and player.current_media.image_url:
-            # image_url is provided by an external source
+        image_url: str | None
+        if player.current_media and player.current_media.image_url:
+            # prefer player.current_media which reflects the live state
+            # (e.g. current track art from radio stream metadata)
             image_url = player.current_media.image_url
+        elif queue and queue.current_item:
+            # fallback to static media item image from queue
+            image_url = self.mass.get_media_item_image_url(queue.current_item)
         else:
             image_url = None
 
