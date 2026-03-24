@@ -115,10 +115,21 @@ async def test_reconfigure_flow(hass: HomeAssistant, qnap_connect: MagicMock) ->
     assert entry.data[CONF_HOST] == "5.6.7.8"
 
 
-async def test_reconfigure_cannot_connect(
-    hass: HomeAssistant, qnap_connect: MagicMock
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ConnectTimeout("Test error"), "cannot_connect"),
+        (TypeError("Test error"), "invalid_auth"),
+        (Exception("Test error"), "unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    qnap_connect: MagicMock,
+    side_effect: Exception,
+    error: str,
 ) -> None:
-    """Test reconfigure flow shows error on connection timeout."""
+    """Test reconfigure flow shows error on various exceptions."""
     entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=TEST_SERIAL,
@@ -128,7 +139,7 @@ async def test_reconfigure_cannot_connect(
 
     result = await entry.start_reconfigure_flow(hass)
 
-    qnap_connect.get_system_stats.side_effect = ConnectTimeout("Test error")
+    qnap_connect.get_system_stats.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         STANDARD_CONFIG,
@@ -136,55 +147,16 @@ async def test_reconfigure_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-
-async def test_reconfigure_invalid_auth(
-    hass: HomeAssistant, qnap_connect: MagicMock
-) -> None:
-    """Test reconfigure flow shows error on invalid auth."""
-    entry = MockConfigEntry(
-        domain=const.DOMAIN,
-        unique_id=TEST_SERIAL,
-        data=ENTRY_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-
-    qnap_connect.get_system_stats.side_effect = TypeError("Test error")
+    qnap_connect.get_system_stats.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         STANDARD_CONFIG,
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_reconfigure_unknown_error(
-    hass: HomeAssistant, qnap_connect: MagicMock
-) -> None:
-    """Test reconfigure flow shows error on unknown exception."""
-    entry = MockConfigEntry(
-        domain=const.DOMAIN,
-        unique_id=TEST_SERIAL,
-        data=ENTRY_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-
-    qnap_connect.get_system_stats.side_effect = Exception("Test error")
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        STANDARD_CONFIG,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_unique_id_mismatch(
