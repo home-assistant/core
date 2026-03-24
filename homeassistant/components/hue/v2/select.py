@@ -218,7 +218,7 @@ async def async_setup_entry(
     @callback
     def _add_group_entities(group_controller) -> None:
         """Create select entities for all groups in the given controller."""
-        entities = []
+        entities: list[SceneActivityBaseEntity] = []
         for group in group_controller:
             entities.append(HueSceneSelectEntity(bridge, manager, group.id))
             if _group_has_smart_scenes(group.id):
