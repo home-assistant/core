@@ -29,7 +29,7 @@ HUMIDITY_DOMAIN_SPECS = {
 }
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "value": make_entity_numerical_condition(HUMIDITY_DOMAIN_SPECS, PERCENTAGE),
+    "is_value": make_entity_numerical_condition(HUMIDITY_DOMAIN_SPECS, PERCENTAGE),
 }
 
 
