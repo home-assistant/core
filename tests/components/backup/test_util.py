@@ -439,7 +439,7 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
             30720,  # 3 x 10240 byte of padding
-            "test_backups/c0cb53bd.tar.encrypted_skip_core2",
+            "test_backups/c0cb53bd.tar.encrypted_v2_skip_core2",
         ),
     ],
 )
