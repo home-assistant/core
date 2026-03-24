@@ -90,7 +90,7 @@
           "name": "Summary"
         }
       },
-      "name": "Create event"
+      "name": "Create calendar event"
     },
     "get_events": {
       "description": "Retrieves events on a calendar within a time range.",
@@ -108,7 +108,7 @@
           "name": "Start time"
         }
       },
-      "name": "Get events"
+      "name": "Get calendar events"
     }
   },
   "title": "Calendar",
