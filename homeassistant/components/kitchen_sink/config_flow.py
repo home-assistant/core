@@ -196,7 +196,7 @@ class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
                     vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
-                            include_entities=[entity.entity_id for entity in entities],
+                            include_entities=entities,
                         )
                     ),
                 }
