@@ -29,7 +29,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -251,9 +254,11 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     @callback
     def _handle_schedule_changed(self, schedule_id: str) -> None:
         """Handle schedule change triggered by another entity."""
-        selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES].get(
-            self.home.entity_id, {}
-        ).get(schedule_id)
+        selected_schedule = (
+            self.hass.data[DOMAIN][DATA_SCHEDULES]
+            .get(self.home.entity_id, {})
+            .get(schedule_id)
+        )
         # update selected schedule attributes
         self._selected_schedule = getattr(selected_schedule, "name", None)
         self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (

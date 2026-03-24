@@ -8,7 +8,10 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -107,9 +110,11 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     @callback
     def _handle_schedule_changed(self, schedule_id: str) -> None:
         """Handle schedule change triggered by another entity."""
-        schedule = self.hass.data[DOMAIN][DATA_SCHEDULES].get(
-            self.home.entity_id, {}
-        ).get(schedule_id)
+        schedule = (
+            self.hass.data[DOMAIN][DATA_SCHEDULES]
+            .get(self.home.entity_id, {})
+            .get(schedule_id)
+        )
         new_option = getattr(schedule, "name", None)
         if new_option == self._attr_current_option:
             return  # already up to date
@@ -137,9 +142,11 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
             new_schedule_id = data["schedule_id"]
             # look up the schedule object from the local cache by id
-            schedule = self.hass.data[DOMAIN][DATA_SCHEDULES].get(
-                self.home.entity_id, {}
-            ).get(new_schedule_id)
+            schedule = (
+                self.hass.data[DOMAIN][DATA_SCHEDULES]
+                .get(self.home.entity_id, {})
+                .get(new_schedule_id)
+            )
             new_option = getattr(schedule, "name", None)
             if new_option != self._attr_current_option:
                 _LOGGER.debug(
@@ -164,9 +171,9 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Handle schedule change triggered by a user selection in the UI."""
-        for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES].get(
-            self.home.entity_id, {}
-        ).items():
+        for sid, schedule in (
+            self.hass.data[DOMAIN][DATA_SCHEDULES].get(self.home.entity_id, {}).items()
+        ):
             if schedule.name != option:
                 continue
             _LOGGER.debug(
