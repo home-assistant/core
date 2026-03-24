@@ -1,10 +1,35 @@
 """Provides conditions for climates."""
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.condition import Condition, make_entity_state_condition
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.condition import (
+    Condition,
+    EntityNumericalConditionWithUnitBase,
+    make_entity_numerical_condition,
+    make_entity_state_condition,
+)
+from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
+from .const import ATTR_HUMIDITY, ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
+
+
+class _ClimateTargetTemperatureConditionMixin(EntityNumericalConditionWithUnitBase):
+    """Mixin for climate target temperature conditions with unit conversion."""
+
+    _base_unit = UnitOfTemperature.CELSIUS
+    _domain_specs = {DOMAIN: NumericalDomainSpec(value_source=ATTR_TEMPERATURE)}
+    _unit_converter = TemperatureConverter
+
+    def _get_entity_unit(self, entity_state: State) -> str | None:
+        """Get the temperature unit of a climate entity from its state."""
+        # Climate entities convert temperatures to the system unit via show_temp
+        return self._hass.config.units.temperature_unit
+
+
+class ClimateTargetTemperatureCondition(_ClimateTargetTemperatureConditionMixin):
+    """Condition for climate target temperature."""
+
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_off": make_entity_state_condition(DOMAIN, HVACMode.OFF),
@@ -28,6 +53,11 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_heating": make_entity_state_condition(
         {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
     ),
+    "target_humidity": make_entity_numerical_condition(
+        {DOMAIN: NumericalDomainSpec(value_source=ATTR_HUMIDITY)},
+        valid_unit="%",
+    ),
+    "target_temperature": ClimateTargetTemperatureCondition,
 }
 
 
