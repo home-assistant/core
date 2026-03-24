@@ -917,6 +917,9 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "saj",
         "hostname": "saj-*",
+    },
+    {
+        "domain": "saj",
         "macaddress": "441793*",
     },
     {

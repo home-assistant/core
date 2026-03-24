@@ -9,7 +9,12 @@ import pytest
 from homeassistant.components.saj.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT_ETHERNET, MOCK_USER_INPUT_WIFI
+from . import (
+    MOCK_DHCP_UNIQUE_ID,
+    MOCK_SERIAL_NUMBER,
+    MOCK_USER_INPUT_ETHERNET,
+    MOCK_USER_INPUT_WIFI,
+)
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +25,7 @@ def mock_config_entry_ethernet(hass: HomeAssistant) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="SAJ Solar Inverter",
-        unique_id=MOCK_SERIAL_NUMBER,
+        unique_id=MOCK_DHCP_UNIQUE_ID,
         data=MOCK_USER_INPUT_ETHERNET,
         entry_id="saj_entry_ethernet",
     )
@@ -32,7 +37,7 @@ def mock_config_entry_wifi(hass: HomeAssistant) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="SAJ Solar Inverter",
-        unique_id=MOCK_SERIAL_NUMBER,
+        unique_id=MOCK_DHCP_UNIQUE_ID,
         data=MOCK_USER_INPUT_WIFI,
         entry_id="saj_entry_wifi",
     )
