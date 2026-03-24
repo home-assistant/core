@@ -407,6 +407,128 @@
     'state': '50.0',
   })
 # ---
+# name: test_all_entities[sensor.ct_backup_network_input-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ct_backup_network_input',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network input',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network input',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_netin',
+    'unique_id': '1234_201_container_netin',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.ct_backup_network_input-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ct-backup Network input',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ct_backup_network_input',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0009765625',
+  })
+# ---
+# name: test_all_entities[sensor.ct_backup_network_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ct_backup_network_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network output',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network output',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_netout',
+    'unique_id': '1234_201_container_netout',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.ct_backup_network_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ct-backup Network output',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ct_backup_network_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00048828125',
+  })
+# ---
 # name: test_all_entities[sensor.ct_backup_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -936,6 +1058,128 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
+  })
+# ---
+# name: test_all_entities[sensor.ct_nginx_network_input-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ct_nginx_network_input',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network input',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network input',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_netin',
+    'unique_id': '1234_200_container_netin',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.ct_nginx_network_input-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ct-nginx Network input',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ct_nginx_network_input',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0009765625',
+  })
+# ---
+# name: test_all_entities[sensor.ct_nginx_network_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ct_nginx_network_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network output',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network output',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_netout',
+    'unique_id': '1234_200_container_netout',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.ct_nginx_network_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'ct-nginx Network output',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ct_nginx_network_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00048828125',
   })
 # ---
 # name: test_all_entities[sensor.ct_nginx_status-entry]
@@ -1998,6 +2242,128 @@
     'state': '50.0',
   })
 # ---
+# name: test_all_entities[sensor.vm_db_network_input-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vm_db_network_input',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network input',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network input',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vm_netin',
+    'unique_id': '1234_101_vm_netin',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.vm_db_network_input-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'vm-db Network input',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vm_db_network_input',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0009765625',
+  })
+# ---
+# name: test_all_entities[sensor.vm_db_network_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vm_db_network_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network output',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network output',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vm_netout',
+    'unique_id': '1234_101_vm_netout',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.vm_db_network_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'vm-db Network output',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vm_db_network_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00048828125',
+  })
+# ---
 # name: test_all_entities[sensor.vm_db_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2527,6 +2893,128 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
+  })
+# ---
+# name: test_all_entities[sensor.vm_web_network_input-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vm_web_network_input',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network input',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network input',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vm_netin',
+    'unique_id': '1234_100_vm_netin',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.vm_web_network_input-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'vm-web Network input',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vm_web_network_input',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0009765625',
+  })
+# ---
+# name: test_all_entities[sensor.vm_web_network_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vm_web_network_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network output',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Network output',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vm_netout',
+    'unique_id': '1234_100_vm_netout',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.vm_web_network_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'vm-web Network output',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vm_web_network_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00048828125',
   })
 # ---
 # name: test_all_entities[sensor.vm_web_status-entry]
