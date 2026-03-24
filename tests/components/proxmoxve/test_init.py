@@ -250,6 +250,8 @@ async def test_offline_node(
     assert coordinator.data["pve3"].node["status"] == "offline"
     assert coordinator.data["pve3"].vms == {}
     assert coordinator.data["pve3"].containers == {}
+
+
 async def test_migration_v2_to_v3(
     hass: HomeAssistant,
 ) -> None:

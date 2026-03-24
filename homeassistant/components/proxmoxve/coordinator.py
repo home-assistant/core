@@ -29,8 +29,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .common import sanitize_userid
-from .const import CONF_NODE, DEFAULT_VERIFY_SSL, DOMAIN, NODE_ONLINE
 from .common import sanitize_config_entry
 from .const import (
     CONF_NODE,
@@ -39,6 +37,7 @@ from .const import (
     CONF_TOKEN_SECRET,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    NODE_ONLINE,
 )
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
