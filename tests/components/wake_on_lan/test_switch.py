@@ -46,6 +46,7 @@ async def test_valid_hostname(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_ON
@@ -56,6 +57,7 @@ async def test_valid_hostname(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_ON
@@ -193,6 +195,7 @@ async def test_off_script(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_ON
@@ -205,6 +208,7 @@ async def test_off_script(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_OFF
@@ -237,6 +241,7 @@ async def test_no_hostname_state(
         {ATTR_ENTITY_ID: "switch.wake_on_lan"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
     assert state.state == STATE_ON
@@ -247,6 +252,7 @@ async def test_no_hostname_state(
         {ATTR_ENTITY_ID: "switch.wake_on_lan"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
     assert state.state == STATE_OFF

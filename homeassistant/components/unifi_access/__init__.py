@@ -6,12 +6,17 @@ from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiCli
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BUTTON]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.EVENT,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) -> bool:
@@ -28,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) 
     try:
         await client.authenticate()
     except ApiAuthError as err:
-        raise ConfigEntryNotReady(
+        raise ConfigEntryAuthFailed(
             f"Authentication failed for UniFi Access at {entry.data[CONF_HOST]}"
         ) from err
     except ApiConnectionError as err:

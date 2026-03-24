@@ -30,6 +30,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -54,7 +55,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -81,6 +82,7 @@ from .automation import (
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
+    number_or_entity,
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
@@ -96,7 +98,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -321,15 +323,14 @@ ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
-STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-        [BEHAVIOR_ANY, BEHAVIOR_ALL]
-    ),
-}
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): STATE_CONDITION_OPTIONS_SCHEMA,
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                [BEHAVIOR_ANY, BEHAVIOR_ALL]
+            ),
+        },
     }
 )
 
@@ -360,6 +361,13 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
@@ -410,13 +418,28 @@ class EntityStateConditionBase(EntityConditionBase):
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
-        return entity_state.state in self._states
+        return self._get_tracked_value(entity_state) in self._states
+
+
+def _normalize_domain_specs(
+    domain_specs: Mapping[str, DomainSpec] | str,
+) -> Mapping[str, DomainSpec]:
+    """Normalize domain_specs argument to a Mapping."""
+    if isinstance(domain_specs, str):
+        return {domain_specs: DomainSpec()}
+    return domain_specs
 
 
 def make_entity_state_condition(
-    domain: str, states: str | set[str]
+    domain_specs: Mapping[str, DomainSpec] | str,
+    states: str | set[str],
 ) -> type[EntityStateConditionBase]:
-    """Create a condition for entity state changes to specific state(s)."""
+    """Create a condition for entity state changes to specific state(s).
+
+    domain_specs can be a string (domain name) for simple state-based conditions,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain conditions.
+    """
+    specs = _normalize_domain_specs(domain_specs)
 
     if isinstance(states, str):
         states_set = {states}
@@ -426,39 +449,118 @@ def make_entity_state_condition(
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
-        _domain_specs = {domain: DomainSpec()}
+        _domain_specs = specs
         _states = states_set
 
     return CustomCondition
 
 
-class EntityStateAttributeConditionBase(EntityConditionBase):
-    """State attribute condition."""
+def _validate_above_below(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that above < below when both are set."""
+    above = config.get(CONF_ABOVE)
+    below = config.get(CONF_BELOW)
+    if above is None or below is None:
+        return config
+    if isinstance(above, str) or isinstance(below, str):
+        return config
+    if above >= below:
+        raise vol.Invalid(
+            f"A value can never be above {above} and below {below} at the same"
+            " time. You probably want two different conditions."
+        )
+    return config
 
-    _attribute: str
-    _attribute_states: set[str]
+
+NUMERICAL_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS): vol.All(
+            {
+                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                    [BEHAVIOR_ANY, BEHAVIOR_ALL]
+                ),
+                vol.Optional(CONF_ABOVE): number_or_entity,
+                vol.Optional(CONF_BELOW): number_or_entity,
+            },
+            cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
+            _validate_above_below,
+        ),
+    }
+)
+
+
+class EntityNumericalConditionBase(EntityConditionBase):
+    """Condition for numerical state comparisons with above/below thresholds."""
+
+    _schema = NUMERICAL_CONDITION_SCHEMA
+    _valid_unit: str | None | UndefinedType = UNDEFINED
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the numerical condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._above: float | str | None = config.options.get(CONF_ABOVE)
+        self._below: float | str | None = config.options.get(CONF_BELOW)
+
+    def _is_valid_unit(self, unit: str | None) -> bool:
+        """Check if the given unit is valid for this condition."""
+        if isinstance(self._valid_unit, UndefinedType):
+            return True
+        return unit == self._valid_unit
+
+    def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
+        """Get numerical value from float or entity state."""
+        if isinstance(entity_or_float, str):
+            if not (ref_state := self._hass.states.get(entity_or_float)):
+                return None
+            if not self._is_valid_unit(
+                ref_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            ):
+                return None
+            try:
+                return float(ref_state.state)
+            except TypeError, ValueError:
+                return None
+        return entity_or_float
 
     def is_valid_state(self, entity_state: State) -> bool:
-        """Check if the state matches the expected state(s)."""
-        return entity_state.attributes.get(self._attribute) in self._attribute_states
+        """Check if the state is within the specified range."""
+        if not self._is_valid_unit(
+            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        ):
+            return False
+
+        try:
+            value = float(self._get_tracked_value(entity_state))
+        except TypeError, ValueError:
+            return False
+
+        if self._above is not None:
+            if (above := self._get_numerical_value(self._above)) is None:
+                return False
+            if value <= above:
+                return False
+        if self._below is not None:
+            if (below := self._get_numerical_value(self._below)) is None:
+                return False
+            if value >= below:
+                return False
+        return True
 
 
-def make_entity_state_attribute_condition(
-    domain: str, attribute: str, attribute_states: str | set[str]
-) -> type[EntityStateAttributeConditionBase]:
-    """Create a condition for entity attribute matching specific state(s)."""
+def make_entity_numerical_condition(
+    domain_specs: Mapping[str, DomainSpec] | str,
+    valid_unit: str | None | UndefinedType = UNDEFINED,
+) -> type[EntityNumericalConditionBase]:
+    """Create a condition for numerical state comparisons."""
+    specs = _normalize_domain_specs(domain_specs)
 
-    if isinstance(attribute_states, str):
-        attribute_states_set = {attribute_states}
-    else:
-        attribute_states_set = attribute_states
+    class CustomCondition(EntityNumericalConditionBase):
+        """Condition for numerical state."""
 
-    class CustomCondition(EntityStateAttributeConditionBase):
-        """Condition for entity attribute."""
-
-        _domain_specs = {domain: DomainSpec()}
-        _attribute = attribute
-        _attribute_states = attribute_states_set
+        _domain_specs = specs
+        _valid_unit = valid_unit
 
     return CustomCondition
 
