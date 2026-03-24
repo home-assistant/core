@@ -104,4 +104,4 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     entity_id = "button.lg_tv_power_on"
-    check_availability_follows_ir_entity(hass, entity_id)
+    await check_availability_follows_ir_entity(hass, entity_id)

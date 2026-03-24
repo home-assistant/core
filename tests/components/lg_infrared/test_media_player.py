@@ -100,4 +100,4 @@ async def test_media_player_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
-    check_availability_follows_ir_entity(hass, MEDIA_PLAYER_ENTITY_ID)
+    await check_availability_follows_ir_entity(hass, MEDIA_PLAYER_ENTITY_ID)
