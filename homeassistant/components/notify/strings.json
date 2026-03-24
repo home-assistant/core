@@ -70,7 +70,7 @@
       "name": "Send a persistent notification"
     },
     "send_message": {
-      "description": "Sends a notification message.",
+      "description": "Sends a notification message using a notification service.",
       "fields": {
         "message": {
           "description": "Your notification message.",
