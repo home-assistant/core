@@ -480,32 +480,32 @@ def _async_get_full_entity_name(
     if name is None and overridden_name is not None:
         name = overridden_name
 
-    elif (
-        device_id is not None
-        and (device := dr.async_get(hass).async_get(device_id)) is not None
-    ):
-        device_name = device.name_by_user or device.name
+    else:
+        device_name: str | None = None
+        if (
+            device_id is not None
+            and (device := dr.async_get(hass).async_get(device_id)) is not None
+        ):
+            device_name = device.name_by_user or device.name
 
         if name is None:
-            name = original_name
-
             if original_name_unprefixed is UNDEFINED:
-                original_name_unprefixed = None
-                if not has_entity_name:
-                    original_name_unprefixed = _async_strip_prefix_from_entity_name(
-                        original_name, device_name
-                    )
+                original_name_unprefixed = (
+                    _async_strip_prefix_from_entity_name(original_name, device_name)
+                    if not has_entity_name
+                    else None
+                )
 
-            if original_name_unprefixed is not None:
-                name = original_name_unprefixed
+            name = (
+                original_name_unprefixed
+                if original_name_unprefixed is not None
+                else original_name
+            )
 
         if not name:
             name = device_name
         elif device_name:
             name = f"{device_name} {name}"
-
-    elif name is None:
-        name = original_name
 
     if not name:
         return fallback
