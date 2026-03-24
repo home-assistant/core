@@ -102,6 +102,13 @@
           "down_first": "Down first",
           "up_first": "Up first"
         }
+      },
+      "store": {
+        "name": "Store value",
+        "state": {
+          "no": "No",
+          "yes": "Yes"
+        }
       }
     },
     "sensor": {
