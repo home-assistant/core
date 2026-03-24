@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from unifi_access_api import Door
+
 from homeassistant.components.event import (
     EventDeviceClass,
     EventEntity,
@@ -54,8 +56,8 @@ async def async_setup_entry(
     """Set up UniFi Access event entities."""
     coordinator = entry.runtime_data
     async_add_entities(
-        UnifiAccessEventEntity(coordinator, door_id, description)
-        for door_id in coordinator.data.doors
+        UnifiAccessEventEntity(coordinator, door, description)
+        for door in coordinator.data.doors.values()
         for description in EVENT_DESCRIPTIONS
     )
 
@@ -68,11 +70,10 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
     def __init__(
         self,
         coordinator: UnifiAccessCoordinator,
-        door_id: str,
+        door: Door,
         description: UnifiAccessEventEntityDescription,
     ) -> None:
         """Initialize the event entity."""
-        door = coordinator.data.doors[door_id]
         super().__init__(coordinator, door, description.key)
         self.entity_description = description
 
