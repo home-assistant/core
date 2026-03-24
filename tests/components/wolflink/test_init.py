@@ -4,9 +4,12 @@ from unittest.mock import MagicMock, patch
 
 from httpx import RequestError
 from wolf_comm.models import Device
+from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import FetchFailed
 
 from homeassistant.components.wolflink import async_migrate_entry
 from homeassistant.components.wolflink.const import CONF_DEVICES, DOMAIN, MANUFACTURER
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -246,3 +249,146 @@ async def test_setup_filters_unselected_device(
 
     assert len(config_entry.runtime_data.coordinators) == 1
     assert config_entry.runtime_data.coordinators[0].device_name == "device-a"
+
+
+async def test_setup_entry_invalid_auth(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+) -> None:
+    """Test setup raises ConfigEntryAuthFailed when fetch_system_list raises InvalidAuth."""
+    mock_wolflink.fetch_system_list.side_effect = InvalidAuth
+
+    config_entry = MockConfigEntry(
+        title="test-username",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+        },
+        options={CONF_DEVICES: ["1234"]},
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_fetch_failed(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+) -> None:
+    """Test setup raises ConfigEntryNotReady when fetch_system_list raises FetchFailed."""
+    mock_wolflink.fetch_system_list.side_effect = FetchFailed("error")
+
+    config_entry = MockConfigEntry(
+        title="test-username",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+        },
+        options={CONF_DEVICES: ["1234"]},
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_fetch_parameters_invalid_auth(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+) -> None:
+    """Test setup raises ConfigEntryAuthFailed when fetch_parameters raises InvalidAuth."""
+    mock_wolflink.fetch_system_list.return_value = [Device(1234, 5678, "device-a")]
+
+    config_entry = MockConfigEntry(
+        title="test-username",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+        },
+        options={CONF_DEVICES: ["1234"]},
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.fetch_parameters",
+        side_effect=InvalidAuth,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_fetch_parameters_fetch_failed(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+) -> None:
+    """Test setup raises ConfigEntryNotReady when fetch_parameters raises FetchFailed."""
+    mock_wolflink.fetch_system_list.return_value = [Device(1234, 5678, "device-a")]
+
+    config_entry = MockConfigEntry(
+        title="test-username",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+        },
+        options={CONF_DEVICES: ["1234"]},
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.fetch_parameters",
+        side_effect=FetchFailed("error"),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+) -> None:
+    """Test that unloading an entry succeeds."""
+    config_entry = MockConfigEntry(
+        title="test-username",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+        },
+        options={CONF_DEVICES: ["1234"]},
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

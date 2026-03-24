@@ -288,3 +288,117 @@ async def test_reauth_flow_wrong_account(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "wrong_account"}
+
+
+async def test_reauth_flow_unknown_exception(hass: HomeAssistant) -> None:
+    """Test reauth flow shows error on unexpected exception."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        data=CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: CONFIG[CONF_USERNAME],
+                CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_reauth_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reauth flow shows error on connection failure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CONFIG[CONF_USERNAME].lower(),
+        data=CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+        side_effect=ConnectError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: CONFIG[CONF_USERNAME],
+                CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_flow_without_runtime_data(
+    hass: HomeAssistant,
+    mock_wolflink,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow creates a new WolfClient when runtime_data is unavailable."""
+    # Add the entry but don't set up the integration so runtime_data is absent
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+
+async def test_options_flow_invalid_auth(
+    hass: HomeAssistant,
+    mock_wolflink,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow handles invalid auth when fetching device list."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_wolflink.fetch_system_list.side_effect = InvalidAuth
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_options_flow_unknown_exception(
+    hass: HomeAssistant,
+    mock_wolflink,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow handles unexpected exception when fetching device list."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_wolflink.fetch_system_list.side_effect = Exception
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
