@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from datetime import date, datetime
-import logging
-from typing import Any
+from datetime import date
 
 import pysaj
 import voluptuous as vol
@@ -16,40 +13,33 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SAJConfigEntry
-from .const import CONNECTION_TYPES
-
-_LOGGER = logging.getLogger(__name__)
-
-MIN_INTERVAL = 5
-MAX_INTERVAL = 300
-
+from .const import CONNECTION_TYPES, DOMAIN, INTEGRATION_TITLE
+from .coordinator import SAJDataUpdateCoordinator
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
@@ -77,81 +67,32 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SAJ sensors from a config entry."""
-    saj = entry.runtime_data
-    connection_type = entry.data[CONF_TYPE]
-    wifi = connection_type == CONNECTION_TYPES[1]
+    runtime = entry.runtime_data
+    coordinator = runtime.coordinator
+    saj = runtime.saj
+    sensor_def = coordinator.sensor_def
 
-    # Init all sensors
-    sensor_def = pysaj.Sensors(wifi)
-
-    # Read initial sensor data
-    try:
-        done = await saj.read(sensor_def)
-        if not done:
-            raise PlatformNotReady("Failed to read initial sensor data")
-    except pysaj.UnauthorizedException as err:
-        _LOGGER.error("Username and/or password is wrong")
-        raise PlatformNotReady("Authentication failed") from err
-    except pysaj.UnexpectedResponseException as err:
-        _LOGGER.error(
-            "Error in SAJ, please check host/ip address. Original error: %s", err
-        )
-        raise PlatformNotReady(f"Connection error: {err}") from err
-
-    # Create sensors
     hass_sensors = [
-        SAJsensor(saj.serialnumber, sensor, inverter_name=None)
+        SAJsensor(coordinator, saj.serialnumber, sensor, inverter_name=None)
         for sensor in sensor_def
         if sensor.enabled
     ]
 
-    # Add diagnostic sensors
+    name_prefix = (
+        saj.serialnumber or entry.title or entry.data.get(CONF_NAME) or entry.entry_id
+    )
     diagnostic_sensors = [
-        SAJDiagnosticSensor(entry, "ip_address", entry.data[CONF_HOST]),
-        SAJDiagnosticSensor(entry, "connection_type", entry.data[CONF_TYPE]),
-        SAJDiagnosticSensor(entry, "serial_number", saj.serialnumber or "Unknown"),
+        SAJDiagnosticSensor(entry, f"{name_prefix} IP address", entry.data[CONF_HOST]),
+        SAJDiagnosticSensor(
+            entry, f"{name_prefix} Connection type", entry.data[CONF_TYPE]
+        ),
+        SAJDiagnosticSensor(
+            entry, f"{name_prefix} Serial number", saj.serialnumber or "Unknown"
+        ),
     ]
 
-    async_add_entities(hass_sensors + diagnostic_sensors)
-
-    async def async_saj() -> bool:
-        """Update all the SAJ sensors."""
-        success = await saj.read(sensor_def)
-
-        for sensor in hass_sensors:
-            state_unknown = False
-            # SAJ inverters are powered by DC via solar panels and thus are
-            # offline after the sun has set. If a sensor resets on a daily
-            # basis like "today_yield", this reset won't happen automatically.
-            # Code below checks if today > day when sensor was last updated
-            # and if so: set state to None.
-            # Sensors with live values like "temperature" or "current_power"
-            # will also be reset to None.
-            if not success and (
-                (sensor.per_day_basis and date.today() > sensor.date_updated)
-                or (not sensor.per_day_basis and not sensor.per_total_basis)
-            ):
-                state_unknown = True
-            sensor.async_update_values(unknown_state=state_unknown)
-
-        return success
-
-    remove_interval_update: CALLBACK_TYPE | None = None
-
-    @callback
-    def start_update_interval(hass: HomeAssistant) -> None:
-        """Start the update interval scheduling."""
-        nonlocal remove_interval_update
-        remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
-
-    @callback
-    def stop_update_interval(event):
-        """Properly cancel the scheduled update."""
-        if remove_interval_update:
-            remove_interval_update()
-
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
-    async_at_start(hass, start_update_interval)
+    entities: list[SensorEntity] = [*hass_sensors, *diagnostic_sensors]
+    async_add_entities(entities)
 
 
 async def async_setup_platform(
@@ -160,127 +101,61 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the SAJ sensors."""
-
-    remove_interval_update = None
-    wifi = config[CONF_TYPE] == CONNECTION_TYPES[1]
-
-    # Init all sensors
-    sensor_def = pysaj.Sensors(wifi)
-
-    # Use all sensors by default
-    hass_sensors: list[SAJsensor] = []
-
-    kwargs = {}
-    if wifi:
-        kwargs["wifi"] = True
-        if config.get(CONF_USERNAME) and config.get(CONF_PASSWORD):
-            kwargs["username"] = config[CONF_USERNAME]
-            kwargs["password"] = config[CONF_PASSWORD]
-
-    try:
-        saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
-        done = await saj.read(sensor_def)
-    except pysaj.UnauthorizedException:
-        _LOGGER.error("Username and/or password is wrong")
-        return
-    except pysaj.UnexpectedResponseException as err:
-        _LOGGER.error(
-            "Error in SAJ, please check host/ip address. Original error: %s", err
+    """Migrate YAML sensor platform configuration to a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=dict(config),
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        reason = result.get("reason", "unknown")
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
         )
         return
 
-    if not done:
-        raise PlatformNotReady
-
-    hass_sensors.extend(
-        SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-        for sensor in sensor_def
-        if sensor.enabled
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
     )
 
-    async_add_entities(hass_sensors)
 
-    async def async_saj() -> bool:
-        """Update all the SAJ sensors."""
-        success = await saj.read(sensor_def)
-
-        for sensor in hass_sensors:
-            state_unknown = False
-            # SAJ inverters are powered by DC via solar panels and thus are
-            # offline after the sun has set. If a sensor resets on a daily
-            # basis like "today_yield", this reset won't happen automatically.
-            # Code below checks if today > day when sensor was last updated
-            # and if so: set state to None.
-            # Sensors with live values like "temperature" or "current_power"
-            # will also be reset to None.
-            if not success and (
-                (sensor.per_day_basis and date.today() > sensor.date_updated)
-                or (not sensor.per_day_basis and not sensor.per_total_basis)
-            ):
-                state_unknown = True
-            sensor.async_update_values(unknown_state=state_unknown)
-
-        return success
-
-    @callback
-    def start_update_interval(hass: HomeAssistant) -> None:
-        """Start the update interval scheduling."""
-        nonlocal remove_interval_update
-        remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
-
-    @callback
-    def stop_update_interval(event):
-        """Properly cancel the scheduled update."""
-        if remove_interval_update:
-            remove_interval_update()
-
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
-    async_at_start(hass, start_update_interval)
-
-
-@callback
-def async_track_time_interval_backoff(
-    hass: HomeAssistant, action: Callable[[], Coroutine[Any, Any, bool]]
-) -> CALLBACK_TYPE:
-    """Add a listener that fires repetitively and increases the interval when failed."""
-    remove = None
-    interval = MIN_INTERVAL
-
-    async def interval_listener(now: datetime | None = None) -> None:
-        """Handle elapsed interval with backoff."""
-        nonlocal interval, remove
-        try:
-            if await action():
-                interval = MIN_INTERVAL
-            else:
-                interval = min(interval * 2, MAX_INTERVAL)
-        finally:
-            remove = async_call_later(hass, interval, interval_listener)
-
-    hass.async_create_task(interval_listener())
-
-    def remove_listener() -> None:
-        """Remove interval listener."""
-        if remove:
-            remove()
-
-    return remove_listener
-
-
-class SAJsensor(SensorEntity):
+class SAJsensor(CoordinatorEntity[SAJDataUpdateCoordinator], SensorEntity):
     """Representation of a SAJ sensor."""
 
-    _attr_should_poll = False
     _state: StateType
 
     def __init__(
         self,
+        coordinator: SAJDataUpdateCoordinator,
         serialnumber: str | None,
         pysaj_sensor: pysaj.Sensor,
         inverter_name: str | None = None,
     ) -> None:
         """Initialize the SAJ sensor."""
+        super().__init__(coordinator)
         self._sensor = pysaj_sensor
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
@@ -309,6 +184,11 @@ class SAJsensor(SensorEntity):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
+    def available(self) -> bool:
+        """Keep reporting entity state; unknown values use None (same as before coordinator)."""
+        return True
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._state
@@ -329,15 +209,26 @@ class SAJsensor(SensorEntity):
         return self._sensor.date
 
     @callback
-    def async_update_values(self, unknown_state=False):
-        """Update this sensor."""
-        update = False
+    def _handle_coordinator_update(self) -> None:
+        """Update state from the inverter data fetched by the coordinator."""
+        success = self.coordinator.data
+        if success is None:
+            super()._handle_coordinator_update()
+            return
 
+        state_unknown = False
+        if not success and (
+            (self.per_day_basis and date.today() > self.date_updated)
+            or (not self.per_day_basis and not self.per_total_basis)
+        ):
+            state_unknown = True
+
+        update = False
         if self._sensor.value != self._state:
             update = True
             self._state = self._sensor.value
 
-        if unknown_state and self._state is not None:
+        if state_unknown and self._state is not None:
             update = True
             self._state = None
 

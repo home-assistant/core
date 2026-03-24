@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -19,12 +20,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONNECTION_TYPES
+from .coordinator import SAJDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type SAJConfigEntry = ConfigEntry[pysaj.SAJ]
+
+@dataclass(frozen=True, slots=True)
+class SAJRuntimeData:
+    """Runtime data attached to a SAJ config entry."""
+
+    saj: pysaj.SAJ
+    coordinator: SAJDataUpdateCoordinator
+
+
+type SAJConfigEntry = ConfigEntry[SAJRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
@@ -44,18 +55,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
         if password:
             kwargs["password"] = password
 
-    async def _async_connect() -> pysaj.SAJ:
+    async def _async_connect() -> tuple[pysaj.SAJ, pysaj.Sensors]:
         """Connect to SAJ and verify connection."""
         saj = pysaj.SAJ(host, **kwargs)
-        # Test connection by reading sensors
         sensor_def = pysaj.Sensors(wifi)
         done = await saj.read(sensor_def)
         if not done:
             raise ConfigEntryNotReady("Failed to read initial sensor data")
-        return saj
+        return saj, sensor_def
 
     try:
-        saj = await _async_connect()
+        saj, sensor_def = await _async_connect()
     except pysaj.UnauthorizedException as err:
         _LOGGER.error("Username and/or password is wrong")
         raise ConfigEntryNotReady("Authentication failed") from err
@@ -71,10 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
         _LOGGER.error("Network error connecting to SAJ at %s: %s", host, err)
         raise ConfigEntryNotReady(f"Network error: {err}") from err
 
-    # Store connection in runtime_data
-    entry.runtime_data = saj
+    coordinator = SAJDataUpdateCoordinator(hass, entry, saj, sensor_def)
+    entry.runtime_data = SAJRuntimeData(saj=saj, coordinator=coordinator)
 
-    # Forward setup to sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

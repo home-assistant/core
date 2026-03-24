@@ -3,8 +3,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_unique_id": "Unable to identify device",
       "not_saj_device": "Device is not a valid SAJ inverter",
-      "no_unique_id": "Unable to identify device"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -13,38 +16,63 @@
     },
     "step": {
       "confirm_discovery": {
-        "description": "Do you want to set up the SAJ inverter at {device}?",
+        "description": "Do you want to set up the SAJ inverter at {device}? If it uses Wi-Fi with login, add username and password when Home Assistant asks you to re-authenticate.",
         "title": "SAJ Inverter discovered"
+      },
+      "device_credentials": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "The inverter required WiFi login. Adjust the name if you like and enter or correct username and password.",
+        "title": "Device Credentials"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Credentials were rejected for {name}. Enter the Wi-Fi username and password for the inverter web interface.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "type": "Connection type"
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "type": "Connection type",
+          "username": "[%key:common::config_flow::data::username%]"
         },
-        "description": "Configure your SAJ solar inverter. Enter the IP address or hostname. For automatic discovery to work, the device hostname must start with 'saj-' or MAC address must start with '44:17:93'. If you select WiFi connection type, you will be asked for device credentials in the next step."
-      },
-      "device_credentials": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "description": "Enter device credentials for your SAJ inverter. These are only required when connecting via WiFi. Both fields are optional.",
-        "title": "Device Credentials"
+        "description": "Configure your SAJ solar inverter. Enter the IP address or hostname. For automatic discovery to work, the device hostname must start with 'saj-' or MAC address must start with '44:17:93'. If you use WiFi, username and password are optional here (open networks); if login is required you can enter them now or on the next step after we detect the inverter."
       }
     }
   },
   "entity": {
     "sensor": {
-      "ip_address": {
-        "name": "IP address"
-      },
       "connection_type": {
         "name": "Connection type"
+      },
+      "ip_address": {
+        "name": "IP address"
       },
       "serial_number": {
         "name": "Serial number"
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nHome Assistant could not reach the inverter while importing your configuration. Check the host, network, and that the device is an SAJ inverter, then restart to retry the import, or remove the `sensor` / `saj` YAML and add the integration from the UI.",
+      "title": "[%key:component::saj::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nThe username or password in your YAML was rejected. Update the credentials in YAML and restart, or remove the `sensor` / `saj` YAML and set up the integration from the UI.",
+      "title": "{domain} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nAn unexpected error occurred while importing your configuration. Restart Home Assistant to try again, or remove the `sensor` / `saj` YAML and add the integration from the UI.",
+      "title": "[%key:component::saj::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    }
   }
 }
-

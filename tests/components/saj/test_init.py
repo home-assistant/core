@@ -66,7 +66,7 @@ async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     mock_config_entry_wifi: MockConfigEntry,
 ) -> None:
-    """Test async_setup_entry handles authentication failures."""
+    """Test async_setup_entry retries when authentication fails."""
     with patch("pysaj.SAJ") as saj_cls:
         saj_instance = MagicMock()
         saj_instance.read = AsyncMock(
@@ -76,7 +76,6 @@ async def test_setup_entry_auth_failed(
 
         with patch("pysaj.Sensors"):
             entry = await setup_integration(hass, mock_config_entry_wifi)
-            # Entry should be in SETUP_RETRY state when setup fails
             assert entry.state is ConfigEntryState.SETUP_RETRY
 
 

@@ -5,7 +5,9 @@
   "config_flow": true,
   "dhcp": [
     {
-      "hostname": "saj-*",
+      "hostname": "saj-*"
+    },
+    {
       "macaddress": "441793*"
     }
   ],

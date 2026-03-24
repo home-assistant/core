@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from fnmatch import fnmatch
 import logging
 from typing import Any
 
@@ -19,9 +20,10 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
 )
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_MAC, CONNECTION_TYPES, DOMAIN
 
@@ -29,17 +31,56 @@ _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_TIMEOUT = 2.0
 
+# Keep in sync with manifest.json dhcp matchers (hostname / macaddress).
+_DHCP_SAJ_HOSTNAME_PATTERN = "saj-*"
+_SAJ_MAC_OUI_PREFIX = "441793"
+
+
+def _dhcp_should_try_wifi_after_ethernet_fails(
+    hostname: str, macaddress: str | None
+) -> bool:
+    """Return True if DHCP hints match SAJ (hostname or OUI), so a WiFi probe is justified."""
+    if hostname.strip() and fnmatch(hostname.lower(), _DHCP_SAJ_HOSTNAME_PATTERN):
+        return True
+    if not macaddress:
+        return False
+    mac = macaddress.replace(":", "").replace("-", "").upper()
+    return mac.startswith(_SAJ_MAC_OUI_PREFIX)
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate invalid credentials (config flow)."""
+
+
+def _config_entry_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Normalize user input into config entry data."""
+    return {
+        CONF_HOST: user_input[CONF_HOST],
+        CONF_TYPE: user_input[CONF_TYPE],
+        CONF_USERNAME: user_input.get(CONF_USERNAME) or "",
+        CONF_PASSWORD: user_input.get(CONF_PASSWORD) or "",
+    }
+
+
 async def _validate_saj_device(
-    host: str, connection_type: str = CONNECTION_TYPES[0]
-) -> tuple[str, str]:
+    host: str,
+    connection_type: str = CONNECTION_TYPES[0],
+    *,
+    accept_wifi_auth_challenge: bool = False,
+) -> tuple[str | None, str]:
     """Validate that the device at host is an SAJ inverter.
 
-    Returns tuple of (unique_id, hostname/model).
+    Returns (serial_number, title) when a full sensor read succeeds; serial_number
+    is always non-empty in that case.
+
+    When accept_wifi_auth_challenge is True for WiFi, UnauthorizedException is
+    turned into (None, title) without a read — callers that need a serial must
+    obtain it elsewhere (e.g. DHCP uses MAC as unique_id).
+
     Raises CannotConnect if validation fails.
     """
     wifi = connection_type == CONNECTION_TYPES[1]
@@ -47,7 +88,7 @@ async def _validate_saj_device(
     if wifi:
         kwargs["wifi"] = True
 
-    async def _async_validate_device() -> tuple[str, str]:
+    async def _async_validate_device() -> tuple[str | None, str]:
         """Validate device connection and get unique_id."""
         saj = pysaj.SAJ(host, **kwargs)
         sensor_def = pysaj.Sensors(wifi)
@@ -57,16 +98,13 @@ async def _validate_saj_device(
             if not done:
                 raise CannotConnect("Failed to read sensor data")
 
-        # Get serial number for unique_id
         serial_number = saj.serialnumber
         if not serial_number:
-            raise CannotConnect("No serial number found")
+            raise CannotConnect("Device did not return a serial number")
 
-        # Use serial number as unique_id
-        unique_id = serial_number
         title = "SAJ Solar Inverter"
 
-        return unique_id, title
+        return serial_number, title
 
     try:
         return await _async_validate_device()
@@ -75,6 +113,12 @@ async def _validate_saj_device(
         _LOGGER.debug("Timeout validating SAJ device at %s: %s", host, err)
         raise CannotConnect("Connection timeout") from err
     except pysaj.UnauthorizedException as err:
+        if wifi and accept_wifi_auth_challenge:
+            _LOGGER.debug(
+                "SAJ WiFi at %s requires credentials; discovery continues without them",
+                host,
+            )
+            return None, "SAJ Solar Inverter"
         _LOGGER.debug("Authentication required for %s", host)
         raise CannotConnect("Authentication required") from err
     except pysaj.UnexpectedResponseException as err:
@@ -95,13 +139,46 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_info: dict[str, Any] = {}
         self._host: str | None = None
         self._connection_type: str | None = None
+        self._pending_entry_name: str = "SAJ Solar Inverter"
+        self._pending_username: str = ""
+        self._pending_password: str = ""
 
-    async def _async_validate_input(
-        self, user_input: dict[str, Any]
-    ) -> tuple[Mapping[str, Any], str | None]:
+    async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
+        """Import a config entry from configuration.yaml (sensor platform)."""
+        _LOGGER.warning(
+            "Importing SAJ from YAML is deprecated and will be removed; %s",
+            import_config,
+        )
+        entry_input: dict[str, Any] = {
+            CONF_HOST: import_config[CONF_HOST],
+            CONF_TYPE: import_config.get(CONF_TYPE, CONNECTION_TYPES[0]),
+            CONF_USERNAME: import_config.get(CONF_USERNAME),
+            CONF_PASSWORD: import_config.get(CONF_PASSWORD),
+        }
+        try:
+            serial_number = await self._async_validate_input(entry_input)
+        except data_entry_flow.AbortFlow:
+            raise
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected error importing SAJ from YAML")
+            return self.async_abort(reason="unknown")
+
+        data = _config_entry_data(entry_input)
+        title = (import_config.get(CONF_NAME) or "").strip() or "SAJ Solar Inverter"
+
+        await self.async_set_unique_id(serial_number)
+        self._abort_if_unique_id_configured(updates=data)
+
+        return self.async_create_entry(title=title, data=data)
+
+    async def _async_validate_input(self, user_input: dict[str, Any]) -> str:
         """Validate the user input allows us to connect.
 
-        Returns tuple of (data dict, serial_number).
+        Returns the device serial number (required after a successful read).
         """
         host = user_input[CONF_HOST]
         connection_type = user_input[CONF_TYPE]
@@ -117,15 +194,18 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             if password:
                 kwargs["password"] = password
 
-        async def _async_validate_connection() -> str | None:
+        async def _async_validate_connection() -> str:
             """Validate connection and get serial number."""
             saj = pysaj.SAJ(host, **kwargs)
             sensor_def = pysaj.Sensors(wifi)
             done = await saj.read(sensor_def)
             if not done:
-                raise ConfigEntryAuthFailed("Failed to read sensor data")
+                raise CannotConnect("Failed to read sensor data")
 
-            return saj.serialnumber
+            serial_number = saj.serialnumber
+            if not serial_number:
+                raise CannotConnect("Device did not return a serial number")
+            return serial_number
 
         try:
             serial_number = await _async_validate_connection()
@@ -134,7 +214,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             # Only raise auth error for WiFi connections with wrong credentials
             if wifi:
                 _LOGGER.error("Username and/or password is wrong for host %s", host)
-                raise ConfigEntryAuthFailed("Invalid authentication") from err
+                raise InvalidAuth("Invalid authentication") from err
             # For ethernet, this likely means wrong connection type - treat as connection error
             _LOGGER.error(
                 "Connection failed for host %s (wrong connection type?): %s", host, err
@@ -147,12 +227,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Connection failed for host %s: %s", host, err)
             raise CannotConnect(f"Connection failed: {err}") from err
 
-        return {
-            CONF_HOST: host,
-            CONF_TYPE: connection_type,
-            CONF_USERNAME: username or "",
-            CONF_PASSWORD: password or "",
-        }, serial_number
+        return serial_number
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -164,31 +239,28 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             connection_type = user_input.get(CONF_TYPE, CONNECTION_TYPES[0])
 
-            # Store for next step if WiFi is selected
+            # Store host/type for a possible WiFi credentials step
             self._host = host
             self._connection_type = connection_type
+            self._pending_entry_name = (
+                user_input.get(CONF_NAME) or ""
+            ).strip() or "SAJ Solar Inverter"
+            self._pending_username = user_input.get(CONF_USERNAME) or ""
+            self._pending_password = user_input.get(CONF_PASSWORD) or ""
 
-            # If WiFi is selected, proceed to credentials step
-            if connection_type == CONNECTION_TYPES[1]:
-                return await self.async_step_device_credentials()
+            entry_input = {
+                CONF_HOST: host,
+                CONF_TYPE: connection_type,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
 
-            # For Ethernet, validate and create entry directly
+            # Ethernet ignores username/password; WiFi tries open access or creds from this step
             try:
-                data, serial_number = await self._async_validate_input(
-                    user_input={CONF_HOST: host, CONF_TYPE: connection_type}
-                )
-
-                # Set unique_id if we got a serial number
-                if serial_number:
-                    await self.async_set_unique_id(serial_number)
-                    self._abort_if_unique_id_configured(updates=dict(data))
-
-                return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, "SAJ Solar Inverter"), data=data
-                )
-            except ConfigEntryAuthFailed as err:
-                errors["base"] = "invalid_auth"
-                _LOGGER.debug("Authentication failed: %s", err)
+                serial_number = await self._async_validate_input(entry_input)
+            except InvalidAuth:
+                # WiFi-only: device is SAJ but requires credentials
+                return await self.async_step_device_credentials()
             except CannotConnect as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.debug("Connection failed: %s", err)
@@ -197,6 +269,15 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected error during user flow")
                 errors["base"] = "unknown"
+            else:
+                data = _config_entry_data(entry_input)
+
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_configured(updates=data)
+
+                return self.async_create_entry(
+                    title=self._pending_entry_name, data=data
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -205,13 +286,16 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _schema_user(self) -> vol.Schema:
-        """Define the schema for the user step (host and connection type)."""
+        """Define the schema for the user step."""
         return vol.Schema(
             {
+                vol.Optional(CONF_NAME, default="SAJ Solar Inverter"): str,
                 vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): vol.In(
                     CONNECTION_TYPES
                 ),
+                vol.Optional(CONF_USERNAME, default=""): str,
+                vol.Optional(CONF_PASSWORD, default=""): str,
             }
         )
 
@@ -231,17 +315,9 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             try:
-                data, serial_number = await self._async_validate_input(
-                    user_input=combined_input
-                )
-
-                # Set unique_id if we got a serial number
-                if serial_number:
-                    await self.async_set_unique_id(serial_number)
-                    self._abort_if_unique_id_configured(updates=dict(data))
-
-                return self.async_create_entry(title="SAJ Solar Inverter", data=data)
-            except ConfigEntryAuthFailed as err:
+                serial_number = await self._async_validate_input(combined_input)
+                data = _config_entry_data(combined_input)
+            except InvalidAuth as err:
                 errors["base"] = "invalid_auth"
                 _LOGGER.debug("Authentication failed: %s", err)
             except CannotConnect as err:
@@ -252,6 +328,14 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected error during device credentials flow")
                 errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_configured(updates=data)
+
+                title = (
+                    user_input.get(CONF_NAME) or ""
+                ).strip() or self._pending_entry_name
+                return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
             step_id="device_credentials",
@@ -263,8 +347,9 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         """Define the schema for device credentials step."""
         return vol.Schema(
             {
-                vol.Optional(CONF_USERNAME, default=""): str,
-                vol.Optional(CONF_PASSWORD, default=""): str,
+                vol.Optional(CONF_NAME, default=self._pending_entry_name): str,
+                vol.Optional(CONF_USERNAME, default=self._pending_username): str,
+                vol.Optional(CONF_PASSWORD, default=self._pending_password): str,
             }
         )
 
@@ -283,27 +368,17 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             macaddress,
         )
 
-        # Check if hostname or MAC matches our patterns
-        hostname_match = hostname.lower().startswith("saj-") if hostname else False
-        mac_match = (
-            macaddress.replace(":", "").upper().startswith("441793")
-            if macaddress
-            else False
-        )
-        _LOGGER.debug(
-            "DHCP match check: hostname_match=%s, mac_match=%s",
-            hostname_match,
-            mac_match,
-        )
-
-        # Try to validate device and get unique_id
+        # Validate device
         mac_unique_id = macaddress.replace(":", "").upper() if macaddress else None
-        unique_id: str | None = None
+        if not mac_unique_id:
+            return self.async_abort(reason="no_unique_id")
+
+        discovered_serial: str | None = None
         title: str | None = None
         connection_type = CONNECTION_TYPES[0]  # Default to ethernet
 
-        # If MAC matches, check if we already have this device configured
-        if mac_match and macaddress:
+        # If we have a MAC, check if we already have this device configured
+        if macaddress:
             formatted_mac = dr.format_mac(macaddress)
             dev_reg = dr.async_get(self.hass)
             if device := dev_reg.async_get_device(
@@ -325,61 +400,62 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Validate device - try ethernet first, then WiFi if that fails
         try:
-            unique_id, title = await _validate_saj_device(host, CONNECTION_TYPES[0])
+            discovered_serial, title = await _validate_saj_device(
+                host, CONNECTION_TYPES[0]
+            )
             connection_type = CONNECTION_TYPES[0]  # Ethernet
             _LOGGER.info(
-                "Successfully validated SAJ ethernet device at %s with serial %s",
+                "Successfully validated SAJ ethernet device at %s (serial=%s)",
                 host,
-                unique_id,
+                discovered_serial or "none",
             )
         except CannotConnect:
-            # Ethernet failed - try WiFi if MAC matches or we have existing WiFi device
-            if mac_match or connection_type == CONNECTION_TYPES[1]:
+            # Ethernet failed — try WiFi only when hostname or MAC matches manifest
+            # (e.g. hostname-only DHCP matchers for WiFi devices with a non-SAJ OUI).
+            if not _dhcp_should_try_wifi_after_ethernet_fails(hostname, macaddress):
                 _LOGGER.debug(
-                    "Ethernet validation failed for %s, trying WiFi",
+                    "Ethernet validation failed for %s and DHCP hints do not match SAJ "
+                    "(hostname=%r); skipping WiFi probe",
                     host,
+                    hostname,
                 )
-                try:
-                    unique_id, title = await _validate_saj_device(
-                        host, CONNECTION_TYPES[1]
-                    )
-                    connection_type = CONNECTION_TYPES[1]  # WiFi
-                    _LOGGER.info(
-                        "Successfully validated SAJ WiFi device at %s with serial %s",
-                        host,
-                        unique_id,
-                    )
-                except CannotConnect:
-                    _LOGGER.debug(
-                        "Both ethernet and WiFi validation failed for %s",
-                        host,
-                    )
-                    return self.async_abort(reason="not_saj_device")
-            else:
-                # MAC doesn't match and ethernet failed - not an SAJ device
+                return self.async_abort(reason="not_saj_device")
+            _LOGGER.debug(
+                "Ethernet validation failed for %s, trying WiFi (hostname=%r)",
+                host,
+                hostname,
+            )
+            try:
+                discovered_serial, title = await _validate_saj_device(
+                    host,
+                    CONNECTION_TYPES[1],
+                    accept_wifi_auth_challenge=True,
+                )
+                connection_type = CONNECTION_TYPES[1]  # WiFi
+                _LOGGER.info(
+                    "Successfully validated SAJ WiFi device at %s (serial=%s)",
+                    host,
+                    discovered_serial or "none",
+                )
+            except CannotConnect:
                 _LOGGER.debug(
-                    "Device at %s failed ethernet validation and MAC doesn't match SAJ pattern",
+                    "Both ethernet and WiFi validation failed for %s",
                     host,
                 )
                 return self.async_abort(reason="not_saj_device")
 
-        # Set unique_id and check if already configured
-        final_unique_id = unique_id or mac_unique_id
-        if not final_unique_id:
-            return self.async_abort(reason="no_unique_id")
-
-        await self.async_set_unique_id(final_unique_id, raise_on_progress=False)
+        await self.async_set_unique_id(mac_unique_id, raise_on_progress=False)
 
         # Check if entry exists - if IP changed, update it
         existing_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, final_unique_id
+            DOMAIN, mac_unique_id
         )
         if existing_entry:
             current_ip = existing_entry.data.get(CONF_HOST)
             if current_ip != host:
                 _LOGGER.info(
                     "Updating IP address for SAJ device %s from %s to %s",
-                    final_unique_id,
+                    mac_unique_id,
                     current_ip,
                     host,
                 )
@@ -387,7 +463,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 _LOGGER.debug(
                     "SAJ device %s already configured with IP %s",
-                    final_unique_id,
+                    mac_unique_id,
                     host,
                 )
                 return self.async_abort(reason="already_configured")
@@ -413,68 +489,19 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm discovered SAJ inverter."""
-        errors = {}
+        """Confirm discovered SAJ inverter.
 
-        # Check if this is a WiFi device that needs credentials
-        is_wifi = self.discovery_info.get(CONF_TYPE) == CONNECTION_TYPES[1]
-
+        Credentials are not collected here.
+        WiFi-only devices that need a login complete setup via reauthentication.
+        """
         if user_input is not None:
-            if is_wifi:
-                # For WiFi devices, validate with credentials
-                try:
-                    data, serial_number = await self._async_validate_input(
-                        user_input={
-                            CONF_HOST: self.discovery_info[CONF_HOST],
-                            CONF_TYPE: CONNECTION_TYPES[1],
-                            CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
-                            CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
-                        }
-                    )
-                    # Update discovery_info with validated data
-                    self.discovery_info.update(data)
-                    # Update unique_id with serial number if available
-                    if serial_number:
-                        await self.async_set_unique_id(
-                            serial_number, raise_on_progress=False
-                        )
-                        self._abort_if_unique_id_configured()
-                except ConfigEntryAuthFailed:
-                    errors["base"] = "invalid_auth"
-                except Exception:
-                    _LOGGER.exception("Error validating WiFi device")
-                    errors["base"] = "cannot_connect"
-
-            if not errors:
-                # Create entry with discovered/validated data
-                return self.async_create_entry(
-                    title=self.context.get("title_placeholders", {}).get(
-                        "device", "SAJ Solar Inverter"
-                    ),
-                    data=self.discovery_info,
-                )
-
-        # Show form - for WiFi devices, include credential fields
-        if is_wifi:
-            data_schema = vol.Schema(
-                {
-                    vol.Optional(CONF_USERNAME, default=""): str,
-                    vol.Optional(CONF_PASSWORD, default=""): str,
-                }
-            )
-            self._set_confirm_only()
-            return self.async_show_form(
-                step_id="confirm_discovery",
-                data_schema=data_schema,
-                description_placeholders={
-                    "device": self.context.get("title_placeholders", {}).get(
-                        "device", "SAJ Inverter"
-                    ),
-                },
-                errors=errors or None,
+            return self.async_create_entry(
+                title=self.context.get("title_placeholders", {}).get(
+                    "device", "SAJ Solar Inverter"
+                ),
+                data=self.discovery_info,
             )
 
-        # For Ethernet devices, simple confirmation
         self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm_discovery",
@@ -483,4 +510,58 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
                     "device", "SAJ Inverter"
                 ),
             },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication (e.g. WiFi credentials after discovery)."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Update credentials for an existing config entry."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            validate_input = {
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_TYPE: reauth_entry.data[CONF_TYPE],
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
+            try:
+                await self._async_validate_input(validate_input)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Error reauthenticating SAJ device")
+                errors["base"] = "unknown"
+            else:
+                data = _config_entry_data(validate_input)
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        CONF_USERNAME: data[CONF_USERNAME],
+                        CONF_PASSWORD: data[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=reauth_entry.data.get(CONF_USERNAME) or "",
+                    ): str,
+                    vol.Optional(CONF_PASSWORD, default=""): str,
+                }
+            ),
+            description_placeholders={"name": reauth_entry.title or "SAJ"},
+            errors=errors or None,
         )
