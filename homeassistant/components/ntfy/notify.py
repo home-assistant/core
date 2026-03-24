@@ -66,7 +66,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic via notify.send_message action."""
-        await self.publish(message=message, title=title)
+        await self._publish(message=message, title=title)
 
     async def publish(self, **kwargs: Any) -> None:
         """Publish a message to a topic via ntfy.publish action."""
