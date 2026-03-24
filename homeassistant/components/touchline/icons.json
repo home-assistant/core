@@ -1,7 +1,7 @@
 {
   "entity": {
-    "fan": {
-      "baf": {
+    "climate": {
+      "climate": {
         "state_attributes": {
           "preset_mode": {
             "state": {
