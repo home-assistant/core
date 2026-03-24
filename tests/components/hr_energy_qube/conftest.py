@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from python_qube_heatpump.models import QubeState
 
-from homeassistant.components.qube_heatpump.const import DOMAIN
+from homeassistant.components.hr_energy_qube.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.qube_heatpump.async_setup_entry", return_value=True
+        "homeassistant.components.hr_energy_qube.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
 
@@ -26,11 +26,11 @@ def mock_qube_client() -> Generator[MagicMock]:
     """Mock the QubeClient for both integration and config flow."""
     with (
         patch(
-            "homeassistant.components.qube_heatpump.QubeClient",
+            "homeassistant.components.hr_energy_qube.QubeClient",
             autospec=True,
         ) as mock_client_cls,
         patch(
-            "homeassistant.components.qube_heatpump.config_flow.QubeClient",
+            "homeassistant.components.hr_energy_qube.config_flow.QubeClient",
             new=mock_client_cls,
         ),
     ):
@@ -74,6 +74,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
-        title="Qube Heat Pump",
+        title="Qube heat pump",
         entry_id="01JQUBEHEATPUMP00000000000",
     )

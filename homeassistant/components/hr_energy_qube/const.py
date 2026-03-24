@@ -2,7 +2,7 @@
 
 from homeassistant.const import Platform
 
-DOMAIN = "qube_heatpump"
+DOMAIN = "hr_energy_qube"
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_PORT = 502

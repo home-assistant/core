@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.components.qube_heatpump.const import DOMAIN
+from homeassistant.components.hr_energy_qube.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -31,7 +31,7 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Qube Heat Pump"
+    assert result["title"] == "Qube heat pump"
     assert result["data"] == {CONF_HOST: "qube.local", CONF_PORT: 502}
 
 

@@ -31,7 +31,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
         super().__init__(
             hass,
             _LOGGER,
-            name="qube_heatpump",
+            name="hr_energy_qube",
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             config_entry=entry,
         )

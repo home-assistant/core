@@ -32,7 +32,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor speed',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -44,7 +44,7 @@
 # name: test_entities[sensor.qube_heat_pump_compressor_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube Heat Pump Compressor speed',
+      'friendly_name': 'Qube heat pump Compressor speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'rpm',
     }),
@@ -89,7 +89,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'COP',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -101,7 +101,7 @@
 # name: test_entities[sensor.qube_heat_pump_cop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube Heat Pump COP',
+      'friendly_name': 'Qube heat pump COP',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -145,7 +145,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW temperature',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -158,7 +158,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump DHW temperature',
+      'friendly_name': 'Qube heat pump DHW temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -203,7 +203,7 @@
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Electric power',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -216,7 +216,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Qube Heat Pump Electric power',
+      'friendly_name': 'Qube heat pump Electric power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -268,7 +268,7 @@
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Heat pump status',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -281,7 +281,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Qube Heat Pump Heat pump status',
+      'friendly_name': 'Qube heat pump Heat pump status',
       'options': list([
         'standby',
         'alarm',
@@ -335,7 +335,7 @@
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Measured PVT flow',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -348,7 +348,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
-      'friendly_name': 'Qube Heat Pump Measured PVT flow',
+      'friendly_name': 'Qube heat pump Measured PVT flow',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
@@ -393,7 +393,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside temperature',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -406,7 +406,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Outside temperature',
+      'friendly_name': 'Qube heat pump Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -451,7 +451,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return temperature',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -464,7 +464,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Return temperature',
+      'friendly_name': 'Qube heat pump Return temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -509,7 +509,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room setpoint cooling (day)',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -522,7 +522,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Room setpoint cooling (day)',
+      'friendly_name': 'Qube heat pump Room setpoint cooling (day)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -567,7 +567,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room setpoint cooling (night)',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -580,7 +580,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Room setpoint cooling (night)',
+      'friendly_name': 'Qube heat pump Room setpoint cooling (night)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -625,7 +625,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room setpoint heating (day)',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -638,7 +638,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Room setpoint heating (day)',
+      'friendly_name': 'Qube heat pump Room setpoint heating (day)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -683,7 +683,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room setpoint heating (night)',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -696,7 +696,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Room setpoint heating (night)',
+      'friendly_name': 'Qube heat pump Room setpoint heating (night)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -741,7 +741,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -754,7 +754,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Room temperature',
+      'friendly_name': 'Qube heat pump Room temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -799,7 +799,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Source temperature in',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -812,7 +812,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Source temperature in',
+      'friendly_name': 'Qube heat pump Source temperature in',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -857,7 +857,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Source temperature out',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -870,7 +870,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Source temperature out',
+      'friendly_name': 'Qube heat pump Source temperature out',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -915,7 +915,7 @@
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply temperature CH',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -928,7 +928,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Qube Heat Pump Supply temperature CH',
+      'friendly_name': 'Qube heat pump Supply temperature CH',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -973,7 +973,7 @@
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Thermal power',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -986,7 +986,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Qube Heat Pump Thermal power',
+      'friendly_name': 'Qube heat pump Thermal power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -1031,7 +1031,7 @@
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total electric consumption',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -1044,7 +1044,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Qube Heat Pump Total electric consumption',
+      'friendly_name': 'Qube heat pump Total electric consumption',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1089,7 +1089,7 @@
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total thermal yield',
-    'platform': 'qube_heatpump',
+    'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -1102,7 +1102,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Qube Heat Pump Total thermal yield',
+      'friendly_name': 'Qube heat pump Total thermal yield',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),

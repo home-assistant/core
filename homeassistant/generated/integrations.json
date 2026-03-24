@@ -2948,6 +2948,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hr_energy_qube": {
+      "name": "Qube heat pump",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "html5": {
       "name": "HTML5 Push Notifications",
       "integration_type": "hub",
@@ -5549,12 +5555,6 @@
       "name": "Quantum Gateway",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "qube_heatpump": {
-      "name": "Qube Heat Pump",
-      "integration_type": "hub",
-      "config_flow": true,
       "iot_class": "local_polling"
     },
     "qvr_pro": {

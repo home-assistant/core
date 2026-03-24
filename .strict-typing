@@ -273,6 +273,7 @@ homeassistant.components.homekit_controller.storage
 homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.homeworks.*
+homeassistant.components.hr_energy_qube.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.humidifier.*
@@ -442,7 +443,6 @@ homeassistant.components.pyload.*
 homeassistant.components.python_script.*
 homeassistant.components.qbus.*
 homeassistant.components.qnap_qsw.*
-homeassistant.components.qube_heatpump.*
 homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*
 homeassistant.components.radio_browser.*

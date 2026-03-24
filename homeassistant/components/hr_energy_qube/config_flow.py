@@ -46,7 +46,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title="Qube Heat Pump",
+                    title="Qube heat pump",
                     data={
                         CONF_HOST: host,
                         CONF_PORT: DEFAULT_PORT,
