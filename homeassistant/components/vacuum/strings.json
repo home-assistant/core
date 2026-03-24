@@ -128,7 +128,7 @@
     },
     "clean_spot": {
       "description": "Tells a vacuum cleaner to do a spot clean-up.",
-      "name": "Spot clean with vacuum cleaner"
+      "name": "Clean spot with vacuum cleaner"
     },
     "locate": {
       "description": "Locates a vacuum cleaner.",
