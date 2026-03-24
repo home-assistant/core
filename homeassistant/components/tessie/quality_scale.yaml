@@ -60,7 +60,7 @@ rules:
     status: exempt
     comment: |
       Cloud-based service without local discovery capabilities.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
