@@ -9,6 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
+    PRESET_AWAY,
+    PRESET_NONE,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -38,12 +41,12 @@ class PresetMode(NamedTuple):
 
 
 PRESET_MODES = {
-    "Normal": PresetMode(mode=0, program=0),
-    "Night": PresetMode(mode=1, program=0),
-    "Holiday": PresetMode(mode=2, program=0),
-    "Pro 1": PresetMode(mode=0, program=1),
-    "Pro 2": PresetMode(mode=0, program=2),
-    "Pro 3": PresetMode(mode=0, program=3),
+    PRESET_NONE: PresetMode(mode=0, program=0),
+    PRESET_SLEEP: PresetMode(mode=1, program=0),
+    PRESET_AWAY: PresetMode(mode=2, program=0),
+    "program_1": PresetMode(mode=0, program=1),
+    "program_2": PresetMode(mode=0, program=2),
+    "program_3": PresetMode(mode=0, program=3),
 }
 
 TOUCHLINE_HA_PRESETS = {
@@ -140,6 +143,7 @@ class Touchline(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "climate"
 
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
