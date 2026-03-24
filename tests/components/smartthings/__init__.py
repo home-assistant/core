@@ -43,6 +43,7 @@ DEVICE_FIXTURES = [
     "yale_push_button_deadbolt_lock",
     "ge_in_wall_smart_dimmer",
     "centralite",
+    "da_ref_normal_100001",
     "da_ref_normal_000001",
     "da_ref_normal_01011",
     "da_ref_normal_01011_onedoor",
