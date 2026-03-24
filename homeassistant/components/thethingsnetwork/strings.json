@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "Application ID is already configured",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -12,6 +13,14 @@
       "reauth_confirm": {
         "description": "The Things Network application could not be connected.\n\nPlease check your credentials."
       },
+      "reconfigure": {
+        "data": {
+          "first_fetch_h": "Initial fetch period"
+        },
+        "data_description": {
+          "first_fetch_h": "How many hours of historical data to fetch on startup"
+        }
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -20,6 +29,17 @@
         },
         "description": "Enter the API hostname, application ID and API key to use with Home Assistant.\n\n[Read the instructions]({instructions_url}) on how to register your application and create an API key.",
         "title": "Connect to The Things Network v3"
+      }
+    }
+  },
+  "selector": {
+    "first_fetch_h": {
+      "options": {
+        "1": "Last 1 hour",
+        "3": "Last 3 hours",
+        "6": "Last 6 hours",
+        "12": "Last 12 hours",
+        "24": "Last 24 hours"
       }
     }
   }

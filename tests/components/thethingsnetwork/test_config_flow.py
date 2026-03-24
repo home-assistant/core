@@ -1,9 +1,13 @@
-"""Define tests for the The Things Network onfig flows."""
+"""Define tests for the The Things Network config flows."""
 
 import pytest
 from ttn_client import TTNAuthError
 
-from homeassistant.components.thethingsnetwork.const import CONF_APP_ID, DOMAIN
+from homeassistant.components.thethingsnetwork.const import (
+    CONF_APP_ID,
+    CONF_FIRST_FETCH_H,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -14,7 +18,11 @@ from .conftest import API_KEY, APP_ID, HOST
 
 from tests.common import MockConfigEntry
 
-USER_DATA = {CONF_HOST: HOST, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
+USER_DATA = {
+    CONF_HOST: HOST,
+    CONF_APP_ID: APP_ID,
+    CONF_API_KEY: API_KEY,
+}
 
 
 async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
@@ -124,3 +132,24 @@ async def test_step_reauth(
 
     assert len(hass.config_entries.async_entries()) == 1
     assert hass.config_entries.async_entries()[0].data[CONF_API_KEY] == new_api_key
+
+
+async def test_step_reconfigure(
+    hass: HomeAssistant, mock_ttnclient, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow for changing first_fetch_h."""
+
+    await init_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_FIRST_FETCH_H: "6"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data[CONF_FIRST_FETCH_H] == "6"

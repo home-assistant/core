@@ -10,14 +10,32 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import CONF_APP_ID, DOMAIN, TTN_API_HOST
+from .const import (
+    CONF_APP_ID,
+    CONF_FIRST_FETCH_H,
+    DEFAULT_FIRST_FETCH_H,
+    DOMAIN,
+    FIRST_FETCH_OPTIONS,
+    TTN_API_HOST,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+_FIRST_FETCH_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=FIRST_FETCH_OPTIONS,
+        translation_key=CONF_FIRST_FETCH_H,
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
 
 
 class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -104,3 +122,34 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates=user_input,
+            )
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_FIRST_FETCH_H): _FIRST_FETCH_SELECTOR,
+                }
+            ),
+            {
+                CONF_FIRST_FETCH_H: str(
+                    reconfigure_entry.data.get(
+                        CONF_FIRST_FETCH_H, DEFAULT_FIRST_FETCH_H
+                    )
+                ),
+            },
+        )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=schema,
+        )
