@@ -53,7 +53,7 @@ async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
         "battery.is_not_low",
         "battery.is_charging",
         "battery.is_not_charging",
-        "battery.percentage",
+        "battery.is_level",
     ],
 )
 async def test_battery_conditions_gated_by_labs_flag(
@@ -185,7 +185,7 @@ async def test_battery_binary_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_any(
-        "battery.percentage",
+        "battery.is_level",
         device_class="battery",
         unit_attributes=_BATTERY_UNIT_ATTRS,
     ),
@@ -221,7 +221,7 @@ async def test_battery_percentage_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     parametrize_numerical_condition_above_below_all(
-        "battery.percentage",
+        "battery.is_level",
         device_class="battery",
         unit_attributes=_BATTERY_UNIT_ATTRS,
     ),
