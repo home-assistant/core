@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, split_entity_id
 
+from . import config_validation as cv
 from .entity import get_device_class_or_undefined
 from .typing import ConfigType
 
@@ -140,3 +141,25 @@ def move_options_fields_to_top_level(
     new_config.update(options)
 
     return new_config
+
+
+_NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
+    {
+        vol.Required("active_choice"): vol.In(["number", "entity"]),
+        vol.Optional("entity"): cv.entity_id,
+        vol.Optional("number"): vol.Coerce(float),
+    }
+)
+
+
+def _validate_number_or_entity(value: dict | float | str) -> float | str:
+    """Validate number or entity selector result."""
+    if isinstance(value, dict):
+        _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
+        return value[value["active_choice"]]  # type: ignore[no-any-return]
+    return value
+
+
+number_or_entity = vol.All(
+    _validate_number_or_entity, vol.Any(vol.Coerce(float), cv.entity_id)
+)

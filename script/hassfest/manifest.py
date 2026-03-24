@@ -61,6 +61,7 @@ NO_IOT_CLASS = [
     "application_credentials",
     "auth",
     "automation",
+    "battery",
     "blueprint",
     "brands",
     "color_extractor",

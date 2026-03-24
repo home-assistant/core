@@ -120,6 +120,7 @@ NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
+    "battery",
     "climate",
     "cover",
     "device_tracker",
@@ -138,11 +139,13 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "schedule",
     "siren",
     "switch",
+    "text",
     "vacuum",
     "window",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
     "button",
@@ -150,6 +153,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "cover",
     "device_tracker",
     "door",
+    "event",
     "fan",
     "garage_door",
     "gate",
