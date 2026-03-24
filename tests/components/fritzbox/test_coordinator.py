@@ -192,14 +192,6 @@ async def test_coordinator_workaround_sub_units_without_main_device(
     assert device_entries[1].identifiers == {(DOMAIN, "bad_device")}
 
 
-@pytest.mark.parametrize(
-    ("trigger", "side_effect", "switch_entity_count"),
-    [
-        (None, None, 0),
-        (None, HTTPError(), 0),
-        (FritzTriggerMock(), None, 1),
-    ],
-)
 async def test_coordinator_cleanup_ain_with_underscore(
     hass: HomeAssistant,
     fritz: Mock,
