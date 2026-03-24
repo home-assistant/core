@@ -23,3 +23,51 @@ set_value:
           mode: box
 
 reload:
+
+create:
+  fields:
+    name:
+      required: true
+      selector:
+        text:
+    id:
+      selector:
+        text:
+    min:
+      required: true
+      selector:
+        number:
+          mode: box
+    max:
+      required: true
+      selector:
+        number:
+          mode: box
+    initial:
+      selector:
+        number:
+          mode: box
+    step:
+      default: 1
+      selector:
+        number:
+          min: 0.001
+          mode: box
+    mode:
+      default: "slider"
+      selector:
+        select:
+          options:
+            - "slider"
+            - "box"
+    icon:
+      selector:
+        icon:
+    unit_of_measurement:
+      selector:
+        text:
+
+delete:
+  target:
+    entity:
+      domain: input_number

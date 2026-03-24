@@ -1,7 +1,13 @@
 {
   "services": {
+    "create": {
+      "service": "mdi:plus"
+    },
     "decrement": {
       "service": "mdi:minus"
+    },
+    "delete": {
+      "service": "mdi:delete"
     },
     "increment": {
       "service": "mdi:plus"

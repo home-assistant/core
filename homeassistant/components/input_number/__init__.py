@@ -19,7 +19,12 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection, config_validation as cv
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import (
+    collection,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
@@ -47,6 +52,8 @@ ATTR_STEP = "step"
 SERVICE_SET_VALUE = "set_value"
 SERVICE_INCREMENT = "increment"
 SERVICE_DECREMENT = "decrement"
+SERVICE_CREATE = "create"
+SERVICE_DELETE = "delete"
 
 
 def _cv_input_number(cfg):
@@ -73,6 +80,19 @@ STORAGE_FIELDS: VolDictType = {
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
 }
+
+CREATE_FIELDS: VolDictType = {
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(CONF_ID): cv.slug,
+    vol.Required(CONF_MIN): vol.Coerce(float),
+    vol.Required(CONF_MAX): vol.Coerce(float),
+    vol.Optional(CONF_INITIAL): vol.Coerce(float),
+    vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_SLIDER, MODE_BOX]),
+}
+CREATE_SCHEMA = vol.All(vol.Schema(CREATE_FIELDS), _cv_input_number)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -154,9 +174,67 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_set_value",
     )
 
-    component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
+    component.async_register_entity_service(
+        SERVICE_INCREMENT,
+        None,
+        "async_increment",
+    )
 
-    component.async_register_entity_service(SERVICE_DECREMENT, None, "async_decrement")
+    component.async_register_entity_service(
+        SERVICE_DECREMENT,
+        None,
+        "async_decrement",
+    )
+
+    async def handle_create(call: ServiceCall) -> None:
+        """Create a new helper programmatically."""
+        create_data = {k: v for k, v in call.data.items() if k != CONF_ID}
+        if CONF_ID in call.data:
+            item_id: str = call.data[CONF_ID]
+            if id_manager.has_id(item_id):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="id_already_exists",
+                    translation_placeholders={"item_id": item_id},
+                )
+        await storage_collection.async_create_item(create_data)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CREATE,
+        handle_create,
+        schema=CREATE_SCHEMA,
+    )
+
+    async def handle_delete(call: ServiceCall) -> None:
+        """Delete a helper."""
+        registry = er.async_get(hass)
+        entity_ids = await homeassistant.helpers.service.async_extract_entity_ids(call)
+        for entity_id in entity_ids:
+            entry = registry.async_get(entity_id)
+            if entry is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            item_id = entry.unique_id
+            if not any(
+                item["id"] == item_id for item in storage_collection.async_items()
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_storage_based",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            await storage_collection.async_delete_item(item_id)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DELETE,
+        handle_delete,
+        schema=cv.make_entity_service_schema({}),
+    )
 
     return True
 

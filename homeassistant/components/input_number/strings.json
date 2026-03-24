@@ -33,10 +33,67 @@
       }
     }
   },
+  "exceptions": {
+    "entity_not_found": {
+      "message": "Entity {entity_id} is not found in the registry."
+    },
+    "entity_not_storage_based": {
+      "message": "Entity {entity_id} is YAML-defined and cannot be deleted."
+    },
+    "id_already_exists": {
+      "message": "A helper with ID {item_id} already exists."
+    }
+  },
   "services": {
+    "create": {
+      "description": "Creates a new input number helper.",
+      "fields": {
+        "icon": {
+          "description": "Icon for the helper.",
+          "name": "Icon"
+        },
+        "id": {
+          "description": "Object ID slug. The entity ID will be input_number.id.",
+          "name": "ID"
+        },
+        "initial": {
+          "description": "Initial value when the helper is created.",
+          "name": "Initial value"
+        },
+        "max": {
+          "description": "Upper bound of the number range.",
+          "name": "Maximum"
+        },
+        "min": {
+          "description": "Lower bound of the number range.",
+          "name": "Minimum"
+        },
+        "mode": {
+          "description": "Display mode of the helper.",
+          "name": "Mode"
+        },
+        "name": {
+          "description": "Friendly name of the helper.",
+          "name": "Name"
+        },
+        "step": {
+          "description": "Step size for incrementing or decrementing.",
+          "name": "Step"
+        },
+        "unit_of_measurement": {
+          "description": "Unit of measurement for the value.",
+          "name": "Unit of measurement"
+        }
+      },
+      "name": "Create"
+    },
     "decrement": {
       "description": "Decrements the value of an input number by 1 step.",
       "name": "Decrement input number"
+    },
+    "delete": {
+      "description": "Deletes an input number helper.",
+      "name": "Delete"
     },
     "increment": {
       "description": "Increments the value of an input number by 1 step.",
