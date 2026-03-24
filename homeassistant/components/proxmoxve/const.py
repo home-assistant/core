@@ -10,6 +10,8 @@ CONF_CONTAINERS = "containers"
 NODE_ONLINE = "online"
 VM_CONTAINER_RUNNING = "running"
 
+STATUS_FAILED = "failed"
+
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"

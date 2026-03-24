@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -17,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
@@ -28,7 +30,7 @@ PARALLEL_UPDATES = 0
 class ProxmoxNodeSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox node sensor description."""
 
-    value_fn: Callable[[ProxmoxNodeData], StateType]
+    value_fn: Callable[[ProxmoxNodeData], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -129,6 +131,31 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         value_fn=lambda data: data.node["status"],
         device_class=SensorDeviceClass.ENUM,
         options=["online", "offline"],
+    ),
+    ProxmoxNodeSensorEntityDescription(
+        key="node_backup_last_backup",
+        translation_key="node_backup_last_backup",
+        value_fn=lambda data: (
+            dt_util.utc_from_timestamp(data.backups[0]["endtime"])
+            if data.backups
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ProxmoxNodeSensorEntityDescription(
+        key="node_backup_duration",
+        translation_key="node_backup_duration",
+        value_fn=lambda data: (
+            data.backups[0]["endtime"] - data.backups[0]["starttime"]
+            if data.backups
+            else None
+        ),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -424,7 +451,7 @@ class ProxmoxNodeSensor(ProxmoxNodeEntity, SensorEntity):
     entity_description: ProxmoxNodeSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_name])
 

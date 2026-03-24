@@ -67,6 +67,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "node_backup_status": {
+        "name": "Backup status"
+      },
       "status": {
         "name": "Status"
       }
@@ -132,6 +135,12 @@
       },
       "container_uptime": {
         "name": "Uptime"
+      },
+      "node_backup_duration": {
+        "name": "Backup duration"
+      },
+      "node_backup_last_backup": {
+        "name": "Last backup"
       },
       "node_cpu": {
         "name": "CPU usage"
