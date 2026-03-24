@@ -1,0 +1,102 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': dict({
+      'test_device_id': dict({
+        'coordinator': dict({
+          'last_exception': None,
+          'last_update_success': True,
+          'update_interval': '0:01:00',
+        }),
+        'data': dict({
+          'controls': list([
+            dict({
+              'max': 8,
+              'min': 2,
+              'name': 'Fridge',
+              'target': 4,
+              'type': 'fridge',
+              'unit': '°C',
+              'value': 5,
+              'zone_id': 1,
+              'zone_position': 'top',
+            }),
+            dict({
+              'max': -16,
+              'min': -24,
+              'name': 'Freezer',
+              'target': -18,
+              'type': 'freezer',
+              'unit': '°C',
+              'value': -18,
+              'zone_id': 2,
+              'zone_position': 'bottom',
+            }),
+            dict({
+              'name': 'supercool',
+              'type': 'ToggleControl',
+              'value': False,
+              'zone_id': 1,
+              'zone_position': 'top',
+            }),
+            dict({
+              'name': 'superfrost',
+              'type': 'ToggleControl',
+              'value': True,
+              'zone_id': 2,
+              'zone_position': 'bottom',
+            }),
+            dict({
+              'name': 'partymode',
+              'type': 'ToggleControl',
+              'value': False,
+              'zone_id': None,
+              'zone_position': None,
+            }),
+            dict({
+              'name': 'nightmode',
+              'type': 'ToggleControl',
+              'value': True,
+              'zone_id': None,
+              'zone_position': None,
+            }),
+            dict({
+              'has_max_ice': True,
+              'ice_maker_mode': 'off',
+              'name': 'icemaker',
+              'type': 'IceMakerControl',
+              'zone_id': 2,
+              'zone_position': 'bottom',
+            }),
+            dict({
+              'current_mode': 'low',
+              'name': 'hydrobreeze',
+              'type': 'HydroBreezeControl',
+              'zone_id': 1,
+            }),
+            dict({
+              'current_mode': 'zero_zero',
+              'name': 'biofreshplus',
+              'supported_modes': list([
+                'zero_zero',
+                'zero_minus_two',
+                'minus_two_minus_two',
+                'minus_two_zero',
+              ]),
+              'temperature_unit': None,
+              'type': 'BioFreshPlusControl',
+              'zone_id': 1,
+            }),
+          ]),
+          'device': dict({
+            'device_id': 'test_device_id',
+            'device_name': 'CBNes1234',
+            'device_type': 'combi',
+            'image_url': None,
+            'nickname': 'Test Fridge',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---

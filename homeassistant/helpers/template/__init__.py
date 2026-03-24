@@ -8,6 +8,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
 from datetime import datetime, timedelta
+from enum import Enum
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
@@ -57,7 +58,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, location as loc_helper
 from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.translation import async_translate_state
+from homeassistant.helpers.translation import (
+    async_translate_state,
+    async_translate_state_attr,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import convert, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -478,7 +482,7 @@ class Template:
         """Parse the result."""
         try:
             return _cached_parse_result(render_result)
-        except (ValueError, TypeError, SyntaxError, MemoryError):
+        except ValueError, TypeError, SyntaxError, MemoryError:
             pass
 
         return render_result
@@ -805,6 +809,48 @@ class StateTranslated:
     def __repr__(self) -> str:
         """Representation of Translated state."""
         return "<template StateTranslated>"
+
+
+class StateAttrTranslated:
+    """Class to represent a translated state attribute value in a template."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self._hass = hass
+
+    def __call__(self, entity_id: str, attribute: str) -> Any:
+        """Retrieve translated state attribute value if available."""
+        state = _get_state_if_valid(self._hass, entity_id)
+
+        if state is None:
+            return None
+
+        attr_value = state.attributes.get(attribute)
+        if attr_value is None:
+            return None
+
+        if not isinstance(attr_value, str | Enum):
+            return attr_value
+
+        domain = state.domain
+        device_class = state.attributes.get("device_class")
+        entry = er.async_get(self._hass).async_get(entity_id)
+        platform = None if entry is None else entry.platform
+        translation_key = None if entry is None else entry.translation_key
+
+        return async_translate_state_attr(
+            self._hass,
+            str(attr_value),
+            domain,
+            platform,
+            translation_key,
+            device_class,
+            attribute,
+        )
+
+    def __repr__(self) -> str:
+        """Representation of Translated state attribute."""
+        return "<template StateAttrTranslated>"
 
 
 class DomainStates:
@@ -1359,6 +1405,19 @@ def distance(hass: HomeAssistant, *args: Any) -> float | None:
     )
 
 
+def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get the name of an entity from its entity ID."""
+    ent_reg = er.async_get(hass)
+    if (entry := ent_reg.async_get(entity_id)) is not None:
+        return entry.name if entry.name is not None else entry.original_name
+
+    # Fall back to state for entities without a unique_id (not in the registry)
+    if (state := hass.states.get(entity_id)) is not None:
+        return state.name
+
+    return None
+
+
 def is_hidden_entity(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if an entity is hidden."""
     entity_reg = er.async_get(hass)
@@ -1416,7 +1475,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
             # if method is common or something else, use common rounding
             value = round(float(value), precision)
         return int(value) if precision == 0 else value
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value can't be converted to float
         if default is _SENTINEL:
             raise_no_default("round", value)
@@ -1427,7 +1486,7 @@ def multiply(value, amount, default=_SENTINEL):
     """Filter to convert value to float and multiply it."""
     try:
         return float(value) * amount
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value can't be converted to float
         if default is _SENTINEL:
             raise_no_default("multiply", value)
@@ -1438,7 +1497,7 @@ def add(value, amount, default=_SENTINEL):
     """Filter to convert value to float and add it."""
     try:
         return float(value) + amount
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value can't be converted to float
         if default is _SENTINEL:
             raise_no_default("add", value)
@@ -1546,7 +1605,7 @@ def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
         return float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         if default is _SENTINEL:
             raise_no_default("float", value)
         return default
@@ -1556,7 +1615,7 @@ def forgiving_float_filter(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
         return float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         if default is _SENTINEL:
             raise_no_default("float", value)
         return default
@@ -1582,7 +1641,7 @@ def is_number(value):
     """Try to convert value to a float."""
     try:
         fvalue = float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return False
     if not math.isfinite(fvalue):
         return False
@@ -1979,23 +2038,22 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return warn_unsupported
 
             hass_globals = [
-                "area_id",
-                "area_name",
                 "closest",
                 "distance",
+                "entity_name",
                 "expand",
                 "has_value",
                 "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
                 "state_attr",
+                "state_attr_translated",
                 "state_translated",
                 "states",
             ]
             hass_filters = [
-                "area_id",
-                "area_name",
                 "closest",
+                "entity_name",
                 "expand",
                 "has_value",
             ]
@@ -2026,6 +2084,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         # Entity extensions
 
+        self.globals["entity_name"] = hassfunction(entity_name)
+        self.filters["entity_name"] = self.globals["entity_name"]
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
             is_hidden_entity, pass_eval_context
@@ -2036,9 +2096,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["is_state"] = hassfunction(is_state)
         self.globals["state_attr"] = hassfunction(state_attr)
+        self.globals["state_attr_translated"] = StateAttrTranslated(hass)
         self.globals["state_translated"] = StateTranslated(hass)
         self.globals["states"] = AllStates(hass)
         self.filters["state_attr"] = self.globals["state_attr"]
+        self.filters["state_attr_translated"] = self.globals["state_attr_translated"]
         self.filters["state_translated"] = self.globals["state_translated"]
         self.filters["states"] = self.globals["states"]
         self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
@@ -2047,7 +2109,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(
-            obj, (AllStates, StateTranslated)
+            obj, (AllStates, StateAttrTranslated, StateTranslated)
         ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):

@@ -27,7 +27,7 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.stream import (
@@ -133,7 +133,7 @@ MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
 
 CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
-    vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
+    vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(MP_DOMAIN),
     vol.Optional(ATTR_FORMAT, default="hls"): vol.In(OUTPUT_FORMATS),
 }
 
@@ -432,6 +432,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     # Entity Properties
+    entity_description: CameraEntityDescription
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
     _attr_is_on: bool = True
@@ -1044,7 +1045,7 @@ async def async_handle_play_stream_service(
     url = f"{get_url(hass)}{url}"
 
     await hass.services.async_call(
-        DOMAIN_MP,
+        MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: service_call.data[ATTR_MEDIA_PLAYER],

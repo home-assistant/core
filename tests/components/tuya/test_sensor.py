@@ -43,8 +43,9 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("updates", "expected_state", "last_reported"),
     [
-        # Update without dpcode - state should not change, last_reported stays at initial
-        ({"doorcontact_state": True}, "62.0", "2024-01-01T00:00:00+00:00"),
+        # Update without dpcode - state should not change, last_reported stays
+        # at available_reported
+        ({"doorcontact_state": True}, "62.0", "2024-01-01T00:00:20+00:00"),
         # Update with dpcode - state should change, last_reported advances
         ({"battery_percentage": 50}, "50.0", "2024-01-01T00:01:00+00:00"),
         # Update with multiple properties including dpcode - state should change
@@ -106,7 +107,6 @@ async def test_delta_report_sensor(
 
     # Send delta update
     await mock_listener.async_send_device_update(
-        hass,
         mock_device,
         {"add_ele": 200},
         {"add_ele": timestamp},
@@ -118,7 +118,6 @@ async def test_delta_report_sensor(
     # Send delta update (multiple dpcode)
     timestamp += 100
     await mock_listener.async_send_device_update(
-        hass,
         mock_device,
         {"add_ele": 300, "switch_1": True},
         {"add_ele": timestamp, "switch_1": timestamp},
@@ -129,7 +128,6 @@ async def test_delta_report_sensor(
 
     # Send delta update (timestamp not incremented)
     await mock_listener.async_send_device_update(
-        hass,
         mock_device,
         {"add_ele": 500},
         {"add_ele": timestamp},  # same timestamp
@@ -140,7 +138,6 @@ async def test_delta_report_sensor(
 
     # Send delta update (unrelated dpcode)
     await mock_listener.async_send_device_update(
-        hass,
         mock_device,
         {"switch_1": False},
         {"switch_1": timestamp + 100},
@@ -152,7 +149,6 @@ async def test_delta_report_sensor(
     # Send delta update
     timestamp += 100
     await mock_listener.async_send_device_update(
-        hass,
         mock_device,
         {"add_ele": 100},
         {"add_ele": timestamp},
@@ -165,7 +161,6 @@ async def test_delta_report_sensor(
     timestamp += 100
     mock_device.status["add_ele"] = None
     await mock_listener.async_send_device_update(
-        hass,
         mock_device,
         {"add_ele": None},
         {"add_ele": timestamp},
@@ -177,7 +172,6 @@ async def test_delta_report_sensor(
     # Send delta update (no timestamp - skipped)
     mock_device.status["add_ele"] = 200
     await mock_listener.async_send_device_update(
-        hass,
         mock_device,
         {"add_ele": 200},
         None,

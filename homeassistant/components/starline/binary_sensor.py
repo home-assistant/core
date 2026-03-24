@@ -100,6 +100,6 @@ class StarlineSensor(StarlineEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self._device.car_state.get(self._key)

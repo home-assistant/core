@@ -52,6 +52,9 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     --mount=type=bind,source=requirements_test_pre_commit.txt,target=requirements_test_pre_commit.txt \
     uv pip install -r requirements.txt -r requirements_test.txt
 
+# Claude Code native install
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
 WORKDIR /workspaces
 
 # Set the default shell to bash instead of sh

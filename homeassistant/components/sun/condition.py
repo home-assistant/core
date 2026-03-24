@@ -26,9 +26,7 @@ from homeassistant.util import dt as dt_util
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Optional("before"): cv.sun_event,
     vol.Optional("before_offset"): cv.time_period,
-    vol.Optional("after"): vol.All(
-        vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
-    ),
+    vol.Optional("after"): cv.sun_event,
     vol.Optional("after_offset"): cv.time_period,
 }
 

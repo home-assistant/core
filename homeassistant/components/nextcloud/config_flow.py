@@ -60,7 +60,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(self._try_connect_nc, user_input)
             except NextcloudMonitorAuthorizationError:
                 errors["base"] = "invalid_auth"
-            except (NextcloudMonitorConnectionError, NextcloudMonitorRequestError):
+            except NextcloudMonitorConnectionError, NextcloudMonitorRequestError:
                 errors["base"] = "connection_error"
             else:
                 return self.async_create_entry(
@@ -93,7 +93,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except NextcloudMonitorAuthorizationError:
                 errors["base"] = "invalid_auth"
-            except (NextcloudMonitorConnectionError, NextcloudMonitorRequestError):
+            except NextcloudMonitorConnectionError, NextcloudMonitorRequestError:
                 errors["base"] = "connection_error"
             else:
                 return self.async_update_reload_and_abort(

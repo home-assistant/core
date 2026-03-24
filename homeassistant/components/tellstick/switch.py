@@ -53,7 +53,7 @@ class TellstickSwitch(TellstickDevice, SwitchEntity):
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
-        self._state = new_state
+        self._attr_is_on = new_state
 
     def _send_device_command(self, requested_state, requested_data):
         """Let tellcore update the actual device to the requested state."""

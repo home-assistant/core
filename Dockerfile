@@ -10,7 +10,6 @@ LABEL \
     org.opencontainers.image.description="Open-source home automation platform running on Python 3" \
     org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
     org.opencontainers.image.licenses="Apache-2.0" \
-    org.opencontainers.image.source="https://github.com/home-assistant/core" \
     org.opencontainers.image.title="Home Assistant" \
     org.opencontainers.image.url="https://www.home-assistant.io/"
 
@@ -24,13 +23,13 @@ ENV \
 COPY rootfs /
 
 # Add go2rtc binary
-COPY --from=ghcr.io/alexxit/go2rtc@sha256:f394f6329f5389a4c9a7fc54b09fdec9621bbb78bf7a672b973440bbdfb02241 /usr/local/bin/go2rtc /bin/go2rtc
+COPY --from=ghcr.io/alexxit/go2rtc@sha256:675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae /usr/local/bin/go2rtc /bin/go2rtc
 
 RUN \
     # Verify go2rtc can be executed
     go2rtc --version \
     # Install uv
-    && pip3 install uv==0.9.26
+    && pip3 install uv==0.10.6
 
 WORKDIR /usr/src
 
