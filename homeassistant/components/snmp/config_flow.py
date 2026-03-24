@@ -187,6 +187,11 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["baseoid"] = "invalid_oid"
             else:
                 self._user_data = user_input
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_HOST]}_{user_input[CONF_BASEOID]}"
+                )
+                self._abort_if_unique_id_configured()
+
                 if user_input[CONF_VERSION] == "3":
                     return await self.async_step_v3()
                 return await self.async_step_v1_v2c()
@@ -270,11 +275,10 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from the old YAML configuration file."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == user_input.get(
-                CONF_HOST
-            ) and entry.data.get(CONF_BASEOID) == user_input.get(CONF_BASEOID):
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(
+            f"{user_input[CONF_HOST]}_{user_input[CONF_BASEOID]}"
+        )
+        self._abort_if_unique_id_configured()
 
         # Filter to only include keys that are relevant to SNMP config entries.
         # The legacy platform schema adds extra keys (platform, consider_home,
