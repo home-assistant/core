@@ -62,6 +62,7 @@ def mock_transmission_client() -> Generator[AsyncMock]:
         client.get_session.return_value = Session(fields=session_data)
 
         client.get_torrents.return_value = []
+        client.port_test.return_value = True
 
         yield mock_client_class
 

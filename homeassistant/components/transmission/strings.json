@@ -41,6 +41,15 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "port_forwarding": {
+        "name": "Port forwarding",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      }
+    },
     "sensor": {
       "active_torrents": {
         "name": "Active torrents",

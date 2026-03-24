@@ -40,7 +40,7 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 MIGRATION_NAME_TO_KEY = {
     # Sensors
@@ -139,10 +139,8 @@ async def async_migrate_entry(
     )
 
     if config_entry.version == 1:
-        # Version 1.2 adds ssl and path
         if config_entry.minor_version < 2:
             new = {**config_entry.data}
-
             new[CONF_PATH] = DEFAULT_PATH
             new[CONF_SSL] = DEFAULT_SSL
 
