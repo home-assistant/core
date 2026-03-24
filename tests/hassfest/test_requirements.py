@@ -275,7 +275,7 @@ def test_check_dependency_file_names(integration: Integration) -> None:
     pkg_files = [
         PackagePath("py.typed"),
         PackagePath("my_package.py"),
-        PackagePath("some_script.pth"),
+        PackagePath("some_script.Pth"),
         PackagePath("my_package-1.0.0.dist-info/METADATA"),
     ]
     with (
@@ -288,13 +288,13 @@ def test_check_dependency_file_names(integration: Integration) -> None:
         assert check_dependency_files(integration, package, pkg, ()) is False
         assert _packages_checked_files_cache[pkg]["file_names"] == {
             "py.typed",
-            "some_script.pth",
+            "some_script.Pth",
         }
         assert len(integration.errors) == 2
         assert f"Package {pkg} has a forbidden file 'py.typed' in {package}" in [
             x.error for x in integration.errors
         ]
-        assert f"Package {pkg} has a forbidden file 'some_script.pth' in {package}" in [
+        assert f"Package {pkg} has a forbidden file 'some_script.Pth' in {package}" in [
             x.error for x in integration.errors
         ]
         integration.errors.clear()
