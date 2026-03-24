@@ -23,14 +23,14 @@
       },
       "user": {
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "ip_address": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "ip_address": "The IP address, (m)DNS name, or hostname of your air-Q device on your local network.",
+          "ip_address": "The IP address, mDNS name, or hostname of your air-Q device on your local network.",
           "password": "The password of your air-Q device."
         },
-        "description": "Provide the IP address or mDNS of the device and its password",
+        "description": "Provide the device's IP address or mDNS name and its password",
         "title": "Identify the device"
       }
     }
@@ -167,7 +167,7 @@
         },
         "data_description": {
           "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behavior is to clip such values to 0.",
-          "return_average": "air-Q allows to poll both the noisy sensor readings as well as the values averaged on the device (default)."
+          "return_average": "air-Q allows you to poll both the noisy sensor readings as well as the values averaged on the device (default)."
         },
         "title": "Configure air-Q integration"
       }
