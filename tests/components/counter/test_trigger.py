@@ -75,11 +75,10 @@ async def test_counter_triggers_gated_by_labs_flag(
     parametrize_target_entities(DOMAIN),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
+    ("trigger", "states"),
     [
         (
             "counter.decremented",
-            None,
             [
                 {"included_state": {"state": None, "attributes": {}}, "count": 0},
                 {"included_state": {"state": "1", "attributes": {}}, "count": 0},
@@ -99,7 +98,6 @@ async def test_counter_triggers_gated_by_labs_flag(
         ),
         (
             "counter.incremented",
-            None,
             [
                 {"included_state": {"state": None, "attributes": {}}, "count": 0},
                 {"included_state": {"state": "2", "attributes": {}}, "count": 0},
@@ -127,7 +125,6 @@ async def test_counter_state_trigger(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    trigger_options: dict[str, Any] | None,
     states: list[BasicTriggerStateDescription],
 ) -> None:
     """Test that the counter decrement and increment triggers fire correctly."""
@@ -138,7 +135,7 @@ async def test_counter_state_trigger(
         set_or_remove_state(hass, eid, states[0]["included_state"])
     await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
+    await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
         included_state = state["included_state"]
