@@ -6,7 +6,6 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 from pyfritzhome import LoginError
-import pytest
 from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
