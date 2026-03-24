@@ -1,6 +1,13 @@
 """Assist pipeline errors."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from homeassistant.exceptions import HomeAssistantError
+
+if TYPE_CHECKING:
+    from .pipeline import PipelineStage
 
 
 class PipelineError(HomeAssistantError):
@@ -55,3 +62,25 @@ class IntentRecognitionError(PipelineError):
 
 class TextToSpeechError(PipelineError):
     """Error in text-to-speech portion of pipeline."""
+
+
+class PipelineRunValidationError(PipelineError):
+    """Error when a pipeline run is not valid."""
+
+    def __init__(self, message: str) -> None:
+        """Set error message."""
+        super().__init__("validation-error", message)
+
+
+class InvalidPipelineStagesError(PipelineRunValidationError):
+    """Error when given an invalid combination of start/end stages."""
+
+    def __init__(
+        self,
+        start_stage: PipelineStage,
+        end_stage: PipelineStage,
+    ) -> None:
+        """Set error message."""
+        super().__init__(
+            f"Invalid stage combination: start={start_stage}, end={end_stage}"
+        )
