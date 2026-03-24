@@ -736,7 +736,7 @@ async def test_service_schedule_thermostats(
 
 
 async def test_service_set_schedule_updates_select_entity(
-    hass: HomeAssistant, config_entry, netatmo_auth: AsyncMock
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test that set_schedule service updates select entity state via internal signal."""
     with selected_platforms([Platform.CLIMATE, "select"]):
