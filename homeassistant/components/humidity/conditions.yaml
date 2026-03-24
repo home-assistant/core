@@ -20,7 +20,7 @@
                   device_class: humidity
       translation_key: number_or_entity
 
-value:
+is_value:
   target:
     entity:
       - domain: sensor

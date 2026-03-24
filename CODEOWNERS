@@ -739,6 +739,8 @@ build.json @home-assistant/supervisor
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
 /tests/components/honeywell/ @rdfurman @mkmer
+/homeassistant/components/hr_energy_qube/ @MattieGit
+/tests/components/hr_energy_qube/ @MattieGit
 /homeassistant/components/html5/ @alexyao2015
 /tests/components/html5/ @alexyao2015
 /homeassistant/components/http/ @home-assistant/core
