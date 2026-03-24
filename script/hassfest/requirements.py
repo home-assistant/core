@@ -247,6 +247,7 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
         # azure_kusto_data-*-nspkg.pth
         # azure_kusto_ingest-*-nspkg.pth
         "homeassistant": {"azure-kusto-data", "azure-kusto-ingest"},
+        "azure-kusto-ingest": {"azure-kusto-data"},
     },
     # https://github.com/coinbase/coinbase-advanced-py
     "cmus": {
