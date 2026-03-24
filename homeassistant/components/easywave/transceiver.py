@@ -125,7 +125,6 @@ class RX11Transceiver:
                 device_path, serial_number = port_info
                 self.device_path = device_path
                 self.usb_serial_number = serial_number
-                self._reconnect_attempts = 0
 
                 # Connect using RX11Device
                 if not await self._try_connect_to_path(device_path):
@@ -134,7 +133,10 @@ class RX11Transceiver:
                     self.is_connected = False
                     return False
 
-            except _SERIAL_ERRORS as err:
+                # Only reset the attempt counter after a successful connection
+                self._reconnect_attempts = 0
+
+            except _SERIAL_OR_OS_ERRORS as err:
                 _LOGGER.debug("Cannot connect to RX11: %s", err)
                 self.is_connected = False
                 return False
@@ -302,14 +304,15 @@ class RX11Transceiver:
                 try:
                     await asyncio.sleep(self.HEALTH_CHECK_INTERVAL)
 
-                    if not self.is_connected or not self._device:
+                    device = self._device  # Local reference for thread safety
+                    if not self.is_connected or not device:
                         consecutive_failures = 0
                         continue
 
                     # Health check: Ping device to verify connection is active
                     connected = False
                     with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
-                        connected = await self._device.ping_request()
+                        connected = await device.ping_request()
 
                     if connected:
                         consecutive_failures = 0
@@ -348,7 +351,14 @@ class RX11Transceiver:
     def _on_device_disconnect(self) -> None:
         """Handle device disconnect detected by RxModule."""
         _LOGGER.warning("Device disconnect detected by RxModule")
-        self.hass.async_create_task(self._handle_device_disconnect())
+
+        def _schedule_disconnect_handling() -> None:
+            """Schedule device disconnect handling on the event loop."""
+            self.hass.async_create_task(self._handle_device_disconnect())
+
+        # Callback may be invoked from the library's serial handler thread;
+        # use call_soon_threadsafe to safely schedule onto the HA event loop.
+        self.hass.loop.call_soon_threadsafe(_schedule_disconnect_handling)
 
     def _on_device_reconnect(self) -> None:
         """Handle device reconnect detected by RxModule."""
@@ -450,7 +460,11 @@ class RX11Transceiver:
 
         Returns: (device_path, serial_number) or None if not found
         """
-        ports = list(serial.tools.list_ports.comports())
+        try:
+            ports = list(serial.tools.list_ports.comports())
+        except _SERIAL_OR_OS_ERRORS:
+            _LOGGER.exception("Error while enumerating serial ports for EASYWAVE")
+            return None
 
         for port in ports:
             if (port.vid, port.pid) in SUPPORTED_USB_IDS:
