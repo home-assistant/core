@@ -53,7 +53,7 @@ PyChromecast==14.0.10
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.8.0
+PyFronius==0.8.2
 
 # homeassistant.components.pyload
 PyLoadAPI==2.0.0
