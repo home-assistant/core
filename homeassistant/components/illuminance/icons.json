@@ -1,0 +1,16 @@
+{
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:brightness-6"
+    },
+    "cleared": {
+      "trigger": "mdi:brightness-4"
+    },
+    "crossed_threshold": {
+      "trigger": "mdi:brightness-6"
+    },
+    "detected": {
+      "trigger": "mdi:brightness-7"
+    }
+  }
+}

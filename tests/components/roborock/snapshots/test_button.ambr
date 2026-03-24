@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_buttons[button.roborock_q10_s5_empty_dustbin-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.roborock_q10_s5_empty_dustbin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Empty dustbin',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Empty dustbin',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'empty_dustbin',
+    'unique_id': 'empty_dustbin_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_q10_s5_empty_dustbin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock Q10 S5+ Empty dustbin',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_q10_s5_empty_dustbin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[button.roborock_s7_2_reset_air_filter_consumable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
