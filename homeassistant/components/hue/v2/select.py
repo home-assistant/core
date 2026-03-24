@@ -15,7 +15,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
-from .scene_activity import HueSceneActivityManager, get_or_create_scene_activity_manager
+from .scene_activity import (
+    HueSceneActivityManager,
+    get_or_create_scene_activity_manager,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -232,7 +235,9 @@ async def async_setup_entry(
                 HueSceneSelectEntity(bridge, manager, group.id)
             ]
             if _group_has_smart_scenes(group.id):
-                new_entities.append(HueSmartSceneSelectEntity(bridge, manager, group.id))
+                new_entities.append(
+                    HueSmartSceneSelectEntity(bridge, manager, group.id)
+                )
             async_add_entities(new_entities)
 
         config_entry.async_on_unload(
