@@ -157,21 +157,21 @@ async def test_create_and_setup(hass: HomeAssistant, mock_panel) -> None:
     assert device.stored_configuration == {
         "binary_sensors": {
             "1": {
-                "entity_id": "binary_sensor.konnected_445566_zone_1",
+                "entity_id": "binary_sensor.konnected_alarm_panel_konnected_445566_zone_1",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 1",
                 "state": None,
                 "type": "door",
             },
             "2": {
-                "entity_id": "binary_sensor.winder",
+                "entity_id": "binary_sensor.konnected_alarm_panel_winder",
                 "inverse": True,
                 "name": "winder",
                 "state": None,
                 "type": "window",
             },
             "3": {
-                "entity_id": "binary_sensor.konnected_445566_zone_3",
+                "entity_id": "binary_sensor.konnected_alarm_panel_konnected_445566_zone_3",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 3",
                 "state": None,
@@ -185,10 +185,10 @@ async def test_create_and_setup(hass: HomeAssistant, mock_panel) -> None:
         "port": 1234,
         "sensors": [
             {
-                "humidity": "sensor.konnected_445566_sensor_4_humidity",
+                "humidity": "sensor.konnected_alarm_panel_konnected_445566_sensor_4_humidity",
                 "name": "Konnected 445566 Sensor 4",
                 "poll_interval": 3,
-                "temperature": "sensor.konnected_445566_sensor_4_temperature",
+                "temperature": "sensor.konnected_alarm_panel_konnected_445566_sensor_4_temperature",
                 "type": "dht",
                 "zone": "4",
             },
@@ -197,7 +197,7 @@ async def test_create_and_setup(hass: HomeAssistant, mock_panel) -> None:
         "switches": [
             {
                 "activation": "low",
-                "entity_id": "switch.switcher",
+                "entity_id": "switch.konnected_alarm_panel_switcher",
                 "momentary": 50,
                 "name": "switcher",
                 "pause": 100,
@@ -207,7 +207,7 @@ async def test_create_and_setup(hass: HomeAssistant, mock_panel) -> None:
             },
             {
                 "activation": "high",
-                "entity_id": "switch.konnected_445566_actuator_6",
+                "entity_id": "switch.konnected_alarm_panel_konnected_445566_actuator_6",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator 6",
                 "pause": None,
@@ -326,28 +326,28 @@ async def test_create_and_setup_pro(hass: HomeAssistant, mock_panel) -> None:
     assert device.stored_configuration == {
         "binary_sensors": {
             "10": {
-                "entity_id": "binary_sensor.konnected_445566_zone_10",
+                "entity_id": "binary_sensor.konnected_pro_alarm_panel_konnected_445566_zone_10",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 10",
                 "state": None,
                 "type": "door",
             },
             "11": {
-                "entity_id": "binary_sensor.konnected_445566_zone_11",
+                "entity_id": "binary_sensor.konnected_pro_alarm_panel_konnected_445566_zone_11",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 11",
                 "state": None,
                 "type": "window",
             },
             "2": {
-                "entity_id": "binary_sensor.konnected_445566_zone_2",
+                "entity_id": "binary_sensor.konnected_pro_alarm_panel_konnected_445566_zone_2",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 2",
                 "state": None,
                 "type": "door",
             },
             "6": {
-                "entity_id": "binary_sensor.winder",
+                "entity_id": "binary_sensor.konnected_pro_alarm_panel_winder",
                 "inverse": True,
                 "name": "winder",
                 "state": None,
@@ -361,10 +361,10 @@ async def test_create_and_setup_pro(hass: HomeAssistant, mock_panel) -> None:
         "port": 1234,
         "sensors": [
             {
-                "humidity": "sensor.konnected_445566_sensor_3_humidity",
+                "humidity": "sensor.konnected_pro_alarm_panel_konnected_445566_sensor_3_humidity",
                 "name": "Konnected 445566 Sensor 3",
                 "poll_interval": 5,
-                "temperature": "sensor.konnected_445566_sensor_3_temperature",
+                "temperature": "sensor.konnected_pro_alarm_panel_konnected_445566_sensor_3_temperature",
                 "type": "dht",
                 "zone": "3",
             },
@@ -373,7 +373,7 @@ async def test_create_and_setup_pro(hass: HomeAssistant, mock_panel) -> None:
         "switches": [
             {
                 "activation": "high",
-                "entity_id": "switch.konnected_445566_actuator_4",
+                "entity_id": "switch.konnected_pro_alarm_panel_konnected_445566_actuator_4",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator 4",
                 "pause": None,
@@ -383,7 +383,7 @@ async def test_create_and_setup_pro(hass: HomeAssistant, mock_panel) -> None:
             },
             {
                 "activation": "low",
-                "entity_id": "switch.switcher",
+                "entity_id": "switch.konnected_pro_alarm_panel_switcher",
                 "momentary": 50,
                 "name": "switcher",
                 "pause": 100,
@@ -393,7 +393,7 @@ async def test_create_and_setup_pro(hass: HomeAssistant, mock_panel) -> None:
             },
             {
                 "activation": "high",
-                "entity_id": "switch.konnected_445566_actuator_out1",
+                "entity_id": "switch.konnected_pro_alarm_panel_konnected_445566_actuator_out1",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator out1",
                 "pause": None,
@@ -403,7 +403,7 @@ async def test_create_and_setup_pro(hass: HomeAssistant, mock_panel) -> None:
             },
             {
                 "activation": "high",
-                "entity_id": "switch.konnected_445566_actuator_alarm1",
+                "entity_id": "switch.konnected_pro_alarm_panel_konnected_445566_actuator_alarm1",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator alarm1",
                 "pause": None,
@@ -530,21 +530,21 @@ async def test_default_options(hass: HomeAssistant, mock_panel) -> None:
     assert device.stored_configuration == {
         "binary_sensors": {
             "1": {
-                "entity_id": "binary_sensor.konnected_445566_zone_1",
+                "entity_id": "binary_sensor.konnected_alarm_panel_konnected_445566_zone_1",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 1",
                 "state": None,
                 "type": "door",
             },
             "2": {
-                "entity_id": "binary_sensor.winder",
+                "entity_id": "binary_sensor.konnected_alarm_panel_winder",
                 "inverse": True,
                 "name": "winder",
                 "state": None,
                 "type": "window",
             },
             "3": {
-                "entity_id": "binary_sensor.konnected_445566_zone_3",
+                "entity_id": "binary_sensor.konnected_alarm_panel_konnected_445566_zone_3",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 3",
                 "state": None,
@@ -558,10 +558,10 @@ async def test_default_options(hass: HomeAssistant, mock_panel) -> None:
         "port": 1234,
         "sensors": [
             {
-                "humidity": "sensor.konnected_445566_sensor_4_humidity",
+                "humidity": "sensor.konnected_alarm_panel_konnected_445566_sensor_4_humidity",
                 "name": "Konnected 445566 Sensor 4",
                 "poll_interval": 3,
-                "temperature": "sensor.konnected_445566_sensor_4_temperature",
+                "temperature": "sensor.konnected_alarm_panel_konnected_445566_sensor_4_temperature",
                 "type": "dht",
                 "zone": "4",
             },
@@ -570,7 +570,7 @@ async def test_default_options(hass: HomeAssistant, mock_panel) -> None:
         "switches": [
             {
                 "activation": "low",
-                "entity_id": "switch.switcher",
+                "entity_id": "switch.konnected_alarm_panel_switcher",
                 "momentary": 50,
                 "name": "switcher",
                 "pause": 100,
@@ -580,7 +580,7 @@ async def test_default_options(hass: HomeAssistant, mock_panel) -> None:
             },
             {
                 "activation": "high",
-                "entity_id": "switch.konnected_445566_actuator_6",
+                "entity_id": "switch.konnected_alarm_panel_konnected_445566_actuator_6",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator 6",
                 "pause": None,

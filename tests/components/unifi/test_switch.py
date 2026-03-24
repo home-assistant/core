@@ -964,7 +964,7 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
-        {"entity_id": "switch.block_media_streaming"},
+        {"entity_id": "switch.unifi_network_block_media_streaming"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
@@ -973,7 +973,7 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {"entity_id": "switch.block_media_streaming"},
+        {"entity_id": "switch.unifi_network_block_media_streaming"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 2
@@ -994,7 +994,7 @@ async def test_remove_switches(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     assert hass.states.get("switch.block_client_2") is not None
-    assert hass.states.get("switch.block_media_streaming") is not None
+    assert hass.states.get("switch.unifi_network_block_media_streaming") is not None
 
     mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[UNBLOCKED])
     await hass.async_block_till_done()
@@ -1002,12 +1002,12 @@ async def test_remove_switches(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     assert hass.states.get("switch.block_client_2") is None
-    assert hass.states.get("switch.block_media_streaming") is not None
+    assert hass.states.get("switch.unifi_network_block_media_streaming") is not None
 
     mock_websocket_message(data=DPI_GROUP_REMOVED_EVENT)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.block_media_streaming") is None
+    assert hass.states.get("switch.unifi_network_block_media_streaming") is None
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
@@ -1092,18 +1092,22 @@ async def test_dpi_switches(
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
     mock_websocket_message(data=DPI_APP_DISABLED_EVENT)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_OFF
+    )
 
     # Remove app
     mock_websocket_message(data=DPI_GROUP_REMOVE_APP)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.block_media_streaming") is None
+    assert hass.states.get("switch.unifi_network_block_media_streaming") is None
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
@@ -1115,7 +1119,9 @@ async def test_dpi_switches_add_second_app(
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
-    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
     second_app_event = {
         "apps": [524292],
@@ -1129,7 +1135,9 @@ async def test_dpi_switches_add_second_app(
     mock_websocket_message(message=MessageKey.DPI_APP_ADDED, data=second_app_event)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
     add_second_app_to_group = {
         "_id": "5f976f4ae3c58f018ec7dff6",
@@ -1142,7 +1150,9 @@ async def test_dpi_switches_add_second_app(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_OFF
+    )
 
     second_app_event_enabled = {
         "apps": [524292],
@@ -1158,7 +1168,9 @@ async def test_dpi_switches_add_second_app(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state == STATE_ON
+    )
 
 
 @pytest.mark.parametrize(("traffic_rule_payload"), [([TRAFFIC_RULE])])
@@ -1790,7 +1802,7 @@ async def test_hub_state_change(
         "switch.mock_name_port_1_poe",
         "switch.mock_name_port_1",
         "switch.plug_outlet_1",
-        "switch.block_media_streaming",
+        "switch.unifi_network_block_media_streaming",
         "switch.unifi_network_plex",
         "switch.unifi_network_test_traffic_rule",
         "switch.unifi_network_allow_internal_to_iot",

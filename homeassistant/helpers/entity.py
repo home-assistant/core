@@ -1662,9 +1662,6 @@ class Entity(
         if (device_id := self.registry_entry.device_id) is None:
             return
 
-        if not self.has_entity_name:
-            return
-
         self._unsub_device_updates = async_track_device_registry_updated_event(
             self.hass,
             device_id,

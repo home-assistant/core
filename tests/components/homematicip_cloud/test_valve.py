@@ -15,7 +15,7 @@ async def test_watering_valve(
 ) -> None:
     """Test HomematicIP watering valve."""
     entity_id = "valve.bewaesserungsaktor_watering"
-    entity_name = "Bewaesserungsaktor watering"
+    entity_name = "Bewaesserungsaktor Watering"
     device_model = "ELV-SH-WSM"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Bewaesserungsaktor"]

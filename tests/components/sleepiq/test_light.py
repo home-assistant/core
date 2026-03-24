@@ -20,12 +20,16 @@ async def test_setup(
 
     assert len(entity_registry.entities) == 2
 
-    entry = entity_registry.async_get(f"light.sleepnumber_{BED_NAME_LOWER}_light_1")
+    entry = entity_registry.async_get(
+        f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+    )
     assert entry
     assert entry.original_name == f"SleepNumber {BED_NAME} Light 1"
     assert entry.unique_id == f"{BED_ID}-light-1"
 
-    entry = entity_registry.async_get(f"light.sleepnumber_{BED_NAME_LOWER}_light_2")
+    entry = entity_registry.async_get(
+        f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_2"
+    )
     assert entry
     assert entry.original_name == f"SleepNumber {BED_NAME} Light 2"
     assert entry.unique_id == f"{BED_ID}-light-2"
@@ -38,7 +42,9 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: f"light.sleepnumber_{BED_NAME_LOWER}_light_1"},
+        {
+            ATTR_ENTITY_ID: f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -47,7 +53,9 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_off",
-        {ATTR_ENTITY_ID: f"light.sleepnumber_{BED_NAME_LOWER}_light_1"},
+        {
+            ATTR_ENTITY_ID: f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -59,7 +67,9 @@ async def test_switch_get_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
     await setup_platform(hass, LIGHT_DOMAIN)
 
     assert (
-        hass.states.get(f"light.sleepnumber_{BED_NAME_LOWER}_light_1").state
+        hass.states.get(
+            f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+        ).state
         == STATE_OFF
     )
     mock_asyncsleepiq.beds[BED_ID].foundation.lights[0].is_on = True
@@ -68,5 +78,8 @@ async def test_switch_get_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        hass.states.get(f"light.sleepnumber_{BED_NAME_LOWER}_light_1").state == STATE_ON
+        hass.states.get(
+            f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+        ).state
+        == STATE_ON
     )

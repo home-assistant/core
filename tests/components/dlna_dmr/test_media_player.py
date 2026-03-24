@@ -67,6 +67,8 @@ from tests.typing import WebSocketGenerator
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
 
+MOCK_ENTITY_NAME = "device_name " + MOCK_DEVICE_NAME
+
 
 async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry) -> str:
     """Set up a mock DlnaDmrEntity with the given configuration."""
@@ -236,7 +238,7 @@ async def test_setup_entry_no_options(
     # Quick check of the state to verify the entity has a connected DmrDevice
     assert mock_state.state == MediaPlayerState.IDLE
     # Check the name matches that supplied
-    assert mock_state.name == MOCK_DEVICE_NAME
+    assert mock_state.name == MOCK_ENTITY_NAME
 
     # Check that an update retrieves state from the device, but does not ping,
     # because poll_availability is False
@@ -314,7 +316,7 @@ async def test_setup_entry_with_options(
     # Quick check of the state to verify the entity has a connected DmrDevice
     assert mock_state.state == MediaPlayerState.IDLE
     # Check the name matches that supplied
-    assert mock_state.name == MOCK_DEVICE_NAME
+    assert mock_state.name == MOCK_ENTITY_NAME
 
     # Check that an update retrieves state from the device, and also pings it,
     # because poll_availability is True
