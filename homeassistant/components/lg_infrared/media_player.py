@@ -34,7 +34,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up LG IR media player from config entry."""
     infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
-    device_type = entry.data.get(CONF_DEVICE_TYPE, LGDeviceType.TV)
+    device_type = entry.data[CONF_DEVICE_TYPE]
     if device_type == LGDeviceType.TV:
         async_add_entities([LgIrTvMediaPlayer(entry, infrared_entity_id)])
 
@@ -60,7 +60,6 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, entry: ConfigEntry, infrared_entity_id: str) -> None:
         """Initialize LG IR media player."""
-        self._entry = entry
         self._infrared_entity_id = infrared_entity_id
         self._attr_unique_id = f"{entry.entry_id}_media_player"
         self._attr_state = MediaPlayerState.ON
@@ -81,7 +80,8 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
             )
             if ir_available != self.available:
                 _LOGGER.info(
-                    "Infrared entity is %s",
+                    "Infrared entity %s is %s",
+                    self._infrared_entity_id,
                     "available" if ir_available else "unavailable",
                 )
 
