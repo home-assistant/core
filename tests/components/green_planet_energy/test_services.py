@@ -178,7 +178,7 @@ async def test_get_prices_max_hours(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Requesting 24 h from midnight returns up to 96 slots (today + tomorrow data)."""
+    """Requesting 24 h from midnight returns up to 96 slots for that day."""
     midnight = datetime(2026, 3, 24, 0, 0, 0, tzinfo=UTC)
     with patch(
         "homeassistant.components.green_planet_energy.services.dt_util.now",
