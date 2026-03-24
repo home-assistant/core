@@ -28,6 +28,9 @@ SERVICE_GET_PRICES_SCHEMA = vol.Schema(
         vol.Required(ATTR_HOURS): vol.All(
             vol.Coerce(float),
             vol.Range(min=0.25, max=24),
+            lambda v: v
+            if abs(v * 4 - round(v * 4)) < 1e-9
+            else vol.Invalid("hours must be a multiple of 0.25 (15 minutes)"),
         ),
     }
 )
