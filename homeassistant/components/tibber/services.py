@@ -6,6 +6,7 @@ import datetime as dt
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Final
 
+import tibber
 import voluptuous as vol
 
 from homeassistant.core import (
@@ -52,7 +53,26 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
 
     tibber_prices: dict[str, Any] = {}
 
+    now = dt_util.now()
+    today_start = dt_util.start_of_local_day()
+    today_end = today_start + dt.timedelta(days=1)
+    tomorrow_end = today_start + dt.timedelta(days=2)
+
+    def _has_valid_prices(home: tibber.TibberHome) -> bool:
+        """Return True if the home has valid prices."""
+        for start in home.price_total:
+            start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
+
+            if now.hour >= 13:
+                if today_end <= start_dt < tomorrow_end:
+                    return True
+            elif today_start <= start_dt < today_end:
+                return True
+        return False
+
     for tibber_home in tibber_connection.get_homes(only_active=True):
+        if not _has_valid_prices(tibber_home):
+            await tibber_home.update_info_and_price_info()
         home_nickname = tibber_home.name
 
         price_data = [

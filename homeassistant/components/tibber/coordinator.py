@@ -298,27 +298,29 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
                 tibber_connection.fetch_production_data_active_homes(),
             )
 
-            now = dt_util.now()
+            today_start = dt_util.start_of_local_day()
+            today_end = today_start + timedelta(days=1)
+
+            def _has_prices_today(home: tibber.TibberHome) -> bool:
+                """Return True if the home has any prices today."""
+                for start in home.price_total:
+                    start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
+                    if today_start <= start_dt < today_end:
+                        return True
+                return False
+
             homes_to_update = [
-                home
-                for home in active_homes
-                if (
-                    (last_data_timestamp := home.last_data_timestamp) is None
-                    or (last_data_timestamp - now).total_seconds() < 11 * 3600
-                )
+                home for home in active_homes if not _has_prices_today(home)
             ]
 
             if homes_to_update:
                 await asyncio.gather(
                     *(home.update_info_and_price_info() for home in homes_to_update)
                 )
-        except (
-            tibber.RetryableHttpExceptionError,
-            tibber.FatalHttpExceptionError,
-        ) as err:
-            _LOGGER.error(
-                "Error communicating with Tibber API (%s): %s", err.status, err
-            )
+        except tibber.RetryableHttpExceptionError as err:
+            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
+        except tibber.FatalHttpExceptionError as err:
+            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
 
         result = {home.home_id: _build_home_data(home) for home in active_homes}
 
