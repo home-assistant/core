@@ -48,7 +48,7 @@
               "enable_custom_laqi": "Enable custom local AQI"
             },
             "data_description": {
-              "country": "Country of the location.",
+              "country": "Country of the location",
               "custom_laqi": "The target air quality index",
               "enable_custom_laqi": "Select to enable a custom local air quality index"
             },
