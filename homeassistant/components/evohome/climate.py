@@ -361,8 +361,8 @@ class EvoController(EvoClimateEntity):
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.
 
-        Data validation is not required, it will have been done upstream via a service
-        schema.
+        Data validation is not required here; it is performed upstream by the service
+        handler (service schema plus runtime checks).
         """
 
         if service == EvoService.RESET_SYSTEM:
