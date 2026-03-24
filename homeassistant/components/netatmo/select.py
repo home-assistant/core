@@ -168,6 +168,12 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
                 sched.selected = sid == new_schedule_id
             self._attr_current_option = new_option
             self.async_write_ha_state()
+            # notify other entities of the schedule change
+            async_dispatcher_send(
+                self.hass,
+                f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
+                new_schedule_id,
+            )
 
     async def async_select_option(self, option: str) -> None:
         """Handle schedule change triggered by a user selection in the UI."""
@@ -213,6 +219,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         if schedule is None:
             _LOGGER.debug("No selected schedule found for home %s", self.home.entity_id)
             self._attr_available = False
+            self.async_write_ha_state()
             return
         self._attr_available = True
         if schedule.name != self._attr_current_option:
@@ -238,3 +245,4 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
+        self.async_write_ha_state()
