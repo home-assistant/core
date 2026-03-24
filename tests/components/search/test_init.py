@@ -474,6 +474,7 @@ async def test_search(
     # Tests
     #
     assert not await search(ItemType.AREA, "unknown")
+    assert not await search(ItemType.DASHBOARD, "test-dashboard/test-view")
     assert await search(ItemType.AREA, bedroom_area.id) == {
         ItemType.AUTOMATION: {"automation.scene", "automation.script"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},

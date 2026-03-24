@@ -959,3 +959,96 @@ async def test_dashboards_with_entity_loads_unloaded_yaml_dashboard(
         assert set(
             await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)
         ) == {"test-dashboard/yaml-view"}
+
+
+async def test_dashboards_with_entity_ignores_false_positive_strings_and_null_path(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test dashboard lookup only matches known entity keys and normalizes null paths."""
+    assert await async_setup_component(hass, "lovelace", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light-false-positive",
+        suggested_object_id="dashboard_light_false_positive",
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/create",
+            "url_path": "test-dashboard",
+            "title": "Test dashboard",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await (
+        hass.data[const.LOVELACE_DATA]
+        .dashboards["test-dashboard"]
+        .async_save(
+            {
+                "views": [
+                    {
+                        "path": None,
+                        "title": entity_entry.entity_id,
+                        "cards": [
+                            {"type": "markdown", "content": entity_entry.entity_id}
+                        ],
+                    },
+                    {
+                        "path": "entity-view",
+                        "cards": [{"type": "entity", "entity": entity_entry.entity_id}],
+                    },
+                ]
+            }
+        )
+    )
+
+    assert set(await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
+        "test-dashboard/entity-view",
+    }
+
+
+async def test_dashboards_with_entity_uses_snapshot_while_loading(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dashboard lookup does not fail if dashboards change during loading."""
+    assert await async_setup_component(hass, "lovelace", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light-snapshot",
+        suggested_object_id="dashboard_light_snapshot",
+    )
+
+    dashboards = hass.data[const.LOVELACE_DATA].dashboards
+
+    class MutableDashboard:
+        """Dashboard that mutates the dashboards dict while loading."""
+
+        url_path = "mutable-dashboard"
+
+        async def async_load(self, force: bool) -> dict[str, Any]:
+            dashboards["added-during-iteration"] = dashboards[None]
+            return {
+                "views": [
+                    {
+                        "path": "mutable-view",
+                        "cards": [{"type": "entity", "entity": entity_entry.entity_id}],
+                    }
+                ]
+            }
+
+    dashboards["mutable-dashboard"] = MutableDashboard()  # type: ignore[assignment]
+
+    assert set(await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
+        "mutable-dashboard/mutable-view",
+    }

@@ -56,6 +56,7 @@ from .const import (  # noqa: F401
 from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
+ENTITY_REFERENCE_KEYS = {"entity", "entity_id", "entities"}
 
 
 def _validate_url_slug(value: Any) -> str:
@@ -490,7 +491,7 @@ async def dashboards_with_entity(hass: HomeAssistant, entity_id: str) -> list[st
 
     dashboard_views: list[str] = []
 
-    for dashboard_config in hass.data[LOVELACE_DATA].dashboards.values():
+    for dashboard_config in list(hass.data[LOVELACE_DATA].dashboards.values()):
         try:
             config = await dashboard_config.async_load(False)
         except dashboard.ConfigNotFound:
@@ -502,7 +503,7 @@ async def dashboards_with_entity(hass: HomeAssistant, entity_id: str) -> list[st
             if not _view_references_entity(view, entity_id):
                 continue
 
-            view_path = view.get("path", str(idx))
+            view_path = view.get("path") or str(idx)
             dashboard_views.append(f"{dashboard_path}/{view_path}")
 
     return dashboard_views
@@ -511,13 +512,36 @@ async def dashboards_with_entity(hass: HomeAssistant, entity_id: str) -> list[st
 @callback
 def _view_references_entity(value: Any, entity_id: str) -> bool:
     """Return if a view config value references an entity."""
-    if isinstance(value, str):
-        return value == entity_id
-
     if isinstance(value, list):
         return any(_view_references_entity(item, entity_id) for item in value)
 
     if isinstance(value, dict):
-        return any(_view_references_entity(item, entity_id) for item in value.values())
+        for key, item in value.items():
+            if key in ENTITY_REFERENCE_KEYS and _entity_reference_matches(
+                item, entity_id
+            ):
+                return True
+
+            if isinstance(item, dict | list) and _view_references_entity(
+                item, entity_id
+            ):
+                return True
+
+    return False
+
+
+@callback
+def _entity_reference_matches(value: Any, entity_id: str) -> bool:
+    """Return if a known entity reference value matches an entity."""
+    if isinstance(value, str):
+        return value == entity_id
+
+    if isinstance(value, list):
+        return any(_entity_reference_matches(item, entity_id) for item in value)
+
+    if isinstance(value, dict):
+        return any(
+            _entity_reference_matches(item, entity_id) for item in value.values()
+        )
 
     return False

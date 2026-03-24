@@ -109,7 +109,12 @@ class Searcher:
     ) -> dict[str, set[str]]:
         """Find results."""
         _LOGGER.debug("Searching for %s/%s", item_type, item_id)
-        result = getattr(self, f"_async_search_{item_type}")(item_id)
+        search_method = getattr(self, f"_async_search_{item_type}", None)
+        if search_method is None:
+            _LOGGER.debug("No search handler for item type %s", item_type)
+            return {}
+
+        result = search_method(item_id)
         if isawaitable(result):
             await result
 
