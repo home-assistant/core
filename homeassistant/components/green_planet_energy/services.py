@@ -23,17 +23,20 @@ from .coordinator import GreenPlanetEnergyUpdateCoordinator
 SERVICE_GET_PRICES = "get_prices"
 ATTR_HOURS = "hours"
 
+
+def _validate_hours(v: float) -> float:
+    """Validate that hours is a multiple of 0.25 (15 minutes)."""
+    if abs(v * 4 - round(v * 4)) >= 1e-9:
+        raise vol.Invalid("hours must be a multiple of 0.25 (15 minutes)")
+    return v
+
+
 SERVICE_GET_PRICES_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_HOURS): vol.All(
             vol.Coerce(float),
             vol.Range(min=0.25, max=24),
-            lambda v: v
-            if abs(v * 4 - round(v * 4)) < 1e-9
-            else vol.Invalid("hours must be a multiple of 0.25 (15 minutes)"),
-            lambda v: v
-            if abs(v * 4 - round(v * 4)) < 1e-9
-            else vol.Invalid("hours must be a multiple of 0.25 (15 minutes)"),
+            _validate_hours,
         ),
     }
 )
