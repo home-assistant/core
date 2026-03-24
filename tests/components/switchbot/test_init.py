@@ -21,8 +21,8 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     AIR_PURIFIER_PM25_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
     AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
-    AIR_PURIFIER_TBALE_PM25_SERVICE_INFO,
     AIR_PURIFIER_VOC_SERVICE_INFO,
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
@@ -241,7 +241,7 @@ async def test_migrate_entry_fails_for_future_version(
         ),
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
-            AIR_PURIFIER_TBALE_PM25_SERVICE_INFO,
+            AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
             "air_purifier_table_us",
         ),
     ],
