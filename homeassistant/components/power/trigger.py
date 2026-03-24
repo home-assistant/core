@@ -8,10 +8,9 @@ from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
-    EntityNumericalStateChangedTriggerWithUnitBase,
-    EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
-    EntityNumericalStateTriggerWithUnitBase,
     Trigger,
+    make_entity_numerical_state_changed_with_unit_trigger,
+    make_entity_numerical_state_crossed_threshold_with_unit_trigger,
 )
 from homeassistant.util.unit_conversion import PowerConverter
 
@@ -21,29 +20,13 @@ POWER_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
 }
 
 
-class _PowerTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
-    """Mixin for power triggers providing entity filtering, value extraction, and unit conversion."""
-
-    _base_unit = UnitOfPower.WATT
-    _domain_specs = POWER_DOMAIN_SPECS
-    _unit_converter = PowerConverter
-
-
-class PowerChangedTrigger(
-    _PowerTriggerMixin, EntityNumericalStateChangedTriggerWithUnitBase
-):
-    """Trigger for power value changes."""
-
-
-class PowerCrossedThresholdTrigger(
-    _PowerTriggerMixin, EntityNumericalStateCrossedThresholdTriggerWithUnitBase
-):
-    """Trigger for power value crossing a threshold."""
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
-    "changed": PowerChangedTrigger,
-    "crossed_threshold": PowerCrossedThresholdTrigger,
+    "changed": make_entity_numerical_state_changed_with_unit_trigger(
+        POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
+    ),
+    "crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+        POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
+    ),
 }
 
 
