@@ -14,6 +14,10 @@ CONF_CONTAINERS = "containers"
 NODE_ONLINE = "online"
 VM_CONTAINER_RUNNING = "running"
 
+STORAGE_ACTIVE = 1
+STORAGE_SHARED = 1
+STORAGE_ENABLED = 1
+
 AUTH_PAM = "pam"
 AUTH_PVE = "pve"
 AUTH_OTHER = "other"
