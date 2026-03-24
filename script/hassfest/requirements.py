@@ -95,6 +95,8 @@ FORBIDDEN_PACKAGES = {
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
+    # Coloredlogs is unmaintained and contains a '.pth' file
+    "coloredlogs": "be replaced with colorlog",
     # Only needed for docs
     "mkdocs": "not be a runtime dependency",
     # Does blocking I/O and should be replaced by pyserial-asyncio-fast
@@ -149,11 +151,13 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
+    "google_maps": {"locationsharinglib": {"coloredlogs"}},
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
+    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "izone": {"python-izone": {"async-timeout"}},
@@ -217,6 +221,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"},
+        "zigpy-znp": {"coloredlogs"},
     },
 }
 
