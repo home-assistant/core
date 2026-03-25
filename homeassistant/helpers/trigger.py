@@ -544,7 +544,7 @@ class ThresholdConfig:
     unit: str | None | UndefinedType
 
     @classmethod
-    def from_config(cls, config: dict[str, Any] | None) -> ThresholdConfig | None:
+    def from_config(cls, config: dict[str, Any] | None) -> Self | None:
         """Create ThresholdConfig from config dict."""
         if config is None:
             return None
