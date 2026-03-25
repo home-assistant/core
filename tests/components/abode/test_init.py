@@ -108,24 +108,32 @@ def test_start_reauth_stops_event_stream_and_starts_flow() -> None:
     """Test runtime reauth starts flow and stops event stream for websocket mode."""
     abode_client = Mock()
     hass = Mock()
+    hass.loop = Mock()
     entry = Mock()
 
     _start_reauth(hass, entry, abode_client, False, Exception("auth failed"))
 
     abode_client.events.stop.assert_called_once()
-    entry.async_start_reauth.assert_called_once_with(hass)
+    hass.loop.call_soon_threadsafe.assert_called_once_with(
+        entry.async_start_reauth, hass
+    )
+    entry.async_start_reauth.assert_not_called()
 
 
 def test_start_reauth_polling_does_not_stop_event_stream() -> None:
     """Test runtime reauth does not stop event stream in polling mode."""
     abode_client = Mock()
     hass = Mock()
+    hass.loop = Mock()
     entry = Mock()
 
     _start_reauth(hass, entry, abode_client, True, Exception("auth failed"))
 
     abode_client.events.stop.assert_not_called()
-    entry.async_start_reauth.assert_called_once_with(hass)
+    hass.loop.call_soon_threadsafe.assert_called_once_with(
+        entry.async_start_reauth, hass
+    )
+    entry.async_start_reauth.assert_not_called()
 
 
 def test_start_reauth_handles_event_stop_error() -> None:
@@ -133,11 +141,15 @@ def test_start_reauth_handles_event_stop_error() -> None:
     abode_client = Mock()
     abode_client.events.stop.side_effect = RuntimeError("stop failed")
     hass = Mock()
+    hass.loop = Mock()
     entry = Mock()
 
     _start_reauth(hass, entry, abode_client, False, Exception("auth failed"))
 
-    entry.async_start_reauth.assert_called_once_with(hass)
+    hass.loop.call_soon_threadsafe.assert_called_once_with(
+        entry.async_start_reauth, hass
+    )
+    entry.async_start_reauth.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -152,6 +164,9 @@ def test_start_reauth_handles_event_stop_error() -> None:
             ),
             True,
         ),
+        (AbodeException((None, "Unauthorized token")), True),
+        (AbodeException((None, None)), False),
+        (AbodeException("any"), False),
         (AbodeException((HTTPStatus.FORBIDDEN, "forbidden")), True),
         (AbodeException((HTTPStatus.INTERNAL_SERVER_ERROR, "server error")), False),
         (RuntimeError("boom"), False),

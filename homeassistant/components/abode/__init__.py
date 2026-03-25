@@ -97,7 +97,7 @@ def _start_reauth(
         except Exception as ex:  # noqa: BLE001
             LOGGER.debug("Failed stopping Abode event stream: %s", ex)
 
-    entry.async_start_reauth(hass)
+    hass.loop.call_soon_threadsafe(entry.async_start_reauth, hass)
 
 
 def _is_auth_error(error: Exception) -> bool:
@@ -109,10 +109,18 @@ def _is_auth_error(error: Exception) -> bool:
         return error.response.status_code in AUTH_STATUS_CODES
 
     if isinstance(error, AbodeException):
-        if int(error.errcode) in AUTH_STATUS_CODES:
-            return True
+        errcode: object | None = None
+        try:
+            errcode = getattr(error, "errcode", None)
+            if errcode is not None and int(errcode) in AUTH_STATUS_CODES:
+                return True
+        except TypeError, ValueError:
+            LOGGER.debug("Unexpected Abode errcode value: %r", errcode)
 
-        message = error.message.lower()
+        try:
+            message = str(getattr(error, "message", "") or "").lower()
+        except TypeError, ValueError:
+            message = ""
         return (
             "unauthorized" in message
             or "invalid credentials" in message
