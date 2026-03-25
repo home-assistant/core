@@ -1,0 +1,168 @@
+# Heiman Home 设备活动记录卡片配置示例
+# 将此配置添加到 Home Assistant 的 Lovelace UI 中
+
+# 方式1: 使用实体卡片显示活动记录
+- type: entities
+  title: 设备活动记录
+  entities:
+    - entity: sensor.heiman_smoke_detector_activity  # 替换为实际的活动传感器实体ID
+      name: 最近告警
+      type: custom:template-entity-row
+      state: >
+        {{ state_attr('sensor.heiman_smoke_detector_activity', 'alarms_formatted') }}
+
+# 方式2: 使用 Markdown 卡片显示格式化的活动记录
+- type: markdown
+  title: 📋 烟雾报警器活动记录
+  content: >
+    {% set alarms = state_attr('sensor.heiman_smoke_detector_activity', 'alarms') %}
+    {% if alarms and alarms | length > 0 %}
+    **共 {{ alarms | length }} 条记录**
+
+    {% for alarm in alarms %}
+    ---
+    ### {{ alarm.date }}
+    **{{ alarm.time }}** - {{ alarm.title }}
+    {% if alarm.contents %}
+    > {{ alarm.contents }}
+    {%- endif %}
+    {%- endfor %}
+    {% else %}
+    *暂无告警记录*
+    {% endif %}
+
+# 方式3: 使用网格卡片显示多条活动记录
+- type: grid
+  columns: 1
+  cards:
+    - type: entity
+      entity: sensor.heiman_smoke_detector_activity
+      name: 最近活动
+      icon: mdi:bell-ring
+    
+    - type: conditional
+      conditions:
+        - entity: sensor.heiman_smoke_detector_activity
+          state_not: "无告警记录"
+          state_not: "unavailable"
+          state_not: "unknown"
+      card:
+        type: markdown
+        content: >
+          {% set alarms = state_attr('sensor.heiman_smoke_detector_activity', 'alarms') %}
+          {% if alarms %}
+          | 时间 | 类型 | 详情 |
+          |------|------|------|
+          {% for alarm in alarms[:5] %}
+          | {{ alarm.time }} | {{ alarm.title }} | {{ alarm.contents | truncate(20) }} |
+          {% endfor %}
+          {% endif %}
+
+# 方式4: 使用自定义按钮卡片 (需要安装 button-card)
+- type: custom:button-card
+  entity: sensor.heiman_smoke_detector_activity
+  name: 活动记录
+  icon: mdi:history
+  show_state: true
+  state_display: >
+    [[[ 
+      const count = entity.attributes.alarm_count || 0;
+      return count > 0 ? `${count} 条记录` : '无记录';
+    ]]]
+  tap_action:
+    action: more-info
+  styles:
+    card:
+      - background-color: >
+          [[[ 
+            const count = entity.attributes.alarm_count || 0;
+            return count > 0 ? 'rgba(255, 152, 0, 0.1)' : 'var(--card-background-color)';
+          ]]]
+
+# 方式5: 垂直堆叠卡片 - 完整活动面板
+- type: vertical-stack
+  cards:
+    - type: markdown
+      content: >
+        ## 🔔 设备活动
+        
+    - type: entity
+      entity: sensor.heiman_smoke_detector_activity
+      name: 最新告警
+      
+    - type: conditional
+      conditions:
+        - entity: sensor.heiman_smoke_detector_activity
+          state_not: "无告警记录"
+      card:
+        type: markdown
+        content: >
+          {% set alarms = state_attr('sensor.heiman_smoke_detector_activity', 'alarms') %}
+          {% for alarm in alarms[:3] %}
+          **{{ alarm.time }}** - {{ alarm.title }}
+          {%- if alarm.contents %}
+          
+          {{ alarm.contents }}
+          {%- endif %}
+          
+          ---
+          {% endfor %}
+
+# 完整的设备详情页面配置示例
+title: 设备详情
+type: panel
+badges: []
+cards:
+  # 设备信息
+  - type: entities
+    title: 设备信息
+    entities:
+      - entity: binary_sensor.heiman_smoke_detector_smoke_sensor_state
+        name: 烟雾状态
+      - entity: sensor.heiman_smoke_detector_battery_percentage
+        name: 电池电量
+      - entity: sensor.heiman_smoke_detector_rssi
+        name: 信号强度
+
+  # 活动记录
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: '## 📋 活动记录'
+        
+      - type: entity
+        entity: sensor.heiman_smoke_detector_activity
+        name: 最新活动
+        
+      - type: conditional
+        conditions:
+          - entity: sensor.heiman_smoke_detector_activity
+            state_not: "无告警记录"
+        card:
+          type: markdown
+          content: >
+            {% set alarms = state_attr('sensor.heiman_smoke_detector_activity', 'alarms') %}
+            {% if alarms %}
+            {% for alarm in alarms %}
+            ### {{ alarm.date }}
+            - **{{ alarm.time }}** {{ alarm.title }}
+              {% if alarm.level >= 4 %}🔴{% elif alarm.level >= 2 %}🟡{% else %}🟢{% endif %}
+            {%- if alarm.contents %}
+              
+              > {{ alarm.contents }}
+            {%- endif %}
+            
+            {% endfor %}
+            {% else %}
+            *暂无告警记录*
+            {% endif %}
+
+  # 自动化快捷操作
+  - type: button
+    name: 刷新活动记录
+    icon: mdi:refresh
+    tap_action:
+      action: call-service
+      service: homeassistant.update_entity
+      target:
+        entity_id: sensor.heiman_smoke_detector_activity

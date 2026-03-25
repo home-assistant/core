@@ -1,0 +1,87 @@
+# Services for Heiman Home integration
+
+# Refresh device data
+refresh_devices:
+  description: Refresh the device list from Heiman Cloud
+  fields: {}
+
+# Sync child devices
+sync_child_devices:
+  description: Synchronize child devices for a gateway device
+  fields:
+    gateway_device_id:
+      description: The gateway device ID to sync child devices for
+      required: true
+      selector:
+        text:
+
+# Read device property
+read_property:
+  description: Read a specific property from a device
+  fields:
+    device_id:
+      description: Device ID
+      required: true
+      selector:
+        text:
+    property_name:
+      description: Property name to read
+      required: true
+      selector:
+        text:
+
+# Write device property
+write_property:
+  description: Write a value to a device property
+  fields:
+    device_id:
+      description: Device ID
+      required: true
+      selector:
+        text:
+    property_name:
+      description: Property name to write
+      required: true
+      selector:
+        text:
+    value:
+      description: Value to write
+      required: true
+      selector:
+        text:
+
+# Trigger device action
+trigger_action:
+  description: Trigger an action on a device
+  fields:
+    device_id:
+      description: Device ID
+      required: true
+      selector:
+        text:
+    action:
+      description: Action to trigger
+      required: true
+      selector:
+        text:
+    parameters:
+      description: Action parameters (JSON format)
+      required: false
+      selector:
+        text:
+
+# Remove device
+remove_device:
+  description: Remove a device from the integration
+  fields:
+    device_id:
+      description: Device ID to remove
+      required: true
+      selector:
+        text:
+    remove_entities:
+      description: Remove associated entities
+      required: false
+      default: true
+      selector:
+        boolean:

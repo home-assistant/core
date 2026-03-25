@@ -1,0 +1,15 @@
+{
+  "domain": "heiman_home",
+  "name": "Heiman Home",
+  "codeowners": ["@LeoXie"],
+  "config_flow": true,
+  "dependencies": ["http", "persistent_notification", "webhook", "zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/heiman_home",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Leo2442926161/heiman_home/issues",
+  "loggers": ["heiman_home"],
+  "requirements": ["aiohttp>=3.8.0", "paho-mqtt>=1.6.0", "aiofiles>=22.0.0"],
+  "version": "0.2.1",
+  "zeroconf": ["_heiman._tcp.local."]
+}

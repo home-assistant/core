@@ -1,0 +1,121 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Configuration for this user is already completed. Please go to the integration page and click the CONFIGURE button for modifications.",
+      "config_flow_error": "Integration configuration error: {error}",
+      "ha_uuid_get_failed": "Failed to get Home Assistant UUID.",
+      "network_connect_error": "Configuration failed. The network connection is abnormal. Please check the equipment network configuration."
+    },
+    "error": {
+      "config_flow_error": "Configuration flow error: {error}",
+      "eula_not_agree": "Please read the risk notice.",
+      "get_homeinfo_error": "Failed to retrieve home information.",
+      "get_token_error": "Failed to retrieve login authorization information (OAuth token).",
+      "invalid_auth_info": "Authentication information has expired. Please re-authenticate.",
+      "no_devices": "There are no devices in the selected home. Please select a home with devices and continue.",
+      "no_family_selected": "No home selected.",
+      "no_homes_found": "No homes found for this account.",
+      "oauth_client_error": "OAuth client initialization error",
+      "oauth_code_fut_error": "OAuth code future error",
+      "user_id_not_found": "User ID not found in response."
+    },
+    "flow_title": "Heiman Home Integration",
+    "progress": {
+      "oauth": "### Authentication required, please open the following URL and log in to Heiman Smart Home: {link_left}Click here to login{link_right} If the code is not automatically copied, please paste the following code to authorize the integration: {link}(You will be automatically redirected to the next page after successful login)"
+    },
+    "selector": {
+      "area_name_rule": {
+        "options": {
+          "home": "Home name",
+          "home_room": "Home name and Room name",
+          "none": "Don't sync",
+          "room": "Room name"
+        }
+      }
+    },
+    "step": {
+      "auth_config": {
+        "data": {
+          "cloud_server": "Login Region",
+          "integration_language": "Language",
+          "oauth_redirect_url": "OAuth2 Redirect URL",
+          "secure_id": "Secure ID",
+          "secure_key": "Secure Key"
+        },
+        "description": "### Login Region\r\nSelect the region of your Heiman account.\r\n### Language\r\nSelect the language for device and entity names. Some sentences without translation will be displayed in English.\r\n### OAuth2 Redirect URL\r\nThe OAuth2 authentication redirect address is **[http://homeassistant.local:8123](http://homeassistant.local:8123)**. Home Assistant needs to be in the same local area network as your current operating terminal (e.g., personal computer) and the terminal can access the Home Assistant home page through this address. Otherwise, login authentication may fail.\r\n### Notes\r\n- For users with hundreds or more Heiman devices, the first integration setup will take some time. Please be patient.\r\n- If Home Assistant is running in a Docker environment, please ensure Docker network mode is set to host, otherwise local control functionality may be affected.",
+        "title": "Authentication Configuration"
+      },
+      "confirm": {
+        "data": {
+          "confirm": "I confirm this configuration"
+        },
+        "description": "## Configuration Summary\r\n\r\nUser ID: {user_id}\r\nHome: {home_name}\r\nTotal Devices: {device_count}\r\n\r\nClick the checkbox below to confirm and complete the configuration.\r\n\r\n### Notes\r\n- For users with hundreds or more Heiman devices, the first integration setup will take some time. Please be patient.",
+        "title": "Confirm Configuration"
+      },
+      "device_config": {
+        "data": {
+          "action": "Action",
+          "area_id": "Area",
+          "device_name": "Device Name"
+        },
+        "description": "**{device_id}**\r\n\r\nModel: {device_model}\r\nHome: {home_name}\r\nRoom: {room_name}",
+        "title": "Create Device ({current}/{total})"
+      },
+      "eula": {
+        "data": {
+          "eula": "I am aware of above risks and willing to voluntarily assume any risks associated with use of the integration."
+        },
+        "description": "1. Your Heiman user information and device information will be stored in Home Assistant system. **Heiman cannot guarantee security of Home Assistant storage mechanism**. You are responsible for preventing your information from being stolen.\r\n2. This integration is maintained by open-source community. There may be stability issues or other problems. When encountering issues or bugs of this integration, **you should seek help from open-source community rather than contacting Heiman customer service**.\r\n3. You need some technical ability to maintain your local operating environment. The integration is not user-friendly for beginners.\r\n4. Please read README file before starting.",
+        "title": "Risk Notice"
+      },
+      "oauth_error": {
+        "description": "Click NEXT to try again.",
+        "title": "Authentication Error"
+      },
+      "select_home": {
+        "data": {
+          "area_name_rule": "Room name sync mode",
+          "home_ids": "Import homes with devices"
+        },
+        "description": "## Room Name Sync Mode\r\nWhen syncing devices from Heiman APP to Home Assistant, the naming of areas in Home Assistant will follow these rules. Note that the syncing process does not change the home and room settings in Heiman APP.\r\n\r\n- **Do not sync**: Devices will not be added to any area.\r\n- **Room name**: The area where devices are added will be named after the room name.\r\n- **Home name**: The area where devices are added will be named after the home name.\r\n- **Home name and Room name**: The area where devices are added will be named with a combination of home name and room name.\r\n\r\n### Notes\r\n- For users with hundreds or more Heiman devices, the first integration setup will take some time. Please be patient.\r\n- If Home Assistant is running in a Docker environment, please ensure Docker network mode is set to host, otherwise local control functionality may be affected.",
+        "title": "Select Homes and Devices"
+      }
+    }
+  },
+  "oauth2": {
+    "error_msg": {
+      "100": "Invalid input parameter",
+      "101": "Invalid state parameter",
+      "102": "Configuration flow error",
+      "200": "Authentication failed",
+      "201": "Invalid OAuth2 response",
+      "202": "Invalid authorization code",
+      "203": "Invalid refresh token",
+      "300": "HTTP request error",
+      "301": "Unauthorized access",
+      "302": "Invalid access token",
+      "500": "JSON decode error"
+    },
+    "fail": {
+      "button": "Close Page",
+      "content": "Authentication failed: {error_msg}. Please close this page and try again.",
+      "title": "Authentication Failed"
+    },
+    "success": {
+      "button": "Close Page",
+      "content": "Authentication was successful. Please close this page and return to Home Assistant to continue.",
+      "title": "Authentication Successful"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "home_id": "Home ID"
+        },
+        "description": "Configure Heiman Home integration options.",
+        "title": "Options"
+      }
+    }
+  }
+}
