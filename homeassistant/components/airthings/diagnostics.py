@@ -19,14 +19,18 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
+    coordinator_data: dict[str, Any] = {}
 
-    return {
-        "config_entry": async_redact_data(entry.as_dict(), REDACT_CONFIG),
-        "coordinator_data": {
+    if coordinator is not None:
+        coordinator_data = {
             device_id: {
                 "sensor_types": list(device.sensor_types),
                 "product_name": device.product_name,
             }
             for device_id, device in coordinator.data.items()
-        },
+        }
+
+    return {
+        "config_entry": async_redact_data(entry.as_dict(), REDACT_CONFIG),
+        "coordinator_data": coordinator_data,
     }
