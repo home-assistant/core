@@ -252,11 +252,11 @@ class AutomationBehavior(StrEnum):
     ANY = "any"
 
 
-class AutomationBehaviorConfig(BaseSelectorConfig):
+class AutomationBehaviorConfig(BaseSelectorConfig, total=False):
     """Class to represent an automation behavior selector config."""
 
     translation_key: str
-    behavior: list[AutomationBehavior]
+    behavior: list[str]
 
 
 @SELECTORS.register("automation_behavior")
@@ -268,7 +268,8 @@ class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("behavior"): vol.All(
-                cv.ensure_list, [vol.In(AutomationBehavior)]
+                cv.ensure_list,
+                [vol.All(vol.Coerce(AutomationBehavior), lambda val: val.value)],
             ),
             vol.Optional("translation_key"): cv.string,
         },
@@ -280,6 +281,8 @@ class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise vol.Invalid("Value should be a string")
         allowed = self.config.get("behavior") or [
             AutomationBehavior.FIRST,
             AutomationBehavior.LAST,
