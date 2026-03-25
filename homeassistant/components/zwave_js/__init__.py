@@ -761,7 +761,6 @@ class NodeEvents:
         self.value_updates_disc_info: dict[
             int, dict[str, PlatformZwaveDiscoveryInfo]
         ] = {}
-        self._node_locks: dict[int, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
