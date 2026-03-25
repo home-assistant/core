@@ -55,6 +55,12 @@
         "any": "Any"
       }
     },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

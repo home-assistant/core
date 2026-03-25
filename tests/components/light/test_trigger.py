@@ -427,8 +427,8 @@ async def test_light_state_attribute_trigger_behavior_last(
             {
                 "threshold": {
                     "type": "between",
-                    "value_min": {"entity": "sensor.humidity_above"},
-                    "value_max": {"entity": "sensor.humidity_below"},
+                    "value_min": {"entity": "sensor.brightness_above"},
+                    "value_max": {"entity": "sensor.brightness_below"},
                 },
             },
             ["sensor.brightness_above", "sensor.brightness_below"],
@@ -438,8 +438,8 @@ async def test_light_state_attribute_trigger_behavior_last(
             {
                 "threshold": {
                     "type": "between",
-                    "value_min": {"entity": "sensor.humidity_lower"},
-                    "value_max": {"entity": "sensor.humidity_upper"},
+                    "value_min": {"entity": "sensor.brightness_lower"},
+                    "value_max": {"entity": "sensor.brightness_upper"},
                 },
             },
             ["sensor.brightness_lower", "sensor.brightness_upper"],

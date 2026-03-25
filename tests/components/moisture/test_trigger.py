@@ -485,8 +485,8 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_last(
             {
                 "threshold": {
                     "type": "between",
-                    "value_min": {"entity": "sensor.humidity_above"},
-                    "value_max": {"entity": "sensor.humidity_below"},
+                    "value_min": {"entity": "sensor.moisture_above"},
+                    "value_max": {"entity": "sensor.moisture_below"},
                 },
             },
             ["sensor.moisture_above", "sensor.moisture_below"],
@@ -496,8 +496,8 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_last(
             {
                 "threshold": {
                     "type": "between",
-                    "value_min": {"entity": "sensor.humidity_lower"},
-                    "value_max": {"entity": "sensor.humidity_upper"},
+                    "value_min": {"entity": "sensor.moisture_lower"},
+                    "value_max": {"entity": "sensor.moisture_upper"},
                 },
             },
             ["sensor.moisture_lower", "sensor.moisture_upper"],
