@@ -1817,7 +1817,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "rympro",
     "saj",
     "sanix",
-    "satel_integra",
     "schlage",
     "schluter",
     "scrape",
