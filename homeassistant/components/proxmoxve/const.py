@@ -14,7 +14,7 @@ CONF_CONTAINERS = "containers"
 NODE_ONLINE = "online"
 VM_CONTAINER_RUNNING = "running"
 
-STATUS_FAILED = "failed"
+STATUS_OK = "ok"
 
 AUTH_PAM = "pam"
 AUTH_PVE = "pve"
