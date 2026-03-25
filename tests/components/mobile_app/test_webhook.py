@@ -29,7 +29,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import MockUser, async_capture_events, async_mock_service
 from tests.components.conversation import MockAgent
 
 
@@ -374,6 +374,43 @@ async def test_webhook_handle_get_config_with_cloudhook_no_subscription(
         # Cloudhook should NOT be in response even though it exists in config entry
         assert "cloudhook_url" not in json_resp
         # Remote UI should also not be in response
+        assert "remote_ui_url" not in json_resp
+
+
+async def test_webhook_handle_get_config_with_cloudhook_local_only_user(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test get_config doesn't return cloudhook_url or remote_ui_url for local_only users."""
+    hass_admin_user.local_only = True
+
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Get the config entry and add cloudhook_url to it
+    config_entry = hass.config_entries.async_entries(DOMAIN)[1]
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, "cloudhook_url": "https://hooks.nabu.casa/test"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            return_value="https://remote.ui.url",
+        ),
+    ):
+        resp = await webhook_client.post(webhook_url, json={"type": "get_config"})
+        assert resp.status == HTTPStatus.OK
+        json_resp = await resp.json()
+
+        assert "cloudhook_url" not in json_resp
         assert "remote_ui_url" not in json_resp
 
 
