@@ -1,5 +1,5 @@
-.condition_common: &condition_common
-  target: &target_light_binary_sensor
+.detected_condition_common: &detected_condition_common
+  target:
     entity:
       - domain: binary_sensor
         device_class: light
@@ -35,9 +35,9 @@
                   device_class: illuminance
       translation_key: number_or_entity
 
-is_detected: *condition_common
+is_detected: *detected_condition_common
 
-is_not_detected: *condition_common
+is_not_detected: *detected_condition_common
 
 is_value:
   target:
