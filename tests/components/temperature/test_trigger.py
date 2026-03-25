@@ -757,9 +757,11 @@ async def test_temperature_trigger_unit_conversion_changed(
         hass,
         "temperature.changed",
         {
-            "above": 68,
-            "below": 77,
-            "unit": "°F",
+            "threshold": {
+                "type": "between",
+                "value_min": {"number": 68, "unit_of_measurement": "°F"},
+                "value_max": {"number": 77, "unit_of_measurement": "°F"},
+            }
         },
         {CONF_ENTITY_ID: [entity_id]},
     )
