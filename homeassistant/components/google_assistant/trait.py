@@ -1204,6 +1204,8 @@ class TemperatureSettingTrait(_Trait):
     action_to_google = {
         climate.HVACAction.OFF: "off",
         climate.HVACAction.HEATING: "heat",
+        climate.HVACAction.DEFROSTING: "heat",
+        climate.HVACAction.PREHEATING: "heat",
         climate.HVACAction.COOLING: "cool",
         climate.HVACAction.DRYING: "dry",
         climate.HVACAction.FAN: "fan-only",
