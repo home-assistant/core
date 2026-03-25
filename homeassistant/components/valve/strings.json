@@ -25,11 +25,11 @@
   "services": {
     "close_valve": {
       "description": "Closes a valve.",
-      "name": "[%key:common::action::close%]"
+      "name": "Close valve"
     },
     "open_valve": {
       "description": "Opens a valve.",
-      "name": "[%key:common::action::open%]"
+      "name": "Open valve"
     },
     "set_valve_position": {
       "description": "Moves a valve to a specific position.",
@@ -39,15 +39,15 @@
           "name": "Position"
         }
       },
-      "name": "Set position"
+      "name": "Set valve position"
     },
     "stop_valve": {
-      "description": "Stops the valve movement.",
-      "name": "[%key:common::action::stop%]"
+      "description": "Stops a valve.",
+      "name": "Stop valve"
     },
     "toggle": {
       "description": "Toggles a valve open/closed.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle valve"
     }
   },
   "title": "Valve"
