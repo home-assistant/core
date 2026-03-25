@@ -575,20 +575,22 @@ def test_number_selector_schema_error(schema) -> None:
             {"mode": "crossed", "unit_of_measurement": ["°C", "°F"]},
             (
                 {
-                    "type": "between",
-                    "value_min": {"number": 10},
-                    "value_max": {"number": 20},
-                },
-                {
                     "type": "above",
                     "value": {"number": 10, "unit_of_measurement": "°C"},
                 },
             ),
             (
+                # Unit missing
+                {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 20},
+                },
+                # Unit not in allowed list
                 {
                     "type": "above",
                     "value": {"number": 10, "unit_of_measurement": "K"},
-                },  # Unit not in allowed list
+                },
                 {"type": "any"},  # "any" not allowed without mode "changed"
             ),
         ),
