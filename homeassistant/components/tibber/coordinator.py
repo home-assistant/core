@@ -272,8 +272,8 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             update_interval=timedelta(minutes=1),
         )
 
-    def _seconds_until_next_15_minute(self) -> float:
-        """Return seconds until the next 15-minute boundary (0, 15, 30, 45) in UTC."""
+    def _time_until_next_15_minute(self) -> timedelta:
+        """Return time until the next 15-minute boundary (0, 15, 30, 45) in UTC."""
         now = dt_util.utcnow()
         next_minute = ((now.minute // 15) + 1) * 15
         if next_minute >= 60:
@@ -284,7 +284,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             next_run = now.replace(
                 minute=next_minute, second=0, microsecond=0, tzinfo=dt_util.UTC
             )
-        return (next_run - now).total_seconds()
+        return next_run - now
 
     async def _async_update_data(self) -> dict[str, TibberHomeData]:
         """Update data via API and return per-home data for sensors."""
@@ -299,7 +299,6 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         def _has_prices_today(home: tibber.TibberHome) -> bool:
             """Return True if the home has any prices today."""
             for start in home.price_total:
-                _LOGGER.error("Home %s has price %s", home.home_id, start)
                 start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
                 if today_start <= start_dt < today_end:
                     return True
@@ -308,11 +307,6 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         homes_to_update = [home for home in active_homes if not _has_prices_today(home)]
 
         try:
-            await asyncio.gather(
-                tibber_connection.fetch_consumption_data_active_homes(),
-                tibber_connection.fetch_production_data_active_homes(),
-            )
-
             if homes_to_update:
                 await asyncio.gather(
                     *(home.update_info_and_price_info() for home in homes_to_update)
@@ -324,7 +318,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
 
         result = {home.home_id: _build_home_data(home) for home in active_homes}
 
-        self.update_interval = timedelta(seconds=self._seconds_until_next_15_minute())
+        self.update_interval = self._time_until_next_15_minute()
         return result
 
 
