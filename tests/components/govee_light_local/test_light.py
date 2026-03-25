@@ -657,7 +657,7 @@ async def test_update_callback_registered_and_triggers_state_update(
     assert light.state == "off"
 
     # Mutate device state and fire callback
-    device._is_on = True
+    await device.turn_on()
     device.update_callback(device)
     await hass.async_block_till_done()
 
