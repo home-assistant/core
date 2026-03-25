@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 DEVICE_FIXTURES = [
     "aq_sensor_3_ikea",
+    "aqara_g350",
     "aeotec_ms6",
     "da_ac_air_000001",
     "da_ac_air_01011",
@@ -42,6 +43,7 @@ DEVICE_FIXTURES = [
     "yale_push_button_deadbolt_lock",
     "ge_in_wall_smart_dimmer",
     "centralite",
+    "da_ref_normal_100001",
     "da_ref_normal_000001",
     "da_ref_normal_01011",
     "da_ref_normal_01011_onedoor",
@@ -68,10 +70,12 @@ DEVICE_FIXTURES = [
     "da_wm_wm_100002",
     "da_wm_wm_000001",
     "da_wm_wm_000001_1",
+    "da_wm_mf_01001",
     "da_wm_sc_000001",
     "da_wm_dw_01011",
     "da_rvc_normal_000001",
     "da_rvc_map_01011",
+    "da_vc_stick_01001",
     "da_ks_microwave_0101x",
     "da_ks_cooktop_000001",
     "da_ks_cooktop_31001",

@@ -1,7 +1,7 @@
 """Provides triggers for covers."""
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
@@ -13,14 +13,14 @@ class CoverTriggerBase(EntityTriggerBase[CoverDomainSpec]):
 
     def _get_value(self, state: State) -> str | bool | None:
         """Extract the relevant value from state based on domain spec."""
-        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        domain_spec = self._domain_specs[state.domain]
         if domain_spec.value_source is not None:
             return state.attributes.get(domain_spec.value_source)
         return state.state
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the state matches the target cover state."""
-        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        domain_spec = self._domain_specs[state.domain]
         return self._get_value(state) == domain_spec.target_value
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
