@@ -1,21 +1,21 @@
 """Tests for the CityBikes sensor platform."""
 
-from types import SimpleNamespace
+from collections.abc import Callable, Generator
+from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant.components.citybikes.sensor import (
-    ATTR_EMPTY_SLOTS,
-    ATTR_FREE_EBIKES,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_TIMESTAMP,
-    ATTR_UID,
-    CityBikesStation,
-)
+from citybikes import model as citybikes_model
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.citybikes import sensor as citybikes_sensor
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
-def _create_station(extra: dict[str, object]) -> SimpleNamespace:
-    """Create a CityBikes station test double."""
-    return SimpleNamespace(
+@pytest.fixture(name="station_factory")
+def station_factory_fixture() -> Callable[[dict[str, object]], citybikes_model.Station]:
+    """Create CityBikes station objects."""
+    return lambda extra: citybikes_model.Station(
         id="station-1",
         name="Station 1",
         free_bikes=5,
@@ -27,31 +27,79 @@ def _create_station(extra: dict[str, object]) -> SimpleNamespace:
     )
 
 
-async def test_citybikes_station_exposes_ebikes_from_station_extra() -> None:
-    """Test CityBikesStation exposes free ebikes from station.extra."""
-    station = _create_station({ATTR_UID: "uid-1", "ebikes": 2})
-    network = SimpleNamespace(stations=[station])
-    entity = CityBikesStation(network, "station-1", "sensor.station_1")
-
-    await entity.async_update()
-
-    assert entity.native_value == 5
-    assert entity.extra_state_attributes == {
-        ATTR_UID: "uid-1",
-        ATTR_LATITUDE: 40.0,
-        ATTR_LONGITUDE: -73.0,
-        ATTR_EMPTY_SLOTS: 8,
-        ATTR_FREE_EBIKES: 2,
-        ATTR_TIMESTAMP: "2026-03-22T00:00:00Z",
-    }
+@pytest.fixture(name="mock_citybikes_client")
+def mock_citybikes_client_fixture() -> Generator[Mock]:
+    """Mock the CityBikes client."""
+    with patch.object(citybikes_sensor, "CitybikesClient") as mock_client:
+        mock_client.return_value.close = AsyncMock()
+        yield mock_client.return_value
 
 
-async def test_citybikes_station_handles_missing_ebikes() -> None:
-    """Test CityBikesStation handles stations without ebike data."""
-    station = _create_station({ATTR_UID: "uid-1"})
-    network = SimpleNamespace(stations=[station])
-    entity = CityBikesStation(network, "station-1", "sensor.station_1")
+async def _async_setup_citybikes_sensor(
+    hass: HomeAssistant,
+    mock_citybikes_client: Mock,
+    station: citybikes_model.Station,
+) -> None:
+    """Set up the CityBikes sensor platform."""
+    network = citybikes_model.Network.from_dict(
+        {
+            "id": "mock-network",
+            "name": "Mock Network",
+            "location": {
+                "latitude": 40.0,
+                "longitude": -73.0,
+                "city": "Test City",
+                "country": "US",
+            },
+            "href": "/v2/networks/mock-network",
+            "stations": [station.__dict__],
+        }
+    )
+    mock_citybikes_client.network.return_value.fetch = AsyncMock(return_value=network)
 
-    await entity.async_update()
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "citybikes",
+                    "network": "mock-network",
+                    "stations": ["station-1"],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entity.extra_state_attributes[ATTR_FREE_EBIKES] is None
+
+@pytest.mark.parametrize(
+    ("extra", "snapshot_name"),
+    [
+        pytest.param(
+            {citybikes_sensor.ATTR_UID: "uid-1", "ebikes": 2},
+            "with_ebikes",
+            id="with_ebikes",
+        ),
+        pytest.param(
+            {citybikes_sensor.ATTR_UID: "uid-1"},
+            "without_ebikes",
+            id="without_ebikes",
+        ),
+    ],
+)
+async def test_sensor_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_citybikes_client: Mock,
+    station_factory: Callable[[dict[str, object]], citybikes_model.Station],
+    extra: dict[str, object],
+    snapshot_name: str,
+) -> None:
+    """Test CityBikes sensor state snapshots."""
+    await _async_setup_citybikes_sensor(
+        hass, mock_citybikes_client, station_factory(extra)
+    )
+
+    assert (state := hass.states.get("sensor.mock_network_station_1"))
+    assert state == snapshot(name=snapshot_name)
