@@ -657,9 +657,14 @@ async def test_lamp_switch_not_used_when_off_in_supported_levels(
     """Test samsungce.lamp on/off uses brightness commands when 'off' is in supported levels, even with switch capability."""
     # Modify the device status to include "off" in supported brightness levels
     # This simulates a device where the switch doesn't control the lamp
-    devices.get_device_status.return_value["lamp"][Capability.SAMSUNG_CE_LAMP][
-        Attribute.SUPPORTED_BRIGHTNESS_LEVEL
-    ].value = ["off", "low", "high"]
+    set_attribute_value(
+        devices,
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        "lamp",
+        Capability.SAMSUNG_CE_LAMP,
+        Attribute.SUPPORTED_BRIGHTNESS_LEVEL,
+        ["off", "low", "high"],
+    )
 
     await setup_integration(hass, mock_config_entry)
 
