@@ -300,13 +300,22 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
 @callback
 def async_device_temperatures_value_fn(
     temperature_name: str, hub: UnifiHub, device: Device
-) -> float:
+) -> float | None:
     """Retrieve the temperature of the device."""
-    return_value: float = 0
     if device.temperatures:
-        temperature = _device_temperature(temperature_name, device.temperatures)
-        return_value = temperature if temperature is not None else 0
-    return return_value
+        return _device_temperature(temperature_name, device.temperatures)
+    return None
+
+
+@callback
+def async_device_temperatures_available_fn(
+    temperature_name: str, hub: UnifiHub, obj_id: str
+) -> bool:
+    """Determine if a device temperature has a value."""
+    device = hub.api.devices[obj_id]
+    if not async_device_available_fn(hub, obj_id):
+        return False
+    return _device_temperature(temperature_name, device.temperatures or []) is not None
 
 
 @callback
@@ -315,7 +324,11 @@ def async_device_temperatures_supported_fn(
 ) -> bool:
     """Determine if an device have a temperatures."""
     if (device := hub.api.devices[obj_id]) and device.temperatures:
-        return _device_temperature(temperature_name, device.temperatures) is not None
+        return any(
+            temperature_name in temperature["name"]
+            for temperature in device.temperatures
+        )
+
     return False
 
 
@@ -326,7 +339,8 @@ def _device_temperature(
     """Return the temperature of the device."""
     for temperature in temperatures:
         if temperature_name in temperature["name"]:
-            return temperature["value"]
+            if (value := temperature.get("value")) is not None:
+                return value
     return None
 
 
@@ -344,7 +358,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             entity_registry_enabled_default=False,
             api_handler_fn=lambda api: api.devices,
-            available_fn=async_device_available_fn,
+            available_fn=partial(async_device_temperatures_available_fn, name),
             device_info_fn=async_device_device_info_fn,
             name_fn=lambda device: f"{device.name} {name} Temperature",
             object_fn=lambda api, obj_id: api.devices[obj_id],

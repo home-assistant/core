@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -20,7 +19,7 @@ from .const import NODE_ONLINE, VM_CONTAINER_RUNNING
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

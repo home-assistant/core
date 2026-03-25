@@ -1,0 +1,72 @@
+.condition_common: &condition_common
+  target: &condition_water_heater_target
+    entity:
+      domain: water_heater
+  fields:
+    behavior: &condition_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+.number_or_entity_temperature: &number_or_entity_temperature
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "°C"
+                    - "°F"
+                - domain: sensor
+                  device_class: temperature
+                - domain: number
+                  device_class: temperature
+      translation_key: number_or_entity
+
+.condition_unit_temperature: &condition_unit_temperature
+  required: false
+  selector:
+    select:
+      options:
+        - "°C"
+        - "°F"
+
+is_off: *condition_common
+is_on: *condition_common
+
+is_operation_mode:
+  target: *condition_water_heater_target
+  fields:
+    behavior: *condition_behavior
+    operation_mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: operation_mode
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
+
+is_target_temperature:
+  target: *condition_water_heater_target
+  fields:
+    behavior: *condition_behavior
+    above: *number_or_entity_temperature
+    below: *number_or_entity_temperature
+    unit: *condition_unit_temperature
