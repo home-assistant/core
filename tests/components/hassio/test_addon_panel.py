@@ -61,7 +61,7 @@ async def test_hassio_addon_panel_startup(
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 3
+        assert aioclient_mock.call_count == 1
         assert mock_panel.called
         mock_panel.assert_called_with(
             hass,
@@ -108,7 +108,7 @@ async def test_hassio_addon_panel_api(
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 3
+        assert aioclient_mock.call_count == 1
         assert mock_panel.called
         mock_panel.assert_called_with(
             hass,
@@ -129,4 +129,45 @@ async def test_hassio_addon_panel_api(
             hass,
             "test1",
             {"enable": True, "title": "Test", "icon": "mdi:test", "admin": False},
+        )
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_hassio_addon_panel_registration(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test panel registration calls frontend.async_register_built_in_panel."""
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels",
+        json={
+            "result": "ok",
+            "data": {
+                "panels": {
+                    "test_addon": {
+                        "enable": True,
+                        "title": "Test Addon",
+                        "icon": "mdi:test-tube",
+                        "admin": True,
+                    },
+                }
+            },
+        },
+    )
+
+    with patch(
+        "homeassistant.components.hassio.addon_panel.frontend.async_register_built_in_panel"
+    ) as mock_register:
+        await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+        # Verify that async_register_built_in_panel was called with correct arguments
+        # for our test addon
+        mock_register.assert_any_call(
+            hass,
+            "app",
+            frontend_url_path="test_addon",
+            sidebar_title="Test Addon",
+            sidebar_icon="mdi:test-tube",
+            require_admin=True,
+            config={"addon": "test_addon"},
         )

@@ -263,6 +263,7 @@ async def test_area_entities(
     device_entry = device_registry.async_get_or_create(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         config_entry_id=config_entry.entry_id,
+        name="Hue Light",
         suggested_area="sensor.fake",
     )
     entity_registry.async_get_or_create(
@@ -274,7 +275,7 @@ async def test_area_entities(
     )
 
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_light_5678"])
+    assert_result_info(info, ["light.hue_5678", "light.hue_light"])
     assert info.rate_limit is None
 
 

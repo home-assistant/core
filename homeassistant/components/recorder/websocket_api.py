@@ -33,11 +33,15 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -84,21 +88,31 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
-        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
         vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
+        vol.Optional("nitrogen_dioxide"): vol.In(
+            NitrogenDioxideConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("nitrogen_monoxide"): vol.In(
+            NitrogenMonoxideConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("ozone"): vol.In(OzoneConcentrationConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
         vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
         vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional("sulphur_dioxide"): vol.In(
+            SulphurDioxideConcentrationConverter.VALID_UNITS
+        ),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("temperature_delta"): vol.In(
             TemperatureDeltaConverter.VALID_UNITS
         ),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
+        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
         vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
     }
@@ -184,7 +198,7 @@ def _ws_get_statistics_during_period(
     start_time: dt,
     end_time: dt | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str],
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> bytes:
@@ -253,7 +267,9 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
-        vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
+        vol.Required("period"): vol.Any(
+            "5minute", "hour", "day", "week", "month", "year"
+        ),
         vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
             [vol.Any("change", "last_reset", "max", "mean", "min", "state", "sum")],

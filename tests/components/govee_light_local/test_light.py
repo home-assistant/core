@@ -418,7 +418,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, "kelvin": 4400},
+        {"entity_id": light.entity_id, "color_temp_kelvin": 4400},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -629,6 +629,68 @@ async def test_scene_restore_temperature(
     assert light.state == "on"
     assert light.attributes[ATTR_EFFECT] is None
     assert light.attributes["color_temp_kelvin"] == initial_color
+
+
+async def test_update_callback_registered_and_triggers_state_update(
+    hass: HomeAssistant, mock_govee_api: MagicMock
+) -> None:
+    """Test that update callback is registered and triggers state update."""
+    device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="asdawdqwdqwd",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    mock_govee_api.devices = [device]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device.update_callback is not None
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "off"
+
+    # Mutate device state and fire callback
+    await device.turn_on()
+    device.update_callback(device)
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+
+
+async def test_update_callback_cleared_on_remove(
+    hass: HomeAssistant, mock_govee_api: MagicMock
+) -> None:
+    """Test that update callback is cleared when entity is removed."""
+    device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="asdawdqwdqwd",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    mock_govee_api.devices = [device]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device.update_callback is not None
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device.update_callback is None
 
 
 async def test_scene_none(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:

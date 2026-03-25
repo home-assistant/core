@@ -32,10 +32,10 @@ async def test_hmip_home_cloud_connection_sensor(
 ) -> None:
     """Test HomematicipCloudConnectionSensor."""
     entity_id = "binary_sensor.cloud_connection"
-    entity_name = "Cloud Connection"
+    entity_name = "Home Cloud Connection"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Cloud Connection"]
     )
 
     ha_state, _hmip_device = get_and_check_entity_basics(
@@ -326,6 +326,27 @@ async def test_hmip_smoke_detector(
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+
+
+async def test_hmip_smoke_detector_chamber_degraded(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipSmokeDetectorChamberDegraded."""
+    entity_id = "binary_sensor.rauchwarnmelder_chamber_degraded"
+    entity_name = "Rauchwarnmelder Chamber Degraded"
+    device_model = "HmIP-SWSD"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Rauchwarnmelder"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_OFF
+    await async_manipulate_test_data(hass, hmip_device, "chamberDegraded", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
 
 
 async def test_hmip_water_detector(

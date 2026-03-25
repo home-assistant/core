@@ -45,6 +45,7 @@ class TelegramDict(DecodedTelegramPayload):
     """Represent a Telegram as a dict."""
 
     # this has to be in sync with the frontend implementation
+    data_secure: bool | None
     destination: str
     destination_name: str
     direction: str
@@ -153,6 +154,7 @@ class Telegrams:
             value = _serializable_decoded_data(telegram.decoded_data.value)
 
         return TelegramDict(
+            data_secure=telegram.data_secure,
             destination=f"{telegram.destination_address}",
             destination_name=dst_name,
             direction=telegram.direction.value,

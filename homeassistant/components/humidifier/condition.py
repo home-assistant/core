@@ -1,0 +1,32 @@
+"""Provides conditions for humidifiers."""
+
+from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.condition import (
+    Condition,
+    make_entity_numerical_condition,
+    make_entity_state_condition,
+)
+
+from .const import ATTR_ACTION, ATTR_HUMIDITY, DOMAIN, HumidifierAction
+
+CONDITIONS: dict[str, type[Condition]] = {
+    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF),
+    "is_on": make_entity_state_condition(DOMAIN, STATE_ON),
+    "is_drying": make_entity_state_condition(
+        {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.DRYING
+    ),
+    "is_humidifying": make_entity_state_condition(
+        {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.HUMIDIFYING
+    ),
+    "is_target_humidity": make_entity_numerical_condition(
+        {DOMAIN: NumericalDomainSpec(value_source=ATTR_HUMIDITY)},
+        valid_unit=PERCENTAGE,
+    ),
+}
+
+
+async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+    """Return the humidifier conditions."""
+    return CONDITIONS

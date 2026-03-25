@@ -1,0 +1,16 @@
+{
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "cleared": {
+      "trigger": "mdi:water-off"
+    },
+    "crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "detected": {
+      "trigger": "mdi:water"
+    }
+  }
+}

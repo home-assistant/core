@@ -5,34 +5,34 @@ from typing import Any
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
-from tests.components import (
+from tests.components.common import (
     ConditionStateDescription,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
-    parametrize_condition_states,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
-async def target_lights(hass: HomeAssistant) -> list[str]:
+async def target_lights(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple light entities associated with different targets."""
-    return (await target_entities(hass, "light"))["included"]
+    return await target_entities(hass, "light")
 
 
 @pytest.fixture
-async def target_switches(hass: HomeAssistant) -> list[str]:
-    """Create multiple switch entities associated with different targets."""
-    return (await target_entities(hass, "switch"))["included"]
+async def target_switches(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple switch entities associated with different targets.
+
+    Note: The switches are used to ensure that only light entities are considered
+    in the condition evaluation and not other toggle entities.
+    """
+    return await target_entities(hass, "switch")
 
 
 @pytest.mark.parametrize(
@@ -57,12 +57,12 @@ async def test_light_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="light.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="light.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
@@ -71,8 +71,8 @@ async def test_light_conditions_gated_by_labs_flag(
 )
 async def test_light_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_lights: list[str],
-    target_switches: list[str],
+    target_lights: dict[str, list[str]],
+    target_switches: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -81,11 +81,11 @@ async def test_light_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the light state condition with the 'any' behavior."""
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included_entities"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_lights["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -97,13 +97,13 @@ async def test_light_state_condition_behavior_any(
 
     # Set state for switches to ensure that they don't impact the condition
     for state in states:
-        for eid in target_switches:
-            set_or_remove_state(hass, eid, state["included"])
+        for eid in target_switches["included_entities"]:
+            set_or_remove_state(hass, eid, state["included_state"])
             await hass.async_block_till_done()
             assert condition(hass) is False
 
     for state in states:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
@@ -123,12 +123,12 @@ async def test_light_state_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="light.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="light.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
@@ -137,8 +137,7 @@ async def test_light_state_condition_behavior_any(
 )
 async def test_light_state_condition_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_lights: list[str],
+    target_lights: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -151,11 +150,11 @@ async def test_light_state_condition_behavior_all(
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
 
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included_entities"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_lights["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -166,21 +165,14 @@ async def test_light_state_condition_behavior_all(
     )
 
     for state in states:
-        included_state = state["included"]
+        included_state = state["included_state"]
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"])
-            or (state["condition_true"] and entities_in_target == 1)
-        )
+        assert condition(hass) == state["condition_true_first_entity"]
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
 
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"]) or state["condition_true"]
-        )
+        assert condition(hass) == state["condition_true"]

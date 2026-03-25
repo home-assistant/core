@@ -41,7 +41,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 device_info = await api.get_device_info()
-            except (TimeoutError, ClientConnectionError):
+            except TimeoutError, ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info.deviceId)

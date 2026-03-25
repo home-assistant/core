@@ -61,7 +61,6 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
     YardianSensorEntityDescription(
         key="active_zone_count",
         translation_key="active_zone_count",
-        native_unit_of_measurement="zones",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda coordinator: len(coordinator.data.active_zones),
     ),
