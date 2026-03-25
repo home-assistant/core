@@ -144,27 +144,27 @@
   },
   "services": {
     "set_away_mode": {
-      "description": "Turns away mode on/off.",
+      "description": "Sets the away mode of a water heater.",
       "fields": {
         "away_mode": {
           "description": "New value of away mode.",
           "name": "Away mode"
         }
       },
-      "name": "Set away mode"
+      "name": "Set water heater away mode"
     },
     "set_operation_mode": {
-      "description": "Sets the operation mode.",
+      "description": "Sets the operation mode of a water heater.",
       "fields": {
         "operation_mode": {
           "description": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::description%]",
           "name": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::name%]"
         }
       },
-      "name": "Set operation mode"
+      "name": "Set water heater operation mode"
     },
     "set_temperature": {
-      "description": "Sets the target temperature.",
+      "description": "Sets the target temperature of a water heater.",
       "fields": {
         "operation_mode": {
           "description": "New value of the operation mode. For a list of possible modes, refer to the integration documentation.",
@@ -175,15 +175,15 @@
           "name": "Temperature"
         }
       },
-      "name": "Set temperature"
+      "name": "Set water heater target temperature"
     },
     "turn_off": {
-      "description": "Turns water heater off.",
-      "name": "[%key:common::action::turn_off%]"
+      "description": "Turns off a water heater.",
+      "name": "Turn off water heater"
     },
     "turn_on": {
-      "description": "Turns water heater on.",
-      "name": "[%key:common::action::turn_on%]"
+      "description": "Turns on a water heater.",
+      "name": "Turn on water heater"
     }
   },
   "title": "Water heater",
