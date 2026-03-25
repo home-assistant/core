@@ -13445,6 +13445,72 @@
     'state': 'room',
   })
 # ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ready',
+        'using_vacuum',
+        'emptying_dustbin',
+        'uv_cleaning',
+        'uv_paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stick_vacuum',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stick_cleaner_operating_state',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_samsungce.stickCleanerStatus_operatingState_operatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Stick vacuum',
+      'options': list([
+        'ready',
+        'using_vacuum',
+        'emptying_dustbin',
+        'uv_cleaning',
+        'uv_paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
 # name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -13495,6 +13561,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_dust_bag_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stick_vacuum_dust_bag_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dust bag cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dust bag cycles',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stick_cleaner_dust_bag_usage',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_station_samsungce.stickCleanerDustBag_usage_usage',
+    'unit_of_measurement': 'cycles',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_dust_bag_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Stick vacuum Dust bag cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_dust_bag_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '343',
   })
 # ---
 # name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_energy-entry]
@@ -13669,6 +13789,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_last_emptied-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stick_vacuum_last_emptied',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last emptied',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last emptied',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stick_cleaner_dustbin_last_emptied',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_samsungce.stickCleanerDustbinStatus_lastEmptiedTime_lastEmptiedTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_last_emptied-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Stick vacuum Last emptied',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stick_vacuum_last_emptied',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-03-21T15:25:00+00:00',
   })
 # ---
 # name: test_all_entities[da_vc_stick_01001][sensor.stick_vacuum_power-entry]
