@@ -32,7 +32,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BTBmsConfigEntry
 from .const import (
+    ATTR_BALANCE_CUR,
     ATTR_BATTERY_HEALTH,
+    ATTR_CELL_NUMBER,
+    ATTR_CELL_VOLTAGES,
     ATTR_CURRENT,
     ATTR_CYCLE_CAP,
     ATTR_CYCLES,
@@ -115,7 +118,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
     BmsEntityDescription(
         attr_fn=lambda data: (
             (
-                {"balance_current": [data.get("balance_current", 0.0)]}
+                {ATTR_BALANCE_CUR: [data.get("balance_current", 0.0)]}
                 if "balance_current" in data
                 else {}
             )
@@ -162,7 +165,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
     ),
     BmsEntityDescription(
         attr_fn=lambda data: (
-            {"cell_voltages": data.get("cell_voltages", [])}
+            {ATTR_CELL_VOLTAGES: data.get("cell_voltages", [])}
             if "cell_voltages" in data
             else {}
         ),
@@ -177,7 +180,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
     ),
     BmsEntityDescription(
         attr_fn=lambda data: (
-            {"cell_number": [cells.index(max(cells))]}
+            {ATTR_CELL_NUMBER: [cells.index(max(cells))]}
             if (cells := data.get("cell_voltages", []))
             else {}
         ),
@@ -195,7 +198,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
     ),
     BmsEntityDescription(
         attr_fn=lambda data: (
-            {"cell_number": [cells.index(min(cells))]}
+            {ATTR_CELL_NUMBER: [cells.index(min(cells))]}
             if (cells := data.get("cell_voltages", []))
             else {}
         ),

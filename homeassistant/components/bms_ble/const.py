@@ -11,6 +11,7 @@ UPDATE_INTERVAL: Final = 30  # in seconds
 ATTR_BALANCE_CUR: Final = "balance_current"
 ATTR_BATTERY_HEALTH: Final = "battery_health"
 ATTR_CELL_COUNT: Final = "cell_count"
+ATTR_CELL_NUMBER: Final[str] = "cell_number"
 ATTR_CELL_VOLTAGES: Final = "cell_voltages"
 
 ATTR_CURRENT: Final = "current"
