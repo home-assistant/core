@@ -1506,7 +1506,7 @@ openrgb-python==0.3.6
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.17.1
+opower==0.18.0
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -2446,7 +2446,7 @@ samsungtvws[async,encrypted]==2.7.2
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==0.3.7
+satel-integra==1.0.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -2690,7 +2690,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==10.2.2
+uiprotect==10.2.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
