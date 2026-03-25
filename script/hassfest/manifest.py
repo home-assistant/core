@@ -104,6 +104,7 @@ NO_IOT_CLASS = [
     "logger",
     "lovelace",
     "media_source",
+    "moisture",
     "motion",
     "my",
     "occupancy",

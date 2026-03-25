@@ -169,6 +169,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "light",
     "lock",
     "media_player",
+    "moisture",
     "motion",
     "occupancy",
     "person",
