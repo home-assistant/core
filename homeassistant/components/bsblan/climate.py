@@ -92,7 +92,6 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         super().__init__(data.fast_coordinator, data, circuit)
         self._circuit = circuit
         mac = format_mac(data.device.MAC)
-        self._attr_translation_key = f"heating_circuit_{circuit}"
 
         # Backward compatible unique ID: circuit 1 keeps old format
         if circuit == 1:
