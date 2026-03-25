@@ -31,11 +31,11 @@
         "state_attributes": {
           "sound_mode": {
             "state": {
-              "11ch_stereo": "11ch Stereo",
               "2ch_stereo": "2ch Stereo",
               "5ch_stereo": "5ch Stereo",
               "7ch_stereo": "7ch Stereo",
               "9ch_stereo": "9ch Stereo",
+              "11ch_stereo": "11ch Stereo",
               "action_game": "Action Game",
               "adventure": "Adventure",
               "all_ch_stereo": "All Ch Stereo",
@@ -60,7 +60,7 @@
               "music": "Music",
               "music_video": "Music Video",
               "my_surround": "My Surround",
-              "off": "Off",
+              "off": "[%key:common::state::off%]",
               "pavilion": "Pavilion",
               "recital_opera": "Recital/Opera",
               "roleplaying_game": "Roleplaying Game",
