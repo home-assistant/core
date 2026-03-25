@@ -19,6 +19,94 @@
       }
     }
   },
+  "entity": {
+    "button": {
+      "back": {
+        "name": "Back"
+      },
+      "down": {
+        "name": "Down"
+      },
+      "exit": {
+        "name": "Exit"
+      },
+      "guide": {
+        "name": "Guide"
+      },
+      "hdmi_1": {
+        "name": "HDMI 1"
+      },
+      "hdmi_2": {
+        "name": "HDMI 2"
+      },
+      "hdmi_3": {
+        "name": "HDMI 3"
+      },
+      "hdmi_4": {
+        "name": "HDMI 4"
+      },
+      "home": {
+        "name": "Home"
+      },
+      "info": {
+        "name": "Info"
+      },
+      "input": {
+        "name": "Input"
+      },
+      "left": {
+        "name": "Left"
+      },
+      "menu": {
+        "name": "Menu"
+      },
+      "num_0": {
+        "name": "Number 0"
+      },
+      "num_1": {
+        "name": "Number 1"
+      },
+      "num_2": {
+        "name": "Number 2"
+      },
+      "num_3": {
+        "name": "Number 3"
+      },
+      "num_4": {
+        "name": "Number 4"
+      },
+      "num_5": {
+        "name": "Number 5"
+      },
+      "num_6": {
+        "name": "Number 6"
+      },
+      "num_7": {
+        "name": "Number 7"
+      },
+      "num_8": {
+        "name": "Number 8"
+      },
+      "num_9": {
+        "name": "Number 9"
+      },
+      "ok": {
+        "name": "OK"
+      },
+      "power_off": {
+        "name": "Power off"
+      },
+      "power_on": {
+        "name": "Power on"
+      },
+      "right": {
+        "name": "Right"
+      },
+      "up": {
+        "name": "Up"
+      }
+    }
+  },
   "selector": {
     "device_type": {
       "options": {

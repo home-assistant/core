@@ -19,11 +19,12 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MOCK_INFRARED_ENTITY_ID, MockInfraredEntity
+from .conftest import MockInfraredEntity
+from .utils import check_availability_follows_ir_entity
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -99,23 +100,4 @@ async def test_media_player_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
-    # Initially available
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    # Make IR entity unavailable
-    hass.states.async_set(MOCK_INFRARED_ENTITY_ID, STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # Restore IR entity
-    hass.states.async_set(MOCK_INFRARED_ENTITY_ID, "2026-01-01T00:00:00.000")
-    await hass.async_block_till_done()
-
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    await check_availability_follows_ir_entity(hass, MEDIA_PLAYER_ENTITY_ID)
