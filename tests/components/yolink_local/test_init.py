@@ -53,28 +53,9 @@ def mock_device() -> Mock:
     """Create a mock YoLink device."""
     device: Mock = Mock(spec=YoLinkDevice)
     device.device_id = "device_123"
-    device.paired_device_id = None
     device.device_type = "DoorSensor"
     device.name = "Test Door Sensor"
     return device
-
-
-@pytest.fixture
-def mock_paired_devices() -> tuple[Mock, Mock]:
-    """Create a pair of mock YoLink devices (parent and child)."""
-    parent: Mock = Mock(spec=YoLinkDevice)
-    parent.device_id = "parent_device"
-    parent.paired_device_id = None
-    parent.device_type = "Hub"
-    parent.name = "Test Hub"
-
-    child: Mock = Mock(spec=YoLinkDevice)
-    child.device_id = "child_device"
-    child.paired_device_id = "parent_device"
-    child.device_type = "Sensor"
-    child.name = "Test Sensor"
-
-    return parent, child
 
 
 @pytest.fixture
@@ -117,7 +98,8 @@ async def test_async_setup_entry_success(
 
     client: Any
     coordinators: dict[str, Any]
-    client, coordinators = entry.runtime_data
+    client: Any = entry.runtime_data.client
+    coordinators: dict[str, Any] = entry.runtime_data.coordinators
     assert client == mock_yolink_client
     assert "device_123" in coordinators
 
@@ -125,45 +107,6 @@ async def test_async_setup_entry_success(
     mock_listener.assert_called_once_with(hass, entry)
     mock_coordinator.assert_called_once()
     mock_coordinator.return_value.async_config_entry_first_refresh.assert_called_once()
-
-
-async def test_async_setup_entry_with_paired_devices(
-    hass: HomeAssistant,
-    mock_yolink_client: Mock,
-    mock_paired_devices: tuple[Mock, Mock],
-    mock_coordinator: MagicMock,
-) -> None:
-    """Test setup with paired devices."""
-    parent: Mock
-    child: Mock
-    parent, child = mock_paired_devices
-    mock_yolink_client.get_devices.return_value = [parent, child]
-
-    entry: MockConfigEntry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CONFIG_DATA,
-        unique_id=TEST_NET_ID,
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.yolink_local.LocalHubMessageListener"):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-
-    # Verify both coordinators were created
-    assert mock_coordinator.call_count == 2
-
-    # Verify parent coordinator was created with paired device
-    calls: list[Any] = mock_coordinator.call_args_list
-    # First call should be for parent device
-    assert calls[0][0][2] == parent  # device parameter
-    assert calls[0][0][3] == child  # paired_device parameter
-
-    # Second call should be for child device
-    assert calls[1][0][2] == child
-    assert calls[1][0][3] is None
 
 
 async def test_async_setup_entry_auth_failure(

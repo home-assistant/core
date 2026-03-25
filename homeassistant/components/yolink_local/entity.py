@@ -44,7 +44,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkLocalCoordinator]):
     async def async_added_to_hass(self) -> None:
         """Update state."""
         await super().async_added_to_hass()
-        return self._handle_coordinator_update()
+        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
