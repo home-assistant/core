@@ -21,35 +21,35 @@
       "paused_torrents": {
         "default": "mdi:counter"
       },
+      "session_download": {
+        "default": "mdi:download"
+      },
+      "session_ratio": {
+        "default": "mdi:swap-vertical"
+      },
+      "session_upload": {
+        "default": "mdi:upload"
+      },
       "started_torrents": {
         "default": "mdi:counter"
       },
+      "total_download": {
+        "default": "mdi:download-multiple"
+      },
+      "total_ratio": {
+        "default": "mdi:swap-vertical-bold"
+      },
       "total_torrents": {
         "default": "mdi:counter"
+      },
+      "total_upload": {
+        "default": "mdi:upload-multiple"
       },
       "transmission_status": {
         "default": "mdi:information-outline"
       },
       "upload_speed": {
         "default": "mdi:cloud-upload"
-      },
-      "session_download": {
-        "default": "mdi:download"
-      },
-      "session_upload": {
-        "default": "mdi:upload"
-      },
-      "total_download": {
-        "default": "mdi:download-multiple"
-      },
-      "total_upload": {
-        "default": "mdi:upload-multiple"
-      },
-      "session_ratio": {
-        "default": "mdi:swap-vertical"
-      },
-      "total_ratio": {
-        "default": "mdi:swap-vertical-bold"
       }
     },
     "switch": {
