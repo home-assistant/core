@@ -521,12 +521,7 @@ def test_number_selector_schema_error(schema) -> None:
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
-            None,
-            ({"type": "above", "value": {"number": 10}},),
-            (),
-        ),
-        (
-            {},
+            {"mode": "crossed"},
             (
                 {"type": "above", "value": {"number": 10}},
                 {"type": "below", "value": {"entity": "sensor.temperature"}},
@@ -573,10 +568,11 @@ def test_number_selector_schema_error(schema) -> None:
                     "type": "above",
                     "value": {"number": 10, "entity": "sensor.foo"},
                 },  # Both number and entity without active_choice
+                {"type": "any"},  # "any" not allowed without mode "changed"
             ),
         ),
         (
-            {"unit_of_measurement": ["°C", "°F"]},
+            {"mode": "crossed", "unit_of_measurement": ["°C", "°F"]},
             (
                 {
                     "type": "between",
@@ -593,35 +589,71 @@ def test_number_selector_schema_error(schema) -> None:
                     "type": "above",
                     "value": {"number": 10, "unit_of_measurement": "K"},
                 },  # Unit not in allowed list
+                {"type": "any"},  # "any" not allowed without mode "changed"
             ),
         ),
         (
-            {"number": {"min": 0, "max": 100}},
+            {"mode": "crossed", "number": {"min": 0, "max": 100}},
             ({"type": "above", "value": {"number": 50}},),
             (
                 {"type": "above", "value": {"number": -1}},  # Below min
                 {"type": "above", "value": {"number": 101}},  # Above max
+                {"type": "any"},  # "any" not allowed without mode "changed"
             ),
         ),
         (
-            {"entity": {"domain": "sensor"}},
+            {"mode": "crossed", "entity": {"domain": "sensor"}},
             ({"type": "above", "value": {"entity": "sensor.temperature"}},),
             (),
         ),
         (
-            {"entity": [{"domain": "sensor"}, {"domain": "input_number"}]},
+            {
+                "mode": "crossed",
+                "entity": [{"domain": "sensor"}, {"domain": "input_number"}],
+            },
             ({"type": "above", "value": {"entity": "sensor.temperature"}},),
             (),
+        ),
+        (
+            {"mode": "crossed"},
+            (
+                {"type": "above", "value": {"number": 10}},
+                {"type": "below", "value": {"number": 5}},
+            ),
+            ({"type": "any"},),  # "any" not allowed for mode "crossed"
+        ),
+        (
+            {"mode": "changed"},
+            (
+                {"type": "above", "value": {"number": 10}},
+                {"type": "any"},
+            ),
+            (),
+        ),
+        (
+            {"mode": "is"},
+            ({"type": "above", "value": {"number": 10}},),
+            ({"type": "any"},),  # "any" not allowed for mode "is"
         ),
     ],
 )
 def test_numeric_threshold_selector_schema(
-    schema: dict[str, Any] | None,
+    schema: dict[str, Any],
     valid_selections: tuple[Any, ...],
     invalid_selections: tuple[Any, ...],
 ) -> None:
     """Test numeric threshold selector."""
     _test_selector("numeric_threshold", schema, valid_selections, invalid_selections)
+
+
+def test_numeric_threshold_selector_invalid_config() -> None:
+    """Test numeric threshold selector rejects an invalid or missing mode in config."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": {"mode": "invalid_mode"}})
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": {}})
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": None})
 
 
 @pytest.mark.parametrize(
@@ -693,13 +725,20 @@ def test_numeric_threshold_selector_schema(
                 "value_max": {"entity": "sensor.max_temp"},
             },
         ),
+        # "any" type passes through unchanged (no value fields)
+        (
+            {"type": "any"},
+            {"type": "any"},
+        ),
     ],
 )
 def test_numeric_threshold_selector_active_choice_extraction(
     value_in: Any, value_out: Any
 ) -> None:
     """Test that active_choice is stripped and only the active field is kept."""
-    vol_schema = vol.Schema({"selection": selector.selector({"numeric_threshold": {}})})
+    vol_schema = vol.Schema(
+        {"selection": selector.selector({"numeric_threshold": {"mode": "changed"}})}
+    )
     assert vol_schema({"selection": value_in}) == {"selection": value_out}
 
 
