@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.scrubbed_air_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -42,7 +43,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SCRUBBED  Air Temperature',
+      'friendly_name': 'SCRUBBED Air Temperature',
       'hayward_temperature': '70',
       'hayward_unit_of_measure': <UnitOfTemperature.FAHRENHEIT: '°F'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -57,8 +58,9 @@
 # ---
 # name: test_sensors[sensor.scrubbed_spa_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -98,7 +100,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SCRUBBED  Spa Water Temperature',
+      'friendly_name': 'SCRUBBED Spa Water Temperature',
       'hayward_temperature': '71',
       'hayward_unit_of_measure': <UnitOfTemperature.FAHRENHEIT: '°F'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
