@@ -116,6 +116,7 @@ async def test_node_startall_stopall_buttons(
         ("button.vm_web_hibernate", 100, "hibernate"),
         ("button.vm_web_reset", 100, "reset"),
         ("button.vm_web_shutdown", 100, "shutdown"),
+        ("button.vm_web_create_snapshot", 100, "snapshot"),
     ],
 )
 async def test_vm_buttons(
@@ -130,7 +131,10 @@ async def test_vm_buttons(
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.qemu(vmid)
-    method_mock = getattr(mock_proxmox_client._qemu_mocks[vmid].status, action).post
+    if action == "snapshot":
+        method_mock = mock_proxmox_client._qemu_mocks[vmid].snapshot.post
+    else:
+        method_mock = getattr(mock_proxmox_client._qemu_mocks[vmid].status, action).post
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
@@ -149,6 +153,7 @@ async def test_vm_buttons(
         ("button.ct_nginx_start", 200, "start"),
         ("button.ct_nginx_stop", 200, "stop"),
         ("button.ct_nginx_restart", 200, "reboot"),
+        ("button.ct_nginx_create_snapshot", 200, "snapshot"),
     ],
 )
 async def test_container_buttons(
@@ -163,7 +168,10 @@ async def test_container_buttons(
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.lxc(vmid)
-    method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
+    if action == "snapshot":
+        method_mock = mock_proxmox_client._lxc_mocks[vmid].snapshot.post
+    else:
+        method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
