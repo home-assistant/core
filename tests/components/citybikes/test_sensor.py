@@ -9,7 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.citybikes import sensor as citybikes_sensor
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+
+from . import setup_integration
 
 
 @pytest.fixture(name="station_factory")
@@ -35,49 +36,11 @@ def mock_citybikes_client_fixture() -> Generator[Mock]:
         yield mock_client.return_value
 
 
-async def _async_setup_citybikes_sensor(
-    hass: HomeAssistant,
-    mock_citybikes_client: Mock,
-    station: citybikes_model.Station,
-) -> None:
-    """Set up the CityBikes sensor platform."""
-    network = citybikes_model.Network.from_dict(
-        {
-            "id": "mock-network",
-            "name": "Mock Network",
-            "location": {
-                "latitude": 40.0,
-                "longitude": -73.0,
-                "city": "Test City",
-                "country": "US",
-            },
-            "href": "/v2/networks/mock-network",
-            "stations": [station.__dict__],
-        }
-    )
-    mock_citybikes_client.network.return_value.fetch = AsyncMock(return_value=network)
-
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "citybikes",
-                    "network": "mock-network",
-                    "stations": ["station-1"],
-                }
-            ]
-        },
-    )
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-
 @pytest.mark.parametrize(
     ("extra", "snapshot_name"),
     [
         pytest.param(
-            {citybikes_sensor.ATTR_UID: "uid-1", "ebikes": 2},
+            {citybikes_sensor.ATTR_UID: "uid-1", citybikes_sensor.EXTRA_EBIKES: 2},
             "with_ebikes",
             id="with_ebikes",
         ),
@@ -97,9 +60,7 @@ async def test_sensor_state(
     snapshot_name: str,
 ) -> None:
     """Test CityBikes sensor state snapshots."""
-    await _async_setup_citybikes_sensor(
-        hass, mock_citybikes_client, station_factory(extra)
-    )
+    await setup_integration(hass, mock_citybikes_client, station_factory(extra))
 
     assert (state := hass.states.get("sensor.mock_network_station_1"))
     assert state == snapshot(name=snapshot_name)
