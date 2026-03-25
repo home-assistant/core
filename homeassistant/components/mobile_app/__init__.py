@@ -124,9 +124,8 @@ async def _async_setup_cloudhook(
             hass.config_entries.async_update_entry(entry, data=data)
 
     if local_only:
-        if CONF_CLOUDHOOK_URL in entry.data:
-            # Local-only user should not have a cloudhook
-            clean_cloudhook()
+        # Local-only user should not have a cloudhook
+        clean_cloudhook()
         return
 
     def on_cloudhook_change(cloudhook: dict[str, Any] | None) -> None:
