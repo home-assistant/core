@@ -13,8 +13,6 @@ from homeassistant.components.transmission.const import (
 )
 from homeassistant.components.transmission.sensor import (
     _compute_ratio,
-    _get_cumulative_stats_field,
-    _get_current_stats_field,
     get_state,
 )
 from homeassistant.const import STATE_IDLE, STATE_UNKNOWN, Platform
@@ -80,34 +78,6 @@ async def test_stats_sensors(
     assert float(state.state) == pytest.approx(0.8, rel=1e-3)
 
 
-async def test_stats_sensors_none_when_missing(
-    hass: HomeAssistant,
-    mock_transmission_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test stats sensors return unknown when stats fields are missing."""
-    client = mock_transmission_client.return_value
-
-    client.session_stats.return_value = SessionStats(
-        fields={
-            "uploadSpeed": 0,
-            "downloadSpeed": 0,
-            "activeTorrentCount": 0,
-            "pausedTorrentCount": 0,
-            "torrentCount": 0,
-        }
-    )
-    with patch("homeassistant.components.transmission.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.transmission_session_download")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    state = hass.states.get("sensor.transmission_session_ratio")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
 
 def test_get_state_combinations() -> None:
     """Test get_state with all upload/download combinations."""
@@ -132,10 +102,3 @@ def test_helper_functions() -> None:
     assert _compute_ratio(500, 1000) == 0.5
 
 
-def test_get_stats_field_exception() -> None:
-    """Test _get_current/cumulative_stats_field returns None on missing data."""
-    coordinator = MagicMock()
-    coordinator.data.current_stats = MagicMock(spec=[])
-    coordinator.data.cumulative_stats = MagicMock(spec=[])
-    assert _get_current_stats_field(coordinator, "downloaded_bytes") is None
-    assert _get_cumulative_stats_field(coordinator, "downloaded_bytes") is None

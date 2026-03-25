@@ -53,26 +53,6 @@ def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None
     return uploaded / downloaded
 
 
-def _get_current_stats_field(
-    coordinator: TransmissionDataUpdateCoordinator, field: str
-) -> int | None:
-    """Safely get a field from the current_stats section, returning None on errors."""
-    with suppress(KeyError, AttributeError):
-        value = getattr(coordinator.data.current_stats, field)
-        return int(value) if isinstance(value, (int, float)) else None
-    return None
-
-
-def _get_cumulative_stats_field(
-    coordinator: TransmissionDataUpdateCoordinator, field: str
-) -> int | None:
-    """Safely get a field from the cumulative_stats section, returning None on errors."""
-    with suppress(KeyError, AttributeError):
-        value = getattr(coordinator.data.cumulative_stats, field)
-        return int(value) if isinstance(value, (int, float)) else None
-    return None
-
-
 SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
     TransmissionSensorEntityDescription(
         key="download",
@@ -153,9 +133,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _get_current_stats_field(
-            coordinator, "downloaded_bytes"
-        ),
+        val_func=lambda coordinator: coordinator.data.current_stats.downloaded_bytes,
     ),
     TransmissionSensorEntityDescription(
         key="session_upload",
@@ -165,9 +143,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _get_current_stats_field(
-            coordinator, "uploaded_bytes"
-        ),
+        val_func=lambda coordinator: coordinator.data.current_stats.uploaded_bytes,
     ),
     TransmissionSensorEntityDescription(
         key="total_download",
@@ -177,9 +153,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _get_cumulative_stats_field(
-            coordinator, "downloaded_bytes"
-        ),
+        val_func=lambda coordinator: coordinator.data.cumulative_stats.downloaded_bytes,
     ),
     TransmissionSensorEntityDescription(
         key="total_upload",
@@ -189,9 +163,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        val_func=lambda coordinator: _get_cumulative_stats_field(
-            coordinator, "uploaded_bytes"
-        ),
+        val_func=lambda coordinator: coordinator.data.cumulative_stats.uploaded_bytes,
     ),
     TransmissionSensorEntityDescription(
         key="session_ratio",
@@ -199,8 +171,8 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
         val_func=lambda coordinator: _compute_ratio(
-            _get_current_stats_field(coordinator, "uploaded_bytes"),
-            _get_current_stats_field(coordinator, "downloaded_bytes"),
+            coordinator.data.current_stats.uploaded_bytes,
+            coordinator.data.current_stats.downloaded_bytes,
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -209,8 +181,8 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
         val_func=lambda coordinator: _compute_ratio(
-            _get_cumulative_stats_field(coordinator, "uploaded_bytes"),
-            _get_cumulative_stats_field(coordinator, "downloaded_bytes"),
+            coordinator.data.cumulative_stats.uploaded_bytes,
+            coordinator.data.cumulative_stats.downloaded_bytes,
         ),
     ),
 )
