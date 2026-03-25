@@ -7,7 +7,10 @@ from typing import Any, Final
 
 from evohomeasync2 import ControlSystem
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
-from evohomeasync2.schemas.const import S2_DURATION, S2_PERIOD
+from evohomeasync2.schemas.const import (
+    S2_DURATION as SZ_DURATION,
+    S2_PERIOD as SZ_PERIOD,
+)
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -98,14 +101,14 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
 
     timing_mode = mode_info.get(SZ_TIMING_MODE)  # will not be None, as can_be_temporary
 
-    if timing_mode == S2_DURATION and ATTR_PERIOD in data:
+    if timing_mode == SZ_DURATION and ATTR_PERIOD in data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_period",
             translation_placeholders={ATTR_MODE: mode},
         )
 
-    if timing_mode == S2_PERIOD and ATTR_DURATION in data:
+    if timing_mode == SZ_PERIOD and ATTR_DURATION in data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_duration",
