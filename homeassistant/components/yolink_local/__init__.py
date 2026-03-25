@@ -43,27 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkLocalConfigEntry) 
 
     devices: list[YoLinkDevice] = client.get_devices()
 
-    device_pairing_mapping = {}
-    for device in devices:
-        if (parent_id := device.paired_device_id) is not None:
-            device_pairing_mapping[parent_id] = device.device_id
-
     coordinators = {}
 
     for device in devices:
-        paired_device: YoLinkDevice | None = None
-        if (
-            paired_device_id := device_pairing_mapping.get(device.device_id)
-        ) is not None:
-            paired_device = next(
-                (
-                    _device
-                    for _device in devices
-                    if _device.device_id == paired_device_id
-                ),
-                None,
-            )
-        coordinator = YoLinkLocalCoordinator(hass, entry, device, paired_device)
+        coordinator = YoLinkLocalCoordinator(hass, entry, device)
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
@@ -82,7 +65,5 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
-        if entry.runtime_data is not None:
-            client: YoLinkLocalHubClient = entry.runtime_data.client
-            await client.async_unload()
+        await entry.runtime_data.client.async_unload()
     return unload_ok

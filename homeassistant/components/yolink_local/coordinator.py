@@ -32,7 +32,6 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         device: YoLinkDevice,
-        paired_device: YoLinkDevice | None = None,
     ) -> None:
         """Init YoLink Local DataUpdateCoordinator.
 
@@ -48,27 +47,7 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
             update_interval=timedelta(minutes=30),
         )
         self.device = device
-        self.paired_device = paired_device
         self.last_report_at: float | None = None
-
-    async def _async_exchange_state_with_paired_device(
-        self,
-        device_state_data,
-    ) -> None:
-        """Exchange state with paired device."""
-        if self.paired_device is not None and device_state_data is not None:
-            paired_device_ret = await self.paired_device.fetch_state()
-            if paired_device_ret.data is None:
-                return
-            paired_device_state_data = paired_device_ret.data.get(ATTR_DEVICE_STATE)
-            # exchange state field
-            if (
-                paired_device_state_data is not None
-                and ATTR_DEVICE_STATE in paired_device_state_data
-            ):
-                device_state_data[ATTR_DEVICE_STATE] = paired_device_state_data[
-                    ATTR_DEVICE_STATE
-                ]
 
     @property
     def is_device_online(self) -> bool:
@@ -83,22 +62,14 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
         """Fetch device state."""
         try:
             async with asyncio.timeout(10):
-                device_state_ret = await self.device.fetch_state()
-                if device_state_ret.data is None:
+                ret = await self.device.fetch_state()
+                if ret.data is None:
                     return None
-                device_state_data = (
-                    device_state_ret.data
-                    if self.device.is_hub
-                    else device_state_ret.data.get(ATTR_DEVICE_STATE)
-                )
-                if (
-                    last_report_str := device_state_ret.data.get(ATTR_REPORT_AT)
-                ) is not None:
+                if (last_report_str := ret.data.get(ATTR_REPORT_AT)) is not None:
                     self.last_report_at = datetime.fromisoformat(
                         last_report_str
                     ).timestamp()
-                await self._async_exchange_state_with_paired_device(device_state_data)
-                return device_state_data
+                return ret.data.get(ATTR_DEVICE_STATE)
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:

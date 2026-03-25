@@ -2833,7 +2833,7 @@ yeelight==0.7.16
 
 # homeassistant.components.yolink
 # homeassistant.components.yolink_local
-yolink-api==0.6.3
+yolink-api==0.6.4
 
 # homeassistant.components.youless
 youless-api==2.2.0
