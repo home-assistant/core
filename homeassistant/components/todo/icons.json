@@ -20,5 +20,16 @@
     "update_item": {
       "service": "mdi:clipboard-edit"
     }
+  },
+  "triggers": {
+    "item_added": {
+      "trigger": "mdi:clipboard-plus"
+    },
+    "item_completed": {
+      "trigger": "mdi:clipboard-check"
+    },
+    "item_removed": {
+      "trigger": "mdi:clipboard-minus"
+    }
   }
 }

@@ -98,5 +98,19 @@
       "name": "Update to-do list item"
     }
   },
-  "title": "To-do list"
+  "title": "To-do list",
+  "triggers": {
+    "item_added": {
+      "description": "Triggers when a to-do item is added to a list.",
+      "name": "To-do item added"
+    },
+    "item_completed": {
+      "description": "Triggers when a to-do item is marked as done.",
+      "name": "To-do item completed"
+    },
+    "item_removed": {
+      "description": "Triggers when a to-do item is removed from a list.",
+      "name": "To-do item removed"
+    }
+  }
 }
