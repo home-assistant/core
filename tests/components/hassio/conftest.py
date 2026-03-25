@@ -1,6 +1,6 @@
 """Fixtures for Hass.io."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import replace
 import os
 import re
@@ -66,7 +66,7 @@ async def hassio_client_supervisor(
 
 
 @pytest.fixture
-async def hassio_handler(hass: HomeAssistant) -> Generator[HassIO]:
+async def hassio_handler(hass: HomeAssistant) -> AsyncGenerator[HassIO]:
     """Create mock hassio handler."""
     with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")
