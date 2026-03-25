@@ -171,14 +171,6 @@
         "first": "First",
         "last": "Last"
       }
-    },
-    "trigger_threshold_type": {
-      "options": {
-        "above": "Above a value",
-        "below": "Below a value",
-        "between": "In a range",
-        "outside": "Outside a range"
-      }
     }
   },
   "services": {

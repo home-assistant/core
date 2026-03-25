@@ -1,6 +1,7 @@
 """Shared test helpers for components."""
 
 from collections.abc import Iterable
+import copy
 from enum import StrEnum
 import itertools
 from typing import Any, TypedDict
@@ -35,12 +36,7 @@ from homeassistant.helpers.condition import (
     ConditionCheckerTypeOptional,
     async_from_config as async_condition_from_config,
 )
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-)
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -439,7 +435,6 @@ def parametrize_trigger_states(
         (
             trigger,
             trigger_options,
-            # other_state,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -541,11 +536,27 @@ def parametrize_trigger_states(
     return tests
 
 
+def _add_threshold_unit(
+    options: dict[str, Any], threshold_unit: str | None | UndefinedType
+) -> dict[str, Any]:
+    """Add unit to trigger thresholds if threshold_unit is provided."""
+    if threshold_unit is UNDEFINED:
+        return options
+    options = copy.deepcopy(options)
+    threshold_options = options["threshold"]
+    for key in ("value", "value_min", "value_max"):
+        if key not in threshold_options:
+            continue
+        threshold_options[key]["unit_of_measurement"] = threshold_unit
+    return options
+
+
 def parametrize_numerical_attribute_changed_trigger_states(
     trigger: str,
     state: str,
     attribute: str,
     *,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -557,7 +568,15 @@ def parametrize_numerical_attribute_changed_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={**trigger_options},
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "any",
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -569,7 +588,16 @@ def parametrize_numerical_attribute_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10, **trigger_options},
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
@@ -583,7 +611,16 @@ def parametrize_numerical_attribute_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90, **trigger_options},
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -603,6 +640,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     state: str,
     attribute: str,
     *,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -614,12 +652,17 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 60} | unit_attributes),
@@ -633,12 +676,17 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "outside",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
@@ -652,11 +700,16 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
@@ -669,11 +722,16 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -691,6 +749,7 @@ def parametrize_numerical_state_value_changed_trigger_states(
     trigger: str,
     *,
     device_class: str,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -709,7 +768,15 @@ def parametrize_numerical_state_value_changed_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options=trigger_options,
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "any",
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("0", unit_attributes),
                 ("50", unit_attributes),
@@ -722,7 +789,16 @@ def parametrize_numerical_state_value_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10} | trigger_options,
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    }
+                }
+                | trigger_options,
+                threshold_unit,
+            ),
             target_states=[("50", unit_attributes), ("100", unit_attributes)],
             other_states=[("none", unit_attributes), ("0", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
@@ -731,7 +807,16 @@ def parametrize_numerical_state_value_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90} | trigger_options,
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    }
+                }
+                | trigger_options,
+                threshold_unit,
+            ),
             target_states=[("0", unit_attributes), ("50", unit_attributes)],
             other_states=[("none", unit_attributes), ("100", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
@@ -745,6 +830,7 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     trigger: str,
     *,
     device_class: str,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -763,12 +849,17 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("50", unit_attributes), ("60", unit_attributes)],
             other_states=[
                 ("none", unit_attributes),
@@ -780,12 +871,17 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "outside",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("0", unit_attributes), ("100", unit_attributes)],
             other_states=[
                 ("none", unit_attributes),
@@ -797,11 +893,16 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("50", unit_attributes), ("100", unit_attributes)],
             other_states=[("none", unit_attributes), ("0", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
@@ -809,11 +910,16 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("0", unit_attributes), ("50", unit_attributes)],
             other_states=[("none", unit_attributes), ("100", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
