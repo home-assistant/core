@@ -233,7 +233,9 @@ class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
                 {
                     "schedule_id": s.schedule_id,
                     "recurring": s.recurring,
-                    "days": [d.name.lower() for d in sorted(s.days, key=lambda d: d.name)],
+                    "days": [
+                        d.name.lower() for d in sorted(s.days, key=lambda d: d.name)
+                    ],
                     "start_time": s.start_time,
                     "end_time": s.end_time,
                     "duration": s.duration,
