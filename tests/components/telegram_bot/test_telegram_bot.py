@@ -90,6 +90,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -130,6 +131,23 @@ async def test_polling_platform_init(
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+
+
+async def test_polling_platform_init_failed(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test failed initialization of the polling platform."""
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.get_me",
+        side_effect=NetworkError("mock network error"),
+    ) as mock_get_me:
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_get_me.assert_called_once()
+    assert mock_polling_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
