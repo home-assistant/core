@@ -32,6 +32,24 @@
       },
       "upload_speed": {
         "default": "mdi:cloud-upload"
+      },
+      "session_download": {
+        "default": "mdi:download"
+      },
+      "session_upload": {
+        "default": "mdi:upload"
+      },
+      "total_download": {
+        "default": "mdi:download-multiple"
+      },
+      "total_upload": {
+        "default": "mdi:upload-multiple"
+      },
+      "session_ratio": {
+        "default": "mdi:swap-vertical"
+      },
+      "total_ratio": {
+        "default": "mdi:swap-vertical-bold"
       }
     },
     "switch": {
