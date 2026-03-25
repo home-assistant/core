@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
 from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -87,7 +87,6 @@ async def test_gate_triggers_gated_by_labs_flag(
 )
 async def test_gate_trigger_cover_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -99,7 +98,6 @@ async def test_gate_trigger_cover_behavior_any(
     """Test gate trigger fires for cover entities with device_class gate."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -157,7 +155,6 @@ async def test_gate_trigger_cover_behavior_any(
 )
 async def test_gate_trigger_cover_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -169,7 +166,6 @@ async def test_gate_trigger_cover_behavior_first(
     """Test gate trigger fires on the first cover state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -227,7 +223,6 @@ async def test_gate_trigger_cover_behavior_first(
 )
 async def test_gate_trigger_cover_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -239,7 +234,6 @@ async def test_gate_trigger_cover_behavior_last(
     """Test gate trigger fires when the last cover changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

@@ -10,8 +10,8 @@ from homeassistant.components.counter import (
     CONF_MINIMUM,
     DOMAIN,
 )
-from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     BasicTriggerStateDescription,
@@ -119,7 +119,6 @@ async def test_counter_triggers_gated_by_labs_flag(
 )
 async def test_counter_state_trigger(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -128,6 +127,7 @@ async def test_counter_state_trigger(
     states: list[BasicTriggerStateDescription],
 ) -> None:
     """Test that the counter decrement and increment triggers fire correctly."""
+    calls: list[str] = []
     other_entity_ids = set(target_counters["included_entities"]) - {entity_id}
 
     # Set all counters, including the tested one, to the initial state
@@ -135,23 +135,23 @@ async def test_counter_state_trigger(
         set_or_remove_state(hass, eid, states[0]["included_state"])
     await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, None, trigger_target_config)
+    await arm_trigger(hass, trigger, None, trigger_target_config, calls)
 
     for state in states[1:]:
         included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         # Check if changing other counters also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
+        assert len(calls) == (entities_in_target - 1) * state["count"]
+        calls.clear()
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -164,7 +164,6 @@ async def test_counter_state_trigger(
 )
 async def test_counter_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -176,7 +175,6 @@ async def test_counter_state_trigger_behavior_any(
     """Test that the counter state trigger fires when any counter state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_counters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -197,7 +195,6 @@ async def test_counter_state_trigger_behavior_any(
 )
 async def test_counter_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -209,7 +206,6 @@ async def test_counter_state_trigger_behavior_first(
     """Test that the counter state trigger fires when the first counter changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_counters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -230,7 +226,6 @@ async def test_counter_state_trigger_behavior_first(
 )
 async def test_counter_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -242,7 +237,6 @@ async def test_counter_state_trigger_behavior_last(
     """Test that the counter state trigger fires when the last counter changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_counters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

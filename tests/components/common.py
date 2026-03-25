@@ -4,6 +4,7 @@ from collections.abc import Iterable
 import copy
 from enum import StrEnum
 import itertools
+import logging
 from typing import Any, TypedDict
 
 import pytest
@@ -22,7 +23,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -34,7 +35,8 @@ from homeassistant.helpers.condition import (
     ConditionCheckerTypeOptional,
     async_from_config as async_condition_from_config,
 )
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.trigger import async_initialize_triggers
+from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -931,30 +933,32 @@ async def arm_trigger(
     trigger: str,
     trigger_options: dict[str, Any] | None,
     trigger_target: dict,
+    calls: list[str],
 ) -> None:
-    """Arm the specified trigger, call service test.automation when it triggers."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
+    """Arm the specified trigger and record fired entity_ids in calls when it triggers."""
     options = {CONF_OPTIONS: {**trigger_options}} if trigger_options is not None else {}
 
-    await async_setup_component(
+    trigger_config = {
+        CONF_PLATFORM: trigger,
+        CONF_TARGET: {**trigger_target},
+    } | options
+
+    @callback
+    def action(run_variables: TemplateVarsType, context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"]["entity_id"])
+
+    logger = logging.getLogger(__name__)
+
+    def log_cb(level: int, msg: str, **kwargs: Any) -> None:
+        logger._log(level, "%s", msg, **kwargs)
+
+    await async_initialize_triggers(
         hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: trigger,
-                    CONF_TARGET: {**trigger_target},
-                }
-                | options,
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
-        },
+        [trigger_config],
+        action,
+        domain="test",
+        name="test_trigger",
+        log_cb=log_cb,
     )
 
 
@@ -1044,7 +1048,25 @@ async def assert_trigger_gated_by_labs_flag(
 ) -> None:
     """Helper to check that a trigger is gated by the labs flag."""
 
-    await arm_trigger(hass, trigger, None, {ATTR_LABEL_ID: "test_label"})
+    # Local include to avoid importing the automation component unnecessarily
+    from homeassistant.components import automation  # noqa: PLC0415
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: trigger,
+                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Trigger "
         f"'{trigger}' requires the experimental 'New triggers and conditions' "
@@ -1157,7 +1179,6 @@ async def assert_condition_behavior_all(
 async def assert_trigger_behavior_any(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     target_entities: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -1167,6 +1188,7 @@ async def assert_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode any."""
+    calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
@@ -1177,17 +1199,17 @@ async def assert_trigger_behavior_any(
         set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config, calls)
 
     for state in states[1:]:
         excluded_state = state["excluded_state"]
         included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
@@ -1195,14 +1217,13 @@ async def assert_trigger_behavior_any(
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
+        assert len(calls) == (entities_in_target - 1) * state["count"]
+        calls.clear()
 
 
 async def assert_trigger_behavior_first(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     target_entities: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -1212,6 +1233,7 @@ async def assert_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode first."""
+    calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
@@ -1223,7 +1245,11 @@ async def assert_trigger_behavior_first(
         await hass.async_block_till_done()
 
     await arm_trigger(
-        hass, trigger, {"behavior": "first"} | trigger_options, trigger_target_config
+        hass,
+        trigger,
+        {"behavior": "first"} | trigger_options,
+        trigger_target_config,
+        calls,
     )
 
     for state in states[1:]:
@@ -1231,10 +1257,10 @@ async def assert_trigger_behavior_first(
         included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
@@ -1242,13 +1268,12 @@ async def assert_trigger_behavior_first(
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert len(calls) == 0
 
 
 async def assert_trigger_behavior_last(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     target_entities: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -1258,6 +1283,7 @@ async def assert_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode last."""
+    calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
@@ -1269,7 +1295,11 @@ async def assert_trigger_behavior_last(
         await hass.async_block_till_done()
 
     await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+        hass,
+        trigger,
+        {"behavior": "last"} | trigger_options,
+        trigger_target_config,
+        calls,
     )
 
     for state in states[1:]:
@@ -1278,19 +1308,19 @@ async def assert_trigger_behavior_last(
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert len(calls) == 0
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert len(calls) == 0
 
 
 def parametrize_numerical_condition_above_below_any(
@@ -1654,7 +1684,6 @@ def parametrize_numerical_attribute_condition_above_below_all(
 async def assert_trigger_ignores_limit_entities_with_wrong_unit(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     trigger: str,
     trigger_options: dict[str, Any],
     entity_id: str,
@@ -1682,6 +1711,7 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
         wrong_unit: A unit that the trigger should reject (e.g. "lx").
 
     """
+    calls: list[str] = []
     # Set up entity in triggering state
     set_or_remove_state(hass, entity_id, trigger_state)
     # Set up all limit entities with the wrong unit
@@ -1693,14 +1723,16 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
         )
     await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]})
+    await arm_trigger(
+        hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]}, calls
+    )
 
     # Cycle entity state - should NOT fire (all limit entities have wrong unit)
     set_or_remove_state(hass, entity_id, reset_state)
     await hass.async_block_till_done()
     set_or_remove_state(hass, entity_id, trigger_state)
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert len(calls) == 0
 
     # Fix limit entities one at a time; trigger should not fire until all are fixed
     for i, (limit_entity_id, limit_value) in enumerate(limit_entities):
@@ -1718,10 +1750,10 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
 
         if i < len(limit_entities) - 1:
             # Not all limits fixed yet - should not fire
-            assert len(service_calls) == 0
+            assert len(calls) == 0
         else:
             # All limits fixed - should fire
-            assert len(service_calls) == 1
+            assert len(calls) == 1
 
 
 async def assert_numerical_condition_unit_conversion(

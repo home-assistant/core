@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -94,7 +94,6 @@ async def test_moisture_triggers_gated_by_labs_flag(
 )
 async def test_moisture_trigger_binary_sensor_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -106,7 +105,6 @@ async def test_moisture_trigger_binary_sensor_behavior_any(
     """Test moisture trigger fires for binary_sensor entities with device_class moisture."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -147,7 +145,6 @@ async def test_moisture_trigger_binary_sensor_behavior_any(
 )
 async def test_moisture_trigger_binary_sensor_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -159,7 +156,6 @@ async def test_moisture_trigger_binary_sensor_behavior_first(
     """Test moisture trigger fires on the first binary_sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -200,7 +196,6 @@ async def test_moisture_trigger_binary_sensor_behavior_first(
 )
 async def test_moisture_trigger_binary_sensor_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -212,7 +207,6 @@ async def test_moisture_trigger_binary_sensor_behavior_last(
     """Test moisture trigger fires when the last binary_sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -245,7 +239,6 @@ async def test_moisture_trigger_binary_sensor_behavior_last(
 )
 async def test_moisture_trigger_sensor_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -257,7 +250,6 @@ async def test_moisture_trigger_sensor_behavior_any(
     """Test moisture trigger fires for sensor entities with device_class moisture."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -285,7 +277,6 @@ async def test_moisture_trigger_sensor_behavior_any(
 )
 async def test_moisture_trigger_sensor_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -297,7 +288,6 @@ async def test_moisture_trigger_sensor_crossed_threshold_behavior_first(
     """Test moisture crossed_threshold trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -325,7 +315,6 @@ async def test_moisture_trigger_sensor_crossed_threshold_behavior_first(
 )
 async def test_moisture_trigger_sensor_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -337,7 +326,6 @@ async def test_moisture_trigger_sensor_crossed_threshold_behavior_last(
     """Test moisture crossed_threshold trigger fires when the last sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -373,7 +361,6 @@ async def test_moisture_trigger_sensor_crossed_threshold_behavior_last(
 )
 async def test_moisture_trigger_number_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -385,7 +372,6 @@ async def test_moisture_trigger_number_behavior_any(
     """Test moisture trigger fires for number entities with device_class moisture."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -413,7 +399,6 @@ async def test_moisture_trigger_number_behavior_any(
 )
 async def test_moisture_trigger_number_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -425,7 +410,6 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_first(
     """Test moisture crossed_threshold trigger fires on the first number state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -453,7 +437,6 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_first(
 )
 async def test_moisture_trigger_number_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -465,7 +448,6 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_last(
     """Test moisture crossed_threshold trigger fires when the last number changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -506,7 +488,6 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_last(
 )
 async def test_moisture_trigger_ignores_limit_entity_with_wrong_unit(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     trigger: str,
     trigger_options: dict[str, Any],
     limit_entities: list[str],
@@ -518,7 +499,6 @@ async def test_moisture_trigger_ignores_limit_entity_with_wrong_unit(
     }
     await assert_trigger_ignores_limit_entities_with_wrong_unit(
         hass,
-        service_calls=service_calls,
         trigger=trigger,
         trigger_options=trigger_options,
         entity_id="sensor.test_moisture",
