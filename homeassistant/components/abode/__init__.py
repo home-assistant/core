@@ -69,6 +69,7 @@ class AbodeSystem:
     entity_ids: set[str | None] = field(default_factory=set)
     logout_listener: CALLBACK_TYPE | None = None
 
+
 AUTH_STATUS_CODES: set[int] = {
     HTTPStatus.BAD_REQUEST,
     HTTPStatus.UNAUTHORIZED,
@@ -165,12 +166,12 @@ def _install_runtime_auth_guard(
         data: dict[str, str] | None = None,
     ) -> Response:
         try:
-            response = cast(Response, original_send_request(method, path, headers, data))
+            response = cast(
+                Response, original_send_request(method, path, headers, data)
+            )
         except Exception as ex:
             if _is_auth_error(ex):
-                _start_reauth(
-                    hass, entry, abode_system.abode, abode_system.polling, ex
-                )
+                _start_reauth(hass, entry, abode_system.abode, abode_system.polling, ex)
             raise
 
         if _is_auth_like_response(response):
