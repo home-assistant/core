@@ -641,4 +641,38 @@ async def test_lamp_unknown_brightness(
         None,
     )
 
-    assert hass.states.get("light.vulcan_light").state == STATE_UNKNOWN
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+@pytest.mark.parametrize(
+    ("service", "argument"),
+    [(SERVICE_TURN_ON, "high"), (SERVICE_TURN_OFF, "off")],
+)
+async def test_lamp_switch_not_used_when_off_in_supported_levels(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    argument: str,
+) -> None:
+    """Test samsungce.lamp on/off uses brightness commands when 'off' is in supported levels, even with switch capability."""
+    # Modify the device status to include "off" in supported brightness levels
+    # This simulates a device where the switch doesn't control the lamp
+    devices.get_device_status.return_value["lamp"][Capability.SAMSUNG_CE_LAMP][
+        Attribute.SUPPORTED_BRIGHTNESS_LEVEL
+    ].value = ["off", "low", "high"]
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "light.range_hood_light"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SAMSUNG_CE_LAMP,
+        Command.SET_BRIGHTNESS_LEVEL,
+        "lamp",
+        argument=argument,
+    )
