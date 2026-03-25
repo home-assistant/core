@@ -14,24 +14,19 @@
             - all
             - any
 
-.number_or_entity: &number_or_entity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              unit_of_measurement: "%"
-        entity:
-          selector:
-            entity:
-              filter:
-                domain:
-                  - input_number
-                  - number
-                  - sensor
-      translation_key: number_or_entity
+.battery_threshold_entity: &battery_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: sensor
+    device_class: battery
+  - domain: number
+    device_class: battery
+
+.battery_threshold_number: &battery_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
 
 is_low: *condition_common
 
@@ -62,5 +57,10 @@ is_level:
         device_class: battery
   fields:
     behavior: *condition_behavior
-    above: *number_or_entity
-    below: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *battery_threshold_entity
+          mode: is
+          number: *battery_threshold_number

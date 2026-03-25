@@ -78,17 +78,21 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
-    CONF_UNIT,
     DomainSpec,
+    ThresholdConfig,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
-    number_or_entity,
-    validate_unit_set_if_range_numerical,
 )
 from .integration_platform import async_process_integration_platforms
-from .selector import TargetSelector
+from .selector import (
+    NumericThresholdMode,
+    NumericThresholdSelector,
+    NumericThresholdSelectorConfig,
+    NumericThresholdType,
+    TargetSelector,
+)
 from .target import TargetSelection, async_extract_referenced_entity_ids
 from .template import Template, render_complex
 from .trace import (
@@ -458,22 +462,6 @@ def make_entity_state_condition(
     return CustomCondition
 
 
-def _validate_above_below(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that above < below when both are set."""
-    above = config.get(CONF_ABOVE)
-    below = config.get(CONF_BELOW)
-    if above is None or below is None:
-        return config
-    if isinstance(above, str) or isinstance(below, str):
-        return config
-    if above >= below:
-        raise vol.Invalid(
-            f"A value can never be above {above} and below {below} at the same"
-            " time. You probably want two different conditions."
-        )
-    return config
-
-
 NUMERICAL_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
@@ -482,11 +470,10 @@ NUMERICAL_CONDITION_SCHEMA = vol.Schema(
                 vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                     [BEHAVIOR_ANY, BEHAVIOR_ALL]
                 ),
-                vol.Optional(CONF_ABOVE): number_or_entity,
-                vol.Optional(CONF_BELOW): number_or_entity,
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
+                ),
             },
-            cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
-            _validate_above_below,
         ),
     }
 )
@@ -503,8 +490,15 @@ class EntityNumericalConditionBase(EntityConditionBase):
         super().__init__(hass, config)
         if TYPE_CHECKING:
             assert config.options is not None
-        self._above: float | str | None = config.options.get(CONF_ABOVE)
-        self._below: float | str | None = config.options.get(CONF_BELOW)
+        threshold_options: dict[str, Any] = config.options["threshold"]
+        self.threshold = ThresholdConfig.from_config(threshold_options.get("value"))
+        self.lower_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_min")
+        )
+        self.upper_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_max")
+        )
+        self._threshold_type = threshold_options["type"]
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this condition."""
@@ -512,20 +506,26 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return True
         return unit == self._valid_unit
 
-    def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
-        """Get numerical value from float or entity state."""
-        if isinstance(entity_or_float, str):
-            if not (ref_state := self._hass.states.get(entity_or_float)):
-                return None
-            if not self._is_valid_unit(
-                ref_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            ):
-                return None
-            try:
-                return float(ref_state.state)
-            except TypeError, ValueError:
-                return None
-        return entity_or_float
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
+            return threshold.number
+
+        if not (entity_state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
+            # Entity not found
+            return None
+        if not self._is_valid_unit(
+            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        ):
+            # Entity unit does not match the expected unit
+            return None
+        try:
+            return float(entity_state.state)
+        except TypeError, ValueError:
+            # Entity state is not a valid number
+            return None
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked value from a state, with unit validation for state-based values."""
@@ -545,17 +545,27 @@ class EntityNumericalConditionBase(EntityConditionBase):
         except TypeError, ValueError:
             return False
 
-        if self._above is not None:
-            if (above := self._get_numerical_value(self._above)) is None:
+        if self._threshold_type == NumericThresholdType.ABOVE:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
                 return False
-            if value <= above:
+            return value > limit
+        if self._threshold_type == NumericThresholdType.BELOW:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
                 return False
-        if self._below is not None:
-            if (below := self._get_numerical_value(self._below)) is None:
-                return False
-            if value >= below:
-                return False
-        return True
+            return value < limit
+
+        # Mode is BETWEEN or OUTSIDE
+        lower_limit = self._get_threshold_value(self.lower_threshold)
+        upper_limit = self._get_threshold_value(self.upper_threshold)
+        if lower_limit is None or upper_limit is None:
+            # Entity not found or invalid number, don't trigger
+            return False
+        between = lower_limit < value < upper_limit
+        if self._threshold_type == NumericThresholdType.BETWEEN:
+            return between
+        return not between
 
 
 def make_entity_numerical_condition(
@@ -586,13 +596,13 @@ def _make_numerical_condition_with_unit_schema(
                     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                         [BEHAVIOR_ANY, BEHAVIOR_ALL]
                     ),
-                    vol.Optional(CONF_ABOVE): number_or_entity,
-                    vol.Optional(CONF_BELOW): number_or_entity,
-                    vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
+                    vol.Required("threshold"): NumericThresholdSelector(
+                        NumericThresholdSelectorConfig(
+                            mode=NumericThresholdMode.IS,
+                            unit_of_measurement=list(unit_converter.VALID_UNITS),
+                        )
+                    ),
                 },
-                cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
-                _validate_above_below,
-                validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
             ),
         }
     )
@@ -602,15 +612,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
     """Condition for numerical state comparisons with unit conversion."""
 
     _base_unit: str | None  # Base unit for the tracked value
-    _manual_limit_unit: str | None  # Unit of above/below limits when numbers
     _unit_converter: type[BaseUnitConverter]
-
-    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
-        """Initialize the numerical condition with unit conversion."""
-        super().__init__(hass, config)
-        if TYPE_CHECKING:
-            assert config.options is not None
-        self._manual_limit_unit = config.options.get(CONF_UNIT)
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
@@ -621,25 +623,34 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         """Get the unit of an entity from its state."""
         return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-    def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
-        """Get numerical value from float or entity state."""
-        if isinstance(entity_or_float, (int, float)):
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
             return self._unit_converter.convert(
-                entity_or_float, self._manual_limit_unit, self._base_unit
+                threshold.number,  # type: ignore[arg-type]
+                threshold.unit,  # type: ignore[arg-type]
+                self._base_unit,
             )
 
-        if not (_state := self._hass.states.get(entity_or_float)):
+        if not (entity_state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
+            # Entity not found
             return None
         try:
-            value = float(_state.state)
+            value = float(entity_state.state)
         except TypeError, ValueError:
+            # Entity state is not a valid number
             return None
 
         try:
             return self._unit_converter.convert(
-                value, _state.attributes.get(ATTR_UNIT_OF_MEASUREMENT), self._base_unit
+                value,
+                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                self._base_unit,
             )
         except HomeAssistantError:
+            # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
     def _get_tracked_value(self, entity_state: State) -> Any:
@@ -662,23 +673,6 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
             )
         except HomeAssistantError:
             return None
-
-    def is_valid_state(self, entity_state: State) -> bool:
-        """Check if the state is within the specified range."""
-        if (value := self._get_tracked_value(entity_state)) is None:
-            return False
-
-        if self._above is not None:
-            if (above := self._get_numerical_value(self._above)) is None:
-                return False
-            if value <= above:
-                return False
-        if self._below is not None:
-            if (below := self._get_numerical_value(self._below)) is None:
-                return False
-            if value >= below:
-                return False
-        return True
 
 
 def make_entity_numerical_condition_with_unit(

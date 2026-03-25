@@ -16,7 +16,6 @@ from typing import (
     Final,
     Literal,
     Protocol,
-    Self,
     TypedDict,
     cast,
     override,
@@ -70,6 +69,7 @@ from . import config_validation as cv, selector
 from .automation import (
     DomainSpec,
     NumericalDomainSpec,
+    ThresholdConfig,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
@@ -533,34 +533,6 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
         )
     }
 )
-
-
-@dataclass(frozen=True, kw_only=True)
-class ThresholdConfig:
-    """Configuration for threshold triggers."""
-
-    numerical: bool
-    entity: str | None
-    number: float | None
-    unit: str | None | UndefinedType
-
-    @classmethod
-    def from_config(cls, config: dict[str, Any] | None) -> Self | None:
-        """Create ThresholdConfig from config dict."""
-        if config is None:
-            return None
-
-        entity: str | None = None
-        number: float | None = None
-        unit: str | None | UndefinedType = UNDEFINED
-        numerical = "number" in config
-        if numerical:
-            number = config["number"]
-            unit = config.get("unit_of_measurement", UNDEFINED)
-        else:
-            entity = config["entity"]
-
-        return cls(numerical=numerical, number=number, entity=entity, unit=unit)
 
 
 class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):

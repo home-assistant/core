@@ -1,7 +1,9 @@
 {
   "common": {
     "condition_behavior_description": "How the state should match on the targeted batteries.",
-    "condition_behavior_name": "Behavior"
+    "condition_behavior_name": "Behavior",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration"
   },
   "conditions": {
     "is_charging": {
@@ -17,17 +19,13 @@
     "is_level": {
       "description": "Tests the battery level of one or more batteries.",
       "fields": {
-        "above": {
-          "description": "Require the battery percentage to be above this value.",
-          "name": "Above"
-        },
         "behavior": {
           "description": "[%key:component::battery::common::condition_behavior_description%]",
           "name": "[%key:component::battery::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "Require the battery percentage to be below this value.",
-          "name": "Below"
+        "threshold": {
+          "description": "[%key:component::battery::common::condition_threshold_description%]",
+          "name": "[%key:component::battery::common::condition_threshold_name%]"
         }
       },
       "name": "Battery level"
@@ -68,12 +66,6 @@
       "options": {
         "all": "All",
         "any": "Any"
-      }
-    },
-    "number_or_entity": {
-      "choices": {
-        "entity": "Entity",
-        "number": "Number"
       }
     }
   },
