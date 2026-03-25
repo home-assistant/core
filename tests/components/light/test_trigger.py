@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -188,7 +188,6 @@ async def test_light_triggers_gated_by_labs_flag(
 )
 async def test_light_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -200,7 +199,6 @@ async def test_light_state_trigger_behavior_any(
     """Test that the light state trigger fires when any light state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -229,7 +227,6 @@ async def test_light_state_trigger_behavior_any(
 )
 async def test_light_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -241,7 +238,6 @@ async def test_light_state_attribute_trigger_behavior_any(
     """Test that the light state trigger fires when any light state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -274,7 +270,6 @@ async def test_light_state_attribute_trigger_behavior_any(
 )
 async def test_light_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -286,7 +281,6 @@ async def test_light_state_trigger_behavior_first(
     """Test that the light state trigger fires when the first light changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -312,7 +306,6 @@ async def test_light_state_trigger_behavior_first(
 )
 async def test_light_state_attribute_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -324,7 +317,6 @@ async def test_light_state_attribute_trigger_behavior_first(
     """Test that the light state trigger fires when the first light state changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -357,7 +349,6 @@ async def test_light_state_attribute_trigger_behavior_first(
 )
 async def test_light_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -369,7 +360,6 @@ async def test_light_state_trigger_behavior_last(
     """Test that the light state trigger fires when the last light changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -395,7 +385,6 @@ async def test_light_state_trigger_behavior_last(
 )
 async def test_light_state_attribute_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -407,7 +396,6 @@ async def test_light_state_attribute_trigger_behavior_last(
     """Test that the light state trigger fires when the last light state changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -448,7 +436,6 @@ async def test_light_state_attribute_trigger_behavior_last(
 )
 async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     trigger: str,
     trigger_options: dict[str, Any],
     limit_entities: list[str],
@@ -456,7 +443,6 @@ async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
     """Test numerical triggers do not fire if limit entities have the wrong unit."""
     await assert_trigger_ignores_limit_entities_with_wrong_unit(
         hass,
-        service_calls=service_calls,
         trigger=trigger,
         trigger_options=trigger_options,
         entity_id="light.test_light",

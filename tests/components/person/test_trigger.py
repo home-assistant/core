@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.person.const import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -61,7 +61,6 @@ async def test_person_triggers_gated_by_labs_flag(
 )
 async def test_person_home_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_persons: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -73,7 +72,6 @@ async def test_person_home_trigger_behavior_any(
     """Test that the person home triggers when any person changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_persons,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -106,7 +104,6 @@ async def test_person_home_trigger_behavior_any(
 )
 async def test_person_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_persons: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -118,7 +115,6 @@ async def test_person_state_trigger_behavior_first(
     """Test that the person home triggers when the first person changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_persons,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -151,7 +147,6 @@ async def test_person_state_trigger_behavior_first(
 )
 async def test_person_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_persons: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -163,7 +158,6 @@ async def test_person_state_trigger_behavior_last(
     """Test that the person home triggers when the last person changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_persons,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

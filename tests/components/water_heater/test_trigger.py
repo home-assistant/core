@@ -13,7 +13,7 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -104,7 +104,6 @@ async def test_water_heater_triggers_gated_by_labs_flag(
 )
 async def test_water_heater_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: list[str],
     trigger_target_config: dict,
     entity_id: str,
@@ -116,7 +115,6 @@ async def test_water_heater_state_trigger_behavior_any(
     """Test that the water heater state trigger fires when any water heater state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -151,7 +149,6 @@ async def test_water_heater_state_trigger_behavior_any(
 )
 async def test_water_heater_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: list[str],
     trigger_target_config: dict,
     entity_id: str,
@@ -163,7 +160,6 @@ async def test_water_heater_state_attribute_trigger_behavior_any(
     """Test that the water heater target temperature attribute triggers fire when any water heater's target temperature changes or crosses a threshold."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -214,7 +210,6 @@ async def test_water_heater_state_attribute_trigger_behavior_any(
 )
 async def test_water_heater_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: list[str],
     trigger_target_config: dict,
     entity_id: str,
@@ -226,7 +221,6 @@ async def test_water_heater_state_trigger_behavior_first(
     """Test that the water heater state trigger fires when the first water heater changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -255,7 +249,6 @@ async def test_water_heater_state_trigger_behavior_first(
 )
 async def test_water_heater_state_attribute_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: list[str],
     trigger_target_config: dict,
     entity_id: str,
@@ -267,7 +260,6 @@ async def test_water_heater_state_attribute_trigger_behavior_first(
     """Test that the water heater attribute threshold trigger fires when the first water heater's target temperature crosses the configured threshold."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -318,7 +310,6 @@ async def test_water_heater_state_attribute_trigger_behavior_first(
 )
 async def test_water_heater_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: list[str],
     trigger_target_config: dict,
     entity_id: str,
@@ -330,7 +321,6 @@ async def test_water_heater_state_trigger_behavior_last(
     """Test that the water heater state trigger fires when the last water heater changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -359,7 +349,6 @@ async def test_water_heater_state_trigger_behavior_last(
 )
 async def test_water_heater_state_attribute_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: list[str],
     trigger_target_config: dict,
     entity_id: str,
@@ -371,7 +360,6 @@ async def test_water_heater_state_attribute_trigger_behavior_last(
     """Test that the water heater trigger fires when the last water heater's target temperature crosses the configured threshold."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
