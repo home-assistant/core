@@ -140,6 +140,7 @@ FLOWS = {
         "datadog",
         "deako",
         "deconz",
+        "decora_wifi",
         "deluge",
         "denonavr",
         "devialet",
