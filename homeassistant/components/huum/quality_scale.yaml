@@ -6,17 +6,8 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: done
-    comment: |
-      PLANNED: Rename result2 -> result throughout test_config_flow.py.
-  config-flow:
-    status: done
-    comment: |
-      PLANNED: Move _async_abort_entries_match before the try block so duplicate
-      entries are rejected before credentials are validated. Remove _LOGGER.error
-      call from config_flow.py — the error message is redundant with the errors
-      dict entry.
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -32,12 +23,7 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    status: done
-    comment: |
-      PLANNED: Move _async_abort_entries_match before the try block in
-      config_flow.py so duplicate entries are rejected before credentials are
-      validated.
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
@@ -50,23 +36,14 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: done
-    comment: |
-      PLANNED: Remove _LOGGER.error from coordinator.py — the message is already
-      passed to UpdateFailed, so logging it separately is redundant.
-  parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage:
-    status: todo
-    comment: |
-      PLANNED: Remove unique_id from mock config entry in conftest.py. Use
-      freezer-based time advancement instead of directly calling async_refresh().
-      Rename result2 -> result in test files.
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: todo
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery: todo
   discovery-update-info: todo
   docs-data-update: done
@@ -86,11 +63,7 @@ rules:
     comment: All entities are core functionality.
   entity-translations: done
   exception-translations: todo
-  icon-translations:
-    status: done
-    comment: |
-      PLANNED: Remove the icon property from climate.py — entities should not set
-      custom icons. Use HA defaults or icon translations instead.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
@@ -102,4 +75,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
