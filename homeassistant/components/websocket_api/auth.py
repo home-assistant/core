@@ -10,6 +10,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components.http.ban import process_success_login, process_wrong_login
+from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.const import __version__
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.json import json_bytes
@@ -67,6 +68,19 @@ class AuthPhase:
         self._request = request
         # send_bytes_text will directly send a message to the client.
         self._send_bytes_text = send_bytes_text
+
+    async def async_handle_supervisor_unix_socket(self) -> ActiveConnection:
+        """Handle a pre-authenticated Unix socket connection."""
+        conn = ActiveConnection(
+            self._logger,
+            self._hass,
+            self._send_message,
+            self._request[KEY_HASS_USER],
+            refresh_token=None,
+        )
+        await self._send_bytes_text(AUTH_OK_MESSAGE)
+        self._logger.debug("Auth OK (unix socket)")
+        return conn
 
     async def async_handle(self, msg: JsonValueType) -> ActiveConnection:
         """Handle authentication."""

@@ -14,6 +14,7 @@ from aiohttp import WSMsgType, web
 from aiohttp.http_websocket import WebSocketWriter
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.const import is_supervisor_unix_socket_request
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -36,11 +37,11 @@ from .error import Disconnect
 from .messages import message_to_json_bytes
 from .util import describe_request
 
-CLOSE_MSG_TYPES = {WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING}
-AUTH_MESSAGE_TIMEOUT = 10  # seconds
-
 if TYPE_CHECKING:
     from .connection import ActiveConnection
+
+CLOSE_MSG_TYPES = {WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING}
+AUTH_MESSAGE_TIMEOUT = 10  # seconds
 
 
 _WS_LOGGER: Final = logging.getLogger(f"{__name__}.connection")
@@ -386,37 +387,45 @@ class WebSocketHandler:
         send_bytes_text: Callable[[bytes], Coroutine[Any, Any, None]],
     ) -> ActiveConnection:
         """Handle the auth phase of the websocket connection."""
-        await send_bytes_text(AUTH_REQUIRED_MESSAGE)
+        request = self._request
 
-        # Auth Phase
-        try:
-            msg = await self._wsock.receive(AUTH_MESSAGE_TIMEOUT)
-        except TimeoutError as err:
-            raise Disconnect(
-                f"Did not receive auth message within {AUTH_MESSAGE_TIMEOUT} seconds"
-            ) from err
+        if is_supervisor_unix_socket_request(request):
+            # Unix socket requests are pre-authenticated by the HTTP
+            # auth middleware — skip the token exchange.
+            connection = await auth.async_handle_supervisor_unix_socket()
+        else:
+            await send_bytes_text(AUTH_REQUIRED_MESSAGE)
 
-        if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
-            raise Disconnect("Received close message during auth phase")
-
-        if msg.type is not WSMsgType.TEXT:
-            if msg.type is WSMsgType.ERROR:
-                # msg.data is the exception
+            # Auth Phase
+            try:
+                msg = await self._wsock.receive(AUTH_MESSAGE_TIMEOUT)
+            except TimeoutError as err:
                 raise Disconnect(
-                    f"Received error message during auth phase: {msg.data}"
+                    f"Did not receive auth message within {AUTH_MESSAGE_TIMEOUT} seconds"
+                ) from err
+
+            if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
+                raise Disconnect("Received close message during auth phase")
+
+            if msg.type is not WSMsgType.TEXT:
+                if msg.type is WSMsgType.ERROR:
+                    # msg.data is the exception
+                    raise Disconnect(
+                        f"Received error message during auth phase: {msg.data}"
+                    )
+                raise Disconnect(
+                    f"Received non-Text message of type {msg.type} during auth phase"
                 )
-            raise Disconnect(
-                f"Received non-Text message of type {msg.type} during auth phase"
-            )
 
-        try:
-            auth_msg_data = json_loads(msg.data)
-        except ValueError as err:
-            raise Disconnect("Received invalid JSON during auth phase") from err
+            try:
+                auth_msg_data = json_loads(msg.data)
+            except ValueError as err:
+                raise Disconnect("Received invalid JSON during auth phase") from err
 
-        if self._debug:
-            self._logger.debug("%s: Received %s", self.description, auth_msg_data)
-        connection = await auth.async_handle(auth_msg_data)
+            if self._debug:
+                self._logger.debug("%s: Received %s", self.description, auth_msg_data)
+            connection = await auth.async_handle(auth_msg_data)
+
         # As the webserver is now started before the start
         # event we do not want to block for websocket responses
         #
