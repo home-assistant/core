@@ -27,7 +27,7 @@
       "name": "Moisture is not detected"
     },
     "is_value": {
-      "description": "Tests the moisture level value.",
+      "description": "Tests the moisture level of one or more entities.",
       "fields": {
         "above": {
           "description": "Require the moisture level to be above this value.",
