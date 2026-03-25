@@ -68,3 +68,10 @@ async def test_scopes_error(hass: HomeAssistant) -> None:
     ):
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_vehicle_api_handle_is_optional(hass: HomeAssistant) -> None:
+    """Test runtime vehicle API handle defaults to None during scaffold stage."""
+
+    entry = await setup_platform(hass)
+    assert all(vehicle.api is None for vehicle in entry.runtime_data.vehicles)
