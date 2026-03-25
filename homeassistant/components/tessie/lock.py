@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from tessie_api import lock, open_unlock_charge_port, unlock
-
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -51,12 +49,12 @@ class TessieLockEntity(TessieEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Set new value."""
-        await self.run(lock)
+        await self.run(self.api.lock())
         self.set((self.key, True))
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Set new value."""
-        await self.run(unlock)
+        await self.run(self.api.unlock())
         self.set((self.key, False))
 
 
@@ -84,5 +82,5 @@ class TessieCableLockEntity(TessieEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock charge cable lock."""
-        await self.run(open_unlock_charge_port)
+        await self.run(self.api.open_charge_port())
         self.set((self.key, TessieChargeCableLockStates.DISENGAGED))

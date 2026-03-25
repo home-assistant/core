@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import RESPONSE_OK, assert_entities, setup_platform
+from .common import RESPONSE_OK, TEST_RESPONSE, assert_entities, setup_platform
 
 
 async def test_switches(
@@ -28,7 +28,8 @@ async def test_switches(
 
     entity_id = "switch.test_charge"
     with patch(
-        "homeassistant.components.tessie.switch.start_charging",
+        "tesla_fleet_api.tessie.Vehicle.start_charging",
+        return_value=TEST_RESPONSE,
     ) as mock_start_charging:
         # Test Switch On
         await hass.services.async_call(
@@ -41,7 +42,8 @@ async def test_switches(
     assert hass.states.get(entity_id) == snapshot(name=SERVICE_TURN_ON)
 
     with patch(
-        "homeassistant.components.tessie.switch.stop_charging",
+        "tesla_fleet_api.tessie.Vehicle.stop_charging",
+        return_value=TEST_RESPONSE,
     ) as mock_stop_charging:
         # Test Switch Off
         await hass.services.async_call(

@@ -13,7 +13,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import assert_entities, setup_platform
+from .common import TEST_RESPONSE, assert_entities, setup_platform
 
 
 async def test_updates(
@@ -28,7 +28,8 @@ async def test_updates(
     entity_id = "update.test_update"
 
     with patch(
-        "homeassistant.components.tessie.update.schedule_software_update"
+        "tesla_fleet_api.tessie.Vehicle.tessie_schedule_software_update",
+        return_value=TEST_RESPONSE,
     ) as mock_update:
         await hass.services.async_call(
             UPDATE_DOMAIN,

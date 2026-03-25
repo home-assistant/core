@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from tessie_api import schedule_software_update
-
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -99,7 +97,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.run(schedule_software_update, in_seconds=0)
+        await self.run(self.api.tessie_schedule_software_update(in_seconds=0))
         self.set(
             ("vehicle_state_software_update_status", TessieUpdateStatus.INSTALLING)
         )

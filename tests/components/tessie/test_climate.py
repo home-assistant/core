@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -22,13 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import (
-    ERROR_CONNECTION,
-    ERROR_UNKNOWN,
-    TEST_RESPONSE,
-    assert_entities,
-    setup_platform,
-)
+from .common import TEST_RESPONSE, assert_entities, setup_platform
 
 
 async def test_climate(
@@ -42,9 +37,8 @@ async def test_climate(
 
     entity_id = "climate.test_climate"
 
-    # Test setting climate on
     with patch(
-        "homeassistant.components.tessie.climate.start_climate_preconditioning",
+        "tesla_fleet_api.tessie.Vehicle.start_climate",
         return_value=TEST_RESPONSE,
     ) as mock_set:
         await hass.services.async_call(
@@ -54,17 +48,15 @@ async def test_climate(
             blocking=True,
         )
         mock_set.assert_called_once()
-    state = hass.states.get(entity_id)
-    assert state.state == HVACMode.HEAT_COOL
+    assert hass.states.get(entity_id).state == HVACMode.HEAT_COOL
 
-    # Test setting climate temp
     with (
         patch(
-            "homeassistant.components.tessie.climate.set_temperature",
+            "tesla_fleet_api.tessie.Vehicle.set_temperatures",
             return_value=TEST_RESPONSE,
         ) as mock_set,
         patch(
-            "homeassistant.components.tessie.climate.start_climate_preconditioning",
+            "tesla_fleet_api.tessie.Vehicle.start_climate",
             return_value=TEST_RESPONSE,
         ) as mock_set2,
     ):
@@ -80,12 +72,10 @@ async def test_climate(
         )
         mock_set.assert_called_once()
         mock_set2.assert_called_once()
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20
+    assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 20
 
-    # Test setting climate preset
     with patch(
-        "homeassistant.components.tessie.climate.set_climate_keeper_mode",
+        "tesla_fleet_api.tessie.Vehicle.tessie_set_climate_keeper_mode",
         return_value=TEST_RESPONSE,
     ) as mock_set:
         await hass.services.async_call(
@@ -95,12 +85,13 @@ async def test_climate(
             blocking=True,
         )
         mock_set.assert_called_once()
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_PRESET_MODE] == TessieClimateKeeper.ON
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_PRESET_MODE]
+        == TessieClimateKeeper.ON
+    )
 
-    # Test setting climate off
     with patch(
-        "homeassistant.components.tessie.climate.stop_climate",
+        "tesla_fleet_api.tessie.Vehicle.stop_climate",
         return_value=TEST_RESPONSE,
     ) as mock_set:
         await hass.services.async_call(
@@ -110,8 +101,7 @@ async def test_climate(
             blocking=True,
         )
         mock_set.assert_called_once()
-    state = hass.states.get(entity_id)
-    assert state.state == HVACMode.OFF
+    assert hass.states.get(entity_id).state == HVACMode.OFF
 
 
 async def test_errors(hass: HomeAssistant) -> None:
@@ -120,11 +110,10 @@ async def test_errors(hass: HomeAssistant) -> None:
     await setup_platform(hass, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
-    # Test setting climate on with unknown error
     with (
         patch(
-            "homeassistant.components.tessie.climate.stop_climate",
-            side_effect=ERROR_UNKNOWN,
+            "tesla_fleet_api.tessie.Vehicle.stop_climate",
+            side_effect=TeslaFleetError,
         ) as mock_set,
         pytest.raises(HomeAssistantError) as error,
     ):
@@ -135,34 +124,12 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert error.value.__cause__ == ERROR_UNKNOWN
-    assert error.value.translation_domain == "tessie"
-    assert error.value.translation_key == "cannot_connect"
+    assert isinstance(error.value.__cause__, TeslaFleetError)
 
-    # Test setting climate on with connection error
     with (
         patch(
-            "homeassistant.components.tessie.climate.stop_climate",
-            side_effect=ERROR_CONNECTION,
-        ) as mock_set,
-        pytest.raises(HomeAssistantError) as error,
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: [entity_id]},
-            blocking=True,
-        )
-    mock_set.assert_called_once()
-    assert error.value.__cause__ == ERROR_CONNECTION
-    assert error.value.translation_domain == "tessie"
-    assert error.value.translation_key == "cannot_connect"
-
-    # Test setting climate with child presence detection error
-    with (
-        patch(
-            "homeassistant.components.tessie.climate.start_climate_preconditioning",
-            return_value={"result": False, "reason": "cpd_enabled"},
+            "tesla_fleet_api.tessie.Vehicle.start_climate",
+            return_value={"response": {"result": False, "reason": "cpd_enabled"}},
         ) as mock_set,
         pytest.raises(HomeAssistantError) as error,
     ):

@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import assert_entities, setup_platform
+from .common import TEST_RESPONSE, assert_entities, setup_platform
 
 
 async def test_buttons(
@@ -21,16 +21,23 @@ async def test_buttons(
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
-    for entity_id, func in (
-        ("button.test_wake", "wake"),
-        ("button.test_flash_lights", "flash_lights"),
-        ("button.test_honk_horn", "honk"),
-        ("button.test_homelink", "trigger_homelink"),
-        ("button.test_keyless_driving", "enable_keyless_driving"),
-        ("button.test_play_fart", "boombox"),
+    for entity_id, path in (
+        ("button.test_wake", "tesla_fleet_api.tessie.Vehicle.wake"),
+        ("button.test_flash_lights", "tesla_fleet_api.tessie.Vehicle.flash"),
+        ("button.test_honk_horn", "tesla_fleet_api.tessie.Vehicle.honk"),
+        (
+            "button.test_homelink",
+            "tesla_fleet_api.tessie.Vehicle.tessie_trigger_homelink",
+        ),
+        (
+            "button.test_keyless_driving",
+            "tesla_fleet_api.tessie.Vehicle.remote_start",
+        ),
+        ("button.test_play_fart", "tesla_fleet_api.tessie.Vehicle.remote_boombox"),
     ):
         with patch(
-            f"homeassistant.components.tessie.button.{func}",
+            path,
+            return_value=TEST_RESPONSE,
         ) as mock_press:
             await hass.services.async_call(
                 BUTTON_DOMAIN,

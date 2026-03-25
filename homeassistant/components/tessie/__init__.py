@@ -9,11 +9,11 @@ from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
     InvalidToken,
+    MissingToken,
     SubscriptionRequired,
     TeslaFleetError,
 )
 from tesla_fleet_api.tessie import Tessie
-from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -33,6 +33,7 @@ from .coordinator import (
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
 )
+from .helpers import fetch_state_of_all_vehicles
 from .models import TessieData, TessieEnergyData, TessieVehicleData
 
 PLATFORMS = [
@@ -59,52 +60,58 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     """Set up Tessie config."""
     api_key = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
+    tessie = Tessie(session, api_key)
 
     try:
-        state_of_all_vehicles = await get_state_of_all_vehicles(
-            session=session,
-            api_key=api_key,
-            only_active=True,
+        state_of_all_vehicles = await fetch_state_of_all_vehicles(
+            tessie, only_active=True
         )
     except ClientResponseError as e:
         if e.status == HTTPStatus.UNAUTHORIZED:
             raise ConfigEntryAuthFailed from e
         raise ConfigEntryError("Setup failed, unable to connect to Tessie") from e
+    except (InvalidToken, MissingToken) as e:
+        raise ConfigEntryAuthFailed from e
+    except TeslaFleetError as e:
+        raise ConfigEntryError("Setup failed, unable to connect to Tessie") from e
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
-    vehicles = [
-        TessieVehicleData(
-            vin=vehicle["vin"],
-            data_coordinator=TessieStateUpdateCoordinator(
-                hass,
-                entry,
-                api_key=api_key,
+    vehicles = []
+    for vehicle in state_of_all_vehicles["results"]:
+        if vehicle["last_state"] is None:
+            continue
+
+        vehicle_api = tessie.vehicles.create(vehicle["vin"])
+        vehicles.append(
+            TessieVehicleData(
+                api=vehicle_api,
                 vin=vehicle["vin"],
-                data=vehicle["last_state"],
-            ),
-            device=DeviceInfo(
-                identifiers={(DOMAIN, vehicle["vin"])},
-                manufacturer="Tesla",
-                configuration_url="https://my.tessie.com/",
-                name=vehicle["last_state"]["display_name"],
-                model=MODELS.get(
-                    vehicle["last_state"]["vehicle_config"]["car_type"],
-                    vehicle["last_state"]["vehicle_config"]["car_type"],
+                data_coordinator=TessieStateUpdateCoordinator(
+                    hass,
+                    entry,
+                    api=vehicle_api,
+                    data=vehicle["last_state"],
                 ),
-                sw_version=vehicle["last_state"]["vehicle_state"]["car_version"].split(
-                    " "
-                )[0],
-                hw_version=vehicle["last_state"]["vehicle_config"]["driver_assist"],
-                serial_number=vehicle["vin"],
-            ),
+                device=DeviceInfo(
+                    identifiers={(DOMAIN, vehicle["vin"])},
+                    manufacturer="Tesla",
+                    configuration_url="https://my.tessie.com/",
+                    name=vehicle["last_state"]["display_name"],
+                    model=MODELS.get(
+                        vehicle["last_state"]["vehicle_config"]["car_type"],
+                        vehicle["last_state"]["vehicle_config"]["car_type"],
+                    ),
+                    sw_version=vehicle["last_state"]["vehicle_state"][
+                        "car_version"
+                    ].split(" ")[0],
+                    hw_version=vehicle["last_state"]["vehicle_config"]["driver_assist"],
+                    serial_number=vehicle["vin"],
+                ),
+            )
         )
-        for vehicle in state_of_all_vehicles["results"]
-        if vehicle["last_state"] is not None
-    ]
 
     # Energy Sites
-    tessie = Tessie(session, api_key)
     energysites: list[TessieEnergyData] = []
 
     try:
@@ -119,58 +126,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             raise ConfigEntryNotReady from e
 
         for product in products:
-            if "energy_site_id" in product:
-                site_id = product["energy_site_id"]
-                if not (
-                    product["components"]["battery"]
-                    or product["components"]["solar"]
-                    or "wall_connectors" in product["components"]
-                ):
-                    _LOGGER.debug(
-                        "Skipping Energy Site %s as it has no components",
-                        site_id,
-                    )
-                    continue
+            if "energy_site_id" not in product:
+                continue
 
-                api = tessie.energySites.create(site_id)
-
-                try:
-                    live_status = (await api.live_status())["response"]
-                except (InvalidToken, Forbidden, SubscriptionRequired) as e:
-                    raise ConfigEntryAuthFailed from e
-                except TeslaFleetError as e:
-                    raise ConfigEntryNotReady(e.message) from e
-
-                powerwall = (
-                    product["components"]["battery"] or product["components"]["solar"]
+            site_id = product["energy_site_id"]
+            if not (
+                product["components"]["battery"]
+                or product["components"]["solar"]
+                or "wall_connectors" in product["components"]
+            ):
+                _LOGGER.debug(
+                    "Skipping Energy Site %s as it has no components",
+                    site_id,
                 )
+                continue
 
-                energysites.append(
-                    TessieEnergyData(
-                        api=api,
-                        id=site_id,
-                        live_coordinator=(
-                            TessieEnergySiteLiveCoordinator(
-                                hass, entry, api, live_status
-                            )
-                            if isinstance(live_status, dict)
-                            else None
-                        ),
-                        info_coordinator=TessieEnergySiteInfoCoordinator(
-                            hass, entry, api
-                        ),
-                        history_coordinator=(
-                            TessieEnergyHistoryCoordinator(hass, entry, api)
-                            if powerwall
-                            else None
-                        ),
-                        device=DeviceInfo(
-                            identifiers={(DOMAIN, str(site_id))},
-                            manufacturer="Tesla",
-                            name=product.get("site_name", "Energy Site"),
-                        ),
-                    )
+            api = tessie.energySites.create(site_id)
+
+            try:
+                live_status = (await api.live_status())["response"]
+            except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+                raise ConfigEntryAuthFailed from e
+            except TeslaFleetError as e:
+                raise ConfigEntryNotReady(e.message) from e
+
+            powerwall = (
+                product["components"]["battery"] or product["components"]["solar"]
+            )
+
+            energysites.append(
+                TessieEnergyData(
+                    api=api,
+                    id=site_id,
+                    live_coordinator=(
+                        TessieEnergySiteLiveCoordinator(hass, entry, api, live_status)
+                        if isinstance(live_status, dict)
+                        else None
+                    ),
+                    info_coordinator=TessieEnergySiteInfoCoordinator(hass, entry, api),
+                    history_coordinator=(
+                        TessieEnergyHistoryCoordinator(hass, entry, api)
+                        if powerwall
+                        else None
+                    ),
+                    device=DeviceInfo(
+                        identifiers={(DOMAIN, str(site_id))},
+                        manufacturer="Tesla",
+                        name=product.get("site_name", "Energy Site"),
+                    ),
                 )
+            )
 
         # Populate coordinator data before forwarding to platforms
         await asyncio.gather(

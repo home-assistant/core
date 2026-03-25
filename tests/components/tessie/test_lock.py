@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .common import assert_entities, setup_platform
+from .common import TEST_RESPONSE, assert_entities, setup_platform
 
 
 async def test_locks(
@@ -30,7 +30,9 @@ async def test_locks(
 
     # Test lock set value functions
     entity_id = "lock.test_lock"
-    with patch("homeassistant.components.tessie.lock.lock") as mock_run:
+    with patch(
+        "tesla_fleet_api.tessie.Vehicle.lock", return_value=TEST_RESPONSE
+    ) as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
@@ -40,7 +42,9 @@ async def test_locks(
         mock_run.assert_called_once()
     assert hass.states.get(entity_id).state == LockState.LOCKED
 
-    with patch("homeassistant.components.tessie.lock.unlock") as mock_run:
+    with patch(
+        "tesla_fleet_api.tessie.Vehicle.unlock", return_value=TEST_RESPONSE
+    ) as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
@@ -61,7 +65,8 @@ async def test_locks(
         )
 
     with patch(
-        "homeassistant.components.tessie.lock.open_unlock_charge_port"
+        "tesla_fleet_api.tessie.Vehicle.open_charge_port",
+        return_value=TEST_RESPONSE,
     ) as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,

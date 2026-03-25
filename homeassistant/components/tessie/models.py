@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tesla_fleet_api.tessie import EnergySite
+from tesla_fleet_api.tessie import EnergySite, Vehicle
 
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -26,7 +26,7 @@ class TessieData:
 
 @dataclass
 class TessieEnergyData:
-    """Data for a Energy Site in the Tessie integration."""
+    """Data for an energy site in the Tessie integration."""
 
     api: EnergySite
     live_coordinator: TessieEnergySiteLiveCoordinator | None
@@ -40,6 +40,7 @@ class TessieEnergyData:
 class TessieVehicleData:
     """Data for a Tessie vehicle."""
 
+    api: Vehicle
     data_coordinator: TessieStateUpdateCoordinator
     device: DeviceInfo
     vin: str

@@ -28,7 +28,8 @@ async def test_numbers(
     # Test number set value functions
     entity_id = "number.test_charge_current"
     with patch(
-        "homeassistant.components.tessie.number.set_charging_amps",
+        "tesla_fleet_api.tessie.Vehicle.tessie_set_charging_amps",
+        return_value=TEST_RESPONSE,
     ) as mock_set_charging_amps:
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -37,11 +38,12 @@ async def test_numbers(
             blocking=True,
         )
         mock_set_charging_amps.assert_called_once()
-    assert hass.states.get(entity_id).state == "16.0"
+    assert hass.states.get(entity_id).state == "16"
 
     entity_id = "number.test_charge_limit"
     with patch(
-        "homeassistant.components.tessie.number.set_charge_limit",
+        "tesla_fleet_api.tessie.Vehicle.set_charge_limit",
+        return_value=TEST_RESPONSE,
     ) as mock_set_charge_limit:
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -50,11 +52,12 @@ async def test_numbers(
             blocking=True,
         )
         mock_set_charge_limit.assert_called_once()
-    assert hass.states.get(entity_id).state == "80.0"
+    assert hass.states.get(entity_id).state == "80"
 
     entity_id = "number.test_speed_limit"
     with patch(
-        "homeassistant.components.tessie.number.set_speed_limit",
+        "tesla_fleet_api.tessie.Vehicle.set_speed_limit",
+        return_value=TEST_RESPONSE,
     ) as mock_set_speed_limit:
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -63,7 +66,7 @@ async def test_numbers(
             blocking=True,
         )
         mock_set_speed_limit.assert_called_once()
-    assert hass.states.get(entity_id).state == "60.0"
+    assert hass.states.get(entity_id).state == "60"
 
     entity_id = "number.energy_site_backup_reserve"
     with patch(

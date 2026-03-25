@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api.tessie import EnergySite
-from tessie_api import set_charge_limit, set_charging_amps, set_speed_limit
+from tesla_fleet_api.tessie import EnergySite, Vehicle
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -38,8 +37,7 @@ PARALLEL_UPDATES = 0
 class TessieNumberEntityDescription(NumberEntityDescription):
     """Describes Tessie Number entity."""
 
-    func: Callable
-    arg: str
+    func: Callable[[Vehicle, float], Awaitable[Any]]
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
@@ -55,8 +53,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=NumberDeviceClass.CURRENT,
         max_key="charge_state_charge_current_request_max",
-        func=lambda: set_charging_amps,
-        arg="amps",
+        func=lambda api, value: api.tessie_set_charging_amps(int(value)),
     ),
     TessieNumberEntityDescription(
         key="charge_state_charge_limit_soc",
@@ -67,8 +64,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.BATTERY,
         min_key="charge_state_charge_limit_soc_min",
         max_key="charge_state_charge_limit_soc_max",
-        func=lambda: set_charge_limit,
-        arg="percent",
+        func=lambda api, value: api.set_charge_limit(int(value)),
     ),
     TessieNumberEntityDescription(
         key="vehicle_state_speed_limit_mode_current_limit_mph",
@@ -80,8 +76,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         mode=NumberMode.BOX,
         min_key="vehicle_state_speed_limit_mode_min_limit_mph",
         max_key="vehicle_state_speed_limit_mode_max_limit_mph",
-        func=lambda: set_speed_limit,
-        arg="mph",
+        func=lambda api, value: api.set_speed_limit(int(value)),
     ),
 )
 
@@ -171,9 +166,8 @@ class TessieNumberEntity(TessieEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.run(
-            self.entity_description.func(), **{self.entity_description.arg: value}
-        )
+        value = int(value)
+        await self.run(self.entity_description.func(self.api, value))
         self.set((self.key, value))
 
 

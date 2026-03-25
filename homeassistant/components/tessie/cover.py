@@ -5,17 +5,6 @@ from __future__ import annotations
 from itertools import chain
 from typing import Any
 
-from tessie_api import (
-    close_charge_port,
-    close_sunroof,
-    close_windows,
-    open_close_rear_trunk,
-    open_front_trunk,
-    open_unlock_charge_port,
-    vent_sunroof,
-    vent_windows,
-)
-
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -85,7 +74,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open windows."""
-        await self.run(vent_windows)
+        await self.run(self.api.vent_windows())
         self.set(
             ("vehicle_state_fd_window", TessieCoverStates.OPEN),
             ("vehicle_state_fp_window", TessieCoverStates.OPEN),
@@ -95,7 +84,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
-        await self.run(close_windows)
+        await self.run(self.api.close_windows())
         self.set(
             ("vehicle_state_fd_window", TessieCoverStates.CLOSED),
             ("vehicle_state_fp_window", TessieCoverStates.CLOSED),
@@ -121,12 +110,12 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open windows."""
-        await self.run(open_unlock_charge_port)
+        await self.run(self.api.open_charge_port())
         self.set((self.key, True))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
-        await self.run(close_charge_port)
+        await self.run(self.api.close_charge_port())
         self.set((self.key, False))
 
 
@@ -147,7 +136,7 @@ class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open front trunk."""
-        await self.run(open_front_trunk)
+        await self.run(self.api.activate_front_trunk())
         self.set((self.key, TessieCoverStates.OPEN))
 
 
@@ -169,13 +158,13 @@ class TessieRearTrunkEntity(TessieEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
         if self.is_closed:
-            await self.run(open_close_rear_trunk)
+            await self.run(self.api.activate_rear_trunk())
             self.set((self.key, TessieCoverStates.OPEN))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
         if not self.is_closed:
-            await self.run(open_close_rear_trunk)
+            await self.run(self.api.activate_rear_trunk())
             self.set((self.key, TessieCoverStates.CLOSED))
 
 
@@ -201,10 +190,10 @@ class TessieSunroofEntity(TessieEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
-        await self.run(vent_sunroof)
+        await self.run(self.api.vent_sunroof())
         self.set((self.key, TessieCoverStates.OPEN))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
-        await self.run(close_sunroof)
+        await self.run(self.api.close_sunroof())
         self.set((self.key, TessieCoverStates.CLOSED))

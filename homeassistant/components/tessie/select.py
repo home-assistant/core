@@ -5,7 +5,6 @@ from __future__ import annotations
 from itertools import chain
 
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
-from tessie_api import set_seat_cool, set_seat_heat
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
@@ -91,7 +90,7 @@ class TessieSeatHeaterSelectEntity(TessieEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         level = self._attr_options.index(option)
-        await self.run(set_seat_heat, seat=SEAT_HEATERS[self.key], level=level)
+        await self.run(self.api.set_seat_heat(SEAT_HEATERS[self.key], level))
         self.set((self.key, level))
 
 
@@ -113,7 +112,7 @@ class TessieSeatCoolerSelectEntity(TessieEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         level = self._attr_options.index(option)
-        await self.run(set_seat_cool, seat=SEAT_COOLERS[self.key], level=level)
+        await self.run(self.api.set_seat_cool(SEAT_COOLERS[self.key], level))
         self.set((self.key, level))
 
 

@@ -7,7 +7,8 @@ from http import HTTPStatus
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from tessie_api import get_state_of_all_vehicles
+from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
+from tesla_fleet_api.tessie import Tessie
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,6 +16,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .helpers import fetch_state_of_all_vehicles
 
 TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 DESCRIPTION_PLACEHOLDERS = {
@@ -36,9 +38,11 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             self._async_abort_entries_match(dict(user_input))
             try:
-                await get_state_of_all_vehicles(
-                    session=async_get_clientsession(self.hass),
-                    api_key=user_input[CONF_ACCESS_TOKEN],
+                await fetch_state_of_all_vehicles(
+                    Tessie(
+                        async_get_clientsession(self.hass),
+                        user_input[CONF_ACCESS_TOKEN],
+                    ),
                     only_active=True,
                 )
             except ClientResponseError as e:
@@ -46,8 +50,12 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
                 else:
                     errors["base"] = "unknown"
+            except InvalidToken, MissingToken:
+                errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
+            except TeslaFleetError:
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title="Tessie",
@@ -75,17 +83,23 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                await get_state_of_all_vehicles(
-                    session=async_get_clientsession(self.hass),
-                    api_key=user_input[CONF_ACCESS_TOKEN],
+                await fetch_state_of_all_vehicles(
+                    Tessie(
+                        async_get_clientsession(self.hass),
+                        user_input[CONF_ACCESS_TOKEN],
+                    )
                 )
             except ClientResponseError as e:
                 if e.status == HTTPStatus.UNAUTHORIZED:
                     errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
                 else:
                     errors["base"] = "unknown"
+            except InvalidToken, MissingToken:
+                errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
+            except TeslaFleetError:
+                errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data=user_input

@@ -4,13 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from tessie_api import (
-    set_climate_keeper_mode,
-    set_temperature,
-    start_climate_preconditioning,
-    stop_climate,
-)
-
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ClimateEntity,
@@ -102,12 +95,12 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
-        await self.run(start_climate_preconditioning)
+        await self.run(self.api.start_climate())
         self.set(("climate_state_is_climate_on", True))
 
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
-        await self.run(stop_climate)
+        await self.run(self.api.stop_climate())
         self.set(
             ("climate_state_is_climate_on", False),
             ("climate_state_climate_keeper_mode", "off"),
@@ -119,7 +112,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
             await self.async_set_hvac_mode(mode)
 
         if temp := kwargs.get(ATTR_TEMPERATURE):
-            await self.run(set_temperature, temperature=temp)
+            await self.run(self.api.set_temperatures(temp))
             self.set(("climate_state_driver_temp_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -132,7 +125,9 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
         await self.run(
-            set_climate_keeper_mode, mode=self._attr_preset_modes.index(preset_mode)
+            self.api.tessie_set_climate_keeper_mode(
+                self._attr_preset_modes.index(preset_mode)
+            )
         )
         self.set(
             (

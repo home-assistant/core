@@ -18,14 +18,12 @@ from .common import (
     TEST_VEHICLE_STATE_ONLINE,
 )
 
-# Tessie
-
 
 @pytest.fixture(autouse=True)
 def mock_get_state():
-    """Mock get_state function."""
+    """Mock vehicle state fetches."""
     with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
+        "tesla_fleet_api.tessie.Vehicle.state",
         return_value=TEST_VEHICLE_STATE_ONLINE,
     ) as mock_get_state:
         yield mock_get_state
@@ -34,14 +32,19 @@ def mock_get_state():
 @pytest.fixture(autouse=True)
 def mock_get_state_of_all_vehicles():
     """Mock get_state_of_all_vehicles function."""
-    with patch(
-        "homeassistant.components.tessie.get_state_of_all_vehicles",
-        return_value=TEST_STATE_OF_ALL_VEHICLES,
-    ) as mock_get_state_of_all_vehicles:
+    with (
+        patch(
+            "homeassistant.components.tessie.fetch_state_of_all_vehicles",
+            return_value=TEST_STATE_OF_ALL_VEHICLES,
+        ) as mock_get_state_of_all_vehicles,
+        patch(
+            "homeassistant.components.tessie.config_flow.fetch_state_of_all_vehicles",
+            new=mock_get_state_of_all_vehicles,
+        ),
+    ):
         yield mock_get_state_of_all_vehicles
 
 
-# Fleet API
 @pytest.fixture(autouse=True)
 def mock_scopes():
     """Mock scopes function."""
@@ -54,7 +57,7 @@ def mock_scopes():
 
 @pytest.fixture(autouse=True)
 def mock_products():
-    """Mock Tesla Fleet Api products method."""
+    """Mock Tesla Fleet API products method."""
     with patch(
         "homeassistant.components.tessie.Tessie.products", return_value=PRODUCTS
     ) as mock_products:
@@ -73,7 +76,7 @@ def mock_request():
 
 @pytest.fixture(autouse=True)
 def mock_live_status():
-    """Mock Tesla Fleet API EnergySpecific live_status method."""
+    """Mock Tesla Fleet API EnergySite live_status method."""
     with patch(
         "tesla_fleet_api.tessie.EnergySite.live_status",
         side_effect=lambda: deepcopy(LIVE_STATUS),
@@ -83,12 +86,12 @@ def mock_live_status():
 
 @pytest.fixture(autouse=True)
 def mock_site_info():
-    """Mock Tesla Fleet API EnergySpecific site_info method."""
+    """Mock Tesla Fleet API EnergySite site_info method."""
     with patch(
         "tesla_fleet_api.tessie.EnergySite.site_info",
         side_effect=lambda: deepcopy(SITE_INFO),
-    ) as mock_live_status:
-        yield mock_live_status
+    ) as mock_site_info:
+        yield mock_site_info
 
 
 @pytest.fixture(autouse=True)

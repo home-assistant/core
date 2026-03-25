@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 def mock_config_flow_get_state_of_all_vehicles():
     """Mock get_state_of_all_vehicles in config flow."""
     with patch(
-        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
+        "homeassistant.components.tessie.config_flow.fetch_state_of_all_vehicles",
         return_value=TEST_STATE_OF_ALL_VEHICLES,
     ) as mock_config_flow_get_state_of_all_vehicles:
         yield mock_config_flow_get_state_of_all_vehicles
