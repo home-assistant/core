@@ -1,33 +1,14 @@
-.number_or_entity_temperature: &number_or_entity_temperature
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement:
-                    - "°C"
-                    - "°F"
-                - domain: sensor
-                  device_class: temperature
-                - domain: number
-                  device_class: temperature
-      translation_key: number_or_entity
+.temperature_units: &temperature_units
+  - "°C"
+  - "°F"
 
-.condition_unit_temperature: &condition_unit_temperature
-  required: false
-  selector:
-    select:
-      options:
-        - "°C"
-        - "°F"
+.temperature_threshold_entity: &temperature_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *temperature_units
+  - domain: sensor
+    device_class: temperature
+  - domain: number
+    device_class: temperature
 
 is_value:
   target:
@@ -47,6 +28,12 @@ is_value:
           options:
             - all
             - any
-    above: *number_or_entity_temperature
-    below: *number_or_entity_temperature
-    unit: *condition_unit_temperature
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units

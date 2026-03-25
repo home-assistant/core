@@ -14,8 +14,6 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
     CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
@@ -1300,6 +1298,7 @@ def parametrize_numerical_condition_above_below_any(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for numerical conditions.
@@ -1315,7 +1314,13 @@ def parametrize_numerical_condition_above_below_any(
     return [
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1330,7 +1335,13 @@ def parametrize_numerical_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("0", unit_attributes),
                 ("50", unit_attributes),
@@ -1345,7 +1356,17 @@ def parametrize_numerical_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1367,6 +1388,7 @@ def parametrize_numerical_condition_above_below_all(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for numerical conditions with 'all' behavior.
@@ -1382,7 +1404,13 @@ def parametrize_numerical_condition_above_below_all(
     return [
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1397,7 +1425,13 @@ def parametrize_numerical_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("0", unit_attributes),
                 ("50", unit_attributes),
@@ -1412,7 +1446,17 @@ def parametrize_numerical_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1436,6 +1480,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for attribute-based numerical conditions.
@@ -1448,7 +1493,13 @@ def parametrize_numerical_attribute_condition_above_below_any(
     return [
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1463,7 +1514,13 @@ def parametrize_numerical_attribute_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1478,7 +1535,17 @@ def parametrize_numerical_attribute_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1502,6 +1569,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for attribute-based numerical conditions with 'all' behavior.
@@ -1514,7 +1582,13 @@ def parametrize_numerical_attribute_condition_above_below_all(
     return [
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1529,7 +1603,13 @@ def parametrize_numerical_attribute_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1544,7 +1624,17 @@ def parametrize_numerical_attribute_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),

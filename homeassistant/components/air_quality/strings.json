@@ -1,13 +1,9 @@
 {
   "common": {
-    "condition_above_description": "Require the value to be above this value.",
-    "condition_above_name": "Above",
     "condition_behavior_description": "How the value should match on the targeted entities.",
     "condition_behavior_name": "Behavior",
-    "condition_below_description": "Require the value to be below this value.",
-    "condition_below_name": "Below",
-    "condition_unit_description": "All values will be converted to this unit when evaluating the condition.",
-    "condition_unit_name": "Unit of measurement",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior",
     "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
@@ -18,17 +14,13 @@
     "is_co2_value": {
       "description": "Tests the carbon dioxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Carbon dioxide value"
@@ -56,21 +48,13 @@
     "is_co_value": {
       "description": "Tests the carbon monoxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Carbon monoxide value"
@@ -98,17 +82,13 @@
     "is_n2o_value": {
       "description": "Tests the nitrous oxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Nitrous oxide value"
@@ -116,21 +96,13 @@
     "is_no2_value": {
       "description": "Tests the nitrogen dioxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Nitrogen dioxide value"
@@ -138,21 +110,13 @@
     "is_no_value": {
       "description": "Tests the nitrogen monoxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Nitrogen monoxide value"
@@ -160,21 +124,13 @@
     "is_ozone_value": {
       "description": "Tests the ozone level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Ozone value"
@@ -182,17 +138,13 @@
     "is_pm10_value": {
       "description": "Tests the PM10 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM10 value"
@@ -200,17 +152,13 @@
     "is_pm1_value": {
       "description": "Tests the PM1 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM1 value"
@@ -218,17 +166,13 @@
     "is_pm25_value": {
       "description": "Tests the PM2.5 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM2.5 value"
@@ -236,17 +180,13 @@
     "is_pm4_value": {
       "description": "Tests the PM4 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM4 value"
@@ -274,21 +214,13 @@
     "is_so2_value": {
       "description": "Tests the sulphur dioxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Sulphur dioxide value"
@@ -296,21 +228,13 @@
     "is_voc_ratio_value": {
       "description": "Tests the volatile organic compounds ratio of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds ratio value"
@@ -318,21 +242,13 @@
     "is_voc_value": {
       "description": "Tests the volatile organic compounds level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
           "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::condition_threshold_description%]",
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds value"
@@ -343,12 +259,6 @@
       "options": {
         "all": "All",
         "any": "Any"
-      }
-    },
-    "number_or_entity": {
-      "choices": {
-        "entity": "Entity",
-        "number": "Number"
       }
     },
     "trigger_behavior": {

@@ -2,6 +2,8 @@
   "common": {
     "condition_behavior_description": "How the state should match on the targeted entities.",
     "condition_behavior_name": "Behavior",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior",
     "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
@@ -32,17 +34,13 @@
     "is_value": {
       "description": "Tests the illuminance value.",
       "fields": {
-        "above": {
-          "description": "Require the illuminance to be above this value.",
-          "name": "Above"
-        },
         "behavior": {
           "description": "[%key:component::illuminance::common::condition_behavior_description%]",
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "Require the illuminance to be below this value.",
-          "name": "Below"
+        "threshold": {
+          "description": "[%key:component::illuminance::common::condition_threshold_description%]",
+          "name": "[%key:component::illuminance::common::condition_threshold_name%]"
         }
       },
       "name": "Illuminance"
@@ -53,12 +51,6 @@
       "options": {
         "all": "All",
         "any": "Any"
-      }
-    },
-    "number_or_entity": {
-      "choices": {
-        "entity": "Entity",
-        "number": "Number"
       }
     },
     "trigger_behavior": {

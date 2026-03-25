@@ -1,6 +1,7 @@
 """Test the condition helper."""
 
 from collections.abc import Mapping
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import io
 from typing import Any
@@ -21,8 +22,6 @@ from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAI
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -50,7 +49,6 @@ from homeassistant.helpers.condition import (
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
-    CONF_UNIT,
     Condition,
     ConditionChecker,
     EntityNumericalConditionWithUnitBase,
@@ -3059,19 +3057,69 @@ async def _setup_numerical_condition(
     ("condition_options", "state_value", "expected"),
     [
         # above only
-        ({CONF_ABOVE: 50}, "75", True),
-        ({CONF_ABOVE: 50}, "50", False),
-        ({CONF_ABOVE: 50}, "25", False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, "75", True),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, "50", False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, "25", False),
         # below only
-        ({CONF_BELOW: 50}, "25", True),
-        ({CONF_BELOW: 50}, "50", False),
-        ({CONF_BELOW: 50}, "75", False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, "25", True),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, "50", False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, "75", False),
         # above and below (range)
-        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "50", True),
-        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "20", False),
-        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "80", False),
-        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "10", False),
-        ({CONF_ABOVE: 20, CONF_BELOW: 80}, "90", False),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "50",
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "20",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "80",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "10",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "90",
+            False,
+        ),
     ],
 )
 async def test_numerical_condition_thresholds(
@@ -3101,7 +3149,7 @@ async def test_numerical_condition_invalid_state(
     """Test numerical condition with non-numeric or unavailable state values."""
     test = await _setup_numerical_condition(
         hass,
-        condition_options={CONF_ABOVE: 50},
+        condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
         entity_ids="test.entity_1",
     )
 
@@ -3116,7 +3164,7 @@ async def test_numerical_condition_attribute_value_source(
     test = await _setup_numerical_condition(
         hass,
         domain_specs={"test": DomainSpec(value_source="brightness")},
-        condition_options={CONF_ABOVE: 100},
+        condition_options={"threshold": {"type": "above", "value": {"number": 100}}},
         entity_ids="test.entity_1",
     )
 
@@ -3145,7 +3193,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
     test = await _setup_numerical_condition(
         hass,
         domain_specs={"test": DomainSpec(value_source="humidity")},
-        condition_options={CONF_ABOVE: 50},
+        condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
         entity_ids="test.entity_1",
         valid_unit="%",
     )
@@ -3184,7 +3232,7 @@ async def test_numerical_condition_valid_unit(
     """Test numerical condition valid_unit filtering."""
     test = await _setup_numerical_condition(
         hass,
-        condition_options={CONF_ABOVE: 50},
+        condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
         entity_ids="test.entity_1",
         valid_unit=valid_unit,
     )
@@ -3209,7 +3257,10 @@ async def test_numerical_condition_behavior(
     """Test numerical condition with behavior any/all."""
     test = await _setup_numerical_condition(
         hass,
-        condition_options={CONF_ABOVE: 50, ATTR_BEHAVIOR: behavior},
+        condition_options={
+            "threshold": {"type": "above", "value": {"number": 50}},
+            ATTR_BEHAVIOR: behavior,
+        },
         entity_ids=["test.entity_1", "test.entity_2"],
     )
 
@@ -3253,16 +3304,17 @@ async def test_numerical_condition_schema_requires_above_or_below(
 
 
 @pytest.mark.parametrize(
-    ("above", "below"),
+    ("above", "below", "expected_result"),
     [
-        (10.0, 10.0),
-        (20.0, 10.0),
+        (10.0, 10.0, does_not_raise()),
+        (20.0, 10.0, pytest.raises(vol.Invalid, match="must not be greater")),
     ],
 )
 async def test_numerical_condition_schema_above_must_be_less_than_below(
     hass: HomeAssistant,
     above: float,
     below: float,
+    expected_result: AbstractContextManager,
 ) -> None:
     """Test numerical condition schema rejects above >= below."""
     condition_cls = make_entity_numerical_condition({"test": DomainSpec()})
@@ -3280,9 +3332,15 @@ async def test_numerical_condition_schema_above_must_be_less_than_below(
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
-        CONF_OPTIONS: {CONF_ABOVE: above, CONF_BELOW: below},
+        CONF_OPTIONS: {
+            "threshold": {
+                "type": "between",
+                "value_min": {"number": above},
+                "value_max": {"number": below},
+            }
+        },
     }
-    with pytest.raises(vol.Invalid, match="can never be above"):
+    with expected_result:
         await async_validate_condition_config(hass, config)
 
 
@@ -3329,42 +3387,102 @@ async def _setup_numerical_condition_with_unit(
     [
         # above in °F, state in °C (base unit)
         # 75°F ≈ 23.89°C, so 25°C > 23.89°C → True
-        ({CONF_ABOVE: 75, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "25", True),
+        (
+            {
+                "threshold": {
+                    "type": "above",
+                    "value": {"number": 75, "unit_of_measurement": "°F"},
+                }
+            },
+            "25",
+            True,
+        ),
         # 75°F ≈ 23.89°C, so 20°C < 23.89°C → False
-        ({CONF_ABOVE: 75, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "20", False),
+        (
+            {
+                "threshold": {
+                    "type": "above",
+                    "value": {"number": 75, "unit_of_measurement": "°F"},
+                }
+            },
+            "20",
+            False,
+        ),
         # below in °F, state in °C
         # 70°F ≈ 21.11°C, so 20°C < 21.11°C → True
-        ({CONF_BELOW: 70, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "20", True),
+        (
+            {
+                "threshold": {
+                    "type": "below",
+                    "value": {"number": 70, "unit_of_measurement": "°F"},
+                }
+            },
+            "20",
+            True,
+        ),
         # 70°F ≈ 21.11°C, so 25°C > 21.11°C → False
-        ({CONF_BELOW: 70, CONF_UNIT: UnitOfTemperature.FAHRENHEIT}, "25", False),
+        (
+            {
+                "threshold": {
+                    "type": "below",
+                    "value": {"number": 70, "unit_of_measurement": "°F"},
+                }
+            },
+            "25",
+            False,
+        ),
         # above in °C (same as base), state in °C
-        ({CONF_ABOVE: 20, CONF_UNIT: UnitOfTemperature.CELSIUS}, "25", True),
-        ({CONF_ABOVE: 20, CONF_UNIT: UnitOfTemperature.CELSIUS}, "15", False),
+        (
+            {
+                "threshold": {
+                    "type": "above",
+                    "value": {"number": 20, "unit_of_measurement": "°C"},
+                }
+            },
+            "25",
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "above",
+                    "value": {"number": 20, "unit_of_measurement": "°C"},
+                }
+            },
+            "15",
+            False,
+        ),
         # range with unit conversion
         # 60°F ≈ 15.56°C, 80°F ≈ 26.67°C
         (
             {
-                CONF_ABOVE: 60,
-                CONF_BELOW: 80,
-                CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 60, "unit_of_measurement": "°F"},
+                    "value_max": {"number": 80, "unit_of_measurement": "°F"},
+                }
             },
             "20",
             True,
         ),
         (
             {
-                CONF_ABOVE: 60,
-                CONF_BELOW: 80,
-                CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 60, "unit_of_measurement": "°F"},
+                    "value_max": {"number": 80, "unit_of_measurement": "°F"},
+                }
             },
             "10",
             False,
         ),
         (
             {
-                CONF_ABOVE: 60,
-                CONF_BELOW: 80,
-                CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 60, "unit_of_measurement": "°F"},
+                    "value_max": {"number": 80, "unit_of_measurement": "°F"},
+                }
             },
             "30",
             False,
@@ -3399,8 +3517,7 @@ async def test_numerical_condition_with_unit_entity_reference(
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
-            CONF_ABOVE: "sensor.temp_limit",
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {"type": "above", "value": {"entity": "sensor.temp_limit"}},
         },
         entity_ids="test.entity_1",
     )
@@ -3435,8 +3552,7 @@ async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
-            CONF_ABOVE: "sensor.bad_limit",
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {"type": "above", "value": {"entity": "sensor.bad_limit"}},
         },
         entity_ids="test.entity_1",
     )
@@ -3462,8 +3578,10 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
-            CONF_ABOVE: 20,
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {
+                "type": "above",
+                "value": {"number": 20, "unit_of_measurement": "°C"},
+            }
         },
         entity_ids="test.entity_1",
     )
@@ -3495,8 +3613,10 @@ async def test_numerical_condition_with_unit_attribute_value_source(
             "test": NumericalDomainSpec(value_source="temperature"),
         },
         condition_options={
-            CONF_ABOVE: 75,
-            CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+            "threshold": {
+                "type": "above",
+                "value": {"number": 75, "unit_of_measurement": "°F"},
+            },
         },
         entity_ids="test.entity_1",
     )
@@ -3557,8 +3677,10 @@ async def test_numerical_condition_with_unit_get_entity_unit_override(
         CONF_CONDITION: "test",
         CONF_TARGET: {CONF_ENTITY_ID: ["test.entity_1"]},
         CONF_OPTIONS: {
-            CONF_ABOVE: 20,
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {
+                "type": "above",
+                "value": {"number": 20, "unit_of_measurement": "°C"},
+            }
         },
     }
     config = await async_validate_condition_config(hass, config)
@@ -3598,8 +3720,10 @@ async def test_numerical_condition_with_unit_schema_accepts_valid_units(
         CONF_CONDITION: "test",
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
-            CONF_ABOVE: 20,
-            CONF_UNIT: UnitOfTemperature.FAHRENHEIT,
+            "threshold": {
+                "type": "above",
+                "value": {"number": 20, "unit_of_measurement": "°F"},
+            }
         },
     }
     result = await async_validate_condition_config(hass, config)
@@ -3629,8 +3753,10 @@ async def test_numerical_condition_with_unit_schema_rejects_invalid_units(
         CONF_CONDITION: "test",
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
-            CONF_ABOVE: 20,
-            CONF_UNIT: "%",
+            "threshold": {
+                "type": "above",
+                "value": {"number": 20, "unit_of_measurement": "%"},
+            }
         },
     }
     with pytest.raises(vol.Invalid):
@@ -3648,8 +3774,10 @@ async def test_numerical_condition_with_unit_invalid_state(
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
-            CONF_ABOVE: 50,
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {
+                "type": "above",
+                "value": {"number": 50, "unit_of_measurement": "°C"},
+            },
         },
         entity_ids="test.entity_1",
     )
@@ -3669,8 +3797,7 @@ async def test_numerical_condition_with_unit_missing_entity_reference(
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
-            CONF_ABOVE: "sensor.nonexistent",
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {"type": "above", "value": {"entity": "sensor.nonexistent"}}
         },
         entity_ids="test.entity_1",
     )
@@ -3699,9 +3826,11 @@ async def test_numerical_condition_with_unit_behavior(
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
-            CONF_ABOVE: 50,
             ATTR_BEHAVIOR: behavior,
-            CONF_UNIT: UnitOfTemperature.CELSIUS,
+            "threshold": {
+                "type": "above",
+                "value": {"number": 50, "unit_of_measurement": "°C"},
+            },
         },
         entity_ids=["test.entity_1", "test.entity_2"],
     )

@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    CONF_ABOVE,
-    CONF_BELOW,
     STATE_OFF,
     STATE_ON,
 )
@@ -32,11 +30,9 @@ from tests.components.common import (
     target_entities,
 )
 
-_UGM3_CONDITION_OPTIONS = {"unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}
 _UGM3_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 }
-_PPB_CONDITION_OPTIONS = {"unit": CONCENTRATION_PARTS_PER_BILLION}
 _PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION}
 _PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION}
 
@@ -241,43 +237,43 @@ async def test_air_quality_binary_condition_behavior_all(
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_co_value",
             device_class="carbon_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_ozone_value",
             device_class="ozone",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_voc_value",
             device_class="volatile_organic_compounds",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_voc_ratio_value",
             device_class="volatile_organic_compounds_parts",
-            condition_options=_PPB_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_no_value",
             device_class="nitrogen_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_no2_value",
             device_class="nitrogen_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_any(
             "air_quality.is_so2_value",
             device_class="sulphur_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
     ],
@@ -316,43 +312,43 @@ async def test_air_quality_numerical_with_unit_condition_behavior_any(
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_co_value",
             device_class="carbon_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_ozone_value",
             device_class="ozone",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_voc_value",
             device_class="volatile_organic_compounds",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_voc_ratio_value",
             device_class="volatile_organic_compounds_parts",
-            condition_options=_PPB_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_no_value",
             device_class="nitrogen_monoxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_no2_value",
             device_class="nitrogen_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_condition_above_below_all(
             "air_quality.is_so2_value",
             device_class="sulphur_dioxide",
-            condition_options=_UGM3_CONDITION_OPTIONS,
+            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
     ],
@@ -539,19 +535,38 @@ async def test_air_quality_condition_unit_conversion_co(
         ],
         numerical_condition_options=[
             {
-                CONF_ABOVE: 0.2,
-                CONF_BELOW: 0.8,
-                "unit": CONCENTRATION_PARTS_PER_MILLION,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 0.2,
+                        "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+                    },
+                    "value_max": {
+                        "number": 0.8,
+                        "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+                    },
+                }
             },
             {
-                CONF_ABOVE: 200,
-                CONF_BELOW: 800,
-                "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 200,
+                        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                    },
+                    "value_max": {
+                        "number": 800,
+                        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                    },
+                }
             },
         ],
         limit_entity_condition_options={
-            CONF_ABOVE: "sensor.above",
-            CONF_BELOW: "sensor.below",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
         },
         limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[

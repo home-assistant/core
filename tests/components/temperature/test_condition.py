@@ -6,12 +6,7 @@ import pytest
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.weather import ATTR_WEATHER_TEMPERATURE_UNIT
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
@@ -28,7 +23,6 @@ from tests.components.common import (
     target_entities,
 )
 
-_TEMPERATURE_CONDITION_OPTIONS = {"unit": UnitOfTemperature.CELSIUS}
 _WEATHER_UNIT_ATTRIBUTES = {ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS}
 
 
@@ -77,7 +71,7 @@ async def test_temperature_conditions_gated_by_labs_flag(
     parametrize_numerical_condition_above_below_any(
         "temperature.is_value",
         device_class="temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     ),
 )
@@ -114,7 +108,7 @@ async def test_temperature_sensor_condition_behavior_any(
     parametrize_numerical_condition_above_below_all(
         "temperature.is_value",
         device_class="temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     ),
 )
@@ -152,7 +146,7 @@ async def test_temperature_sensor_condition_behavior_all(
         "temperature.is_value",
         HVACMode.AUTO,
         "current_temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
     ),
 )
 async def test_temperature_climate_condition_behavior_any(
@@ -189,7 +183,7 @@ async def test_temperature_climate_condition_behavior_any(
         "temperature.is_value",
         HVACMode.AUTO,
         "current_temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
     ),
 )
 async def test_temperature_climate_condition_behavior_all(
@@ -226,7 +220,7 @@ async def test_temperature_climate_condition_behavior_all(
         "temperature.is_value",
         "eco",
         "current_temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
     ),
 )
 async def test_temperature_water_heater_condition_behavior_any(
@@ -263,7 +257,7 @@ async def test_temperature_water_heater_condition_behavior_any(
         "temperature.is_value",
         "eco",
         "current_temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
     ),
 )
 async def test_temperature_water_heater_condition_behavior_all(
@@ -300,7 +294,7 @@ async def test_temperature_water_heater_condition_behavior_all(
         "temperature.is_value",
         "sunny",
         "temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
     ),
 )
@@ -338,7 +332,7 @@ async def test_temperature_weather_condition_behavior_any(
         "temperature.is_value",
         "sunny",
         "temperature",
-        condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+        threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
     ),
 )
@@ -397,12 +391,39 @@ async def test_temperature_condition_unit_conversion_sensor(
             }
         ],
         numerical_condition_options=[
-            {CONF_ABOVE: 75, CONF_BELOW: 90, "unit": UnitOfTemperature.FAHRENHEIT},
-            {CONF_ABOVE: 24, CONF_BELOW: 30, "unit": UnitOfTemperature.CELSIUS},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 75,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                    "value_max": {
+                        "number": 90,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                }
+            },
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 24,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                    "value_max": {
+                        "number": 30,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                }
+            },
         ],
         limit_entity_condition_options={
-            CONF_ABOVE: "sensor.above",
-            CONF_BELOW: "sensor.below",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
         },
         limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[
@@ -448,12 +469,39 @@ async def test_temperature_condition_unit_conversion_climate(
             {"state": HVACMode.AUTO, "attributes": {"current_temperature": 20}}
         ],
         numerical_condition_options=[
-            {CONF_ABOVE: 75, CONF_BELOW: 90, "unit": UnitOfTemperature.FAHRENHEIT},
-            {CONF_ABOVE: 24, CONF_BELOW: 30, "unit": UnitOfTemperature.CELSIUS},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 75,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                    "value_max": {
+                        "number": 90,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                }
+            },
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 24,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                    "value_max": {
+                        "number": 30,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                }
+            },
         ],
         limit_entity_condition_options={
-            CONF_ABOVE: "sensor.above",
-            CONF_BELOW: "sensor.below",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
         },
         limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[
