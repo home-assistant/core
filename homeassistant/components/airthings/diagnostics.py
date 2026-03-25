@@ -4,12 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .coordinator import AirthingsConfigEntry
-
-TO_REDACT = {"device_id", "location_name"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -31,6 +28,6 @@ async def async_get_config_entry_diagnostics(
     }
 
     return {
-        "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "devices": async_redact_data(devices, TO_REDACT),
+        "config_entry": config_entry.as_dict(),
+        "devices": devices,
     }
