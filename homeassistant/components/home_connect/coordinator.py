@@ -312,6 +312,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             case EventType.NOTIFY:
                 settings = self.data.settings
                 events = self.data.events
+                program_update_event_value = None
                 for event in event_message.data.items:
                     event_key = event.key
                     if event_key in SettingKey.__members__.values():  # type: ignore[comparison-overlap]
@@ -330,11 +331,13 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
                         ) and isinstance(event_value, str):
-                            await self.update_options(
-                                event_key,
-                                ProgramKey(event_value),
-                            )
+                            program_update_event_value = ProgramKey(event_value)
                         events[event_key] = event
+                # Process program update after all events to ensure
+                # BSH_COMMON_OPTION_BASE_PROGRAM event is available for
+                # favorite program resolution
+                if program_update_event_value:
+                    await self.update_options(program_update_event_value)
                 self._call_event_listener(event_message)
 
             case EventType.EVENT:
@@ -493,7 +496,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         programs = []
         events = {}
         options = {}
-        if appliance.type in APPLIANCES_WITH_PROGRAMS:
+        if appliance.type in APPLIANCES_WITH_PROGRAMS:  # pylint: disable=too-many-nested-blocks
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
             except TooManyRequestsError:
@@ -529,6 +532,17 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         )
                         current_program_key = program.key
                         program_options = program.options
+                        if (
+                            current_program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+                            and program_options
+                        ):
+                            # The API doesn't allow to fetch the options from the favorite program.
+                            # We can attempt to get the base program and get the options
+                            for option in program_options:
+                                if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
+                                    current_program_key = ProgramKey(option.value)
+                                    break
+
                 if current_program_key:
                     options = await self.get_options_definitions(current_program_key)
                     for option in program_options or []:
@@ -595,15 +609,24 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             )
             return {}
 
-    async def update_options(
-        self, event_key: EventKey, program_key: ProgramKey
-    ) -> None:
+    async def update_options(self, program_key: ProgramKey) -> None:
         """Update options for appliance."""
         options = self.data.options
         events = self.data.events
         options_to_notify = options.copy()
         options.clear()
-        options.update(await self.get_options_definitions(program_key))
+        if (
+            program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+            and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
+            and isinstance(event.value, str)
+        ):
+            # The API doesn't allow to fetch the options from the favorite program.
+            # We can attempt to get the base program and get the options
+            resolved_program_key = ProgramKey(event.value)
+        else:
+            resolved_program_key = program_key
+
+        options.update(await self.get_options_definitions(resolved_program_key))
 
         for option in options.values():
             option_value = option.constraints.default if option.constraints else None
