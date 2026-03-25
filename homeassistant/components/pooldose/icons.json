@@ -86,16 +86,10 @@
         }
       },
       "circulation_pump_status": {
-        "default": "mdi:pump",
-        "state": {
-          "on": "mdi:pump"
-        }
+        "default": "mdi:pump"
       },
       "flow_delay_status": {
-        "default": "mdi:timer-sand",
-        "state": {
-          "on": "mdi:timer-sand"
-        }
+        "default": "mdi:timer-sand"
       },
       "flow_rate_alarm": {
         "default": "mdi:autorenew",
@@ -116,10 +110,7 @@
         }
       },
       "power_on_delay_status": {
-        "default": "mdi:timer-sand",
-        "state": {
-          "on": "mdi:timer-sand"
-        }
+        "default": "mdi:timer-sand"
       },
       "pump_alarm": {
         "default": "mdi:pump",
