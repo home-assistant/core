@@ -74,7 +74,9 @@ class CounterMaxReachedTrigger(CounterValueBaseTrigger):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
-        return state.state == str(state.attributes.get(CONF_MAXIMUM))
+        if (max_value := state.attributes.get(CONF_MAXIMUM)) is None:
+            return False
+        return state.state == str(max_value)
 
 
 class CounterMinReachedTrigger(CounterValueBaseTrigger):
@@ -82,7 +84,9 @@ class CounterMinReachedTrigger(CounterValueBaseTrigger):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
-        return state.state == str(state.attributes.get(CONF_MINIMUM))
+        if (min_value := state.attributes.get(CONF_MINIMUM)) is None:
+            return False
+        return state.state == str(min_value)
 
 
 class CounterResetTrigger(CounterValueBaseTrigger):
@@ -90,7 +94,9 @@ class CounterResetTrigger(CounterValueBaseTrigger):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
-        return state.state == str(state.attributes.get(CONF_INITIAL))
+        if (init_state := state.attributes.get(CONF_INITIAL)) is None:
+            return False
+        return state.state == str(init_state)
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
