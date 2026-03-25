@@ -49,13 +49,13 @@ LOG_FAIL_GATEWAY = (
     "homeassistant.components.evohome",
     logging.ERROR,
     "Failed to fetch initial data: "
-    "Authenticator response is invalid: 502 Bad Gateway, response=None",
+    "Authenticator response is invalid: 502 Bad Gateway, response=<no response>",
 )
 LOG_FAIL_TOO_MANY = (
     "homeassistant.components.evohome",
     logging.ERROR,
     "Failed to fetch initial data: "
-    "Authenticator response is invalid: 429 Too Many Requests, response=None",
+    "Authenticator response is invalid: 429 Too Many Requests, response=<no response>",
 )
 
 LOG_FGET_CONNECTION = (
@@ -70,14 +70,14 @@ LOG_FGET_GATEWAY = (
     logging.ERROR,
     "Failed to fetch initial data: "
     "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
-    "502 Bad Gateway, response=None",
+    "502 Bad Gateway",
 )
 LOG_FGET_TOO_MANY = (
     "homeassistant.components.evohome",
     logging.ERROR,
     "Failed to fetch initial data: "
     "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
-    "429 Too Many Requests, response=None",
+    "429 Too Many Requests",
 )
 
 

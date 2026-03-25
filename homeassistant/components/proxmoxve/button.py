@@ -82,6 +82,14 @@ NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
         ).stopall.post(),
         entity_category=EntityCategory.CONFIG,
     ),
+    ProxmoxNodeButtonNodeEntityDescription(
+        key="suspend_all",
+        translation_key="suspend_all",
+        press_action=lambda coordinator, node: coordinator.proxmox.nodes(
+            node
+        ).suspendall.post(),
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
@@ -122,6 +130,14 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         translation_key="reset",
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node).qemu(vmid).status.reset.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ProxmoxVMButtonEntityDescription(
+        key="shutdown",
+        translation_key="shutdown",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node).qemu(vmid).status.shutdown.post()
         ),
         entity_category=EntityCategory.CONFIG,
     ),

@@ -761,7 +761,7 @@ LOCK_ULTRA_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
-AIR_PURIFIER_TBALE_PM25_SERVICE_INFO = BluetoothServiceInfoBleak(
+AIR_PURIFIER_TABLE_PM25_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Air Purifier Table PM25",
     manufacturer_data={
         2409: b"\xf0\x9e\x9e\x96j\xd6\xa1\x81\x88\xe4\x00\x01\x95\x00\x00",
