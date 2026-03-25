@@ -194,7 +194,7 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
-        """Handle repositories step."""
+        """Create the config entry after successful device authentication."""
 
         if TYPE_CHECKING:
             assert self._login is not None
@@ -218,7 +218,7 @@ class RepositoryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Handle options flow."""
+        """Handle repository subentry flow."""
         if not user_input:
             repositories = await get_repositories(
                 self.hass, self._get_entry().data[CONF_ACCESS_TOKEN]

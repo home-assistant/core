@@ -68,8 +68,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> b
 async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.minor_version == 1:
-        # In version 1 we added support for multiple repositories, so we need to
-        # migrate the old repository to a subentry.
+        # In minor version 2 we migrated repositories from entry options to
+        # subentries, so we need to convert the list from
+        # entry.options[CONF_REPOSITORIES] into individual subentries.
         for repository in entry.options[CONF_REPOSITORIES]:
             subentry = ConfigSubentry(
                 data=MappingProxyType({CONF_REPOSITORY: repository}),
