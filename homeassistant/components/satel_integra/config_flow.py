@@ -143,12 +143,17 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         """Test a connection to the Satel alarm."""
         controller = AsyncSatel(host, port)
 
-        result = await controller.connect(check_busy=False)
-
-        # Make sure we close the connection again
-        await controller.close()
-
-        return result
+        try:
+            return await controller.connect(check_busy=False)
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error during connection test to %s:%s",
+                host,
+                port,
+            )
+            return False
+        finally:
+            await controller.close()
 
 
 class SatelOptionsFlow(OptionsFlow):
