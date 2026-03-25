@@ -116,6 +116,4 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_FACE,
 ]
 
-# --- Unit constants ---
-
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
