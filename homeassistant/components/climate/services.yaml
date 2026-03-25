@@ -56,16 +56,10 @@ set_temperature:
           mode: box
     hvac_mode:
       selector:
-        select:
-          options:
-            - "off"
-            - "auto"
-            - "cool"
-            - "dry"
-            - "fan_only"
-            - "heat_cool"
-            - "heat"
-          translation_key: hvac_mode
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 set_humidity:
   target:
     entity:
