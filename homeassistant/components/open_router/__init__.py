@@ -66,7 +66,7 @@ async def async_migrate_entry(
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
-    if entry.version > 1:
+    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 1):
         return False
 
     if entry.version == 1 and entry.minor_version < 1:
