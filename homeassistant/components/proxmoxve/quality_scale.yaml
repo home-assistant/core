@@ -37,13 +37,17 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
   # Gold
-  devices: todo
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Not discoverable, infrastructure components are static
+  discovery:
+    status: exempt
+    comment: Not discoverable 
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -58,14 +62,14 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 
   # Platinum
   async-dependency:
     status: todo
-    comment: The upstream client library (proxmoxer) performs synchronous HTTP I/O integration runs calls in the executor
+    comment: The upstream client library (proxmoxer) performs synchronous HTTP I/O. This integration offloads those calls to an executor.
   inject-websession:
     status: todo
     comment: The upstream client library (proxmoxer) does not support injecting HA aiohttp ClientSession
