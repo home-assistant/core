@@ -66,13 +66,31 @@
         "name": "Paused torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
+      "session_download": {
+        "name": "Session download"
+      },
+      "session_ratio": {
+        "name": "Session ratio"
+      },
+      "session_upload": {
+        "name": "Session upload"
+      },
       "started_torrents": {
         "name": "Started torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
+      "total_download": {
+        "name": "Total download"
+      },
+      "total_ratio": {
+        "name": "Total ratio"
+      },
       "total_torrents": {
         "name": "Total torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
+      "total_upload": {
+        "name": "Total upload"
       },
       "transmission_status": {
         "name": "Status",
