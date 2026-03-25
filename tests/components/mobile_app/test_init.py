@@ -1,9 +1,11 @@
 """Tests for the mobile app integration."""
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import Mock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.cloud import CloudNotAvailable
@@ -12,6 +14,7 @@ from homeassistant.components.mobile_app.const import (
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
     DATA_DELETED_IDS,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -615,3 +618,33 @@ async def test_cloudhook_change_listener_update(
 
         # URL should remain the same
         assert config_entry.data[CONF_CLOUDHOOK_URL] == new_url
+
+
+@pytest.mark.usefixtures("create_registrations")
+async def test_unload_removes_live_activity_tokens(
+    hass: HomeAssistant, webhook_client: TestClient
+) -> None:
+    """Test that live activity tokens are removed from hass.data when entry is unloaded."""
+    # Use the cleartext (non-encrypted) entry
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    webhook_id = config_entry.data["webhook_id"]
+
+    # Store a live activity token via the webhook
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "update_live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+
+    # Unload the config entry
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # Verify the token is removed so stale tokens cannot be used after reloads/unloads
+    assert webhook_id not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]

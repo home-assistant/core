@@ -93,6 +93,7 @@ from .const import (
     ATTR_WEBHOOK_DATA,
     ATTR_WEBHOOK_ENCRYPTED,
     ATTR_WEBHOOK_ENCRYPTED_DATA,
+    ATTR_WEBHOOK_ID,
     ATTR_WEBHOOK_TYPE,
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
@@ -837,7 +838,7 @@ async def webhook_update_live_activity_token(
         {
             ATTR_LIVE_ACTIVITY_TAG: activity_tag,
             ATTR_DEVICE_ID: device.id,
-            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_WEBHOOK_ID: webhook_id,
         },
         EventOrigin.remote,
         context=registration_context(config_entry.data),
@@ -849,7 +850,7 @@ async def webhook_update_live_activity_token(
 @WEBHOOK_COMMANDS.register("live_activity_dismissed")
 @validate_schema(
     {
-        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
+        vol.Required(ATTR_LIVE_ACTIVITY_TAG): vol.All(cv.string, vol.Length(min=1)),
     }
 )
 async def webhook_live_activity_dismissed(
@@ -877,7 +878,7 @@ async def webhook_live_activity_dismissed(
         {
             ATTR_LIVE_ACTIVITY_TAG: activity_tag,
             ATTR_DEVICE_ID: device.id,
-            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_WEBHOOK_ID: webhook_id,
         },
         EventOrigin.remote,
         context=registration_context(config_entry.data),
