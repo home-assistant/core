@@ -85,6 +85,12 @@
           "on": "mdi:thermometer-alert"
         }
       },
+      "circulation_pump_status": {
+        "default": "mdi:pump"
+      },
+      "flow_delay_status": {
+        "default": "mdi:timer-sand"
+      },
       "flow_rate_alarm": {
         "default": "mdi:autorenew",
         "state": {
@@ -102,6 +108,9 @@
         "state": {
           "on": "mdi:flask-empty"
         }
+      },
+      "power_on_delay_status": {
+        "default": "mdi:timer-sand"
       },
       "pump_alarm": {
         "default": "mdi:pump",
