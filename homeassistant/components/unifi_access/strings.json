@@ -68,14 +68,14 @@
       }
     },
     "select": {
-      "door_lock_rules": {
-        "name": "Door Lock Rule",
+      "door_lock_rule": {
+        "name": "Lock rule",
         "state": {
-          "custom": "Custom (set interval)",
-          "keep_lock": "Keep it locked",
-          "keep_unlock": "Keep it unlocked",
+          "custom": "Custom",
+          "keep_lock": "Keep locked",
+          "keep_unlock": "Keep unlocked",
           "lock_early": "Lock early",
-          "reset": "Reset rule",
+          "reset": "Reset",
           "schedule": "Schedule"
         }
       }

@@ -91,7 +91,6 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         )
         self.client = client
         self._event_listeners: list[Callable[[DoorEvent], None]] = []
-        self.lock_rule_intervals: dict[str, int] = {}
 
     @callback
     def async_subscribe_door_events(
@@ -110,9 +109,8 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         """Set a temporary lock rule for a door."""
         if not rule_type:
             return
-        interval = self.lock_rule_intervals.get(door_id, DEFAULT_LOCK_RULE_INTERVAL)
         lock_rule_type = DoorLockRuleType(rule_type)
-        rule = DoorLockRule(type=lock_rule_type, interval=interval)
+        rule = DoorLockRule(type=lock_rule_type, interval=DEFAULT_LOCK_RULE_INTERVAL)
         await self.client.set_door_lock_rule(door_id, rule)
         if self.data is None or door_id not in self.data.doors:
             return
