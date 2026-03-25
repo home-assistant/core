@@ -50,16 +50,17 @@ def run_single(translations, flattened_translations, integration):
         print("Integration has no strings.json")
         sys.exit(1)
 
-    component_translations[integration] = substitute_references(
+    integration_strings = substitute_references(
         component_translations[integration],
         flattened_translations,
         fail_on_missing=True,
     )
+    component_translations[integration] = integration_strings
 
     prepare_download_dir()
 
     (download.DOWNLOAD_DIR / "en.json").write_bytes(
-        orjson.dumps({"component": {integration: component_translations[integration]}})
+        orjson.dumps({"component": {integration: integration_strings}})
     )
 
     download.save_integrations_translations()
