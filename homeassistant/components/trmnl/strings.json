@@ -21,7 +21,8 @@
         },
         "data_description": {
           "api_key": "The API key for your TRMNL account."
-        }
+        },
+        "description": "You can find your API key on [your TRMNL account page]({account_url})."
       }
     }
   },

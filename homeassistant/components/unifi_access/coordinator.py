@@ -13,6 +13,7 @@ from unifi_access_api import (
     ApiConnectionError,
     ApiError,
     Door,
+    DoorLockRelayStatus,
     EmergencyStatus,
     UnifiAccessApiClient,
     WsMessageHandler,
@@ -23,6 +24,7 @@ from unifi_access_api.models.websocket import (
     LocationUpdateState,
     LocationUpdateV2,
     SettingUpdate,
+    ThumbnailInfo,
     V2LocationState,
     V2LocationUpdate,
     WebsocketMessage,
@@ -30,6 +32,7 @@ from unifi_access_api.models.websocket import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -55,6 +58,7 @@ class UnifiAccessData:
 
     doors: dict[str, Door]
     emergency: EmergencyStatus
+    door_thumbnails: dict[str, ThumbnailInfo]
 
 
 class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
@@ -116,7 +120,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     self.client.get_emergency_status(),
                 )
         except ApiAuthError as err:
-            raise UpdateFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except ApiConnectionError as err:
             raise UpdateFailed(f"Error connecting to API: {err}") from err
         except ApiError as err:
@@ -126,6 +130,15 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         return UnifiAccessData(
             doors={door.id: door for door in doors},
             emergency=emergency,
+            door_thumbnails={
+                door.id: ThumbnailInfo(
+                    url=door.door_thumbnail,
+                    door_thumbnail_last_update=door.door_thumbnail_last_update,
+                )
+                for door in doors
+                if door.door_thumbnail is not None
+                and door.door_thumbnail_last_update is not None
+            },
         )
 
     def _on_ws_connect(self) -> None:
@@ -140,7 +153,6 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
     def _on_ws_disconnect(self) -> None:
         """Handle WebSocket disconnection."""
-        _LOGGER.warning("WebSocket disconnected from UniFi Access")
         self.async_set_update_error(
             UpdateFailed("WebSocket disconnected from UniFi Access")
         )
@@ -148,38 +160,52 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_location_update(self, msg: WebsocketMessage) -> None:
         """Handle location_update_v2 messages."""
         update = cast(LocationUpdateV2, msg)
-        self._process_door_update(update.data.id, update.data.state)
+        self._process_door_update(
+            update.data.id, update.data.state, update.data.thumbnail
+        )
 
     async def _handle_v2_location_update(self, msg: WebsocketMessage) -> None:
         """Handle V2 location update messages."""
         update = cast(V2LocationUpdate, msg)
-        self._process_door_update(update.data.id, update.data.state)
+        self._process_door_update(
+            update.data.id, update.data.state, update.data.thumbnail
+        )
 
     def _process_door_update(
-        self, door_id: str, ws_state: LocationUpdateState | V2LocationState | None
+        self,
+        door_id: str,
+        ws_state: LocationUpdateState | V2LocationState | None,
+        thumbnail: ThumbnailInfo | None = None,
     ) -> None:
         """Process a door state update from WebSocket."""
         if self.data is None or door_id not in self.data.doors:
             return
 
-        if ws_state is None:
+        if ws_state is None and thumbnail is None:
             return
 
         current_door = self.data.doors[door_id]
         updates: dict[str, object] = {}
-        if ws_state.dps is not None:
-            updates["door_position_status"] = ws_state.dps
-        if ws_state.lock == "locked":
-            updates["door_lock_relay_status"] = "lock"
-        elif ws_state.lock == "unlocked":
-            updates["door_lock_relay_status"] = "unlock"
-        if not updates:
+        if ws_state is not None:
+            if ws_state.dps is not None:
+                updates["door_position_status"] = ws_state.dps
+            if ws_state.lock == "locked":
+                updates["door_lock_relay_status"] = DoorLockRelayStatus.LOCK
+            elif ws_state.lock == "unlocked":
+                updates["door_lock_relay_status"] = DoorLockRelayStatus.UNLOCK
+        if not updates and thumbnail is None:
             return
-        updated_door = current_door.with_updates(**updates)
+        updated_door = current_door.with_updates(**updates) if updates else current_door
+        new_thumbnails = (
+            {**self.data.door_thumbnails, door_id: thumbnail}
+            if thumbnail is not None
+            else self.data.door_thumbnails
+        )
         self.async_set_updated_data(
             UnifiAccessData(
                 doors={**self.data.doors, door_id: updated_door},
                 emergency=self.data.emergency,
+                door_thumbnails=new_thumbnails,
             )
         )
 
@@ -195,6 +221,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     evacuation=update.data.evacuation,
                     lockdown=update.data.lockdown,
                 ),
+                door_thumbnails=self.data.door_thumbnails,
             )
         )
 
@@ -211,9 +238,6 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
-        door = insights.data.metadata.door
-        if not door.id:
-            return
         event_type = (
             "access_granted" if insights.data.result == "ACCESS" else "access_denied"
         )
@@ -224,7 +248,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["authentication"] = insights.data.metadata.authentication.display_name
         if insights.data.result:
             attrs["result"] = insights.data.result
-        self._dispatch_door_event(door.id, "access", event_type, attrs)
+        for door in insights.data.metadata.door:
+            if door.id:
+                self._dispatch_door_event(door.id, "access", event_type, attrs)
 
     @callback
     def _dispatch_door_event(

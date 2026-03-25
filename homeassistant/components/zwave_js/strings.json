@@ -303,6 +303,10 @@
     }
   },
   "issues": {
+    "deprecated_legacy_door_state": {
+      "description": "The binary sensor `{entity_id}` is deprecated because it has been replaced with the opening state sensor `{opening_state_entity_id}`.\n\nThe entity was found in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the opening state sensor `{opening_state_entity_id}` and disable the binary sensor `{entity_id}` to fix this issue.\n\nNote that `{opening_state_entity_id}` reports three states:\n- Closed\n- Open\n- Tilted (if supported by the device).",
+      "title": "Deprecation: {entity_name}"
+    },
     "device_config_file_changed": {
       "fix_flow": {
         "abort": {
