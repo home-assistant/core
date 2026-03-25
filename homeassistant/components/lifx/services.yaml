@@ -1,0 +1,453 @@
+set_hev_cycle_state:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power:
+      required: true
+      example: true
+      selector:
+        boolean:
+    duration:
+      required: false
+      default: 7200
+      example: 3600
+      selector:
+        number:
+          min: 0
+          max: 86400
+          unit_of_measurement: seconds
+set_state:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    infrared:
+      selector:
+        number:
+          min: 0
+          max: 255
+    zones:
+      example: "[0,5]"
+      selector:
+        object:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    power:
+      selector:
+        boolean:
+
+effect_pulse:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    mode:
+      selector:
+        select:
+          options:
+            - "blink"
+            - "breathe"
+            - "ping"
+            - "strobe"
+            - "solid"
+    brightness:
+      selector:
+        number:
+          min: 1
+          max: 255
+    brightness_pct:
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    color_name:
+      example: "red"
+      selector:
+        text:
+    rgb_color:
+      example: "[255, 100, 100]"
+      selector:
+        object:
+    period:
+      default: 1.0
+      selector:
+        number:
+          min: 0.05
+          max: 60.00
+          step: 0.05
+          unit_of_measurement: seconds
+    cycles:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 10000
+    power_on:
+      default: true
+      selector:
+        boolean:
+
+effect_colorloop:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    brightness:
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_pct:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    saturation_min:
+      default: 80
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    saturation_max:
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    transition:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    period:
+      default: 60
+      selector:
+        number:
+          min: 0.05
+          max: 3600.00
+          step: 0.05
+          unit_of_measurement: seconds
+    change:
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: "°"
+    spread:
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: "°"
+    power_on:
+      default: true
+      selector:
+        boolean:
+effect_move:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      default: 3.0
+      example: 3.0
+      selector:
+        number:
+          min: 0.1
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+    direction:
+      default: right
+      example: right
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - right
+            - left
+    theme:
+      example: exciting
+      default: exciting
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - "autumn"
+            - "blissful"
+            - "bias_lighting"
+            - "calaveras"
+            - "cheerful"
+            - "christmas"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "evening"
+            - "exciting"
+            - "fantasy"
+            - "focusing"
+            - "gentle"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "hygge"
+            - "independence"
+            - "intense"
+            - "love"
+            - "kwanzaa"
+            - "mellow"
+            - "party"
+            - "peaceful"
+            - "powerful"
+            - "proud"
+            - "pumpkin"
+            - "relaxing"
+            - "romance"
+            - "santa"
+            - "serene"
+            - "shamrock"
+            - "soothing"
+            - "spacey"
+            - "sports"
+            - "spring"
+            - "stardust"
+            - "thanksgiving"
+            - "tranquil"
+            - "warming"
+            - "zombie"
+    power_on:
+      default: true
+      selector:
+        boolean:
+effect_flame:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    power_on:
+      default: true
+      selector:
+        boolean:
+effect_morph:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    palette:
+      example:
+        - "[[0, 100, 100, 3500], [60, 100, 100, 3500]]"
+      selector:
+        object:
+    theme:
+      selector:
+        select:
+          options:
+            - "autumn"
+            - "blissful"
+            - "bias_lighting"
+            - "calaveras"
+            - "cheerful"
+            - "christmas"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "evening"
+            - "exciting"
+            - "fantasy"
+            - "focusing"
+            - "gentle"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "hygge"
+            - "independence"
+            - "intense"
+            - "love"
+            - "kwanzaa"
+            - "mellow"
+            - "party"
+            - "peaceful"
+            - "powerful"
+            - "proud"
+            - "pumpkin"
+            - "relaxing"
+            - "romance"
+            - "santa"
+            - "serene"
+            - "shamrock"
+            - "soothing"
+            - "spacey"
+            - "sports"
+            - "spring"
+            - "stardust"
+            - "thanksgiving"
+            - "tranquil"
+            - "warming"
+            - "zombie"
+    power_on:
+      default: true
+      selector:
+        boolean:
+effect_sky:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power_on:
+      default: true
+      selector:
+        boolean:
+    speed:
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 1
+          max: 86400
+          step: 1
+          unit_of_measurement: seconds
+    sky_type:
+      default: "Clouds"
+      example: "Clouds"
+      selector:
+        select:
+          options:
+            - "Clouds"
+            - "Sunrise"
+            - "Sunset"
+    cloud_saturation_min:
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 255
+    cloud_saturation_max:
+      default: 180
+      example: 180
+      selector:
+        number:
+          min: 0
+          max: 255
+    palette:
+      example:
+        - "[200, 1, 1, 3500]"
+        - "[241, 1, 0.01, 3500]"
+        - "[189, 1, 0.08, 3500]"
+        - "[40, 1, 1, 3500]"
+        - "[40, 0.5, 1, 3500]"
+        - "[40, 0, 1, 6500]"
+      selector:
+        object:
+effect_stop:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+paint_theme:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    palette:
+      example:
+        - "[[0, 100, 100, 3500], [60, 100, 100, 3500]]"
+      selector:
+        object:
+    theme:
+      example: exciting
+      default: exciting
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - "autumn"
+            - "blissful"
+            - "bias_lighting"
+            - "calaveras"
+            - "cheerful"
+            - "christmas"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "evening"
+            - "exciting"
+            - "fantasy"
+            - "focusing"
+            - "gentle"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "hygge"
+            - "independence"
+            - "intense"
+            - "love"
+            - "kwanzaa"
+            - "mellow"
+            - "party"
+            - "peaceful"
+            - "powerful"
+            - "proud"
+            - "pumpkin"
+            - "relaxing"
+            - "romance"
+            - "santa"
+            - "serene"
+            - "shamrock"
+            - "soothing"
+            - "spacey"
+            - "sports"
+            - "spring"
+            - "stardust"
+            - "thanksgiving"
+            - "tranquil"
+            - "warming"
+            - "zombie"
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    power_on:
+      default: true
+      selector:
+        boolean:

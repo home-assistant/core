@@ -1,0 +1,12 @@
+send_command:
+  fields:
+    command:
+      required: true
+      example: "on"
+      selector:
+        text:
+    device_id:
+      required: true
+      example: newkaku_0000c6c2_1
+      selector:
+        text:

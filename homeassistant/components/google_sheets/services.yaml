@@ -1,0 +1,37 @@
+append_sheet:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: google_sheets
+    worksheet:
+      example: "Sheet1"
+      selector:
+        text:
+    add_created_column:
+      required: false
+      default: true
+      selector:
+        boolean:
+    data:
+      required: true
+      example: '{"hello": world, "cool": True, "count": 5}'
+      selector:
+        object:
+get_sheet:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: google_sheets
+    worksheet:
+      example: "Sheet1"
+      selector:
+        text:
+    rows:
+      required: true
+      example: 2
+      selector:
+        number:

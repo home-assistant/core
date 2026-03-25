@@ -1,0 +1,12 @@
+{
+  "domain": "forked_daapd",
+  "name": "OwnTone",
+  "after_dependencies": ["spotify"],
+  "codeowners": ["@uvjustin"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/forked_daapd",
+  "iot_class": "local_push",
+  "loggers": ["pyforked_daapd", "pylibrespot_java"],
+  "requirements": ["pyforked-daapd==0.1.14", "pylibrespot-java==0.1.1"],
+  "zeroconf": ["_daap._tcp.local."]
+}

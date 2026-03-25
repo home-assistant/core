@@ -1,0 +1,36 @@
+enable_output:
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    port:
+      required: true
+      example: "hdmi1"
+      selector:
+        text:
+    enabled:
+      required: true
+      selector:
+        boolean:
+menu_cursor:
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    cursor:
+      example: down
+      selector:
+        text:
+select_scene:
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    scene:
+      required: true
+      example: "TV Viewing"
+      selector:
+        text:

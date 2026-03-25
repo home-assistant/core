@@ -1,0 +1,51 @@
+{
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:lightbulb-off"
+    },
+    "is_on": {
+      "condition": "mdi:lightbulb-on"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:lightbulb",
+      "state": {
+        "off": "mdi:lightbulb-off"
+      },
+      "state_attributes": {
+        "effect": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "off": "mdi:star-off"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle": {
+      "service": "mdi:lightbulb"
+    },
+    "turn_off": {
+      "service": "mdi:lightbulb-off"
+    },
+    "turn_on": {
+      "service": "mdi:lightbulb-on"
+    }
+  },
+  "triggers": {
+    "brightness_changed": {
+      "trigger": "mdi:lightbulb-on-50"
+    },
+    "brightness_crossed_threshold": {
+      "trigger": "mdi:lightbulb-on-50"
+    },
+    "turned_off": {
+      "trigger": "mdi:lightbulb-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:lightbulb-on"
+    }
+  }
+}

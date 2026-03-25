@@ -1,0 +1,9 @@
+{
+  "domain": "auth",
+  "name": "Auth",
+  "codeowners": ["@home-assistant/core"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/auth",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

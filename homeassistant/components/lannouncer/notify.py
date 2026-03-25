@@ -1,0 +1,112 @@
+"""Lannouncer platform for notify component."""
+
+from __future__ import annotations
+
+import logging
+import socket
+from typing import Any
+from urllib.parse import urlencode
+
+import voluptuous as vol
+
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+DOMAIN = "lannouncer"
+
+ATTR_METHOD = "method"
+ATTR_METHOD_DEFAULT = "speak"
+ATTR_METHOD_ALLOWED = ["speak", "alarm"]
+
+DEFAULT_PORT = 1035
+
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> LannouncerNotificationService:
+    """Get the Lannouncer notification service."""
+
+    @callback
+    def _async_create_issue() -> None:
+        """Create issue for removed integration."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "integration_removed",
+            is_fixable=False,
+            breaks_in_ha_version="2026.3.0",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="integration_removed",
+        )
+
+    hass.add_job(_async_create_issue)
+
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+
+    return LannouncerNotificationService(hass, host, port)
+
+
+class LannouncerNotificationService(BaseNotificationService):
+    """Implementation of a notification service for Lannouncer."""
+
+    def __init__(self, hass, host, port):
+        """Initialize the service."""
+        self._hass = hass
+        self._host = host
+        self._port = port
+
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
+        """Send a message to Lannouncer."""
+        data = kwargs.get(ATTR_DATA)
+        if data is not None and ATTR_METHOD in data:
+            method = data.get(ATTR_METHOD)
+        else:
+            method = ATTR_METHOD_DEFAULT
+
+        if method not in ATTR_METHOD_ALLOWED:
+            _LOGGER.error("Unknown method %s", method)
+            return
+
+        cmd = urlencode({method: message})
+
+        try:
+            # Open socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            sock.connect((self._host, self._port))
+
+            # Send message
+            _LOGGER.debug("Sending message: %s", cmd)
+            sock.sendall(cmd.encode())
+            sock.sendall(b"&@DONE@\n")
+
+            # Check response
+            buffer = sock.recv(1024)
+            if buffer != b"LANnouncer: OK":
+                _LOGGER.error("Error sending data to Lannnouncer: %s", buffer.decode())
+
+            # Close socket
+            sock.close()
+        except socket.gaierror:
+            _LOGGER.error("Unable to connect to host %s", self._host)
+        except OSError:
+            _LOGGER.exception("Failed to send data to Lannnouncer")

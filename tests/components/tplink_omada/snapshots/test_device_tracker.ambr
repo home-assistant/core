@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_device_scanner_created
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Banana',
+      'host_name': 'testhost',
+      'ip': '192.168.1.102',
+      'mac': '2C-71-FF-ED-34-83',
+      'source_type': <SourceType.ROUTER: 'router'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.banana',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_device_scanner_update_to_away_nulls_properties
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Banana',
+      'mac': '2C-71-FF-ED-34-83',
+      'source_type': <SourceType.ROUTER: 'router'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.banana',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---

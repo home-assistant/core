@@ -1,0 +1,10 @@
+{
+  "domain": "nissan_leaf",
+  "name": "Nissan Leaf",
+  "codeowners": ["@filcole"],
+  "documentation": "https://www.home-assistant.io/integrations/nissan_leaf",
+  "iot_class": "cloud_polling",
+  "loggers": ["pycarwings2"],
+  "quality_scale": "legacy",
+  "requirements": ["pycarwings2==2.14"]
+}

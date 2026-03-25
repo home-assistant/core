@@ -1,0 +1,400 @@
+"""The exceptions used by Home Assistant."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Generator, Sequence
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
+from aiohttp import ClientResponse, ClientResponseError, RequestInfo
+from multidict import MultiMapping
+
+from .util.event_type import EventType
+
+if TYPE_CHECKING:
+    from .core import Context
+
+
+_function_cache: dict[str, Callable[[str, str, dict[str, str] | None], str]] = {}
+
+
+def import_async_get_exception_message() -> Callable[
+    [str, str, dict[str, str] | None], str
+]:
+    """Return a method that can fetch a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+
+    from .helpers.translation import (  # noqa: PLC0415
+        async_get_exception_message as async_get_exception_message_import,
+    )
+
+    return async_get_exception_message_import
+
+
+class HomeAssistantError(Exception):
+    """General Home Assistant exception occurred."""
+
+    _message: str | None = None
+    generate_message: bool = False
+
+    def __init__(
+        self,
+        *args: object,
+        translation_domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize exception."""
+        if not args and translation_key and translation_domain:
+            self.generate_message = True
+            args = (translation_key,)
+
+        super().__init__(*args)
+        self.translation_domain = translation_domain
+        self.translation_key = translation_key
+        self.translation_placeholders = translation_placeholders
+
+    def __str__(self) -> str:
+        """Return exception message.
+
+        If no message was passed to `__init__`, the exception message is generated from
+        the translation_key. The message will be in English, regardless of the configured
+        language.
+        """
+
+        if self._message:
+            return self._message
+
+        if not self.generate_message:
+            self._message = super().__str__()
+            return self._message
+
+        if TYPE_CHECKING:
+            assert self.translation_key is not None
+            assert self.translation_domain is not None
+
+        if "async_get_exception_message" not in _function_cache:
+            _function_cache["async_get_exception_message"] = (
+                import_async_get_exception_message()
+            )
+
+        self._message = _function_cache["async_get_exception_message"](
+            self.translation_domain, self.translation_key, self.translation_placeholders
+        )
+        return self._message
+
+
+class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
+    """A validation exception occurred when validating the configuration."""
+
+    def __init__(
+        self,
+        message_translation_key: str,
+        exceptions: list[Exception],
+        translation_domain: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(
+            *(message_translation_key, exceptions),
+            translation_domain=translation_domain,
+            translation_key=message_translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+        self.generate_message = True
+
+
+class ServiceValidationError(HomeAssistantError):
+    """A validation exception occurred when calling a service."""
+
+
+class InvalidEntityFormatError(HomeAssistantError):
+    """When an invalid formatted entity is encountered."""
+
+
+class NoEntitySpecifiedError(HomeAssistantError):
+    """When no entity is specified."""
+
+
+class TemplateError(HomeAssistantError):
+    """Error during template rendering."""
+
+    def __init__(self, exception: Exception | str) -> None:
+        """Init the error."""
+        if isinstance(exception, str):
+            super().__init__(exception)
+        else:
+            super().__init__(f"{exception.__class__.__name__}: {exception}")
+
+
+@dataclass(slots=True)
+class ConditionError(HomeAssistantError):
+    """Error during condition evaluation."""
+
+    type: str
+
+    @staticmethod
+    def _indent(indent: int, message: str) -> str:
+        """Return indentation."""
+        return "  " * indent + message
+
+    def output(self, indent: int) -> Generator[str]:
+        """Yield an indented representation."""
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        """Return string representation."""
+        return "\n".join(list(self.output(indent=0)))
+
+
+@dataclass(slots=True)
+class ConditionErrorMessage(ConditionError):
+    """Condition error message."""
+
+    # A message describing this error
+    message: str
+
+    def output(self, indent: int) -> Generator[str]:
+        """Yield an indented representation."""
+        yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
+
+
+@dataclass(slots=True)
+class ConditionErrorIndex(ConditionError):
+    """Condition error with index."""
+
+    # The zero-based index of the failed condition, for conditions with multiple parts
+    index: int
+    # The total number of parts in this condition, including non-failed parts
+    total: int
+    # The error that this error wraps
+    error: ConditionError
+
+    def output(self, indent: int) -> Generator[str]:
+        """Yield an indented representation."""
+        if self.total > 1:
+            yield self._indent(
+                indent, f"In '{self.type}' (item {self.index + 1} of {self.total}):"
+            )
+        else:
+            yield self._indent(indent, f"In '{self.type}':")
+
+        yield from self.error.output(indent + 1)
+
+
+@dataclass(slots=True)
+class ConditionErrorContainer(ConditionError):
+    """Condition error with subconditions."""
+
+    # List of ConditionErrors that this error wraps
+    errors: Sequence[ConditionError]
+
+    def output(self, indent: int) -> Generator[str]:
+        """Yield an indented representation."""
+        for item in self.errors:
+            yield from item.output(indent)
+
+
+class IntegrationError(HomeAssistantError):
+    """Base class for platform and config entry exceptions."""
+
+    def __str__(self) -> str:
+        """Return a human readable error."""
+        return super().__str__() or str(self.__cause__)
+
+
+class PlatformNotReady(IntegrationError):
+    """Error to indicate that platform is not ready."""
+
+
+class ConfigEntryError(IntegrationError):
+    """Error to indicate that config entry setup has failed."""
+
+
+class ConfigEntryNotReady(IntegrationError):
+    """Error to indicate that config entry is not ready."""
+
+
+class ConfigEntryAuthFailed(IntegrationError):
+    """Error to indicate that config entry could not authenticate."""
+
+
+class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
+    """Error to indicate that the OAuth 2.0 flow could not refresh token."""
+
+    def __init__(
+        self,
+        *,
+        request_info: RequestInfo,
+        history: tuple[ClientResponse, ...] = (),
+        status: int = 0,
+        message: str = "OAuth 2.0 token refresh failed",
+        headers: MultiMapping[str] | None = None,
+        domain: str,
+    ) -> None:
+        """Initialize OAuth2RefreshTokenFailed."""
+        ClientResponseError.__init__(
+            self,
+            request_info=request_info,
+            history=history,
+            status=status,
+            message=message,
+            headers=headers,
+        )
+        HomeAssistantError.__init__(self)
+        self.domain = domain
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_failed"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
+
+
+class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
+    """Recoverable error to indicate flow could not refresh token."""
+
+    def __init__(self, *, domain: str, **kwargs: Any) -> None:
+        """Initialize OAuth2RefreshTokenTransientError."""
+        super().__init__(domain=domain, **kwargs)
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_transient"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
+
+
+class OAuth2TokenRequestReauthError(OAuth2TokenRequestError):
+    """Non recoverable error to indicate the flow could not refresh token.
+
+    Re-authentication is required.
+    """
+
+    def __init__(self, *, domain: str, **kwargs: Any) -> None:
+        """Initialize OAuth2RefreshTokenReauthError."""
+        super().__init__(domain=domain, **kwargs)
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_reauth_required"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
+
+
+class InvalidStateError(HomeAssistantError):
+    """When an invalid state is encountered."""
+
+
+class Unauthorized(HomeAssistantError):
+    """When an action is unauthorized."""
+
+    def __init__(
+        self,
+        context: Context | None = None,
+        user_id: str | None = None,
+        entity_id: str | None = None,
+        config_entry_id: str | None = None,
+        perm_category: str | None = None,
+        permission: str | None = None,
+    ) -> None:
+        """Unauthorized error."""
+        super().__init__(self.__class__.__name__)
+        self.context = context
+
+        if user_id is None and context is not None:
+            user_id = context.user_id
+
+        self.user_id = user_id
+        self.entity_id = entity_id
+        self.config_entry_id = config_entry_id
+        # Not all actions have an ID (like adding config entry)
+        # We then use this fallback to know what category was unauth
+        self.perm_category = perm_category
+        self.permission = permission
+
+
+class UnknownUser(Unauthorized):
+    """When call is made with user ID that doesn't exist."""
+
+
+class ServiceNotFound(ServiceValidationError):
+    """Raised when a service is not found."""
+
+    def __init__(self, domain: str, service: str) -> None:
+        """Initialize error."""
+        super().__init__(
+            translation_domain="homeassistant",
+            translation_key="service_not_found",
+            translation_placeholders={"domain": domain, "service": service},
+        )
+        self.domain = domain
+        self.service = service
+        self.generate_message = True
+
+
+class ServiceNotSupported(ServiceValidationError):
+    """Raised when an entity action is not supported."""
+
+    def __init__(self, domain: str, service: str, entity_id: str) -> None:
+        """Initialize ServiceNotSupported exception."""
+        super().__init__(
+            translation_domain="homeassistant",
+            translation_key="service_not_supported",
+            translation_placeholders={
+                "domain": domain,
+                "service": service,
+                "entity_id": entity_id,
+            },
+        )
+        self.domain = domain
+        self.service = service
+        self.generate_message = True
+
+
+class MaxLengthExceeded(HomeAssistantError):
+    """Raised when a property value has exceeded the max character length."""
+
+    def __init__(
+        self, value: EventType[Any] | str, property_name: str, max_length: int
+    ) -> None:
+        """Initialize error."""
+        if TYPE_CHECKING:
+            value = str(value)
+        super().__init__(
+            translation_domain="homeassistant",
+            translation_key="max_length_exceeded",
+            translation_placeholders={
+                "value": value,
+                "property_name": property_name,
+                "max_length": str(max_length),
+            },
+        )
+        self.value = value
+        self.property_name = property_name
+        self.max_length = max_length
+        self.generate_message = True
+
+
+class DependencyError(HomeAssistantError):
+    """Raised when dependencies cannot be setup."""
+
+    def __init__(self, failed_dependencies: list[str]) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Could not setup dependencies: {', '.join(failed_dependencies)}",
+        )
+        self.failed_dependencies = failed_dependencies
+
+
+class UnsupportedStorageVersionError(HomeAssistantError):
+    """Raised when a storage file has a newer major version than expected."""
+
+    def __init__(
+        self, storage_key: str, found_version: int, max_supported_version: int
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Storage file {storage_key} has version {found_version}"
+            f" which is newer than the max supported version {max_supported_version};"
+            " upgrade Home Assistant or restore from a backup",
+        )
+        self.storage_key = storage_key
+        self.found_version = found_version
+        self.max_supported_version = max_supported_version

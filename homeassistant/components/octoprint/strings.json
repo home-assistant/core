@@ -1,0 +1,113 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "auth_failed": "Failed to retrieve API key",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "OctoPrint printer: {host}",
+    "progress": {
+      "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "path": "Application path",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your printer."
+        }
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "bed_temperature": {
+        "name": "Bed temperature"
+      },
+      "extruder_n_temperature": {
+        "name": "Extruder {n} temperature"
+      },
+      "extruder_temperature": {
+        "name": "Extruder temperature"
+      }
+    },
+    "sensor": {
+      "file_name": {
+        "name": "Current file"
+      },
+      "status": {
+        "name": "Current state",
+        "state": {
+          "cancelling": "Cancelling",
+          "connecting": "Connecting",
+          "detect_serial": "Detecting serial connection",
+          "error": "[%key:common::state::error%]",
+          "finishing": "Finishing",
+          "offline": "Offline",
+          "offline_after_error": "Offline after error",
+          "open_serial": "Opening serial connection",
+          "operational": "Operational",
+          "paused": "[%key:common::state::paused%]",
+          "pausing": "Pausing",
+          "printing": "Printing",
+          "printing_sd": "Printing from SD",
+          "printing_streaming": "Sending file to SD",
+          "resuming": "Resuming",
+          "starting": "Starting",
+          "starting_sd": "Starting print from SD",
+          "starting_streaming": "Starting to send file to SD",
+          "transferring_file": "Transferring file to SD"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "error_setting_temperature": {
+      "message": "Error setting target {tool} temperature"
+    },
+    "missing_client": {
+      "message": "No client for device ID: {device_id}"
+    }
+  },
+  "services": {
+    "printer_connect": {
+      "description": "Instructs the OctoPrint server to connect to a printer.",
+      "fields": {
+        "baudrate": {
+          "description": "Baud rate.",
+          "name": "Baudrate"
+        },
+        "device_id": {
+          "description": "The server that should connect.",
+          "name": "Server"
+        },
+        "port": {
+          "description": "Port name to connect on.",
+          "name": "Serial port"
+        },
+        "profile_name": {
+          "description": "Printer profile to connect with.",
+          "name": "Profile name"
+        }
+      },
+      "name": "Connect to a printer"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Production",
+  "category": "zndb",
+  "product_id": "v5jlnn5hwyffkhp3",
+  "product_name": "Smart Meter",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-04-18T08:57:59+00:00",
+  "create_time": "2025-04-18T08:57:59+00:00",
+  "update_time": "2025-04-18T08:57:59+00:00",
+  "function": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "total_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": -99999999,
+        "max": 99999999,
+        "scale": 1,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "forward_energy_total": 152021,
+    "reverse_energy_total": 0,
+    "total_power": 23146
+  },
+  "set_up": true,
+  "support_local": true
+}

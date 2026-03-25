@@ -1,0 +1,11 @@
+{
+  "domain": "steam_online",
+  "name": "Steam",
+  "codeowners": ["@tkdrob"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/steam_online",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["steam"],
+  "requirements": ["steamodd==4.21"]
+}

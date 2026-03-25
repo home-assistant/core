@@ -1,0 +1,14 @@
+{
+  "user_id": "295-6y3-1nf4",
+  "firstname": "User",
+  "lastname": "Name",
+  "address": {
+    "house_number": 123,
+    "house_number_ext": "a",
+    "postcode": "4321 AB",
+    "street": "Commonstreet",
+    "city": "Somewhere"
+  },
+  "total_deliveries": 123,
+  "completed_deliveries": 112
+}

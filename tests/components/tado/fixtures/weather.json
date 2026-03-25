@@ -1,0 +1,22 @@
+{
+  "outsideTemperature": {
+    "celsius": 7.46,
+    "fahrenheit": 45.43,
+    "precision": {
+      "celsius": 0.01,
+      "fahrenheit": 0.01
+    },
+    "timestamp": "2020-12-22T08:13:13.652Z",
+    "type": "TEMPERATURE"
+  },
+  "solarIntensity": {
+    "percentage": 2.1,
+    "timestamp": "2020-12-22T08:13:13.652Z",
+    "type": "PERCENTAGE"
+  },
+  "weatherState": {
+    "timestamp": "2020-12-22T08:13:13.652Z",
+    "type": "WEATHER_STATE",
+    "value": "FOGGY"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "Type": "pollen",
+  "ForecastDate": "2018-06-12T00:00:00-04:00",
+  "Location": {
+    "ZIP": "12345",
+    "City": "SCHENECTADY",
+    "State": "NY",
+    "periods": [
+      {
+        "Period": "2018-06-12T13:47:12.897",
+        "Index": 6.6
+      },
+      {
+        "Period": "2018-06-13T13:47:12.897",
+        "Index": 6.3
+      },
+      {
+        "Period": "2018-06-14T13:47:12.897",
+        "Index": 7.6
+      },
+      {
+        "Period": "2018-06-15T13:47:12.897",
+        "Index": 7.6
+      },
+      {
+        "Period": "2018-06-16T13:47:12.897",
+        "Index": 7.3
+      }
+    ],
+    "DisplayLocation": "Schenectady, NY"
+  }
+}

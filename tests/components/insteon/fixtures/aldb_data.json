@@ -1,0 +1,67 @@
+{
+  "4095": {
+    "memory": 4095,
+    "in_use": true,
+    "controller": false,
+    "high_water_mark": false,
+    "bit5": true,
+    "bit4": false,
+    "group": 0,
+    "target": "aaaaaa",
+    "data1": 0,
+    "data2": 0,
+    "data3": 0
+  },
+  "4087": {
+    "memory": 4087,
+    "in_use": true,
+    "controller": true,
+    "high_water_mark": false,
+    "bit5": true,
+    "bit4": false,
+    "group": 1,
+    "target": "aaaaaa",
+    "data1": 0,
+    "data2": 0,
+    "data3": 0
+  },
+  "4079": {
+    "memory": 4079,
+    "in_use": true,
+    "controller": false,
+    "high_water_mark": false,
+    "bit5": true,
+    "bit4": false,
+    "group": 0,
+    "target": "111111",
+    "data1": 0,
+    "data2": 0,
+    "data3": 0
+  },
+  "4071": {
+    "memory": 4071,
+    "in_use": true,
+    "controller": true,
+    "high_water_mark": false,
+    "bit5": true,
+    "bit4": false,
+    "group": 2,
+    "target": "222222",
+    "data1": 0,
+    "data2": 0,
+    "data3": 0
+  },
+  "4063": {
+    "memory": 4063,
+    "in_use": true,
+    "controller": false,
+    "high_water_mark": false,
+    "bit5": true,
+    "bit4": false,
+    "group": 3,
+    "target": "333333",
+    "data1": 0,
+    "data2": 0,
+    "data3": 0
+  }
+}

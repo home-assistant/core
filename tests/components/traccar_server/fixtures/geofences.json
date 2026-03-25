@@ -1,0 +1,10 @@
+[
+  {
+    "id": 0,
+    "name": "Tatooine",
+    "description": "A harsh desert world orbiting twin suns in the galaxy's Outer Rim",
+    "area": "string",
+    "calendarId": 0,
+    "attributes": {}
+  }
+]

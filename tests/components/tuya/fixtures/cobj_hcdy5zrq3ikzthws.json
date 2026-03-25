@@ -1,0 +1,59 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Smogo",
+  "category": "cobj",
+  "product_id": "hcdy5zrq3ikzthws",
+  "product_name": "WIFI smart CO alarm",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2023-07-19T07:41:22+00:00",
+  "create_time": "2023-07-19T07:41:22+00:00",
+  "update_time": "2023-07-19T07:41:22+00:00",
+  "function": {},
+  "status_range": {
+    "co_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["alarm", "normal"]
+      }
+    },
+    "co_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "ppm",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "checking_result": {
+      "type": "Enum",
+      "value": {
+        "range": ["checking", "check_success", "check_failure", "others"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "co_status": "normal",
+    "co_value": 0,
+    "checking_result": "check_success",
+    "battery_percentage": 97
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -1,0 +1,38 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Duotecno device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "duotecno": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "half_moon": "Half moon",
+              "half_sun": "Half sun",
+              "moon": "Moon",
+              "sun": "Sun"
+            }
+          }
+        }
+      }
+    }
+  }
+}

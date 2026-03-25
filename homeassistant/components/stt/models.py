@@ -1,0 +1,32 @@
+"""Speech-to-text data models."""
+
+from dataclasses import dataclass
+
+from .const import (
+    AudioBitRates,
+    AudioChannels,
+    AudioCodecs,
+    AudioFormats,
+    AudioSampleRates,
+    SpeechResultState,
+)
+
+
+@dataclass
+class SpeechMetadata:
+    """Metadata of audio stream."""
+
+    language: str
+    format: AudioFormats
+    codec: AudioCodecs
+    bit_rate: AudioBitRates
+    sample_rate: AudioSampleRates
+    channel: AudioChannels
+
+
+@dataclass
+class SpeechResult:
+    """Result of audio Speech."""
+
+    text: str | None
+    result: SpeechResultState

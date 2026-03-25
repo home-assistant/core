@@ -1,0 +1,25 @@
+{
+  "Description": "Downtown Seattle to Downtown Bellevue via I-90",
+  "TimeUpdated": "/Date(1485040200000-0800)/",
+  "Distance": 10.6,
+  "EndPoint": {
+    "Direction": "N",
+    "Description": "I-405 @ NE 8th St in Bellevue",
+    "Longitude": -122.18797,
+    "MilePost": 13.6,
+    "Latitude": 47.61361,
+    "RoadName": "I-405"
+  },
+  "StartPoint": {
+    "Direction": "S",
+    "Description": "I-5 @ University St in Seattle",
+    "Longitude": -122.331759,
+    "MilePost": 165.83,
+    "Latitude": 47.609294,
+    "RoadName": "I-5"
+  },
+  "CurrentTime": 11,
+  "TravelTimeID": 96,
+  "Name": "Seattle-Bellevue via I-90 (EB AM)",
+  "AverageTime": 11
+}

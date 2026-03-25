@@ -1,0 +1,10 @@
+{
+  "domain": "minio",
+  "name": "Minio",
+  "codeowners": ["@tkislan"],
+  "documentation": "https://www.home-assistant.io/integrations/minio",
+  "iot_class": "cloud_push",
+  "loggers": ["minio"],
+  "quality_scale": "legacy",
+  "requirements": ["minio==7.1.12"]
+}

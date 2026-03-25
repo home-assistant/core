@@ -1,0 +1,85 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "description": "Do you want to configure the shopping list?",
+        "title": "[%key:component::shopping_list::title%]"
+      }
+    }
+  },
+  "entity": {
+    "todo": {
+      "shopping_list": {
+        "name": "[%key:component::shopping_list::title%]"
+      }
+    }
+  },
+  "services": {
+    "add_item": {
+      "description": "Adds an item to the shopping list.",
+      "fields": {
+        "name": {
+          "description": "The name of the item to add.",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "name": "Add item"
+    },
+    "clear_completed_items": {
+      "description": "Removes completed items from the shopping list.",
+      "name": "Clear completed items"
+    },
+    "complete_all": {
+      "description": "Marks all items as completed in the shopping list (without removing them from the list).",
+      "name": "Complete all"
+    },
+    "complete_item": {
+      "description": "Marks the first item with matching name as completed in the shopping list.",
+      "fields": {
+        "name": {
+          "description": "The name of the item to mark as completed (without removing).",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "name": "Complete item"
+    },
+    "incomplete_all": {
+      "description": "Marks all items as incomplete in the shopping list.",
+      "name": "Incomplete all"
+    },
+    "incomplete_item": {
+      "description": "Marks the first item with matching name as incomplete in the shopping list.",
+      "fields": {
+        "name": {
+          "description": "The name of the item to mark as incomplete.",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "name": "Incomplete item"
+    },
+    "remove_item": {
+      "description": "Removes the first item with matching name from the shopping list.",
+      "fields": {
+        "name": {
+          "description": "The name of the item to remove.",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "name": "Remove item"
+    },
+    "sort": {
+      "description": "Sorts all items by name in the shopping list.",
+      "fields": {
+        "reverse": {
+          "description": "Whether to sort in reverse (descending) order.",
+          "name": "Sort reverse"
+        }
+      },
+      "name": "Sort all items"
+    }
+  },
+  "title": "Shopping List"
+}

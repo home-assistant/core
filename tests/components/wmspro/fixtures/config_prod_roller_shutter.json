@@ -1,0 +1,171 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 18894,
+      "animationType": 2,
+      "names": ["Wohnebene alle", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 4,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 116682,
+      "animationType": 2,
+      "names": ["Wohnzimmer", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 4,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 172555,
+      "animationType": 2,
+      "names": ["Badezimmer", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 4,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 230952,
+      "animationType": 2,
+      "names": ["Sportzimmer", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 4,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 284942,
+      "animationType": 2,
+      "names": ["Terrasse", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 4,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 328518,
+      "animationType": 2,
+      "names": ["alle Rolll\u00e4den", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 4,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 15175,
+      "name": "Wohnbereich",
+      "destinations": [18894, 116682, 172555, 230952],
+      "scenes": []
+    },
+    {
+      "id": 92218,
+      "name": "Terrasse",
+      "destinations": [284942],
+      "scenes": []
+    },
+    {
+      "id": 193582,
+      "name": "Alle",
+      "destinations": [328518],
+      "scenes": []
+    }
+  ],
+  "scenes": []
+}

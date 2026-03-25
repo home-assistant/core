@@ -1,0 +1,189 @@
+# Describes the format for available RainMachine services
+pause_watering:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    seconds:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 43200
+          unit_of_measurement: seconds
+restrict_watering:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    duration:
+      required: true
+      default: "01:00:00"
+      selector:
+        text:
+start_program:
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
+start_zone:
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
+  fields:
+    zone_run_time:
+      default: 600
+      selector:
+        number:
+          min: 1
+          max: 86400
+          mode: box
+stop_all:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+stop_program:
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
+stop_zone:
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
+unpause_watering:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+push_flow_meter_data:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    value:
+      required: true
+      selector:
+        number:
+          min: 0.0
+          max: 1000000000.0
+          step: 0.1
+          mode: box
+    unit_of_measurement:
+      selector:
+        select:
+          options:
+            - "clicks"
+            - "gal"
+            - "litre"
+            - "m3"
+push_weather_data:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    timestamp:
+      selector:
+        text:
+    mintemp:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+    maxtemp:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+    temperature:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+    wind:
+      selector:
+        number:
+          min: 0
+          max: 65
+          unit_of_measurement: "m/s"
+    solarrad:
+      selector:
+        number:
+          min: 0
+          max: 5
+          step: 0.1
+          unit_of_measurement: "MJ/m²/h"
+    et:
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: "mm"
+    qpf:
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: "mm"
+    rain:
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: "mm"
+    minrh:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    maxrh:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    condition:
+      selector:
+        text:
+    pressure:
+      selector:
+        number:
+          min: 60
+          max: 110
+          unit_of_measurement: "kPa"
+    dewpoint:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+unrestrict_watering:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine

@@ -1,0 +1,113 @@
+{
+  "common": {
+    "validation_failed_title": "Automation {name} failed to set up"
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::automation::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "current": {
+          "name": "Running automations"
+        },
+        "id": {
+          "name": "ID"
+        },
+        "last_triggered": {
+          "name": "Last triggered"
+        },
+        "max": {
+          "name": "Max running automations"
+        },
+        "mode": {
+          "name": "Run mode",
+          "state": {
+            "parallel": "Parallel",
+            "queued": "Queued",
+            "restart": "Restart",
+            "single": "Single"
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "service_not_found": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The automation \"{name}\" (`{entity_id}`) has an unknown action: `{service}`.\n\nThis error prevents the automation from running correctly. Maybe this action is no longer available, or perhaps a typo caused it.\n\nTo fix this error, [edit the automation]({edit}) and remove this action.\n\nSelect **Submit** below to confirm you have fixed this automation.",
+            "title": "[%key:component::automation::issues::service_not_found::title%]"
+          }
+        }
+      },
+      "title": "{name} uses an unknown action"
+    },
+    "validation_failed_actions": {
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because its actions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "title": "[%key:component::automation::common::validation_failed_title%]"
+    },
+    "validation_failed_blueprint": {
+      "description": "The blueprinted automation \"{name}\" (`{entity_id}`) failed to set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "title": "[%key:component::automation::common::validation_failed_title%]"
+    },
+    "validation_failed_conditions": {
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because its conditions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "title": "[%key:component::automation::common::validation_failed_title%]"
+    },
+    "validation_failed_schema": {
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because the configuration has errors.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "title": "[%key:component::automation::common::validation_failed_title%]"
+    },
+    "validation_failed_triggers": {
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because its triggers could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "title": "[%key:component::automation::common::validation_failed_title%]"
+    }
+  },
+  "preview_features": {
+    "new_triggers_conditions": {
+      "description": "Enables new purpose-specific triggers and conditions that are more user-friendly than technical state-based options.\n\nThese new automation features support targets across your entire home, letting you trigger automations for any entity, device, area, floor, or label (for example, when any light in your living room turned on). Integrations can now also provide their own purpose-specific triggers and conditions, just like actions.\n\nThis preview also includes a new tree view to help you navigate your home when adding triggers, conditions, and actions.",
+      "disable_confirmation": "Disabling this preview will cause automations and scripts that use the new purpose-specific triggers and conditions to fail.\n\nBefore disabling, ensure that your automations or scripts do not rely on this feature.",
+      "enable_confirmation": "This feature is still in development and may change. These new purpose-specific triggers and conditions are being refined based on user feedback and are not yet complete.\n\nBy enabling this preview, you'll have early access to these new capabilities, but be aware that they may be modified or updated in future releases.",
+      "name": "Purpose-specific triggers and conditions"
+    }
+  },
+  "services": {
+    "reload": {
+      "description": "Reloads the automation configuration.",
+      "name": "[%key:common::action::reload%]"
+    },
+    "toggle": {
+      "description": "Toggles (enable / disable) an automation.",
+      "name": "[%key:common::action::toggle%]"
+    },
+    "trigger": {
+      "description": "Triggers the actions of an automation.",
+      "fields": {
+        "skip_condition": {
+          "description": "Defines whether or not the conditions will be skipped.",
+          "name": "Skip conditions"
+        }
+      },
+      "name": "Trigger"
+    },
+    "turn_off": {
+      "description": "Disables an automation.",
+      "fields": {
+        "stop_actions": {
+          "description": "Stops currently running actions.",
+          "name": "Stop actions"
+        }
+      },
+      "name": "[%key:common::action::turn_off%]"
+    },
+    "turn_on": {
+      "description": "Enables an automation.",
+      "name": "[%key:common::action::turn_on%]"
+    }
+  },
+  "title": "Automation"
+}

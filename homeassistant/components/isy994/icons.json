@@ -1,0 +1,28 @@
+{
+  "services": {
+    "delete_zwave_lock_user_code": {
+      "service": "mdi:lock-remove"
+    },
+    "get_zwave_parameter": {
+      "service": "mdi:download"
+    },
+    "rename_node": {
+      "service": "mdi:pencil"
+    },
+    "send_node_command": {
+      "service": "mdi:console"
+    },
+    "send_program_command": {
+      "service": "mdi:console"
+    },
+    "send_raw_node_command": {
+      "service": "mdi:console-line"
+    },
+    "set_zwave_lock_user_code": {
+      "service": "mdi:upload-lock"
+    },
+    "set_zwave_parameter": {
+      "service": "mdi:upload"
+    }
+  }
+}

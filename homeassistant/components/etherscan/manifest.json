@@ -1,0 +1,10 @@
+{
+  "domain": "etherscan",
+  "name": "Etherscan",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/etherscan",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyetherscan"],
+  "quality_scale": "legacy",
+  "requirements": ["python-etherscan-api==0.0.3"]
+}

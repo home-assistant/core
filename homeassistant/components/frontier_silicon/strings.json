@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "device_config": {
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "description": "The PIN can be found via 'MENU button > Main Menu > System setting > Network > NetRemote PIN setup'",
+        "title": "Device configuration"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Frontier Silicon device."
+        }
+      }
+    }
+  }
+}

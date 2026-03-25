@@ -1,0 +1,33 @@
+transition_on:
+  target:
+    entity:
+      integration: snooz
+      domain: fan
+  fields:
+    duration:
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+          mode: box
+    volume:
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+
+transition_off:
+  target:
+    entity:
+      integration: snooz
+      domain: fan
+  fields:
+    duration:
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+          mode: box

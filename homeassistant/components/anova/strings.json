@@ -1,0 +1,65 @@
+{
+  "config": {
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cook_time": {
+        "name": "Cook time"
+      },
+      "cook_time_remaining": {
+        "name": "Cook time remaining"
+      },
+      "heater_temperature": {
+        "name": "Heater temperature"
+      },
+      "mode": {
+        "name": "[%key:common::config_flow::data::mode%]",
+        "state": {
+          "cook": "Cooking",
+          "device_failure": "Device failure",
+          "high_temp": "High temperature",
+          "idle": "[%key:common::state::idle%]",
+          "low_water": "Low water",
+          "ota": "OTA update",
+          "provisioning": "Provisioning",
+          "startup": "Startup"
+        }
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "cooking": "Cooking",
+          "maintaining": "Maintaining",
+          "no_state": "No state",
+          "preheating": "Preheating",
+          "set_timer": "Set timer",
+          "timer_expired": "Timer expired"
+        }
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "triac_temperature": {
+        "name": "Triac temperature"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    }
+  }
+}

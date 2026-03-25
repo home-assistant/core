@@ -1,0 +1,62 @@
+# Describes the format for available scene services
+
+turn_on:
+  target:
+    entity:
+      domain: scene
+  fields:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
+
+reload:
+apply:
+  fields:
+    entities:
+      required: true
+      example: |
+        light.kitchen: "on"
+        light.ceiling:
+          state: "on"
+          brightness: 80
+      selector:
+        object:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
+
+create:
+  fields:
+    scene_id:
+      required: true
+      example: all_lights
+      selector:
+        text:
+    entities:
+      advanced: true
+      example: |
+        light.tv_back_light: "on"
+        light.ceiling:
+          state: "on"
+          brightness: 200
+      selector:
+        object:
+    snapshot_entities:
+      example: |
+        - light.ceiling
+        - light.kitchen
+      selector:
+        entity:
+          multiple: true
+
+delete:
+  target:
+    entity:
+      - integration: homeassistant
+        domain: scene

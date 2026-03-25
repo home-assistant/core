@@ -1,0 +1,7 @@
+{
+  "domain": "test_legacy_state_translations_bad_data",
+  "name": "Test package for legacy state translations",
+  "documentation": "http://test-package.io",
+  "config_flow": true,
+  "version": "1.2.3"
+}

@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_authenticate": "Cannot authenticate, is your gateway paired with another server like e.g. HomeKit?",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_security_code": "Failed to register with provided code. If this keeps happening, try restarting the gateway.",
+      "timeout": "Timeout validating the code."
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "security_code": "Security code"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Trådfri gateway."
+        },
+        "description": "You can find the security code on the back of your gateway.",
+        "title": "Enter security code"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "aqi": {
+        "name": "Air quality"
+      },
+      "filter_life_remaining": {
+        "name": "Filter time left"
+      }
+    }
+  }
+}

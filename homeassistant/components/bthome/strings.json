@@ -1,0 +1,137 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "decryption_failed": "The provided bindkey did not work, sensor data could not be decrypted. Please check it and try again.",
+      "expected_32_characters": "Expected a 32 character hexadecimal bindkey."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "get_encryption_key": {
+        "data": {
+          "bindkey": "Bindkey"
+        },
+        "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 32 character hexadecimal bindkey."
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "double_press": "Double Press",
+      "hold_press": "Hold Press",
+      "long_double_press": "Long Double Press",
+      "long_press": "Long Press",
+      "long_triple_press": "Long Triple Press",
+      "press": "Press",
+      "rotate_left": "Rotate Left",
+      "rotate_right": "Rotate Right",
+      "triple_press": "Triple Press"
+    },
+    "trigger_type": {
+      "button": "Button \"{subtype}\"",
+      "dimmer": "Dimmer \"{subtype}\""
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "generic": {
+        "name": "Generic"
+      }
+    },
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "double_press": "Double press",
+              "hold_press": "Hold press",
+              "long_double_press": "Long double press",
+              "long_press": "Long press",
+              "long_triple_press": "Long triple press",
+              "press": "Press",
+              "triple_press": "Triple press"
+            }
+          }
+        }
+      },
+      "dimmer": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "rotate_left": "Rotate left",
+              "rotate_right": "Rotate right"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "acceleration": {
+        "name": "Acceleration"
+      },
+      "channel": {
+        "name": "Channel"
+      },
+      "count": {
+        "name": "Count"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "direction": {
+        "name": "Direction"
+      },
+      "gyroscope": {
+        "name": "Gyroscope"
+      },
+      "packet_id": {
+        "name": "Packet ID"
+      },
+      "raw": {
+        "name": "Raw"
+      },
+      "rotation": {
+        "name": "Rotation"
+      },
+      "rotational_speed": {
+        "name": "Rotational speed"
+      },
+      "text": {
+        "name": "Text"
+      },
+      "uv_index": {
+        "name": "UV Index"
+      }
+    }
+  },
+  "issues": {
+    "encryption_removed": {
+      "fix_flow": {
+        "abort": {
+          "entry_removed": "The device has been removed"
+        },
+        "step": {
+          "confirm": {
+            "description": "The BTHome device **{name}** was configured with encryption but is now broadcasting unencrypted data. Data from this device is being ignored until this is resolved.\n\nIf you disabled encryption on the device, select **Submit** to remove the encryption key and resume receiving data.\n\nIf you did not disable encryption, someone may be attempting to spoof your device. Do not submit this form and the unencrypted data will continue to be ignored.",
+            "title": "Remove encryption key for {name}"
+          }
+        }
+      },
+      "title": "Encryption disabled on {name}"
+    }
+  }
+}

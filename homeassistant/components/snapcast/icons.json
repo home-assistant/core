@@ -1,0 +1,13 @@
+{
+  "services": {
+    "restore": {
+      "service": "mdi:camera-retake"
+    },
+    "set_latency": {
+      "service": "mdi:camera-timer"
+    },
+    "snapshot": {
+      "service": "mdi:camera"
+    }
+  }
+}

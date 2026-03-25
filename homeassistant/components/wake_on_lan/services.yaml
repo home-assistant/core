@@ -1,0 +1,18 @@
+send_magic_packet:
+  fields:
+    mac:
+      required: true
+      example: "aa:bb:cc:dd:ee:ff"
+      selector:
+        text:
+    broadcast_address:
+      example: 192.168.255.255
+      selector:
+        text:
+    broadcast_port:
+      default: 9
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: "box"

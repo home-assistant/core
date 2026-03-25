@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "sensor": {
+      "connectivity_mode": {
+        "default": "mdi:bluetooth-off",
+        "state": {
+          "bluetooth": "mdi:bluetooth",
+          "not_configured": "mdi:alert-circle",
+          "smartlink": "mdi:hub"
+        }
+      },
+      "radon_1day_avg": {
+        "default": "mdi:radioactive"
+      },
+      "radon_1day_level": {
+        "default": "mdi:radioactive"
+      },
+      "radon_longterm_avg": {
+        "default": "mdi:radioactive"
+      },
+      "radon_longterm_level": {
+        "default": "mdi:radioactive"
+      }
+    }
+  }
+}

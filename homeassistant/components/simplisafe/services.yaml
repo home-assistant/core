@@ -1,0 +1,100 @@
+# Describes the format for available SimpliSafe services
+remove_pin:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          entity:
+            domain: alarm_control_panel
+    label_or_pin:
+      required: true
+      example: Test PIN
+      selector:
+        text:
+set_pin:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          entity:
+            domain: alarm_control_panel
+    label:
+      required: true
+      example: Test PIN
+      selector:
+        text:
+    pin:
+      required: true
+      example: 1256
+      selector:
+        text:
+set_system_properties:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          entity:
+            domain: alarm_control_panel
+    alarm_duration:
+      selector:
+        number:
+          min: 30
+          max: 480
+          unit_of_measurement: seconds
+    alarm_volume:
+      selector:
+        select:
+          options:
+            - "low"
+            - "medium"
+            - "high"
+            - "off"
+    chime_volume:
+      selector:
+        select:
+          options:
+            - "low"
+            - "medium"
+            - "high"
+            - "off"
+    entry_delay_away:
+      selector:
+        number:
+          min: 30
+          max: 255
+          unit_of_measurement: seconds
+    entry_delay_home:
+      selector:
+        number:
+          min: 0
+          max: 255
+          unit_of_measurement: seconds
+    exit_delay_away:
+      selector:
+        number:
+          min: 45
+          max: 255
+          unit_of_measurement: seconds
+    exit_delay_home:
+      selector:
+        number:
+          min: 0
+          max: 255
+          unit_of_measurement: seconds
+    light:
+      selector:
+        boolean:
+    voice_prompt_volume:
+      selector:
+        select:
+          options:
+            - "low"
+            - "medium"
+            - "high"
+            - "off"

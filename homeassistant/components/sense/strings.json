@@ -1,0 +1,55 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_validate": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The Sense integration needs to re-authenticate your account {email}.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "timeout": "Timeout"
+        },
+        "title": "Connect to your Sense Energy Monitor"
+      },
+      "validation": {
+        "data": {
+          "code": "Verification code"
+        },
+        "title": "Sense multi-factor authentication"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bill_energy": {
+        "name": "Bill energy"
+      },
+      "daily_energy": {
+        "name": "Daily energy"
+      },
+      "monthly_energy": {
+        "name": "Monthly energy"
+      },
+      "weekly_energy": {
+        "name": "Weekly energy"
+      },
+      "yearly_energy": {
+        "name": "Yearly energy"
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "google_assistant",
+  "name": "Google Assistant",
+  "after_dependencies": ["camera", "matter"],
+  "codeowners": ["@home-assistant/cloud"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/google_assistant",
+  "integration_type": "system",
+  "iot_class": "cloud_push"
+}

@@ -1,0 +1,19 @@
+update_state:
+set_scan_interval:
+  fields:
+    scan_interval:
+      selector:
+        number:
+          min: 10
+          max: 86400
+          step: 5
+          unit_of_measurement: seconds
+set_scan_obd_interval:
+  fields:
+    scan_interval:
+      selector:
+        number:
+          min: 180
+          max: 86400
+          step: 5
+          unit_of_measurement: seconds

@@ -1,0 +1,10 @@
+{
+  "domain": "threshold",
+  "name": "Threshold",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/threshold",
+  "integration_type": "helper",
+  "iot_class": "local_polling",
+  "quality_scale": "internal"
+}

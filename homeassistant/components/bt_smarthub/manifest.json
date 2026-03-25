@@ -1,0 +1,10 @@
+{
+  "domain": "bt_smarthub",
+  "name": "BT Smart Hub",
+  "codeowners": ["@typhoon2099"],
+  "documentation": "https://www.home-assistant.io/integrations/bt_smarthub",
+  "iot_class": "local_polling",
+  "loggers": ["btsmarthub_devicelist"],
+  "quality_scale": "legacy",
+  "requirements": ["btsmarthub-devicelist==0.2.3"]
+}

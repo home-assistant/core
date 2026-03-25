@@ -1,0 +1,32 @@
+call_method:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      required: true
+      example: "playlist"
+      selector:
+        text:
+    parameters:
+      example: '["loadtracks", "album.titlesearch=Revolver"]'
+      advanced: true
+      selector:
+        object:
+call_query:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      required: true
+      example: "albums"
+      selector:
+        text:
+    parameters:
+      example: '["0", "20", "search:Revolver"]'
+      advanced: true
+      selector:
+        object:

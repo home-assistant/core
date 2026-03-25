@@ -1,0 +1,27 @@
+{
+  "exceptions": {
+    "url_already_exists": {
+      "message": "The URL \"{url}\" is already in use. Please choose a different one."
+    }
+  },
+  "issues": {
+    "yaml_mode_deprecated": {
+      "description": "Your YAML dashboard configuration uses the legacy `mode: yaml` option, which will be removed in Home Assistant 2026.8. Your YAML dashboards will continue to work, you just need to update how they are defined.\n\nTo update your configuration:\n\n1. Remove `mode: yaml` from `lovelace:` in your `configuration.yaml`\n2. Add a dashboard entry instead:\n\n   ```yaml\n   lovelace:\n     resource_mode: yaml\n     dashboards:\n       lovelace:\n         mode: yaml\n         filename: {config_file}\n         title: Overview\n         icon: mdi:view-dashboard\n         show_in_sidebar: true\n   ```\n\n3. Restart Home Assistant\n\nNote: `resource_mode: yaml` keeps loading resources from YAML. If you want to manage resources through the UI instead, you can remove this line and move your resources to Settings > Dashboards > Resources.",
+      "title": "Lovelace YAML configuration needs update"
+    }
+  },
+  "services": {
+    "reload_resources": {
+      "description": "Reloads dashboard resources from the YAML-configuration.",
+      "name": "Reload resources"
+    }
+  },
+  "system_health": {
+    "info": {
+      "dashboards": "Dashboards",
+      "mode": "[%key:common::config_flow::data::mode%]",
+      "resources": "Resources",
+      "views": "Views"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "homeworks",
+  "name": "Lutron Homeworks",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/homeworks",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["pyhomeworks"],
+  "requirements": ["pyhomeworks==1.1.2"]
+}

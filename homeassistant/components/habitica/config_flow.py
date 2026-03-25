@@ -1,0 +1,453 @@
+"""Config flow for habitica integration."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+import logging
+from typing import TYPE_CHECKING, Any
+from uuid import UUID
+
+from aiohttp import ClientError
+from habiticalib import (
+    Habitica,
+    HabiticaException,
+    LoginData,
+    NotAuthorizedError,
+    UserData,
+)
+import voluptuous as vol
+
+from homeassistant import data_entry_flow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
+
+from . import HABITICA_KEY
+from .const import (
+    CONF_API_USER,
+    CONF_PARTY_MEMBER,
+    DEFAULT_URL,
+    DOMAIN,
+    FORGOT_PASSWORD_URL,
+    HABITICANS_URL,
+    SECTION_DANGER_ZONE,
+    SECTION_REAUTH_API_KEY,
+    SECTION_REAUTH_LOGIN,
+    SIGN_UP_URL,
+    SITE_DATA_URL,
+    X_CLIENT,
+)
+from .coordinator import HabiticaConfigEntry
+
+STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_USER): str,
+        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_URL, default=DEFAULT_URL): str,
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+    }
+)
+
+STEP_LOGIN_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+                autocomplete="email",
+            )
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(SECTION_REAUTH_LOGIN): data_entry_flow.section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.EMAIL,
+                            autocomplete="email",
+                        )
+                    ),
+                    vol.Optional(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
+                },
+            ),
+            {"collapsed": False},
+        ),
+        vol.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_API_KEY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
+    }
+)
+
+STEP_RECONF_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_URL): str,
+                    vol.Required(CONF_VERIFY_SSL): bool,
+                },
+            ),
+            {"collapsed": True},
+        ),
+    }
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for habitica."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["login", "advanced"],
+            description_placeholders={
+                "signup": SIGN_UP_URL,
+                "habiticans": HABITICANS_URL,
+            },
+        )
+
+    async def async_step_login(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Config flow with username/password.
+
+        Simplified configuration setup that retrieves API credentials
+        from Habitica.com by authenticating with login and password.
+        """
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors, login, user = await self.validate_login(
+                {**user_input, CONF_URL: DEFAULT_URL}
+            )
+            if not errors and login is not None and user is not None:
+                await self.async_set_unique_id(str(login.id))
+                self._abort_if_unique_id_configured()
+                if TYPE_CHECKING:
+                    assert user.profile.name
+                return self.async_create_entry(
+                    title=user.profile.name,
+                    data={
+                        CONF_API_USER: str(login.id),
+                        CONF_API_KEY: login.apiToken,
+                        CONF_URL: DEFAULT_URL,
+                        CONF_VERIFY_SSL: True,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="login",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_LOGIN_DATA_SCHEMA, suggested_values=user_input
+            ),
+            errors=errors,
+            description_placeholders={"forgot_password": FORGOT_PASSWORD_URL},
+        )
+
+    async def async_step_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Advanced configuration with User Id and API Token.
+
+        Advanced configuration allows connecting to Habitica instances
+        hosted on different domains or to self-hosted instances.
+        """
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_API_USER])
+            self._abort_if_unique_id_configured()
+            errors, user = await self.validate_api_key(user_input)
+            if not errors and user is not None:
+                if TYPE_CHECKING:
+                    assert user.profile.name
+                return self.async_create_entry(
+                    title=user.profile.name,
+                    data={
+                        **user_input,
+                        CONF_URL: user_input.get(CONF_URL, DEFAULT_URL),
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="advanced",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_ADVANCED_DATA_SCHEMA, suggested_values=user_input
+            ),
+            errors=errors,
+            description_placeholders={
+                "site_data": SITE_DATA_URL,
+                "default_url": DEFAULT_URL,
+            },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+        reauth_entry: HabiticaConfigEntry = self._get_reauth_entry()
+
+        if user_input is not None:
+            if user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME) and user_input[
+                SECTION_REAUTH_LOGIN
+            ].get(CONF_PASSWORD):
+                errors, login, _ = await self.validate_login(
+                    {**reauth_entry.data, **user_input[SECTION_REAUTH_LOGIN]}
+                )
+                if not errors and login is not None:
+                    await self.async_set_unique_id(str(login.id))
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={CONF_API_KEY: login.apiToken},
+                    )
+            elif user_input[SECTION_REAUTH_API_KEY].get(CONF_API_KEY):
+                errors, user = await self.validate_api_key(
+                    {
+                        **reauth_entry.data,
+                        **user_input[SECTION_REAUTH_API_KEY],
+                    }
+                )
+                if not errors and user is not None:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data_updates=user_input[SECTION_REAUTH_API_KEY]
+                    )
+            else:
+                errors["base"] = "invalid_credentials"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
+                suggested_values={
+                    CONF_USERNAME: (
+                        user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME)
+                        if user_input
+                        else None,
+                    )
+                },
+            ),
+            description_placeholders={
+                CONF_NAME: reauth_entry.title,
+                "habiticans": HABITICANS_URL,
+            },
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        suggested_values = {
+            CONF_API_KEY: reconf_entry.data[CONF_API_KEY],
+            SECTION_DANGER_ZONE: {
+                CONF_URL: reconf_entry.data[CONF_URL],
+                CONF_VERIFY_SSL: reconf_entry.data.get(CONF_VERIFY_SSL, True),
+            },
+        }
+
+        if user_input:
+            errors, user = await self.validate_api_key(
+                {
+                    **reconf_entry.data,
+                    **user_input,
+                    **user_input[SECTION_DANGER_ZONE],
+                }
+            )
+            if not errors and user is not None:
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        **user_input[SECTION_DANGER_ZONE],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_RECONF_DATA_SCHEMA,
+                suggested_values=user_input or suggested_values,
+            ),
+            errors=errors,
+            description_placeholders={
+                "site_data": SITE_DATA_URL,
+                "habiticans": HABITICANS_URL,
+            },
+        )
+
+    async def validate_login(
+        self, user_input: Mapping[str, Any]
+    ) -> tuple[dict[str, str], LoginData | None, UserData | None]:
+        """Validate login with login credentials."""
+        errors: dict[str, str] = {}
+        session = async_get_clientsession(
+            self.hass, verify_ssl=user_input.get(CONF_VERIFY_SSL, True)
+        )
+        api = Habitica(session=session, x_client=X_CLIENT)
+        try:
+            login = await api.login(
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+            )
+            user = await api.get_user(user_fields="profile")
+
+        except NotAuthorizedError:
+            errors["base"] = "invalid_auth"
+        except HabiticaException, ClientError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return errors, login.data, user.data
+
+        return errors, None, None
+
+    async def validate_api_key(
+        self, user_input: Mapping[str, Any]
+    ) -> tuple[dict[str, str], UserData | None]:
+        """Validate authentication with api key."""
+        errors: dict[str, str] = {}
+        session = async_get_clientsession(
+            self.hass, verify_ssl=user_input.get(CONF_VERIFY_SSL, True)
+        )
+        api = Habitica(
+            session=session,
+            x_client=X_CLIENT,
+            api_user=user_input[CONF_API_USER],
+            api_key=user_input[CONF_API_KEY],
+            url=user_input.get(CONF_URL, DEFAULT_URL),
+        )
+        try:
+            user = await api.get_user(user_fields="profile")
+        except NotAuthorizedError:
+            errors["base"] = "invalid_auth"
+        except HabiticaException, ClientError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return errors, user.data
+
+        return errors, None
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"party_member": PartyMembersSubentryFlowHandler}
+
+
+class PartyMembersSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding party members."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Subentry user flow."""
+
+        entry: HabiticaConfigEntry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_disabled")
+        if (party := entry.runtime_data.data.user.party.id) is None:
+            return self.async_abort(reason="not_in_a_party")
+
+        party_members = self.hass.data[HABITICA_KEY][party].data.members
+
+        if user_input is not None:
+            config_entries = self.hass.config_entries.async_entries(DOMAIN)
+
+            for entry in config_entries:
+                if user_input[CONF_PARTY_MEMBER] == entry.unique_id:
+                    return self.async_abort(reason="already_configured_as_entry")
+                if user_input[CONF_PARTY_MEMBER] in {
+                    subentry.unique_id for subentry in entry.subentries.values()
+                }:
+                    return self.async_abort(reason="already_configured")
+
+            return self.async_create_entry(
+                title=party_members[UUID(user_input[CONF_PARTY_MEMBER])].profile.name,
+                data={},
+                unique_id=user_input[CONF_PARTY_MEMBER],
+            )
+
+        options = [
+            SelectOptionDict(
+                value=str(member_id),
+                label=f"{member.profile.name} (@{member.auth.local.username})",
+            )
+            for member_id, member in party_members.items()
+            if member_id != str(entry.runtime_data.data.user.id)
+            and member.profile.name
+            and member.auth.local.username
+        ]
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PARTY_MEMBER): SelectSelector(
+                        SelectSelectorConfig(options=options)
+                    )
+                }
+            ),
+        )

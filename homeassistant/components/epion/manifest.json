@@ -1,0 +1,11 @@
+{
+  "domain": "epion",
+  "name": "Epion",
+  "codeowners": ["@lhgravendeel"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/epion",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["epion"],
+  "requirements": ["epion==0.0.3"]
+}

@@ -1,0 +1,48 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "freeze_prevent": {
+        "default": "mdi:snowflake-alert"
+      },
+      "standby": {
+        "default": "mdi:pause-circle"
+      },
+      "watering_running": {
+        "default": "mdi:sprinkler",
+        "state": {
+          "off": "mdi:sprinkler-variant"
+        }
+      },
+      "zone_enabled": {
+        "default": "mdi:toggle-switch",
+        "state": {
+          "off": "mdi:toggle-switch-off"
+        }
+      }
+    },
+    "sensor": {
+      "active_zone_count": {
+        "default": "mdi:counter"
+      },
+      "rain_delay": {
+        "default": "mdi:timer-sand"
+      },
+      "water_hammer_duration": {
+        "default": "mdi:hammer"
+      },
+      "zone_delay": {
+        "default": "mdi:timer-pause"
+      }
+    },
+    "switch": {
+      "switch": {
+        "default": "mdi:water"
+      }
+    }
+  },
+  "services": {
+    "start_irrigation": {
+      "service": "mdi:water"
+    }
+  }
+}

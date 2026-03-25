@@ -1,0 +1,78 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Air Conditioner",
+  "category": "kt",
+  "product_id": "5wnlzekkstwcdsvm",
+  "product_name": "\u79fb\u52a8\u7a7a\u8c03 YPK--\uff08\u53cc\u6a21+\u84dd\u7259\uff09\u4f4e\u529f\u8017",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-07-06T10:10:44+00:00",
+  "create_time": "2025-07-06T10:10:44+00:00",
+  "update_time": "2025-07-06T10:10:44+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103 \u2109",
+        "min": 16,
+        "max": 86,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "windspeed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103 \u2109",
+        "min": 16,
+        "max": 86,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103 \u2109",
+        "min": -7,
+        "max": 98,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "windspeed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "temp_set": 23,
+    "temp_current": 22,
+    "windspeed": 1
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "atome",
+  "name": "Atome Linky",
+  "codeowners": ["@baqs"],
+  "documentation": "https://www.home-assistant.io/integrations/atome",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyatome"],
+  "quality_scale": "legacy",
+  "requirements": ["pyAtome==0.1.1"]
+}

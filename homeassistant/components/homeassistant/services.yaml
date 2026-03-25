@@ -1,0 +1,63 @@
+check_config:
+reload_core_config:
+restart:
+set_location:
+  fields:
+    latitude:
+      required: true
+      example: 32.87336
+      selector:
+        number:
+          mode: box
+          min: -90
+          max: 90
+          step: any
+    longitude:
+      required: true
+      example: 117.22743
+      selector:
+        number:
+          mode: box
+          min: -180
+          max: 180
+          step: any
+    elevation:
+      required: false
+      example: 120
+      selector:
+        number:
+          mode: box
+          step: any
+
+stop:
+toggle:
+  target:
+
+turn_on:
+  target:
+
+turn_off:
+  target:
+
+update_entity:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          multiple: true
+
+reload_custom_templates:
+reload_config_entry:
+  target:
+  fields:
+    entry_id:
+      advanced: true
+      required: false
+      example: 8955375327824e14ba89e4b29cc3ec9a
+      selector:
+        config_entry:
+
+save_persistent_states:
+
+reload_all:

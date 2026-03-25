@@ -1,0 +1,281 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "kamereon_no_account": "Unable to find Kamereon account",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
+    "step": {
+      "kamereon": {
+        "data": {
+          "kamereon_account_id": "Account ID"
+        },
+        "data_description": {
+          "kamereon_account_id": "The Kamereon account ID associated with your vehicle"
+        },
+        "description": "You have multiple Kamereon accounts associated to this email, please select one",
+        "title": "Kamereon account ID"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Your MyRenault phone application password"
+        },
+        "description": "Please update your password for {username}",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "locale": "Locale",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "locale": "Your country code",
+          "password": "Your MyRenault phone application password",
+          "username": "Your MyRenault phone application email address"
+        },
+        "title": "Set Renault credentials"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "driver_door_status": {
+        "name": "Driver door"
+      },
+      "hatch_status": {
+        "name": "Hatch"
+      },
+      "hvac_status": {
+        "name": "HVAC"
+      },
+      "passenger_door_status": {
+        "name": "Passenger door"
+      },
+      "rear_left_door_status": {
+        "name": "Rear left door"
+      },
+      "rear_right_door_status": {
+        "name": "Rear right door"
+      }
+    },
+    "button": {
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "sound_horn": {
+        "name": "Sound horn"
+      },
+      "start_air_conditioner": {
+        "name": "Start air conditioner"
+      },
+      "start_charge": {
+        "name": "Start charge"
+      },
+      "stop_charge": {
+        "name": "Stop charge"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "[%key:common::config_flow::data::location%]"
+      }
+    },
+    "number": {
+      "charge_limit_min": {
+        "name": "Minimum charge level"
+      },
+      "charge_limit_target": {
+        "name": "Target charge level"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "always": "Always",
+          "always_charging": "Always charging",
+          "schedule_mode": "Schedule mode",
+          "scheduled": "Scheduled"
+        }
+      }
+    },
+    "sensor": {
+      "admissible_charging_power": {
+        "name": "Admissible charging power"
+      },
+      "battery_autonomy": {
+        "name": "Battery autonomy"
+      },
+      "battery_available_energy": {
+        "name": "Battery available energy"
+      },
+      "battery_last_activity": {
+        "name": "Last battery activity"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "charge_state": {
+        "name": "Charge state",
+        "state": {
+          "charge_ended": "Charge ended",
+          "charge_error": "Not charging or plugged in",
+          "charge_in_progress": "[%key:common::state::charging%]",
+          "energy_flap_opened": "Energy flap opened",
+          "not_in_charge": "Not charging",
+          "unavailable": "Unavailable",
+          "waiting_for_a_planned_charge": "Waiting for planned charge",
+          "waiting_for_current_charge": "Waiting for current charge"
+        }
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "charging_remaining_time": {
+        "name": "Charging remaining time"
+      },
+      "charging_settings_mode": {
+        "name": "Charging mode",
+        "state": {
+          "always": "Always",
+          "delayed": "Delayed",
+          "scheduled": "Scheduled"
+        }
+      },
+      "front_left_pressure": {
+        "name": "Front left tyre pressure"
+      },
+      "front_right_pressure": {
+        "name": "Front right tyre pressure"
+      },
+      "fuel_autonomy": {
+        "name": "Fuel autonomy"
+      },
+      "fuel_quantity": {
+        "name": "Fuel quantity"
+      },
+      "hvac_last_activity": {
+        "name": "Last HVAC activity"
+      },
+      "hvac_soc_threshold": {
+        "name": "HVAC SoC threshold"
+      },
+      "location_last_activity": {
+        "name": "Last location activity"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "plug_state": {
+        "name": "Plug state",
+        "state": {
+          "plug_error": "Plug error",
+          "plug_unknown": "Plug unknown",
+          "plugged": "Plugged in",
+          "unplugged": "Unplugged"
+        }
+      },
+      "rear_left_pressure": {
+        "name": "Rear left tyre pressure"
+      },
+      "rear_right_pressure": {
+        "name": "Rear right tyre pressure"
+      },
+      "res_state": {
+        "name": "Remote engine start"
+      },
+      "res_state_code": {
+        "name": "Remote engine start code"
+      }
+    }
+  },
+  "exceptions": {
+    "battery_soc_unavailable": {
+      "message": "Battery state of charge data is currently unavailable"
+    },
+    "invalid_device_id": {
+      "message": "No device with ID {device_id} was found"
+    },
+    "no_config_entry_for_device": {
+      "message": "No loaded config entry was found for device with ID {device_id}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Renault servers: {error}"
+    }
+  },
+  "services": {
+    "ac_cancel": {
+      "description": "Cancels A/C on vehicle.",
+      "fields": {
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Cancel A/C"
+    },
+    "ac_set_schedules": {
+      "description": "Updates A/C schedule on vehicle.",
+      "fields": {
+        "schedules": {
+          "description": "[%key:component::renault::services::charge_set_schedules::fields::schedules::description%]",
+          "name": "Schedules"
+        },
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Update A/C schedule"
+    },
+    "ac_start": {
+      "description": "Starts A/C on vehicle.",
+      "fields": {
+        "temperature": {
+          "description": "Target A/C temperature in °C.",
+          "name": "Temperature"
+        },
+        "vehicle": {
+          "description": "The vehicle to send the command to.",
+          "name": "Vehicle"
+        },
+        "when": {
+          "description": "Timestamp for the start of the A/C (optional - defaults to now).",
+          "name": "When"
+        }
+      },
+      "name": "Start A/C"
+    },
+    "charge_set_schedules": {
+      "description": "Updates charge schedule on vehicle.",
+      "fields": {
+        "schedules": {
+          "description": "Schedule details.",
+          "name": "Schedules"
+        },
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Update charge schedule"
+    }
+  }
+}

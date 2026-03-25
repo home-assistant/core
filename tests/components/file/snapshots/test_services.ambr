@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_read_file[tests/components/file/fixtures/file_read.json-json]
+  dict({
+    'data': dict({
+      'key': 'value',
+      'key1': 'value1',
+    }),
+  })
+# ---
+# name: test_read_file[tests/components/file/fixtures/file_read.yaml-yaml]
+  dict({
+    'data': dict({
+      'mylist': list([
+        dict({
+          'id': 1,
+          'name': 'list_item_1',
+        }),
+        dict({
+          'id': 2,
+          'name': 'list_item_2',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_read_file[tests/components/file/fixtures/file_read_list.yaml-yaml]
+  dict({
+    'data': list([
+      dict({
+        'id': 1,
+        'name': 'list_item_1',
+      }),
+      dict({
+        'id': 2,
+        'name': 'list_item_2',
+      }),
+    ]),
+  })
+# ---

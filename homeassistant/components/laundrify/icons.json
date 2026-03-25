@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "wash_cycle": {
+        "default": "mdi:washing-machine",
+        "state": {
+          "off": "mdi:washing-machine-off",
+          "on": "mdi:washing-machine"
+        }
+      }
+    }
+  }
+}

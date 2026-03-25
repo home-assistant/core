@@ -1,0 +1,18 @@
+<user id="12345" uuid="1234567890" username="User 1" title="User 1" email="myplexusername@email.com" friendlyName="User 1" locale="" confirmed="1" joinedAt="946730096" emailOnlyAuth="0" hasPassword="1" protected="0" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=12345" authToken="faketoken" mailingListStatus="unsubscribed" mailingListActive="0" scrobbleTypes="" country="CA" subscriptionDescription="" restricted="0" anonymous="" home="1" guest="0" homeSize="2" homeAdmin="1" maxHomeSize="15" rememberExpiresAt="1680893707" adsConsent="" adsConsentSetAt="" adsConsentReminderAt="" experimentalFeatures="0" twoFactorEnabled="1" backupCodesCreated="1">
+  <subscription active="1" subscribedAt="2023-09-19 00:00:00 UTC" status="Active" paymentService="" plan="lifetime">
+    <features>
+      <feature id="companions_sonos"/>
+    </features>
+  </subscription>
+  <profile autoSelectAudio="0" defaultAudioLanguage="en" defaultSubtitleLanguage="en" autoSelectSubtitle="0" defaultSubtitleAccessibility="0" defaultSubtitleForced="0"/>
+  <entitlements>
+    <entitlement id="all"/>
+  </entitlements>
+  <roles>
+    <role id="plexpass"/>
+  </roles>
+  <subscriptions>
+  </subscriptions>
+ <services>
+ </services>
+</user>

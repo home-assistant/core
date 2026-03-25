@@ -1,0 +1,99 @@
+"""Support for LCN scenes."""
+
+from collections.abc import Iterable
+from functools import partial
+from typing import Any
+
+import pypck
+
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, Scene
+from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SCENE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    CONF_DOMAIN_DATA,
+    CONF_OUTPUTS,
+    CONF_REGISTER,
+    CONF_TRANSITION,
+    OUTPUT_PORTS,
+)
+from .entity import LcnEntity
+from .helpers import LcnConfigEntry
+
+PARALLEL_UPDATES = 2
+
+
+def add_lcn_entities(
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities = [
+        LcnScene(entity_config, config_entry) for entity_config in entity_configs
+    ]
+
+    async_add_entities(entities)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LCN switch entities from a config entry."""
+    add_entities = partial(
+        add_lcn_entities,
+        config_entry,
+        async_add_entities,
+    )
+
+    config_entry.runtime_data.add_entities_callbacks.update(
+        {SCENE_DOMAIN: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == SCENE_DOMAIN
+        ),
+    )
+
+
+class LcnScene(LcnEntity, Scene):
+    """Representation of a LCN scene."""
+
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
+        """Initialize the LCN scene."""
+        super().__init__(config, config_entry)
+
+        self.register_id = config[CONF_DOMAIN_DATA][CONF_REGISTER]
+        self.scene_id = config[CONF_DOMAIN_DATA][CONF_SCENE]
+        self.output_ports = []
+        self.relay_ports = []
+
+        for port in config[CONF_DOMAIN_DATA][CONF_OUTPUTS]:
+            if port in OUTPUT_PORTS:
+                self.output_ports.append(pypck.lcn_defs.OutputPort[port])
+            else:  # in RELEAY_PORTS
+                self.relay_ports.append(pypck.lcn_defs.RelayPort[port])
+
+        if config[CONF_DOMAIN_DATA][CONF_TRANSITION] is None:
+            self.transition = None
+        else:
+            self.transition = pypck.lcn_defs.time_to_ramp_value(
+                config[CONF_DOMAIN_DATA][CONF_TRANSITION] * 1000.0
+            )
+
+    async def async_activate(self, **kwargs: Any) -> None:
+        """Activate scene."""
+        await self.device_connection.activate_scene(
+            self.register_id,
+            self.scene_id,
+            self.output_ports,
+            self.relay_ports,
+            self.transition,
+        )

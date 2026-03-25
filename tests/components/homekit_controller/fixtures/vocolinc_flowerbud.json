@@ -1,0 +1,358 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "bool",
+            "iid": 2,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "VOCOlinc"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "Flowerbud"
+          },
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "VOCOlinc-Flowerbud-0d324b"
+          },
+          {
+            "format": "string",
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "AM01121849000327"
+          },
+          {
+            "description": "",
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "3.121.2"
+          },
+          {
+            "format": "string",
+            "iid": 8,
+            "perms": ["pr"],
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "value": "0.1"
+          }
+        ],
+        "iid": 1,
+        "stype": "accessory-information",
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "rssi_report_switch",
+            "format": "bool",
+            "iid": 81,
+            "perms": ["pr", "pw"],
+            "type": "D9959C8A-809A-4F75-92D7-71F630AC2925",
+            "value": 0
+          },
+          {
+            "description": "rssi_report_value",
+            "format": "uint8",
+            "iid": 82,
+            "perms": ["pr", "pw", "ev"],
+            "type": "8137182C-6904-4FB9-ADCC-61CECA85CE48",
+            "value": 0
+          }
+        ],
+        "iid": 80,
+        "stype": "Unknown Service: C635EF5C-5BBC-4F96-B7DA-6669069A4B32",
+        "type": "C635EF5C-5BBC-4F96-B7DA-6669069A4B32"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 31,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "FLOWERBUD"
+          },
+          {
+            "format": "uint8",
+            "iid": 32,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "value": 0
+          },
+          {
+            "format": "float",
+            "iid": 33,
+            "maxValue": 100.0,
+            "minStep": 1.0,
+            "minValue": 0.0,
+            "perms": ["pr", "ev"],
+            "type": "00000010-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 45.0
+          },
+          {
+            "format": "uint8",
+            "iid": 34,
+            "maxValue": 2,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "000000B3-0000-1000-8000-0026BB765291",
+            "value": 0
+          },
+          {
+            "format": "uint8",
+            "iid": 35,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000B4-0000-1000-8000-0026BB765291",
+            "value": 1
+          },
+          {
+            "format": "uint8",
+            "iid": 36,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "36158AC8-5191-4AE2-9EF5-1D6722E88E3D",
+            "value": 1
+          },
+          {
+            "description": "spray quantity",
+            "format": "uint8",
+            "iid": 38,
+            "maxValue": 5,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr", "pw", "ev"],
+            "type": "69D52519-0A4E-4898-8335-4739F9116D0A",
+            "value": 5
+          },
+          {
+            "format": "float",
+            "iid": 39,
+            "maxValue": 100.0,
+            "minStep": 1.0,
+            "minValue": 0.0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000CA-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100.0
+          },
+          {
+            "description": "humidifier_timer_setting",
+            "format": "data",
+            "iid": 40,
+            "perms": ["pr", "pw", "ev"],
+            "type": "F84B3138-E44F-49B9-AA91-9E1736C247C0",
+            "value": "AA=="
+          },
+          {
+            "description": "humidifier_countdown",
+            "format": "data",
+            "iid": 41,
+            "perms": ["pr", "pw", "ev"],
+            "type": "43CE176B-2933-4034-98A7-AD215BEEBF2F",
+            "value": "AA=="
+          }
+        ],
+        "iid": 30,
+        "stype": "humidifier-dehumidifier",
+        "type": "000000BD-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 10,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Mood Light"
+          },
+          {
+            "format": "bool",
+            "iid": 11,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "int",
+            "iid": 12,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 50
+          },
+          {
+            "format": "float",
+            "iid": 13,
+            "maxValue": 360.0,
+            "minStep": 1.0,
+            "minValue": 0.0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000013-0000-1000-8000-0026BB765291",
+            "unit": "arcdegrees",
+            "value": 120.0
+          },
+          {
+            "format": "float",
+            "iid": 14,
+            "maxValue": 100.0,
+            "minStep": 1.0,
+            "minValue": 0.0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "0000002F-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100.0
+          },
+          {
+            "description": "lb_timer_setting",
+            "format": "data",
+            "iid": 63,
+            "perms": ["pr", "pw", "ev"],
+            "type": "A30DFE91-271A-42A5-88BA-00E3FF5488AD",
+            "value": "AA=="
+          },
+          {
+            "description": "light effect mode",
+            "format": "uint8",
+            "iid": 64,
+            "maxValue": 31,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "146889FC-7C42-429B-93AB-E80F79759E90",
+            "value": 0
+          },
+          {
+            "description": "light effect flag",
+            "format": "uint32",
+            "iid": 73,
+            "perms": ["pr"],
+            "type": "9D4B479D-9EFB-4739-98F3-B33E6543BF7B",
+            "value": 7
+          },
+          {
+            "description": "flashing mode",
+            "format": "data",
+            "iid": 65,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2C42B339-6EC9-4ED5-8DBF-FFCCC721B144",
+            "value": "AA=="
+          },
+          {
+            "description": "smoothing mode",
+            "format": "data",
+            "iid": 66,
+            "perms": ["pr", "pw", "ev"],
+            "type": "A3663C89-DC18-42EF-8297-910A4C0C9B61",
+            "value": "AA=="
+          },
+          {
+            "description": "breathing mode",
+            "format": "data",
+            "iid": 67,
+            "perms": ["pr", "pw", "ev"],
+            "type": "6533B15C-AECB-455F-8896-20B125390F61",
+            "value": "AA=="
+          }
+        ],
+        "iid": 9,
+        "stype": "lightbulb",
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "time_zone",
+            "format": "int",
+            "iid": 50,
+            "maxValue": 1400,
+            "minStep": 1,
+            "minValue": -1200,
+            "perms": ["pr", "pw"],
+            "type": "38396B8E-161B-4A77-AF3F-C4DAC0BE9B74",
+            "value": 0
+          },
+          {
+            "description": "hour_date_time",
+            "format": "int",
+            "iid": 51,
+            "perms": ["pr", "pw"],
+            "type": "71216CD3-209E-40CC-BEA0-71A2A9458E13",
+            "value": 0
+          }
+        ],
+        "iid": 48,
+        "stype": "Unknown Service: 961EBB65-A1E3-4F34-BD31-86552706FE40",
+        "type": "961EBB65-A1E3-4F34-BD31-86552706FE40"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "fm_upgrade_status",
+            "format": "int",
+            "iid": 21,
+            "perms": ["pr", "ev"],
+            "type": "49DDDE07-C3FA-499E-8055-58E154E04F34",
+            "value": 0
+          },
+          {
+            "description": "fm_upgrade_url",
+            "format": "string",
+            "iid": 22,
+            "maxLen": 256,
+            "perms": ["pw"],
+            "type": "4C203E30-EB25-466D-9980-C6C2E14BF6AA"
+          }
+        ],
+        "hidden": true,
+        "iid": 20,
+        "stype": "Unknown Service: 3138B537-E830-4F52-90A7-D6FDB000BF97",
+        "type": "3138B537-E830-4F52-90A7-D6FDB000BF97"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 24,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 23,
+        "stype": "service",
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      }
+    ]
+  }
+]

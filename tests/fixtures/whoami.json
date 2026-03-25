@@ -1,0 +1,15 @@
+{
+  "ip": "1.2.3.4",
+  "city": "Gotham",
+  "continent": "Earth",
+  "country": "XX",
+  "currency": "XXX",
+  "latitude": "12.34567",
+  "longitude": "12.34567",
+  "postal_code": "12345",
+  "region_code": "00",
+  "region": "Gotham",
+  "timezone": "Earth/Gotham",
+  "iso_time": "2021-05-12T11:29:15.752Z",
+  "timestamp": 1620818956
+}

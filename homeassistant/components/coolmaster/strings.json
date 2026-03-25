@@ -1,0 +1,45 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_units": "Could not find any HVAC units in CoolMasterNet host."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "cool": "Support cool mode",
+          "dry": "Support dry mode",
+          "fan_only": "Support fan only mode",
+          "heat": "Support heat mode",
+          "heat_cool": "Support automatic heat/cool mode",
+          "host": "[%key:common::config_flow::data::host%]",
+          "off": "Can be turned off",
+          "send_wakeup_prompt": "Send wakeup prompt",
+          "swing_support": "Control swing mode"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your CoolMasterNet device.",
+          "send_wakeup_prompt": "Send the coolmaster unit an empty commaand before issuing any actual command. This is required for serial models."
+        },
+        "description": "Set up your CoolMasterNet connection details."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "clean_filter": {
+        "name": "Clean filter"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
+    "sensor": {
+      "error_code": {
+        "name": "Error code"
+      }
+    }
+  }
+}

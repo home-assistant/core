@@ -1,0 +1,234 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Workday has already been set up with chosen configuration"
+    },
+    "error": {
+      "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
+      "add_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)",
+      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+      "remove_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)"
+    },
+    "step": {
+      "options": {
+        "data": {
+          "add_holidays": "Add holidays",
+          "category": "Additional category as holiday",
+          "days_offset": "Offset",
+          "excludes": "Days to exclude",
+          "language": "Language for named holidays",
+          "province": "Subdivision of country",
+          "remove_holidays": "Remove holidays",
+          "workdays": "Days to include"
+        },
+        "data_description": {
+          "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
+          "category": "Select additional categories to include as holidays",
+          "days_offset": "Days offset from current day",
+          "excludes": "Select which weekdays to exclude as workdays.\nThe key `holidays` adds those for the configured country, customizable by all the settings below. Read the documentation on how to use them correctly.",
+          "language": "Language to use when configuring named holiday exclusions",
+          "province": "State, territory, province or region of country",
+          "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
+          "workdays": "Select which weekdays to include as possible workdays."
+        },
+        "description": "Set additional options for {name} configured for country {country}"
+      },
+      "user": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "workday": {
+        "state_attributes": {
+          "days_offset": {
+            "name": "[%key:component::workday::config::step::options::data::days_offset%]"
+          },
+          "excludes": {
+            "name": "[%key:component::workday::config::step::options::data::excludes%]"
+          },
+          "workdays": {
+            "name": "[%key:component::workday::config::step::options::data::workdays%]"
+          }
+        }
+      }
+    },
+    "calendar": {
+      "workday": {
+        "name": "[%key:component::calendar::title%]"
+      }
+    }
+  },
+  "issues": {
+    "bad_country": {
+      "fix_flow": {
+        "step": {
+          "country": {
+            "data": {
+              "country": "[%key:common::config_flow::data::country%]"
+            },
+            "description": "Select a country to use for your Workday sensor.",
+            "title": "Select country for {title}"
+          },
+          "province": {
+            "data": {
+              "province": "[%key:component::workday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "province": "[%key:component::workday::config::step::options::data_description::province%]"
+            },
+            "description": "Select a province in country {country} to use for your Workday sensor.",
+            "title": "Select province for {title}"
+          }
+        }
+      },
+      "title": "Configured country for {title} does not exist"
+    },
+    "bad_date_holiday": {
+      "fix_flow": {
+        "error": {
+          "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]"
+        },
+        "step": {
+          "fix_remove_holiday": {
+            "data": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
+            },
+            "data_description": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
+            },
+            "description": "Remove holiday date `{remove_holidays}` as it can't be found in country {country}.",
+            "title": "[%key:component::workday::issues::bad_date_holiday::title%]"
+          }
+        }
+      },
+      "title": "Configured holiday date {remove_holidays} for {title} does not exist"
+    },
+    "bad_named_holiday": {
+      "fix_flow": {
+        "error": {
+          "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]"
+        },
+        "step": {
+          "fix_remove_holiday": {
+            "data": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
+            },
+            "data_description": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
+            },
+            "description": "Remove named holiday `{remove_holidays}` as it can't be found in country {country}.",
+            "title": "[%key:component::workday::issues::bad_named_holiday::title%]"
+          }
+        }
+      },
+      "title": "Configured named holiday {remove_holidays} for {title} does not exist"
+    },
+    "bad_province": {
+      "fix_flow": {
+        "step": {
+          "province": {
+            "data": {
+              "province": "[%key:component::workday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "province": "[%key:component::workday::config::step::options::data_description::province%]"
+            },
+            "description": "[%key:component::workday::issues::bad_country::fix_flow::step::province::description%]",
+            "title": "[%key:component::workday::issues::bad_country::fix_flow::step::province::title%]"
+          }
+        }
+      },
+      "title": "Configured province in country {country} for {title} does not exist"
+    }
+  },
+  "options": {
+    "error": {
+      "add_holiday_error": "[%key:component::workday::config::error::add_holiday_error%]",
+      "add_holiday_range_error": "[%key:component::workday::config::error::add_holiday_range_error%]",
+      "already_configured": "Service with this configuration already exist",
+      "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]",
+      "remove_holiday_range_error": "[%key:component::workday::config::error::remove_holiday_range_error%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "add_holidays": "[%key:component::workday::config::step::options::data::add_holidays%]",
+          "category": "[%key:component::workday::config::step::options::data::category%]",
+          "days_offset": "[%key:component::workday::config::step::options::data::days_offset%]",
+          "excludes": "[%key:component::workday::config::step::options::data::excludes%]",
+          "language": "[%key:component::workday::config::step::options::data::language%]",
+          "province": "[%key:component::workday::config::step::options::data::province%]",
+          "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]",
+          "workdays": "[%key:component::workday::config::step::options::data::workdays%]"
+        },
+        "data_description": {
+          "add_holidays": "[%key:component::workday::config::step::options::data_description::add_holidays%]",
+          "category": "[%key:component::workday::config::step::options::data_description::category%]",
+          "days_offset": "[%key:component::workday::config::step::options::data_description::days_offset%]",
+          "excludes": "[%key:component::workday::config::step::options::data_description::excludes%]",
+          "language": "[%key:component::workday::config::step::options::data_description::language%]",
+          "province": "[%key:component::workday::config::step::options::data_description::province%]",
+          "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
+          "workdays": "[%key:component::workday::config::step::options::data_description::workdays%]"
+        },
+        "description": "Change additional options for {name} configured for country {country}"
+      }
+    }
+  },
+  "selector": {
+    "category": {
+      "options": {
+        "armed_forces": "Armed forces",
+        "bank": "Bank",
+        "catholic": "Catholic",
+        "chinese": "Chinese",
+        "christian": "Christian",
+        "government": "Government",
+        "half_day": "Half day",
+        "hebrew": "Hebrew",
+        "hindu": "Hindu",
+        "islamic": "Islamic",
+        "optional": "Optional",
+        "public": "Public",
+        "school": "School",
+        "unofficial": "Unofficial",
+        "workday": "Workday"
+      }
+    },
+    "days": {
+      "options": {
+        "fri": "[%key:common::time::friday%]",
+        "holiday": "Holidays",
+        "mon": "[%key:common::time::monday%]",
+        "sat": "[%key:common::time::saturday%]",
+        "sun": "[%key:common::time::sunday%]",
+        "thu": "[%key:common::time::thursday%]",
+        "tue": "[%key:common::time::tuesday%]",
+        "wed": "[%key:common::time::wednesday%]"
+      }
+    },
+    "province": {
+      "options": {
+        "none": "No subdivision"
+      }
+    }
+  },
+  "services": {
+    "check_date": {
+      "description": "Checks if a given date is a workday.",
+      "fields": {
+        "check_date": {
+          "description": "Date to check if workday.",
+          "name": "Date"
+        }
+      },
+      "name": "Check date"
+    }
+  },
+  "title": "Workday"
+}

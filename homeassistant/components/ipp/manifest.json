@@ -1,0 +1,12 @@
+{
+  "domain": "ipp",
+  "name": "Internet Printing Protocol (IPP)",
+  "codeowners": ["@ctalkington"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ipp",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["deepmerge", "pyipp"],
+  "requirements": ["pyipp==0.17.0"],
+  "zeroconf": ["_ipps._tcp.local.", "_ipp._tcp.local."]
+}

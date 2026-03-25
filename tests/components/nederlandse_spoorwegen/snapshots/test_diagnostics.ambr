@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_device_diagnostics
+  dict({
+    'coordinator_info': dict({
+      'departure': 'Ams',
+      'departure_time': None,
+      'destination': 'Rot',
+      'name': 'To work',
+      'via': 'Ht',
+    }),
+    'device_info': dict({
+      'device_name': 'To work',
+      'manufacturer': 'Nederlandse Spoorwegen',
+      'model': 'Route',
+      'subentry_id': '01K721DZPMEN39R5DK0ATBMSY8',
+    }),
+    'first_trip': dict({
+      'arrival_platform_actual': '12',
+      'arrival_platform_planned': '12',
+      'arrival_time_actual': '2025-09-15 18:37:00+02:00',
+      'arrival_time_planned': '2025-09-15 18:37:00+02:00',
+      'departure_platform_actual': '4',
+      'departure_platform_planned': '4',
+      'departure_time_actual': '2025-09-15 16:35:00+02:00',
+      'departure_time_planned': '2025-09-15 16:34:00+02:00',
+      'going': True,
+      'nr_transfers': 2,
+      'status': 'NORMAL',
+    }),
+    'trip_details': dict({
+      'has_first_trip': True,
+      'has_next_trip': True,
+      'trips_count': 8,
+    }),
+  })
+# ---
+# name: test_entry_diagnostics
+  dict({
+    'coordinators': dict({
+      '01K721DZPMEN39R5DK0ATBMSY8': dict({
+        'coordinator_info': dict({
+          'departure': 'Ams',
+          'departure_time': None,
+          'destination': 'Rot',
+          'name': 'To work',
+          'via': 'Ht',
+        }),
+        'route_data': dict({
+          'has_first_trip': True,
+          'has_next_trip': True,
+          'trips_count': 8,
+        }),
+      }),
+      '01K721DZPMEN39R5DK0ATBMSY9': dict({
+        'coordinator_info': dict({
+          'departure': 'Hag',
+          'departure_time': '08:00',
+          'destination': 'Utr',
+          'name': 'To home',
+          'via': None,
+        }),
+        'route_data': dict({
+          'has_first_trip': True,
+          'has_next_trip': True,
+          'trips_count': 8,
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'api_key': '**REDACTED**',
+    }),
+  })
+# ---

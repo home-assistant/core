@@ -1,0 +1,25 @@
+create:
+  fields:
+    message:
+      required: true
+      example: Please check your configuration.yaml.
+      selector:
+        text:
+    title:
+      example: Test notification
+      selector:
+        text:
+    notification_id:
+      example: 1234
+      selector:
+        text:
+
+dismiss:
+  fields:
+    notification_id:
+      required: true
+      example: 1234
+      selector:
+        text:
+
+dismiss_all:

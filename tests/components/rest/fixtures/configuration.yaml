@@ -1,0 +1,16 @@
+sensor:
+  - platform: rest
+    resource: "http://localhost"
+    method: GET
+    name: rollout
+
+binary_sensor:
+  - platform: rest
+    resource: "http://localhost"
+    method: GET
+    name: rollout
+
+notify:
+  - name: rest_reloaded
+    platform: rest
+    resource: http://127.0.0.1/on

@@ -1,0 +1,118 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "wrong_location": "Location Sweden only"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "title": "Reconfigure your location in Sweden"
+      },
+      "user": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "title": "Location in Sweden"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "build_up_index": {
+        "name": "Build up index"
+      },
+      "drought_code": {
+        "name": "Drought code"
+      },
+      "duff_moisture_code": {
+        "name": "Duff moisture code"
+      },
+      "fine_fuel_moisture_code": {
+        "name": "Fine fuel moisture code"
+      },
+      "fire_weather_index": {
+        "name": "Fire weather index"
+      },
+      "forestdry": {
+        "name": "Fuel drying",
+        "state": {
+          "dry": "Dry",
+          "extremely_dry": "Extremely dry",
+          "moderate_wet": "Moderately wet",
+          "very_dry": "Very dry",
+          "very_wet": "Very wet",
+          "wet": "Wet"
+        }
+      },
+      "frozen_precipitation": {
+        "name": "Frozen precipitation"
+      },
+      "fwi": {
+        "name": "Fire weather index"
+      },
+      "fwiindex": {
+        "name": "FWI index",
+        "state": {
+          "extreme": "Extremely high risk",
+          "high": "High risk",
+          "low": "Low risk",
+          "moderate": "Moderate risk",
+          "very_high": "Very high risk",
+          "very_low": "Very low risk"
+        }
+      },
+      "grassfire": {
+        "name": "Highest grass fire risk",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "moderate": "Moderate",
+          "season_over": "Grass fire season over",
+          "snow_cover": "Snow cover",
+          "very_high": "Very high"
+        }
+      },
+      "high_cloud": {
+        "name": "High cloud coverage"
+      },
+      "initial_spread_index": {
+        "name": "Initial spread index"
+      },
+      "low_cloud": {
+        "name": "Low cloud coverage"
+      },
+      "medium_cloud": {
+        "name": "Medium cloud coverage"
+      },
+      "precipitation_category": {
+        "name": "Precipitation category",
+        "state": {
+          "0": "No precipitation",
+          "1": "Snow",
+          "2": "Snow and rain",
+          "3": "Rain",
+          "4": "Drizzle",
+          "5": "Freezing rain",
+          "6": "Freezing drizzle"
+        }
+      },
+      "rate_of_spread": {
+        "name": "Potential rate of spread"
+      },
+      "thunder": {
+        "name": "Thunder probability"
+      },
+      "total_cloud": {
+        "name": "Total cloud coverage"
+      }
+    }
+  }
+}

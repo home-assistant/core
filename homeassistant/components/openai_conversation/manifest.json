@@ -1,0 +1,13 @@
+{
+  "domain": "openai_conversation",
+  "name": "OpenAI",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/openai_conversation",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["openai==2.21.0"]
+}

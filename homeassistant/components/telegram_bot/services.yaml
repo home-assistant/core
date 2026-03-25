@@ -1,0 +1,1108 @@
+# Describes the format for available Telegram bot services
+
+send_message:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    title:
+      example: "Your Garage Door Friend"
+      selector:
+        text:
+    message:
+      required: true
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_notification:
+      selector:
+        boolean:
+    disable_web_page_preview:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text
+        button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_chat_action:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    chat_action:
+      selector:
+        select:
+          options:
+            - "typing"
+            - "upload_photo"
+            - "record_video"
+            - "upload_video"
+            - "record_voice"
+            - "upload_voice"
+            - "upload_document"
+            - "choose_sticker"
+            - "find_location"
+            - "record_video_note"
+            - "upload_video_note"
+          translation_key: "chat_action"
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_photo:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    url:
+      example: "http://example.org/path/to/the/image.png"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/path/to/the/image.png"
+      selector:
+        text:
+    caption:
+      example: "My image"
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_notification:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_sticker:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    url:
+      example: "http://example.org/path/to/the/sticker.webp"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/path/to/the/sticker.webp"
+      selector:
+        text:
+    sticker_id:
+      example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
+      selector:
+        text:
+    disable_notification:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_animation:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    url:
+      example: "http://example.org/path/to/the/animation.gif"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/path/to/the/animation.gif"
+      selector:
+        text:
+    caption:
+      example: "My animation"
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_notification:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_video:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    url:
+      example: "http://example.org/path/to/the/video.mp4"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/path/to/the/video.mp4"
+      selector:
+        text:
+    caption:
+      example: "My video"
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_notification:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_voice:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    url:
+      example: "http://example.org/path/to/the/voice.opus"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/path/to/the/voice.opus"
+      selector:
+        text:
+    caption:
+      example: "My microphone recording"
+      selector:
+        text:
+    disable_notification:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_document:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    url:
+      example: "http://example.org/path/to/the/document.odf"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/tmp/whatever.odf"
+      selector:
+        text:
+    caption:
+      example: Document Title xy
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_notification:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_location:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    latitude:
+      required: true
+      selector:
+        number:
+          min: -90
+          max: 90
+          step: 0.001
+          unit_of_measurement: "°"
+    longitude:
+      required: true
+      selector:
+        number:
+          min: -180
+          max: 180
+          step: 0.001
+          unit_of_measurement: "°"
+    disable_notification:
+      selector:
+        boolean:
+    keyboard:
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        text:
+          multiple: true
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+send_poll:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    question:
+      required: true
+      selector:
+        text:
+    options:
+      example: '["Option 1", "Option 2", "Option 3"]'
+      required: true
+      selector:
+        text:
+          multiple: true
+    is_anonymous:
+      default: true
+      selector:
+        boolean:
+    allows_multiple_answers:
+      selector:
+        boolean:
+    open_period:
+      selector:
+        number:
+          min: 5
+          max: 600
+          unit_of_measurement: seconds
+    disable_notification:
+      selector:
+        boolean:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+edit_message:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    message:
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:
+    title:
+      example: "Your Garage Door Friend"
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_web_page_preview:
+      selector:
+        boolean:
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+edit_message_media:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    media_type:
+      selector:
+        select:
+          options:
+            - "animation"
+            - "audio"
+            - "document"
+            - "photo"
+            - "video"
+          translation_key: "media_type"
+    url:
+      example: "http://example.org/path/to/the/image.png"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/path/to/the/image.png"
+      selector:
+        text:
+    caption:
+      example: Document Title xy
+      selector:
+        text:
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+edit_caption:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    caption:
+      required: true
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+edit_replymarkup:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    inline_keyboard:
+      required: true
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
+answer_callback_query:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    message:
+      required: true
+      example: "OK, I'm listening"
+      selector:
+        text:
+    callback_query_id:
+      required: true
+      example: "{{ trigger.event.data.id }}"
+      selector:
+        text:
+    show_alert:
+      required: true
+      selector:
+        boolean:
+
+delete_message:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
+
+leave_chat:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
+
+set_message_reaction:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+    message_id:
+      required: true
+      example: 54321
+      selector:
+        text:
+    reaction:
+      required: true
+      example: 👍
+      selector:
+        text:
+    is_big:
+      required: false
+      selector:
+        boolean:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
+
+download_file:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    file_id:
+      required: true
+      example: "ABCD1234Efgh5678Ijkl90mnopQRStuvwx"
+      selector:
+        text:
+    directory_path:
+      required: false
+      default: "/config/telegram_bot"
+      selector:
+        text:
+    file_name:
+      required: false
+      example: "my_downloaded_file"
+      selector:
+        text:

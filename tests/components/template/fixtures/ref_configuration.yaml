@@ -1,0 +1,9 @@
+sensor:
+  - platform: template
+    sensors:
+      test1:
+        value_template: "{{ (states.sensor.test2.state |int) + (states.sensor.test3.state |int)}}"
+      test2:
+        value_template: "{{ 1 }}"
+      test3:
+        value_template: "{{ 2 }}"

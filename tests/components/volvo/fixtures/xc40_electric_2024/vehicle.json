@@ -1,0 +1,17 @@
+{
+  "vin": "YV1ABCDEFG1234567",
+  "modelYear": 2024,
+  "gearbox": "AUTOMATIC",
+  "fuelType": "ELECTRIC",
+  "externalColour": "Silver Dawn",
+  "batteryCapacityKWH": 81.608,
+  "images": {
+    "exteriorImageUrl": "https://cas.volvocars.com/image/dynamic/MY24_0000/123/exterior-v4/_/default.png?market=se&client=public-api-engineering&angle=1&bg=00000000&w=1920",
+    "internalImageUrl": "https://cas.volvocars.com/image/dynamic/MY24_0000/123/interior-v4/_/default.jpg?market=se&client=public-api-engineering&angle=0&w=1920"
+  },
+  "descriptions": {
+    "model": "XC40",
+    "upholstery": "null",
+    "steering": "LEFT"
+  }
+}

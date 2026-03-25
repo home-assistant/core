@@ -1,0 +1,187 @@
+"""The Flexit Nordic (BACnet) integration."""
+
+import asyncio.exceptions
+from typing import Any
+
+from flexit_bacnet import (
+    OPERATION_MODE_FIREPLACE,
+    OPERATION_MODE_OFF,
+    VENTILATION_MODE_AWAY,
+    VENTILATION_MODE_HOME,
+    VENTILATION_MODE_STOP,
+)
+from flexit_bacnet.bacnet import DecodingError
+
+from homeassistant.components.climate import (
+    PRESET_AWAY,
+    PRESET_HOME,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import (
+    DOMAIN,
+    MAX_TEMP,
+    MIN_TEMP,
+    OPERATION_TO_PRESET_MODE_MAP,
+    PRESET_FIREPLACE,
+    PRESET_HIGH,
+    PRESET_TO_VENTILATION_MODE_MAP,
+)
+from .coordinator import FlexitConfigEntry, FlexitCoordinator
+from .entity import FlexitEntity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: FlexitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Flexit Nordic unit."""
+    async_add_entities([FlexitClimateEntity(config_entry.runtime_data)])
+
+
+PARALLEL_UPDATES = 1
+
+
+class FlexitClimateEntity(FlexitEntity, ClimateEntity):
+    """Flexit air handling unit."""
+
+    _attr_name = None
+    _attr_translation_key = "flexit_bacnet"
+
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.FAN_ONLY,
+    ]
+
+    _attr_preset_modes = [
+        PRESET_AWAY,
+        PRESET_HOME,
+        PRESET_HIGH,
+        PRESET_FIREPLACE,
+    ]
+
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+
+    _attr_target_temperature_step = PRECISION_HALVES
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
+
+    def __init__(self, coordinator: FlexitCoordinator) -> None:
+        """Initialize the Flexit unit."""
+        super().__init__(coordinator)
+        self._attr_unique_id = coordinator.device.serial_number
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return current HVAC action."""
+        if self.device.electric_heater:
+            return HVACAction.HEATING
+        return HVACAction.FAN
+
+    @property
+    def current_temperature(self) -> float:
+        """Return the current temperature."""
+        return self.device.room_temperature
+
+    @property
+    def target_temperature(self) -> float:
+        """Return the temperature we try to reach."""
+        if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
+            return self.device.air_temp_setpoint_away
+
+        return self.device.air_temp_setpoint_home
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        try:
+            if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
+                await self.device.set_air_temp_setpoint_away(temperature)
+            else:
+                await self.device.set_air_temp_setpoint_home(temperature)
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                },
+            ) from exc
+        finally:
+            await self.coordinator.async_refresh()
+
+    @property
+    def preset_mode(self) -> str:
+        """Return the current preset mode, e.g., home, away, temp.
+
+        Requires ClimateEntityFeature.PRESET_MODE.
+        """
+        return OPERATION_TO_PRESET_MODE_MAP[self.device.operation_mode]
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        try:
+            if preset_mode == PRESET_FIREPLACE:
+                # Use trigger method for fireplace mode
+                await self.device.trigger_fireplace_mode()
+            else:
+                # If currently in fireplace mode, toggle it off first
+                # trigger_fireplace_mode() acts as a toggle
+                if self.device.operation_mode == OPERATION_MODE_FIREPLACE:
+                    await self.device.trigger_fireplace_mode()
+
+                # Set the desired ventilation mode
+                ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
+                await self.device.set_ventilation_mode(ventilation_mode)
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode",
+                translation_placeholders={
+                    "preset": preset_mode,
+                },
+            ) from exc
+        finally:
+            await self.coordinator.async_refresh()
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return hvac operation ie. heat, cool mode."""
+        if self.device.operation_mode == OPERATION_MODE_OFF:
+            return HVACMode.OFF
+
+        return HVACMode.FAN_ONLY
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        try:
+            if hvac_mode == HVACMode.OFF:
+                await self.device.set_ventilation_mode(VENTILATION_MODE_STOP)
+            else:
+                await self.device.set_ventilation_mode(VENTILATION_MODE_HOME)
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_hvac_mode",
+                translation_placeholders={
+                    "mode": str(hvac_mode),
+                },
+            ) from exc
+        finally:
+            await self.coordinator.async_refresh()

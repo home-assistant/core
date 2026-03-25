@@ -1,0 +1,31 @@
+{
+  "conditions": {
+    "is_home": {
+      "condition": "mdi:account"
+    },
+    "is_not_home": {
+      "condition": "mdi:account-arrow-right"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:account",
+      "state": {
+        "not_home": "mdi:account-arrow-right"
+      }
+    }
+  },
+  "services": {
+    "see": {
+      "service": "mdi:account-eye"
+    }
+  },
+  "triggers": {
+    "entered_home": {
+      "trigger": "mdi:account-arrow-left"
+    },
+    "left_home": {
+      "trigger": "mdi:account-arrow-right"
+    }
+  }
+}

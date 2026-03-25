@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "external_ip": {
+        "default": "mdi:ip"
+      },
+      "packet_download_speed": {
+        "default": "mdi:transmission-tower"
+      },
+      "packet_upload_speed": {
+        "default": "mdi:transmission-tower"
+      },
+      "packets_received": {
+        "default": "mdi:database"
+      },
+      "packets_sent": {
+        "default": "mdi:database"
+      },
+      "port_mapping_number_of_entries_ipv4": {
+        "default": "mdi:server-network"
+      },
+      "wan_status": {
+        "default": "mdi:network"
+      }
+    }
+  }
+}

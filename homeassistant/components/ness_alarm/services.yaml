@@ -1,0 +1,22 @@
+# Describes the format for available ness alarm services
+
+aux:
+  fields:
+    output_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 8
+    state:
+      default: true
+      selector:
+        boolean:
+
+panic:
+  fields:
+    code:
+      required: true
+      example: 1234
+      selector:
+        text:

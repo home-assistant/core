@@ -1,0 +1,267 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The connected account does not match {title}. Sign in with the same Tibber account and try again."
+    },
+    "step": {
+      "connection_error": {
+        "description": "Could not connect to Tibber. Check your internet connection and try again.",
+        "title": "Connection failed"
+      },
+      "reauth_confirm": {
+        "description": "Reconnect your Tibber account to refresh access.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "accumulated_consumption": {
+        "name": "Accumulated consumption"
+      },
+      "accumulated_consumption_last_hour": {
+        "name": "Accumulated consumption current hour"
+      },
+      "accumulated_cost": {
+        "name": "Accumulated cost"
+      },
+      "accumulated_production": {
+        "name": "Accumulated production"
+      },
+      "accumulated_production_last_hour": {
+        "name": "Accumulated production current hour"
+      },
+      "accumulated_reward": {
+        "name": "Accumulated reward"
+      },
+      "average_power": {
+        "name": "Average power"
+      },
+      "cellular_rssi": {
+        "name": "Cellular signal strength"
+      },
+      "charging_current_max": {
+        "name": "Maximum allowed charge current"
+      },
+      "charging_current_offline_fallback": {
+        "name": "Fallback current if charger goes offline"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "electricity_price": {
+        "name": "Electricity price"
+      },
+      "energy_flow_hour_battery_charged": {
+        "name": "Battery energy charged this hour"
+      },
+      "energy_flow_hour_battery_discharged": {
+        "name": "Battery energy discharged this hour"
+      },
+      "energy_flow_hour_battery_source_grid": {
+        "name": "Battery charged from grid this hour"
+      },
+      "energy_flow_hour_battery_source_load": {
+        "name": "Battery charged from load this hour"
+      },
+      "energy_flow_hour_grid_exported": {
+        "name": "Energy exported to grid this hour"
+      },
+      "energy_flow_hour_grid_imported": {
+        "name": "Energy imported from grid this hour"
+      },
+      "energy_flow_hour_load_consumed": {
+        "name": "Load energy consumed this hour"
+      },
+      "energy_flow_hour_load_generated": {
+        "name": "Load energy generated this hour"
+      },
+      "energy_flow_hour_load_source_battery": {
+        "name": "Load supplied by battery this hour"
+      },
+      "energy_flow_hour_load_source_grid": {
+        "name": "Load supplied by grid this hour"
+      },
+      "energy_flow_month_battery_charged": {
+        "name": "Battery energy charged this month"
+      },
+      "energy_flow_month_battery_discharged": {
+        "name": "Battery energy discharged this month"
+      },
+      "energy_flow_month_battery_source_grid": {
+        "name": "Battery charged from grid this month"
+      },
+      "energy_flow_month_battery_source_load": {
+        "name": "Battery charged from load this month"
+      },
+      "energy_flow_month_grid_exported": {
+        "name": "Energy exported to grid this month"
+      },
+      "energy_flow_month_grid_imported": {
+        "name": "Energy imported from grid this month"
+      },
+      "energy_flow_month_grid_source_battery": {
+        "name": "Grid export from battery this month"
+      },
+      "energy_flow_month_grid_source_load": {
+        "name": "Grid export from load this month"
+      },
+      "energy_flow_month_load_consumed": {
+        "name": "Load energy consumed this month"
+      },
+      "energy_flow_month_load_generated": {
+        "name": "Load energy generated this month"
+      },
+      "energy_flow_month_load_source_battery": {
+        "name": "Load supplied by battery this month"
+      },
+      "energy_flow_month_load_source_grid": {
+        "name": "Load supplied by grid this month"
+      },
+      "estimated_hour_consumption": {
+        "name": "Estimated consumption current hour"
+      },
+      "grid_phase_count": {
+        "name": "Number of grid phases"
+      },
+      "last_meter_consumption": {
+        "name": "Last meter consumption"
+      },
+      "last_meter_production": {
+        "name": "Last meter production"
+      },
+      "max_power": {
+        "name": "Max power"
+      },
+      "min_power": {
+        "name": "Min power"
+      },
+      "month_cons": {
+        "name": "Monthly net consumption"
+      },
+      "month_cost": {
+        "name": "Monthly cost"
+      },
+      "peak_hour": {
+        "name": "Monthly peak hour consumption"
+      },
+      "peak_hour_time": {
+        "name": "Time of max hour consumption"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "power_factor": {
+        "name": "Power factor"
+      },
+      "power_flow_battery": {
+        "name": "Battery power"
+      },
+      "power_flow_from_grid": {
+        "name": "Power flow from grid"
+      },
+      "power_flow_from_load": {
+        "name": "Power flow from load"
+      },
+      "power_flow_grid": {
+        "name": "Grid power"
+      },
+      "power_flow_load": {
+        "name": "Load power"
+      },
+      "power_flow_to_grid": {
+        "name": "Power flow to grid"
+      },
+      "power_flow_to_load": {
+        "name": "Power flow to load"
+      },
+      "power_production": {
+        "name": "Power production"
+      },
+      "range_remaining": {
+        "name": "Estimated remaining driving range"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      },
+      "storage_available_energy": {
+        "name": "Available energy"
+      },
+      "storage_rated_capacity": {
+        "name": "Rated capacity"
+      },
+      "storage_rated_power": {
+        "name": "Rated power"
+      },
+      "storage_state_of_charge": {
+        "name": "State of charge"
+      },
+      "storage_target_state_of_charge": {
+        "name": "Target state of charge"
+      },
+      "temp_comfort": {
+        "name": "Comfort temperature"
+      },
+      "temp_current": {
+        "name": "Current temperature"
+      },
+      "temp_setpoint": {
+        "name": "Setpoint temperature"
+      },
+      "voltage_phase1": {
+        "name": "Voltage phase1"
+      },
+      "voltage_phase2": {
+        "name": "Voltage phase2"
+      },
+      "voltage_phase3": {
+        "name": "Voltage phase3"
+      }
+    }
+  },
+  "exceptions": {
+    "data_api_reauth_required": {
+      "message": "Reconnect Tibber so Home Assistant can enable the new Tibber Data API features."
+    },
+    "invalid_date": {
+      "message": "Invalid datetime provided {date}"
+    },
+    "no_config_entry": {
+      "message": "No Tibber integration configured"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "send_message_timeout": {
+      "message": "Timeout sending message with Tibber"
+    }
+  },
+  "services": {
+    "get_prices": {
+      "description": "Fetches hourly energy prices including price level.",
+      "fields": {
+        "end": {
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted.",
+          "name": "End"
+        },
+        "start": {
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",
+          "name": "Start"
+        }
+      },
+      "name": "Get energy prices"
+    }
+  }
+}

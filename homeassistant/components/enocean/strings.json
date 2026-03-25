@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "invalid_dongle_path": "Invalid dongle path"
+    },
+    "error": {
+      "invalid_dongle_path": "No valid dongle found for this path"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "detect": {
+        "data": {
+          "device": "USB dongle"
+        },
+        "data_description": {
+          "device": "Path to your EnOcean USB dongle."
+        },
+        "description": "Select your EnOcean USB dongle."
+      },
+      "manual": {
+        "data": {
+          "device": "[%key:component::enocean::config::step::detect::data::device%]"
+        },
+        "data_description": {
+          "device": "[%key:component::enocean::config::step::detect::data_description::device%]"
+        },
+        "description": "Enter the path to your EnOcean USB dongle."
+      },
+      "usb_confirm": {
+        "description": "{manufacturer} USB dongle detected at {device}. Do you want to set up this device?"
+      }
+    }
+  },
+  "selector": {
+    "devices": {
+      "options": {
+        "manual": "Custom path"
+      }
+    }
+  }
+}

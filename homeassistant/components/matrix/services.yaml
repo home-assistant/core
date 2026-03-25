@@ -1,0 +1,49 @@
+send_message:
+  fields:
+    message:
+      required: true
+      example: This is a message I am sending to matrix
+      selector:
+        text:
+    target:
+      required: true
+      example: "#hasstest:matrix.org"
+      selector:
+        text:
+    data:
+      example: "{'images': ['/tmp/test.jpg'], 'format': 'text', 'thread_id': '$-abcdeghij_klmnopqrstuvwxyz123'}"
+      selector:
+        object:
+          translation_key: send_message_data
+          fields:
+            images:
+              selector:
+                text:
+                  multiple: true
+            format:
+              selector:
+                select:
+                  options:
+                    - text
+                    - html
+                  translation_key: send_message_data_format
+            thread_id:
+              selector:
+                text:
+react:
+  fields:
+    reaction:
+      required: true
+      example: "👍"
+      selector:
+        text:
+    room:
+      required: true
+      example: "#hasstest:matrix.org"
+      selector:
+        text:
+    message_id:
+      required: true
+      example: "$-abcdeghij_klmnopqrstuvwxyz123"
+      selector:
+        text:

@@ -1,0 +1,17 @@
+#!/bin/sh
+# Resolve all dependencies that the application requires to run.
+
+# Stop on errors
+set -e
+
+cd "$(realpath "$(dirname "$0")/..")"
+
+echo "Installing development dependencies..."
+uv pip install \
+  -e . \
+  -r requirements_test_all.txt \
+  colorlog \
+  --upgrade \
+  --config-settings editable_mode=compat
+
+python3 -m script.translations develop --all

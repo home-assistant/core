@@ -1,0 +1,62 @@
+create_group:
+  fields:
+    name:
+      required: true
+      example: family
+      selector:
+        text:
+create_person:
+  fields:
+    group:
+      required: true
+      example: family
+      selector:
+        text:
+    name:
+      required: true
+      example: Hans
+      selector:
+        text:
+delete_group:
+  fields:
+    name:
+      required: true
+      example: family
+      selector:
+        text:
+delete_person:
+  fields:
+    group:
+      required: true
+      example: family
+      selector:
+        text:
+    name:
+      required: true
+      example: Hans
+      selector:
+        text:
+face_person:
+  fields:
+    camera_entity:
+      required: true
+      example: camera.door
+      selector:
+        text:
+    group:
+      required: true
+      example: family
+      selector:
+        text:
+    person:
+      required: true
+      example: Hans
+      selector:
+        text:
+train_group:
+  fields:
+    group:
+      required: true
+      example: family
+      selector:
+        text:

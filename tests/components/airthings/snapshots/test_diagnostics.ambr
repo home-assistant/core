@@ -1,0 +1,133 @@
+# serializer version: 1
+# name: test_entry_diagnostics[view_plus]
+  dict({
+    'config_entry': dict({
+      'created_at': FakeDatetime(2026, 3, 24, 0, 0),
+      'data': dict({
+        'id': '**REDACTED**',
+        'secret': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'airthings',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'modified_at': FakeDatetime(2026, 3, 24, 0, 0),
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      '2933000001': dict({
+        'model': 'View Plus',
+        'sensors': list([
+          'battery',
+          'co2',
+          'humidity',
+          'light',
+          'mold',
+          'pm1',
+          'pm25',
+          'pressure',
+          'radonShortTermAvg',
+          'temp',
+          'voc',
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_entry_diagnostics[wave_enhance]
+  dict({
+    'config_entry': dict({
+      'created_at': FakeDatetime(2026, 3, 24, 0, 0),
+      'data': dict({
+        'id': '**REDACTED**',
+        'secret': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'airthings',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'modified_at': FakeDatetime(2026, 3, 24, 0, 0),
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      '2931000001': dict({
+        'model': 'Wave Enhance',
+        'sensors': list([
+          'battery',
+          'co2',
+          'humidity',
+          'pm1',
+          'pm25',
+          'pressure',
+          'radonShortTermAvg',
+          'temp',
+          'voc',
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_entry_diagnostics[wave_plus]
+  dict({
+    'config_entry': dict({
+      'created_at': FakeDatetime(2026, 3, 24, 0, 0),
+      'data': dict({
+        'id': '**REDACTED**',
+        'secret': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'airthings',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'modified_at': FakeDatetime(2026, 3, 24, 0, 0),
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      '2930000002': dict({
+        'model': 'Wave Plus',
+        'sensors': list([
+          'battery',
+          'co2',
+          'humidity',
+          'pressure',
+          'radonShortTermAvg',
+          'temp',
+          'voc',
+        ]),
+      }),
+    }),
+  })
+# ---

@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: done
+    comment: >
+      Polling interval is set to support one connection.
+      There is a rate limit at 10000 calls per day.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: todo
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: No events implemented
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable:
+    status: done
+    comment: Offloaded to coordinator
+  entity-unavailable:
+    status: done
+    comment: Offloaded to coordinator
+  action-exceptions: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication needed
+  parallel-updates: done
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: no options flow
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default:
+    status: done
+    comment: No disabled entities implemented
+  discovery:
+    status: exempt
+    comment: Nothing to discover
+  stale-devices:
+    status: exempt
+    comment: Stale not possible
+  diagnostics: todo
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: exempt
+    comment: No dynamic devices
+  discovery-update-info:
+    status: exempt
+    comment: Nothing to discover
+  repair-issues:
+    status: exempt
+    comment: Nothing to repair
+  docs-use-cases: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

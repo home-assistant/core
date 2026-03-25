@@ -1,0 +1,18 @@
+sync:
+  target:
+    entity:
+      integration: harmony
+      domain: remote
+
+change_channel:
+  target:
+    entity:
+      integration: harmony
+      domain: remote
+  fields:
+    channel:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100000

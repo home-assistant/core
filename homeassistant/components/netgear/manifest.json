@@ -1,0 +1,17 @@
+{
+  "domain": "netgear",
+  "name": "NETGEAR",
+  "codeowners": ["@hacf-fr", "@Quentame", "@starkillerOG"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/netgear",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["pynetgear"],
+  "requirements": ["pynetgear==0.10.10"],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+      "manufacturer": "NETGEAR, Inc."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "usb",
+  "name": "USB Discovery",
+  "codeowners": ["@bdraco"],
+  "dependencies": ["websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/usb",
+  "integration_type": "system",
+  "iot_class": "local_push",
+  "quality_scale": "internal",
+  "requirements": ["aiousbwatcher==1.1.1", "pyserial==3.5"]
+}

@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_upb_file": "Missing or invalid UPB UPStart export file, check the name and path of the file.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "address": "Address (see description above)",
+          "file_path": "Path and name of the UPStart UPB export file.",
+          "protocol": "Protocol"
+        },
+        "description": "Connect a Universal Powerline Bus Powerline Interface Module (UPB PIM). The address string must be in the form 'address[:port]' for 'tcp'. The port is optional and defaults to 2101. Example: '192.168.1.42'. For the serial protocol, the address must be in the form 'tty[:baud]'. The baud is optional and defaults to 4800. Example: '/dev/ttyS1'.",
+        "title": "Connect to UPB PIM"
+      }
+    }
+  },
+  "services": {
+    "light_blink": {
+      "description": "Blinks a light.",
+      "fields": {
+        "rate": {
+          "description": "Amount of time that the link flashes on.",
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]"
+        }
+      },
+      "name": "Blink light"
+    },
+    "light_fade_start": {
+      "description": "Starts fading a light either up or down from current brightness.",
+      "fields": {
+        "brightness": {
+          "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness.",
+          "name": "Brightness"
+        },
+        "brightness_pct": {
+          "description": "Number indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness.",
+          "name": "Brightness percentage"
+        },
+        "rate": {
+          "description": "Rate for light to transition to new brightness.",
+          "name": "Rate"
+        }
+      },
+      "name": "Start light fade"
+    },
+    "light_fade_stop": {
+      "description": "Stops a light fade.",
+      "name": "Stop light fade"
+    },
+    "link_blink": {
+      "description": "Blinks a link.",
+      "fields": {
+        "blink_rate": {
+          "description": "[%key:component::upb::services::light_blink::fields::rate::description%]",
+          "name": "Blink rate"
+        }
+      },
+      "name": "Blink link"
+    },
+    "link_deactivate": {
+      "description": "Deactivates a UPB scene.",
+      "name": "Deactivate link"
+    },
+    "link_fade_start": {
+      "description": "Starts fading a link either up or down from current brightness.",
+      "fields": {
+        "brightness": {
+          "description": "[%key:component::upb::services::link_goto::fields::brightness::description%]",
+          "name": "Brightness"
+        },
+        "brightness_pct": {
+          "description": "[%key:component::upb::services::link_goto::fields::brightness_pct::description%]",
+          "name": "[%key:component::upb::services::light_fade_start::fields::brightness_pct::name%]"
+        },
+        "rate": {
+          "description": "[%key:component::upb::services::link_goto::fields::rate::description%]",
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]"
+        }
+      },
+      "name": "Start link fade"
+    },
+    "link_fade_stop": {
+      "description": "Stops a link fade.",
+      "name": "Stop link fade"
+    },
+    "link_goto": {
+      "description": "Set scene to brightness.",
+      "fields": {
+        "brightness": {
+          "description": "Number indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness.",
+          "name": "Brightness"
+        },
+        "brightness_pct": {
+          "description": "Number indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness.",
+          "name": "[%key:component::upb::services::light_fade_start::fields::brightness_pct::name%]"
+        },
+        "rate": {
+          "description": "Amount of time for scene to transition to new brightness.",
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]"
+        }
+      },
+      "name": "Go to link"
+    }
+  }
+}

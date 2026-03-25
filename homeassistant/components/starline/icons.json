@@ -1,0 +1,94 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "autostart": {
+        "default": "mdi:auto-mode"
+      },
+      "hand_brake": {
+        "default": "mdi:car-brake-parking"
+      },
+      "handsfree": {
+        "default": "mdi:hand-back-right"
+      },
+      "ignition": {
+        "default": "mdi:key-variant"
+      },
+      "moving_ban": {
+        "default": "mdi:car-off"
+      },
+      "neutral": {
+        "default": "mdi:car-shift-pattern"
+      }
+    },
+    "button": {
+      "flex": {
+        "default": "mdi:star-circle-outline"
+      },
+      "horn": {
+        "default": "mdi:bullhorn-outline"
+      },
+      "panic": {
+        "default": "mdi:alarm-note"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:map-marker-outline"
+      }
+    },
+    "sensor": {
+      "balance": {
+        "default": "mdi:cash-multiple"
+      },
+      "errors": {
+        "default": "mdi:alert-octagon"
+      },
+      "fuel": {
+        "default": "mdi:fuel"
+      },
+      "gps_count": {
+        "default": "mdi:satellite-variant"
+      },
+      "mileage": {
+        "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "additional_channel": {
+        "default": "mdi:access-point-network-off",
+        "state": {
+          "on": "mdi:access-point-network"
+        }
+      },
+      "engine": {
+        "default": "mdi:engine-off-outline",
+        "state": {
+          "on": "mdi:engine-outline"
+        }
+      },
+      "service_mode": {
+        "default": "mdi:car-wrench",
+        "state": {
+          "on": "mdi:wrench-clock"
+        }
+      },
+      "webasto": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_scan_interval": {
+      "service": "mdi:timer"
+    },
+    "set_scan_obd_interval": {
+      "service": "mdi:timer"
+    },
+    "update_state": {
+      "service": "mdi:reload"
+    }
+  }
+}

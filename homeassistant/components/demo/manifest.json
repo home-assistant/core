@@ -1,0 +1,10 @@
+{
+  "domain": "demo",
+  "name": "Demo",
+  "codeowners": ["@home-assistant/core"],
+  "dependencies": ["conversation", "group", "zone"],
+  "documentation": "https://www.home-assistant.io/integrations/demo",
+  "iot_class": "calculated",
+  "quality_scale": "internal",
+  "single_config_entry": true
+}

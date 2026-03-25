@@ -1,0 +1,175 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "description": "Select **Submit** for initial setup. On the created config entry, select configure to add sensors for selected processes"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "process": {
+        "name": "Process {process}"
+      }
+    },
+    "sensor": {
+      "battery_empty": {
+        "name": "Battery empty"
+      },
+      "cpu_pressure_some_avg10": {
+        "name": "CPU pressure some 10s average"
+      },
+      "cpu_pressure_some_avg300": {
+        "name": "CPU pressure some 300s average"
+      },
+      "cpu_pressure_some_avg60": {
+        "name": "CPU pressure some 60s average"
+      },
+      "cpu_pressure_some_total": {
+        "name": "CPU pressure some total"
+      },
+      "disk_free": {
+        "name": "Disk free {mount_point}"
+      },
+      "disk_use": {
+        "name": "Disk use {mount_point}"
+      },
+      "disk_use_percent": {
+        "name": "Disk usage {mount_point}"
+      },
+      "fan_speed": {
+        "name": "{fan_name} fan speed"
+      },
+      "io_pressure_full_avg10": {
+        "name": "IO pressure full 10s average"
+      },
+      "io_pressure_full_avg300": {
+        "name": "IO pressure full 300s average"
+      },
+      "io_pressure_full_avg60": {
+        "name": "IO pressure full 60s average"
+      },
+      "io_pressure_full_total": {
+        "name": "IO pressure full total"
+      },
+      "io_pressure_some_avg10": {
+        "name": "IO pressure some 10s average"
+      },
+      "io_pressure_some_avg300": {
+        "name": "IO pressure some 300s average"
+      },
+      "io_pressure_some_avg60": {
+        "name": "IO pressure some 60s average"
+      },
+      "io_pressure_some_total": {
+        "name": "IO pressure some total"
+      },
+      "ipv4_address": {
+        "name": "IPv4 address {ip_address}"
+      },
+      "ipv6_address": {
+        "name": "IPv6 address {ip_address}"
+      },
+      "last_boot": {
+        "name": "Last boot"
+      },
+      "load_15m": {
+        "name": "Load (15 min)"
+      },
+      "load_1m": {
+        "name": "Load (1 min)"
+      },
+      "load_5m": {
+        "name": "Load (5 min)"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_pressure_full_avg10": {
+        "name": "Memory pressure full 10s average"
+      },
+      "memory_pressure_full_avg300": {
+        "name": "Memory pressure full 300s average"
+      },
+      "memory_pressure_full_avg60": {
+        "name": "Memory pressure full 60s average"
+      },
+      "memory_pressure_full_total": {
+        "name": "Memory pressure full total"
+      },
+      "memory_pressure_some_avg10": {
+        "name": "Memory pressure some 10s average"
+      },
+      "memory_pressure_some_avg300": {
+        "name": "Memory pressure some 300s average"
+      },
+      "memory_pressure_some_avg60": {
+        "name": "Memory pressure some 60s average"
+      },
+      "memory_pressure_some_total": {
+        "name": "Memory pressure some total"
+      },
+      "memory_use": {
+        "name": "Memory use"
+      },
+      "memory_use_percent": {
+        "name": "Memory usage"
+      },
+      "network_in": {
+        "name": "Network in {interface}"
+      },
+      "network_out": {
+        "name": "Network out {interface}"
+      },
+      "packets_in": {
+        "name": "Packets in {interface}"
+      },
+      "packets_out": {
+        "name": "Packets out {interface}"
+      },
+      "process": {
+        "name": "Process {process}"
+      },
+      "process_num_fds": {
+        "name": "Open file descriptors {process}"
+      },
+      "processor_temperature": {
+        "name": "Processor temperature"
+      },
+      "processor_use": {
+        "name": "Processor use"
+      },
+      "swap_free": {
+        "name": "Swap free"
+      },
+      "swap_use": {
+        "name": "Swap use"
+      },
+      "swap_use_percent": {
+        "name": "Swap usage"
+      },
+      "throughput_network_in": {
+        "name": "Network throughput in {interface}"
+      },
+      "throughput_network_out": {
+        "name": "Network throughput out {interface}"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "process": "Processes to add as sensor(s)"
+        },
+        "data_description": {
+          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
+        },
+        "description": "Configure a monitoring sensor for a running process"
+      }
+    }
+  }
+}

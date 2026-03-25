@@ -1,0 +1,10 @@
+{
+  "domain": "channels",
+  "name": "Channels",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/channels",
+  "iot_class": "local_polling",
+  "loggers": ["pychannels"],
+  "quality_scale": "legacy",
+  "requirements": ["pychannels==1.2.3"]
+}

@@ -1,0 +1,185 @@
+{
+  "config": {
+    "abort": {
+      "no_available_devices": "All available devices have already been configured.",
+      "not_intellifire_device": "Not an IntelliFire device.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "api_error": "Login failed"
+    },
+    "flow_title": "{serial}",
+    "step": {
+      "cloud_api": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "Your IntelliFire app password",
+          "username": "Your IntelliFire app username"
+        },
+        "description": "Authenticate against IntelliFire cloud"
+      },
+      "pick_cloud_device": {
+        "data": {
+          "serial": "Fireplace serial number"
+        },
+        "data_description": {
+          "serial": "Serial number of the fireplace to configure"
+        },
+        "description": "Select fireplace by serial number.",
+        "title": "Configure fireplace"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "accessory_error": {
+        "name": "Accessory error"
+      },
+      "cloud_connectivity": {
+        "name": "Cloud connectivity"
+      },
+      "disabled_error": {
+        "name": "Disabled error"
+      },
+      "ecm_offline_error": {
+        "name": "ECM offline error"
+      },
+      "fan_delay_error": {
+        "name": "Fan delay error"
+      },
+      "fan_error": {
+        "name": "Fan error"
+      },
+      "flame": {
+        "name": "Flame"
+      },
+      "flame_error": {
+        "name": "Flame error"
+      },
+      "lights_error": {
+        "name": "Lights error"
+      },
+      "local_connectivity": {
+        "name": "Local connectivity"
+      },
+      "maintenance_error": {
+        "name": "Maintenance error"
+      },
+      "offline_error": {
+        "name": "Offline error"
+      },
+      "pilot_flame_error": {
+        "name": "Pilot flame error"
+      },
+      "pilot_light_on": {
+        "name": "Pilot light on"
+      },
+      "soft_lock_out_error": {
+        "name": "Soft lock out error"
+      },
+      "thermostat_on": {
+        "name": "Thermostat on"
+      },
+      "timer_on": {
+        "name": "Timer on"
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]"
+      }
+    },
+    "light": {
+      "lights": {
+        "name": "Lights"
+      }
+    },
+    "number": {
+      "flame_control": {
+        "name": "Flame control"
+      }
+    },
+    "sensor": {
+      "connection_quality": {
+        "name": "Connection quality"
+      },
+      "control_mode": {
+        "name": "Control mode",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
+      },
+      "downtime": {
+        "name": "Downtime"
+      },
+      "ecm_latency": {
+        "name": "ECM latency"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "flame_height": {
+        "name": "Flame height"
+      },
+      "ipv4_address": {
+        "name": "IP address"
+      },
+      "read_mode": {
+        "name": "Read mode",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
+      },
+      "target_temp": {
+        "name": "Target temperature"
+      },
+      "timer_end_timestamp": {
+        "name": "Timer end"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    },
+    "switch": {
+      "flame": {
+        "name": "Flame"
+      },
+      "pilot_light": {
+        "name": "Pilot light"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "cloud_unavailable": "Cloud connectivity is not available",
+      "local_unavailable": "Local connectivity is not available"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "control_mode": "Send commands to",
+          "read_mode": "Read data from"
+        },
+        "data_description": {
+          "control_mode": "Whether to send fireplace commands via the `Local` or `Cloud` API",
+          "read_mode": "Whether to read fireplace state via the `Local` or `Cloud` API"
+        },
+        "description": "Some users find that their fireplace hardware prioritizes `Cloud` communication and may experience timeouts with `Local` control. If you encounter connectivity issues, try switching to `Cloud` for the affected endpoint.",
+        "title": "Endpoint selection"
+      }
+    }
+  },
+  "selector": {
+    "api_mode": {
+      "options": {
+        "cloud": "Cloud",
+        "local": "Local"
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Re-authenticate by entering password for {username}",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_lock_state": {
+      "description": "Sets lock state.",
+      "fields": {
+        "flap_id": {
+          "description": "Flap ID to lock/unlock.",
+          "name": "Flap ID"
+        },
+        "lock_state": {
+          "description": "New lock state.",
+          "name": "Lock state"
+        }
+      },
+      "name": "Set lock state"
+    },
+    "set_pet_location": {
+      "description": "Sets pet location.",
+      "fields": {
+        "location": {
+          "description": "Pet location (Inside or Outside).",
+          "name": "[%key:common::config_flow::data::location%]"
+        },
+        "pet_name": {
+          "description": "Name of pet.",
+          "name": "Pet name"
+        }
+      },
+      "name": "Set pet location"
+    }
+  }
+}

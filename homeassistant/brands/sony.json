@@ -1,0 +1,11 @@
+{
+  "domain": "sony",
+  "name": "Sony",
+  "integrations": [
+    "braviatv",
+    "ps4",
+    "sony_projector",
+    "songpal",
+    "playstation_network"
+  ]
+}

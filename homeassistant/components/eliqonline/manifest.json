@@ -1,0 +1,9 @@
+{
+  "domain": "eliqonline",
+  "name": "Eliqonline",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/eliqonline",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy",
+  "requirements": ["eliqonline==1.2.2"]
+}

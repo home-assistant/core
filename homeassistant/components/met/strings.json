@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "no_home": "No home coordinates are set in the Home Assistant configuration"
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Meteorologisk institutt",
+        "title": "[%key:common::config_flow::data::location%]"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Update of data from the web site failed: {error}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "title": "[%key:common::config_flow::data::location%]"
+      }
+    }
+  }
+}

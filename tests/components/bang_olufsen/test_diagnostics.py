@@ -1,0 +1,89 @@
+"""Test bang_olufsen config entry diagnostics."""
+
+from mozart_api.models import BatteryState
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
+
+from .conftest import mock_websocket_connection
+from .const import TEST_BUTTON_EVENT_ENTITY_ID, TEST_REMOTE_KEY_EVENT_ENTITY_ID
+
+from tests.common import AsyncMock, MockConfigEntry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
+
+
+async def test_async_get_config_entry_diagnostics(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    hass_client: ClientSessionGenerator,
+    integration: None,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics."""
+
+    # Enable a button and remote key Event entity
+    entity_registry.async_update_entity(TEST_BUTTON_EVENT_ENTITY_ID, disabled_by=None)
+    entity_registry.async_update_entity(
+        TEST_REMOTE_KEY_EVENT_ENTITY_ID, disabled_by=None
+    )
+    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+
+    # Re-trigger WebSocket events after the reload
+    await mock_websocket_connection(hass, mock_mozart_client)
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert result == snapshot(
+        exclude=props(
+            "created_at",
+            "entry_id",
+            "id",
+            "last_changed",
+            "last_reported",
+            "last_updated",
+            "media_position_updated_at",
+            "modified_at",
+        )
+    )
+
+
+async def test_async_get_config_entry_diagnostics_with_battery(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry_a5: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics for devices with a battery."""
+    mock_mozart_client.get_battery_state.return_value = BatteryState(
+        battery_level=1, state="BatteryVeryLow"
+    )
+
+    # Load entry
+    mock_config_entry_a5.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_a5.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry_a5
+    )
+
+    assert result == snapshot(
+        exclude=props(
+            "created_at",
+            "entry_id",
+            "id",
+            "last_changed",
+            "last_reported",
+            "last_updated",
+            "media_position_updated_at",
+            "modified_at",
+        )
+    )

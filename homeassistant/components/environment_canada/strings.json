@@ -1,0 +1,131 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "bad_station_id": "Station code is invalid, missing, or not found in the station code database",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "error_response": "Response from Environment Canada in error",
+      "too_many_attempts": "Connections to Environment Canada are rate limited; Try again in 60 seconds",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "language": "Weather information language",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "station": "Weather station"
+        },
+        "description": "Select a weather station from the dropdown, or specify coordinates to use the closest station. The default coordinates are from your Home Assistant installation. Weather information can be retrieved in English or French.",
+        "title": "Environment Canada: weather location and language"
+      }
+    }
+  },
+  "entity": {
+    "camera": {
+      "radar": {
+        "name": "Radar"
+      }
+    },
+    "sensor": {
+      "advisories": {
+        "name": "Advisories"
+      },
+      "aqhi": {
+        "name": "AQHI"
+      },
+      "condition": {
+        "name": "Current condition"
+      },
+      "dewpoint": {
+        "name": "Dew point"
+      },
+      "endings": {
+        "name": "Endings"
+      },
+      "high_temp": {
+        "name": "High temperature"
+      },
+      "humidex": {
+        "name": "Humidex"
+      },
+      "icon_code": {
+        "name": "Icon code"
+      },
+      "low_temp": {
+        "name": "Low temperature"
+      },
+      "normal_high": {
+        "name": "Normal high temperature"
+      },
+      "normal_low": {
+        "name": "Normal low temperature"
+      },
+      "pop": {
+        "name": "Chance of precipitation"
+      },
+      "pressure": {
+        "name": "Barometric pressure"
+      },
+      "statements": {
+        "name": "Statements"
+      },
+      "tendency": {
+        "name": "Tendency"
+      },
+      "text_summary": {
+        "name": "Summary"
+      },
+      "timestamp": {
+        "name": "Observation time"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "warnings": {
+        "name": "Warnings"
+      },
+      "watches": {
+        "name": "Watches"
+      },
+      "wind_bearing": {
+        "name": "Wind bearing"
+      },
+      "wind_chill": {
+        "name": "Wind chill"
+      },
+      "wind_dir": {
+        "name": "Wind direction"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      }
+    },
+    "weather": {
+      "forecast": {
+        "name": "Forecast"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts": {
+      "description": "Retrieves the forecast from selected weather services.",
+      "name": "Get forecasts"
+    },
+    "set_radar_type": {
+      "description": "Sets the type of radar image to retrieve.",
+      "fields": {
+        "radar_type": {
+          "description": "The type of radar image to display.",
+          "name": "Radar type"
+        }
+      },
+      "name": "Set radar type"
+    }
+  }
+}

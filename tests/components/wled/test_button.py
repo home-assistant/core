@@ -1,0 +1,120 @@
+"""Tests for the WLED button platform."""
+
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+from wled import WLEDConnectionError, WLEDError
+
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.wled.const import DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import MockConfigEntry, snapshot_platform
+
+pytestmark = [
+    pytest.mark.usefixtures("init_integration"),
+    pytest.mark.freeze_time("2021-11-04 17:36:59+01:00"),
+]
+
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.wled.PLATFORMS", [Platform.BUTTON]):
+        yield
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_snapshots(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test snapshot of the platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_snapshot(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test device snapshot."""
+    assert (entity_entry := entity_registry.async_get("button.wled_rgb_light_restart"))
+
+    assert entity_entry.device_id
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    assert device_entry == snapshot
+
+
+async def test_button_restart(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_wled: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the behavior of the restart button."""
+    assert (state := hass.states.get("button.wled_rgb_light_restart"))
+
+    assert state.state == STATE_UNKNOWN
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
+        blocking=True,
+    )
+    assert mock_wled.reset.call_count == 1
+    mock_wled.reset.assert_called_with()
+
+    assert (state := hass.states.get("button.wled_rgb_light_restart"))
+    assert state.state == "2021-11-04T16:37:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state", "expected_translation_key"),
+    [
+        (WLEDError, "2021-11-04T16:37:00+00:00", "invalid_response_wled_error"),
+        (WLEDConnectionError, STATE_UNAVAILABLE, "connection_error"),
+    ],
+)
+async def test_button_restart_errors(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_wled: MagicMock,
+    side_effect: Exception,
+    expected_state: str,
+    expected_translation_key: str,
+) -> None:
+    """Test the error handling of the restart button."""
+    # Test with WLED connection error
+    mock_wled.reset.side_effect = side_effect
+    with pytest.raises(HomeAssistantError) as ex:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
+            blocking=True,
+        )
+
+    assert ex.value.translation_domain == DOMAIN
+    assert ex.value.translation_key == expected_translation_key
+
+    # Ensure this made the entity unavailable
+    assert (state := hass.states.get("button.wled_rgb_light_restart"))
+    assert state.state == expected_state

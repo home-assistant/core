@@ -1,0 +1,40 @@
+"""Constants for the Flexit Nordic (BACnet) integration."""
+
+from flexit_bacnet import (
+    OPERATION_MODE_AWAY,
+    OPERATION_MODE_FIREPLACE,
+    OPERATION_MODE_HIGH,
+    OPERATION_MODE_HOME,
+    OPERATION_MODE_OFF,
+    VENTILATION_MODE_AWAY,
+    VENTILATION_MODE_HIGH,
+    VENTILATION_MODE_HOME,
+    VENTILATION_MODE_STOP,
+)
+
+from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME, PRESET_NONE
+
+DOMAIN = "flexit_bacnet"
+
+MAX_TEMP = 30
+MIN_TEMP = 10
+
+PRESET_HIGH = "high"
+PRESET_FIREPLACE = "fireplace"
+
+# Map operation mode (what device reports) to Home Assistant preset
+OPERATION_TO_PRESET_MODE_MAP = {
+    OPERATION_MODE_OFF: PRESET_NONE,
+    OPERATION_MODE_AWAY: PRESET_AWAY,
+    OPERATION_MODE_HOME: PRESET_HOME,
+    OPERATION_MODE_HIGH: PRESET_HIGH,
+    OPERATION_MODE_FIREPLACE: PRESET_FIREPLACE,
+}
+
+# Map preset to ventilation mode (for setting standard modes)
+PRESET_TO_VENTILATION_MODE_MAP = {
+    PRESET_NONE: VENTILATION_MODE_STOP,
+    PRESET_AWAY: VENTILATION_MODE_AWAY,
+    PRESET_HOME: VENTILATION_MODE_HOME,
+    PRESET_HIGH: VENTILATION_MODE_HIGH,
+}

@@ -1,0 +1,13 @@
+# Describes the format for available nzbget services
+
+pause:
+resume:
+set_speed:
+  fields:
+    speed:
+      default: 1000
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          unit_of_measurement: "kB/s"

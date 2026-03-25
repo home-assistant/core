@@ -1,0 +1,10 @@
+{
+  "domain": "dnsip",
+  "name": "DNS IP",
+  "codeowners": ["@gjohansson-ST"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dnsip",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["aiodns==4.0.0"]
+}

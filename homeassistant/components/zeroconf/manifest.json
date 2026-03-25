@@ -1,0 +1,12 @@
+{
+  "domain": "zeroconf",
+  "name": "Zero-configuration networking (zeroconf)",
+  "codeowners": ["@bdraco"],
+  "dependencies": ["network", "api"],
+  "documentation": "https://www.home-assistant.io/integrations/zeroconf",
+  "integration_type": "system",
+  "iot_class": "local_push",
+  "loggers": ["zeroconf"],
+  "quality_scale": "internal",
+  "requirements": ["zeroconf==0.148.0"]
+}

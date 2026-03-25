@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "access_denied": "The access to the backup path has been denied. Please check the permissions of the backup path.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_method": "The server does not support the required methods. Please check whether you have the correct URL. Check with your provider for the correct URL.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "backup_path": "Backup path",
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "backup_path": "Define the path where the backups should be located (will be created automatically if it does not exist).",
+          "password": "The password for the WebDAV server.",
+          "url": "The URL of the WebDAV server. Check with your provider for the correct URL.",
+          "username": "The username for the WebDAV server.",
+          "verify_ssl": "Whether to verify the SSL certificate of the server. If you are using a self-signed certificate, do not select this option."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to WebDAV server"
+    },
+    "invalid_username_password": {
+      "message": "Invalid username or password"
+    }
+  }
+}

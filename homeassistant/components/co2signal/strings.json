@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_data": "No data is available for the location or zone you have selected.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "coordinates": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "country": {
+        "data": {
+          "country_code": "Zone key"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "description": "Visit the [Electricity Maps app]({register_link}) to request an API key."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "carbon_intensity": {
+        "name": "CO2 intensity",
+        "state_attributes": {
+          "country_code": {
+            "name": "Zone key"
+          }
+        }
+      },
+      "fossil_fuel_percentage": {
+        "name": "Grid fossil fuel percentage",
+        "state_attributes": {
+          "country_code": {
+            "name": "[%key:component::co2signal::entity::sensor::carbon_intensity::state_attributes::country_code::name%]"
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "location": {
+      "options": {
+        "specify_coordinates": "Specify coordinates",
+        "specify_country_code": "Specify zone key",
+        "use_home_location": "Use home location"
+      }
+    }
+  }
+}

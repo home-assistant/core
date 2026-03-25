@@ -1,0 +1,86 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "description": "The authentication credentials for {host}:{port} need to be updated."
+      },
+      "user": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_token": "The API token generated from your account on your Traccar Server",
+          "host": "The hostname or IP address of your Traccar Server"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Motion",
+        "state": {
+          "off": "[%key:common::state::stopped%]",
+          "on": "Moving"
+        }
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "off": "Offline",
+          "on": "Online"
+        }
+      }
+    },
+    "sensor": {
+      "address": {
+        "name": "Address"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "geofence": {
+        "name": "Geofence"
+      }
+    }
+  },
+  "exceptions": {
+    "migrate_to_api_token": {
+      "message": "To continue using Traccar Server, you need to migrate to API token based authentication."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "custom_attributes": "Custom attributes",
+          "events": "Events",
+          "max_accuracy": "Max accuracy",
+          "skip_accuracy_filter_for": "Position skip filter for attributes"
+        },
+        "data_description": {
+          "custom_attributes": "Add any custom or calculated attributes here. These will be added to the device attributes",
+          "events": "Selected events will be fired in Home Assistant",
+          "max_accuracy": "Any position reports with accuracy higher than this value will be ignored",
+          "skip_accuracy_filter_for": "Attributes defined here will bypass the accuracy filter if they are present in the update"
+        }
+      }
+    }
+  }
+}

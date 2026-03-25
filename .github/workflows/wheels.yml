@@ -1,0 +1,209 @@
+name: Build wheels
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+  push:
+    branches:
+      - dev
+      - rc
+    paths:
+      - ".github/workflows/wheels.yml"
+      - "homeassistant/package_constraints.txt"
+      - "requirements_all.txt"
+      - "requirements.txt"
+      - "script/gen_requirements_all.py"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name}}
+  cancel-in-progress: true
+
+jobs:
+  init:
+    name: Initialize wheels builder
+    if: github.repository_owner == 'home-assistant'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version-file: ".python-version"
+          check-latest: true
+
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          pip install "$(grep '^uv' < requirements.txt)"
+          uv pip install -r requirements.txt
+
+      - name: Create requirements_diff file
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" =~ (schedule|workflow_dispatch) ]]; then
+            touch requirements_diff.txt
+          else
+            curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt
+          fi
+
+      - name: Write env-file
+        run: |
+          (
+            echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
+            echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
+
+            # Fix out of memory issues with rust
+            echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
+
+            # OpenCV headless installation
+            echo "CI_BUILD=1"
+            echo "ENABLE_HEADLESS=1"
+
+            # Use C-Extension for SQLAlchemy
+            echo "REQUIRE_SQLALCHEMY_CEXT=1"
+          ) > .env_file
+
+      - name: Upload env_file
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: env_file
+          path: ./.env_file
+          include-hidden-files: true
+          overwrite: true
+
+      - name: Upload requirements_diff
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: requirements_diff
+          path: ./requirements_diff.txt
+          overwrite: true
+
+      - name: Generate requirements
+        run: |
+          . venv/bin/activate
+          python -m script.gen_requirements_all ci
+
+      - name: Upload requirements_all_wheels
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: requirements_all_wheels
+          path: ./requirements_all_wheels_*.txt
+
+  core:
+    name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
+    if: github.repository_owner == 'home-assistant'
+    needs: init
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ["cp314"]
+        arch: ["amd64", "aarch64"]
+        include:
+          - arch: amd64
+            os: ubuntu-latest
+          - arch: aarch64
+            os: ubuntu-24.04-arm
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Download env_file
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: env_file
+
+      - name: Download requirements_diff
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: requirements_diff
+
+      - name: Adjust build env
+        run: |
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
+
+      - name: Build wheels
+        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
+          env-file: true
+          apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev"
+          skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements.txt"
+
+  integrations:
+    name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
+    if: github.repository_owner == 'home-assistant'
+    needs: init
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ["cp314"]
+        arch: ["amd64", "aarch64"]
+        include:
+          - arch: amd64
+            os: ubuntu-latest
+          - arch: aarch64
+            os: ubuntu-24.04-arm
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Download env_file
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: env_file
+
+      - name: Download requirements_diff
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: requirements_diff
+
+      - name: Download requirements_all_wheels
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: requirements_all_wheels
+
+      - name: Adjust build env
+        run: |
+          # Do not pin numpy in wheels building
+          sed -i "/numpy/d" homeassistant/package_constraints.txt
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
+
+      - name: Build wheels
+        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all_wheels_${{ matrix.arch }}.txt"

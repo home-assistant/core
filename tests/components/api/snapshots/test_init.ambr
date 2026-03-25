@@ -1,0 +1,125 @@
+# serializer version: 1
+# name: test_api_get_services
+  list([
+    dict({
+      'domain': 'group',
+      'services': dict({
+        'reload': dict({
+          'fields': dict({
+          }),
+        }),
+        'remove': dict({
+          'fields': dict({
+            'object_id': dict({
+              'example': 'test_group',
+              'required': True,
+              'selector': dict({
+                'object': dict({
+                  'multiple': False,
+                }),
+              }),
+            }),
+          }),
+        }),
+        'set': dict({
+          'fields': dict({
+            'add_entities': dict({
+              'example': 'domain.entity_id1, domain.entity_id2',
+              'selector': dict({
+                'entity': dict({
+                  'multiple': True,
+                  'reorder': False,
+                }),
+              }),
+            }),
+            'all': dict({
+              'selector': dict({
+                'boolean': dict({
+                }),
+              }),
+            }),
+            'entities': dict({
+              'example': 'domain.entity_id1, domain.entity_id2',
+              'selector': dict({
+                'entity': dict({
+                  'multiple': True,
+                  'reorder': False,
+                }),
+              }),
+            }),
+            'icon': dict({
+              'example': 'mdi:camera',
+              'selector': dict({
+                'icon': dict({
+                }),
+              }),
+            }),
+            'name': dict({
+              'example': 'My test group',
+              'selector': dict({
+                'text': dict({
+                  'multiline': False,
+                  'multiple': False,
+                }),
+              }),
+            }),
+            'object_id': dict({
+              'example': 'test_group',
+              'required': True,
+              'selector': dict({
+                'text': dict({
+                  'multiline': False,
+                  'multiple': False,
+                }),
+              }),
+            }),
+            'remove_entities': dict({
+              'example': 'domain.entity_id1, domain.entity_id2',
+              'selector': dict({
+                'entity': dict({
+                  'multiple': True,
+                  'reorder': False,
+                }),
+              }),
+            }),
+          }),
+        }),
+      }),
+    }),
+  ])
+# ---
+# name: test_api_get_services.1
+  dict({
+    'domain': 'logger',
+    'services': dict({
+      'set_default_level': dict({
+        'description': 'Translated description',
+        'fields': dict({
+          'level': dict({
+            'description': 'Field description',
+            'example': 'Field example',
+            'name': 'Field name',
+            'selector': dict({
+              'select': dict({
+                'options': list([
+                  'debug',
+                  'info',
+                  'warning',
+                  'error',
+                  'fatal',
+                  'critical',
+                ]),
+                'translation_key': 'level',
+              }),
+            }),
+          }),
+        }),
+        'name': 'Translated name',
+      }),
+      'set_level': dict({
+        'fields': dict({
+        }),
+      }),
+    }),
+  })
+# ---

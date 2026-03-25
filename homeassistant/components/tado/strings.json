@@ -1,0 +1,158 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "could_not_authenticate": "Could not authenticate with Tado.",
+      "no_homes": "There are no homes linked to this Tado account.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "progress": {
+      "wait_for_device": "To authenticate, open the following URL and login at Tado:\n{url}\nIf the code is not automatically copied, paste the following code to authorize the integration:\n\n```{code}```\n\n\nThe login attempt will time out after five minutes."
+    },
+    "step": {
+      "homekit": {
+        "description": "Your device has been discovered and needs to authenticate with Tado. Press `Submit` to start the authentication process.",
+        "title": "Authenticate with Tado"
+      },
+      "reauth_confirm": {
+        "description": "You need to reauthenticate with Tado. Press `Submit` to start the authentication process.",
+        "title": "Authenticate with Tado"
+      },
+      "timeout": {
+        "description": "The authentication process timed out. Please try again."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connection_state": {
+        "name": "Connection state"
+      },
+      "early_start": {
+        "name": "Early start"
+      },
+      "overlay": {
+        "name": "Overlay"
+      }
+    },
+    "climate": {
+      "tado": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "ac": {
+        "name": "AC"
+      },
+      "automatic_geofencing": {
+        "name": "Automatic geofencing"
+      },
+      "geofencing_mode": {
+        "name": "Geofencing mode"
+      },
+      "heating": {
+        "name": "Heating"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "solar_percentage": {
+        "name": "Solar percentage"
+      },
+      "tado_mode": {
+        "name": "Tado mode"
+      },
+      "weather_condition": {
+        "name": "Weather condition"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      }
+    }
+  },
+  "issues": {
+    "water_heater_fallback": {
+      "description": "Due to added support for water heaters entities, these entities may use a different overlay. Please configure the integration entity and Tado app water heater zone overlay options (under Settings -> Rooms & Devices -> Hot Water).",
+      "title": "Tado water heater entities now support fallback options"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "fallback": "Choose fallback mode."
+        },
+        "description": "Fallback mode lets you choose when to fallback to Smart Schedule from your manual zone overlay. (NEXT_TIME_BLOCK:= Change at next Smart Schedule change; MANUAL:= Don't change until you cancel; TADO_DEFAULT:= Change based on your setting in the Tado app).",
+        "title": "Adjust Tado options."
+      }
+    }
+  },
+  "services": {
+    "add_meter_reading": {
+      "description": "Adds a meter reading to Tado Energy IQ.",
+      "fields": {
+        "config_entry": {
+          "description": "Config entry to add meter reading to.",
+          "name": "Config entry"
+        },
+        "reading": {
+          "description": "Reading in m³ or kWh without decimals.",
+          "name": "Reading"
+        }
+      },
+      "name": "Add meter reading"
+    },
+    "set_climate_temperature_offset": {
+      "description": "Sets the temperature offset of climate entities.",
+      "fields": {
+        "offset": {
+          "description": "Offset you would like (depending on your device).",
+          "name": "Offset"
+        }
+      },
+      "name": "Set climate temperature offset"
+    },
+    "set_climate_timer": {
+      "description": "Turns on climate entities for a set time.",
+      "fields": {
+        "requested_overlay": {
+          "description": "Choose this or 'Time period'. Allows you to choose an overlay. MANUAL:=Overlay until user removes; NEXT_TIME_BLOCK:=Overlay until next timeblock; TADO_DEFAULT:=Overlay based on Tado app setting.",
+          "name": "Overlay"
+        },
+        "temperature": {
+          "description": "Temperature to set climate entity to.",
+          "name": "Temperature"
+        },
+        "time_period": {
+          "description": "Choose this or 'Overlay'. Set the time period for the change if you want to be specific.",
+          "name": "Time period"
+        }
+      },
+      "name": "Set climate timer"
+    },
+    "set_water_heater_timer": {
+      "description": "Turns on water heater for a set time.",
+      "fields": {
+        "temperature": {
+          "description": "Temperature to set heater to.",
+          "name": "Temperature"
+        },
+        "time_period": {
+          "description": "Set the time period for the boost.",
+          "name": "Time period"
+        }
+      },
+      "name": "Set water heater timer"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Patates",
+  "category": "zwjcy",
+  "product_id": "myd45weu",
+  "product_name": "Soil sensor",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-19T12:12:41+00:00",
+  "create_time": "2025-07-19T12:12:41+00:00",
+  "update_time": "2025-07-19T12:12:41+00:00",
+  "function": {
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status_range": {
+    "humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -30,
+        "max": 70,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "humidity": 97,
+    "temp_current": 22,
+    "temp_unit_convert": "c",
+    "battery_state": "low",
+    "battery_percentage": 20
+  },
+  "set_up": true,
+  "support_local": true
+}

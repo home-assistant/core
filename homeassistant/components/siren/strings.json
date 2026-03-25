@@ -1,0 +1,110 @@
+{
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted sirens.",
+    "condition_behavior_name": "Behavior",
+    "trigger_behavior_description": "The behavior of the targeted sirens to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more sirens are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::siren::common::condition_behavior_description%]",
+          "name": "[%key:component::siren::common::condition_behavior_name%]"
+        }
+      },
+      "name": "If a siren is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more sirens are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::siren::common::condition_behavior_description%]",
+          "name": "[%key:component::siren::common::condition_behavior_name%]"
+        }
+      },
+      "name": "If a siren is on"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::siren::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "available_tones": {
+          "name": "Available tones"
+        }
+      }
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "services": {
+    "toggle": {
+      "description": "Toggles the siren on/off.",
+      "name": "[%key:common::action::toggle%]"
+    },
+    "turn_off": {
+      "description": "Turns the siren off.",
+      "name": "[%key:common::action::turn_off%]"
+    },
+    "turn_on": {
+      "description": "Turns the siren on.",
+      "fields": {
+        "duration": {
+          "description": "Number of seconds the sound is played. Must be supported by the integration.",
+          "name": "Duration"
+        },
+        "tone": {
+          "description": "The tone to emit. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration.",
+          "name": "Tone"
+        },
+        "volume_level": {
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume. Must be supported by the integration.",
+          "name": "Volume"
+        }
+      },
+      "name": "[%key:common::action::turn_on%]"
+    }
+  },
+  "title": "Siren",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more sirens turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::siren::common::trigger_behavior_description%]",
+          "name": "[%key:component::siren::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Siren turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more sirens turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::siren::common::trigger_behavior_description%]",
+          "name": "[%key:component::siren::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Siren turned on"
+    }
+  }
+}

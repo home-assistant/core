@@ -1,0 +1,27 @@
+start_irrigation:
+  target:
+    entity:
+      integration: rainbird
+      domain: switch
+  fields:
+    duration:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: "minutes"
+set_rain_delay:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: rainbird
+    duration:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 14
+          unit_of_measurement: "days"

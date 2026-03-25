@@ -1,0 +1,8 @@
+{
+  "domain": "vacuum",
+  "name": "Vacuum",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/vacuum",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

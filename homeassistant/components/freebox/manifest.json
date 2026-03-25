@@ -1,0 +1,13 @@
+{
+  "domain": "freebox",
+  "name": "Freebox",
+  "codeowners": ["@hacf-fr", "@Quentame"],
+  "config_flow": true,
+  "dependencies": ["ffmpeg"],
+  "documentation": "https://www.home-assistant.io/integrations/freebox",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["freebox_api"],
+  "requirements": ["freebox-api==1.3.0"],
+  "zeroconf": ["_fbx-api._tcp.local."]
+}

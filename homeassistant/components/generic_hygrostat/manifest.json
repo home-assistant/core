@@ -1,0 +1,10 @@
+{
+  "domain": "generic_hygrostat",
+  "name": "Generic hygrostat",
+  "codeowners": ["@Shulyaka"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/generic_hygrostat",
+  "integration_type": "helper",
+  "iot_class": "local_polling",
+  "quality_scale": "internal"
+}

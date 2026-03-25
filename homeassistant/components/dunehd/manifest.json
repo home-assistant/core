@@ -1,0 +1,11 @@
+{
+  "domain": "dunehd",
+  "name": "Dune HD",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dunehd",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pdunehd"],
+  "requirements": ["pdunehd==1.3.2"]
+}

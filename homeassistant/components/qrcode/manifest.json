@@ -1,0 +1,10 @@
+{
+  "domain": "qrcode",
+  "name": "QR Code",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/qrcode",
+  "iot_class": "calculated",
+  "loggers": ["pyzbar"],
+  "quality_scale": "legacy",
+  "requirements": ["Pillow==12.1.1", "pyzbar==0.1.7"]
+}

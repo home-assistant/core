@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "download": {
+        "name": "Download",
+        "state_attributes": {
+          "bytes_received": {
+            "name": "Bytes received"
+          },
+          "server_country": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_country::name%]"
+          },
+          "server_id": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_id::name%]"
+          },
+          "server_name": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_name::name%]"
+          }
+        }
+      },
+      "ping": {
+        "name": "Ping",
+        "state_attributes": {
+          "server_country": {
+            "name": "Server country"
+          },
+          "server_id": {
+            "name": "Server ID"
+          },
+          "server_name": {
+            "name": "Server name"
+          }
+        }
+      },
+      "upload": {
+        "name": "Upload",
+        "state_attributes": {
+          "bytes_sent": {
+            "name": "Bytes sent"
+          },
+          "server_country": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_country::name%]"
+          },
+          "server_id": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_id::name%]"
+          },
+          "server_name": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_name::name%]"
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "server_name": "Select test server"
+        }
+      }
+    }
+  }
+}

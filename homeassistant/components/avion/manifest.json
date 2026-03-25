@@ -1,0 +1,9 @@
+{
+  "domain": "avion",
+  "name": "Avi-on",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/avion",
+  "iot_class": "assumed_state",
+  "quality_scale": "legacy",
+  "requirements": ["avion==0.10"]
+}

@@ -1,0 +1,47 @@
+boost_heating_on:
+  target:
+    entity:
+      integration: hive
+      domain: climate
+  fields:
+    time_period:
+      required: true
+      example: 01:30:00
+      selector:
+        time:
+    temperature:
+      default: 25.0
+      selector:
+        number:
+          min: 7
+          max: 35
+          step: 0.5
+          unit_of_measurement: °
+boost_heating_off:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hive
+          domain: climate
+boost_hot_water:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hive
+          domain: water_heater
+    time_period:
+      required: true
+      example: 01:30:00
+      selector:
+        time:
+    on_off:
+      required: true
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"

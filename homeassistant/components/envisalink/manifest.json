@@ -1,0 +1,10 @@
+{
+  "domain": "envisalink",
+  "name": "Envisalink",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/envisalink",
+  "iot_class": "local_push",
+  "loggers": ["pyenvisalink"],
+  "quality_scale": "legacy",
+  "requirements": ["pyenvisalink==4.7"]
+}

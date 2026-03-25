@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "counter_not_found": "Could not find meter ID automatically",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "counter_id": "Meter ID",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "counter_id": "Enter your meter ID (ex: 12345678). Should be found automatically during setup, if not see integration documentation for more information",
+          "password": "Enter your password associated with your {tout_sur_mon_eau} account",
+          "username": "Enter your login associated with your {tout_sur_mon_eau} account"
+        },
+        "description": "Connect your Suez Water {tout_sur_mon_eau} account to retrieve your water consumption"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "water_price": {
+        "name": "Water price"
+      },
+      "water_usage_yesterday": {
+        "name": "Water usage yesterday"
+      }
+    }
+  }
+}

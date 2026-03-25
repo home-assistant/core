@@ -1,0 +1,10 @@
+{
+  "domain": "bitcoin",
+  "name": "Bitcoin",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/bitcoin",
+  "iot_class": "cloud_polling",
+  "loggers": ["blockchain"],
+  "quality_scale": "legacy",
+  "requirements": ["blockchain==1.4.4"]
+}

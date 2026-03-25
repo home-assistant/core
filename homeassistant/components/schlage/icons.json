@@ -1,0 +1,13 @@
+{
+  "services": {
+    "add_code": {
+      "service": "mdi:key-plus"
+    },
+    "delete_code": {
+      "service": "mdi:key-minus"
+    },
+    "get_codes": {
+      "service": "mdi:table-key"
+    }
+  }
+}

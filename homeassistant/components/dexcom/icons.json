@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "glucose_trend": {
+        "default": "mdi:help",
+        "state": {
+          "falling": "mdi:arrow-down",
+          "falling_quickly": "mdi:arrow-down-thick",
+          "falling_slightly": "mdi:arrow-bottom-right",
+          "rising": "mdi:arrow-up",
+          "rising_quickly": "mdi:arrow-up-thick",
+          "rising_slightly": "mdi:arrow-top-right",
+          "steady": "mdi:arrow-right"
+        }
+      },
+      "glucose_value": {
+        "default": "mdi:diabetes"
+      }
+    }
+  }
+}

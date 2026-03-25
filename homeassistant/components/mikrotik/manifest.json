@@ -1,0 +1,11 @@
+{
+  "domain": "mikrotik",
+  "name": "Mikrotik",
+  "codeowners": ["@engrbm87"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mikrotik",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["librouteros"],
+  "requirements": ["librouteros==3.2.0"]
+}

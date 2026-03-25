@@ -1,0 +1,38 @@
+set_light_sleep_timer:
+  target:
+    entity:
+      integration: modern_forms
+      domain: light
+  fields:
+    sleep_time:
+      required: true
+      example: "900"
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: minutes
+clear_light_sleep_timer:
+  target:
+    entity:
+      integration: modern_forms
+      domain: light
+set_fan_sleep_timer:
+  target:
+    entity:
+      integration: modern_forms
+      domain: fan
+  fields:
+    sleep_time:
+      required: true
+      example: "900"
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: minutes
+clear_fan_sleep_timer:
+  target:
+    entity:
+      integration: modern_forms
+      domain: fan

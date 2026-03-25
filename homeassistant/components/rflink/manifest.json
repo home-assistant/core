@@ -1,0 +1,10 @@
+{
+  "domain": "rflink",
+  "name": "RFLink",
+  "codeowners": ["@javicalle"],
+  "documentation": "https://www.home-assistant.io/integrations/rflink",
+  "iot_class": "assumed_state",
+  "loggers": ["rflink"],
+  "quality_scale": "legacy",
+  "requirements": ["rflink==0.0.67"]
+}

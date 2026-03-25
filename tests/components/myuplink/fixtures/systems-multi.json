@@ -1,0 +1,61 @@
+{
+  "page": 1,
+  "itemsPerPage": 10,
+  "numItems": 3,
+  "systems": [
+    {
+      "systemId": "123456-7890-1234",
+      "name": "Gotham City",
+      "securityLevel": "admin",
+      "hasAlarm": false,
+      "country": "Sweden",
+      "devices": [
+        {
+          "id": "alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+          "connectionState": "Connected",
+          "currentFwVersion": "9682R7A",
+          "product": {
+            "serialNumber": "10001",
+            "name": "Tehowatti Air"
+          }
+        }
+      ]
+    },
+    {
+      "systemId": "123456-7890-1234",
+      "name": "Batcave",
+      "securityLevel": "admin",
+      "hasAlarm": false,
+      "country": "Sweden",
+      "devices": [
+        {
+          "id": "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+          "connectionState": "Connected",
+          "currentFwVersion": "9682R7B",
+          "product": {
+            "serialNumber": "10002",
+            "name": "F730 CU 3x400V"
+          }
+        }
+      ]
+    },
+    {
+      "systemId": "123456-7890-1234",
+      "name": "Duckburg",
+      "securityLevel": "admin",
+      "hasAlarm": false,
+      "country": "Sweden",
+      "devices": [
+        {
+          "id": "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+          "connectionState": "Connected",
+          "currentFwVersion": "9682R7C",
+          "product": {
+            "serialNumber": "10003",
+            "name": "SM0 20"
+          }
+        }
+      ]
+    }
+  ]
+}

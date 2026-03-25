@@ -1,0 +1,11 @@
+{
+  "domain": "glances",
+  "name": "Glances",
+  "codeowners": ["@engrbm87"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/glances",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["glances_api"],
+  "requirements": ["glances-api==0.8.0"]
+}

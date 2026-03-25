@@ -1,0 +1,13 @@
+{
+  "services": {
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "reset_accessory": {
+      "service": "mdi:cog-refresh"
+    },
+    "unpair": {
+      "service": "mdi:link-variant-off"
+    }
+  }
+}

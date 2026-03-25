@@ -1,0 +1,11 @@
+{
+  "domain": "watttime",
+  "name": "WattTime",
+  "codeowners": ["@bachya"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/watttime",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiowatttime"],
+  "requirements": ["aiowatttime==0.1.1"]
+}

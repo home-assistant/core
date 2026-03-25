@@ -1,0 +1,45 @@
+{
+  "response": {
+    "period": "day",
+    "time_series": [
+      {
+        "timestamp": "2023-06-01T01:00:00-07:00",
+        "solar_energy_exported": 70940,
+        "generator_energy_exported": 0,
+        "grid_energy_imported": 521,
+        "grid_services_energy_imported": 17.53125,
+        "grid_services_energy_exported": 3.80859375,
+        "grid_energy_exported_from_solar": 43660,
+        "grid_energy_exported_from_generator": 0,
+        "grid_energy_exported_from_battery": 19,
+        "battery_energy_exported": 10030,
+        "battery_energy_imported_from_grid": 80,
+        "battery_energy_imported_from_solar": 16800,
+        "battery_energy_imported_from_generator": 0,
+        "consumer_energy_imported_from_grid": 441,
+        "consumer_energy_imported_from_solar": 10480,
+        "consumer_energy_imported_from_battery": 10011,
+        "consumer_energy_imported_from_generator": 0
+      },
+      {
+        "timestamp": "2023-06-01T01:05:00-07:00",
+        "solar_energy_exported": 140940,
+        "generator_energy_exported": 1,
+        "grid_energy_imported": 1021,
+        "grid_services_energy_imported": 27.53125,
+        "grid_services_energy_exported": 6.80859375,
+        "grid_energy_exported_from_solar": 83660,
+        "grid_energy_exported_from_generator": 0,
+        "grid_energy_exported_from_battery": 29,
+        "battery_energy_exported": 20030,
+        "battery_energy_imported_from_grid": 0,
+        "battery_energy_imported_from_solar": 26800,
+        "battery_energy_imported_from_generator": 0,
+        "consumer_energy_imported_from_grid": 841,
+        "consumer_energy_imported_from_solar": 20480,
+        "consumer_energy_imported_from_battery": 20011,
+        "consumer_energy_imported_from_generator": 0
+      }
+    ]
+  }
+}

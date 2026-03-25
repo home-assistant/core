@@ -1,0 +1,177 @@
+addon_start:
+  fields:
+    addon:
+      required: true
+      example: core_ssh
+      selector:
+        addon:
+
+addon_restart:
+  fields:
+    addon:
+      required: true
+      example: core_ssh
+      selector:
+        addon:
+
+addon_stdin:
+  fields:
+    addon:
+      required: true
+      example: core_ssh
+      selector:
+        addon:
+
+addon_stop:
+  fields:
+    addon:
+      required: true
+      example: core_ssh
+      selector:
+        addon:
+
+app_start:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+
+app_restart:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+
+app_stdin:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+    input:
+      required: true
+      selector:
+        object:
+
+app_stop:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+
+host_reboot:
+host_shutdown:
+backup_full:
+  fields:
+    name:
+      example: "Backup 1"
+      selector:
+        text:
+    password:
+      example: "password"
+      selector:
+        text:
+    compressed:
+      default: true
+      selector:
+        boolean:
+    location:
+      example: my_backup_mount
+      selector:
+        backup_location:
+    homeassistant_exclude_database:
+      default: false
+      selector:
+        boolean:
+
+backup_partial:
+  fields:
+    homeassistant:
+      selector:
+        boolean:
+    homeassistant_exclude_database:
+      default: false
+      selector:
+        boolean:
+    apps:
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
+    addons:
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
+    folders:
+      example: ["homeassistant", "share"]
+      selector:
+        object:
+    name:
+      example: "Partial backup 1"
+      selector:
+        text:
+    password:
+      example: "password"
+      selector:
+        text:
+    compressed:
+      default: true
+      selector:
+        boolean:
+    location:
+      example: my_backup_mount
+      selector:
+        backup_location:
+
+restore_full:
+  fields:
+    slug:
+      required: true
+      selector:
+        text:
+    password:
+      example: "password"
+      selector:
+        text:
+
+restore_partial:
+  fields:
+    slug:
+      required: true
+      selector:
+        text:
+    homeassistant:
+      selector:
+        boolean:
+    folders:
+      example: ["homeassistant", "share"]
+      selector:
+        object:
+    apps:
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
+    addons:
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
+    password:
+      example: "password"
+      selector:
+        text:
+
+mount_reload:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: hassio
+            model: Home Assistant Mount

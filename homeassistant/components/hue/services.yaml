@@ -1,0 +1,45 @@
+# Describes the format for available hue services
+
+# legacy hue_activate_scene to activate a scene
+hue_activate_scene:
+  fields:
+    group_name:
+      example: "Living Room"
+      selector:
+        text:
+    scene_name:
+      example: "Energize"
+      selector:
+        text:
+    dynamic:
+      selector:
+        boolean:
+
+# entity service to activate a Hue scene (V2)
+activate_scene:
+  target:
+    entity:
+      domain: scene
+      integration: hue
+  fields:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    dynamic:
+      selector:
+        boolean:
+    speed:
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 100
+    brightness:
+      advanced: true
+      selector:
+        number:
+          min: 1
+          max: 255

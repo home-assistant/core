@@ -1,0 +1,47 @@
+# Describes the format for available MQTT services
+
+publish:
+  fields:
+    topic:
+      required: true
+      example: /homeassistant/hello
+      selector:
+        text:
+    payload:
+      example: "The temperature is {{ states('sensor.temperature') }}"
+      selector:
+        template:
+    evaluate_payload:
+      advanced: true
+      default: false
+      selector:
+        boolean:
+    qos:
+      advanced: true
+      default: 0
+      selector:
+        select:
+          options:
+            - "0"
+            - "1"
+            - "2"
+    retain:
+      default: false
+      selector:
+        boolean:
+
+dump:
+  fields:
+    topic:
+      example: "OpenZWave/#"
+      selector:
+        text:
+    duration:
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: "seconds"
+
+reload:

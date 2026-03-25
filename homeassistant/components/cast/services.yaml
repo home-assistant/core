@@ -1,0 +1,17 @@
+show_lovelace_view:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: cast
+          domain: media_player
+    dashboard_path:
+      example: lovelace-cast
+      selector:
+        text:
+    view_path:
+      required: true
+      example: downstairs
+      selector:
+        text:

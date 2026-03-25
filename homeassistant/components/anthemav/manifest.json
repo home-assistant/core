@@ -1,0 +1,11 @@
+{
+  "domain": "anthemav",
+  "name": "Anthem A/V Receivers",
+  "codeowners": ["@hyralex"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/anthemav",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["anthemav"],
+  "requirements": ["anthemav==1.4.1"]
+}

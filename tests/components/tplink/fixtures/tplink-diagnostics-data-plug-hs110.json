@@ -1,0 +1,74 @@
+{
+  "device_last_response": {
+    "system": {
+      "get_sysinfo": {
+        "sw_ver": "1.0.4 Build 191111 Rel.143500",
+        "hw_ver": "4.0",
+        "model": "HS110(EU)",
+        "deviceId": "1234",
+        "oemId": "1234",
+        "hwId": "1234",
+        "rssi": -57,
+        "longitude_i": "0.0",
+        "latitude_i": "0.0",
+        "alias": "some plug",
+        "status": "new",
+        "mic_type": "IOT.SMARTPLUGSWITCH",
+        "feature": "TIM:ENE",
+        "mac": "aa:bb:cc:dd:ee:ff",
+        "updating": 0,
+        "led_off": 1,
+        "relay_state": 1,
+        "on_time": 254454,
+        "active_mode": "none",
+        "icon_hash": "",
+        "dev_name": "Smart Wi-Fi Plug With Energy Monitoring",
+        "next_action": {
+          "type": -1
+        },
+        "err_code": 0
+      }
+    },
+    "emeter": {
+      "get_realtime": {
+        "voltage_mv": 230118,
+        "current_ma": 303,
+        "power_mw": 28825,
+        "total_wh": 18313,
+        "err_code": 0
+      },
+      "get_monthstat": {
+        "month_list": [
+          {
+            "year": 2022,
+            "month": 2,
+            "energy_wh": 321
+          },
+          {
+            "year": 2022,
+            "month": 1,
+            "energy_wh": 321
+          }
+        ],
+        "err_code": 0
+      },
+      "get_daystat": {
+        "day_list": [
+          {
+            "year": 2022,
+            "month": 2,
+            "day": 1,
+            "energy_wh": 123
+          },
+          {
+            "year": 2022,
+            "month": 2,
+            "day": 2,
+            "energy_wh": 123
+          }
+        ],
+        "err_code": 0
+      }
+    }
+  }
+}

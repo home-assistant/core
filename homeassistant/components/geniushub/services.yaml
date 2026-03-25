@@ -1,0 +1,51 @@
+# Support for a Genius Hub system
+# Describes the format for available services
+
+set_zone_mode:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: geniushub
+          domain: climate
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "off"
+            - "timer"
+            - "footprint"
+
+set_zone_override:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: geniushub
+          domain: climate
+    temperature:
+      required: true
+      selector:
+        number:
+          min: 4
+          max: 28
+          step: 0.1
+          unit_of_measurement: "°"
+    duration:
+      example: '{"minutes": 135}'
+      selector:
+        object:
+
+set_switch_override:
+  target:
+    entity:
+      integration: geniushub
+      domain: switch
+  fields:
+    duration:
+      example: '{"minutes": 135}'
+      selector:
+        object:

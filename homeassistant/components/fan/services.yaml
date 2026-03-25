@@ -1,0 +1,123 @@
+# Describes the format for available fan services
+set_preset_mode:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.PRESET_MODE
+  fields:
+    preset_mode:
+      required: true
+      example: "auto"
+      selector:
+        text:
+
+set_percentage:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
+  fields:
+    percentage:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+turn_on:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.TURN_ON
+  fields:
+    percentage:
+      filter:
+        supported_features:
+          - fan.FanEntityFeature.SET_SPEED
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    preset_mode:
+      example: "auto"
+      filter:
+        supported_features:
+          - fan.FanEntityFeature.PRESET_MODE
+      selector:
+        text:
+
+turn_off:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.TURN_OFF
+
+oscillate:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.OSCILLATE
+  fields:
+    oscillating:
+      required: true
+      selector:
+        boolean:
+
+toggle:
+  target:
+    entity:
+      domain: fan
+
+set_direction:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.DIRECTION
+  fields:
+    direction:
+      required: true
+      selector:
+        select:
+          options:
+            - "forward"
+            - "reverse"
+          translation_key: direction
+increase_speed:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
+  fields:
+    percentage_step:
+      advanced: true
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+decrease_speed:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
+  fields:
+    percentage_step:
+      advanced: true
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"

@@ -1,0 +1,64 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "credential_error": "Error fetching credentials.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation]({ps4_docs_url}) for additional info.",
+      "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation]({ps4_docs_url}) for additional info."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "credential_timeout": "Credential service timed out. Select **Submit** to restart.",
+      "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
+      "no_ipaddress": "Enter the IP address of the PlayStation 4 you would like to configure."
+    },
+    "step": {
+      "creds": {
+        "data": {
+          "token": "PSN Token"
+        },
+        "data_description": {
+          "token": "To get your PSN token, please follow these [instructions]({ps4_docs_url})."
+        },
+        "description": "Credentials needed. Select **Submit** and then in the PS4 2nd Screen App, refresh devices and select the **Home-Assistant** device to continue."
+      },
+      "link": {
+        "data": {
+          "code": "[%key:common::config_flow::data::pin%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "region": "Region"
+        },
+        "data_description": {
+          "code": "On your PlayStation 4 console, go to **Settings**. Then, go to **Mobile App Connection Settings** and select **Add Device** to get the PIN."
+        }
+      },
+      "mode": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "mode": "Config Mode"
+        },
+        "data_description": {
+          "ip_address": "Leave blank if selecting auto-discovery."
+        }
+      }
+    }
+  },
+  "services": {
+    "send_command": {
+      "description": "Emulates button press for PlayStation 4.",
+      "fields": {
+        "command": {
+          "description": "Button to press.",
+          "name": "Command"
+        },
+        "entity_id": {
+          "description": "Name of entity to send command.",
+          "name": "Entity"
+        }
+      },
+      "name": "Send command"
+    }
+  }
+}

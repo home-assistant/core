@@ -1,0 +1,20 @@
+lock_n_go:
+  target:
+    entity:
+      integration: nuki
+      domain: lock
+  fields:
+    unlatch:
+      default: false
+      selector:
+        boolean:
+set_continuous_mode:
+  target:
+    entity:
+      integration: nuki
+      domain: lock
+  fields:
+    enable:
+      default: false
+      selector:
+        boolean:

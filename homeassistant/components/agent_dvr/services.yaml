@@ -1,0 +1,29 @@
+start_recording:
+  target:
+    entity:
+      integration: agent_dvr
+      domain: camera
+
+stop_recording:
+  target:
+    entity:
+      integration: agent_dvr
+      domain: camera
+
+enable_alerts:
+  target:
+    entity:
+      integration: agent_dvr
+      domain: camera
+
+disable_alerts:
+  target:
+    entity:
+      integration: agent_dvr
+      domain: camera
+
+snapshot:
+  target:
+    entity:
+      integration: agent_dvr
+      domain: camera

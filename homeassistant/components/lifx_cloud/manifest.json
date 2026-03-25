@@ -1,0 +1,8 @@
+{
+  "domain": "lifx_cloud",
+  "name": "LIFX Cloud",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/lifx_cloud",
+  "iot_class": "cloud_push",
+  "quality_scale": "legacy"
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "ps4",
+  "name": "Sony PlayStation 4",
+  "codeowners": ["@ktnrg45"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ps4",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["pyps4_2ndscreen"],
+  "requirements": ["pyps4-2ndscreen==1.3.1"]
+}

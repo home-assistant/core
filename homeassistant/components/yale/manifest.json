@@ -1,0 +1,18 @@
+{
+  "domain": "yale",
+  "name": "Yale Home",
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "cloud"],
+  "dhcp": [
+    {
+      "hostname": "yale-connect-plus",
+      "macaddress": "00177A*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/yale",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["socketio", "engineio", "yalexs"],
+  "requirements": ["yalexs==9.2.0", "yalexs-ble==3.3.0"]
+}

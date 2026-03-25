@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1,
+    "title": "The Matrix",
+    "year": 1999,
+    "hasFile": true,
+    "monitored": true,
+    "status": "released",
+    "sizeOnDisk": 8589934592,
+    "tmdbId": 603,
+    "imdbId": "tt0133093",
+    "path": "/movies/The Matrix (1999)",
+    "images": [
+      {
+        "coverType": "poster",
+        "url": "/MediaCover/1/poster.jpg",
+        "remoteUrl": "https://image.tmdb.org/t/p/original/testposter1.jpg"
+      },
+      {
+        "coverType": "fanart",
+        "url": "/MediaCover/1/fanart.jpg",
+        "remoteUrl": "https://image.tmdb.org/t/p/original/testfanart1.jpg"
+      }
+    ],
+    "statistics": {
+      "movieFileCount": 1,
+      "sizeOnDisk": 8589934592
+    }
+  },
+  {
+    "id": 2,
+    "title": "Inception",
+    "year": 2010,
+    "hasFile": false,
+    "monitored": true,
+    "status": "released",
+    "sizeOnDisk": 0,
+    "tmdbId": 27205,
+    "imdbId": "tt1375666",
+    "path": "/movies/Inception (2010)",
+    "images": [
+      {
+        "coverType": "poster",
+        "url": "/MediaCover/2/poster.jpg",
+        "remoteUrl": "https://image.tmdb.org/t/p/original/testposter2.jpg"
+      }
+    ],
+    "statistics": {
+      "movieFileCount": 0,
+      "sizeOnDisk": 0
+    }
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "domain": "tplink_lte",
+  "name": "TP-Link LTE",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/tplink_lte",
+  "iot_class": "local_polling",
+  "loggers": ["tp_connected"],
+  "quality_scale": "legacy",
+  "requirements": ["tp-connected==0.0.4"]
+}

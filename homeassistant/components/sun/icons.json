@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "solar_rising": {
+        "default": "mdi:weather-sunny-off",
+        "state": {
+          "off": "mdi:weather-sunset-down",
+          "on": "mdi:weather-sunset-up"
+        }
+      }
+    },
+    "sensor": {
+      "next_dawn": {
+        "default": "mdi:sun-clock"
+      },
+      "next_dusk": {
+        "default": "mdi:sun-clock"
+      },
+      "next_midnight": {
+        "default": "mdi:sun-clock"
+      },
+      "next_noon": {
+        "default": "mdi:sun-clock"
+      },
+      "next_rising": {
+        "default": "mdi:sun-clock"
+      },
+      "next_setting": {
+        "default": "mdi:sun-clock"
+      },
+      "solar_azimuth": {
+        "default": "mdi:sun-angle"
+      },
+      "solar_elevation": {
+        "default": "mdi:theme-light-dark"
+      }
+    }
+  }
+}

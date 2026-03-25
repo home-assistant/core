@@ -1,0 +1,12 @@
+{
+  "domain": "apcupsd",
+  "name": "APC UPS Daemon",
+  "codeowners": ["@yuxincs"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/apcupsd",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["apcaccess"],
+  "quality_scale": "platinum",
+  "requirements": ["aioapcaccess==1.0.0"]
+}

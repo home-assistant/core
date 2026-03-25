@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Connect to the API of your Advantage Air wall mounted tablet.",
+        "title": "[%key:common::action::connect%]"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while updating from the Advantage Air API: {error}"
+    }
+  },
+  "services": {
+    "set_time_to": {
+      "description": "Controls timers to turn the system on or off after a set number of minutes.",
+      "fields": {
+        "minutes": {
+          "description": "Minutes until action.",
+          "name": "Minutes"
+        }
+      },
+      "name": "Set time to"
+    }
+  }
+}

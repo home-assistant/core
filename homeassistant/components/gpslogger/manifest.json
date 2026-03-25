@@ -1,0 +1,9 @@
+{
+  "domain": "gpslogger",
+  "name": "GPSLogger",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/gpslogger",
+  "iot_class": "cloud_push"
+}

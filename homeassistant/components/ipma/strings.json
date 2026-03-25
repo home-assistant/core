@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "mode": "[%key:common::config_flow::data::mode%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+        "title": "[%key:common::config_flow::data::location%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fire_risk": {
+        "name": "Fire risk"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "weather_alert": {
+        "name": "Weather Alert",
+        "state": {
+          "green": "Green",
+          "orange": "Orange",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "api_endpoint_reachable": "IPMA API endpoint reachable"
+    }
+  }
+}

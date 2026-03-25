@@ -1,0 +1,5 @@
+{
+  "domain": "samsung",
+  "name": "Samsung",
+  "integrations": ["familyhub", "samsungtv", "syncthru"]
+}

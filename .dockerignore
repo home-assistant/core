@@ -1,0 +1,21 @@
+# General files
+.git
+.github
+config
+docs
+
+# Development
+.devcontainer
+.vscode
+.tool-versions
+
+# Test related files
+tests
+
+# Other virtualization methods
+venv
+.venv
+.vagrant
+
+# Temporary files
+**/__pycache__

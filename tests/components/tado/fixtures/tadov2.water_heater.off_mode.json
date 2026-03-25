@@ -1,0 +1,42 @@
+{
+  "tadoMode": "HOME",
+  "geolocationOverride": false,
+  "geolocationOverrideDisableTime": null,
+  "preparation": null,
+  "setting": {
+    "type": "HOT_WATER",
+    "power": "OFF",
+    "temperature": null
+  },
+  "overlayType": "MANUAL",
+  "overlay": {
+    "type": "MANUAL",
+    "setting": {
+      "type": "HOT_WATER",
+      "power": "OFF",
+      "temperature": null
+    },
+    "termination": {
+      "type": "MANUAL",
+      "typeSkillBasedApp": "MANUAL",
+      "projectedExpiry": null
+    }
+  },
+  "openWindow": null,
+  "nextScheduleChange": {
+    "start": "2020-03-10T22:00:00Z",
+    "setting": {
+      "type": "HOT_WATER",
+      "power": "OFF",
+      "temperature": null
+    }
+  },
+  "nextTimeBlock": {
+    "start": "2020-03-10T22:00:00.000Z"
+  },
+  "link": {
+    "state": "ONLINE"
+  },
+  "activityDataPoints": {},
+  "sensorDataPoints": {}
+}

@@ -1,0 +1,232 @@
+"""The tests for the hassio sensors."""
+
+from dataclasses import replace
+from datetime import timedelta
+import os
+from unittest.mock import AsyncMock, Mock, patch
+
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonState, InstalledAddonComplete
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.hassio import DOMAIN, HASSIO_UPDATE_INTERVAL
+from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
+
+
+@pytest.fixture(autouse=True)
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+    addon_stats: AsyncMock,
+    addon_changelog: AsyncMock,
+    resolution_info: AsyncMock,
+    jobs_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    homeassistant_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    addons_list: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    homeassistant_stats: AsyncMock,
+    supervisor_stats: AsyncMock,
+) -> None:
+    """Mock all setup requests."""
+    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
+    )
+
+    host_info.return_value = replace(host_info.return_value, agent_version="1.0.0")
+    addons_list.return_value[1] = replace(
+        addons_list.return_value[1], version_latest="3.2.0", update_available=True
+    )
+
+    def mock_addon_info(slug: str):
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
+        if slug == "test":
+            addon.name = "test"
+            addon.slug = "test"
+            addon.version = "2.0.0"
+            addon.version_latest = "2.0.1"
+            addon.update_available = True
+            addon.state = AddonState.STARTED
+            addon.url = "https://github.com/home-assistant/addons/test"
+            addon.auto_update = True
+        else:
+            addon.name = "test2"
+            addon.slug = "test2"
+            addon.version = "3.1.0"
+            addon.version_latest = "3.2.0"
+            addon.update_available = True
+            addon.state = AddonState.STOPPED
+            addon.url = "https://github.com"
+            addon.auto_update = False
+
+        return addon
+
+    addon_installed.side_effect = mock_addon_info
+
+
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@pytest.mark.parametrize(
+    ("entity_id", "expected"),
+    [
+        ("sensor.home_assistant_operating_system_version", "1.0.0"),
+        ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
+        ("sensor.home_assistant_host_os_agent_version", "1.0.0"),
+        ("sensor.home_assistant_core_cpu_percent", "0.99"),
+        ("sensor.home_assistant_supervisor_cpu_percent", "0.99"),
+        ("sensor.test_version", "2.0.0"),
+        ("sensor.test_newest_version", "2.0.1"),
+        ("sensor.test2_version", "3.1.0"),
+        ("sensor.test2_newest_version", "3.2.0"),
+        ("sensor.test_cpu_percent", "0.99"),
+        ("sensor.test2_cpu_percent", "unavailable"),
+        ("sensor.test_memory_percent", "4.59"),
+        ("sensor.test2_memory_percent", "unavailable"),
+    ],
+)
+async def test_sensor(
+    hass: HomeAssistant,
+    entity_id,
+    expected,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test hassio OS and addons sensor."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    # Verify that the entity is disabled by default.
+    assert hass.states.get(entity_id) is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the entity have the expected state.
+    state = hass.states.get(entity_id)
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@pytest.mark.parametrize(
+    ("entity_id", "expected"),
+    [
+        ("sensor.test_cpu_percent", "0.99"),
+        ("sensor.test_memory_percent", "4.59"),
+    ],
+)
+@patch.dict(os.environ, MOCK_ENVIRON)
+async def test_stats_addon_sensor(
+    hass: HomeAssistant,
+    entity_id,
+    expected,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    addon_stats: AsyncMock,
+) -> None:
+    """Test stats addons sensor."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass,
+        "hassio",
+        {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the entity is disabled by default.
+    assert hass.states.get(entity_id) is None
+
+    addon_stats.side_effect = SupervisorError
+    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Could not fetch stats" not in caplog.text
+
+    addon_stats.side_effect = None
+    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Could not fetch stats" not in caplog.text
+
+    # Enable the entity and wait for the reload to complete.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+    # Verify the entity is still enabled
+    assert entity_registry.async_get(entity_id).disabled_by is None
+
+    # The config entry just reloaded, so we need to wait for the next update
+    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id) is not None
+
+    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Verify that the entity have the expected state.
+    state = hass.states.get(entity_id)
+    assert state.state == expected
+
+    addon_stats.side_effect = SupervisorError
+    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert "Could not fetch stats" in caplog.text

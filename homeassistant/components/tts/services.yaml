@@ -1,0 +1,58 @@
+# Describes the format for available TTS services
+
+say:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          domain: media_player
+    message:
+      example: "My name is hanna"
+      required: true
+      selector:
+        text:
+    cache:
+      default: false
+      selector:
+        boolean:
+    language:
+      example: "ru"
+      selector:
+        text:
+    options:
+      advanced: true
+      example: platform specific
+      selector:
+        object:
+
+speak:
+  target:
+    entity:
+      domain: tts
+  fields:
+    media_player_entity_id:
+      required: true
+      selector:
+        entity:
+          domain: media_player
+    message:
+      example: "My name is hanna"
+      required: true
+      selector:
+        text:
+    cache:
+      default: true
+      selector:
+        boolean:
+    language:
+      example: "ru"
+      selector:
+        text:
+    options:
+      advanced: true
+      example: platform specific
+      selector:
+        object:
+
+clear_cache:

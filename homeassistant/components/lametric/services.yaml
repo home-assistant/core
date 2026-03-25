@@ -1,0 +1,111 @@
+chart:
+  fields:
+    device_id: &device_id
+      required: true
+      selector:
+        device:
+          integration: lametric
+    data:
+      required: true
+      example: "[1,2,3,4,5,4,3,2,1]"
+      selector:
+        object:
+    sound: &sound
+      required: false
+      selector:
+        select:
+          options:
+            - "alarm1"
+            - "alarm2"
+            - "alarm3"
+            - "alarm4"
+            - "alarm5"
+            - "alarm6"
+            - "alarm7"
+            - "alarm8"
+            - "alarm9"
+            - "alarm10"
+            - "alarm11"
+            - "alarm12"
+            - "alarm13"
+            - "bicycle"
+            - "car"
+            - "cash"
+            - "cat"
+            - "dog"
+            - "dog2"
+            - "energy"
+            - "knock-knock"
+            - "letter_email"
+            - "lose1"
+            - "lose2"
+            - "negative1"
+            - "negative2"
+            - "negative3"
+            - "negative4"
+            - "negative5"
+            - "notification"
+            - "notification2"
+            - "notification3"
+            - "notification4"
+            - "open_door"
+            - "positive1"
+            - "positive2"
+            - "positive3"
+            - "positive4"
+            - "positive5"
+            - "positive6"
+            - "statistic"
+            - "thunder"
+            - "water1"
+            - "water2"
+            - "win"
+            - "win2"
+            - "wind"
+            - "wind_short"
+          translation_key: sound
+    cycles: &cycles
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider
+    icon_type: &icon_type
+      required: false
+      default: "none"
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - "none"
+            - "info"
+            - "alert"
+          translation_key: icon_type
+    priority: &priority
+      required: false
+      default: "info"
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - "info"
+            - "warning"
+            - "critical"
+          translation_key: priority
+message:
+  fields:
+    device_id: *device_id
+    message:
+      required: true
+      selector:
+        text:
+    icon:
+      required: false
+      selector:
+        text:
+    sound: *sound
+    cycles: *cycles
+    icon_type: *icon_type
+    priority: *priority

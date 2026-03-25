@@ -1,0 +1,10 @@
+{
+  "domain": "pencom",
+  "name": "Pencom",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/pencom",
+  "iot_class": "local_polling",
+  "loggers": ["pencompy"],
+  "quality_scale": "legacy",
+  "requirements": ["pencompy==0.0.3"]
+}

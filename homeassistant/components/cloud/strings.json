@@ -1,0 +1,103 @@
+{
+  "entity": {
+    "ai_task": {
+      "cloud_ai": {
+        "name": "Home Assistant Cloud AI"
+      }
+    }
+  },
+  "exceptions": {
+    "backup_size_too_large": {
+      "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
+    }
+  },
+  "issues": {
+    "connection_error": {
+      "description": "You do not have a connection to Home Assistant Cloud. Check your network.",
+      "title": "No connection"
+    },
+    "deprecated_gender": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The `{deprecated_option}` option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_option}` option with an option for a supported `{replacement_option}` instead.",
+            "title": "[%key:component::cloud::issues::deprecated_voice::title%]"
+          }
+        }
+      },
+      "title": "The {deprecated_option} text-to-speech option is deprecated"
+    },
+    "deprecated_tts_platform_config": {
+      "description": "The whole `platform: cloud` entry under the `tts:` section in configuration.yaml is deprecated and should be removed. You can use the UI to change settings for the Cloud text-to-speech platform. Please adjust your configuration.yaml and restart Home Assistant to fix this issue.",
+      "title": "The Cloud text-to-speech platform configuration is deprecated"
+    },
+    "deprecated_voice": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The `{deprecated_voice}`voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_voice}` with another voice like eg. `{replacement_voice}`.",
+            "title": "[%key:component::cloud::issues::deprecated_voice::title%]"
+          }
+        }
+      },
+      "title": "A deprecated voice was used"
+    },
+    "legacy_subscription": {
+      "fix_flow": {
+        "abort": {
+          "operation_took_too_long": "The operation took too long. Please try again later."
+        },
+        "step": {
+          "confirm_change_plan": {
+            "description": "We've recently updated our subscription system. To continue using Home Assistant Cloud you need to one-time approve the change in PayPal.\n\nThis takes 1 minute and will not increase the price."
+          }
+        }
+      },
+      "title": "Legacy subscription detected"
+    },
+    "no_subscription": {
+      "description": "You do not have a Home Assistant Cloud subscription. Subscribe at {account_url}.",
+      "title": "No subscription detected"
+    },
+    "reset_bad_custom_domain_configuration": {
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Cloud. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page.",
+      "title": "Custom domain ignored"
+    },
+    "subscription_expired": {
+      "description": "Your Home Assistant Cloud subscription has expired. Resubscribe at {account_url}.",
+      "title": "Subscription has expired"
+    },
+    "warn_bad_custom_domain_configuration": {
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. Please check the DNS configuration of your domain and make sure it points to the correct CNAME.",
+      "title": "Detected wrong custom domain configuration"
+    }
+  },
+  "services": {
+    "remote_connect": {
+      "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Cloud connection.",
+      "name": "Enable remote access"
+    },
+    "remote_disconnect": {
+      "description": "Disconnects the instance UI from Home Assistant Cloud. This disables access to it from outside your local network.",
+      "name": "Disable remote access"
+    }
+  },
+  "system_health": {
+    "info": {
+      "alexa_enabled": "Alexa enabled",
+      "can_reach_cert_server": "Reach certificate server",
+      "can_reach_cloud": "Reach Home Assistant Cloud",
+      "can_reach_cloud_auth": "Reach authentication server",
+      "certificate_status": "Certificate status",
+      "google_enabled": "Google enabled",
+      "instance_id": "Instance ID",
+      "logged_in": "Logged In",
+      "relayer_connected": "Relayer connected",
+      "relayer_region": "Relayer region",
+      "remote_connected": "Remote connected",
+      "remote_enabled": "Remote enabled",
+      "remote_server": "Remote server",
+      "subscription_expiration": "Subscription expiration"
+    }
+  }
+}

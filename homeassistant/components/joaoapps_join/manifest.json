@@ -1,0 +1,10 @@
+{
+  "domain": "joaoapps_join",
+  "name": "Joaoapps Join",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/joaoapps_join",
+  "iot_class": "cloud_push",
+  "loggers": ["pyjoin"],
+  "quality_scale": "legacy",
+  "requirements": ["python-join-api==0.0.9"]
+}

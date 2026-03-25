@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_mfa": "Unknown error occurred during MFA setup"
+    },
+    "step": {
+      "installation": {
+        "data": {
+          "giid": "Installation"
+        },
+        "description": "Home Assistant found multiple Verisure installations in your My Pages account. Please, select the installation to add to Home Assistant."
+      },
+      "mfa": {
+        "data": {
+          "code": "Verification code",
+          "description": "Your account has 2-step verification enabled. Please enter the verification code Verisure sends to you."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with your Verisure My Pages account.",
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_mfa": {
+        "data": {
+          "code": "[%key:component::verisure::config::step::mfa::data::code%]",
+          "description": "[%key:component::verisure::config::step::mfa::data::description%]"
+        }
+      },
+      "user": {
+        "data": {
+          "description": "Sign in with your Verisure My Pages account.",
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet status"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "lock_code_digits": "Number of digits in PIN code for locks"
+        }
+      }
+    }
+  },
+  "services": {
+    "capture_smartcam": {
+      "description": "Captures a new image from a Verisure SmartCam.",
+      "name": "Capture SmartCam image"
+    },
+    "disable_autolock": {
+      "description": "Disables autolock of a Verisure Lockguard Smartlock.",
+      "name": "Disable autolock"
+    },
+    "enable_autolock": {
+      "description": "Enables autolock of a Verisure Lockguard Smartlock.",
+      "name": "Enable autolock"
+    }
+  }
+}

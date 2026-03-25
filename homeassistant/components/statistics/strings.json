@@ -1,0 +1,128 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "missing_keep_last_sample": "The sensor configuration must provide 'Max age' if 'Keep last sample' is true",
+      "missing_max_age_or_sampling_size": "The sensor configuration must provide 'Max age' and/or 'Sampling size'"
+    },
+    "step": {
+      "options": {
+        "data": {
+          "entity_id": "[%key:component::statistics::config::step::user::data::entity_id%]",
+          "keep_last_sample": "Keep last sample",
+          "max_age": "Max age",
+          "percentile": "Percentile",
+          "precision": "Precision",
+          "sampling_size": "Sampling size",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data::state_characteristic%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::statistics::config::step::user::data_description::entity_id%]",
+          "keep_last_sample": "Defines whether the most recent sampled value should be preserved regardless of the 'Max age' setting.",
+          "max_age": "Maximum age of source sensor measurements stored.",
+          "percentile": "Only relevant in combination with the 'Percentile' characteristic. Must be a value between 1 and 99.",
+          "precision": "Defines the number of decimal places of the calculated sensor value.",
+          "sampling_size": "Maximum number of source sensor measurements stored.",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data_description::state_characteristic%]"
+        },
+        "description": "Read the documentation for further details on how to configure the statistics sensor using these options."
+      },
+      "state_characteristic": {
+        "data": {
+          "state_characteristic": "Statistic characteristic"
+        },
+        "data_description": {
+          "state_characteristic": "The statistic characteristic that should be used as the state of the sensor."
+        },
+        "description": "Read the documentation for further details on available options and how to use them."
+      },
+      "user": {
+        "data": {
+          "entity_id": "Entity",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "entity_id": "Entity to get statistics from.",
+          "name": "Name for the created entity."
+        },
+        "description": "Create a statistics sensor"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "missing_keep_last_sample": "[%key:component::statistics::config::error::missing_keep_last_sample%]",
+      "missing_max_age_or_sampling_size": "[%key:component::statistics::config::error::missing_max_age_or_sampling_size%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "entity_id": "[%key:component::statistics::config::step::user::data::entity_id%]",
+          "keep_last_sample": "[%key:component::statistics::config::step::options::data::keep_last_sample%]",
+          "max_age": "[%key:component::statistics::config::step::options::data::max_age%]",
+          "percentile": "[%key:component::statistics::config::step::options::data::percentile%]",
+          "precision": "[%key:component::statistics::config::step::options::data::precision%]",
+          "sampling_size": "[%key:component::statistics::config::step::options::data::sampling_size%]",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data::state_characteristic%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::statistics::config::step::user::data_description::entity_id%]",
+          "keep_last_sample": "[%key:component::statistics::config::step::options::data_description::keep_last_sample%]",
+          "max_age": "[%key:component::statistics::config::step::options::data_description::max_age%]",
+          "percentile": "[%key:component::statistics::config::step::options::data_description::percentile%]",
+          "precision": "[%key:component::statistics::config::step::options::data_description::precision%]",
+          "sampling_size": "[%key:component::statistics::config::step::options::data_description::sampling_size%]",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data_description::state_characteristic%]"
+        },
+        "description": "[%key:component::statistics::config::step::options::description%]"
+      }
+    }
+  },
+  "selector": {
+    "state_characteristic": {
+      "options": {
+        "average_linear": "Average linear",
+        "average_step": "Average step",
+        "average_timeless": "Average timeless",
+        "change": "Change",
+        "change_sample": "Change sample",
+        "change_second": "Change second",
+        "count": "Count",
+        "count_off": "Count off",
+        "count_on": "Count on",
+        "datetime_newest": "Newest datetime",
+        "datetime_oldest": "Oldest datetime",
+        "datetime_value_max": "Max value datetime",
+        "datetime_value_min": "Min value datetime",
+        "distance_95_percent_of_values": "Distance 95% of values",
+        "distance_99_percent_of_values": "Distance 99% of values",
+        "distance_absolute": "Absolute distance",
+        "mean": "Mean",
+        "mean_circular": "Mean circular",
+        "median": "Median",
+        "noisiness": "Noisiness",
+        "percentile": "Percentile",
+        "standard_deviation": "Standard deviation",
+        "sum": "Sum",
+        "sum_differences": "Sum of differences",
+        "sum_differences_nonnegative": "Sum of differences non-negative",
+        "total": "Total",
+        "value_max": "Max value",
+        "value_min": "Min value",
+        "variance": "Variance"
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "description": "Reloads statistics sensors from the YAML-configuration.",
+      "name": "[%key:common::action::reload%]"
+    }
+  },
+  "title": "Statistics"
+}

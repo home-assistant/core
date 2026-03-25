@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "away_mode": {
+        "name": "Away mode"
+      }
+    },
+    "sensor": {
+      "daily_usage": {
+        "name": "Daily usage"
+      },
+      "monthly_usage": {
+        "name": "Monthly usage"
+      },
+      "yearly_usage": {
+        "name": "Yearly usage"
+      }
+    }
+  },
+  "services": {
+    "set_away_mode": {
+      "description": "Sets the home/away mode for a Streamlabs Water Monitor.",
+      "fields": {
+        "away_mode": {
+          "description": "Home or away.",
+          "name": "Away mode"
+        },
+        "location_id": {
+          "description": "The location ID of the Streamlabs Water Monitor.",
+          "name": "Location ID"
+        }
+      },
+      "name": "Set away mode"
+    }
+  }
+}

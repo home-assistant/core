@@ -1,0 +1,130 @@
+"""Support for covers."""
+
+from __future__ import annotations
+
+from typing import Any, cast
+
+from aiocomelit import ComelitSerialBridgeObject
+from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
+
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+
+from .const import ObjectClassType
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call, new_device_listener
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ComelitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Comelit covers."""
+
+    coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
+
+    def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            ComelitCoverEntity(coordinator, device, config_entry.entry_id)
+            for device in coordinator.data[dev_type].values()
+            if device in new_devices
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        new_device_listener(coordinator, _add_new_entities, COVER)
+    )
+
+
+class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
+    """Cover device."""
+
+    _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: ComelitSerialBridge,
+        device: ComelitSerialBridgeObject,
+        config_entry_entry_id: str,
+    ) -> None:
+        """Init cover entity."""
+        super().__init__(coordinator, device, config_entry_entry_id)
+        # Device doesn't provide a status so we assume UNKNOWN at first startup
+        self._last_action: int | None = None
+
+    def _current_action(self, action: str) -> bool:
+        """Return the current cover action."""
+        is_moving = self.device_status == STATE_COVER.index(action)
+        if is_moving:
+            self._last_action = STATE_COVER.index(action)
+        return is_moving
+
+    @property
+    def device_status(self) -> int:
+        """Return current device status."""
+        return cast("int", self.coordinator.data[COVER][self._device.index].status)
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed."""
+
+        if self._last_action:
+            return self._last_action == STATE_COVER.index("closing")
+
+        return None
+
+    @property
+    def is_closing(self) -> bool:
+        """Return if the cover is closing."""
+        return bool(self._current_action("closing"))
+
+    @property
+    def is_opening(self) -> bool:
+        """Return if the cover is opening."""
+        return self._current_action("opening")
+
+    @bridge_api_call
+    async def _cover_set_state(self, action: int, state: int) -> None:
+        """Set desired cover state."""
+        await self.coordinator.api.set_device_status(COVER, self._device.index, action)
+        self.coordinator.data[COVER][self._device.index].status = state
+        self.async_write_ha_state()
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close cover."""
+        await self._cover_set_state(STATE_OFF, 2)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open cover."""
+        await self._cover_set_state(STATE_ON, 1)
+
+    async def async_stop_cover(self, **_kwargs: Any) -> None:
+        """Stop the cover."""
+        if not self.is_closing and not self.is_opening:
+            return
+
+        action = STATE_ON if self.is_closing else STATE_OFF
+        await self._cover_set_state(action, 0)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+
+        await super().async_added_to_hass()
+
+        if (state := await self.async_get_last_state()) is not None:
+            if state.state == CoverState.CLOSED:
+                self._last_action = STATE_COVER.index(CoverState.CLOSING)
+            if state.state == CoverState.OPEN:
+                self._last_action = STATE_COVER.index(CoverState.OPENING)
+
+            self._attr_is_closed = state.state == CoverState.CLOSED

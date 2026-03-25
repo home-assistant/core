@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up iZone?"
+      }
+    }
+  },
+  "services": {
+    "airflow_max": {
+      "description": "Sets the airflow maximum percent for a zone.",
+      "fields": {
+        "airflow": {
+          "description": "[%key:component::izone::services::airflow_min::fields::airflow::description%]",
+          "name": "[%key:component::izone::services::airflow_min::fields::airflow::name%]"
+        }
+      },
+      "name": "Set maximum airflow"
+    },
+    "airflow_min": {
+      "description": "Sets the airflow minimum percent for a zone.",
+      "fields": {
+        "airflow": {
+          "description": "Airflow percent.",
+          "name": "Percent"
+        }
+      },
+      "name": "Set minimum airflow"
+    }
+  }
+}

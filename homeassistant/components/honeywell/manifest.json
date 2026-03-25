@@ -1,0 +1,11 @@
+{
+  "domain": "honeywell",
+  "name": "Honeywell Total Connect Comfort (US)",
+  "codeowners": ["@rdfurman", "@mkmer"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/honeywell",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["somecomfort"],
+  "requirements": ["AIOSomecomfort==0.0.35"]
+}

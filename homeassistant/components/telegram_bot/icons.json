@@ -1,0 +1,68 @@
+{
+  "entity": {
+    "event": {
+      "update_event": {
+        "default": "mdi:message-reply"
+      }
+    }
+  },
+  "services": {
+    "answer_callback_query": {
+      "service": "mdi:check"
+    },
+    "delete_message": {
+      "service": "mdi:delete"
+    },
+    "download_file": {
+      "service": "mdi:paperclip"
+    },
+    "edit_caption": {
+      "service": "mdi:pencil"
+    },
+    "edit_message": {
+      "service": "mdi:pencil"
+    },
+    "edit_message_media": {
+      "service": "mdi:pencil"
+    },
+    "edit_replymarkup": {
+      "service": "mdi:pencil"
+    },
+    "leave_chat": {
+      "service": "mdi:exit-run"
+    },
+    "send_animation": {
+      "service": "mdi:animation"
+    },
+    "send_chat_action": {
+      "service": "mdi:send"
+    },
+    "send_document": {
+      "service": "mdi:file-document"
+    },
+    "send_location": {
+      "service": "mdi:map-marker"
+    },
+    "send_message": {
+      "service": "mdi:send"
+    },
+    "send_photo": {
+      "service": "mdi:camera"
+    },
+    "send_poll": {
+      "service": "mdi:poll"
+    },
+    "send_sticker": {
+      "service": "mdi:sticker"
+    },
+    "send_video": {
+      "service": "mdi:video"
+    },
+    "send_voice": {
+      "service": "mdi:microphone"
+    },
+    "set_message_reaction": {
+      "service": "mdi:emoticon-happy"
+    }
+  }
+}

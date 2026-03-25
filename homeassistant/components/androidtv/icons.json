@@ -1,0 +1,16 @@
+{
+  "services": {
+    "adb_command": {
+      "service": "mdi:console"
+    },
+    "download": {
+      "service": "mdi:download"
+    },
+    "learn_sendevent": {
+      "service": "mdi:remote"
+    },
+    "upload": {
+      "service": "mdi:upload"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "pjlink",
+  "name": "PJLink",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/pjlink",
+  "iot_class": "local_polling",
+  "loggers": ["pypjlink"],
+  "quality_scale": "legacy",
+  "requirements": ["pypjlink2==1.2.1"]
+}

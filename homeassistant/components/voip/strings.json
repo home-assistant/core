@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "description": "Receive Voice over IP calls to interact with Assist."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "call_in_progress": {
+        "name": "Call in progress"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      },
+      "pipeline_n": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline_n::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      },
+      "vad_sensitivity": {
+        "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
+        "state": {
+          "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
+          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
+          "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      }
+    },
+    "switch": {
+      "allow_call": {
+        "name": "Allow calls"
+      }
+    }
+  },
+  "exceptions": {
+    "non_tts_announcement": {
+      "message": "VoIP does not currently support non-TTS announcements"
+    }
+  },
+  "issues": {
+    "assist_in_progress_deprecated": {
+      "fix_flow": {
+        "step": {
+          "confirm_disable_entity": {
+            "description": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::fix_flow::step::confirm_disable_entity::description%]"
+          }
+        }
+      },
+      "title": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::title%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sip_port": "SIP port",
+          "sip_user": "SIP user"
+        }
+      }
+    }
+  }
+}

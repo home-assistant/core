@@ -1,0 +1,115 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_konn_panel": "Not a recognized Konnected.io device",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Model: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected alarm panel settings.",
+        "title": "Konnected device ready"
+      },
+      "import_confirm": {
+        "description": "A Konnected alarm panel with ID {id} has been discovered in configuration.yaml. This flow will allow you to import it into a config entry.",
+        "title": "Import Konnected device"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Please enter the host information for your Konnected panel."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_firmware": {
+      "description": "Konnected's integration is deprecated and Konnected strongly recommends migrating to their ESPHome based firmware and integration by following the guide at {kb_page_url}. After this migration, make sure you don't have any Konnected YAML configuration left in your configuration.yaml file and remove this integration from Home Assistant.",
+      "title": "Konnected firmware is deprecated"
+    }
+  },
+  "options": {
+    "abort": {
+      "not_konn_panel": "[%key:component::konnected::config::abort::not_konn_panel%]"
+    },
+    "error": {
+      "bad_host": "Invalid custom API host URL"
+    },
+    "step": {
+      "options_binary": {
+        "data": {
+          "inverse": "Invert the open/close state",
+          "name": "[%key:common::config_flow::data::name%]",
+          "type": "Binary sensor type"
+        },
+        "description": "{zone} options",
+        "title": "Configure binary sensor"
+      },
+      "options_digital": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "poll_interval": "Poll interval (minutes)",
+          "type": "Sensor type"
+        },
+        "description": "[%key:component::konnected::options::step::options_binary::description%]",
+        "title": "Configure digital sensor"
+      },
+      "options_io": {
+        "data": {
+          "1": "Zone 1",
+          "2": "Zone 2",
+          "3": "Zone 3",
+          "4": "Zone 4",
+          "5": "Zone 5",
+          "6": "Zone 6",
+          "7": "Zone 7",
+          "out": "OUT"
+        },
+        "description": "Discovered a {model} at {host}. Select the base configuration of each I/O below - depending on the I/O it may allow for binary sensors (open/close contacts), digital sensors (dht and ds18b20), or switchable outputs. You'll be able to configure detailed options in the next steps.",
+        "title": "Configure I/O"
+      },
+      "options_io_ext": {
+        "data": {
+          "8": "Zone 8",
+          "9": "Zone 9",
+          "10": "Zone 10",
+          "11": "Zone 11",
+          "12": "Zone 12",
+          "alarm1": "ALARM1",
+          "alarm2_out2": "OUT2/ALARM2",
+          "out1": "OUT1"
+        },
+        "description": "Select the configuration of the remaining I/O below. You'll be able to configure detailed options in the next steps.",
+        "title": "Configure extended I/O"
+      },
+      "options_misc": {
+        "data": {
+          "api_host": "Custom API host URL",
+          "blink": "Blink panel LED on when sending state change",
+          "discovery": "Respond to discovery requests on your network",
+          "override_api_host": "Override default Home Assistant API host URL"
+        },
+        "description": "Please select the desired behavior for your panel",
+        "title": "Configure misc"
+      },
+      "options_switch": {
+        "data": {
+          "activation": "Output when on",
+          "momentary": "Pulse duration (ms)",
+          "more_states": "Configure additional states for this zone",
+          "name": "[%key:common::config_flow::data::name%]",
+          "pause": "Pause between pulses (ms)",
+          "repeat": "Times to repeat (-1=infinite)"
+        },
+        "description": "{zone} options: state {state}",
+        "title": "Configure switchable output"
+      }
+    }
+  }
+}

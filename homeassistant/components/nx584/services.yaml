@@ -1,0 +1,27 @@
+# Describes the format for available nx584 services
+
+bypass_zone:
+  target:
+    entity:
+      integration: nx584
+      domain: alarm_control_panel
+  fields:
+    zone:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255
+
+unbypass_zone:
+  target:
+    entity:
+      integration: nx584
+      domain: alarm_control_panel
+  fields:
+    zone:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255

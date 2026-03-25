@@ -1,0 +1,11 @@
+{
+  "domain": "androidtv",
+  "name": "Android Debug Bridge",
+  "codeowners": ["@JeffLIrion", "@ollo69"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/androidtv",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["adb_shell", "androidtv"],
+  "requirements": ["adb-shell[async]==0.4.4", "androidtv[async]==0.0.75"]
+}

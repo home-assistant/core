@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "button": {
+      "favorite_now_playing": {
+        "default": "mdi:heart-plus"
+      }
+    }
+  },
+  "services": {
+    "get_library": { "service": "mdi:music-box-multiple" },
+    "get_queue": { "service": "mdi:playlist-music" },
+    "play_announcement": { "service": "mdi:bullhorn" },
+    "play_media": { "service": "mdi:play" },
+    "search": { "service": "mdi:magnify" },
+    "transfer_queue": { "service": "mdi:transfer" }
+  }
+}

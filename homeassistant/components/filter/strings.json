@@ -1,0 +1,249 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "lowpass": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "time_constant": "Time constant",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "time_constant": "Loosely relates to the amount of time it takes for a state to influence the output.",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "outlier": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "Precision",
+          "radius": "Radius",
+          "window_size": "Window size"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "Defines the number of decimal places of the calculated sensor value.",
+          "radius": "Band radius from median of previous states.",
+          "window_size": "Size of the window of previous states."
+        },
+        "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+      },
+      "range": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "lower_bound": "Lower bound",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "upper_bound": "Upper bound"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "lower_bound": "Lower bound for filter range.",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "upper_bound": "Upper bound for filter range."
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "throttle": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "time_simple_moving_average": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "type": "Type",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "type": "Defines the type of Simple Moving Average.",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "time_throttle": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "user": {
+        "data": {
+          "entity_id": "Entity",
+          "filter": "Filter",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "entity_id": "Entity to filter from.",
+          "filter": "Select filter to configure.",
+          "name": "Name for the created entity."
+        },
+        "description": "Add a filter sensor. UI configuration is limited to a single filter, use YAML for filter chain."
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "lowpass": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "time_constant": "[%key:component::filter::config::step::lowpass::data::time_constant%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "time_constant": "[%key:component::filter::config::step::lowpass::data_description::time_constant%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "outlier": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "radius": "[%key:component::filter::config::step::outlier::data::radius%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "radius": "[%key:component::filter::config::step::outlier::data_description::radius%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "range": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "lower_bound": "[%key:component::filter::config::step::range::data::lower_bound%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "upper_bound": "[%key:component::filter::config::step::range::data::upper_bound%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "lower_bound": "[%key:component::filter::config::step::range::data_description::lower_bound%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "upper_bound": "[%key:component::filter::config::step::range::data_description::upper_bound%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "throttle": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "time_simple_moving_average": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "type": "[%key:component::filter::config::step::time_simple_moving_average::data::type%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "type": "[%key:component::filter::config::step::time_simple_moving_average::data_description::type%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      },
+      "time_throttle": {
+        "data": {
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]",
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]"
+        },
+        "description": "[%key:component::filter::config::step::outlier::description%]"
+      }
+    }
+  },
+  "selector": {
+    "filter": {
+      "options": {
+        "lowpass": "Lowpass",
+        "outlier": "Outlier",
+        "range": "Range",
+        "throttle": "Throttle",
+        "time_simple_moving_average": "Moving average (time-based)",
+        "time_throttle": "Time throttle"
+      }
+    },
+    "type": {
+      "options": {
+        "last": "Last"
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "description": "Reloads filters from the YAML-configuration.",
+      "name": "[%key:common::action::reload%]"
+    }
+  },
+  "title": "Filter"
+}

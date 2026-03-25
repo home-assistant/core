@@ -1,0 +1,94 @@
+{
+  "issues": {
+    "duplicate_entity_entry": {
+      "description": "An address can only be associated with one entity. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "Modbus {sub_1} address {sub_2} is duplicate, second entry not loaded."
+    },
+    "duplicate_entity_name": {
+      "description": "An entity name must be unique. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "Modbus {sub_1} is duplicate, second entry not loaded."
+    },
+    "duplicate_modbus_entry": {
+      "description": "Please update {sub_2} and/or {sub_1} for the entry in your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "Modbus {sub_2} host/port {sub_1} is duplicate, second entry not loaded."
+    },
+    "missing_modbus_name": {
+      "description": "Please add `{sub_1}` key to the {integration} entry with host `{sub_2}` in your configuration.yaml file and restart Home Assistant to fix this issue\n\n. `{sub_1}: {sub_3}` have been added.",
+      "title": "Modbus entry with host {sub_2} missing name"
+    },
+    "no_entities": {
+      "description": "Please add at least one entity to Modbus {sub_1} in your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "Modbus {sub_1} contain no entities, entry not loaded."
+    }
+  },
+  "services": {
+    "reload": {
+      "description": "Reloads all Modbus entities.",
+      "name": "[%key:common::action::reload%]"
+    },
+    "restart": {
+      "description": "Restarts a Modbus hub (if running, stops then starts).",
+      "fields": {
+        "hub": {
+          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]",
+          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]"
+        }
+      },
+      "name": "[%key:common::action::restart%]"
+    },
+    "stop": {
+      "description": "Stops a Modbus hub.",
+      "fields": {
+        "hub": {
+          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]",
+          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]"
+        }
+      },
+      "name": "[%key:common::action::stop%]"
+    },
+    "write_coil": {
+      "description": "Writes to a Modbus coil.",
+      "fields": {
+        "address": {
+          "description": "Address of the register to write to.",
+          "name": "Address"
+        },
+        "hub": {
+          "description": "Modbus hub name.",
+          "name": "Hub"
+        },
+        "slave": {
+          "description": "Address of the Modbus unit/server.",
+          "name": "Server"
+        },
+        "state": {
+          "description": "State to write.",
+          "name": "State"
+        }
+      },
+      "name": "Write coil"
+    },
+    "write_register": {
+      "description": "Writes to a Modbus holding register.",
+      "fields": {
+        "address": {
+          "description": "Address of the holding register to write to.",
+          "name": "[%key:component::modbus::services::write_coil::fields::address::name%]"
+        },
+        "hub": {
+          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]",
+          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]"
+        },
+        "slave": {
+          "description": "[%key:component::modbus::services::write_coil::fields::slave::description%]",
+          "name": "[%key:component::modbus::services::write_coil::fields::slave::name%]"
+        },
+        "value": {
+          "description": "Value (single value or array) to write.",
+          "name": "Value"
+        }
+      },
+      "name": "Write register"
+    }
+  }
+}

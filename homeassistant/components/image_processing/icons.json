@@ -1,0 +1,7 @@
+{
+  "services": {
+    "scan": {
+      "service": "mdi:qrcode-scan"
+    }
+  }
+}

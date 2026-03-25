@@ -1,0 +1,10 @@
+{
+  "domain": "garages_amsterdam",
+  "name": "Garages Amsterdam",
+  "codeowners": ["@klaasnicolaas"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/garages_amsterdam",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["odp-amsterdam==6.1.2"]
+}

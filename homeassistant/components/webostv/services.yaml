@@ -1,0 +1,49 @@
+# Describes the format for available webostv services
+
+button:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: webostv
+          domain: media_player
+    button:
+      required: true
+      example: "LEFT"
+      selector:
+        text:
+
+command:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: webostv
+          domain: media_player
+    command:
+      required: true
+      example: "system.launcher/open"
+      selector:
+        text:
+    payload:
+      example: >-
+        target: https://www.google.com
+      advanced: true
+      selector:
+        object:
+
+select_sound_output:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: webostv
+          domain: media_player
+    sound_output:
+      required: true
+      example: "external_speaker"
+      selector:
+        text:

@@ -1,0 +1,87 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_devices_found": "No devices found",
+      "not_supported": "Device not supported"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "mode": {
+        "name": "Brushing mode",
+        "state": {
+          "daily_clean": "Daily clean",
+          "deep_clean": "Deep clean",
+          "gum_care": "Gum care",
+          "intense": "Intense",
+          "massage": "Massage",
+          "off": "[%key:common::state::off%]",
+          "sensitive": "Sensitive",
+          "settings": "Settings",
+          "super_sensitive": "Super sensitive",
+          "tongue_cleaning": "Tongue clean",
+          "turbo": "Turbo",
+          "whiten": "[%key:component::oralb::entity::sensor::mode::state::whitening%]",
+          "whitening": "Whiten"
+        }
+      },
+      "number_of_sectors": {
+        "name": "Number of sectors"
+      },
+      "pressure": {
+        "name": "Pressure",
+        "state": {
+          "button_pressed": "Button pressed",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "normal": "[%key:common::state::normal%]",
+          "power_button_pressed": "Power button pressed"
+        }
+      },
+      "sector": {
+        "name": "Sector",
+        "state": {
+          "no_sector": "No sector",
+          "sector_1": "Sector 1",
+          "sector_2": "Sector 2",
+          "sector_3": "Sector 3",
+          "sector_4": "Sector 4",
+          "success": "Success"
+        }
+      },
+      "sector_timer": {
+        "name": "Sector timer"
+      },
+      "toothbrush_state": {
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "final_test": "Final test",
+          "flight_menu": "Flight menu",
+          "idle": "[%key:common::state::idle%]",
+          "initializing": "Initializing",
+          "off": "[%key:common::state::off%]",
+          "pcb_test": "PCB test",
+          "running": "Running",
+          "selection_menu": "Selection menu",
+          "setup": "Setup",
+          "sleeping": "Sleeping",
+          "transport": "Transport"
+        }
+      }
+    }
+  }
+}

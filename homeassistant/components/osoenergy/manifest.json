@@ -1,0 +1,10 @@
+{
+  "domain": "osoenergy",
+  "name": "OSO Energy",
+  "codeowners": ["@osohotwateriot"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/osoenergy",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["pyosoenergyapi==1.2.4"]
+}

@@ -1,0 +1,19 @@
+{
+  "domain": "fjaraskupan",
+  "name": "Fj\u00e4r\u00e5skupan",
+  "bluetooth": [
+    {
+      "connectable": false,
+      "manufacturer_data_start": [79, 68, 70, 74, 65, 82],
+      "manufacturer_id": 20296
+    }
+  ],
+  "codeowners": ["@elupus"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/fjaraskupan",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["bleak", "fjaraskupan"],
+  "requirements": ["fjaraskupan==2.3.3"]
+}

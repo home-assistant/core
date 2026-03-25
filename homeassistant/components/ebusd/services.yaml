@@ -1,0 +1,7 @@
+write:
+  fields:
+    call:
+      required: true
+      example: '{"name": "Hc1MaxFlowTempDesired", "value": 21}'
+      selector:
+        object:

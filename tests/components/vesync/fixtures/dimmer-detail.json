@@ -1,0 +1,19 @@
+{
+  "code": 0,
+  "msg": "request success",
+  "traceId": "1234",
+  "result": {
+    "devicename": "Test Dimmer",
+    "brightness": 50,
+    "indicatorlightStatus": "on",
+    "rgbStatus": "on",
+    "rgbValue": {
+      "red": 50,
+      "blue": 100,
+      "green": 225
+    },
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "activeTime": 100
+  }
+}

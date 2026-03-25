@@ -1,0 +1,37 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::button::title%]",
+      "state_attributes": {
+        "event_type": {
+          "name": "Event type"
+        },
+        "event_types": {
+          "name": "Event types"
+        }
+      }
+    },
+    "button": {
+      "name": "Button"
+    },
+    "doorbell": {
+      "name": "Doorbell"
+    },
+    "motion": {
+      "name": "Motion"
+    }
+  },
+  "title": "Event",
+  "triggers": {
+    "received": {
+      "description": "Triggers after one or more event entities receive a matching event.",
+      "fields": {
+        "event_type": {
+          "description": "The event types to trigger on.",
+          "name": "Event type"
+        }
+      },
+      "name": "Event received"
+    }
+  }
+}

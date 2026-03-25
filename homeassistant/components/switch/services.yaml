@@ -1,0 +1,16 @@
+# Describes the format for available switch services
+
+turn_on:
+  target:
+    entity:
+      domain: switch
+
+turn_off:
+  target:
+    entity:
+      domain: switch
+
+toggle:
+  target:
+    entity:
+      domain: switch

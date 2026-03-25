@@ -1,0 +1,89 @@
+# Describes the format for available cover services
+
+open_cover:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.OPEN
+
+close_cover:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.CLOSE
+
+toggle:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - - cover.CoverEntityFeature.CLOSE
+          - cover.CoverEntityFeature.OPEN
+
+set_cover_position:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.SET_POSITION
+  fields:
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+stop_cover:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.STOP
+
+open_cover_tilt:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.OPEN_TILT
+
+close_cover_tilt:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.CLOSE_TILT
+
+toggle_cover_tilt:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - - cover.CoverEntityFeature.CLOSE_TILT
+          - cover.CoverEntityFeature.OPEN_TILT
+
+set_cover_tilt_position:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.SET_TILT_POSITION
+  fields:
+    tilt_position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+stop_cover_tilt:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.STOP_TILT

@@ -1,0 +1,91 @@
+get_process_by_id:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    id:
+      required: true
+      example: 1234
+      selector:
+        number:
+get_processes_by_name:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    name:
+      required: true
+      example: "chrome.exe"
+      selector:
+        text:
+open_path:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    path:
+      required: true
+      example: "C:\\test\\image.png"
+      selector:
+        text:
+open_url:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    url:
+      required: true
+      example: "https://www.home-assistant.io"
+      selector:
+        text:
+send_keypress:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    key:
+      required: true
+      example: "audio_play"
+      selector:
+        text:
+send_text:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    text:
+      required: true
+      example: "Hello world"
+      selector:
+        text:
+power_command:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    command:
+      required: true
+      example: "sleep"
+      selector:
+        select:
+          options:
+            - "hibernate"
+            - "lock"
+            - "logout"
+            - "restart"
+            - "shutdown"
+            - "sleep"

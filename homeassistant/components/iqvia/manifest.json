@@ -1,0 +1,11 @@
+{
+  "domain": "iqvia",
+  "name": "IQVIA",
+  "codeowners": ["@bachya"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/iqvia",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyiqvia"],
+  "requirements": ["numpy==2.3.2", "pyiqvia==2022.04.0"]
+}

@@ -1,0 +1,81 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: No explicit event subscriptions.
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: No custom action.
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: No custom action.
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: No custom action.
+  reauthentication-flow: done
+  parallel-updates:
+    status: exempt
+    comment: Coordinator and sensor only platform.
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow.
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: exempt
+    comment: Solar-Log device cannot be discovered.
+  stale-devices: done
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices: done
+  discovery-update-info:
+    status: exempt
+    comment: Solar-Log device cannot be discovered.
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      This integration doesn't have known issues that could be resolved by the user.
+  docs-examples: done
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

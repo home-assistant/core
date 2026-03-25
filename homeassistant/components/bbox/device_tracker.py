@@ -1,0 +1,98 @@
+"""Support for French FAI Bouygues Bbox routers."""
+
+from __future__ import annotations
+
+from collections import namedtuple
+from datetime import timedelta
+import logging
+
+import pybbox
+import voluptuous as vol
+
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    DeviceScanner,
+)
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import Throttle, dt as dt_util
+
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_HOST = "192.168.1.254"
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
+
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
+)
+
+
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | None:
+    """Validate the configuration and return a Bbox scanner."""
+    scanner = BboxDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+
+    return scanner if scanner.success_init else None
+
+
+Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])  # noqa: PYI024
+
+
+class BboxDeviceScanner(DeviceScanner):
+    """Scanner for devices connected to the bbox."""
+
+    def __init__(self, config):
+        """Get host from config."""
+
+        self.host = config[CONF_HOST]
+
+        """Initialize the scanner."""
+        self.last_results: list[Device] = []
+
+        self.success_init = self._update_info()
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+
+        return [device.mac for device in self.last_results]
+
+    def get_device_name(self, device):
+        """Return the name of the given device or None if we don't know."""
+        filter_named = [
+            result.name for result in self.last_results if result.mac == device
+        ]
+
+        if filter_named:
+            return filter_named[0]
+        return None
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """Check the Bbox for devices.
+
+        Returns boolean if scanning successful.
+        """
+        _LOGGER.debug("Scanning")
+
+        box = pybbox.Bbox(ip=self.host)
+        result = box.get_all_connected_devices()
+
+        now = dt_util.now()
+        last_results = []
+        for device in result:
+            if device["active"] != 1:
+                continue
+            last_results.append(
+                Device(
+                    device["macaddress"], device["hostname"], device["ipaddress"], now
+                )
+            )
+
+        self.last_results = last_results
+
+        _LOGGER.debug("Scan successful")
+        return True

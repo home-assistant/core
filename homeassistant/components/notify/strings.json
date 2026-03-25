@@ -1,0 +1,88 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::notify::title%]"
+    }
+  },
+  "issues": {
+    "migrate_notify": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The {integration_title} `notify` action(s) are migrated. A new `notify` entity is available now to replace each legacy `notify` action.\n\nUpdate any automations to use the new `notify.send_message` action exposed with this new entity. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Migrate legacy {integration_title} notify action for domain `{domain}`"
+          }
+        }
+      },
+      "title": "Migration of {integration_title} notify action"
+    },
+    "migrate_notify_service": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The {integration_title} `notify.{service_name}` action is migrated, but it seems the old `notify` action is still being used.\n\nA new `notify` entity is available now to replace each legacy `notify` action.\n\nUpdate any automations or scripts to use the new `notify.send_message` action exposed with this new entity. When this is done, select Submit and restart Home Assistant.",
+            "title": "Migrate legacy {integration_title} notify action for domain `{domain}`"
+          }
+        }
+      },
+      "title": "Legacy action notify.{service_name} still being used"
+    }
+  },
+  "services": {
+    "notify": {
+      "description": "Sends a notification message to selected targets.",
+      "fields": {
+        "data": {
+          "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation.",
+          "name": "Data"
+        },
+        "message": {
+          "description": "Message body of the notification.",
+          "name": "Message"
+        },
+        "target": {
+          "description": "Some integrations allow you to specify the targets that receive the notification. For more information, refer to the integration documentation.",
+          "name": "Target"
+        },
+        "title": {
+          "description": "Title for your notification.",
+          "name": "Title"
+        }
+      },
+      "name": "Send a notification"
+    },
+    "persistent_notification": {
+      "description": "Sends a notification that is visible in the notifications panel.",
+      "fields": {
+        "data": {
+          "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation.",
+          "name": "Data"
+        },
+        "message": {
+          "description": "Message body of the notification.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "Title of the notification.",
+          "name": "Title"
+        }
+      },
+      "name": "Send a persistent notification"
+    },
+    "send_message": {
+      "description": "Sends a notification message.",
+      "fields": {
+        "message": {
+          "description": "Your notification message.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "Title for your notification message.",
+          "name": "Title"
+        }
+      },
+      "name": "Send a notification message"
+    }
+  },
+  "title": "Notifications"
+}

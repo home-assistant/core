@@ -1,0 +1,28 @@
+airflow_min:
+  target:
+    entity:
+      integration: izone
+      domain: climate
+  fields:
+    airflow:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+airflow_max:
+  target:
+    entity:
+      integration: izone
+      domain: climate
+  fields:
+    airflow:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"

@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "data": {
+    "city": "Edgewater",
+    "state": "Colorado",
+    "country": "USA",
+    "location": {
+      "type": "Point",
+      "coordinates": [-105.06415, 39.75304]
+    },
+    "current": {
+      "weather": {
+        "ts": "2021-09-03T21:00:00.000Z",
+        "tp": 23,
+        "pr": 999,
+        "hu": 45,
+        "ws": 0.45,
+        "wd": 252,
+        "ic": "10d"
+      },
+      "pollution": {
+        "ts": "2021-09-04T00:00:00.000Z",
+        "aqius": 52,
+        "mainus": "p2",
+        "aqicn": 18,
+        "maincn": "p2"
+      }
+    }
+  }
+}

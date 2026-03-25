@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "sensor": {
+      "awarded_favorite_points": {
+        "default": "mdi:heart"
+      },
+      "cache_favorite_points": {
+        "default": "mdi:star-check"
+      },
+      "cache_found": {
+        "default": "mdi:package-variant-closed-check"
+      },
+      "cache_found_date": {
+        "default": "mdi:calendar-search"
+      },
+      "cache_hidden_date": {
+        "default": "mdi:calendar-badge"
+      },
+      "cache_name": {
+        "default": "mdi:label"
+      },
+      "cache_owner": {
+        "default": "mdi:account"
+      },
+      "favorite_points": {
+        "default": "mdi:heart-outline"
+      },
+      "find_count": {
+        "default": "mdi:notebook-edit-outline"
+      },
+      "hide_count": {
+        "default": "mdi:eye-off-outline"
+      },
+      "souvenir_count": {
+        "default": "mdi:license"
+      }
+    }
+  }
+}

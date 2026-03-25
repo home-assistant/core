@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<presets>
+    <preset id="1">
+        <ContentItem source="UPNP" location="http://homeassistant:8123/media/local/test.mp3" sourceAccount="UPnPUserName" isPresetable="true"/>
+    </preset>
+    <preset id="2">
+        <ContentItem source="TUNEIN" type="stationurl" location="/v1/playback/station/sXXXXX" sourceAccount="" isPresetable="true">
+            <itemName>MockStation</itemName>
+            <containerArt>http://cdn-profiles.tunein.com/sXXXXX/images/logoq.png</containerArt>
+        </ContentItem>
+    </preset>
+</presets>

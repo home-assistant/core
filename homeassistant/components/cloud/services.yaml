@@ -1,0 +1,4 @@
+# Describes the format for available cloud services
+
+remote_connect:
+remote_disconnect:

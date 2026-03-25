@@ -1,0 +1,10 @@
+{
+  "domain": "gitlab_ci",
+  "name": "GitLab-CI",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/gitlab_ci",
+  "iot_class": "cloud_polling",
+  "loggers": ["gitlab"],
+  "quality_scale": "legacy",
+  "requirements": ["python-gitlab==1.6.0"]
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "cisco_webex_teams",
+  "name": "Cisco Webex Teams",
+  "codeowners": ["@fbradyirl"],
+  "documentation": "https://www.home-assistant.io/integrations/cisco_webex_teams",
+  "iot_class": "cloud_push",
+  "loggers": ["webexpythonsdk"],
+  "quality_scale": "legacy",
+  "requirements": ["webexpythonsdk==2.0.1"]
+}

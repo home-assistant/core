@@ -1,0 +1,16 @@
+{
+  "domain": "control4",
+  "name": "Control4",
+  "codeowners": ["@lawtancool", "@davidrecordon"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/control4",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["pyControl4"],
+  "requirements": ["pyControl4==1.5.0"],
+  "ssdp": [
+    {
+      "st": "c4:director"
+    }
+  ]
+}

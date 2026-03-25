@@ -1,0 +1,44 @@
+sync_clock:
+  fields:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+
+scan:
+  fields:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+
+clear_cache:
+  fields:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+    address:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 254
+
+set_memo_text:
+  fields:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+    address:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 254
+    memo_text:
+      example: "Do not forget trash"
+      default: ""
+      selector:
+        text:

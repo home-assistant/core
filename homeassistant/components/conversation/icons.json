@@ -1,0 +1,15 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:forum-outline"
+    }
+  },
+  "services": {
+    "process": {
+      "service": "mdi:message-processing"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
+  }
+}

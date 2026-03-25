@@ -1,0 +1,88 @@
+{
+  "config": {
+    "abort": {
+      "all_configured": "All linked servers already configured",
+      "already_configured": "This Plex server is already configured",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "token_request_timeout": "Timed out obtaining token",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "faulty_credentials": "Authorization failed, verify token",
+      "host_or_token": "Must provide at least one of host or token",
+      "no_servers": "No servers linked to Plex account",
+      "not_found": "Plex server not found",
+      "ssl_error": "SSL certificate issue"
+    },
+    "flow_title": "{name} ({host})",
+    "step": {
+      "manual_setup": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "token": "Token (optional)",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "title": "Manual Plex configuration"
+      },
+      "select_server": {
+        "data": {
+          "server": "Server"
+        },
+        "description": "Multiple servers available, select one:",
+        "title": "Select Plex server"
+      },
+      "user": {
+        "description": "Continue to {plex_server_url} to link a Plex server."
+      },
+      "user_advanced": {
+        "data": {
+          "setup_method": "Setup method"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "scan_clients": {
+        "name": "Scan clients"
+      }
+    },
+    "update": {
+      "server_update": {
+        "name": "[%key:component::update::title%]"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "plex_mp_settings": {
+        "data": {
+          "ignore_new_shared_users": "Ignore new managed/shared users",
+          "ignore_plex_web_clients": "Ignore Plex web clients",
+          "monitored_users": "Monitored users",
+          "use_episode_art": "Use episode art"
+        },
+        "description": "Options for Plex media players"
+      }
+    }
+  },
+  "services": {
+    "refresh_library": {
+      "description": "Refreshes a Plex library to scan for new and updated media.",
+      "fields": {
+        "library_name": {
+          "description": "Name of the Plex library to refresh.",
+          "name": "Library name"
+        },
+        "server_name": {
+          "description": "Name of a Plex server if multiple Plex servers configured.",
+          "name": "Server name"
+        }
+      },
+      "name": "Refresh library"
+    }
+  }
+}

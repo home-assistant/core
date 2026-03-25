@@ -1,0 +1,123 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_pin": "The provided PIN is invalid. It must be a 4-10 digit number.",
+      "invalid_vedo_auth": "The provided VEDO PIN is incorrect or VEDO alarm is not enabled on this device.",
+      "invalid_vedo_pin": "The provided VEDO PIN is invalid. It must be a 4-10 digit number.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_pin": "[%key:component::comelit::config::abort::invalid_pin%]",
+      "invalid_vedo_auth": "[%key:component::comelit::config::abort::invalid_vedo_auth%]",
+      "invalid_vedo_pin": "[%key:component::comelit::config::abort::invalid_vedo_pin%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{host}",
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "vedo_pin": "[%key:component::comelit::config::step::user::data::vedo_pin%]"
+        },
+        "data_description": {
+          "pin": "The PIN of your Comelit device.",
+          "vedo_pin": "[%key:component::comelit::config::step::user::data_description::vedo_pin%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "vedo_pin": "[%key:component::comelit::config::step::user::data::vedo_pin%]"
+        },
+        "data_description": {
+          "host": "[%key:component::comelit::config::step::user::data_description::host%]",
+          "pin": "[%key:component::comelit::config::step::reauth_confirm::data_description::pin%]",
+          "port": "[%key:component::comelit::config::step::user::data_description::port%]",
+          "vedo_pin": "[%key:component::comelit::config::step::user::data_description::vedo_pin%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "type": "Device type",
+          "vedo_pin": "VEDO alarm PIN (optional)"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Comelit device.",
+          "pin": "[%key:component::comelit::config::step::reauth_confirm::data_description::pin%]",
+          "port": "The port of your Comelit device.",
+          "type": "The type of your Comelit device.",
+          "vedo_pin": "Optional PIN for VEDO alarm system on Serial Bridge devices. Leave empty if you don't have VEDO alarm enabled."
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "dehumidifier": {
+        "name": "Dehumidifier"
+      },
+      "humidifier": {
+        "name": "Humidifier"
+      }
+    },
+    "sensor": {
+      "zone_status": {
+        "state": {
+          "alarm": "Alarm",
+          "armed": "Armed",
+          "excluded": "Excluded",
+          "faulty": "Faulty",
+          "inhibited": "Inhibited",
+          "isolated": "Isolated",
+          "open": "[%key:common::state::open%]",
+          "rest": "Rest",
+          "sabotated": "Sabotated"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_authenticate": {
+      "message": "Error authenticating"
+    },
+    "cannot_connect": {
+      "message": "Error connecting: {error}"
+    },
+    "cannot_retrieve_data": {
+      "message": "Error retrieving data: {error}"
+    },
+    "humidity_while_off": {
+      "message": "Cannot change humidity while off"
+    },
+    "invalid_clima_data": {
+      "message": "Invalid 'clima' data"
+    },
+    "update_failed": {
+      "message": "Failed to update data: {error}"
+    }
+  }
+}

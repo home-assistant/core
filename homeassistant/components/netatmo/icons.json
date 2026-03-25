@@ -1,0 +1,86 @@
+{
+  "entity": {
+    "button": {
+      "preferred_position": {
+        "default": "mdi:window-shutter-auto"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_guard": "mdi:snowflake-thermometer",
+              "manual": "mdi:gesture-tap",
+              "schedule": "mdi:clock-outline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "gust_angle": {
+        "default": "mdi:compass-outline"
+      },
+      "gust_direction": {
+        "default": "mdi:compass-outline"
+      },
+      "health_idx": {
+        "default": "mdi:cloud"
+      },
+      "pressure_trend": {
+        "default": "mdi:trending-up"
+      },
+      "reachable": {
+        "default": "mdi:signal"
+      },
+      "rf_strength": {
+        "default": "mdi:signal"
+      },
+      "temp_trend": {
+        "default": "mdi:trending-up"
+      },
+      "wifi_strength": {
+        "default": "mdi:wifi"
+      },
+      "wind_angle": {
+        "default": "mdi:compass-outline"
+      },
+      "wind_direction": {
+        "default": "mdi:compass-outline"
+      }
+    }
+  },
+  "services": {
+    "clear_temperature_setting": {
+      "service": "mdi:thermometer"
+    },
+    "register_webhook": {
+      "service": "mdi:link-variant"
+    },
+    "set_camera_light": {
+      "service": "mdi:led-on"
+    },
+    "set_person_away": {
+      "service": "mdi:walk"
+    },
+    "set_persons_home": {
+      "service": "mdi:home"
+    },
+    "set_preset_mode_with_end_datetime": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_schedule": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_temperature_with_end_datetime": {
+      "service": "mdi:thermometer"
+    },
+    "set_temperature_with_time_period": {
+      "service": "mdi:thermometer"
+    },
+    "unregister_webhook": {
+      "service": "mdi:link-variant-off"
+    }
+  }
+}

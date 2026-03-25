@@ -1,0 +1,58 @@
+{
+  "entity": {
+    "climate": {
+      "knx_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "building_protection": "mdi:sun-snowflake-variant",
+              "comfort": "mdi:sofa",
+              "economy": "mdi:leaf",
+              "standby": "mdi:home-export-outline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "individual_address": {
+        "default": "mdi:router-network"
+      },
+      "telegram_count": {
+        "default": "mdi:plus-network"
+      },
+      "telegrams_data_secure_undecodable": {
+        "default": "mdi:lock-alert"
+      },
+      "telegrams_incoming": {
+        "default": "mdi:upload-network"
+      },
+      "telegrams_incoming_error": {
+        "default": "mdi:help-network"
+      },
+      "telegrams_outgoing": {
+        "default": "mdi:download-network"
+      },
+      "telegrams_outgoing_error": {
+        "default": "mdi:close-network"
+      }
+    }
+  },
+  "services": {
+    "event_register": {
+      "service": "mdi:home-import-outline"
+    },
+    "exposure_register": {
+      "service": "mdi:home-export-outline"
+    },
+    "read": {
+      "service": "mdi:email-search"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "send": {
+      "service": "mdi:email-arrow-right"
+    }
+  }
+}

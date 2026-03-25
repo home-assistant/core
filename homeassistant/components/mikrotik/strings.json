@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "name_exists": "Name exists"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The password for {username} is invalid.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "title": "Set up Mikrotik Router"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "device_tracker": {
+        "data": {
+          "arp_ping": "Enable ARP ping",
+          "detection_time": "Consider home interval",
+          "force_dhcp": "Force scanning using DHCP"
+        }
+      }
+    }
+  }
+}

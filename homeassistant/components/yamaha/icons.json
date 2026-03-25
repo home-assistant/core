@@ -1,0 +1,13 @@
+{
+  "services": {
+    "enable_output": {
+      "service": "mdi:audio-input-stereo-minijack"
+    },
+    "menu_cursor": {
+      "service": "mdi:cursor-default"
+    },
+    "select_scene": {
+      "service": "mdi:palette"
+    }
+  }
+}

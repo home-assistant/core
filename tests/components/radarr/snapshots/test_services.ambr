@@ -1,0 +1,96 @@
+# serializer version: 1
+# name: test_get_movies_service
+  dict({
+    'movies': dict({
+      'Inception': dict({
+        'has_file': False,
+        'id': 2,
+        'images': dict({
+          'poster': 'https://image.tmdb.org/t/p/original/testposter2.jpg',
+        }),
+        'imdb_id': 'tt1375666',
+        'monitored': True,
+        'movie_file_count': None,
+        'path': '/movies/Inception (2010)',
+        'size_on_disk': None,
+        'status': 'released',
+        'title': 'Inception',
+        'tmdb_id': 27205,
+        'year': 2010,
+      }),
+      'The Matrix': dict({
+        'has_file': True,
+        'id': 1,
+        'images': dict({
+          'fanart': 'https://image.tmdb.org/t/p/original/testfanart1.jpg',
+          'poster': 'https://image.tmdb.org/t/p/original/testposter1.jpg',
+        }),
+        'imdb_id': 'tt0133093',
+        'monitored': True,
+        'movie_file_count': None,
+        'path': '/movies/The Matrix (1999)',
+        'size_on_disk': None,
+        'status': 'released',
+        'title': 'The Matrix',
+        'tmdb_id': 603,
+        'year': 1999,
+      }),
+    }),
+  })
+# ---
+# name: test_get_queue_service
+  dict({
+    'movies': dict({
+      'test': dict({
+        'download_client': 'string',
+        'download_id': 'string',
+        'download_title': 'test',
+        'estimated_completion_time': '2020-01-21 00:01:59',
+        'id': 0,
+        'images': dict({
+          'poster': 'https://image.tmdb.org/t/p/original/testposter1.jpg',
+        }),
+        'indexer': 'string',
+        'languages': list([
+          'string',
+        ]),
+        'movie_id': 0,
+        'progress': '0.00%',
+        'protocol': 'ProtocolType.UNKNOWN',
+        'quality': 'string',
+        'size': 0,
+        'size_left': 0,
+        'status': 'string',
+        'time_left': 'string',
+        'title': 'Test Movie 1',
+        'tracked_download_state': 'downloading',
+        'tracked_download_status': 'string',
+      }),
+      'test2': dict({
+        'download_client': 'string',
+        'download_id': 'string',
+        'download_title': 'test2',
+        'estimated_completion_time': '2020-01-21 00:01:59',
+        'id': 0,
+        'images': dict({
+          'poster': 'https://image.tmdb.org/t/p/original/testposter2.jpg',
+        }),
+        'indexer': 'string',
+        'languages': list([
+          'string',
+        ]),
+        'movie_id': 0,
+        'progress': '0.00%',
+        'protocol': 'ProtocolType.UNKNOWN',
+        'quality': 'string',
+        'size': 0,
+        'size_left': 1000000,
+        'status': 'string',
+        'time_left': '00:00:00',
+        'title': 'Test Movie 2',
+        'tracked_download_state': 'downloading',
+        'tracked_download_status': 'string',
+      }),
+    }),
+  })
+# ---

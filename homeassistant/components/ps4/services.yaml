@@ -1,0 +1,22 @@
+send_command:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: ps4
+          domain: media_player
+    command:
+      required: true
+      selector:
+        select:
+          options:
+            - "back"
+            - "down"
+            - "enter"
+            - "left"
+            - "option"
+            - "ps_hold"
+            - "ps"
+            - "right"
+            - "up"

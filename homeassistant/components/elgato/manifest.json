@@ -1,0 +1,11 @@
+{
+  "domain": "elgato",
+  "name": "Elgato Light",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/elgato",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["elgato==5.1.2"],
+  "zeroconf": ["_elg._tcp.local."]
+}

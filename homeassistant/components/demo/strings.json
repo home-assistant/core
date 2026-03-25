@@ -1,0 +1,128 @@
+{
+  "entity": {
+    "climate": {
+      "ubercool": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto_high": "Auto high",
+              "auto_low": "Auto low",
+              "on_high": "On high",
+              "on_low": "On low"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "off": "[%key:common::state::off%]",
+              "rangefull": "Full range"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "1": "1",
+              "2": "2",
+              "3": "3",
+              "auto": "[%key:common::state::auto%]",
+              "off": "[%key:common::state::off%]"
+            }
+          }
+        }
+      }
+    },
+    "event": {
+      "push": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "pressed": "Pressed"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "demo": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "on": "[%key:common::state::on%]",
+              "sleep": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "bed_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "rainbow": "Rainbow"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "speed": {
+        "state": {
+          "light_speed": "Light speed",
+          "ludicrous_speed": "Ludicrous speed",
+          "ridiculous_speed": "Ridiculous speed"
+        }
+      }
+    },
+    "sensor": {
+      "thermostat_mode": {
+        "name": "Thermostat mode",
+        "state": {
+          "away": "[%key:common::state::not_home%]",
+          "comfort": "Comfort",
+          "eco": "Eco",
+          "sleep": "Sleep"
+        }
+      }
+    },
+    "vacuum": {
+      "model_s": {
+        "state_attributes": {
+          "cleaned_area": {
+            "name": "Cleaned area"
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {}
+      },
+      "options_1": {
+        "data": {
+          "bool": "Optional boolean",
+          "constant": "Constant",
+          "int": "Numeric input"
+        },
+        "submit": "Save!"
+      },
+      "options_2": {
+        "data": {
+          "multi": "Multiselect",
+          "select": "Select an option",
+          "string": "String value"
+        }
+      }
+    }
+  },
+  "services": {
+    "randomize_device_tracker_data": {
+      "description": "Demonstrates using a device tracker to see where devices are located.",
+      "name": "Randomize device tracker data"
+    }
+  },
+  "title": "Demo"
+}

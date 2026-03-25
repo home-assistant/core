@@ -1,0 +1,21 @@
+join:
+  fields:
+    master:
+      required: true
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player
+    entity_id:
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player
+
+unjoin:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player

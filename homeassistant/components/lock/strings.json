@@ -1,0 +1,191 @@
+{
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted locks.",
+    "condition_behavior_name": "Behavior",
+    "trigger_behavior_description": "The behavior of the targeted locks to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_jammed": {
+      "description": "Tests if one or more locks are jammed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is jammed"
+    },
+    "is_locked": {
+      "description": "Tests if one or more locks are locked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is locked"
+    },
+    "is_open": {
+      "description": "Tests if one or more locks are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is open"
+    },
+    "is_unlocked": {
+      "description": "Tests if one or more locks are unlocked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is unlocked"
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "lock": "Lock {entity_name}",
+      "open": "Open {entity_name}",
+      "unlock": "Unlock {entity_name}"
+    },
+    "condition_type": {
+      "is_jammed": "{entity_name} is jammed",
+      "is_locked": "{entity_name} is locked",
+      "is_locking": "{entity_name} is locking",
+      "is_open": "{entity_name} is open",
+      "is_opening": "{entity_name} is opening",
+      "is_unlocked": "{entity_name} is unlocked",
+      "is_unlocking": "{entity_name} is unlocking"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
+    "trigger_type": {
+      "locked": "{entity_name} locked",
+      "open": "{entity_name} opened",
+      "unlocked": "{entity_name} unlocked"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::lock::title%]",
+      "state": {
+        "jammed": "Jammed",
+        "locked": "[%key:common::state::locked%]",
+        "locking": "Locking",
+        "open": "[%key:common::state::open%]",
+        "opening": "[%key:common::state::opening%]",
+        "unlocked": "[%key:common::state::unlocked%]",
+        "unlocking": "Unlocking"
+      },
+      "state_attributes": {
+        "changed_by": {
+          "name": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::changed_by::name%]"
+        },
+        "code_format": {
+          "name": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::code_format::name%]"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "add_default_code": {
+      "message": "The code for {entity_id} doesn't match pattern {code_format}."
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "services": {
+    "lock": {
+      "description": "Locks a lock.",
+      "fields": {
+        "code": {
+          "description": "Code used to lock the lock.",
+          "name": "Code"
+        }
+      },
+      "name": "Lock"
+    },
+    "open": {
+      "description": "Opens a lock.",
+      "fields": {
+        "code": {
+          "description": "Code used to open the lock.",
+          "name": "[%key:component::lock::services::lock::fields::code::name%]"
+        }
+      },
+      "name": "[%key:common::action::open%]"
+    },
+    "unlock": {
+      "description": "Unlocks a lock.",
+      "fields": {
+        "code": {
+          "description": "Code used to unlock the lock.",
+          "name": "[%key:component::lock::services::lock::fields::code::name%]"
+        }
+      },
+      "name": "Unlock"
+    }
+  },
+  "title": "Lock",
+  "triggers": {
+    "jammed": {
+      "description": "Triggers after one or more locks jam.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::trigger_behavior_description%]",
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lock jammed"
+    },
+    "locked": {
+      "description": "Triggers after one or more locks lock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::trigger_behavior_description%]",
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lock locked"
+    },
+    "opened": {
+      "description": "Triggers after one or more locks open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::trigger_behavior_description%]",
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lock opened"
+    },
+    "unlocked": {
+      "description": "Triggers after one or more locks unlock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::trigger_behavior_description%]",
+          "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lock unlocked"
+    }
+  }
+}

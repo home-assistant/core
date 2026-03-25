@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "The selected agreement is already configured.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_agreements": "This account has no Toon displays.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]"
+    },
+    "step": {
+      "agreement": {
+        "data": {
+          "agreement": "Agreement"
+        },
+        "description": "Select the agreement address you want to add.",
+        "title": "Select your agreement"
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "Choose your tenant to authenticate with"
+      }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "services": {
+    "update": {
+      "description": "Updates all entities with fresh data from Toon.",
+      "fields": {
+        "display": {
+          "description": "Toon display to update.",
+          "name": "Display"
+        }
+      },
+      "name": "Update"
+    }
+  }
+}

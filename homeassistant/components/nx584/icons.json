@@ -1,0 +1,10 @@
+{
+  "services": {
+    "bypass_zone": {
+      "service": "mdi:wrench"
+    },
+    "unbypass_zone": {
+      "service": "mdi:wrench"
+    }
+  }
+}

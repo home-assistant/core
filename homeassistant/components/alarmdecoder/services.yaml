@@ -1,0 +1,23 @@
+alarm_keypress:
+  target:
+    entity:
+      integration: alarmdecoder
+      domain: alarm_control_panel
+  fields:
+    keypress:
+      required: true
+      example: "*71"
+      selector:
+        text:
+
+alarm_toggle_chime:
+  target:
+    entity:
+      integration: alarmdecoder
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: true
+      example: 1234
+      selector:
+        text:

@@ -1,0 +1,10 @@
+{
+  "domain": "concord232",
+  "name": "Concord232",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/concord232",
+  "iot_class": "local_polling",
+  "loggers": ["concord232", "stevedore"],
+  "quality_scale": "legacy",
+  "requirements": ["concord232==0.15.1"]
+}

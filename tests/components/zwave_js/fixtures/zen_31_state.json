@@ -1,0 +1,2713 @@
+{
+  "nodeId": 94,
+  "index": 0,
+  "installerIcon": 1536,
+  "userIcon": 1536,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 634,
+  "productId": 8192,
+  "productType": 2306,
+  "firmwareVersion": "5.0",
+  "zwavePlusVersion": 1,
+  "name": "Kitchen Under Cabinet Lights",
+  "location": "Kitchen",
+  "deviceConfig": {
+    "filename": "/opt/node_modules/@zwave-js/config/config/devices/0x027a/zen31.json",
+    "manufacturer": "Zooz",
+    "manufacturerId": 634,
+    "label": "ZEN31",
+    "description": "RGBW Dimmer",
+    "devices": [
+      {
+        "productType": 2306,
+        "productId": 8192
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "ZEN31",
+  "neighbors": [44, 45, 48, 50, 74, 81, 87, 88, 89, 90, 91, 95, 96, 97, 98],
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": false,
+  "individualEndpointCount": 9,
+  "aggregatedEndpointCount": 0,
+  "interviewAttempts": 0,
+  "endpoints": [
+    {
+      "nodeId": 94,
+      "index": 0,
+      "installerIcon": 1536,
+      "userIcon": 1536,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 2,
+          "label": "Tunable Color Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 38, 133, 89, 51, 90, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 11,
+          "isSecure": false
+        },
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 51,
+          "name": "Color Switch",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 86,
+          "name": "CRC-16 Encapsulation",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 91,
+          "name": "Central Scene",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 117,
+          "name": "Protection",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        }
+      ]
+    },
+    {
+      "nodeId": 94,
+      "index": 1,
+      "installerIcon": 1536,
+      "userIcon": 1536,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 2,
+          "label": "Tunable Color Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 38, 133, 89, 51, 90, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 2,
+      "installerIcon": 1536,
+      "userIcon": 1536,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Multilevel Power Switch"
+        },
+        "mandatorySupportedCCs": [32, 38, 39],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 3,
+      "installerIcon": 1536,
+      "userIcon": 1536,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Multilevel Power Switch"
+        },
+        "mandatorySupportedCCs": [32, 38, 39],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 4,
+      "installerIcon": 1536,
+      "userIcon": 1536,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Multilevel Power Switch"
+        },
+        "mandatorySupportedCCs": [32, 38, 39],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 5,
+      "installerIcon": 1536,
+      "userIcon": 1536,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Multilevel Power Switch"
+        },
+        "mandatorySupportedCCs": [32, 38, 39],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 6,
+      "installerIcon": 3343,
+      "userIcon": 3343,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 33,
+          "label": "Multilevel Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Routing Multilevel Sensor"
+        },
+        "mandatorySupportedCCs": [32, 49],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 7,
+      "installerIcon": 3343,
+      "userIcon": 3343,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 33,
+          "label": "Multilevel Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Routing Multilevel Sensor"
+        },
+        "mandatorySupportedCCs": [32, 49],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 8,
+      "installerIcon": 3343,
+      "userIcon": 3343,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 33,
+          "label": "Multilevel Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Routing Multilevel Sensor"
+        },
+        "mandatorySupportedCCs": [32, 49],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 94,
+      "index": 9,
+      "installerIcon": 3343,
+      "userIcon": 3343,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 33,
+          "label": "Multilevel Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Routing Multilevel Sensor"
+        },
+        "mandatorySupportedCCs": [32, 49],
+        "mandatoryControlledCCs": []
+      }
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "reset",
+      "propertyName": "reset",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset accumulated values"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "slowRefresh",
+      "propertyName": "slowRefresh",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "description": "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
+        "label": "Send held down notifications at a slow rate"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "001",
+      "propertyName": "scene",
+      "propertyKeyName": "001",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 001",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x",
+          "4": "KeyPressed3x"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "002",
+      "propertyName": "scene",
+      "propertyKeyName": "002",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 002",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x",
+          "4": "KeyPressed3x"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "003",
+      "propertyName": "scene",
+      "propertyKeyName": "003",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 003",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x",
+          "4": "KeyPressed3x"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "004",
+      "propertyName": "scene",
+      "propertyKeyName": "004",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 004",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x",
+          "4": "KeyPressed3x"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "On Off Status After Power Failure",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "On Off Status After Power Failure",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "forced to OFF",
+          "1": "restore to previous state",
+          "2": "forced to on"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyName": "Switch / Input Type for IN1",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Switch / Input Type for IN1. Choose the input/switch type you want to connect to the IN1 terminal. Default: momentary switch",
+        "label": "Switch / Input Type for IN1",
+        "default": 2,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "analog sensor w/no pullup",
+          "1": "analog sensor with pull-up",
+          "2": "momentary switch",
+          "3": "toggle switch (on when swithc is on)",
+          "4": "toggle switch (toggles with switch toggle)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 21,
+      "propertyName": "Switch / Input Type for IN2",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Switch / Input Type for IN2. Choose the input/switch type you want to connect to the IN2 terminal. Default: momentary switch",
+        "label": "Switch / Input Type for IN2",
+        "default": 2,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "analog sensor w/no pullup",
+          "1": "analog sensor with pull-up",
+          "2": "momentary switch",
+          "3": "toggle switch (on when swithc is on)",
+          "4": "toggle switch (toggles with switch toggle)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 22,
+      "propertyName": "Switch / Input Type for IN3",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Switch / Input Type for IN3. Choose the input/switch type you want to connect to the IN3 terminal. Default: momentary switch",
+        "label": "Switch / Input Type for IN3",
+        "default": 2,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "analog sensor w/no pullup",
+          "1": "analog sensor with pull-up",
+          "2": "momentary switch",
+          "3": "toggle switch (on when swithc is on)",
+          "4": "toggle switch (toggles with switch toggle)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 23,
+      "propertyName": "Switch / Input Type for IN4",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Switch / Input Type for IN4. Choose the input/switch type you want to connect to the IN4 terminal. Default: momentary switch",
+        "label": "Switch / Input Type for IN4",
+        "default": 2,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "analog sensor w/no pullup",
+          "1": "analog sensor with pull-up",
+          "2": "momentary switch",
+          "3": "toggle switch (on when swithc is on)",
+          "4": "toggle switch (toggles with switch toggle)"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 62,
+      "propertyName": "Power Report Frequency",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Power Report Frequency. Choose how often you want your RGBW Dimmer to report power consumption (W) to your controller. NOTE: must be 0, or an increment of 30. Default: 3600",
+        "label": "Power Report Frequency",
+        "default": 3600,
+        "min": 0,
+        "max": 32400,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3600
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 65,
+      "propertyName": "Energy Report Threshold",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Energy Report Threshold. Choose how you want your RGBW Dimmer to report energy use (kWh) to your hub. The number entered as value corresponds to decimal values in energy useage change. So if 10 is entered by default, the RGBW Dimmer will report any change in energy use over 0.1 kWh. Energy reports are sent in t least 30-second intervals.",
+        "label": "Energy Report Threshold",
+        "default": 10,
+        "min": 0,
+        "max": 500,
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 66,
+      "propertyName": "Energy Report Frequency",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Energy Report Frequency. Choose how often you want your RGBW Dimmer to report energy (kWh) to your controller. NOTE: must be 0, or an increment of 30. Default: 3600",
+        "label": "Energy Report Frequency",
+        "default": 3600,
+        "min": 0,
+        "max": 32400,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3600
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 150,
+      "propertyName": "RGBW/HSB Wall Switch Mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "RGBW/HSB Wall Switch Mode. Choose how switches connected to the input terminals control your LED strip. In the default RGBW mode, each switch connected to each input terminal controls the RGBW chnnels separately (so IN1 for red, IN2 for green, etc.) with a single click for ON/OFF, double click to full brightness, and press-and-hold to dim (momentary switches only). In the HSB, IN1 controls hue, IN2 - saturation, IN3 - brightness, IN4 - white with single click for last set value or value 0, double click to max value, and press-and-hold to set custom value. Default: RGBW mode",
+        "label": "RGBW/HSB Wall Switch Mode",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "RGBW mode",
+          "1": "HSB mode"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 151,
+      "propertyName": "Ramp Rate (switch)",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Ramp Rate (switch). Adjust the ramp rate for your RGBW dimmer (fade-in/fade-out effect for on/off operation). Values correspond to the number of seconds it takes for the dimmer to reach full brightness or turn off when operated from the connected wall switch. Note that 0 is instant on/off. Default : 3 seconds",
+        "label": "Ramp Rate (switch)",
+        "default": 3,
+        "min": 0,
+        "max": 127,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 152,
+      "propertyName": "Ramp Rate (Z-Wave)",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Ramp Rate (Z-Wave). Adjust the ramp rate for your RGBW dimmer (fade-in/fade-out effect for on/off operation). Values correspond to the number of seconds it takes for the dimmer to reach full brightness or turn off when operated remotely from the Z-Wave hub Note that 0 is instant on/off. Default : 3 seconds",
+        "label": "Ramp Rate (Z-Wave)",
+        "default": 3,
+        "min": 0,
+        "max": 127,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 157,
+      "propertyName": "Preset Programs",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Enable one of the preset animated color programs to set the mood with a click. Default: preset programs disabled",
+        "label": "Preset Programs",
+        "default": 0,
+        "min": 0,
+        "max": 10,
+        "states": {
+          "0": "preset programs disabled",
+          "6": "fireplace",
+          "7": "storm",
+          "8": "rainbow",
+          "9": "polar lights",
+          "10": "police"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 1,
+      "propertyName": "Scene Control for IN1. click/toggle 1 time to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 1 time to trigger a scene.",
+        "label": "Scene Control for IN1. click/toggle 1 time to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 2,
+      "propertyName": "Scene Control for IN1. click/toggle 2 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 2 times to trigger a scene.",
+        "label": "Scene Control for IN1. click/toggle 2 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 4,
+      "propertyName": "Scene Control for IN1. click/toggle 3 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 3 times to trigger a scene.",
+        "label": "Scene Control for IN1. click/toggle 3 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 8,
+      "propertyName": "Scene Control for IN1. click/toggle 4 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 4 times to trigger a scene.",
+        "label": "Scene Control for IN1. click/toggle 4 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 1,
+      "propertyName": "Scene Control for IN2. click/toggle 1 time to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 1 time to trigger a scene.",
+        "label": "Scene Control for IN2. click/toggle 1 time to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 2,
+      "propertyName": "Scene Control for IN2. click/toggle 2 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 2 times to trigger a scene.",
+        "label": "Scene Control for IN2. click/toggle 2 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 4,
+      "propertyName": "Scene Control for IN2. click/toggle 3 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 3 times to trigger a scene.",
+        "label": "Scene Control for IN2. click/toggle 3 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 8,
+      "propertyName": "Scene Control for IN2. click/toggle 4 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 4 times to trigger a scene.",
+        "label": "Scene Control for IN2. click/toggle 4 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 42,
+      "propertyKey": 1,
+      "propertyName": "Scene Control for IN3. click/toggle 1 time to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 1 time to trigger a scene.",
+        "label": "Scene Control for IN3. click/toggle 1 time to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 42,
+      "propertyKey": 2,
+      "propertyName": "Scene Control for IN3. click/toggle 2 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 2 times to trigger a scene.",
+        "label": "Scene Control for IN3. click/toggle 2 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 42,
+      "propertyKey": 4,
+      "propertyName": "Scene Control for IN3. click/toggle 3 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 3 times to trigger a scene.",
+        "label": "Scene Control for IN3. click/toggle 3 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 42,
+      "propertyKey": 8,
+      "propertyName": "Scene Control for IN3. click/toggle 4 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 4 times to trigger a scene.",
+        "label": "Scene Control for IN3. click/toggle 4 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 43,
+      "propertyKey": 1,
+      "propertyName": "Scene Control for IN4. click/toggle 1 time to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 1 time to trigger a scene.",
+        "label": "Scene Control for IN4. click/toggle 1 time to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 43,
+      "propertyKey": 2,
+      "propertyName": "Scene Control for IN4. click/toggle 2 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 2 times to trigger a scene.",
+        "label": "Scene Control for IN4. click/toggle 2 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 43,
+      "propertyKey": 4,
+      "propertyName": "Scene Control for IN4. click/toggle 3 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 3 times to trigger a scene.",
+        "label": "Scene Control for IN4. click/toggle 3 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 43,
+      "propertyKey": 8,
+      "propertyName": "Scene Control for IN4. click/toggle 4 times to trigger",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Click/toggle the connected switch 4 times to trigger a scene.",
+        "label": "Scene Control for IN4. click/toggle 4 times to trigger",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-current status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-current status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-current status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "6": "Over-current detected"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "System",
+      "propertyKey": "Hardware status",
+      "propertyName": "System",
+      "propertyKeyName": "Hardware status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Hardware status",
+        "ccSpecific": {
+          "notificationType": 9
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "3": "System hardware failure (with failure code)"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 634
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 2306
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 8192
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "rf",
+      "propertyName": "rf",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection state",
+        "states": {
+          "0": "Unprotected",
+          "1": "NoControl"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "exclusiveControlNodeId",
+      "propertyName": "exclusiveControlNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "timeout",
+      "propertyName": "timeout",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "6.4"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["5.0"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      },
+      "value": 59
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 59
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Remaining duration"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 0,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Warm White",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Warm White color.",
+        "label": "Current value (Warm White)",
+        "min": 0,
+        "max": 255
+      },
+      "value": 141
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyName": "currentColor",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Color"
+      },
+      "value": {
+        "warmWhite": 141,
+        "red": 255,
+        "green": 159,
+        "blue": 70
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 2,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Red color.",
+        "label": "Current value (Red)",
+        "min": 0,
+        "max": 255
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "hexColor",
+      "propertyName": "hexColor",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "color",
+        "readable": true,
+        "writeable": true,
+        "label": "RGB Color",
+        "minLength": 6,
+        "maxLength": 7
+      },
+      "value": "ff9f46"
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 3,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Green color.",
+        "label": "Current value (Green)",
+        "min": 0,
+        "max": 255
+      },
+      "value": 159
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 4,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Blue color.",
+        "label": "Current value (Blue)",
+        "min": 0,
+        "max": 255
+      },
+      "value": 70
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyName": "targetColor",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Target Color",
+        "valueChangeOptions": ["transitionDuration"]
+      },
+      "value": {
+        "warmWhite": 141,
+        "red": 255,
+        "green": 159,
+        "blue": 70
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 0,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Warm White",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Warm White color.",
+        "label": "Target value (Warm White)",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 2,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Red color.",
+        "label": "Target value (Red)",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 3,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Green color.",
+        "label": "Target value (Green)",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 4,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Blue color.",
+        "label": "Target value (Blue)",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65536,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 0,
+          "scale": 0
+        },
+        "unit": "kWh"
+      },
+      "value": 8.33
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [W]",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 2
+        },
+        "unit": "W"
+      },
+      "value": 5.1
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65537,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 0
+        },
+        "unit": "kWh"
+      },
+      "value": 9.73
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "local",
+      "propertyName": "local",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Local protection state",
+        "states": {
+          "0": "Unprotected",
+          "1": "ProtectedBySequence",
+          "2": "NoOperationPossible"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 93
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      },
+      "value": 76
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 76
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      },
+      "value": 24
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 24
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Voltage",
+      "propertyName": "Voltage",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Voltage",
+        "ccSpecific": {
+          "sensorType": 15,
+          "scale": 0
+        },
+        "unit": "V"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Voltage",
+      "propertyName": "Voltage",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Voltage",
+        "ccSpecific": {
+          "sensorType": 15,
+          "scale": 0
+        },
+        "unit": "V"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Voltage",
+      "propertyName": "Voltage",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Voltage",
+        "ccSpecific": {
+          "sensorType": 15,
+          "scale": 0
+        },
+        "unit": "V"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 9,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 9,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 9,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Voltage",
+      "propertyName": "Voltage",
+      "ccVersion": 11,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Voltage",
+        "ccSpecific": {
+          "sensorType": 15,
+          "scale": 0
+        },
+        "unit": "V"
+      },
+      "value": 0
+    }
+  ],
+  "interviewStage": 6,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 2,
+      "label": "Tunable Color Switch"
+    },
+    "mandatorySupportedCCs": [
+      32, 38, 133, 89, 51, 90, 114, 115, 159, 108, 85, 134, 94
+    ],
+    "mandatoryControlledCCs": []
+  },
+  "isControllerNode": false
+}

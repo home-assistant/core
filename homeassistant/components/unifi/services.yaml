@@ -1,0 +1,9 @@
+reconnect_client:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifi
+
+remove_clients:

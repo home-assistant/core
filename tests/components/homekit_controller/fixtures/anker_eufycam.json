@@ -1,0 +1,1628 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Anker",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "T8010",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "eufy HomeBase2-0AAA",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "A0000A000000000A",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "2.1.6",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "2.0.0",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 9,
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "format": "string",
+            "value": "3.0;17A93g",
+            "perms": ["pr", "hd"],
+            "ev": false
+          }
+        ],
+        "stype": "accessory-information"
+      },
+      {
+        "iid": 19,
+        "type": "80CF79D6-9D29-4268-83F7-58FA0244B7CE",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 20,
+            "type": "B6704D2D-682B-4CB5-9150-AF94EFD18C22",
+            "format": "string",
+            "perms": ["pw"],
+            "maxLen": 256
+          },
+          {
+            "iid": 21,
+            "type": "489F0737-E399-41C1-A38A-BC2C152DC88D",
+            "format": "string",
+            "value": "0|0",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 22,
+            "type": "DAC539C4-2E71-4C5F-97BE-47A11B41DE4A",
+            "format": "string",
+            "value": "0",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 23,
+            "type": "7BD15050-677E-446B-983F-CA276A96ECDF",
+            "format": "string",
+            "value": "0",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 24,
+            "type": "DBE912DF-223D-4038-8116-D0DFA1B6E3DF",
+            "format": "string",
+            "value": "T8010N2319490CEB",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "Unknown Service: 80CF79D6-9D29-4268-83F7-58FA0244B7CE"
+      },
+      {
+        "iid": 16,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 18,
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.1.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "service"
+      }
+    ]
+  },
+  {
+    "aid": 2,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Anker",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "T8113",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "eufyCam2-000A",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "A0000A000000000B",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.6.7",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "accessory-information"
+      },
+      {
+        "iid": 48,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 50,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 51,
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQEA",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 52,
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AaoBAQACEQEBAQIBAAAAAgECAwEABAEAAwsBAoAHAgI4BAMBHgAAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAgAFAgLAAwMBHgAAAwsBAgAEAgIAAwMBHgAAAwsBAoACAgLgAQMBHgAAAwsBAuABAgJoAQMBHgAAAwsBAkABAgLwAAMBHg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 53,
+            "type": "00000115-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQ4BAQICCQEBAQIBAAMBAQIBAA==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 54,
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AgEAAAACAQEAAAIBAg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 55,
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          },
+          {
+            "iid": 56,
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          }
+        ],
+        "stype": "camera-rtp-stream-management"
+      },
+      {
+        "iid": 64,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 66,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 67,
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQEA",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 68,
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AYwBAQACEQEBAQIBAAAAAgECAwEABAEAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAgAEAgIAAwMBHgAAAwsBAoACAgLgAQMBHgAAAwsBAuABAgJoAQMBHgAAAwsBAkABAgLwAAMBHg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 69,
+            "type": "00000115-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQ4BAQICCQEBAQIBAAMBAQIBAA==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 70,
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AgEAAAACAQEAAAIBAg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 71,
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          },
+          {
+            "iid": 72,
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          }
+        ],
+        "stype": "camera-rtp-stream-management"
+      },
+      {
+        "iid": 128,
+        "type": "204",
+        "primary": false,
+        "hidden": false,
+        "linked": [112, 160],
+        "characteristics": [
+          {
+            "iid": 130,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 131,
+            "type": "205",
+            "format": "tlv8",
+            "value": "AQQAAAAAAggBAAAAAAAAAAMLAQEAAgYBBKAPAAA=",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 132,
+            "type": "206",
+            "format": "tlv8",
+            "value": "AaQBAQACCwEBAQIBAAAAAgECAwsBAoAHAgI4BAMBHgAAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAoAHAgI4BAMBDwAAAwsBAgAFAgLQAgMBDwAAAwsBAoACAgJoAQMBDwAAAwsBAuABAgIOAQMBDwAAAwsBAkABAgK0AAMBDw==",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 133,
+            "type": "207",
+            "format": "tlv8",
+            "value": "AQ4BAQECCQEBAQIBAAMBAQ==",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 134,
+            "type": "209",
+            "format": "tlv8",
+            "value": "AR0BBAAAAAACCAEAAAAAAAAAAwsBAQACBgEEoA8AAAIkAQEAAhIBAQECAQIDBNAHAAAEBKAPAAADCwECgAcCAjgEAwEeAxQBAQECDwEBAQIBAAMBAQQEEAAAAA==",
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 135,
+            "type": "226",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ],
+        "stype": "Unknown Service: 204"
+      },
+      {
+        "iid": 112,
+        "type": "00000129-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 114,
+            "type": "00000130-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQMBAQA=",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 115,
+            "type": "00000131-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw", "wr"],
+            "ev": false
+          },
+          {
+            "iid": 116,
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "data-stream-transport-management"
+      },
+      {
+        "iid": 144,
+        "type": "21A",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 146,
+            "type": "223",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 147,
+            "type": "225",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 148,
+            "type": "21B",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 149,
+            "type": "21C",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 150,
+            "type": "21D",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 152,
+            "type": "0000011B-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          }
+        ],
+        "stype": "Unknown Service: 21A"
+      },
+      {
+        "iid": 80,
+        "type": "00000112-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 82,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Microphone",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 83,
+            "type": "0000011A-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 84,
+            "type": "00000119-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 100,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          }
+        ],
+        "stype": "microphone"
+      },
+      {
+        "iid": 160,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 162,
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true
+          },
+          {
+            "iid": 163,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Motion Sensor",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 164,
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 1,
+            "perms": ["pr", "ev"],
+            "ev": false
+          }
+        ],
+        "stype": "motion"
+      },
+      {
+        "iid": 101,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 102,
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 38,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 103,
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "iid": 104,
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ],
+        "stype": "battery"
+      }
+    ]
+  },
+  {
+    "aid": 3,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Anker",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "T8113",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "eufyCam2-000A",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "A0000A000000000C",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.6.7",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "accessory-information"
+      },
+      {
+        "iid": 48,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 50,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 51,
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQEA",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 52,
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AaoBAQACEQEBAQIBAAAAAgECAwEABAEAAwsBAoAHAgI4BAMBHgAAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAgAFAgLAAwMBHgAAAwsBAgAEAgIAAwMBHgAAAwsBAoACAgLgAQMBHgAAAwsBAuABAgJoAQMBHgAAAwsBAkABAgLwAAMBHg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 53,
+            "type": "00000115-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQ4BAQICCQEBAQIBAAMBAQIBAA==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 54,
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AgEAAAACAQEAAAIBAg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 55,
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          },
+          {
+            "iid": 56,
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          }
+        ],
+        "stype": "camera-rtp-stream-management"
+      },
+      {
+        "iid": 64,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 66,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 67,
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQEA",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 68,
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AYwBAQACEQEBAQIBAAAAAgECAwEABAEAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAgAEAgIAAwMBHgAAAwsBAoACAgLgAQMBHgAAAwsBAuABAgJoAQMBHgAAAwsBAkABAgLwAAMBHg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 69,
+            "type": "00000115-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQ4BAQICCQEBAQIBAAMBAQIBAA==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 70,
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AgEAAAACAQEAAAIBAg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 71,
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          },
+          {
+            "iid": 72,
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          }
+        ],
+        "stype": "camera-rtp-stream-management"
+      },
+      {
+        "iid": 128,
+        "type": "204",
+        "primary": false,
+        "hidden": false,
+        "linked": [112, 160],
+        "characteristics": [
+          {
+            "iid": 130,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 131,
+            "type": "205",
+            "format": "tlv8",
+            "value": "AQQAAAAAAggBAAAAAAAAAAMLAQEAAgYBBKAPAAA=",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 132,
+            "type": "206",
+            "format": "tlv8",
+            "value": "AaQBAQACCwEBAQIBAAAAAgECAwsBAoAHAgI4BAMBHgAAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAoAHAgI4BAMBDwAAAwsBAgAFAgLQAgMBDwAAAwsBAoACAgJoAQMBDwAAAwsBAuABAgIOAQMBDwAAAwsBAkABAgK0AAMBDw==",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 133,
+            "type": "207",
+            "format": "tlv8",
+            "value": "AQ4BAQECCQEBAQIBAAMBAQ==",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 134,
+            "type": "209",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 135,
+            "type": "226",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ],
+        "stype": "Unknown Service: 204"
+      },
+      {
+        "iid": 112,
+        "type": "00000129-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 114,
+            "type": "00000130-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQMBAQA=",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 115,
+            "type": "00000131-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw", "wr"],
+            "ev": false
+          },
+          {
+            "iid": 116,
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "data-stream-transport-management"
+      },
+      {
+        "iid": 144,
+        "type": "21A",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 146,
+            "type": "223",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 147,
+            "type": "225",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 148,
+            "type": "21B",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 149,
+            "type": "21C",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 150,
+            "type": "21D",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 152,
+            "type": "0000011B-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": null,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          }
+        ],
+        "stype": "Unknown Service: 21A"
+      },
+      {
+        "iid": 80,
+        "type": "00000112-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 82,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Microphone",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 83,
+            "type": "0000011A-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": null,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 84,
+            "type": "00000119-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": null,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          }
+        ],
+        "stype": "microphone"
+      },
+      {
+        "iid": 160,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 162,
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": null,
+            "perms": ["pr", "ev"],
+            "ev": true
+          },
+          {
+            "iid": 163,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Motion Sensor",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 164,
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": null,
+            "perms": ["pr", "ev"],
+            "ev": false
+          }
+        ],
+        "stype": "motion"
+      },
+      {
+        "iid": 101,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 102,
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": null,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 103,
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": null,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "iid": 104,
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": null,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ],
+        "stype": "battery"
+      }
+    ]
+  },
+  {
+    "aid": 4,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Anker",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "T8113",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "eufyCam2-0000",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "A0000A000000000D",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.6.7",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "accessory-information"
+      },
+      {
+        "iid": 48,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 50,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 51,
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQEA",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 52,
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AaoBAQACEQEBAQIBAAAAAgECAwEABAEAAwsBAoAHAgI4BAMBHgAAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAgAFAgLAAwMBHgAAAwsBAgAEAgIAAwMBHgAAAwsBAoACAgLgAQMBHgAAAwsBAuABAgJoAQMBHgAAAwsBAkABAgLwAAMBHg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 53,
+            "type": "00000115-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQ4BAQICCQEBAQIBAAMBAQIBAA==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 54,
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AgEAAAACAQEAAAIBAg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 55,
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          },
+          {
+            "iid": 56,
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          }
+        ],
+        "stype": "camera-rtp-stream-management"
+      },
+      {
+        "iid": 64,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 66,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 67,
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQEA",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 68,
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AYwBAQACEQEBAQIBAAAAAgECAwEABAEAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAgAEAgIAAwMBHgAAAwsBAoACAgLgAQMBHgAAAwsBAuABAgJoAQMBHgAAAwsBAkABAgLwAAMBHg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 69,
+            "type": "00000115-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQ4BAQICCQEBAQIBAAMBAQIBAA==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 70,
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AgEAAAACAQEAAAIBAg==",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 71,
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          },
+          {
+            "iid": 72,
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw"],
+            "ev": false
+          }
+        ],
+        "stype": "camera-rtp-stream-management"
+      },
+      {
+        "iid": 128,
+        "type": "204",
+        "primary": false,
+        "hidden": false,
+        "linked": [112, 160],
+        "characteristics": [
+          {
+            "iid": 130,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 131,
+            "type": "205",
+            "format": "tlv8",
+            "value": "AQQAAAAAAggBAAAAAAAAAAMLAQEAAgYBBKAPAAA=",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 132,
+            "type": "206",
+            "format": "tlv8",
+            "value": "AaQBAQACCwEBAQIBAAAAAgECAwsBAoAHAgI4BAMBHgAAAwsBAgAFAgLQAgMBHgAAAwsBAoACAgJoAQMBHgAAAwsBAuABAgIOAQMBHgAAAwsBAkABAgK0AAMBHgAAAwsBAoAHAgI4BAMBDwAAAwsBAgAFAgLQAgMBDwAAAwsBAoACAgJoAQMBDwAAAwsBAuABAgIOAQMBDwAAAwsBAkABAgK0AAMBDw==",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 133,
+            "type": "207",
+            "format": "tlv8",
+            "value": "AQ4BAQECCQEBAQIBAAMBAQ==",
+            "perms": ["pr", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 134,
+            "type": "209",
+            "format": "tlv8",
+            "value": "AR0BBAAAAAACCAEAAAAAAAAAAwsBAQACBgEEoA8AAAIkAQEAAhIBAQECAQIDBNAHAAAEBKAPAAADCwECgAcCAjgEAwEeAxQBAQECDwEBAQIBAAMBAQQEEAAAAA==",
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 135,
+            "type": "226",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev", "tw"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ],
+        "stype": "Unknown Service: 204"
+      },
+      {
+        "iid": 112,
+        "type": "00000129-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 114,
+            "type": "00000130-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "AQMBAQA=",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 115,
+            "type": "00000131-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "",
+            "perms": ["pr", "pw", "wr"],
+            "ev": false
+          },
+          {
+            "iid": 116,
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ],
+        "stype": "data-stream-transport-management"
+      },
+      {
+        "iid": 144,
+        "type": "21A",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 146,
+            "type": "223",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 147,
+            "type": "225",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 148,
+            "type": "21B",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 149,
+            "type": "21C",
+            "format": "uint8",
+            "value": 1,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 150,
+            "type": "21D",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 152,
+            "type": "0000011B-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 1,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          }
+        ],
+        "stype": "Unknown Service: 21A"
+      },
+      {
+        "iid": 80,
+        "type": "00000112-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 82,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Microphone",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 83,
+            "type": "0000011A-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false
+          },
+          {
+            "iid": 84,
+            "type": "00000119-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 50,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          }
+        ],
+        "stype": "microphone"
+      },
+      {
+        "iid": 160,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 162,
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true
+          },
+          {
+            "iid": 163,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Motion Sensor",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 164,
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 1,
+            "perms": ["pr", "ev"],
+            "ev": false
+          }
+        ],
+        "stype": "motion"
+      },
+      {
+        "iid": 101,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 102,
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 17,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 103,
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "iid": 104,
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ],
+        "stype": "battery"
+      }
+    ]
+  }
+]

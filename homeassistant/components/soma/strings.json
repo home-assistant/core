@@ -1,0 +1,26 @@
+{
+  "config": {
+    "abort": {
+      "already_setup": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "The Soma component is not configured. Please follow the documentation.",
+      "result_error": "SOMA Connect responded with error status."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your SOMA Connect."
+        },
+        "description": "Please enter connection settings of your SOMA Connect."
+      }
+    }
+  }
+}

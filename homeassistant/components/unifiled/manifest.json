@@ -1,0 +1,10 @@
+{
+  "domain": "unifiled",
+  "name": "UniFi LED",
+  "codeowners": ["@florisvdk"],
+  "documentation": "https://www.home-assistant.io/integrations/unifiled",
+  "iot_class": "local_polling",
+  "loggers": ["unifiled"],
+  "quality_scale": "legacy",
+  "requirements": ["unifiled==0.11"]
+}

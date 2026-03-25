@@ -1,0 +1,9 @@
+{
+  "mode": 1,
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK",
+    "query": "/info/mode"
+  }
+}

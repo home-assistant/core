@@ -1,0 +1,42 @@
+# Describes the format for available humidifier services
+
+set_mode:
+  target:
+    entity:
+      domain: humidifier
+      supported_features:
+        - humidifier.HumidifierEntityFeature.MODES
+  fields:
+    mode:
+      required: true
+      example: "away"
+      selector:
+        text:
+
+set_humidity:
+  target:
+    entity:
+      domain: humidifier
+  fields:
+    humidity:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+turn_on:
+  target:
+    entity:
+      domain: humidifier
+
+turn_off:
+  target:
+    entity:
+      domain: humidifier
+
+toggle:
+  target:
+    entity:
+      domain: humidifier

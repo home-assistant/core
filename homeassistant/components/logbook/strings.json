@@ -1,0 +1,27 @@
+{
+  "services": {
+    "log": {
+      "description": "Tracks a custom activity.",
+      "fields": {
+        "domain": {
+          "description": "Determines which icon is used in the activity. The icon illustrates the integration domain related to this activity.",
+          "name": "Domain"
+        },
+        "entity_id": {
+          "description": "Entity to reference in the activity.",
+          "name": "Entity ID"
+        },
+        "message": {
+          "description": "Message of the activity.",
+          "name": "Message"
+        },
+        "name": {
+          "description": "Custom name for an entity, can be referenced using the 'Entity ID' field.",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "name": "Log"
+    }
+  },
+  "title": "Activity"
+}

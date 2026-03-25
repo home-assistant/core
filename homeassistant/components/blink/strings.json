@@ -1,0 +1,162 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "2fa": {
+        "data": {
+          "pin": "Two-factor code"
+        },
+        "description": "Enter the PIN sent via email or SMS",
+        "title": "Two-factor authentication"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "The credentials for {username} need to be updated",
+        "title": "Re-authenticate Blink"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Sign in with Blink account"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "camera_armed": {
+        "name": "Camera armed"
+      }
+    },
+    "sensor": {
+      "wifi_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
+    "switch": {
+      "camera_motion": {
+        "name": "Camera motion detection"
+      }
+    }
+  },
+  "exceptions": {
+    "cant_write": {
+      "message": "Can't write to file."
+    },
+    "failed_arm": {
+      "message": "Blink failed to arm camera."
+    },
+    "failed_arm_motion": {
+      "message": "Blink failed to arm camera motion detection."
+    },
+    "failed_clip": {
+      "message": "Blink failed to record a clip."
+    },
+    "failed_disarm": {
+      "message": "Blink failed to disarm camera."
+    },
+    "failed_disarm_motion": {
+      "message": "Blink failed to disarm camera motion detection."
+    },
+    "failed_snap": {
+      "message": "Blink failed to snap a picture."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_path": {
+      "message": "Can't write to directory {target}, no access to path!"
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "service_removed": {
+      "message": "The service {service_name} has been removed and is no longer needed. Home Assistant will automatically prompt for reauthentication when required."
+    }
+  },
+  "issues": {
+    "service_deprecation": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Blink update service is deprecated and will be removed.\nPlease update your automations and scripts to use `Home Assistant Core Integration: Update entity`.",
+            "title": "[%key:component::blink::issues::service_deprecation::title%]"
+          }
+        }
+      },
+      "title": "Blink update service is being removed"
+    },
+    "service_send_pin_deprecation": {
+      "description": "The service {service_name} has been removed and is no longer needed. When a new two-factor authentication code is required, Home Assistant will automatically prompt you to reauthenticate through the integration configuration. Please remove any automations or scripts that call this service.",
+      "title": "Blink send PIN service has been removed"
+    }
+  },
+  "options": {
+    "step": {
+      "simple_options": {
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        },
+        "description": "Configure Blink integration",
+        "title": "Blink options"
+      }
+    }
+  },
+  "services": {
+    "record": {
+      "description": "Requests camera to record a clip.",
+      "name": "Record"
+    },
+    "save_recent_clips": {
+      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_[camera name].mp4\".",
+      "fields": {
+        "file_path": {
+          "description": "Directory name of writable path (directory may need to be included in allowlist_external_dirs in config).",
+          "name": "Output directory"
+        }
+      },
+      "name": "Save recent clips"
+    },
+    "save_video": {
+      "description": "Saves last recorded video clip to local file.",
+      "fields": {
+        "filename": {
+          "description": "Filename to writable path (directory may need to be included in allowlist_external_dirs in config).",
+          "name": "File name"
+        }
+      },
+      "name": "Save video"
+    },
+    "send_pin": {
+      "description": "Sends a new PIN to Blink for 2FA.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Blink integration ID.",
+          "name": "Integration ID"
+        },
+        "pin": {
+          "description": "PIN received from Blink. Leave empty if you only received a verification email.",
+          "name": "PIN"
+        }
+      },
+      "name": "Send PIN"
+    },
+    "trigger_camera": {
+      "description": "Requests camera to take new image.",
+      "name": "Trigger camera"
+    }
+  }
+}

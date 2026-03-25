@@ -1,0 +1,3 @@
+# Port is wrong type
+host: blah.com
+port: foo

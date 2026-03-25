@@ -1,0 +1,6 @@
+{
+  "sensors": [
+    { "name": "Thermostat", "temp": 14 },
+    { "name": "Space Temp", "temp": 14 }
+  ]
+}

@@ -1,0 +1,11 @@
+arm_away_instant:
+  target:
+    entity:
+      integration: totalconnect
+      domain: alarm_control_panel
+
+arm_home_instant:
+  target:
+    entity:
+      integration: totalconnect
+      domain: alarm_control_panel

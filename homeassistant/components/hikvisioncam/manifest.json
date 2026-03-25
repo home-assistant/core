@@ -1,0 +1,10 @@
+{
+  "domain": "hikvisioncam",
+  "name": "Hikvision",
+  "codeowners": ["@fbradyirl"],
+  "documentation": "https://www.home-assistant.io/integrations/hikvisioncam",
+  "iot_class": "local_polling",
+  "loggers": ["hikvision"],
+  "quality_scale": "legacy",
+  "requirements": ["hikvision==0.4"]
+}

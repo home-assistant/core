@@ -1,0 +1,25 @@
+{
+  "sceneIds": [46274, 21015],
+  "sceneData": [
+    {
+      "roomId": 12538,
+      "name": "one",
+      "colorId": 12,
+      "iconId": 0,
+      "networkNumber": 250,
+      "id": 46274,
+      "order": 0,
+      "hkAssist": false
+    },
+    {
+      "roomId": 12538,
+      "name": "two",
+      "colorId": 14,
+      "iconId": 0,
+      "networkNumber": 231,
+      "id": 21015,
+      "order": 1,
+      "hkAssist": false
+    }
+  ]
+}

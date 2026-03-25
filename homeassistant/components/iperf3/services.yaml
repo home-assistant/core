@@ -1,0 +1,7 @@
+speedtest:
+  fields:
+    host:
+      example: "iperf.he.net"
+      default: None
+      selector:
+        text:

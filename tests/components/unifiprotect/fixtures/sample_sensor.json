@@ -1,0 +1,92 @@
+{
+  "mac": "26DBAFF133A4",
+  "connectionHost": "192.168.216.198",
+  "type": "UFP-SENSE",
+  "name": "Test Sensor",
+  "upSince": 1641256963255,
+  "uptime": null,
+  "lastSeen": 1641259127934,
+  "connectedSince": 1641259139255,
+  "state": "CONNECTED",
+  "hardwareRevision": 6,
+  "firmwareVersion": "1.0.2",
+  "latestFirmwareVersion": "1.0.2",
+  "firmwareBuild": null,
+  "isUpdating": false,
+  "isAdopting": false,
+  "isAdopted": true,
+  "isAdoptedByOther": false,
+  "isProvisioned": false,
+  "isRebooting": false,
+  "isSshEnabled": false,
+  "canAdopt": false,
+  "isAttemptingToConnect": false,
+  "isMotionDetected": false,
+  "mountType": "door",
+  "leakDetectedAt": null,
+  "tamperingDetectedAt": null,
+  "isOpened": false,
+  "openStatusChangedAt": 1641269036582,
+  "alarmTriggeredAt": null,
+  "motionDetectedAt": 1641269044824,
+  "wiredConnectionState": {
+    "phyRate": null
+  },
+  "stats": {
+    "light": {
+      "value": 10.0,
+      "status": "neutral"
+    },
+    "humidity": {
+      "value": 10.0,
+      "status": "neutral"
+    },
+    "temperature": {
+      "value": 10.0,
+      "status": "neutral"
+    }
+  },
+  "bluetoothConnectionState": {
+    "signalQuality": 15,
+    "signalStrength": -50
+  },
+  "batteryStatus": {
+    "percentage": 10,
+    "isLow": false
+  },
+  "alarmSettings": {
+    "isEnabled": false
+  },
+  "lightSettings": {
+    "isEnabled": false,
+    "lowThreshold": null,
+    "highThreshold": null,
+    "margin": 10
+  },
+  "motionSettings": {
+    "isEnabled": false,
+    "sensitivity": 100
+  },
+  "temperatureSettings": {
+    "isEnabled": false,
+    "lowThreshold": null,
+    "highThreshold": null,
+    "margin": 0.1
+  },
+  "humiditySettings": {
+    "isEnabled": false,
+    "lowThreshold": null,
+    "highThreshold": null,
+    "margin": 1
+  },
+  "ledSettings": {
+    "isEnabled": false
+  },
+  "bridge": "61b3f5c90050a703e700042a",
+  "camera": "2f9beb2e6f79af3c32c22d49",
+  "bridgeCandidates": [],
+  "id": "f6ecbe829f81cc79ad6e0c9a",
+  "isConnected": true,
+  "marketName": "UP Sense",
+  "modelKey": "sensor"
+}

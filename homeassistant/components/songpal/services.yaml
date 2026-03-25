@@ -1,0 +1,16 @@
+set_sound_setting:
+  target:
+    entity:
+      integration: songpal
+      domain: media_player
+  fields:
+    name:
+      required: true
+      example: "nightMode"
+      selector:
+        text:
+    value:
+      required: true
+      example: "on"
+      selector:
+        text:

@@ -1,0 +1,10 @@
+{
+  "domain": "slide",
+  "name": "Slide",
+  "codeowners": ["@ualex73"],
+  "documentation": "https://www.home-assistant.io/integrations/slide",
+  "iot_class": "cloud_polling",
+  "loggers": ["goslideapi"],
+  "quality_scale": "legacy",
+  "requirements": ["goslide-api==0.7.0"]
+}

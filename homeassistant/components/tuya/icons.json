@@ -1,0 +1,385 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "carbon_dioxide": {
+        "default": "mdi:molecule-co2"
+      },
+      "carbon_monoxide": {
+        "default": "mdi:molecule-co"
+      },
+      "drop": {
+        "default": "mdi:package-down"
+      },
+      "feeding": {
+        "default": "mdi:information"
+      },
+      "tilt": {
+        "default": "mdi:spirit-level"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
+      }
+    },
+    "button": {
+      "reset_duster_cloth": {
+        "default": "mdi:restart"
+      },
+      "reset_edge_brush": {
+        "default": "mdi:restart"
+      },
+      "reset_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_map": {
+        "default": "mdi:map-marker-remove"
+      },
+      "reset_roll_brush": {
+        "default": "mdi:restart"
+      },
+      "snooze": {
+        "default": "mdi:sleep"
+      }
+    },
+    "number": {
+      "cook_time": {
+        "default": "mdi:timer"
+      },
+      "down_delay": {
+        "default": "mdi:timer"
+      },
+      "far_detection": {
+        "default": "mdi:signal-distance-variant"
+      },
+      "feed": {
+        "default": "mdi:bowl"
+      },
+      "heat_preservation_time": {
+        "default": "mdi:timer"
+      },
+      "maximum_brightness": {
+        "default": "mdi:lightbulb-on-outline"
+      },
+      "maximum_brightness_2": {
+        "default": "mdi:lightbulb-on-outline"
+      },
+      "maximum_brightness_3": {
+        "default": "mdi:lightbulb-on-outline"
+      },
+      "minimum_brightness": {
+        "default": "mdi:lightbulb-outline"
+      },
+      "minimum_brightness_2": {
+        "default": "mdi:lightbulb-outline"
+      },
+      "minimum_brightness_3": {
+        "default": "mdi:lightbulb-outline"
+      },
+      "move_down": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "move_up": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "near_detection": {
+        "default": "mdi:signal-distance-variant"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "voice_times": {
+        "default": "mdi:microphone"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
+      },
+      "water_level": {
+        "default": "mdi:cup-water"
+      }
+    },
+    "select": {
+      "basic_anti_flicker": {
+        "default": "mdi:image-outline"
+      },
+      "basic_nightvision": {
+        "default": "mdi:theme-light-dark"
+      },
+      "concentration": {
+        "default": "mdi:altimeter"
+      },
+      "countdown": {
+        "default": "mdi:timer-cog-outline"
+      },
+      "cups": {
+        "default": "mdi:numeric"
+      },
+      "curtain_motor_mode": {
+        "default": "mdi:swap-horizontal"
+      },
+      "decibel_sensitivity": {
+        "default": "mdi:volume-vibrate"
+      },
+      "horizontal_fan_angle": {
+        "default": "mdi:format-horizontal-align-center"
+      },
+      "humidifier_level": {
+        "default": "mdi:spray"
+      },
+      "humidifier_moodlighting": {
+        "default": "mdi:lightbulb-multiple"
+      },
+      "humidifier_spray_mode": {
+        "default": "mdi:spray"
+      },
+      "mode": {
+        "default": "mdi:coffee"
+      },
+      "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "record_mode": {
+        "default": "mdi:record-rec"
+      },
+      "target_humidity": {
+        "default": "mdi:water-percent"
+      },
+      "temperature_level": {
+        "default": "mdi:thermometer-lines"
+      },
+      "vacuum_cistern": {
+        "default": "mdi:water-opacity"
+      },
+      "vacuum_collection": {
+        "default": "mdi:air-filter"
+      },
+      "vacuum_mode": {
+        "default": "mdi:layers-outline"
+      },
+      "vertical_fan_angle": {
+        "default": "mdi:format-vertical-align-center"
+      },
+      "weather_delay": {
+        "default": "mdi:weather-cloudy-clock"
+      }
+    },
+    "sensor": {
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "air_quality_index": {
+        "default": "mdi:air-filter"
+      },
+      "battery_state": {
+        "default": "mdi:battery"
+      },
+      "carbon_dioxide": {
+        "default": "mdi:molecule-co2"
+      },
+      "carbon_monoxide": {
+        "default": "mdi:molecule-co"
+      },
+      "cleaning_area": {
+        "default": "mdi:texture-box"
+      },
+      "cleaning_time": {
+        "default": "mdi:progress-clock"
+      },
+      "duster_cloth_life": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "filter_life": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "filter_utilization": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "gas": {
+        "default": "mdi:gas-cylinder"
+      },
+      "illuminance": {
+        "default": "mdi:brightness-6"
+      },
+      "last_amount": {
+        "default": "mdi:counter"
+      },
+      "last_operation_duration": {
+        "default": "mdi:progress-clock"
+      },
+      "luminosity": {
+        "default": "mdi:brightness-6"
+      },
+      "pm25": {
+        "default": "mdi:molecule"
+      },
+      "remaining_time": {
+        "default": "mdi:timer"
+      },
+      "rolling_brush_life": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "side_brush_life": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "smoke_amount": {
+        "default": "mdi:smoke-detector"
+      },
+      "total_absorption_particles": {
+        "default": "mdi:texture-box"
+      },
+      "total_cleaning_area": {
+        "default": "mdi:texture-box"
+      },
+      "total_cleaning_time": {
+        "default": "mdi:history"
+      },
+      "total_cleaning_times": {
+        "default": "mdi:counter"
+      },
+      "total_operating_time": {
+        "default": "mdi:history"
+      },
+      "total_watering_time": {
+        "default": "mdi:history"
+      },
+      "water_level": {
+        "default": "mdi:waves-arrow-up"
+      }
+    },
+    "switch": {
+      "alarm_1": {
+        "default": "mdi:alarm"
+      },
+      "alarm_2": {
+        "default": "mdi:alarm"
+      },
+      "alarm_3": {
+        "default": "mdi:alarm"
+      },
+      "alarm_4": {
+        "default": "mdi:alarm"
+      },
+      "anion": {
+        "default": "mdi:atom"
+      },
+      "arm_beep": {
+        "default": "mdi:volume-high"
+      },
+      "battery_lock": {
+        "default": "mdi:battery-lock"
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
+      "cry_detection": {
+        "default": "mdi:emoticon-cry"
+      },
+      "disinfection": {
+        "default": "mdi:bacteria"
+      },
+      "do_not_disturb": {
+        "default": "mdi:minus-circle"
+      },
+      "energy_saving": {
+        "default": "mdi:leaf"
+      },
+      "filter_cartridge_reset": {
+        "default": "mdi:filter"
+      },
+      "filter_reset": {
+        "default": "mdi:filter"
+      },
+      "flip": {
+        "default": "mdi:flip-horizontal"
+      },
+      "humidification": {
+        "default": "mdi:water-percent"
+      },
+      "ionizer": {
+        "default": "mdi:minus-circle-outline"
+      },
+      "motion_alarm": {
+        "default": "mdi:motion-sensor"
+      },
+      "motion_recording": {
+        "default": "mdi:record-rec"
+      },
+      "motion_tracking": {
+        "default": "mdi:motion-sensor"
+      },
+      "mute_voice": {
+        "default": "mdi:account-voice"
+      },
+      "natural_wind": {
+        "default": "mdi:weather-windy"
+      },
+      "open_window_detection": {
+        "default": "mdi:window-open"
+      },
+      "oxygen_bar": {
+        "default": "mdi:molecule"
+      },
+      "privacy_mode": {
+        "default": "mdi:eye-off"
+      },
+      "radio": {
+        "default": "mdi:radio"
+      },
+      "reset_of_water_usage_days": {
+        "default": "mdi:water-sync"
+      },
+      "reverse": {
+        "default": "mdi:swap-horizontal"
+      },
+      "siren": {
+        "default": "mdi:alarm-light"
+      },
+      "sleep": {
+        "default": "mdi:power-sleep"
+      },
+      "sleep_aid": {
+        "default": "mdi:power-sleep"
+      },
+      "slow_feed": {
+        "default": "mdi:speedometer-slow"
+      },
+      "sound": {
+        "default": "mdi:minus-circle"
+      },
+      "sound_detection": {
+        "default": "mdi:microphone-outline"
+      },
+      "spray": {
+        "default": "mdi:spray"
+      },
+      "start": {
+        "default": "mdi:kettle-steam"
+      },
+      "sterilization": {
+        "default": "mdi:minus-circle-outline"
+      },
+      "switch": {
+        "default": "mdi:power"
+      },
+      "time_watermark": {
+        "default": "mdi:watermark"
+      },
+      "uv_sterilization": {
+        "default": "mdi:lightbulb"
+      },
+      "video_recording": {
+        "default": "mdi:record-rec"
+      },
+      "voice": {
+        "default": "mdi:account-voice"
+      },
+      "water": {
+        "default": "mdi:water"
+      },
+      "water_pump_reset": {
+        "default": "mdi:pump"
+      },
+      "wide_dynamic_range": {
+        "default": "mdi:watermark"
+      }
+    }
+  }
+}

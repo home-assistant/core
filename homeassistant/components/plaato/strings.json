@@ -1,0 +1,55 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
+    },
+    "create_entry": {
+      "default": "Your Plaato {device_type} with name **{device_name}** was successfully set up!"
+    },
+    "error": {
+      "invalid_webhook_device": "You have selected a device that does not support sending data to a webhook. It is only available for the Airlock",
+      "no_api_method": "You need to add an auth token or select webhook",
+      "no_auth_token": "You need to add an auth token"
+    },
+    "step": {
+      "api_method": {
+        "data": {
+          "token": "Auth token",
+          "use_webhook": "Use webhook"
+        },
+        "description": "To be able to query the API an 'auth token' is required which can be obtained by following [these instructions]({auth_token_url})\n\nSelected device: **{device_type}** \n\nIf you prefer to use the built-in webhook method (Airlock only) please check the box below and leave 'Auth token' blank",
+        "title": "Select API method"
+      },
+      "user": {
+        "data": {
+          "device_name": "Name your device",
+          "device_type": "Type of Plaato device"
+        },
+        "description": "[%key:common::config_flow::description::confirm_setup%]",
+        "title": "Set up the Plaato devices"
+      },
+      "webhook": {
+        "description": "To send events to Home Assistant, you will need to set up the webhook feature in Plaato Airlock.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details.",
+        "title": "Webhook to use"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "update_interval": "Update interval (minutes)"
+        },
+        "description": "Set the update interval (minutes)",
+        "title": "Options for Plaato"
+      },
+      "webhook": {
+        "description": "Webhook info:\n\n- URL: `{webhook_url}`\n- Method: POST",
+        "title": "Options for Plaato Airlock"
+      }
+    }
+  }
+}

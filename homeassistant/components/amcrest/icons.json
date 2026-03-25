@@ -1,0 +1,37 @@
+{
+  "services": {
+    "disable_audio": {
+      "service": "mdi:volume-off"
+    },
+    "disable_motion_recording": {
+      "service": "mdi:motion-sensor-off"
+    },
+    "disable_recording": {
+      "service": "mdi:stop"
+    },
+    "enable_audio": {
+      "service": "mdi:volume-high"
+    },
+    "enable_motion_recording": {
+      "service": "mdi:motion-sensor"
+    },
+    "enable_recording": {
+      "service": "mdi:record-rec"
+    },
+    "goto_preset": {
+      "service": "mdi:pan"
+    },
+    "ptz_control": {
+      "service": "mdi:pan"
+    },
+    "set_color_bw": {
+      "service": "mdi:palette"
+    },
+    "start_tour": {
+      "service": "mdi:panorama"
+    },
+    "stop_tour": {
+      "service": "mdi:panorama-outline"
+    }
+  }
+}

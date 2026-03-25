@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_setup
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Factory reset',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_title_factory_reset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Factory reset',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_title_factory_reset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

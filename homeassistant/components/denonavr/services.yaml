@@ -1,0 +1,28 @@
+# Describes the format for available denonavr services
+
+get_command:
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player
+  fields:
+    command:
+      example: "/goform/formiPhoneAppDirect.xml?RCKSK0410370"
+      required: true
+      selector:
+        text:
+set_dynamic_eq:
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player
+  fields:
+    dynamic_eq:
+      default: true
+      selector:
+        boolean:
+update_audyssey:
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player

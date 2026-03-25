@@ -1,0 +1,106 @@
+rules:
+  ## Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry:
+    status: done
+    comment: unique ID is not available, but duplicates are prevented based on host/port
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: entities do not subscribe to events
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: No service actions currently available
+  common-modules:
+    status: done
+    comment: base entity available, but no coordinator
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: No service actions currently available
+  brands: done
+
+  ## Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: No service actions currently available
+  reauthentication-flow:
+    status: exempt
+    comment: Local polling without authentication
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+
+  ## Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: done
+    comment: hassio and mDNS/zeroconf discovery implemented
+  stale-devices:
+    status: done
+    comment: >
+      Manual removal, as it is not possible to distinguish
+      between a flaky device and a device that has been removed
+  diagnostics: done
+  exception-translations:
+    status: todo
+    comment: Under review
+  icon-translations:
+    status: exempt
+    comment: It doesn't make sense to override defaults
+  reconfiguration-flow: done
+  dynamic-devices:
+    status: done
+    comment: The bus is scanned for new devices at regular interval
+  discovery-update-info:
+    status: todo
+    comment: Under review
+  repair-issues:
+    status: exempt
+    comment: No repairs available
+  docs-use-cases:
+    status: todo
+    comment: Under review
+  docs-supported-devices:
+    status: todo
+    comment: Under review
+  docs-supported-functions:
+    status: todo
+    comment: Under review
+  docs-data-update:
+    status: todo
+    comment: Under review
+  docs-known-limitations:
+    status: todo
+    comment: Under review
+  docs-troubleshooting:
+    status: todo
+    comment: Under review
+  docs-examples:
+    status: todo
+    comment: Under review
+
+  ## Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: No websession
+  strict-typing: done

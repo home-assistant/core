@@ -1,0 +1,125 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::weather::title%]",
+      "state": {
+        "clear-night": "Clear, night",
+        "cloudy": "Cloudy",
+        "exceptional": "Exceptional",
+        "fog": "Fog",
+        "hail": "Hail",
+        "lightning": "Lightning",
+        "lightning-rainy": "Lightning, rainy",
+        "partlycloudy": "Partly cloudy",
+        "pouring": "Pouring",
+        "rainy": "Rainy",
+        "snowy": "Snowy",
+        "snowy-rainy": "Snowy, rainy",
+        "sunny": "Sunny",
+        "windy": "Windy",
+        "windy-variant": "Windy, cloudy"
+      },
+      "state_attributes": {
+        "apparent_temperature": {
+          "name": "Apparent temperature"
+        },
+        "cloud_coverage": {
+          "name": "Cloud coverage"
+        },
+        "dew_point": {
+          "name": "Dew point temperature"
+        },
+        "forecast": {
+          "name": "Forecast"
+        },
+        "humidity": {
+          "name": "Humidity"
+        },
+        "ozone": {
+          "name": "Ozone"
+        },
+        "precipitation_unit": {
+          "name": "Precipitation unit"
+        },
+        "pressure": {
+          "name": "Pressure"
+        },
+        "pressure_unit": {
+          "name": "Pressure unit"
+        },
+        "temperature": {
+          "name": "Temperature"
+        },
+        "temperature_unit": {
+          "name": "Temperature unit"
+        },
+        "uv_index": {
+          "name": "UV index"
+        },
+        "visibility": {
+          "name": "Visibility"
+        },
+        "visibility_unit": {
+          "name": "Visibility unit"
+        },
+        "wind_bearing": {
+          "name": "Wind bearing"
+        },
+        "wind_gust_speed": {
+          "name": "Wind gust speed"
+        },
+        "wind_speed": {
+          "name": "Wind speed"
+        },
+        "wind_speed_unit": {
+          "name": "Wind speed unit"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_service_weather_get_forecast": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue.",
+            "title": "[%key:component::weather::issues::deprecated_service_weather_get_forecast::title%]"
+          }
+        }
+      },
+      "title": "Detected use of deprecated action weather.get_forecast"
+    }
+  },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "twice_daily": "Twice daily"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "description": "Retrieves the forecast from a selected weather service.",
+      "fields": {
+        "type": {
+          "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]",
+          "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]"
+        }
+      },
+      "name": "Get forecast"
+    },
+    "get_forecasts": {
+      "description": "Retrieves the forecast from selected weather services.",
+      "fields": {
+        "type": {
+          "description": "The scope of the weather forecast.",
+          "name": "Forecast type"
+        }
+      },
+      "name": "Get forecasts"
+    }
+  },
+  "title": "Weather"
+}

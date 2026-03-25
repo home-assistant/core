@@ -1,0 +1,460 @@
+{
+  "data": {
+    "id": "station__lh_9876336",
+    "name": "Славянский Бульвар",
+    "coordinates": [37.47243, 55.730359],
+    "currentTime": 1634984296770,
+    "tzOffset": 10800,
+    "type": "railway",
+    "region": {
+      "id": 213,
+      "capitalId": 0,
+      "hierarchy": [225, 1, 213],
+      "seoname": "moscow",
+      "bounds": [
+        [37.0402925, 55.31141404514547],
+        [38.2047155, 56.190068045145466]
+      ],
+      "longitude": 37.622504,
+      "latitude": 55.753215,
+      "zoom": 10,
+      "names": {
+        "ablative": "",
+        "accusative": "Москву",
+        "dative": "Москве",
+        "directional": "",
+        "genitive": "Москвы",
+        "instrumental": "Москвой",
+        "locative": "",
+        "nominative": "Москва",
+        "preposition": "в",
+        "prepositional": "Москве"
+      }
+    },
+    "transports": [
+      {
+        "lineId": "lh_6031x7531_9600213_g21_4",
+        "name": "6031/7531",
+        "Types": ["suburban", "railway"],
+        "type": "suburban",
+        "threads": [
+          {
+            "threadId": "lh_6031x7531_0_9600213_g21_4",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "station__lh_9600213",
+                "name": "Аэропорт Шереметьево"
+              },
+              {
+                "id": "station__lh_9600721",
+                "name": "Одинцово"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1634984640",
+                    "tzOffset": 10800,
+                    "text": "13:24"
+                  }
+                }
+              ],
+              "Frequencies": [],
+              "departureTime": "13:24"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=lh_6031x7531_9600213_g21_4&ll=37.349317%2C55.818167&name=6031%2F7531&r=16767&type=suburban",
+        "seoname": "6031_7531"
+      },
+      {
+        "lineId": "lh_6183_9600781_g21_4",
+        "name": "6183",
+        "Types": ["suburban", "railway"],
+        "type": "suburban",
+        "threads": [
+          {
+            "threadId": "lh_6183_0_9600781_g21_4",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "station__lh_9600781",
+                "name": "Лобня"
+              },
+              {
+                "id": "station__lh_9601006",
+                "name": "Можайск"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1634985180",
+                    "tzOffset": 10800,
+                    "text": "13:33"
+                  }
+                }
+              ],
+              "Frequencies": [],
+              "departureTime": "13:33"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=lh_6183_9600781_g21_4&ll=36.753680%2C55.756043&name=6183&r=53892&type=suburban",
+        "seoname": "6183"
+      },
+      {
+        "lineId": "lh_7268_9600721_g21_4",
+        "name": "7268",
+        "Types": ["suburban", "railway"],
+        "type": "suburban",
+        "threads": [
+          {
+            "threadId": "lh_7268_0_9600721_g21_4",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "station__lh_9600721",
+                "name": "Одинцово"
+              },
+              {
+                "id": "station__lh_9600781",
+                "name": "Лобня"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1634985120",
+                    "tzOffset": 10800,
+                    "text": "13:32"
+                  }
+                }
+              ],
+              "Frequencies": [],
+              "departureTime": "13:32"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=lh_7268_9600721_g21_4&ll=37.382971%2C55.843017&name=7268&r=20019&type=suburban",
+        "seoname": "7268"
+      }
+    ],
+    "links": [
+      {
+        "type": "timetable",
+        "href": "https://rasp.yandex.ru/station/9876336?span=day&direction=all&type=suburban"
+      }
+    ],
+    "breadcrumbs": [
+      {
+        "name": "Карты",
+        "type": "root",
+        "url": "https://yandex.ru/maps/"
+      },
+      {
+        "name": "Москва",
+        "type": "region",
+        "url": "https://yandex.ru/maps/213/moscow/",
+        "region": {
+          "center": [37.622504, 55.753215],
+          "zoom": 10
+        }
+      },
+      {
+        "name": "Общественный транспорт",
+        "type": "masstransit-home",
+        "url": "https://yandex.ru/maps/213/moscow/transport/"
+      },
+      {
+        "name": "Славянский Бульвар",
+        "type": "search",
+        "url": "https://yandex.ru/maps/213/moscow/stops/station__lh_9876336/",
+        "currentPage": true
+      }
+    ],
+    "searchResult": {
+      "type": "business",
+      "requestId": "1634984296787090-1406171972-man2-7134-3a4-man-addrs-nmeta-new-8031",
+      "analyticsId": "1",
+      "title": "Станция метро Славянский бульвар",
+      "description": "Россия, Москва, Западный административный округ, район Фили-Давыдково",
+      "address": "Россия, Москва, Западный административный округ, район Фили-Давыдково",
+      "coordinates": [37.47049, 55.729442],
+      "displayCoordinates": [37.47049, 55.729442],
+      "bounds": [
+        [37.464149, 55.725767],
+        [37.480606, 55.735054]
+      ],
+      "uri": "ymapsbm1://transit/stop?id=station__lh_9876336",
+      "logId": "dHlwZT1iaXpmaW5kZXI7aWQ9MjM2OTE0NjU0Nzcx",
+      "id": "236914654771",
+      "metro": [
+        {
+          "id": "station__9858904",
+          "name": "Славянский бульвар",
+          "distance": "130 м",
+          "distanceValue": 131.128,
+          "coordinates": [37.46880848, 55.729018063],
+          "type": "metro",
+          "color": "#003399"
+        },
+        {
+          "id": "station__9858881",
+          "name": "Пионерская",
+          "distance": "1,1 км",
+          "distanceValue": 1145.75,
+          "coordinates": [37.467484245, 55.736075908],
+          "type": "metro",
+          "color": "#0099cc"
+        },
+        {
+          "id": "station__9858935",
+          "name": "Филёвский парк",
+          "distance": "1,9 км",
+          "distanceValue": 1940.38,
+          "coordinates": [37.48289444, 55.739425767],
+          "type": "metro",
+          "color": "#0099cc"
+        }
+      ],
+      "stops": [
+        {
+          "id": "2081245620",
+          "name": "Метро Славянский бульвар",
+          "distance": "300 м",
+          "distanceValue": 295.068,
+          "coordinates": [37.473066913, 55.728642545],
+          "type": "common"
+        },
+        {
+          "id": "stop__9641464",
+          "name": "Давыдково",
+          "distance": "680 м",
+          "distanceValue": 675.354,
+          "coordinates": [37.469965263, 55.727241055],
+          "type": "common"
+        },
+        {
+          "id": "stop__9650359",
+          "name": "Давыдковская улица",
+          "distance": "770 м",
+          "distanceValue": 774.503,
+          "coordinates": [37.478631492, 55.726709525],
+          "type": "common"
+        },
+        {
+          "id": "stop__9644821",
+          "name": "Метро Пионерская",
+          "distance": "790 м",
+          "distanceValue": 789.69,
+          "coordinates": [37.470052901, 55.733765425],
+          "type": "common"
+        }
+      ],
+      "photos": {
+        "count": 7,
+        "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2356223/2a00000173646464071921e9e0b575ac37ff/%s",
+        "items": [
+          {
+            "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2356223/2a00000173646464071921e9e0b575ac37ff/%s"
+          },
+          {
+            "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2838749/2a00000173646465a0be003e4d4d8f6eabe2/%s"
+          },
+          {
+            "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2701558/2a00000173646465fc6d7185d3d782d2d17f/%s"
+          },
+          {
+            "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2425845/2a00000173646464ebcd5b209af0606301c9/%s"
+          },
+          {
+            "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2408158/2a00000173646464915cb00f964811d0e948/%s"
+          },
+          {
+            "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2378041/2a00000173b976f3f703c0d895c481f303ca/%s"
+          },
+          {
+            "urlTemplate": "https://avatars.mds.yandex.net/get-altay/2755030/2a0000017364646546b611057e56e3c4878c/%s"
+          }
+        ]
+      },
+      "shortTitle": "Станция метро Славянский бульвар",
+      "fullAddress": "Россия, Москва, Западный административный округ, район Фили-Давыдково",
+      "country": "Россия",
+      "status": "open",
+      "businessLinks": [],
+      "ratingData": {
+        "ratingCount": 7,
+        "ratingValue": 0,
+        "reviewCount": 4
+      },
+      "sources": [
+        {
+          "id": "yandex",
+          "name": "Яндекс",
+          "href": "https://www.yandex.ru"
+        }
+      ],
+      "categories": [
+        {
+          "id": "244903403206",
+          "name": "Станция метро",
+          "class": "metro",
+          "seoname": "metro_station",
+          "pluralName": "Станции метро"
+        }
+      ],
+      "featureGroups": [],
+      "businessProperties": {
+        "has_verified_owner": false,
+        "hide_claim_organization": true,
+        "sensitive": true
+      },
+      "modularSnippet": {
+        "snippet_show_title": true,
+        "snippet_show_rating": true,
+        "snippet_show_photo": "single_photo",
+        "snippet_show_eta": true,
+        "snippet_show_category": "single_category",
+        "snippet_show_work_hours": true,
+        "snippet_show_metro_line": true,
+        "snippet_show_metro_jams": true,
+        "snippet_show_subline": [
+          "no_subline",
+          "closed_for_visitors",
+          "closed_for_without_qr"
+        ]
+      },
+      "seoname": "stantsiya_metro_slavyanskiy_bulvar",
+      "geoId": 98561,
+      "compositeAddress": {
+        "locality": "Москва"
+      },
+      "references": [
+        {
+          "id": "4037957080",
+          "scope": "nyak"
+        }
+      ],
+      "subtitleItems": [
+        {
+          "type": "rating",
+          "text": "6",
+          "property": [
+            {
+              "key": "value",
+              "value": "6"
+            },
+            {
+              "key": "value_5",
+              "value": "3"
+            }
+          ]
+        }
+      ],
+      "region": {
+        "id": 213,
+        "capitalId": 0,
+        "hierarchy": [225, 1, 213],
+        "seoname": "moscow",
+        "bounds": [
+          [37.0402925, 55.31141404514547],
+          [38.2047155, 56.190068045145466]
+        ],
+        "longitude": 37.622504,
+        "latitude": 55.753215,
+        "zoom": 10,
+        "names": {
+          "ablative": "",
+          "accusative": "Москву",
+          "dative": "Москве",
+          "directional": "",
+          "genitive": "Москвы",
+          "instrumental": "Москвой",
+          "locative": "",
+          "nominative": "Москва",
+          "preposition": "в",
+          "prepositional": "Москве"
+        }
+      },
+      "events": [],
+      "breadcrumbs": [
+        {
+          "name": "Карты",
+          "type": "root",
+          "url": "https://yandex.ru/maps/"
+        },
+        {
+          "name": "Москва",
+          "type": "region",
+          "url": "https://yandex.ru/maps/213/moscow/",
+          "region": {
+            "center": [37.622504, 55.753215],
+            "zoom": 10
+          }
+        },
+        {
+          "type": "catalog",
+          "name": "Каталог организаций",
+          "url": "https://yandex.ru/maps/213/moscow/catalog/",
+          "region": {
+            "id": 213,
+            "capitalId": 0,
+            "hierarchy": [225, 1, 213],
+            "seoname": "moscow",
+            "bounds": [
+              [37.0402925, 55.31141404514547],
+              [38.2047155, 56.190068045145466]
+            ],
+            "longitude": 37.622504,
+            "latitude": 55.753215,
+            "zoom": 10,
+            "names": {
+              "ablative": "",
+              "accusative": "Москву",
+              "dative": "Москве",
+              "directional": "",
+              "genitive": "Москвы",
+              "instrumental": "Москвой",
+              "locative": "",
+              "nominative": "Москва",
+              "preposition": "в",
+              "prepositional": "Москве"
+            }
+          }
+        },
+        {
+          "category": {
+            "id": "244903403206",
+            "name": "Станция метро",
+            "class": "metro",
+            "seoname": "metro_station",
+            "pluralName": "Станции метро"
+          },
+          "name": "Станции метро",
+          "type": "category",
+          "url": "https://yandex.ru/maps/213/moscow/category/metro_station/244903403206/"
+        },
+        {
+          "name": "Станция метро Славянский бульвар",
+          "type": "search",
+          "url": "https://yandex.ru/maps/org/stantsiya_metro_slavyanskiy_bulvar/236914654771/",
+          "currentPage": true
+        }
+      ],
+      "geoWhere": {
+        "id": "53211697",
+        "seoname": "rayon_fili_davydkovo",
+        "kind": "district",
+        "coordinates": [37.469359, 55.727136],
+        "displayCoordinates": [37.469359, 55.727136],
+        "encodedCoordinates": "Z04YcgFpSkAOQFtvfXtzdn1gYg=="
+      }
+    }
+  }
+}

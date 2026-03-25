@@ -1,0 +1,150 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "auth_missing": "You must provide either an API key or a username and password.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "site_not_active": "The site is not active for the provided API key",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::solaredge::config::step::user::data_description::api_key%]",
+          "password": "[%key:component::solaredge::config::step::user::data_description::password%]",
+          "username": "[%key:component::solaredge::config::step::user::data_description::username%]"
+        },
+        "description": "Update your API key or web account credentials for site {site_id}.",
+        "sections": {
+          "api_auth": {
+            "data": {
+              "api_key": "[%key:common::config_flow::data::api_key%]"
+            },
+            "description": "[%key:component::solaredge::config::step::user::sections::api_auth::description%]",
+            "name": "[%key:component::solaredge::config::step::user::sections::api_auth::name%]"
+          },
+          "web_auth": {
+            "data": {
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "description": "[%key:component::solaredge::config::step::user::sections::web_auth::description%]",
+            "name": "[%key:component::solaredge::config::step::user::sections::web_auth::name%]"
+          }
+        },
+        "title": "Reconfigure SolarEdge"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "name": "The name of this installation",
+          "password": "[%key:common::config_flow::data::password%]",
+          "site_id": "The SolarEdge site ID",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "api_key": "Optional, used for general site sensors",
+          "password": "Required if username is provided",
+          "username": "Optional, used for detailed module-level production statistics"
+        },
+        "description": "Provide your site ID and at least one method of authentication",
+        "sections": {
+          "api_auth": {
+            "data": {
+              "api_key": "[%key:common::config_flow::data::api_key%]"
+            },
+            "description": "Optionally provide your SolarEdge API key. Used for real-time detailed site sensors",
+            "name": "API key authentication"
+          },
+          "web_auth": {
+            "data": {
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "description": "Optionally provide your SolarEdge web portal credentials. Used for non real-time module-level production statistics",
+            "name": "Web account authentication"
+          }
+        },
+        "title": "Set up your SolarEdge integration"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "batteries": {
+        "name": "Batteries"
+      },
+      "consumption_energy": {
+        "name": "Consumed energy"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
+      "energy_this_month": {
+        "name": "Energy this month"
+      },
+      "energy_this_year": {
+        "name": "Energy this year"
+      },
+      "energy_today": {
+        "name": "Energy today"
+      },
+      "feedin_energy": {
+        "name": "Exported energy"
+      },
+      "gateways": {
+        "name": "Gateways"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "inverters": {
+        "name": "Inverters"
+      },
+      "lifetime_energy": {
+        "name": "Lifetime energy"
+      },
+      "meters": {
+        "name": "Meters"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
+      "production_energy": {
+        "name": "Produced energy"
+      },
+      "purchased_energy": {
+        "name": "Imported energy"
+      },
+      "selfconsumption_energy": {
+        "name": "Self-consumed energy"
+      },
+      "sensors": {
+        "name": "Sensors"
+      },
+      "site_details": {
+        "name": "Site details"
+      },
+      "solar_power": {
+        "name": "Solar power"
+      },
+      "storage_level": {
+        "name": "Storage level"
+      },
+      "storage_power": {
+        "name": "Storage power"
+      }
+    }
+  }
+}

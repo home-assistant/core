@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "sensor": {
+      "avg_response_time_1d": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "avg_response_time_30d": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "avg_response_time_365d": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "cert_days_remaining": {
+        "default": "mdi:certificate"
+      },
+      "hostname": {
+        "default": "mdi:ip-outline"
+      },
+      "port": {
+        "default": "mdi:ip-outline"
+      },
+      "response_time": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "status": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "down": "mdi:lan-disconnect",
+          "maintenance": "mdi:account-hard-hat-outline",
+          "pending": "mdi:lan-pending"
+        }
+      },
+      "tags": {
+        "default": "mdi:tag"
+      },
+      "type": {
+        "default": "mdi:protocol"
+      },
+      "uptime_1d": {
+        "default": "mdi:history"
+      },
+      "uptime_30d": {
+        "default": "mdi:history"
+      },
+      "uptime_365d": {
+        "default": "mdi:history"
+      },
+      "url": {
+        "default": "mdi:web"
+      }
+    }
+  }
+}

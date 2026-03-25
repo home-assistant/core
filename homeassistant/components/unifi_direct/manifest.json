@@ -1,0 +1,10 @@
+{
+  "domain": "unifi_direct",
+  "name": "UniFi AP",
+  "codeowners": ["@tofuSCHNITZEL"],
+  "documentation": "https://www.home-assistant.io/integrations/unifi_direct",
+  "iot_class": "local_polling",
+  "loggers": ["unifi_ap"],
+  "quality_scale": "legacy",
+  "requirements": ["unifi_ap==0.0.2"]
+}

@@ -1,0 +1,95 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hopper_connected": {
+        "default": "mdi:filter-check"
+      },
+      "sleep_mode": {
+        "default": "mdi:sleep"
+      },
+      "sleeping": {
+        "default": "mdi:sleep"
+      }
+    },
+    "button": {
+      "give_snack": {
+        "default": "mdi:candy-outline"
+      },
+      "reset_waste_drawer": {
+        "default": "mdi:delete-variant"
+      }
+    },
+    "select": {
+      "brightness_level": {
+        "default": "mdi:lightbulb-question",
+        "state": {
+          "high": "mdi:lightbulb-on",
+          "low": "mdi:lightbulb-on-30",
+          "medium": "mdi:lightbulb-on-50"
+        }
+      },
+      "cycle_delay": {
+        "default": "mdi:timer-outline"
+      },
+      "globe_brightness": {
+        "default": "mdi:lightbulb-question",
+        "state": {
+          "high": "mdi:lightbulb-on",
+          "low": "mdi:lightbulb-on-30",
+          "medium": "mdi:lightbulb-on-50"
+        }
+      },
+      "globe_light": {
+        "state": {
+          "auto": "mdi:lightbulb-auto",
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on"
+        }
+      },
+      "meal_insert_size": {
+        "default": "mdi:scale"
+      }
+    },
+    "sensor": {
+      "food_dispensed_today": {
+        "default": "mdi:counter"
+      },
+      "hopper_status": {
+        "default": "mdi:filter",
+        "state": {
+          "disabled": "mdi:filter-remove",
+          "empty": "mdi:filter-minus-outline",
+          "enabled": "mdi:filter-check",
+          "motor_disconnected": "mdi:engine-off",
+          "motor_fault_short": "mdi:flash-off",
+          "motor_ot_amps": "mdi:flash-alert"
+        }
+      },
+      "total_cycles": {
+        "default": "mdi:counter"
+      },
+      "visits_today": {
+        "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "night_light_mode": {
+        "default": "mdi:lightbulb-off",
+        "state": {
+          "on": "mdi:lightbulb-on"
+        }
+      },
+      "panel_lockout": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "service": "mdi:sleep"
+    }
+  }
+}

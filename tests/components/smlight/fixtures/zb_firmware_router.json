@@ -1,0 +1,13 @@
+[
+  {
+    "mode": "ZB",
+    "type": 1,
+    "notes": "<b>SMLIGHT latest ROUTER release for CC2652P7 chips [16-Jul-2024]</b>:<br>- SDK 7.41 based (latest);<br><a href='https://smlight.tech/legal/licenses/restrictive-smlight-slzb06-v20240328.txt' target='_blank' aria-current='true'><span>Terms of use</span></a><span> - by downloading and installing this firmware, you agree to the aforementioned terms.",
+    "rev": "20240716",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06p10/znp-SLZB-06P10-20240716.bin",
+    "ver": "20240716",
+    "dev": false,
+    "prod": true,
+    "baud": 115200
+  }
+]

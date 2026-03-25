@@ -1,0 +1,14 @@
+{
+  "domain": "abode",
+  "name": "Abode",
+  "codeowners": ["@shred86"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/abode",
+  "homekit": {
+    "models": ["Abode", "Iota"]
+  },
+  "iot_class": "cloud_push",
+  "loggers": ["jaraco.abode", "lomond"],
+  "requirements": ["jaraco.abode==6.2.1"],
+  "single_config_entry": true
+}

@@ -1,0 +1,18 @@
+{
+  "device_id": "3210000003",
+  "name": "Bedroom",
+  "is_active": true,
+  "device_type": "WAVE_ENHANCE",
+  "product_name": "Wave Enhance",
+  "location_name": "Home",
+  "sensors": {
+    "battery": 1.1,
+    "co2": 2.2,
+    "humidity": 3.3,
+    "lux": 4.4,
+    "pressure": 5.5,
+    "sla": 6.6,
+    "temp": 7.7,
+    "voc": 8.8
+  }
+}

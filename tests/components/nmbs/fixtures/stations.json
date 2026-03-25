@@ -1,0 +1,30 @@
+{
+  "version": "1.3",
+  "timestamp": "1720252400",
+  "station": [
+    {
+      "@id": "http://irail.be/stations/NMBS/008812005",
+      "id": "BE.NMBS.008812005",
+      "name": "Brussels-North",
+      "locationX": "4.360846",
+      "locationY": "50.859663",
+      "standardname": "Brussel-Noord/Bruxelles-Nord"
+    },
+    {
+      "@id": "http://irail.be/stations/NMBS/008813003",
+      "id": "BE.NMBS.008813003",
+      "name": "Brussels-Central",
+      "locationX": "4.356801",
+      "locationY": "50.845658",
+      "standardname": "Brussel-Centraal/Bruxelles-Central"
+    },
+    {
+      "@id": "http://irail.be/stations/NMBS/008814001",
+      "id": "BE.NMBS.008814001",
+      "name": "Brussels-South/Brussels-Midi",
+      "locationX": "4.336531",
+      "locationY": "50.835707",
+      "standardname": "Brussel-Zuid/Bruxelles-Midi"
+    }
+  ]
+}

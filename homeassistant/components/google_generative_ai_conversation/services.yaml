@@ -1,0 +1,12 @@
+generate_content:
+  fields:
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+    filenames:
+      required: false
+      selector:
+        text:
+          multiple: true

@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_sensor": "Sensor not available or invalid"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "sensor_id": "Sensor ID",
+          "show_on_map": "Show on map"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pressure_at_sealevel": { "name": "Pressure at sea level" }
+    }
+  }
+}

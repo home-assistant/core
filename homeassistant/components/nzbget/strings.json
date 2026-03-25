@@ -1,0 +1,92 @@
+{
+  "config": {
+    "abort": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "title": "Connect to NZBGet"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "article_cache": {
+        "name": "Article cache"
+      },
+      "average_speed": {
+        "name": "Average speed"
+      },
+      "disk_free": {
+        "name": "Disk free"
+      },
+      "download_paused": {
+        "name": "Download paused"
+      },
+      "post_processing_jobs": {
+        "name": "Post-processing jobs"
+      },
+      "post_processing_paused": {
+        "name": "Post-processing paused"
+      },
+      "queue_size": {
+        "name": "Queue size"
+      },
+      "size": {
+        "name": "Size"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "speed_limit": {
+        "name": "Speed limit"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    },
+    "switch": {
+      "download": {
+        "name": "Download"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Config entry not found or not loaded!"
+    }
+  },
+  "services": {
+    "pause": {
+      "description": "Pauses download queue.",
+      "name": "[%key:common::action::pause%]"
+    },
+    "resume": {
+      "description": "Resumes download queue.",
+      "name": "Resume"
+    },
+    "set_speed": {
+      "description": "Sets download speed limit.",
+      "fields": {
+        "speed": {
+          "description": "Speed limit. 0 is unlimited.",
+          "name": "Speed"
+        }
+      },
+      "name": "Set speed"
+    }
+  }
+}

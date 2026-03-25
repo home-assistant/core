@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer size="0" totalSize="5" allowSync="1" art="/:/resources/show-fanart.jpg" identifier="com.plexapp.plugins.library" librarySectionID="2" librarySectionTitle="TV Shows" librarySectionUUID="905308ec-5019-43d4-a449-75d2b9e42f93" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1628745015" nocache="1" offset="0" sortAsc="1" thumb="/:/resources/show.png" title1="TV Shows" title2="All Shows" viewGroup="show" viewMode="131122">
+    <Meta>
+        <Type key="/library/sections/2/all?type=2" type="show" title="TV Shows" active="1">
+            <Filter filter="genre" filterType="string" key="/library/sections/2/genre?type=2" title="Genre" type="filter" />
+            <Filter filter="year" filterType="integer" key="/library/sections/2/year?type=2" title="Year" type="filter" />
+            <Filter filter="contentRating" filterType="string" key="/library/sections/2/contentRating?type=2" title="Content Rating" type="filter" />
+            <Filter filter="studio" filterType="string" key="/library/sections/2/studio?type=2" title="Studio" type="filter" />
+            <Filter filter="network" filterType="string" key="/library/sections/2/network?type=2" title="Network" type="filter" />
+            <Filter filter="collection" filterType="string" key="/library/sections/2/collection?type=2" title="Collection" type="filter" />
+            <Filter filter="director" filterType="string" key="/library/sections/2/director?type=2" title="Director" type="filter" />
+            <Filter filter="actor" filterType="string" key="/library/sections/2/actor?type=2" title="Actor" type="filter" />
+            <Filter filter="writer" filterType="string" key="/library/sections/2/writer?type=2" title="Writer" type="filter" />
+            <Filter filter="producer" filterType="string" key="/library/sections/2/producer?type=2" title="Producer" type="filter" />
+            <Filter filter="unwatchedLeaves" filterType="boolean" key="/library/sections/2/unwatchedLeaves?type=2" title="Unplayed" type="filter" />
+            <Filter filter="unmatched" filterType="boolean" key="/library/sections/2/unmatched" title="Unmatched" type="filter" />
+            <Filter filter="label" filterType="string" key="/library/sections/2/label?type=2" title="Labels" type="filter" />
+            <Sort active="1" activeDirection="asc" default="asc" defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/2/firstCharacter" key="titleSort" title="Title" />
+            <Sort defaultDirection="desc" descKey="year:desc" key="year" title="Year" />
+            <Sort defaultDirection="desc" descKey="originallyAvailableAt:desc" key="originallyAvailableAt" title="Release Date" />
+            <Sort defaultDirection="desc" descKey="rating:desc" key="rating" title="Critic Rating" />
+            <Sort defaultDirection="desc" descKey="audienceRating:desc" key="audienceRating" title="Audience Rating" />
+            <Sort defaultDirection="desc" descKey="userRating:desc" key="userRating" title="Rating" />
+            <Sort defaultDirection="desc" descKey="contentRating:desc" key="contentRating" title="Content Rating" />
+            <Sort defaultDirection="desc" descKey="unviewedLeafCount:desc" key="unviewedLeafCount" title="Unplayed" />
+            <Sort defaultDirection="desc" descKey="episode.addedAt:desc" key="episode.addedAt" title="Last Episode Date Added" />
+            <Sort defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+            <Sort defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Viewed" />
+            <Sort defaultDirection="desc" descKey="random:desc" key="random" title="Randomly" />
+            <Field key="show.title" title="Show Title" type="string" />
+            <Field key="show.studio" title="Studio" type="string" />
+            <Field key="show.network" title="Network" type="tag" />
+            <Field key="show.userRating" subType="rating" title="Show Rating" type="integer" />
+            <Field key="show.contentRating" title="Content Rating" type="tag" />
+            <Field key="show.year" subType="year" title="Show Year" type="integer" />
+            <Field key="show.viewCount" title="Show Plays" type="integer" />
+            <Field key="show.lastViewedAt" title="Show Last Played" type="date" />
+            <Field key="show.genre" title="Genre" type="tag" />
+            <Field key="show.collection" title="Show Collection" type="tag" />
+            <Field key="show.director" title="Show Director" type="tag" />
+            <Field key="show.writer" title="Show Writer" type="tag" />
+            <Field key="show.producer" title="Show Producer" type="tag" />
+            <Field key="show.actor" title="Show Actor" type="tag" />
+            <Field key="show.addedAt" title="Date Show Added" type="date" />
+            <Field key="show.unmatched" title="Show Unmatched" type="boolean" />
+            <Field key="show.unwatchedLeaves" title="Unplayed Episodes" type="boolean" />
+            <Field key="show.label" title="Label" type="tag" />
+        </Type>
+        <Type key="/library/sections/2/all?type=3" type="season" title="Seasons" active="0">
+            <Sort defaultDirection="asc" descKey="season.index:desc,season.titleSort" key="season.index,season.titleSort" title="Season" />
+            <Sort default="asc" defaultDirection="asc" descKey="show.titleSort:desc,index" key="show.titleSort,index" title="Show" />
+            <Sort defaultDirection="desc" descKey="userRating:desc" key="userRating" title="Rating" />
+            <Sort defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+            <Sort defaultDirection="desc" descKey="random:desc" key="random" title="Randomly" />
+        </Type>
+        <Type key="/library/sections/2/all?type=4" type="episode" title="Episodes" active="0">
+            <Filter filter="year" filterType="integer" key="/library/sections/2/year?type=4" title="Year" type="filter" />
+            <Filter filter="collection" filterType="string" key="/library/sections/2/collection?type=4" title="Collection" type="filter" />
+            <Filter filter="resolution" filterType="string" key="/library/sections/2/resolution?type=4" title="Resolution" type="filter" />
+            <Filter filter="unwatched" filterType="boolean" key="/library/sections/2/unwatched?type=4" title="Unplayed" type="filter" />
+            <Filter filter="inProgress" filterType="boolean" key="/library/sections/2/inProgress?type=4" title="In Progress" type="filter" />
+            <Filter filter="audioLanguage" filterType="string" key="/library/sections/2/audioLanguage" title="Audio Language" type="filter" />
+            <Filter filter="subtitleLanguage" filterType="string" key="/library/sections/2/subtitleLanguage" title="Subtitle Language" type="filter" />
+            <Filter filter="unmatched" filterType="boolean" key="/library/sections/2/unmatched" title="Unmatched" type="filter" />
+            <Filter filter="duplicate" filterType="boolean" key="/library/sections/2/duplicate?type=4" title="Duplicates" type="filter" advanced="1" />
+            <Sort defaultDirection="desc" descKey="titleSort:desc" firstCharacterKey="/library/sections/2/firstCharacter?type=4" key="titleSort" title="Title" />
+            <Sort default="asc" defaultDirection="asc" descKey="show.titleSort:desc,season.index:nullsLast,episode.index:nullsLast,episode.originallyAvailableAt:nullsLast,episode.titleSort,episode.id" key="show.titleSort,season.index:nullsLast,episode.index:nullsLast,episode.originallyAvailableAt:nullsLast,episode.titleSort,episode.id" title="Show" />
+            <Sort defaultDirection="desc" descKey="year:desc" key="year" title="Year" />
+            <Sort defaultDirection="desc" descKey="originallyAvailableAt:desc" key="originallyAvailableAt" title="Release Date" />
+            <Sort defaultDirection="desc" descKey="rating:desc" key="rating" title="Critic Rating" />
+            <Sort defaultDirection="desc" descKey="audienceRating:desc" key="audienceRating" title="Audience Rating" />
+            <Sort defaultDirection="desc" descKey="userRating:desc" key="userRating" title="Rating" />
+            <Sort defaultDirection="desc" descKey="duration:desc" key="duration" title="Duration" />
+            <Sort defaultDirection="desc" descKey="viewOffset:desc" key="viewOffset" title="Progress" />
+            <Sort defaultDirection="desc" descKey="viewCount:desc" key="viewCount" title="Plays" />
+            <Sort defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+            <Sort defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Viewed" />
+            <Sort defaultDirection="desc" descKey="mediaHeight:desc" key="mediaHeight" title="Resolution" />
+            <Sort defaultDirection="desc" descKey="mediaBitrate:desc" key="mediaBitrate" title="Bitrate" />
+            <Sort defaultDirection="desc" descKey="random:desc" key="random" title="Randomly" />
+            <Field key="episode.title" title="Episode Title" type="string" />
+            <Field key="episode.addedAt" title="Date Episode Added" type="date" />
+            <Field key="episode.originallyAvailableAt" title="Episode Air Date" type="date" />
+            <Field key="episode.year" subType="year" title="Episode Year" type="integer" />
+            <Field key="episode.userRating" subType="rating" title="Episode Rating" type="integer" />
+            <Field key="episode.viewCount" title="Episode Plays" type="integer" />
+            <Field key="episode.lastViewedAt" title="Episode Last Played" type="date" />
+            <Field key="episode.unwatched" title="Episode Unplayed" type="boolean" />
+            <Field key="episode.inProgress" title="Episode In Progress" type="boolean" />
+            <Field key="episode.duplicate" title="Episode Duplicate" type="boolean" />
+            <Field key="episode.hdr" subType="hdr" title="HDR" type="boolean" />
+            <Field key="episode.resolution" title="Resolution" type="resolution" />
+            <Field key="episode.mediaSize" subType="fileSize" title="File size" type="integer" />
+            <Field key="episode.mediaBitrate" subType="bitrate" title="Bitrate" type="integer" />
+            <Field key="episode.subtitleLanguage" title="Subtitle Language" type="subtitleLanguage" />
+            <Field key="episode.audioLanguage" title="Audio Language" type="audioLanguage" />
+            <Field key="episode.trash" title="Trash" type="boolean" />
+            <Field key="episode.unmatched" title="Episode Unmatched" type="boolean" />
+        </Type>
+        <Type key="/library/sections/2/folder" type="folder" title="Folders" active="0">
+        </Type>
+        <FieldType type="tag">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="integer">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+            <Operator key="&gt;&gt;=" title="is greater than" />
+            <Operator key="&lt;&lt;=" title="is less than" />
+        </FieldType>
+        <FieldType type="string">
+            <Operator key="=" title="contains" />
+            <Operator key="!=" title="does not contain" />
+            <Operator key="==" title="is" />
+            <Operator key="!==" title="is not" />
+            <Operator key="&lt;=" title="begins with" />
+            <Operator key="&gt;=" title="ends with" />
+        </FieldType>
+        <FieldType type="boolean">
+            <Operator key="=" title="is true" />
+            <Operator key="!=" title="is false" />
+        </FieldType>
+        <FieldType type="date">
+            <Operator key="&lt;&lt;=" title="is before" />
+            <Operator key="&gt;&gt;=" title="is after" />
+        </FieldType>
+        <FieldType type="subtitleLanguage">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="audioLanguage">
+            <Operator key="=" title="is" />
+            <Operator key="!=" title="is not" />
+        </FieldType>
+        <FieldType type="resolution">
+            <Operator key="=" title="is" />
+        </FieldType>
+    </Meta>
+</MediaContainer>

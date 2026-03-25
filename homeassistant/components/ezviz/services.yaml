@@ -1,0 +1,31 @@
+set_alarm_detection_sensibility:
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
+  fields:
+    level:
+      required: true
+      example: 3
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          mode: box
+    type_value:
+      required: true
+      example: "0"
+      default: "0"
+      selector:
+        select:
+          options:
+            - "0"
+            - "3"
+
+wake_device:
+  target:
+    entity:
+      integration: ezviz
+      domain: camera

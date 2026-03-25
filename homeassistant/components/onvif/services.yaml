@@ -1,0 +1,59 @@
+ptz:
+  target:
+    entity:
+      integration: onvif
+      domain: camera
+  fields:
+    tilt:
+      selector:
+        select:
+          options:
+            - "DOWN"
+            - "UP"
+    pan:
+      selector:
+        select:
+          options:
+            - "LEFT"
+            - "RIGHT"
+    zoom:
+      selector:
+        select:
+          options:
+            - "ZOOM_IN"
+            - "ZOOM_OUT"
+    distance:
+      default: 0.1
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+    continuous_duration:
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+    preset:
+      example: "1"
+      default: "0"
+      selector:
+        text:
+    move_mode:
+      default: "RelativeMove"
+      selector:
+        select:
+          options:
+            - "AbsoluteMove"
+            - "ContinuousMove"
+            - "GotoPreset"
+            - "RelativeMove"
+            - "Stop"

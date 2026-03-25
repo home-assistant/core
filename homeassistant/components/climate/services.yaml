@@ -1,0 +1,153 @@
+# Describes the format for available climate services
+
+set_preset_mode:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.PRESET_MODE
+  fields:
+    preset_mode:
+      required: true
+      example: "away"
+      selector:
+        text:
+
+set_temperature:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+  fields:
+    temperature:
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
+    target_temp_high:
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
+    target_temp_low:
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
+    hvac_mode:
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
+          translation_key: hvac_mode
+set_humidity:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_HUMIDITY
+  fields:
+    humidity:
+      required: true
+      selector:
+        number:
+          min: 30
+          max: 99
+          unit_of_measurement: "%"
+
+set_fan_mode:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.FAN_MODE
+  fields:
+    fan_mode:
+      required: true
+      example: "low"
+      selector:
+        text:
+
+set_hvac_mode:
+  target:
+    entity:
+      domain: climate
+  fields:
+    hvac_mode:
+      selector:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
+set_swing_mode:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.SWING_MODE
+  fields:
+    swing_mode:
+      required: true
+      example: "on"
+      selector:
+        text:
+
+set_swing_horizontal_mode:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.SWING_HORIZONTAL_MODE
+  fields:
+    swing_horizontal_mode:
+      required: true
+      example: "on"
+      selector:
+        text:
+
+turn_on:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_ON
+
+turn_off:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_OFF
+
+toggle:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_OFF
+        - climate.ClimateEntityFeature.TURN_ON

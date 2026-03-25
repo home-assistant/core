@@ -1,0 +1,12 @@
+{
+  "domain": "skybell",
+  "name": "SkyBell",
+  "codeowners": ["@tkdrob"],
+  "config_flow": true,
+  "dependencies": ["ffmpeg"],
+  "documentation": "https://www.home-assistant.io/integrations/skybell",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioskybell"],
+  "requirements": ["aioskybell==22.7.0"]
+}

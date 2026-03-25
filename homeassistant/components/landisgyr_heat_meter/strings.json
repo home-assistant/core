@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "setup_serial_manual_path": {
+        "data": {
+          "device": "[%key:common::config_flow::data::usb_path%]"
+        }
+      },
+      "user": {
+        "data": {
+          "device": "Select device"
+        }
+      }
+    }
+  }
+}

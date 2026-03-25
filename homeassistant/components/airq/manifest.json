@@ -1,0 +1,19 @@
+{
+  "domain": "airq",
+  "name": "air-Q",
+  "codeowners": ["@Sibgatulin", "@dl2080"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airq",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["aioairq"],
+  "requirements": ["aioairq==0.4.7"],
+  "zeroconf": [
+    {
+      "properties": {
+        "device": "air-q"
+      },
+      "type": "_http._tcp.local."
+    }
+  ]
+}

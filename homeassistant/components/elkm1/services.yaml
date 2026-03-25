@@ -1,0 +1,163 @@
+alarm_bypass:
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: true
+      example: 4242
+      selector:
+        text:
+
+alarm_clear_bypass:
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: true
+      example: 4242
+      selector:
+        text:
+
+alarm_arm_home_instant:
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: true
+      example: 1234
+      selector:
+        text:
+
+alarm_arm_night_instant:
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: true
+      example: 1234
+      selector:
+        text:
+
+alarm_arm_vacation:
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: true
+      example: 1234
+      selector:
+        text:
+
+alarm_display_message:
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
+  fields:
+    clear:
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 2
+    beep:
+      default: 0
+      selector:
+        boolean:
+    timeout:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 65535
+    line1:
+      example: The answer to life.
+      default: ""
+      selector:
+        text:
+    line2:
+      example: the universe, and everything.
+      default: ""
+      selector:
+        text:
+
+set_time:
+  fields:
+    prefix:
+      example: gatehouse
+      selector:
+        text:
+
+speak_phrase:
+  fields:
+    number:
+      required: true
+      example: 42
+      selector:
+        text:
+    prefix:
+      example: gatehouse
+      default: ""
+      selector:
+        text:
+
+speak_word:
+  fields:
+    number:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 473
+    prefix:
+      example: gatehouse
+      default: ""
+      selector:
+        text:
+
+sensor_counter_refresh:
+  target:
+    entity:
+      integration: elkm1
+      domain: sensor
+
+sensor_counter_set:
+  target:
+    entity:
+      integration: elkm1
+      domain: sensor
+  fields:
+    value:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65536
+
+sensor_zone_bypass:
+  target:
+    entity:
+      integration: elkm1
+      domain: sensor
+  fields:
+    code:
+      required: true
+      example: 4242
+      selector:
+        text:
+
+sensor_zone_trigger:
+  target:
+    entity:
+      integration: elkm1
+      domain: sensor

@@ -1,0 +1,10 @@
+{
+  "domain": "emulated_kasa",
+  "name": "Emulated Kasa",
+  "codeowners": ["@kbickar"],
+  "documentation": "https://www.home-assistant.io/integrations/emulated_kasa",
+  "iot_class": "local_push",
+  "loggers": ["sense_energy"],
+  "quality_scale": "internal",
+  "requirements": ["sense-energy==0.13.8"]
+}

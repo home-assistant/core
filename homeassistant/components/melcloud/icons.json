@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "energy_consumed": {
+        "default": "mdi:factory"
+      },
+      "fan_frequency": {
+        "default": "mdi:fan"
+      }
+    }
+  },
+  "services": {
+    "set_vane_horizontal": {
+      "service": "mdi:arrow-left-right"
+    },
+    "set_vane_vertical": {
+      "service": "mdi:arrow-up-down"
+    }
+  }
+}

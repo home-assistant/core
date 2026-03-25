@@ -1,0 +1,11 @@
+{
+  "domain": "ifttt",
+  "name": "IFTTT",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/ifttt",
+  "iot_class": "cloud_push",
+  "loggers": ["pyfttt"],
+  "requirements": ["pyfttt==0.3"]
+}

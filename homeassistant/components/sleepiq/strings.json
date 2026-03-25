@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The SleepIQ integration needs to re-authenticate your account {username}.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "core_temps": {
+        "state": {
+          "cooling_high": "Cooling high",
+          "cooling_low": "Cooling low",
+          "cooling_medium": "Cooling medium",
+          "heating_high": "Heating high",
+          "heating_low": "Heating low",
+          "heating_medium": "Heating medium",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "foot_warmer_temp": {
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    }
+  }
+}

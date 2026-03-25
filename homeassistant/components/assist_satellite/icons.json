@@ -1,0 +1,46 @@
+{
+  "conditions": {
+    "is_idle": {
+      "condition": "mdi:chat-sleep"
+    },
+    "is_listening": {
+      "condition": "mdi:chat-question"
+    },
+    "is_processing": {
+      "condition": "mdi:chat-processing"
+    },
+    "is_responding": {
+      "condition": "mdi:chat-alert"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:account-voice"
+    }
+  },
+  "services": {
+    "announce": {
+      "service": "mdi:bullhorn"
+    },
+    "ask_question": {
+      "service": "mdi:microphone-question"
+    },
+    "start_conversation": {
+      "service": "mdi:forum"
+    }
+  },
+  "triggers": {
+    "idle": {
+      "trigger": "mdi:chat-sleep"
+    },
+    "listening": {
+      "trigger": "mdi:chat-question"
+    },
+    "processing": {
+      "trigger": "mdi:chat-processing"
+    },
+    "responding": {
+      "trigger": "mdi:chat-alert"
+    }
+  }
+}

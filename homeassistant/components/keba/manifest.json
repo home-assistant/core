@@ -1,0 +1,10 @@
+{
+  "domain": "keba",
+  "name": "Keba Charging Station",
+  "codeowners": ["@dannerph"],
+  "documentation": "https://www.home-assistant.io/integrations/keba",
+  "iot_class": "local_polling",
+  "loggers": ["keba_kecontact"],
+  "quality_scale": "legacy",
+  "requirements": ["keba-kecontact==1.3.0"]
+}

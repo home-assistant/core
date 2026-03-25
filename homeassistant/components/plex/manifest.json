@@ -1,0 +1,17 @@
+{
+  "domain": "plex",
+  "name": "Plex Media Server",
+  "codeowners": ["@jjlawren"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/plex",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "loggers": ["plexapi", "plexwebsocket"],
+  "requirements": [
+    "PlexAPI==4.15.16",
+    "plexauth==0.0.6",
+    "plexwebsocket==0.0.14"
+  ],
+  "zeroconf": ["_plexmediasvr._tcp.local."]
+}

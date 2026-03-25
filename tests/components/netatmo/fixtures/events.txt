@@ -1,0 +1,50 @@
+{
+  "12:34:56:78:90:ab": {
+    1654191519: {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000001",
+      "event_type": "human",
+      "event_time": 1654191519,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "vignette": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0011",
+      "video_status": "available",
+      "message": "<b>Bewegung</b> erkannt",
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    1654189491: {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000002",
+      "event_type": "person",
+      "event_time": 1654189491,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0012",
+      "video_status": "available",
+      "message": "<b>Jane</b> gesehen",
+      "person_id": "1111",
+      "out_of_sight": False,
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    1654289891: {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000002",
+      "event_type": "person",
+      "event_time": 1654289891,
+      "module_id": "12:34:56:78:90:ab",
+      "message": "<b>Jane</b> gesehen",
+      "person_id": "1111",
+      "out_of_sight": False,
+      "subevents": []
+    }
+  }
+}

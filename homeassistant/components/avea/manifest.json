@@ -1,0 +1,10 @@
+{
+  "domain": "avea",
+  "name": "Elgato Avea",
+  "codeowners": ["@pattyland"],
+  "documentation": "https://www.home-assistant.io/integrations/avea",
+  "iot_class": "local_polling",
+  "loggers": ["avea"],
+  "quality_scale": "legacy",
+  "requirements": ["avea==1.6.1"]
+}

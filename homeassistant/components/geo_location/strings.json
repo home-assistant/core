@@ -1,0 +1,19 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::geo_location::title%]",
+      "state_attributes": {
+        "latitude": {
+          "name": "Latitude"
+        },
+        "longitude": {
+          "name": "Longitude"
+        },
+        "source": {
+          "name": "Source"
+        }
+      }
+    }
+  },
+  "title": "Geolocation"
+}

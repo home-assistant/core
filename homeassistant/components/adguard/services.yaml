@@ -1,0 +1,43 @@
+add_url:
+  fields:
+    name:
+      required: true
+      example: Example
+      selector:
+        text:
+    url:
+      required: true
+      example: https://www.example.com/filter/1.txt
+      selector:
+        text:
+
+remove_url:
+  fields:
+    url:
+      required: true
+      example: https://www.example.com/filter/1.txt
+      selector:
+        text:
+
+enable_url:
+  fields:
+    url:
+      required: true
+      example: https://www.example.com/filter/1.txt
+      selector:
+        text:
+
+disable_url:
+  fields:
+    url:
+      required: true
+      example: https://www.example.com/filter/1.txt
+      selector:
+        text:
+
+refresh:
+  fields:
+    force:
+      default: false
+      selector:
+        boolean:

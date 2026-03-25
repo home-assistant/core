@@ -1,0 +1,9 @@
+{
+  "domain": "panel_custom",
+  "name": "Custom Panel",
+  "codeowners": ["@home-assistant/frontend"],
+  "dependencies": ["frontend"],
+  "documentation": "https://www.home-assistant.io/integrations/panel_custom",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

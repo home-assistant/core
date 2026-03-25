@@ -1,0 +1,10 @@
+set_txt:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: duckdns
+    txt:
+      example: "This domain name is reserved for use in documentation"
+      selector:
+        text:

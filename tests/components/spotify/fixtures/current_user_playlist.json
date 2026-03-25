@@ -1,0 +1,92 @@
+{
+  "href": "https://api.spotify.com/v1/users/1112264111/playlists?offset=0&limit=20",
+  "items": [
+    {
+      "collaborative": false,
+      "description": "",
+      "external_urls": {
+        "spotify": "https://open.spotify.com/playlist/4WkWJ0EjHEFASDevhM8oPw"
+      },
+      "href": "https://api.spotify.com/v1/playlists/4WkWJ0EjHEFASDevhM8oPw",
+      "id": "4WkWJ0EjHEFASDevhM8oPw",
+      "images": [
+        {
+          "height": 640,
+          "url": "https://i.scdn.co/image/ab67616d0000b273d061f5bfae8d38558f3698c1",
+          "width": 640
+        }
+      ],
+      "name": "Hyper",
+      "owner": {
+        "display_name": "Henk",
+        "external_urls": {
+          "spotify": "https://open.spotify.com/user/1112264111"
+        },
+        "href": "https://api.spotify.com/v1/users/1112264111",
+        "id": "1112264111",
+        "type": "user",
+        "uri": "spotify:user:1112264111"
+      },
+      "primary_color": null,
+      "public": true,
+      "snapshot_id": "Myw2ZjkyN2Q1ZWEwMjU1YWJjM2EwOWQ5YzA2ZDJjYjIzNTEzNzVmYmVl",
+      "tracks": {
+        "href": "https://api.spotify.com/v1/playlists/4WkWJ0EjHEFASDevhM8oPw/tracks",
+        "total": 1
+      },
+      "type": "playlist",
+      "uri": "spotify:playlist:4WkWJ0EjHEFASDevhM8oPw"
+    },
+    {
+      "collaborative": false,
+      "description": "",
+      "external_urls": {
+        "spotify": "https://open.spotify.com/playlist/1RHirWgH1weMsBLi4KOK9d"
+      },
+      "href": "https://api.spotify.com/v1/playlists/1RHirWgH1weMsBLi4KOK9d",
+      "id": "1RHirWgH1weMsBLi4KOK9d",
+      "images": [
+        {
+          "height": 640,
+          "url": "https://mosaic.scdn.co/640/ab67616d0000b2732f3e58dd611d177973cb3a8cab67616d0000b27345cab965cb4639a4e669564aab67616d0000b2739e83c93811be6abfad8649d6ab67616d0000b273e4c03429788f0aff263a5fc6",
+          "width": 640
+        },
+        {
+          "height": 300,
+          "url": "https://mosaic.scdn.co/300/ab67616d0000b2732f3e58dd611d177973cb3a8cab67616d0000b27345cab965cb4639a4e669564aab67616d0000b2739e83c93811be6abfad8649d6ab67616d0000b273e4c03429788f0aff263a5fc6",
+          "width": 300
+        },
+        {
+          "height": 60,
+          "url": "https://mosaic.scdn.co/60/ab67616d0000b2732f3e58dd611d177973cb3a8cab67616d0000b27345cab965cb4639a4e669564aab67616d0000b2739e83c93811be6abfad8649d6ab67616d0000b273e4c03429788f0aff263a5fc6",
+          "width": 60
+        }
+      ],
+      "name": "Ain’t got shit on me",
+      "owner": {
+        "display_name": "Rens Boeser",
+        "external_urls": {
+          "spotify": "https://open.spotify.com/user/317g2sbpe3ccycu45fes6lfr5lpe"
+        },
+        "href": "https://api.spotify.com/v1/users/317g2sbpe3ccycu45fes6lfr5lpe",
+        "id": "317g2sbpe3ccycu45fes6lfr5lpe",
+        "type": "user",
+        "uri": "spotify:user:317g2sbpe3ccycu45fes6lfr5lpe"
+      },
+      "primary_color": null,
+      "public": false,
+      "snapshot_id": "MjksMTdlMGU4ZGIxZWY5NWRkNjVkMzQ1YzUxYjk3YWZkMDdhNzRjNWE0Zg==",
+      "tracks": {
+        "href": "https://api.spotify.com/v1/playlists/1RHirWgH1weMsBLi4KOK9d/tracks",
+        "total": 28
+      },
+      "type": "playlist",
+      "uri": "spotify:playlist:1RHirWgH1weMsBLi4KOK9d"
+    }
+  ],
+  "limit": 18,
+  "next": "https://api.spotify.com/v1/users/1112264111/playlists?offset=18&limit=20",
+  "offset": 0,
+  "previous": null,
+  "total": 101
+}

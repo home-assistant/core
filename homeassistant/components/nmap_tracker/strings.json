@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "error": {
+      "invalid_hosts": "Invalid hosts"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "exclude": "IP address to exclude from tracking",
+          "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
+          "hosts": "IP address or range to scan",
+          "mac_exclude": "MAC address to exclude from tracking",
+          "scan_options": "Raw configurable scan options for Nmap"
+        },
+        "description": "Configure hosts to be scanned by Nmap. IP address and excludes can be addresses (192.168.1.1), networks (192.168.0.0/24) or ranges (192.168.1.0-32)."
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_hosts": "[%key:component::nmap_tracker::config::error::invalid_hosts%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen.",
+          "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
+          "home_interval": "[%key:component::nmap_tracker::config::step::user::data::home_interval%]",
+          "hosts": "[%key:component::nmap_tracker::config::step::user::data::hosts%]",
+          "interval_seconds": "Scan interval",
+          "mac_exclude": "[%key:component::nmap_tracker::config::step::user::data::mac_exclude%]",
+          "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]"
+        },
+        "description": "[%key:component::nmap_tracker::config::step::user::description%]"
+      }
+    }
+  },
+  "title": "Nmap Tracker"
+}

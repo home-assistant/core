@@ -1,0 +1,54 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_flipr_id_found": "No Flipr or hub associated to your account for now. You should verify it is working with the Flipr mobile app first.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Connect using your Flipr account.",
+        "title": "Connect to Flipr"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "chlorine_status": {
+        "name": "Chlorine status"
+      },
+      "ph_status": {
+        "name": "pH status"
+      }
+    },
+    "select": {
+      "hub_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "planning": "Planning"
+        }
+      }
+    },
+    "sensor": {
+      "chlorine": {
+        "name": "Chlorine"
+      },
+      "last_measured": {
+        "name": "Last measured"
+      },
+      "red_ox": {
+        "name": "Red OX"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    }
+  }
+}

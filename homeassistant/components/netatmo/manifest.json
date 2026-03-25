@@ -1,0 +1,16 @@
+{
+  "domain": "netatmo",
+  "name": "Netatmo",
+  "after_dependencies": ["cloud", "media_source"],
+  "codeowners": ["@cgtobi"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/netatmo",
+  "homekit": {
+    "models": ["Healthy Home Coach", "Netatmo Relay", "Presence", "Welcome"]
+  },
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyatmo"],
+  "requirements": ["pyatmo==9.2.3"]
+}

@@ -1,0 +1,13 @@
+{
+  "domain": "anthropic",
+  "name": "Anthropic",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@Shulyaka"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/anthropic",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["anthropic==0.83.0"]
+}

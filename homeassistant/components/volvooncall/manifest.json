@@ -1,0 +1,9 @@
+{
+  "domain": "volvooncall",
+  "name": "Volvo On Call",
+  "codeowners": ["@molobrakos", "@svrooij"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/volvooncall",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
+}

@@ -1,0 +1,245 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "machine_not_found": "Discovered machine not found in given account",
+      "no_machines": "No machines found in account"
+    },
+    "step": {
+      "bluetooth_selection": {
+        "data": {
+          "mac": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "mac": "Select the Bluetooth device that is your machine"
+        },
+        "description": "Select your device from available Bluetooth devices."
+      },
+      "machine_selection": {
+        "data": {
+          "machine": "Machine"
+        },
+        "data_description": {
+          "machine": "Select the machine you want to integrate"
+        },
+        "description": "Select the machine you want to integrate."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
+        },
+        "description": "Re-authentication required. Please enter your password again."
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]",
+          "username": "[%key:component::lamarzocco::config::step::user::data_description::username%]"
+        }
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your password from the La Marzocco app",
+          "username": "Your username from the La Marzocco app"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "backflush_enabled": {
+        "name": "Backflush active"
+      },
+      "brew_active": {
+        "name": "Brewing active"
+      },
+      "water_tank": {
+        "name": "Water tank empty"
+      },
+      "websocket_connected": {
+        "name": "WebSocket connected"
+      }
+    },
+    "button": {
+      "start_backflush": {
+        "name": "Start backflush"
+      }
+    },
+    "calendar": {
+      "auto_on_off_schedule": {
+        "name": "Auto on/off schedule ({id})"
+      }
+    },
+    "number": {
+      "bbw_dose": {
+        "name": "Brew by weight dose {dose}"
+      },
+      "coffee_temp": {
+        "name": "Coffee target temperature"
+      },
+      "prebrew_time_off": {
+        "name": "Prebrew off time"
+      },
+      "prebrew_time_on": {
+        "name": "Prebrew on time"
+      },
+      "preinfusion_time": {
+        "name": "Preinfusion time"
+      },
+      "smart_standby_time": {
+        "name": "Smart standby time"
+      },
+      "steam_temp": {
+        "name": "Steam target temperature"
+      }
+    },
+    "select": {
+      "bbw_dose_mode": {
+        "name": "Brew by weight dose mode",
+        "state": {
+          "continuous": "Continuous",
+          "dose1": "Dose 1",
+          "dose2": "Dose 2"
+        }
+      },
+      "prebrew_infusion_select": {
+        "name": "Prebrew/-infusion mode",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "prebrew": "Prebrew",
+          "preinfusion": "Preinfusion"
+        }
+      },
+      "smart_standby_mode": {
+        "name": "Smart standby mode",
+        "state": {
+          "last_brewing": "Last brewing",
+          "power_on": "Power on"
+        }
+      },
+      "steam_temp_select": {
+        "name": "Steam level",
+        "state": {
+          "1": "1",
+          "2": "2",
+          "3": "3"
+        }
+      }
+    },
+    "sensor": {
+      "brewing_start_time": {
+        "name": "Brewing start time"
+      },
+      "coffee_boiler_ready_time": {
+        "name": "Coffee boiler ready time"
+      },
+      "last_cleaning_time": {
+        "name": "Last cleaning time"
+      },
+      "steam_boiler_ready_time": {
+        "name": "Steam boiler ready time"
+      },
+      "total_coffees_made": {
+        "name": "Total coffees made",
+        "unit_of_measurement": "coffees"
+      },
+      "total_flushes_done": {
+        "name": "Total flushes done",
+        "unit_of_measurement": "flushes"
+      }
+    },
+    "switch": {
+      "auto_on_off": {
+        "name": "Auto on/off ({id})"
+      },
+      "smart_standby_enabled": {
+        "name": "Smart standby enabled"
+      },
+      "steam_boiler": {
+        "name": "Steam boiler"
+      }
+    },
+    "update": {
+      "gateway_firmware": {
+        "name": "Gateway firmware"
+      },
+      "machine_firmware": {
+        "name": "Machine firmware"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the API"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "auto_on_off_error": {
+      "message": "Error while setting auto on/off to {state} for {id}"
+    },
+    "bluetooth_connection_failed": {
+      "message": "Error while connecting to machine via Bluetooth"
+    },
+    "bluetooth_required_offline": {
+      "message": "Bluetooth is required when offline mode is enabled, but no Bluetooth device was found"
+    },
+    "button_error": {
+      "message": "Error while executing button {key}"
+    },
+    "number_exception": {
+      "message": "Error while setting value {value} for number {key}"
+    },
+    "select_option_error": {
+      "message": "Error while setting select option {option} for {key}"
+    },
+    "switch_off_error": {
+      "message": "Error while turning off switch {key}"
+    },
+    "switch_on_error": {
+      "message": "Error while turning on switch {key}"
+    },
+    "update_failed": {
+      "message": "Error while updating {key}"
+    }
+  },
+  "issues": {
+    "unsupported_gateway_firmware": {
+      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update.",
+      "title": "Unsupported gateway firmware"
+    }
+  },
+  "options": {
+    "error": {
+      "bluetooth_required_offline": "Bluetooth is required when offline mode is enabled."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "offline_mode": "Offline Mode",
+          "use_bluetooth": "Use Bluetooth"
+        },
+        "data_description": {
+          "offline_mode": "Enable offline mode to operate without internet connectivity through Bluetooth. Only local features will be available. Requires Bluetooth to be enabled.",
+          "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
+        }
+      }
+    }
+  }
+}

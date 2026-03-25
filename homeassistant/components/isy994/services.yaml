@@ -1,0 +1,159 @@
+# Describes the ISY-specific services available
+
+# Note: controlling many entity_ids with one call is not recommended since it may result in
+# flooding the ISY with requests. To control multiple devices with a service call
+# the recommendation is to add a scene in the ISY and control that scene.
+send_raw_node_command:
+  target:
+    entity:
+      integration: isy994
+  fields:
+    command:
+      required: true
+      example: "DON"
+      selector:
+        text:
+    value:
+      selector:
+        number:
+          min: 0
+          max: 255
+    parameters:
+      example: { GV2: 0, GV3: 0, GV4: 255 }
+      default: {}
+      selector:
+        object:
+    unit_of_measurement:
+      selector:
+        number:
+          min: 0
+          max: 120
+send_node_command:
+  target:
+    entity:
+      integration: isy994
+  fields:
+    command:
+      required: true
+      selector:
+        select:
+          options:
+            - "beep"
+            - "brighten"
+            - "dim"
+            - "disable"
+            - "enable"
+            - "fade_down"
+            - "fade_stop"
+            - "fade_up"
+            - "fast_off"
+            - "fast_on"
+            - "query"
+get_zwave_parameter:
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+set_zwave_parameter:
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+    value:
+      required: true
+      example: 33491663
+      selector:
+        text:
+    size:
+      required: true
+      example: 4
+      selector:
+        select:
+          options:
+            - "1"
+            - "2"
+            - "4"
+set_zwave_lock_user_code:
+  target:
+    entity:
+      integration: isy994
+      domain: lock
+  fields:
+    user_num:
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+    code:
+      required: true
+      example: 33491663
+      selector:
+        number:
+          min: 1
+          max: 99999999
+          mode: box
+delete_zwave_lock_user_code:
+  target:
+    entity:
+      integration: isy994
+      domain: lock
+  fields:
+    user_num:
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+rename_node:
+  target:
+    entity:
+      integration: isy994
+  fields:
+    name:
+      required: true
+      example: "Front Door Light"
+      selector:
+        text:
+send_program_command:
+  fields:
+    address:
+      example: "04B1"
+      selector:
+        text:
+    name:
+      example: "My Program"
+      selector:
+        text:
+    command:
+      required: true
+      selector:
+        select:
+          options:
+            - "disable"
+            - "disable_run_at_startup"
+            - "enable"
+            - "enable_run_at_startup"
+            - "run"
+            - "run_else"
+            - "run_then"
+            - "stop"
+    isy:
+      example: "ISY"
+      selector:
+        text:

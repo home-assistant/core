@@ -1,0 +1,76 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "pairing_failed": "Pairing failed; please check the Bosch Smart Home Controller is in pairing mode (LED flashing) as well as your password is correct.",
+      "session_error": "Session error: API returned Non-OK result.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "Bosch SHC: {name}",
+    "step": {
+      "confirm_discovery": {
+        "description": "Smart Home Controller I: Please press the front-side button until LED starts flashing.\nSmart Home Controller II: Press the function button shortly. Cloud and network lights start blinking orange.\nDevice is now ready to be paired.\n\nReady to continue to set up {model} @ {host} with Home Assistant?"
+      },
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password of the Smart Home Controller"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "The Bosch SHC integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bosch Smart Home Controller."
+        },
+        "description": "Set up your Bosch Smart Home Controller to allow monitoring and control with Home Assistant.",
+        "title": "SHC authentication parameters"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "communication_quality": {
+        "name": "Communication quality"
+      },
+      "humidity_rating": {
+        "name": "Humidity rating"
+      },
+      "purity": {
+        "name": "Purity"
+      },
+      "purity_rating": {
+        "name": "Purity rating"
+      },
+      "temperature_rating": {
+        "name": "Temperature rating"
+      },
+      "valvetappet": {
+        "name": "Valvetappet"
+      }
+    },
+    "switch": {
+      "routing": {
+        "name": "Routing"
+      }
+    }
+  }
+}

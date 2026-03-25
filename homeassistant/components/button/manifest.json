@@ -1,0 +1,8 @@
+{
+  "domain": "button",
+  "name": "Button",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/button",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

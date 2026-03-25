@@ -1,0 +1,46 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Lutron main repeater."
+        },
+        "description": "Please enter the main repeater login information",
+        "title": "Main repeater setup"
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press",
+              "release": "Release",
+              "single_press": "Single press"
+            }
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "default_dimmer_level": "Default light level when first turning on a light from Home Assistant"
+        }
+      }
+    }
+  }
+}

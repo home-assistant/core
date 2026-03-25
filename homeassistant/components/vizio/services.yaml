@@ -1,0 +1,21 @@
+update_setting:
+  target:
+    entity:
+      integration: vizio
+      domain: media_player
+  fields:
+    setting_type:
+      required: true
+      example: "audio"
+      selector:
+        text:
+    setting_name:
+      required: true
+      example: "eq"
+      selector:
+        text:
+    new_value:
+      required: true
+      example: "Music"
+      selector:
+        text:

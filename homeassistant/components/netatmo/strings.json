@@ -1,0 +1,284 @@
+{
+  "config": {
+    "abort": {
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Netatmo integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "away": "[%key:common::state::not_home%]",
+      "hg": "Frost guard",
+      "schedule": "Schedule"
+    },
+    "trigger_type": {
+      "alarm_started": "{entity_name} detected an alarm",
+      "animal": "{entity_name} detected an animal",
+      "cancel_set_point": "{entity_name} has resumed its schedule",
+      "human": "{entity_name} detected a human",
+      "movement": "{entity_name} detected movement",
+      "outdoor": "{entity_name} detected an outdoor event",
+      "person": "{entity_name} detected a person",
+      "person_away": "{entity_name} detected a person has left",
+      "set_point": "Target temperature {entity_name} set manually",
+      "therm_mode": "{entity_name} switched to \"{subtype}\"",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "vehicle": "{entity_name} detected a vehicle"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "furniture": {
+        "name": "Furniture"
+      },
+      "gate": {
+        "name": "Gate"
+      },
+      "opening_sensor": {
+        "name": "Opening"
+      }
+    },
+    "button": {
+      "preferred_position": {
+        "name": "Preferred position"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_guard": "Frost guard",
+              "manual": "[%key:common::state::manual%]",
+              "schedule": "Schedule"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "gust_angle": {
+        "name": "Gust angle"
+      },
+      "gust_direction": {
+        "name": "Gust direction",
+        "state": {
+          "e": "[%key:component::netatmo::entity::sensor::wind_direction::state::e%]",
+          "n": "[%key:component::netatmo::entity::sensor::wind_direction::state::n%]",
+          "ne": "[%key:component::netatmo::entity::sensor::wind_direction::state::ne%]",
+          "nw": "[%key:component::netatmo::entity::sensor::wind_direction::state::nw%]",
+          "s": "[%key:component::netatmo::entity::sensor::wind_direction::state::s%]",
+          "se": "[%key:component::netatmo::entity::sensor::wind_direction::state::se%]",
+          "sw": "[%key:component::netatmo::entity::sensor::wind_direction::state::sw%]",
+          "w": "[%key:component::netatmo::entity::sensor::wind_direction::state::w%]"
+        }
+      },
+      "gust_strength": {
+        "name": "Gust strength"
+      },
+      "health_idx": {
+        "name": "Health index",
+        "state": {
+          "fair": "Fair",
+          "fine": "Fine",
+          "healthy": "Healthy",
+          "poor": "Poor",
+          "unhealthy": "Unhealthy"
+        }
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "pressure_trend": {
+        "name": "Pressure trend"
+      },
+      "reachable": {
+        "name": "Reachability"
+      },
+      "rf_strength": {
+        "name": "RF strength"
+      },
+      "sum_rain_1": {
+        "name": "Precipitation last hour"
+      },
+      "sum_rain_24": {
+        "name": "Precipitation today"
+      },
+      "temp_trend": {
+        "name": "Temperature trend"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      },
+      "wind_angle": {
+        "name": "Wind angle"
+      },
+      "wind_direction": {
+        "name": "Wind direction",
+        "state": {
+          "e": "East",
+          "n": "North",
+          "ne": "Northeast",
+          "nw": "Northwest",
+          "s": "South",
+          "se": "Southeast",
+          "sw": "Southwest",
+          "w": "West"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "options": {
+    "step": {
+      "public_weather": {
+        "data": {
+          "area_name": "Name of the area",
+          "lat_ne": "Northeast corner latitude",
+          "lat_sw": "Southwest corner latitude",
+          "lon_ne": "Northeast corner longitude",
+          "lon_sw": "Southwest corner longitude",
+          "mode": "Calculation",
+          "show_on_map": "Show on map"
+        },
+        "description": "Configure a public weather sensor for an area.",
+        "title": "Netatmo public weather sensor"
+      },
+      "public_weather_areas": {
+        "data": {
+          "new_area": "Area name",
+          "weather_areas": "Weather areas"
+        },
+        "description": "Configure public weather sensors.",
+        "title": "[%key:component::netatmo::options::step::public_weather::title%]"
+      }
+    }
+  },
+  "services": {
+    "clear_temperature_setting": {
+      "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule.",
+      "name": "Clear temperature setting"
+    },
+    "register_webhook": {
+      "description": "Registers the webhook to the Netatmo backend.",
+      "name": "Register webhook"
+    },
+    "set_camera_light": {
+      "description": "Sets the light mode for a Netatmo Outdoor camera light.",
+      "fields": {
+        "camera_light_mode": {
+          "description": "Outdoor camera light mode.",
+          "name": "Camera light mode"
+        }
+      },
+      "name": "Set camera light mode"
+    },
+    "set_person_away": {
+      "description": "Sets a person as away. If no person is set the home will be marked as empty. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.",
+      "fields": {
+        "person": {
+          "description": "Person's name.",
+          "name": "Person"
+        }
+      },
+      "name": "Set person away"
+    },
+    "set_persons_home": {
+      "description": "Sets a list of persons as at home. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.",
+      "fields": {
+        "persons": {
+          "description": "List of names.",
+          "name": "Persons"
+        }
+      },
+      "name": "Set persons at home"
+    },
+    "set_preset_mode_with_end_datetime": {
+      "description": "Sets the preset mode for a Netatmo climate device. The preset mode must match a preset mode configured at Netatmo.",
+      "fields": {
+        "end_datetime": {
+          "description": "Date & time the preset will be active until.",
+          "name": "End date & time"
+        },
+        "preset_mode": {
+          "description": "Climate preset mode such as Schedule, Away or Frost Guard.",
+          "name": "Preset mode"
+        }
+      },
+      "name": "Set preset mode with end date & time"
+    },
+    "set_schedule": {
+      "description": "Sets the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo.",
+      "fields": {
+        "schedule_name": {
+          "description": "Schedule name.",
+          "name": "[%key:component::netatmo::device_automation::trigger_subtype::schedule%]"
+        }
+      },
+      "name": "Set heating schedule"
+    },
+    "set_temperature_with_end_datetime": {
+      "description": "Sets the target temperature for a Netatmo climate device with an end date & time.",
+      "fields": {
+        "end_datetime": {
+          "description": "Date & time the target temperature will be active until.",
+          "name": "[%key:component::netatmo::services::set_preset_mode_with_end_datetime::fields::end_datetime::name%]"
+        },
+        "target_temperature": {
+          "description": "The target temperature for the device.",
+          "name": "Target temperature"
+        }
+      },
+      "name": "Set temperature with end date & time"
+    },
+    "set_temperature_with_time_period": {
+      "description": "Sets the target temperature for a Netatmo climate device with time period.",
+      "fields": {
+        "target_temperature": {
+          "description": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::description%]",
+          "name": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::name%]"
+        },
+        "time_period": {
+          "description": "The time period which the temperature setting will be active for.",
+          "name": "Time period"
+        }
+      },
+      "name": "Set temperature with time period"
+    },
+    "unregister_webhook": {
+      "description": "Unregisters the webhook from the Netatmo backend.",
+      "name": "Unregister webhook"
+    }
+  }
+}

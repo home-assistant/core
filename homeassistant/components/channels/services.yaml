@@ -1,0 +1,25 @@
+seek_forward:
+  target:
+    entity:
+      integration: channels
+      domain: media_player
+
+seek_backward:
+  target:
+    entity:
+      integration: channels
+      domain: media_player
+
+seek_by:
+  target:
+    entity:
+      integration: channels
+      domain: media_player
+  fields:
+    seconds:
+      required: true
+      selector:
+        number:
+          min: -3600
+          max: 3600
+          unit_of_measurement: seconds

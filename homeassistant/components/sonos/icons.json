@@ -1,0 +1,72 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "microphone": {
+        "default": "mdi:microphone"
+      }
+    },
+    "sensor": {
+      "audio_input_format": {
+        "default": "mdi:import"
+      },
+      "favorites": {
+        "default": "mdi:star"
+      }
+    },
+    "switch": {
+      "buttons_enabled": {
+        "default": "mdi:gesture-tap"
+      },
+      "cross_fade": {
+        "default": "mdi:swap-horizontal"
+      },
+      "dialog_level": {
+        "default": "mdi:ear-hearing"
+      },
+      "loudness": {
+        "default": "mdi:bullhorn-variant"
+      },
+      "night_mode": {
+        "default": "mdi:chat-sleep"
+      },
+      "status_light": {
+        "default": "mdi:led-on"
+      },
+      "sub_enabled": {
+        "default": "mdi:dog"
+      },
+      "surround_enabled": {
+        "default": "mdi:surround-sound"
+      },
+      "surround_mode": {
+        "default": "mdi:music-note-plus"
+      }
+    }
+  },
+  "services": {
+    "clear_sleep_timer": {
+      "service": "mdi:alarm-off"
+    },
+    "get_queue": {
+      "service": "mdi:queue-first-in-last-out"
+    },
+    "play_queue": {
+      "service": "mdi:play"
+    },
+    "remove_from_queue": {
+      "service": "mdi:playlist-remove"
+    },
+    "restore": {
+      "service": "mdi:camera-retake"
+    },
+    "set_sleep_timer": {
+      "service": "mdi:alarm"
+    },
+    "snapshot": {
+      "service": "mdi:camera"
+    },
+    "update_alarm": {
+      "service": "mdi:alarm"
+    }
+  }
+}
