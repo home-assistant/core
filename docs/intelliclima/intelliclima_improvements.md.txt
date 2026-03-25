@@ -1,0 +1,16 @@
+Recent Improvements: 
+
+	- Handling of None values:
+
+		The IntelliClima API may return `None` for certain fields such as `filter_from`.
+		This is now handled safely to prevent runtime errors during device parsing.
+
+	- Multi-house support
+
+		Support for multiple houses has been added.
+		All devices across all configured houses are now discovered instead of only the first one.
+
+	- Notes
+
+		- No configuration changes are required
+		- Fully backward compatible
