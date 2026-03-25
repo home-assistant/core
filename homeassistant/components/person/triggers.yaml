@@ -1,7 +1,7 @@
 .trigger_common: &trigger_common
   target:
     entity:
-      domain: lawn_mower
+      domain: person
   fields:
     behavior:
       required: true
@@ -14,8 +14,5 @@
             - last
             - any
 
-docked: *trigger_common
-errored: *trigger_common
-paused_mowing: *trigger_common
-started_mowing: *trigger_common
-started_returning: *trigger_common
+entered_home: *trigger_common
+left_home: *trigger_common

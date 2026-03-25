@@ -7,9 +7,9 @@ is_event_active:
       required: true
       default: any
       selector:
-        select:
+        automation_behavior:
           translation_key: condition_behavior
-          options:
+          behavior:
             - all
             - any
     for:

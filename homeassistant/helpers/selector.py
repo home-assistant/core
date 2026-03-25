@@ -243,6 +243,51 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     model_id: str
 
 
+class AutomationBehavior(StrEnum):
+    """Possible behaviors for an automation behavior selector."""
+
+    ALL = "all"
+    FIRST = "first"
+    LAST = "last"
+    ANY = "any"
+
+
+class AutomationBehaviorConfig(BaseSelectorConfig):
+    """Class to represent an automation behavior selector config."""
+
+    translation_key: str
+    behavior: list[AutomationBehavior]
+
+
+@SELECTORS.register("automation_behavior")
+class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
+    """Selector of an automation behavior."""
+
+    selector_type = "automation_behavior"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("behavior"): vol.All(
+                cv.ensure_list, [vol.In(AutomationBehavior)]
+            ),
+            vol.Optional("translation_key"): cv.string,
+        },
+    )
+
+    def __init__(self, config: AutomationBehaviorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        allowed = self.config.get("behavior") or [
+            AutomationBehavior.FIRST,
+            AutomationBehavior.LAST,
+            AutomationBehavior.ANY,
+        ]
+        return vol.In(allowed)(data)
+
+
 class ActionSelectorConfig(BaseSelectorConfig):
     """Class to represent an action selector config."""
 

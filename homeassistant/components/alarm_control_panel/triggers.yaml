@@ -7,17 +7,12 @@
       required: true
       default: any
       selector:
-        select:
-          options:
+        automation_behavior:
+          translation_key: trigger_behavior
+          behavior:
             - first
             - last
             - any
-          translation_key: trigger_behavior
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
 
 armed: *trigger_common
 
