@@ -9494,7 +9494,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-entry]
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9510,7 +9510,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9518,12 +9518,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (2)',
+    'object_id_base': 'Current switch position (Fancy Button)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (2)',
+    'original_name': 'Current switch position (Fancy Button)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -9533,14 +9533,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-state]
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Current switch position (2)',
+      'friendly_name': 'Mock Generic Switch Current switch position (Fancy Button)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
