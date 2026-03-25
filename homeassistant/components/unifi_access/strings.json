@@ -67,6 +67,23 @@
         "name": "Thumbnail"
       }
     },
+    "sensor": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Locked",
+          "keep_unlock": "Unlocked",
+          "lock_early": "Lock early",
+          "lock_now": "Lock now",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      },
+      "door_lock_rule_ended_time": {
+        "name": "Rule end time"
+      }
+    },
     "switch": {
       "evacuation": {
         "name": "Evacuation"

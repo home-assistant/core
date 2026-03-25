@@ -38,8 +38,6 @@ ALL_ON_STATES = [
     STATE_PERFORMANCE,
 ]
 
-_TEMPERATURE_TRIGGER_OPTIONS = {"unit": UnitOfTemperature.CELSIUS}
-
 
 @pytest.fixture
 async def target_water_heaters(hass: HomeAssistant) -> list[str]:
@@ -120,13 +118,13 @@ async def test_water_heater_state_trigger_behavior_any(
             "water_heater.target_temperature_changed",
             STATE_ECO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
     ],
 )
@@ -212,7 +210,7 @@ async def test_water_heater_state_trigger_behavior_first(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
     ],
 )
@@ -298,7 +296,7 @@ async def test_water_heater_state_trigger_behavior_last(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
     ],
 )

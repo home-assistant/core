@@ -11,8 +11,15 @@ CONF_TOKEN_SECRET = "token_value"
 CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
 
+CONF_USER = "user"
+
 NODE_ONLINE = "online"
 VM_CONTAINER_RUNNING = "running"
+
+STORAGE_ACTIVE = 1
+STORAGE_SHARED = 1
+STORAGE_ENABLED = 1
+STATUS_OK = "ok"
 
 AUTH_PAM = "pam"
 AUTH_PVE = "pve"

@@ -13,19 +13,8 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-)
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -593,17 +582,22 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
         (
             "humidity.changed",
             {
-                CONF_ABOVE: "sensor.humidity_above",
-                CONF_BELOW: "sensor.humidity_below",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.humidity_above"},
+                    "value_max": {"entity": "sensor.humidity_below"},
+                },
             },
             ["sensor.humidity_above", "sensor.humidity_below"],
         ),
         (
             "humidity.crossed_threshold",
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: "sensor.humidity_lower",
-                CONF_UPPER_LIMIT: "sensor.humidity_upper",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.humidity_lower"},
+                    "value_max": {"entity": "sensor.humidity_upper"},
+                },
             },
             ["sensor.humidity_lower", "sensor.humidity_upper"],
         ),
@@ -624,9 +618,14 @@ async def test_humidity_trigger_ignores_limit_entity_with_wrong_unit(
         trigger=trigger,
         trigger_options=trigger_options,
         entity_id="climate.test_climate",
-        entity_state=HVACMode.AUTO,
-        reset_attributes={CLIMATE_ATTR_CURRENT_HUMIDITY: 0},
-        trigger_attributes={CLIMATE_ATTR_CURRENT_HUMIDITY: 50},
+        reset_state={
+            "state": HVACMode.AUTO,
+            "attributes": {CLIMATE_ATTR_CURRENT_HUMIDITY: 0},
+        },
+        trigger_state={
+            "state": HVACMode.AUTO,
+            "attributes": {CLIMATE_ATTR_CURRENT_HUMIDITY: 50},
+        },
         limit_entities=[
             (limit_entities[0], "10"),
             (limit_entities[1], "90"),
