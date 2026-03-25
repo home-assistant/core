@@ -118,6 +118,9 @@ def mock_proxmox_client():
 
         node_mock.qemu.get.return_value = qemu_list
         node_mock.lxc.get.return_value = lxc_list
+        node_mock.tasks.get.return_value = load_json_array_fixture(
+            "nodes/tasks.json", DOMAIN
+        )
 
         qemu_by_vmid = {vm["vmid"]: vm for vm in qemu_list}
         lxc_by_vmid = {vm["vmid"]: vm for vm in lxc_list}
@@ -167,6 +170,7 @@ def mock_proxmox_client():
         mock_instance.nodes = nodes_mock
         mock_instance._node_mock = node_mock
         mock_instance._nodes_mock = nodes_mock
+        mock_instance._all_nodes = all_nodes
 
         yield mock_instance
 

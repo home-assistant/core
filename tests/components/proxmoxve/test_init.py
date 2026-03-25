@@ -29,6 +29,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -231,6 +233,24 @@ async def test_migration_v1_to_v3(
 
     assert vm_entity_after.unique_id == f"{entry.entry_id}_100_status"
     assert container_entity_after.unique_id == f"{entry.entry_id}_200_status"
+
+
+async def test_offline_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an offline node doesn't cause the entire update to fail."""
+    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("binary_sensor.pve1_status")
+    assert state.state == STATE_ON
+
+    state = hass.states.get("binary_sensor.pve3_status")
+    assert state.state == STATE_OFF
 
 
 async def test_migration_v2_to_v3(
