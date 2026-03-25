@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
-from incomfortclient import InvalidGateway, InvalidHeaterList
+from incomfortclient import InvalidHeaterList
 import pytest
 
 from homeassistant.components.incomfort.const import DOMAIN
@@ -165,57 +165,3 @@ async def test_coordinator_update_fails(
     state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize(
-    ("exc", "config_entry_state"),
-    [
-        (
-            InvalidGateway,
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (InvalidHeaterList, ConfigEntryState.SETUP_RETRY),
-        (
-            ClientResponseError(
-                RequestInfo(
-                    url="http://example.com",
-                    method="GET",
-                    headers=[],
-                    real_url="http://example.com",
-                ),
-                None,
-                status=404,
-            ),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (
-            ClientResponseError(
-                RequestInfo(
-                    url="http://example.com",
-                    method="GET",
-                    headers=[],
-                    real_url="http://example.com",
-                ),
-                None,
-                status=500,
-            ),
-            ConfigEntryState.SETUP_RETRY,
-        ),
-        (TimeoutError, ConfigEntryState.SETUP_RETRY),
-    ],
-)
-async def test_entry_setup_fails(
-    hass: HomeAssistant,
-    mock_incomfort: MagicMock,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: ConfigEntry,
-    exc: Exception,
-    config_entry_state: ConfigEntryState,
-) -> None:
-    """Test the incomfort coordinator entry setup fails."""
-    mock_incomfort.heaters.side_effect = exc
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    state = hass.states.get("sensor.boiler_pressure")
-    assert state is None
-    assert mock_config_entry.state is config_entry_state

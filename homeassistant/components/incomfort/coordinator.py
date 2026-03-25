@@ -15,11 +15,7 @@ from incomfortclient import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -98,36 +94,6 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         )
         self.client = client
         self.unique_id = config_entry.unique_id
-
-    async def _async_setup(self) -> None:
-        """Set up the Incomfort coordinator."""
-        try:
-            await self.client.heaters()
-        except InvalidHeaterList as exc:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="no_heaters",
-            ) from exc
-        except InvalidGateway as exc:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from exc
-        except ClientResponseError as exc:
-            if exc.status == HTTPStatus.NOT_FOUND:
-                raise ConfigEntryError(
-                    translation_domain=DOMAIN,
-                    translation_key="not_found",
-                ) from exc
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="unknown",
-            ) from exc
-        except TimeoutError as exc:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="timeout_error",
-            ) from exc
 
     async def _async_update_data(self) -> InComfortData:
         """Fetch data from Incomfort."""
