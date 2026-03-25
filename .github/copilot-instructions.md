@@ -26,8 +26,13 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Testing
 
-When writing or modifying tests, ensure all test function parameters have type annotations.
-Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
+- When writing or modifying tests, ensure all test function parameters have type annotations.
+- Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
+- Add tests when they do not already exist so new behavior is covered and later changes are less likely to regress it.
+- Prefer `.ambr` snapshots, mocks, and fixtures so tests are easier to extend.
+- Use `patch.object(...)` instead of `patch(...)` when the object is already in test scope and/or already imported so patches stay tied to the object under test and are easier to follow.
+- If an integration grows a `setup_integration` helper, add it to `tests/components/<integration>/__init__.py` so tests can share one setup path and future contributors can extend them without duplicating setup code.
+- Keep tests DRY with `pytest.mark.parametrize` where it fits so new cases can be added without copying the full test body.
 
 ## Good practices
 
