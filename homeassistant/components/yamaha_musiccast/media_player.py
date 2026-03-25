@@ -81,6 +81,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_translation_key = "zone"
 
     def __init__(self, zone_id, name, entry_id, coordinator):
         """Initialize the musiccast device."""
@@ -202,13 +203,12 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-        sound_program_id = self.coordinator.data.zones[self._zone_id].sound_program
-        return self.coordinator.data.sound_program_names.get(sound_program_id)
+        return self.coordinator.data.zones[self._zone_id].sound_program
 
     @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
-        return list(self.coordinator.data.sound_program_names.values())
+        return self.coordinator.data.zones[self._zone_id].sound_program_list
 
     @property
     def zone(self):
@@ -401,14 +401,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        sound_programs = self.coordinator.data.sound_program_names.items()
-        sound_program_id = next(
-            (k for k, v in sound_programs if v == sound_mode),
-            None,
-        )
-        await self.coordinator.musiccast.select_sound_mode(
-            self._zone_id, sound_program_id
-        )
+        await self.coordinator.musiccast.select_sound_mode(self._zone_id, sound_mode)
 
     @property
     def media_image_url(self):

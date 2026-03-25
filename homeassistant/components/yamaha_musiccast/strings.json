@@ -26,6 +26,69 @@
     }
   },
   "entity": {
+    "media_player": {
+      "zone": {
+        "state_attributes": {
+          "sound_mode": {
+            "state": {
+              "munich_a": "Hall in Munich A",
+              "munich_b": "Hall in Munich B",
+              "munich": "Hall in Munich",
+              "frankfurt": "Hall in Frankfurt",
+              "stuttgart": "Hall in Stuttgart",
+              "vienna": "Hall in Vienna",
+              "amsterdam": "Hall in Amsterdam",
+              "usa_a": "Hall in USA A",
+              "usa_b": "Hall in USA B",
+              "tokyo": "Church in Tokyo",
+              "freiburg": "Church in Freiburg",
+              "royaumont": "Church in Royaumont",
+              "chamber": "Chamber",
+              "concert": "Live Concert",
+              "village_gate": "Village Gate",
+              "village_vanguard": "Village Vanguard",
+              "warehouse_loft": "Warehouse Loft",
+              "cellar_club": "Cellar Club",
+              "jazz_club": "Jazz Club",
+              "roxy_theatre": "The Roxy Theatre",
+              "bottom_line": "The Bottom Line",
+              "arena": "Arena",
+              "sports": "Sports",
+              "action_game": "Action Game",
+              "roleplaying_game": "Roleplaying Game",
+              "game": "Game",
+              "music_video": "Music Video",
+              "music": "Music",
+              "recital_opera": "Recital/Opera",
+              "pavilion": "Pavilion",
+              "disco": "Disco",
+              "standard": "Standard",
+              "spectacle": "Spectacle",
+              "sci-fi": "Sci-Fi",
+              "adventure": "Adventure",
+              "drama": "Drama",
+              "talk_show": "Talk Show",
+              "tv_program": "TV Program",
+              "mono_movie": "Mono Movie",
+              "movie": "Movie",
+              "enhanced": "Enhanced",
+              "2ch_stereo": "2ch Stereo",
+              "5ch_stereo": "5ch Stereo",
+              "7ch_stereo": "7ch Stereo",
+              "9ch_stereo": "9ch Stereo",
+              "11ch_stereo": "11ch Stereo",
+              "all_ch_stereo": "All Ch Stereo",
+              "stereo": "Stereo",
+              "surr_decoder": "Surround Decoder",
+              "my_surround": "My Surround",
+              "target": "Target",
+              "straight": "Straight",
+              "off": "Off"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "dimmer": {
         "state": {
