@@ -113,7 +113,9 @@ async def test_import_creates_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_aborts_if_already_configured(hass: HomeAssistant) -> None:
+async def test_import_aborts_if_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test importing a YAML config aborts if already configured."""
     # First import creates the entry
     await hass.config_entries.flow.async_init(
