@@ -874,7 +874,7 @@ def url(
         raise vol.Invalid("invalid url")
 
     try:
-        parsed.port  # noqa: B018
+        _port = parsed.port
     except ValueError as err:
         raise vol.Invalid("invalid url") from err
     return cast(str, vol.Schema(vol.Url())(url_in))
