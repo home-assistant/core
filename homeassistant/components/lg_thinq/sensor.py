@@ -761,12 +761,14 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                 )
         self._attr_native_value = value
 
-        if isinstance(self.data.value, (int, float)):
-            if (data_unit := self._get_unit_of_measurement(self.data.unit)) is not None:
-                # For different from description's unit
-                self._attr_native_unit_of_measurement = data_unit
+        if isinstance(self.native_value, str):
+            # non-numeric value
+            self._attr_native_unit_of_measurement = None
+        elif (data_unit := self._get_unit_of_measurement(self.data.unit)) is not None:
+            # data has its own unit C or F
+            self._attr_native_unit_of_measurement = data_unit
         else:
-            # Clear unit when value is non-numeric to avoid treating it as numeric
+            # entity_description
             self._attr_native_unit_of_measurement = (
                 self.entity_description.native_unit_of_measurement
             )
@@ -779,7 +781,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             self.native_value,
             self.options,
             self.native_unit_of_measurement,
-            type(self.data.value),
+            type(self.native_value),
         )
 
     def _get_duration(self, data: time, unit: str | None) -> float | None:
