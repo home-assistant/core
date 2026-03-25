@@ -3,6 +3,24 @@
   dict({
     'data': dict({
       'binary_sensor': dict({
+        'alarm_cl_too_high': dict({
+          'value': False,
+        }),
+        'alarm_cl_too_high_orp': dict({
+          'value': True,
+        }),
+        'alarm_cl_too_low_orp': dict({
+          'value': False,
+        }),
+        'alarm_ofa2_cl': dict({
+          'value': False,
+        }),
+        'alarm_ofa2_orp': dict({
+          'value': False,
+        }),
+        'alarm_ofa2_ph': dict({
+          'value': False,
+        }),
         'alarm_ofa_cl': dict({
           'value': False,
         }),
@@ -10,6 +28,21 @@
           'value': False,
         }),
         'alarm_ofa_ph': dict({
+          'value': False,
+        }),
+        'alarm_ph_too_high': dict({
+          'value': False,
+        }),
+        'alarm_ph_too_low': dict({
+          'value': False,
+        }),
+        'alarm_system_standby': dict({
+          'value': True,
+        }),
+        'alarm_water_too_cold': dict({
+          'value': True,
+        }),
+        'alarm_water_too_hot': dict({
           'value': False,
         }),
         'flow_rate_alarm': dict({
@@ -44,6 +77,13 @@
           'step': 0.01,
           'unit': 'ppm',
           'value': 1,
+        }),
+        'flow_delay_timer': dict({
+          'max': 3600,
+          'min': 0,
+          'step': 1,
+          'unit': 's',
+          'value': 0,
         }),
         'ofa_cl_lower': dict({
           'max': 10,
@@ -101,6 +141,34 @@
           'unit': None,
           'value': 6.5,
         }),
+        'power_on_delay_timer': dict({
+          'max': 5400,
+          'min': 0,
+          'step': 1,
+          'unit': 's',
+          'value': 0,
+        }),
+        'time_off_cl_dosing': dict({
+          'max': 360,
+          'min': 1,
+          'step': 1,
+          'unit': 's',
+          'value': 60,
+        }),
+        'time_off_orp_dosing': dict({
+          'max': 360,
+          'min': 1,
+          'step': 1,
+          'unit': 's',
+          'value': 60,
+        }),
+        'time_off_ph_dosing': dict({
+          'max': 360,
+          'min': 1,
+          'step': 1,
+          'unit': 's',
+          'value': 60,
+        }),
       }),
       'select': dict({
         'cl_type_dosing_method': dict({
@@ -129,6 +197,10 @@
         }),
       }),
       'sensor': dict({
+        'circulation_pump_status': dict({
+          'unit': None,
+          'value': 'disabled',
+        }),
         'cl': dict({
           'unit': 'ppm',
           'value': 1.2,
@@ -136,6 +208,14 @@
         'cl_type_dosing': dict({
           'unit': None,
           'value': 'low',
+        }),
+        'device_config': dict({
+          'unit': None,
+          'value': 'ph_orp',
+        }),
+        'flow_delay_status': dict({
+          'unit': None,
+          'value': 'disabled',
         }),
         'flow_rate': dict({
           'unit': 'L/s',
@@ -201,9 +281,17 @@
           'unit': None,
           'value': 'alcalyne',
         }),
+        'power_on_delay_status': dict({
+          'unit': None,
+          'value': 'disabled',
+        }),
         'temperature': dict({
           'unit': '°C',
           'value': 25,
+        }),
+        'temperature_unit': dict({
+          'unit': None,
+          'value': 'celsius',
         }),
         'water_meter_total_permanent': dict({
           'unit': 'm3',

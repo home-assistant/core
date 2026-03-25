@@ -44,6 +44,20 @@
     }),
     'devices': dict({
       'pve1': dict({
+        'backups': list([
+          dict({
+            'endtime': 1774350433,
+            'id': '',
+            'node': 'pve1',
+            'pid': 2146406,
+            'pstart': 70119940,
+            'starttime': 1774350000,
+            'status': 'OK',
+            'type': 'vzdump',
+            'upid': 'UPID:pve1:0020C066:042DF204:69C26EB0:vzdump::root@pam:',
+            'user': 'root@pam',
+          }),
+        ]),
         'containers': dict({
           '200': dict({
             'cpu': 0.05,
