@@ -35,11 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 def get_entity(hass: HomeAssistant, entity_id: str) -> TodoListEntity:
     """Get the todo entity for the provided entity_id."""
     component: EntityComponent[TodoListEntity] = hass.data[DATA_COMPONENT]
-    if not (entity := component.get_entity(entity_id)) or not isinstance(
-        entity, TodoListEntity
-    ):
+    if not (entity := component.get_entity(entity_id)):
         raise HomeAssistantError(
-            f"Entity does not exist {entity_id} or is not a todo entity"
+            f"Entity does not exist: {entity_id}"
         )
     return entity
 
@@ -101,7 +99,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
                 entity = get_entity(self._hass, entity_id)
             except HomeAssistantError:
                 _LOGGER.debug(
-                    "Skipping entity %s: not found or not a todo entity", entity_id
+                    "Skipping entity %s: not found", entity_id
                 )
                 continue
             _listener_wrapper(entity_id, entity.todo_items)
