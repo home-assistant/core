@@ -37,7 +37,7 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
 async def test_config_import(
@@ -259,3 +259,69 @@ async def test_migration_v2_to_v3(
     assert entry.version == 3
     assert entry.data[CONF_AUTH_METHOD] == AUTH_PAM
     assert entry.data[CONF_REALM] == AUTH_PAM
+
+
+async def test_new_vm_creates_entity(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a VM appearing after initial load gets an entity created."""
+    mock_proxmox_client._node_mock.qemu.get.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    initial_count = len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    )
+
+    mock_proxmox_client._node_mock.qemu.get.return_value = (
+        await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        > initial_count
+    )
+
+
+async def test_new_container_creates_entity(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a container appearing after initial load gets an entity created."""
+    mock_proxmox_client._node_mock.lxc.get.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    initial_count = len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    )
+
+    mock_proxmox_client._node_mock.lxc.get.return_value = (
+        await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        > initial_count
+    )
