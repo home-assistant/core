@@ -10,48 +10,18 @@
           - last
           - any
 
-.number_or_entity: &number_or_entity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement:
-                    - "°C"
-                    - "°F"
-                - domain: sensor
-                  device_class: temperature
-                - domain: number
-                  device_class: temperature
-      translation_key: number_or_entity
+.temperature_units: &temperature_units
+  - "°C"
+  - "°F"
 
-.trigger_threshold_type: &trigger_threshold_type
-  required: true
-  default: above
-  selector:
-    select:
-      options:
-        - above
-        - below
-        - between
-        - outside
-      translation_key: trigger_threshold_type
+.temperature_threshold_entity: &temperature_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *temperature_units
+  - domain: sensor
+    device_class: temperature
+  - domain: number
+    device_class: temperature
 
-.trigger_unit: &trigger_unit
-  required: false
-  selector:
-    select:
-      options:
-        - "°C"
-        - "°F"
 .trigger_target: &trigger_target
   entity:
     - domain: sensor
@@ -63,15 +33,26 @@
 changed:
   target: *trigger_target
   fields:
-    above: *number_or_entity
-    below: *number_or_entity
-    unit: *trigger_unit
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: changed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units
 
 crossed_threshold:
   target: *trigger_target
   fields:
     behavior: *trigger_behavior
-    threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity
-    upper_limit: *number_or_entity
-    unit: *trigger_unit
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: crossed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units

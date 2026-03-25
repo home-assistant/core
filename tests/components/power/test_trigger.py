@@ -21,7 +21,6 @@ from tests.components.common import (
     target_entities,
 )
 
-_POWER_TRIGGER_OPTIONS = {"unit": UnitOfPower.WATT}
 _POWER_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
 
 
@@ -62,13 +61,13 @@ async def test_power_triggers_gated_by_labs_flag(
         *parametrize_numerical_state_value_changed_trigger_states(
             "power.changed",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
@@ -109,7 +108,7 @@ async def test_power_trigger_sensor_behavior_any(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
@@ -150,7 +149,7 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_first(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
@@ -194,13 +193,13 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_last(
         *parametrize_numerical_state_value_changed_trigger_states(
             "power.changed",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
@@ -241,7 +240,7 @@ async def test_power_trigger_number_behavior_any(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
@@ -282,7 +281,7 @@ async def test_power_trigger_number_crossed_threshold_behavior_first(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],

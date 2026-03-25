@@ -5,14 +5,8 @@ from typing import Any
 import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import CONF_ABOVE, CONF_BELOW, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-)
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -44,7 +38,7 @@ def parametrize_brightness_changed_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={},
+            trigger_options={"threshold": {"type": "any"}},
             target_states=[
                 (state, {attribute: 0}),
                 (state, {attribute: 128}),
@@ -55,7 +49,7 @@ def parametrize_brightness_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
+            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
             target_states=[
                 (state, {attribute: 128}),
                 (state, {attribute: 255}),
@@ -68,7 +62,7 @@ def parametrize_brightness_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
+            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
             target_states=[
                 (state, {attribute: 0}),
                 (state, {attribute: 128}),
@@ -94,9 +88,11 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
             },
             target_states=[
                 (state, {attribute: 128}),
@@ -111,9 +107,11 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 90},
+                }
             },
             target_states=[
                 (state, {attribute: 0}),
@@ -127,10 +125,7 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-            },
+            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
             target_states=[
                 (state, {attribute: 128}),
                 (state, {attribute: 255}),
@@ -142,10 +137,7 @@ def parametrize_brightness_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-            },
+            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
             target_states=[
                 (state, {attribute: 0}),
                 (state, {attribute: 128}),
@@ -433,17 +425,22 @@ async def test_light_state_attribute_trigger_behavior_last(
         (
             "light.brightness_changed",
             {
-                CONF_ABOVE: "sensor.brightness_above",
-                CONF_BELOW: "sensor.brightness_below",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.brightness_above"},
+                    "value_max": {"entity": "sensor.brightness_below"},
+                },
             },
             ["sensor.brightness_above", "sensor.brightness_below"],
         ),
         (
             "light.brightness_crossed_threshold",
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: "sensor.brightness_lower",
-                CONF_UPPER_LIMIT: "sensor.brightness_upper",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.brightness_lower"},
+                    "value_max": {"entity": "sensor.brightness_upper"},
+                },
             },
             ["sensor.brightness_lower", "sensor.brightness_upper"],
         ),

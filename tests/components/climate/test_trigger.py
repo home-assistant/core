@@ -37,8 +37,6 @@ from tests.components.common import (
     target_entities,
 )
 
-_TEMPERATURE_TRIGGER_OPTIONS = {"unit": UnitOfTemperature.CELSIUS}
-
 
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -197,7 +195,7 @@ async def test_climate_state_trigger_behavior_any(
             "climate.target_temperature_changed",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
@@ -206,7 +204,7 @@ async def test_climate_state_trigger_behavior_any(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -325,7 +323,7 @@ async def test_climate_state_trigger_behavior_first(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -444,7 +442,7 @@ async def test_climate_state_trigger_behavior_last(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
-            trigger_options=_TEMPERATURE_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",

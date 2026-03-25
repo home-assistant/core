@@ -3,7 +3,10 @@
     "condition_behavior_description": "How the state should match on the targeted climate-control devices.",
     "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted climates to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Behavior",
+    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
+    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
+    "trigger_threshold_name": "Threshold configuration"
   },
   "conditions": {
     "is_cooling": {
@@ -293,14 +296,6 @@
         "first": "First",
         "last": "Last"
       }
-    },
-    "trigger_threshold_type": {
-      "options": {
-        "above": "Above a value",
-        "below": "Below a value",
-        "between": "In a range",
-        "outside": "Outside a range"
-      }
     }
   },
   "services": {
@@ -448,13 +443,9 @@
     "target_humidity_changed": {
       "description": "Triggers after the humidity setpoint of one or more climate-control devices changes.",
       "fields": {
-        "above": {
-          "description": "Trigger when the target humidity is above this value.",
-          "name": "Above"
-        },
-        "below": {
-          "description": "Trigger when the target humidity is below this value.",
-          "name": "Below"
+        "threshold": {
+          "description": "[%key:component::climate::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
       "name": "Climate-control device target humidity changed"
@@ -466,17 +457,9 @@
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "Lower threshold limit.",
-          "name": "Lower threshold"
-        },
-        "threshold_type": {
-          "description": "Type of threshold crossing to trigger on.",
-          "name": "Threshold type"
-        },
-        "upper_limit": {
-          "description": "Upper threshold limit.",
-          "name": "Upper threshold"
+        "threshold": {
+          "description": "[%key:component::climate::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
       "name": "Climate-control device target humidity crossed threshold"
@@ -484,17 +467,9 @@
     "target_temperature_changed": {
       "description": "Triggers after the temperature setpoint of one or more climate-control devices changes.",
       "fields": {
-        "above": {
-          "description": "Trigger when the target temperature is above this value.",
-          "name": "Above"
-        },
-        "below": {
-          "description": "Trigger when the target temperature is below this value.",
-          "name": "Below"
-        },
-        "unit": {
-          "description": "All values will be converted to this unit when evaluating the trigger.",
-          "name": "Unit of measurement"
+        "threshold": {
+          "description": "[%key:component::climate::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
       "name": "Climate-control device target temperature changed"
@@ -506,21 +481,9 @@
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "Lower threshold limit.",
-          "name": "Lower threshold"
-        },
-        "threshold_type": {
-          "description": "Type of threshold crossing to trigger on.",
-          "name": "Threshold type"
-        },
-        "unit": {
-          "description": "[%key:component::climate::triggers::target_temperature_changed::fields::unit::description%]",
-          "name": "[%key:component::climate::triggers::target_temperature_changed::fields::unit::name%]"
-        },
-        "upper_limit": {
-          "description": "Upper threshold limit.",
-          "name": "Upper threshold"
+        "threshold": {
+          "description": "[%key:component::climate::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
         }
       },
       "name": "Climate-control device target temperature crossed threshold"

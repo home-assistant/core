@@ -10,39 +10,17 @@
           - last
           - any
 
-.number_or_entity: &number_or_entity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-              unit_of_measurement: "lx"
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement: "lx"
-                - domain: sensor
-                  device_class: illuminance
-                - domain: number
-                  device_class: illuminance
-      translation_key: number_or_entity
+.illuminance_threshold_entity: &illuminance_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "lx"
+  - domain: sensor
+    device_class: illuminance
+  - domain: number
+    device_class: illuminance
 
-.trigger_threshold_type: &trigger_threshold_type
-  required: true
-  default: above
-  selector:
-    select:
-      options:
-        - above
-        - below
-        - between
-        - outside
-      translation_key: trigger_threshold_type
+.illuminance_threshold_number: &illuminance_threshold_number
+  mode: box
+  unit_of_measurement: "lx"
 
 .trigger_binary_target: &trigger_binary_target
   entity:
@@ -67,13 +45,22 @@ cleared:
 changed:
   target: *trigger_numerical_target
   fields:
-    above: *number_or_entity
-    below: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *illuminance_threshold_entity
+          mode: changed
+          number: *illuminance_threshold_number
 
 crossed_threshold:
   target: *trigger_numerical_target
   fields:
     behavior: *trigger_behavior
-    threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity
-    upper_limit: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *illuminance_threshold_entity
+          mode: crossed
+          number: *illuminance_threshold_number

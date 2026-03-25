@@ -7,7 +7,6 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, field
-from enum import StrEnum
 import functools
 import inspect
 import logging
@@ -17,6 +16,7 @@ from typing import (
     Final,
     Literal,
     Protocol,
+    Self,
     TypedDict,
     cast,
     override,
@@ -27,9 +27,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
     CONF_ALIAS,
-    CONF_BELOW,
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
@@ -70,18 +68,21 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
 from .automation import (
-    CONF_UNIT,
     DomainSpec,
     NumericalDomainSpec,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
-    number_or_entity,
-    validate_unit_set_if_range_numerical,
 )
 from .integration_platform import async_process_integration_platforms
-from .selector import TargetSelector
+from .selector import (
+    NumericThresholdMode,
+    NumericThresholdSelector,
+    NumericThresholdSelectorConfig,
+    NumericThresholdType,
+    TargetSelector,
+)
 from .target import (
     TargetStateChangedData,
     async_track_target_selector_state_change_event,
@@ -521,51 +522,65 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
         )
 
 
-def _validate_range[_T: dict[str, Any]](
-    lower_limit: str, upper_limit: str
-) -> Callable[[_T], _T]:
-    """Generate range validator."""
-
-    def _validate_range_impl(value: _T) -> _T:
-        above = value.get(lower_limit)
-        below = value.get(upper_limit)
-
-        if above is None or below is None:
-            return value
-
-        if isinstance(above, str) or isinstance(below, str):
-            return value
-
-        if above > below:
-            raise vol.Invalid(
-                (
-                    f"A value can never be above {above} and below {below} at the same"
-                    " time. You probably want two different triggers."
-                ),
-            )
-
-        return value
-
-    return _validate_range_impl
-
-
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): vol.All(
             {
-                vol.Optional(CONF_ABOVE): number_or_entity,
-                vol.Optional(CONF_BELOW): number_or_entity,
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(mode=NumericThresholdMode.CHANGED)
+                )
             },
-            _validate_range(CONF_ABOVE, CONF_BELOW),
         )
     }
 )
+
+
+@dataclass(frozen=True, kw_only=True)
+class ThresholdConfig:
+    """Configuration for threshold triggers."""
+
+    numerical: bool
+    entity: str | None
+    number: float | None
+    unit: str | None | UndefinedType
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any] | None) -> Self | None:
+        """Create ThresholdConfig from config dict."""
+        if config is None:
+            return None
+
+        entity: str | None = None
+        number: float | None = None
+        unit: str | None | UndefinedType = UNDEFINED
+        numerical = "number" in config
+        if numerical:
+            number = config["number"]
+            unit = config.get("unit_of_measurement", UNDEFINED)
+        else:
+            entity = config["entity"]
+
+        return cls(numerical=numerical, number=number, entity=entity, unit=unit)
 
 
 class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 
     _valid_unit: str | None | UndefinedType = UNDEFINED
+    _threshold_type: NumericThresholdType
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the state trigger."""
+        super().__init__(hass, config)
+        threshold_options: dict[str, Any] = self._options["threshold"]
+        self.threshold = ThresholdConfig.from_config(threshold_options.get("value"))
+        self.lower_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_min")
+        )
+        self.upper_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_max")
+        )
+        self._threshold_type = threshold_options["type"]
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this trigger."""
@@ -573,21 +588,24 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
             return True
         return unit == self._valid_unit
 
-    def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
-        """Get numerical value from float or entity state."""
-        if isinstance(entity_or_float, str):
-            if not (state := self._hass.states.get(entity_or_float)):
-                # Entity not found
-                return None
-            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
-                # Entity unit does not match the expected unit
-                return None
-            try:
-                return float(state.state)
-            except TypeError, ValueError:
-                # Entity state is not a valid number
-                return None
-        return entity_or_float
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
+            return threshold.number
+
+        if not (state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
+            # Entity not found
+            return None
+        if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            # Entity unit does not match the expected unit
+            return None
+        try:
+            return float(state.state)
+        except TypeError, ValueError:
+            # Entity state is not a valid number
+            return None
 
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
@@ -613,31 +631,64 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
             return domain_spec.value_converter
         return lambda x: x
 
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state or state attribute matches the expected one."""
+        # Handle missing or None value case first to avoid expensive exceptions
+        if (_attribute_value := self._get_tracked_value(state)) is None:
+            return False
+
+        current_value = self._get_converter(state)(_attribute_value)
+
+        if self._threshold_type == NumericThresholdType.ANY:
+            # If the threshold type is "any" we always trigger on valid state
+            # changes
+            return True
+
+        if self._threshold_type == NumericThresholdType.ABOVE:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            return current_value > limit
+        if self._threshold_type == NumericThresholdType.BELOW:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            return current_value < limit
+
+        # Mode is BETWEEN or OUTSIDE
+        lower_limit = self._get_threshold_value(self.lower_threshold)
+        upper_limit = self._get_threshold_value(self.upper_threshold)
+        if lower_limit is None or upper_limit is None:
+            # Entity not found or invalid number, don't trigger
+            return False
+        between = lower_limit < current_value < upper_limit
+        if self._threshold_type == NumericThresholdType.BETWEEN:
+            return between
+        return not between
+
 
 class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
     _base_unit: str | None  # Base unit for the tracked value
-    _manual_limit_unit: str | None  # Unit of above/below limits when numbers
     _unit_converter: type[BaseUnitConverter]
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the trigger."""
-        super().__init__(hass, config)
-        self._manual_limit_unit = self._options.get(CONF_UNIT)
 
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the unit of an entity from its state."""
         return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-    def _get_numerical_value(self, entity_or_float: float | str) -> float | None:
-        """Get numerical value from float or entity state."""
-        if isinstance(entity_or_float, (int, float)):
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
             return self._unit_converter.convert(
-                entity_or_float, self._manual_limit_unit, self._base_unit
+                threshold.number,  # type: ignore[arg-type]
+                threshold.unit,  # type: ignore[arg-type]
+                self._base_unit,
             )
 
-        if not (state := self._hass.states.get(entity_or_float)):
+        if not (state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
             # Entity not found
             return None
         try:
@@ -683,47 +734,12 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
-    _above: None | float | str
-    _below: None | float | str
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the state trigger."""
-        super().__init__(hass, config)
-        self._above = self._options.get(CONF_ABOVE)
-        self._below = self._options.get(CONF_BELOW)
-
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
-
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state or state attribute matches the expected one."""
-        # Handle missing or None value case first to avoid expensive exceptions
-        if (_attribute_value := self._get_tracked_value(state)) is None:
-            return False
-
-        current_value = self._get_converter(state)(_attribute_value)
-
-        if self._above is not None:
-            if (above := self._get_numerical_value(self._above)) is None:
-                # Entity not found or invalid number, don't trigger
-                return False
-            if current_value <= above:
-                # The number is not above the limit, don't trigger
-                return False
-
-        if self._below is not None:
-            if (below := self._get_numerical_value(self._below)) is None:
-                # Entity not found or invalid number, don't trigger
-                return False
-            if current_value >= below:
-                # The number is not below the limit, don't trigger
-                return False
-
-        return True
 
 
 def make_numerical_state_changed_with_unit_schema(
@@ -734,12 +750,13 @@ def make_numerical_state_changed_with_unit_schema(
         {
             vol.Required(CONF_OPTIONS, default={}): vol.All(
                 {
-                    vol.Optional(CONF_ABOVE): number_or_entity,
-                    vol.Optional(CONF_BELOW): number_or_entity,
-                    vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
+                    vol.Required("threshold"): NumericThresholdSelector(
+                        NumericThresholdSelectorConfig(
+                            mode=NumericThresholdMode.CHANGED,
+                            unit_of_measurement=list(unit_converter.VALID_UNITS),
+                        )
+                    )
                 },
-                _validate_range(CONF_ABOVE, CONF_BELOW),
-                validate_unit_set_if_range_numerical(CONF_ABOVE, CONF_BELOW),
             )
         }
     )
@@ -757,40 +774,6 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
         cls._schema = make_numerical_state_changed_with_unit_schema(cls._unit_converter)
 
 
-CONF_LOWER_LIMIT = "lower_limit"
-CONF_UPPER_LIMIT = "upper_limit"
-CONF_THRESHOLD_TYPE = "threshold_type"
-
-
-class ThresholdType(StrEnum):
-    """Numerical threshold types."""
-
-    ABOVE = "above"
-    BELOW = "below"
-    BETWEEN = "between"
-    OUTSIDE = "outside"
-
-
-def _validate_limits_for_threshold_type(value: dict[str, Any]) -> dict[str, Any]:
-    """Validate that the correct limits are provided for the selected threshold type."""
-    threshold_type = value.get(CONF_THRESHOLD_TYPE)
-
-    if threshold_type == ThresholdType.ABOVE:
-        if CONF_LOWER_LIMIT not in value:
-            raise vol.Invalid("lower_limit is required for threshold_type 'above'")
-    elif threshold_type == ThresholdType.BELOW:
-        if CONF_UPPER_LIMIT not in value:
-            raise vol.Invalid("upper_limit is required for threshold_type 'below'")
-    elif threshold_type in (ThresholdType.BETWEEN, ThresholdType.OUTSIDE):
-        if CONF_LOWER_LIMIT not in value or CONF_UPPER_LIMIT not in value:
-            raise vol.Invalid(
-                "Both lower_limit and upper_limit are required for"
-                f" threshold_type '{threshold_type}'"
-            )
-
-    return value
-
-
 NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS): vol.All(
@@ -798,12 +781,10 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                     [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
                 ),
-                vol.Optional(CONF_LOWER_LIMIT): number_or_entity,
-                vol.Optional(CONF_UPPER_LIMIT): number_or_entity,
-                vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(mode=NumericThresholdMode.CROSSED)
+                ),
             },
-            _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
-            _validate_limits_for_threshold_type,
         )
     }
 )
@@ -818,17 +799,6 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
 
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
-    _lower_limit: float | str | None = None
-    _upper_limit: float | str | None = None
-    _threshold_type: ThresholdType
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the state trigger."""
-        super().__init__(hass, config)
-        self._lower_limit = self._options.get(CONF_LOWER_LIMIT)
-        self._upper_limit = self._options.get(CONF_UPPER_LIMIT)
-        self._threshold_type = self._options[CONF_THRESHOLD_TYPE]
-
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
@@ -836,39 +806,8 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
 
         return not self.is_valid_state(from_state)
 
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
-        if self._lower_limit is not None:
-            if (lower_limit := self._get_numerical_value(self._lower_limit)) is None:
-                # Entity not found or invalid number, don't trigger
-                return False
 
-        if self._upper_limit is not None:
-            if (upper_limit := self._get_numerical_value(self._upper_limit)) is None:
-                # Entity not found or invalid number, don't trigger
-                return False
-
-        # Handle missing or None value case first to avoid expensive exceptions
-        if (_attribute_value := self._get_tracked_value(state)) is None:
-            return False
-
-        current_value = self._get_converter(state)(_attribute_value)
-
-        # Note: We do not need to check for lower_limit/upper_limit being None here
-        # because of the validation done in the schema.
-        if self._threshold_type == ThresholdType.ABOVE:
-            return current_value > lower_limit  # type: ignore[operator]
-        if self._threshold_type == ThresholdType.BELOW:
-            return current_value < upper_limit  # type: ignore[operator]
-
-        # Mode is BETWEEN or OUTSIDE
-        between = lower_limit < current_value < upper_limit  # type: ignore[operator]
-        if self._threshold_type == ThresholdType.BETWEEN:
-            return between
-        return not between
-
-
-def make_numerical_state_crossed_threshold_with_unit_schema(
+def _make_numerical_state_crossed_threshold_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
 ) -> vol.Schema:
     """Trigger for numerical state and state attribute changes.
@@ -883,16 +822,13 @@ def make_numerical_state_crossed_threshold_with_unit_schema(
                     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                         [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
                     ),
-                    vol.Optional(CONF_LOWER_LIMIT): number_or_entity,
-                    vol.Optional(CONF_UPPER_LIMIT): number_or_entity,
-                    vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
-                    vol.Optional(CONF_UNIT): vol.In(unit_converter.VALID_UNITS),
+                    vol.Required("threshold"): NumericThresholdSelector(
+                        NumericThresholdSelectorConfig(
+                            mode=NumericThresholdMode.CROSSED,
+                            unit_of_measurement=list(unit_converter.VALID_UNITS),
+                        )
+                    ),
                 },
-                _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
-                _validate_limits_for_threshold_type,
-                validate_unit_set_if_range_numerical(
-                    CONF_LOWER_LIMIT, CONF_UPPER_LIMIT
-                ),
             )
         }
     )
@@ -907,7 +843,7 @@ class EntityNumericalStateCrossedThresholdTriggerWithUnitBase(
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
-        cls._schema = make_numerical_state_crossed_threshold_with_unit_schema(
+        cls._schema = _make_numerical_state_crossed_threshold_with_unit_schema(
             cls._unit_converter
         )
 

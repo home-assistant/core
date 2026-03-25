@@ -3,7 +3,10 @@
     "condition_behavior_description": "How the power value should match on the targeted entities.",
     "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Behavior",
+    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
+    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
+    "trigger_threshold_name": "Threshold configuration"
   },
   "conditions": {
     "is_value": {
@@ -48,14 +51,6 @@
         "first": "First",
         "last": "Last"
       }
-    },
-    "trigger_threshold_type": {
-      "options": {
-        "above": "Above",
-        "below": "Below",
-        "between": "Between",
-        "outside": "Outside"
-      }
     }
   },
   "title": "Power",
@@ -63,17 +58,9 @@
     "changed": {
       "description": "Triggers after one or more power values change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when power is above this value.",
-          "name": "Above"
-        },
-        "below": {
-          "description": "Only trigger when power is below this value.",
-          "name": "Below"
-        },
-        "unit": {
-          "description": "All values will be converted to this unit when evaluating the trigger.",
-          "name": "Unit of measurement"
+        "threshold": {
+          "description": "[%key:component::power::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::power::common::trigger_threshold_name%]"
         }
       },
       "name": "Power changed"
@@ -85,21 +72,9 @@
           "description": "[%key:component::power::common::trigger_behavior_description%]",
           "name": "[%key:component::power::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "The lower limit of the threshold.",
-          "name": "Lower limit"
-        },
-        "threshold_type": {
-          "description": "The type of threshold to use.",
-          "name": "Threshold type"
-        },
-        "unit": {
-          "description": "[%key:component::power::triggers::changed::fields::unit::description%]",
-          "name": "[%key:component::power::triggers::changed::fields::unit::name%]"
-        },
-        "upper_limit": {
-          "description": "The upper limit of the threshold.",
-          "name": "Upper limit"
+        "threshold": {
+          "description": "[%key:component::power::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::power::common::trigger_threshold_name%]"
         }
       },
       "name": "Power crossed threshold"
