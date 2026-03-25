@@ -935,7 +935,7 @@ async def arm_trigger(
     trigger_target: dict,
     calls: list[str],
 ) -> None:
-    """Arm the specified trigger, call service test.automation when it triggers."""
+    """Arm the specified trigger and record fired entity_ids in calls when it triggers."""
     options = {CONF_OPTIONS: {**trigger_options}} if trigger_options is not None else {}
 
     trigger_config = {
