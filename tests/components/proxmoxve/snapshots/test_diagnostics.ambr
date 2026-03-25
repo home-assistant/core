@@ -3,6 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
+        'auth_method': 'pam',
         'host': '**REDACTED**',
         'nodes': list([
           dict({
@@ -20,6 +21,7 @@
         'password': '**REDACTED**',
         'port': 8006,
         'realm': 'pam',
+        'token': False,
         'username': '**REDACTED**',
         'verify_ssl': True,
       }),
@@ -38,7 +40,7 @@
       ]),
       'title': 'ProxmoxVE test',
       'unique_id': None,
-      'version': 2,
+      'version': 3,
     }),
     'devices': dict({
       'pve1': dict({

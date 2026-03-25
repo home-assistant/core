@@ -316,67 +316,67 @@
   },
   "services": {
     "set_fan_mode": {
-      "description": "Sets fan operation mode.",
+      "description": "Sets the fan mode of a climate-control device.",
       "fields": {
         "fan_mode": {
           "description": "Fan operation mode.",
           "name": "Fan mode"
         }
       },
-      "name": "Set fan mode"
+      "name": "Set climate-control device fan mode"
     },
     "set_humidity": {
-      "description": "Sets target humidity.",
+      "description": "Sets the target humidity of a climate-control device.",
       "fields": {
         "humidity": {
           "description": "Target humidity.",
           "name": "Humidity"
         }
       },
-      "name": "Set target humidity"
+      "name": "Set climate-control device target humidity"
     },
     "set_hvac_mode": {
-      "description": "Sets HVAC operation mode.",
+      "description": "Sets the HVAC mode of a climate-control device.",
       "fields": {
         "hvac_mode": {
           "description": "HVAC operation mode.",
           "name": "HVAC mode"
         }
       },
-      "name": "Set HVAC mode"
+      "name": "Set climate-control device HVAC mode"
     },
     "set_preset_mode": {
-      "description": "Sets preset mode.",
+      "description": "Sets the preset mode of a climate-control device.",
       "fields": {
         "preset_mode": {
           "description": "Preset mode.",
           "name": "Preset mode"
         }
       },
-      "name": "Set preset mode"
+      "name": "Set climate-control device preset mode"
     },
     "set_swing_horizontal_mode": {
-      "description": "Sets horizontal swing operation mode.",
+      "description": "Sets the horizontal swing mode of a climate-control device.",
       "fields": {
         "swing_horizontal_mode": {
           "description": "Horizontal swing operation mode.",
           "name": "Horizontal swing mode"
         }
       },
-      "name": "Set horizontal swing mode"
+      "name": "Set climate-control device horizontal swing mode"
     },
     "set_swing_mode": {
-      "description": "Sets swing operation mode.",
+      "description": "Sets the swing mode of a climate-control device.",
       "fields": {
         "swing_mode": {
           "description": "Swing operation mode.",
           "name": "Swing mode"
         }
       },
-      "name": "Set swing mode"
+      "name": "Set climate-control device swing mode"
     },
     "set_temperature": {
-      "description": "Sets the temperature setpoint.",
+      "description": "Sets the target temperature of a climate-control device.",
       "fields": {
         "hvac_mode": {
           "description": "HVAC operation mode.",
@@ -395,19 +395,19 @@
           "name": "Target temperature"
         }
       },
-      "name": "Set target temperature"
+      "name": "Set climate-control device target temperature"
     },
     "toggle": {
-      "description": "Toggles climate device, from on to off, or off to on.",
-      "name": "[%key:common::action::toggle%]"
+      "description": "Toggles a climate-control device on/off.",
+      "name": "Toggle climate-control device"
     },
     "turn_off": {
-      "description": "Turns climate device off.",
-      "name": "[%key:common::action::turn_off%]"
+      "description": "Turns off a climate-control device.",
+      "name": "Turn off climate-control device"
     },
     "turn_on": {
-      "description": "Turns climate device on.",
-      "name": "[%key:common::action::turn_on%]"
+      "description": "Turns on a climate-control device.",
+      "name": "Turn on climate-control device"
     }
   },
   "title": "Climate",

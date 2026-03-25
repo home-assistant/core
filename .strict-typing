@@ -274,10 +274,12 @@ homeassistant.components.homekit_controller.storage
 homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.homeworks.*
+homeassistant.components.hr_energy_qube.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.humidifier.*
 homeassistant.components.husqvarna_automower.*
+homeassistant.components.huum.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.hypontech.*
