@@ -78,7 +78,7 @@ class AbodeSystem:
 
         self.reauth_started = True
         LOGGER.warning(
-            "Abode authentication failed at runtime: %s. Starting reauthentication.",
+            "Abode authentication failed at runtime: %s. Starting reauthentication",
             error,
         )
 
@@ -160,7 +160,7 @@ def _install_runtime_auth_guard(abode_system: AbodeSystem) -> None:
     ) -> Any:
         try:
             response = original_send_request(method, path, headers, data)
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:
             if _is_auth_error(ex):
                 abode_system.start_reauth(ex)
             raise
@@ -178,7 +178,7 @@ def _install_runtime_auth_guard(abode_system: AbodeSystem) -> None:
         return response
 
     # This is an instance-level wrapper; avoid changing upstream library behavior globally.
-    abode_system.abode.send_request = wrapped_send_request  # type: ignore[method-assign]
+    abode_system.abode.send_request = wrapped_send_request
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
