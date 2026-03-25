@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 from . import download, upload
 from .const import INTEGRATIONS_DIR
@@ -30,28 +31,34 @@ def get_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_single(translations, flattened_translations, integration):
-    """Run the script for a single integration."""
-    print(f"Generating translations for {integration}")
-
-    if integration not in translations["component"]:
-        print("Integration has no strings.json")
-        sys.exit(1)
-
-    integration_strings = translations["component"][integration]
-
-    translations["component"][integration] = substitute_references(
-        integration_strings, flattened_translations, fail_on_missing=True
-    )
-
+def prepare_download_dir():
+    """Ensure the download directory exists and is empty."""
     if download.DOWNLOAD_DIR.is_dir():
         for lang_file in download.DOWNLOAD_DIR.glob("*.json"):
             lang_file.unlink()
     else:
         download.DOWNLOAD_DIR.mkdir(parents=True)
 
+
+def run_single(translations, flattened_translations, integration):
+    """Run the script for a single integration."""
+    print(f"Generating translations for {integration}")
+
+    component_translations = translations["component"]
+    if integration not in component_translations:
+        print("Integration has no strings.json")
+        sys.exit(1)
+
+    component_translations[integration] = substitute_references(
+        component_translations[integration],
+        flattened_translations,
+        fail_on_missing=True,
+    )
+
+    prepare_download_dir()
+
     (download.DOWNLOAD_DIR / "en.json").write_text(
-        json.dumps({"component": {integration: translations["component"][integration]}})
+        json.dumps({"component": {integration: component_translations[integration]}})
     )
 
     download.save_integrations_translations()
@@ -64,9 +71,25 @@ def run():
     flattened_translations = flatten_translations(translations)
 
     if args.all:
-        for integration in translations["component"]:
-            run_single(translations, flattened_translations, integration)
-        print("🌎 Generated translation files for all integrations")
+        start = time.perf_counter()
+        prepare_download_dir()
+        component_translations = translations["component"]
+        for integration in component_translations:
+            print(f"Generating translations for {integration}")
+            component_translations[integration] = substitute_references(
+                component_translations[integration],
+                flattened_translations,
+                fail_on_missing=True,
+            )
+
+        (download.DOWNLOAD_DIR / "en.json").write_text(
+            json.dumps({"component": component_translations})
+        )
+        download.save_integrations_translations()
+        elapsed = time.perf_counter() - start
+        print(
+            f"🌎 Generated translation files for all integrations in {elapsed:.2f} seconds"
+        )
         return 0
 
     if args.integration:
@@ -75,7 +98,7 @@ def run():
         integration = None
         while (
             integration is None
-            or not Path(f"homeassistant/components/{integration}").exists()
+            or not Path(f"homeassistant/components/{integration}").is_dir()
         ):
             if integration is not None:
                 print(f"Integration {integration} doesn't exist!")
