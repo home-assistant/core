@@ -16,6 +16,7 @@ from typing import (
     Final,
     Literal,
     Protocol,
+    Self,
     TypedDict,
     cast,
     override,
