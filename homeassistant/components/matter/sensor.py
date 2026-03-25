@@ -25,7 +25,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -49,6 +48,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -743,6 +743,20 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.OzoneConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="RadonSensor",
+            native_unit_of_measurement=CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="radon_concentration",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.RadonConcentrationMeasurement.Attributes.MeasuredValue,
         ),
     ),
     MatterDiscoverySchema(
@@ -1579,18 +1593,5 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorClosedEvents,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="RadonSensor",
-            native_unit_of_measurement=CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
-            device_class=SensorDeviceClass.RADON,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(
-            clusters.RadonConcentrationMeasurement.Attributes.MeasuredValue,
-        ),
     ),
 ]

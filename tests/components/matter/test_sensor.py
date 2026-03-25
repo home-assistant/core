@@ -360,14 +360,14 @@ async def test_air_quality_sensor(
     assert state.state == "50.0"
 
     # Radon
-    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon")
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
     assert state
     assert state.state == "60.0"
 
     set_node_attribute(matter_node, 1, 1071, 0, 50)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon")
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
     assert state
     assert state.state == "50.0"
 

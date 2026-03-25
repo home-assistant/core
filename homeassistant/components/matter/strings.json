@@ -549,8 +549,8 @@
       "pump_speed": {
         "name": "Rotation speed"
       },
-      "radon": {
-        "name": "[%key:component::sensor::entity_component::radon::name%]"
+      "radon_concentration": {
+        "name": "Radon concentration"
       },
       "reactive_current": {
         "name": "Reactive current"
