@@ -4,6 +4,14 @@
       "paused": {
         "default": "mdi:timer-pause"
       }
+    },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play"
+      }
     }
   }
 }
