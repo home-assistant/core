@@ -37,6 +37,7 @@ from .const import (
     CONF_TOKEN_SECRET,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    NODE_ONLINE,
 )
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
@@ -240,6 +241,13 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         node: dict[str, Any],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
         """Get vms, containers, and backups for a node."""
+        if node.get("status") != NODE_ONLINE:
+            _LOGGER.debug(
+                "Node %s is offline, skipping VM/container fetch",
+                node[CONF_NODE],
+            )
+            return [], [], []
+
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         backups = (

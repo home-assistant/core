@@ -170,6 +170,7 @@ def mock_proxmox_client():
         mock_instance.nodes = nodes_mock
         mock_instance._node_mock = node_mock
         mock_instance._nodes_mock = nodes_mock
+        mock_instance._all_nodes = all_nodes
 
         yield mock_instance
 
