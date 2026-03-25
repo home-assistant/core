@@ -25,3 +25,5 @@ async def test_sensors(
         entry = await init_integration(hass, mock_nuki_requests)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
