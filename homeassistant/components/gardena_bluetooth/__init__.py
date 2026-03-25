@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Callable
 import logging
 
 from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementDataCallback
 from gardena_bluetooth.client import CachedConnection, Client
 from gardena_bluetooth.const import AquaContour, DeviceConfiguration, DeviceInformation
 from gardena_bluetooth.exceptions import (
@@ -13,7 +14,9 @@ from gardena_bluetooth.exceptions import (
     CharacteristicNotFound,
     CommunicationFailure,
 )
-from gardena_bluetooth.parse import CharacteristicTime
+from gardena_bluetooth.parse import CharacteristicTime, ProductType
+from gardena_bluetooth.scan import async_get_manufacturer_data
+from habluetooth import HaBleakScannerWrapper
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, Platform
@@ -29,7 +32,23 @@ from .coordinator import (
     GardenaBluetoothConfigEntry,
     GardenaBluetoothCoordinator,
 )
-from .util import async_get_product_type
+
+
+class CallbackCleanHaBleakScannerWrapper(HaBleakScannerWrapper):
+    """Temporary fix for HaBleakScannerWrapper not cleaning up."""
+
+    def register_detection_callback(
+        self, callback: AdvertisementDataCallback | None
+    ) -> Callable[[], None]:
+        """Register a detection callback."""
+        original_callback = super().register_detection_callback(callback)
+
+        def _callback():
+            self._detection_cancel = None
+            original_callback()
+
+        return _callback
+
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -75,11 +94,12 @@ async def async_setup_entry(
 
     address = entry.data[CONF_ADDRESS]
 
-    try:
-        async with asyncio.timeout(TIMEOUT):
-            product_type = await async_get_product_type(hass, address)
-    except TimeoutError as exception:
-        raise ConfigEntryNotReady("Unable to find product type") from exception
+    mfg_data = await async_get_manufacturer_data(
+        {address}, backend=CallbackCleanHaBleakScannerWrapper
+    )
+    product_type = mfg_data[address].product_type
+    if product_type == ProductType.UNKNOWN:
+        raise ConfigEntryNotReady("Unable to find product type")
 
     client = Client(get_connection(hass, address), product_type)
     try:

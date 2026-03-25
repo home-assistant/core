@@ -1,5 +1,6 @@
 """Common fixtures for the Gardena Bluetooth tests."""
 
+import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -9,6 +10,9 @@ from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic, Service
+from gardena_bluetooth.scan import (
+    async_get_manufacturer_data as _async_get_manufacturer_data,
+)
 import pytest
 
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
@@ -133,3 +137,26 @@ def mock_client(
 @pytest.fixture(autouse=True)
 def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
+
+
+@pytest.fixture
+def manufacturer_request_event() -> Generator[asyncio.Event]:
+    """Make sure all entities are enabled."""
+
+    event = asyncio.Event()
+
+    async def _get(*args, **kwargs):
+        event.set()
+        return await _async_get_manufacturer_data(*args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.gardena_bluetooth.async_get_manufacturer_data",
+            wraps=_get,
+        ),
+        patch(
+            "homeassistant.components.gardena_bluetooth.config_flow.async_get_manufacturer_data",
+            wraps=_get,
+        ),
+    ):
+        yield event

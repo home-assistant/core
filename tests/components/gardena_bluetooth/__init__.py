@@ -44,6 +44,16 @@ AQUA_CONTOUR_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+MISSING_PRODUCT_SERVICE_INFO = BluetoothServiceInfo(
+    name="Missing Product Info",
+    address="00000000-0000-0000-0000-000000000000",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={1062: b"\x05\x04\xf1b\xc1\x03"},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
 MISSING_SERVICE_SERVICE_INFO = BluetoothServiceInfo(
     name="Missing Service Info",
     address="00000000-0000-0000-0001-000000000000",

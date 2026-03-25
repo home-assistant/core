@@ -140,15 +140,6 @@
     'type': <FlowResultType.ABORT: 'abort'>,
   })
 # ---
-# name: test_no_devices
-  FlowResultSnapshot({
-    'description_placeholders': None,
-    'flow_id': <ANY>,
-    'handler': 'gardena_bluetooth',
-    'reason': 'no_devices_found',
-    'type': <FlowResultType.ABORT: 'abort'>,
-  })
-# ---
 # name: test_user_selection
   FlowResultSnapshot({
     'data_schema': list([
