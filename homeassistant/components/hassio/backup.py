@@ -44,6 +44,7 @@ from homeassistant.components.backup import (
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
+    OnProgressCallback,
     RestoreBackupEvent,
     RestoreBackupStage,
     RestoreBackupState,
@@ -183,6 +184,7 @@ class SupervisorBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -202,8 +204,17 @@ class SupervisorBackupAgent(BackupAgent):
             location={self.location},
             filename=PurePath(suggested_backup_filename(backup)),
         )
+
+        async def stream_with_progress() -> AsyncIterator[bytes]:
+            """Wrap stream to track upload progress."""
+            bytes_uploaded = 0
+            async for chunk in stream:
+                bytes_uploaded += len(chunk)
+                on_progress(bytes_uploaded=bytes_uploaded)
+                yield chunk
+
         await self._client.backups.upload_backup(
-            stream,
+            stream_with_progress(),
             upload_options,
         )
 

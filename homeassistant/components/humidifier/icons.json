@@ -11,6 +11,9 @@
     },
     "is_on": {
       "condition": "mdi:air-humidifier"
+    },
+    "is_target_humidity": {
+      "condition": "mdi:water-percent"
     }
   },
   "entity_component": {
@@ -64,12 +67,6 @@
     }
   },
   "triggers": {
-    "current_humidity_changed": {
-      "trigger": "mdi:water-percent"
-    },
-    "current_humidity_crossed_threshold": {
-      "trigger": "mdi:water-percent"
-    },
     "started_drying": {
       "trigger": "mdi:arrow-down-bold"
     },
