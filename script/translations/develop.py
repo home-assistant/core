@@ -1,10 +1,11 @@
 """Compile the current translation strings files for testing."""
 
 import argparse
-import json
 from pathlib import Path
 import sys
 import time
+
+import orjson
 
 from . import download, upload
 from .const import INTEGRATIONS_DIR
@@ -57,8 +58,8 @@ def run_single(translations, flattened_translations, integration):
 
     prepare_download_dir()
 
-    (download.DOWNLOAD_DIR / "en.json").write_text(
-        json.dumps({"component": {integration: component_translations[integration]}})
+    (download.DOWNLOAD_DIR / "en.json").write_bytes(
+        orjson.dumps({"component": {integration: component_translations[integration]}})
     )
 
     download.save_integrations_translations()
@@ -82,8 +83,8 @@ def run():
                 fail_on_missing=True,
             )
 
-        (download.DOWNLOAD_DIR / "en.json").write_text(
-            json.dumps({"component": component_translations})
+        (download.DOWNLOAD_DIR / "en.json").write_bytes(
+            orjson.dumps({"component": component_translations})
         )
         download.save_integrations_translations()
         elapsed = time.perf_counter() - start
