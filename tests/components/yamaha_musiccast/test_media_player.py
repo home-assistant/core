@@ -15,6 +15,7 @@ from homeassistant.components.yamaha_musiccast.const import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
 
 from tests.common import MockConfigEntry
 
@@ -101,3 +102,13 @@ async def test_translation_key(
     mp_entries = [e for e in entries if e.domain == "media_player"]
     assert len(mp_entries) > 0
     assert all(e.translation_key == "zone" for e in mp_entries)
+
+
+async def test_sound_mode_translations(hass: HomeAssistant) -> None:
+    """Test that sound_mode state translations are present and resolve correctly."""
+    prefix = (
+        f"component.{DOMAIN}.entity.media_player.zone"
+        ".state_attributes.sound_mode.state."
+    )
+    translations = await async_get_translations(hass, LOCALE_EN, "entity", [DOMAIN])
+    assert translations[f"{prefix}warehouse_loft"] == "Warehouse Loft"
