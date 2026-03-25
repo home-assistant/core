@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import partial
+from http import HTTPStatus
 from pathlib import Path
+from typing import Any
 
 from jaraco.abode.client import Client as Abode
 import jaraco.abode.config
@@ -63,8 +65,120 @@ class AbodeSystem:
 
     abode: Abode
     polling: bool
+    hass: HomeAssistant
+    entry: ConfigEntry
     entity_ids: set[str | None] = field(default_factory=set)
     logout_listener: CALLBACK_TYPE | None = None
+    reauth_started: bool = False
+
+    def start_reauth(self, error: Exception) -> None:
+        """Start a reauthentication flow once when auth fails at runtime."""
+        if self.reauth_started:
+            return
+
+        self.reauth_started = True
+        LOGGER.warning(
+            "Abode authentication failed at runtime: %s. Starting reauthentication.",
+            error,
+        )
+
+        # Stop event stream first to avoid aggressive retries while user reauthenticates.
+        if not self.polling:
+            try:
+                self.abode.events.stop()
+            except Exception as ex:  # noqa: BLE001
+                LOGGER.debug("Failed stopping Abode event stream: %s", ex)
+
+        self.hass.add_job(self.entry.async_start_reauth, self.hass)
+
+
+AUTH_STATUS_CODES = {
+    HTTPStatus.BAD_REQUEST,
+    HTTPStatus.UNAUTHORIZED,
+    HTTPStatus.FORBIDDEN,
+}
+
+
+def _is_auth_error(error: Exception) -> bool:
+    """Return True if an exception indicates an auth failure."""
+    if isinstance(error, AbodeAuthenticationException):
+        return True
+
+    if isinstance(error, HTTPError) and error.response:
+        return HTTPStatus(error.response.status_code) in AUTH_STATUS_CODES
+
+    if isinstance(error, AbodeException):
+        if error.errcode in AUTH_STATUS_CODES:
+            return True
+
+        message = error.message.lower()
+        return (
+            "unauthorized" in message
+            or "invalid credentials" in message
+            or ("password" in message and "match" in message)
+        )
+
+    return False
+
+
+def _is_auth_like_response(response: Any) -> bool:
+    """Return True if a response payload indicates auth failure despite 200 status."""
+    status_code = getattr(response, "status_code", None)
+    if status_code in AUTH_STATUS_CODES:
+        return True
+    if status_code != HTTPStatus.OK:
+        return False
+
+    try:
+        response_json = response.json()
+    except ValueError:
+        return False
+
+    if not isinstance(response_json, dict):
+        return False
+
+    message = str(response_json.get("message", "")).lower()
+    error_code = response_json.get("errorCode")
+
+    # Abode has returned auth errors in JSON payloads; guard that too.
+    return error_code in {11002, 13027} or (
+        "unauthorized" in message
+        or "invalid credentials" in message
+        or ("password" in message and "match" in message)
+    )
+
+
+def _install_runtime_auth_guard(abode_system: AbodeSystem) -> None:
+    """Wrap Abode requests to trigger reauth on runtime auth failures."""
+    original_send_request = abode_system.abode.send_request
+
+    def wrapped_send_request(
+        method: str,
+        path: str,
+        headers: dict[str, str] | None = None,
+        data: dict[str, str] | None = None,
+    ) -> Any:
+        try:
+            response = original_send_request(method, path, headers, data)
+        except Exception as ex:  # noqa: BLE001
+            if _is_auth_error(ex):
+                abode_system.start_reauth(ex)
+            raise
+
+        if _is_auth_like_response(response):
+            auth_error = AbodeAuthenticationException(
+                (
+                    HTTPStatus.UNAUTHORIZED,
+                    "Abode returned an authentication error payload",
+                )
+            )
+            abode_system.start_reauth(auth_error)
+            raise auth_error
+
+        return response
+
+    # This is an instance-level wrapper; avoid changing upstream library behavior globally.
+    abode_system.abode.send_request = wrapped_send_request  # type: ignore[method-assign]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -99,7 +213,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Abode: {ex}") from ex
 
-    hass.data[DOMAIN_DATA] = AbodeSystem(abode, polling)
+    hass.data[DOMAIN_DATA] = AbodeSystem(abode, polling, hass, entry)
+    _install_runtime_auth_guard(hass.data[DOMAIN_DATA])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
