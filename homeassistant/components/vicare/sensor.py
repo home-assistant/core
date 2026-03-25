@@ -835,7 +835,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ess_discharge_today",
         translation_key="ess_discharge_today",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: (
             api.getElectricalEnergySystemTransferDischargeCumulatedCurrentDay()
         ),
@@ -846,7 +846,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ess_discharge_this_week",
         translation_key="ess_discharge_this_week",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: (
             api.getElectricalEnergySystemTransferDischargeCumulatedCurrentWeek()
         ),
@@ -858,7 +858,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ess_discharge_this_month",
         translation_key="ess_discharge_this_month",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: (
             api.getElectricalEnergySystemTransferDischargeCumulatedCurrentMonth()
         ),
@@ -870,7 +870,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ess_discharge_this_year",
         translation_key="ess_discharge_this_year",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: (
             api.getElectricalEnergySystemTransferDischargeCumulatedCurrentYear()
         ),
@@ -889,7 +889,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         unit_getter=lambda api: (
             api.getElectricalEnergySystemTransferDischargeCumulatedUnit()
         ),
-        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="pcc_transfer_power_exchange",
@@ -929,7 +928,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_energy_production_today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
     ),
@@ -938,7 +937,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_energy_production_this_week",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentWeek(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
         entity_registry_enabled_default=False,
@@ -948,7 +947,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_energy_production_this_month",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentMonth(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
         entity_registry_enabled_default=False,
@@ -958,7 +957,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_energy_production_this_year",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentYear(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
         entity_registry_enabled_default=False,
