@@ -178,8 +178,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_device_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1155,8 +1156,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_temperature_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

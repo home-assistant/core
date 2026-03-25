@@ -256,8 +256,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_overfeed_alternative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -306,8 +307,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_high-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,8 +358,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_high_orp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -406,8 +409,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_low_orp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -558,8 +562,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_orp_overfeed_alternative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -710,8 +715,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_ph_overfeed_alternative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -811,8 +817,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_ph_too_high-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -861,8 +868,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_ph_too_low-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -962,8 +970,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_system_standby-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1012,8 +1021,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_water_too_cold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1062,8 +1072,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_water_too_hot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

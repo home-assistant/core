@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_numbers[number.pool_device_chlorine_dosing_off_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 360,
@@ -241,8 +242,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_flow_delay_timer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3600,
@@ -301,8 +303,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_orp_dosing_off_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 360,
@@ -544,8 +547,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_ph_dosing_off_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 360,
@@ -784,8 +788,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_power_on_delay_timer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5400,
