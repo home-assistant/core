@@ -5,7 +5,6 @@ from __future__ import annotations
 from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -30,27 +29,15 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         """Initialize the Cielo base entity."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._client = coordinator.client
-        self._device_api: CieloDeviceAPI | None = None
+        self.client = CieloDeviceAPI(
+            coordinator.client, coordinator.data.parsed[device_id]
+        )
 
-    @property
-    def client(self) -> CieloDeviceAPI:
-        """Return a per-device API wrapper bound to latest device data.
-
-        By keeping it as a property, we ensure the wrapper always references the latest device object while still reusing the same wrapper instance.
-        """
-        dev = self.device_data
-        if dev is None:
-            raise HomeAssistantError(
-                f"Cielo device {self._device_id} data not available"
-            )
-
-        if self._device_api is None:
-            self._device_api = CieloDeviceAPI(self._client, dev)
-        else:
-            self._device_api.device_data = dev
-
-        return self._device_api
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if (dev := self.device_data) is not None:
+            self.client.device_data = dev
+        super()._handle_coordinator_update()
 
     @property
     def device_data(self) -> CieloDevice | None:

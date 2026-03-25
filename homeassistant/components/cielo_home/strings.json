@@ -17,9 +17,9 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Follow the [documentation]({url}) to get your API key"
+          "api_key": "The API key from your Cielo Home account"
         },
-        "description": "Sign in with your API key",
+        "description": "Sign in with your Cielo Home API key. Follow the [documentation]({url}) to learn how to get your API key.",
         "title": "Connect to Cielo Home"
       }
     }
@@ -43,7 +43,7 @@
             "state": {
               "adjust": "Adjust",
               "auto": "[%key:common::state::auto%]",
-              "auto-stop": "Auto Stop",
+              "auto_stop": "Auto Stop",
               "pos1": "Position 1",
               "pos10": "Position 10",
               "pos11": "Position 11",
