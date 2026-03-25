@@ -3085,7 +3085,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.4.3
+tesla-fleet-api==1.4.5
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
