@@ -1625,6 +1625,44 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
 
 
+async def test_temperature_setting_action_change(hass: HomeAssistant) -> None:
+    """Test that activeThermostatMode contains the current HVAC action."""
+    trt_idle = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.COOL,
+            {
+                climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
+                climate.ATTR_HVAC_ACTION: climate.HVACAction.IDLE,
+                climate.ATTR_CURRENT_TEMPERATURE: 18,
+                climate.ATTR_MIN_TEMP: 10,
+                climate.ATTR_MAX_TEMP: 30,
+                ATTR_TEMPERATURE: 18,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt_idle.query_attributes().get("activeThermostatMode") == "none"
+    trt_cool = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.COOL,
+            {
+                climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
+                climate.ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
+                climate.ATTR_CURRENT_TEMPERATURE: 23,
+                climate.ATTR_MIN_TEMP: 10,
+                climate.ATTR_MAX_TEMP: 30,
+                ATTR_TEMPERATURE: 18,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt_cool.query_attributes().get("activeThermostatMode") == "cool"
+
+
 async def test_temperature_control(hass: HomeAssistant) -> None:
     """Test TemperatureControl trait support for sensor domain."""
     trt = trait.TemperatureControlTrait(

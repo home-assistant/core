@@ -1201,6 +1201,15 @@ class TemperatureSettingTrait(_Trait):
     preset_to_google = {climate.PRESET_ECO: "eco"}
     google_to_preset = {value: key for key, value in preset_to_google.items()}
 
+    action_to_google = {
+        climate.HVACAction.OFF: "off",
+        climate.HVACAction.HEATING: "heat",
+        climate.HVACAction.COOLING: "cool",
+        climate.HVACAction.DRYING: "dry",
+        climate.HVACAction.FAN: "fan-only",
+        climate.HVACAction.IDLE: "none",
+    }
+
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
@@ -1281,6 +1290,11 @@ class TemperatureSettingTrait(_Trait):
             response["thermostatMode"] = self.preset_to_google[preset]
         else:
             response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
+
+        if (
+            action := self.action_to_google.get(attrs.get(climate.ATTR_HVAC_ACTION))
+        ) is not None:
+            response["activeThermostatMode"] = action
 
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
