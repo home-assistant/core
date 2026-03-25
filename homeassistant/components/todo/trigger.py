@@ -36,9 +36,7 @@ def get_entity(hass: HomeAssistant, entity_id: str) -> TodoListEntity:
     """Get the todo entity for the provided entity_id."""
     component: EntityComponent[TodoListEntity] = hass.data[DATA_COMPONENT]
     if not (entity := component.get_entity(entity_id)):
-        raise HomeAssistantError(
-            f"Entity does not exist: {entity_id}"
-        )
+        raise HomeAssistantError(f"Entity does not exist: {entity_id}")
     return entity
 
 
@@ -98,9 +96,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
             try:
                 entity = get_entity(self._hass, entity_id)
             except HomeAssistantError:
-                _LOGGER.debug(
-                    "Skipping entity %s: not found", entity_id
-                )
+                _LOGGER.debug("Skipping entity %s: not found", entity_id)
                 continue
             _listener_wrapper(entity_id, entity.todo_items)
             unsub = entity.async_subscribe_updates(
@@ -175,13 +171,14 @@ class ItemAddedTrigger(ItemTriggerBase):
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Listen for todo item changes."""
+        entity_id = event.entity_id
         if event.items is None:
-            self._entity_item_ids[event.entity_id] = None
+            self._entity_item_ids[entity_id] = None
             return
 
-        old_item_ids = self._entity_item_ids.get(event.entity_id)
+        old_item_ids = self._entity_item_ids.get(entity_id)
         current_item_ids = {item.uid for item in event.items if item.uid is not None}
-        self._entity_item_ids[event.entity_id] = current_item_ids
+        self._entity_item_ids[entity_id] = current_item_ids
         if old_item_ids is None:
             # Entity just became available, so no old items to compare against
             return
@@ -190,10 +187,10 @@ class ItemAddedTrigger(ItemTriggerBase):
             _LOGGER.debug(
                 "Detected added items with ids %s for entity %s",
                 added_item_ids,
-                event.entity_id,
+                entity_id,
             )
             payload = {
-                ATTR_ENTITY_ID: event.entity_id,
+                ATTR_ENTITY_ID: entity_id,
                 "item_ids": sorted(added_item_ids),
             }
             run_action(payload, description="todo item added trigger")
@@ -213,13 +210,14 @@ class ItemRemovedTrigger(ItemTriggerBase):
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Listen for todo item changes."""
+        entity_id = event.entity_id
         if event.items is None:
-            self._entity_item_ids[event.entity_id] = None
+            self._entity_item_ids[entity_id] = None
             return
 
-        old_item_ids = self._entity_item_ids.get(event.entity_id)
+        old_item_ids = self._entity_item_ids.get(entity_id)
         current_item_ids = {item.uid for item in event.items if item.uid is not None}
-        self._entity_item_ids[event.entity_id] = current_item_ids
+        self._entity_item_ids[entity_id] = current_item_ids
         if old_item_ids is None:
             # Entity just became available, so no old items to compare against
             return
@@ -228,10 +226,10 @@ class ItemRemovedTrigger(ItemTriggerBase):
             _LOGGER.debug(
                 "Detected removed items with ids %s for entity %s",
                 removed_item_ids,
-                event.entity_id,
+                entity_id,
             )
             payload = {
-                ATTR_ENTITY_ID: event.entity_id,
+                ATTR_ENTITY_ID: entity_id,
                 "item_ids": sorted(removed_item_ids),
             }
             run_action(payload, description="todo item removed trigger")
@@ -251,17 +249,18 @@ class ItemCompletedTrigger(ItemTriggerBase):
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Listen for todo item changes."""
+        entity_id = event.entity_id
         if event.items is None:
-            self._entity_completed_item_ids[event.entity_id] = None
+            self._entity_completed_item_ids[entity_id] = None
             return
 
-        old_item_ids = self._entity_completed_item_ids.get(event.entity_id)
+        old_item_ids = self._entity_completed_item_ids.get(entity_id)
         current_item_ids = {
             item.uid
             for item in event.items
             if item.uid is not None and item.status == TodoItemStatus.COMPLETED
         }
-        self._entity_completed_item_ids[event.entity_id] = current_item_ids
+        self._entity_completed_item_ids[entity_id] = current_item_ids
         if old_item_ids is None:
             # Entity just became available, so no old items to compare against
             return
@@ -270,10 +269,10 @@ class ItemCompletedTrigger(ItemTriggerBase):
             _LOGGER.debug(
                 "Detected new completed items with ids %s for entity %s",
                 new_completed_item_ids,
-                event.entity_id,
+                entity_id,
             )
             payload = {
-                ATTR_ENTITY_ID: event.entity_id,
+                ATTR_ENTITY_ID: entity_id,
                 "item_ids": sorted(new_completed_item_ids),
             }
             run_action(payload, description="todo item completed trigger")

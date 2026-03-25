@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TARGET,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
@@ -183,7 +184,6 @@ def _make_entity(
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
-        | TodoListEntityFeature.MOVE_TODO_ITEM
     )
     return entity
 
@@ -287,7 +287,7 @@ async def test_item_change_triggers(
     ],
 )
 @pytest.mark.usefixtures("enable_labs_preview_features")
-async def test_item_change_triggers_ignore_initial_unavailable(
+async def test_item_change_triggers_ignore_initial_unknown(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     todo_lists: tuple[MockTodoListEntity, MockTodoListEntity],
@@ -300,6 +300,8 @@ async def test_item_change_triggers_ignore_initial_unavailable(
     entity._attr_todo_items = None
     entity.async_write_ha_state()
     await hass.async_block_till_done()
+    assert (state := hass.states.get(TODO_ENTITY_ID1))
+    assert state.state == STATE_UNKNOWN
 
     await _setup_automation(hass, {CONF_ENTITY_ID: TODO_ENTITY_ID1})
 
@@ -311,6 +313,8 @@ async def test_item_change_triggers_ignore_initial_unavailable(
     entity.async_write_ha_state()
     await hass.async_block_till_done()
     _assert_service_calls(service_calls, [])
+    assert (state := hass.states.get(TODO_ENTITY_ID1))
+    assert state.state == "1"
 
     await action_method(hass, TODO_ENTITY_ID1, item_summary)
     _assert_service_calls(
