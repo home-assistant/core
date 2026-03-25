@@ -32,10 +32,10 @@ async def test_hmip_home_cloud_connection_sensor(
 ) -> None:
     """Test HomematicipCloudConnectionSensor."""
     entity_id = "binary_sensor.cloud_connection"
-    entity_name = "Cloud Connection"
+    entity_name = "Home Cloud Connection"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Cloud Connection"]
     )
 
     ha_state, _hmip_device = get_and_check_entity_basics(

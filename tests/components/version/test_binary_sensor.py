@@ -12,7 +12,9 @@ async def test_version_binary_sensor_local_source(hass: HomeAssistant) -> None:
     """Test the Version binary sensor with local source."""
     await setup_version_integration(hass)
 
-    state = hass.states.get("binary_sensor.local_installation_update_available")
+    state = hass.states.get(
+        "binary_sensor.home_assistant_version_local_installation_update_available"
+    )
     assert not state
 
 
@@ -20,5 +22,7 @@ async def test_version_binary_sensor(hass: HomeAssistant) -> None:
     """Test the Version binary sensor."""
     await setup_version_integration(hass, {**DEFAULT_CONFIGURATION, "source": "pypi"})
 
-    state = hass.states.get("binary_sensor.local_installation_update_available")
+    state = hass.states.get(
+        "binary_sensor.home_assistant_version_local_installation_update_available"
+    )
     assert state

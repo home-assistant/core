@@ -21,6 +21,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
@@ -82,6 +83,14 @@ NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
         ).stopall.post(),
         entity_category=EntityCategory.CONFIG,
     ),
+    ProxmoxNodeButtonNodeEntityDescription(
+        key="suspend_all",
+        translation_key="suspend_all",
+        press_action=lambda coordinator, node: coordinator.proxmox.nodes(
+            node
+        ).suspendall.post(),
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
@@ -104,7 +113,7 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
     ProxmoxVMButtonEntityDescription(
         key="restart",
         press_action=lambda coordinator, node, vmid: (
-            coordinator.proxmox.nodes(node).qemu(vmid).status.restart.post()
+            coordinator.proxmox.nodes(node).qemu(vmid).status.reboot.post()
         ),
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
@@ -122,6 +131,30 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         translation_key="reset",
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node).qemu(vmid).status.reset.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ProxmoxVMButtonEntityDescription(
+        key="shutdown",
+        translation_key="shutdown",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node).qemu(vmid).status.shutdown.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ProxmoxVMButtonEntityDescription(
+        key="snapshot_create",
+        translation_key="snapshot_create",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node)
+            .qemu(vmid)
+            .snapshot.post(
+                name=(
+                    "homeassistant_snapshot_"
+                    f"{coordinator.data[node].vms[vmid]['name']}_"
+                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+                )
+            )
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -147,10 +180,26 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
     ProxmoxContainerButtonEntityDescription(
         key="restart",
         press_action=lambda coordinator, node, vmid: (
-            coordinator.proxmox.nodes(node).lxc(vmid).status.restart.post()
+            coordinator.proxmox.nodes(node).lxc(vmid).status.reboot.post()
         ),
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
+    ),
+    ProxmoxContainerButtonEntityDescription(
+        key="snapshot_create",
+        translation_key="snapshot_create",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node)
+            .lxc(vmid)
+            .snapshot.post(
+                name=(
+                    "homeassistant_snapshot_"
+                    f"{coordinator.data[node].containers[vmid]['name']}_"
+                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+                )
+            )
+        ),
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -265,7 +314,8 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the node button action via executor."""
-        if not is_granted(self.coordinator.permissions, p_type="nodes"):
+        node_id = self._node_data.node["node"]
+        if not is_granted(self.coordinator.permissions, p_type="nodes", p_id=node_id):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_permission_node_power",
@@ -273,7 +323,7 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            self._node_data.node["node"],
+            node_id,
         )
 
 
@@ -284,7 +334,8 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
-        if not is_granted(self.coordinator.permissions, p_type="vms"):
+        vmid = self.vm_data["vmid"]
+        if not is_granted(self.coordinator.permissions, p_type="vms", p_id=vmid):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
@@ -293,7 +344,7 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
             self.entity_description.press_action,
             self.coordinator,
             self._node_name,
-            self.vm_data["vmid"],
+            vmid,
         )
 
 
@@ -304,8 +355,9 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
+        vmid = self.container_data["vmid"]
         # Container power actions fall under vms
-        if not is_granted(self.coordinator.permissions, p_type="vms"):
+        if not is_granted(self.coordinator.permissions, p_type="vms", p_id=vmid):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
@@ -314,5 +366,5 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
             self.entity_description.press_action,
             self.coordinator,
             self._node_name,
-            self.container_data["vmid"],
+            vmid,
         )

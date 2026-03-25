@@ -14,7 +14,7 @@ async def test_door_bell_event(
 ) -> None:
     """Test of door bell event of HmIP-DSD-PCB."""
     entity_id = "event.dsdpcb_klingel_doorbell"
-    entity_name = "dsdpcb_klingel doorbell"
+    entity_name = "dsdpcb_klingel Doorbell"
     device_model = "HmIP-DSD-PCB"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["dsdpcb_klingel"]
@@ -43,7 +43,7 @@ async def test_door_bell_event_wrong_event_type(
 ) -> None:
     """Test of door bell event of HmIP-DSD-PCB."""
     entity_id = "event.dsdpcb_klingel_doorbell"
-    entity_name = "dsdpcb_klingel doorbell"
+    entity_name = "dsdpcb_klingel Doorbell"
     device_model = "HmIP-DSD-PCB"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["dsdpcb_klingel"]

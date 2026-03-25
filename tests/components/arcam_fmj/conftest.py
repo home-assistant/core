@@ -20,7 +20,7 @@ MOCK_TURN_ON = {
     "service": "switch.turn_on",
     "data": {"entity_id": "switch.test"},
 }
-MOCK_ENTITY_ID = "media_player.arcam_fmj_127_0_0_1_zone_1"
+MOCK_ENTITY_ID = "media_player.arcam_fmj_127_0_0_1"
 MOCK_UUID = "456789abcdef"
 MOCK_UDN = f"uuid:01234567-89ab-cdef-0123-{MOCK_UUID}"
 MOCK_NAME = f"{DEFAULT_NAME} ({MOCK_HOST})"
@@ -44,12 +44,14 @@ def state_1_fixture(client: Mock) -> State:
     state.zn = 1
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
+    state.get_source.return_value = None
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (None, None)
     state.get_incoming_video_parameters.return_value = None
     state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
+    state.get_decode_mode.return_value = None
     return state
 
 
@@ -61,12 +63,14 @@ def state_2_fixture(client: Mock) -> State:
     state.zn = 2
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
+    state.get_source.return_value = None
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (None, None)
     state.get_incoming_video_parameters.return_value = None
     state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
+    state.get_decode_mode.return_value = None
     return state
 
 
@@ -90,7 +94,7 @@ async def player_setup_fixture(
     state_1: State,
     state_2: State,
     client: Mock,
-) -> AsyncGenerator[str]:
+) -> AsyncGenerator[None]:
     """Get standard player."""
 
     def state_mock(cli, zone):
@@ -101,7 +105,15 @@ async def player_setup_fixture(
         raise ValueError(f"Unknown player zone: {zone}")
 
     async def _mock_run_client(hass: HomeAssistant, runtime_data, interval):
-        for coordinator in runtime_data.coordinators.values():
+        coordinators = runtime_data.coordinators
+
+        def _notify_data_updated() -> None:
+            for coordinator in coordinators.values():
+                coordinator.async_notify_data_updated()
+
+        client.notify_data_updated = _notify_data_updated
+
+        for coordinator in coordinators.values():
             coordinator.async_notify_connected()
 
     await async_setup_component(hass, "homeassistant", {})
@@ -119,4 +131,4 @@ async def player_setup_fixture(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield MOCK_ENTITY_ID
+        yield
