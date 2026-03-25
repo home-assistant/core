@@ -2,6 +2,8 @@
   "common": {
     "condition_behavior_description": "How the state should match on the targeted humidifiers.",
     "condition_behavior_name": "Behavior",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration",
     "trigger_behavior_description": "The behavior of the targeted humidifiers to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
@@ -49,17 +51,13 @@
     "is_target_humidity": {
       "description": "Tests the target humidity of one or more humidifiers.",
       "fields": {
-        "above": {
-          "description": "Require the target humidity to be above this value.",
-          "name": "Above"
-        },
         "behavior": {
           "description": "[%key:component::humidifier::common::condition_behavior_description%]",
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "Require the target humidity to be below this value.",
-          "name": "Below"
+        "threshold": {
+          "description": "[%key:component::humidifier::common::condition_threshold_description%]",
+          "name": "[%key:component::humidifier::common::condition_threshold_name%]"
         }
       },
       "name": "Humidifier target humidity"
@@ -157,12 +155,6 @@
       "options": {
         "all": "All",
         "any": "Any"
-      }
-    },
-    "number_or_entity": {
-      "choices": {
-        "entity": "Entity",
-        "number": "Number"
       }
     },
     "trigger_behavior": {

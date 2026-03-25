@@ -1,43 +1,29 @@
-.number_or_entity_power: &number_or_entity_power
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement:
-                    - "mW"
-                    - "W"
-                    - "kW"
-                    - "MW"
-                    - "GW"
-                    - "TW"
-                    - "BTU/h"
-                - domain: sensor
-                  device_class: power
-                - domain: number
-                  device_class: power
-      translation_key: number_or_entity
-
-.condition_unit_power: &condition_unit_power
-  required: false
+.condition_behavior: &condition_behavior
+  required: true
+  default: any
   selector:
     select:
+      translation_key: condition_behavior
       options:
-        - "mW"
-        - "W"
-        - "kW"
-        - "MW"
-        - "GW"
-        - "TW"
-        - "BTU/h"
+        - all
+        - any
+
+.power_units: &power_units
+  - "mW"
+  - "W"
+  - "kW"
+  - "MW"
+  - "GW"
+  - "TW"
+  - "BTU/h"
+
+.power_threshold_entity: &power_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *power_units
+  - domain: sensor
+    device_class: power
+  - domain: number
+    device_class: power
 
 is_value:
   target:
@@ -47,15 +33,13 @@ is_value:
       - domain: sensor
         device_class: power
   fields:
-    behavior:
+    behavior: *condition_behavior
+    threshold:
       required: true
-      default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
-    above: *number_or_entity_power
-    below: *number_or_entity_power
-    unit: *condition_unit_power
+        numeric_threshold:
+          entity: *power_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *power_units
