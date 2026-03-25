@@ -641,6 +641,8 @@ async def test_lamp_unknown_brightness(
         None,
     )
 
+    assert hass.states.get("light.vulcan_light").state == STATE_UNKNOWN
+
 
 @pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
 @pytest.mark.parametrize(
