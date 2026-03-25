@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -112,26 +112,43 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fresh-r sensors from a config entry."""
-    entities: list[FreshrSensor] = []
-    for device in config_entry.runtime_data.devices.data:
-        descriptions = SENSOR_TYPES.get(
-            device.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
-        )
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
-            name=_DEVICE_TYPE_NAMES.get(device.device_type, "Fresh-r"),
-            serial_number=device.id,
-            manufacturer="Fresh-r",
-        )
-        entities.extend(
-            FreshrSensor(
-                config_entry.runtime_data.readings[device.id],
-                description,
-                device_info,
+    coordinator = config_entry.runtime_data.devices
+    known_devices: set[str] = set()
+
+    @callback
+    def _check_devices() -> None:
+        current = set(coordinator.data)
+        removed_ids = known_devices - current
+        if removed_ids:
+            known_devices.difference_update(removed_ids)
+        new_ids = current - known_devices
+        if not new_ids:
+            return
+        known_devices.update(new_ids)
+        entities: list[FreshrSensor] = []
+        for device_id in new_ids:
+            device = coordinator.data[device_id]
+            descriptions = SENSOR_TYPES.get(
+                device.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
             )
-            for description in descriptions
-        )
-    async_add_entities(entities)
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_id)},
+                name=_DEVICE_TYPE_NAMES.get(device.device_type, "Fresh-r"),
+                serial_number=device_id,
+                manufacturer="Fresh-r",
+            )
+            entities.extend(
+                FreshrSensor(
+                    config_entry.runtime_data.readings[device_id],
+                    description,
+                    device_info,
+                )
+                for description in descriptions
+            )
+        async_add_entities(entities)
+
+    _check_devices()
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_devices))
 
 
 class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
