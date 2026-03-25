@@ -184,14 +184,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     PooldoseSensorEntityDescription(
-        key="circulation_pump_status",
-        translation_key="circulation_pump_status",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.ENUM,
-        options=["disabled", "enabled"],
-    ),
-    PooldoseSensorEntityDescription(
         key="device_config",
         translation_key="device_config",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -206,22 +198,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["celsius", "fahrenheit"],
-    ),
-    PooldoseSensorEntityDescription(
-        key="power_on_delay_status",
-        translation_key="power_on_delay_status",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.ENUM,
-        options=["disabled", "enabled"],
-    ),
-    PooldoseSensorEntityDescription(
-        key="flow_delay_status",
-        translation_key="flow_delay_status",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.ENUM,
-        options=["disabled", "enabled"],
     ),
 )
 

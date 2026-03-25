@@ -212,13 +212,6 @@
       }
     },
     "sensor": {
-      "circulation_pump_status": {
-        "name": "Circulation pump",
-        "state": {
-          "disabled": "[%key:common::state::disabled%]",
-          "enabled": "[%key:common::state::enabled%]"
-        }
-      },
       "cl": {
         "name": "Chlorine"
       },
@@ -234,13 +227,6 @@
         "state": {
           "ph_orp": "pH/ORP",
           "ph_orp_chlorine": "pH/ORP/Chlorine"
-        }
-      },
-      "flow_delay_status": {
-        "name": "Flow delay",
-        "state": {
-          "disabled": "[%key:common::state::disabled%]",
-          "enabled": "[%key:common::state::enabled%]"
         }
       },
       "flow_rate": {
@@ -324,13 +310,6 @@
         "state": {
           "acid": "pH-",
           "alcalyne": "pH+"
-        }
-      },
-      "power_on_delay_status": {
-        "name": "Power-on delay",
-        "state": {
-          "disabled": "[%key:common::state::disabled%]",
-          "enabled": "[%key:common::state::enabled%]"
         }
       },
       "temperature_unit": {

@@ -205,9 +205,6 @@
       }
     },
     "sensor": {
-      "circulation_pump_status": {
-        "default": "mdi:pump"
-      },
       "cl": {
         "default": "mdi:pool"
       },
@@ -216,9 +213,6 @@
       },
       "device_config": {
         "default": "mdi:cog"
-      },
-      "flow_delay_status": {
-        "default": "mdi:timer-sand"
       },
       "flow_rate": {
         "default": "mdi:pipe-valve"
@@ -264,9 +258,6 @@
       },
       "ph_type_dosing": {
         "default": "mdi:beaker"
-      },
-      "power_on_delay_status": {
-        "default": "mdi:timer-sand"
       },
       "temperature_unit": {
         "default": "mdi:thermometer"

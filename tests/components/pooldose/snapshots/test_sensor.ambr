@@ -173,65 +173,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_circulation_pump-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pool_device_circulation_pump',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Circulation pump',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Circulation pump',
-    'platform': 'pooldose',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'circulation_pump_status',
-    'unique_id': 'TEST123456789_circulation_pump_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_sensors[sensor.pool_device_circulation_pump-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device Circulation pump',
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pool_device_circulation_pump',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'disabled',
-  })
-# ---
 # name: test_all_sensors[sensor.pool_device_device_configuration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -289,65 +230,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ph_orp',
-  })
-# ---
-# name: test_all_sensors[sensor.pool_device_flow_delay-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pool_device_flow_delay',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Flow delay',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Flow delay',
-    'platform': 'pooldose',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flow_delay_status',
-    'unique_id': 'TEST123456789_flow_delay_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_sensors[sensor.pool_device_flow_delay-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device Flow delay',
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pool_device_flow_delay',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'disabled',
   })
 # ---
 # name: test_all_sensors[sensor.pool_device_flow_rate-entry]
@@ -1196,65 +1078,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'proportional',
-  })
-# ---
-# name: test_all_sensors[sensor.pool_device_power_on_delay-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pool_device_power_on_delay',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power-on delay',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Power-on delay',
-    'platform': 'pooldose',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_on_delay_status',
-    'unique_id': 'TEST123456789_power_on_delay_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_sensors[sensor.pool_device_power_on_delay-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device Power-on delay',
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pool_device_power_on_delay',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'disabled',
   })
 # ---
 # name: test_all_sensors[sensor.pool_device_temperature-entry]
