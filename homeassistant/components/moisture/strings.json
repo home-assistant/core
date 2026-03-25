@@ -7,7 +7,7 @@
   },
   "conditions": {
     "is_detected": {
-      "description": "Tests if moisture is currently detected.",
+      "description": "Tests if one or more moisture sensors are detecting moisture.",
       "fields": {
         "behavior": {
           "description": "[%key:component::moisture::common::condition_behavior_description%]",
@@ -17,7 +17,7 @@
       "name": "Moisture is detected"
     },
     "is_not_detected": {
-      "description": "Tests if moisture is currently not detected.",
+      "description": "Tests if one or more moisture sensors are not detecting moisture.",
       "fields": {
         "behavior": {
           "description": "[%key:component::moisture::common::condition_behavior_description%]",
