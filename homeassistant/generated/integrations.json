@@ -2954,6 +2954,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hr_energy_qube": {
+      "name": "Qube heat pump",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "html5": {
       "name": "HTML5 Push Notifications",
       "integration_type": "hub",
@@ -3657,6 +3663,12 @@
     "lg": {
       "name": "LG",
       "integrations": {
+        "lg_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "LG Infrared"
+        },
         "lg_netcast": {
           "integration_type": "device",
           "config_flow": true,
@@ -5870,7 +5882,7 @@
       "integrations": {
         "touchline": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Roth Touchline"
         },
@@ -6472,6 +6484,12 @@
     "solarlog": {
       "name": "Solar-Log",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "solarman": {
+      "name": "Solarman",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
