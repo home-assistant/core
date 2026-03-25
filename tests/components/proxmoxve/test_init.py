@@ -244,7 +244,7 @@ async def test_offline_node(
     mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("binary_sensor.pve1_status")
     assert state.state == STATE_ON
