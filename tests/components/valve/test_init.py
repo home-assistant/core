@@ -62,7 +62,6 @@ class MockValveEntity(ValveEntity):
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
         self._attr_current_valve_position = current_position
-        self._attr_is_closed = self._attr_current_valve_position == 0
         if reports_position is not None:
             self._attr_reports_position = reports_position
         if device_class is not None:
@@ -77,7 +76,6 @@ class MockValveEntity(ValveEntity):
             self._attr_is_closing = True
             self._attr_is_opening = False
         self._target_valve_position = position
-        self._attr_is_closed = self._attr_current_valve_position == 0
         self.schedule_update_ha_state()
 
     def stop_valve(self) -> None:
@@ -94,7 +92,6 @@ class MockValveEntity(ValveEntity):
         self._attr_current_valve_position = self._target_valve_position
         self._attr_is_closing = False
         self._attr_is_opening = False
-        self._attr_is_closed = self._attr_current_valve_position == 0
         self.async_write_ha_state()
 
 

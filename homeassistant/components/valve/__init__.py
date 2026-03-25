@@ -193,10 +193,15 @@ class ValveEntity(Entity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data: dict[str, Any] = {}
-        data[ATTR_IS_CLOSED] = self.is_closed
 
         if self.reports_position:
-            data[ATTR_CURRENT_POSITION] = self.current_valve_position
+            if (current_valve_position := self.current_valve_position) is None:
+                data[ATTR_IS_CLOSED] = None
+            else:
+                data[ATTR_IS_CLOSED] = current_valve_position == 0
+            data[ATTR_CURRENT_POSITION] = current_valve_position
+        else:
+            data[ATTR_IS_CLOSED] = self.is_closed
 
         return data
 

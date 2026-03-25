@@ -42,7 +42,7 @@
       'current_position': 0,
       'device_class': 'water',
       'friendly_name': 'Test Valve Valve position',
-      'is_closed': None,
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 4>,
     }),
     'context': <ANY>,
