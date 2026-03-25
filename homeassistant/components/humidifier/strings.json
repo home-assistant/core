@@ -45,6 +45,24 @@
         }
       },
       "name": "Humidifier is on"
+    },
+    "is_target_humidity": {
+      "description": "Tests the target humidity of one or more humidifiers.",
+      "fields": {
+        "above": {
+          "description": "Require the target humidity to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the target humidity to be below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Humidifier target humidity"
     }
   },
   "device_automation": {
