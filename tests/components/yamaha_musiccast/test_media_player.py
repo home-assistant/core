@@ -14,10 +14,9 @@ from homeassistant.components.yamaha_musiccast.const import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-
-ENTITY_ID = "media_player.test_musiccast"
 
 
 @pytest.fixture(autouse=True)
@@ -34,9 +33,8 @@ def silent_ssdp_scanner() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_device():
+def mock_device() -> MagicMock:
     """Return a mock MusicCastDevice with minimal data populated."""
-
     zone = MusicCastZoneData()
     zone.name = "Main Zone"
     zone.sound_program = "movie"
@@ -48,11 +46,7 @@ def mock_device():
     data.network_name = "Test MusicCast"
     data.mac_addresses = {"wlan": "00:11:22:33:44:55"}
     data.zones = {DEFAULT_ZONE: zone}
-    data.sound_program_names = {
-        "movie": "Movie",
-        "music": "Music",
-        "sports": "Sports",
-    }
+    data.sound_program_names = {}
 
     device = MagicMock()
     device.data = data
@@ -62,7 +56,6 @@ def mock_device():
     device.remove_callback = MagicMock()
     device.register_group_update_callback = MagicMock()
     device.remove_group_update_callback = MagicMock()
-    device.select_sound_mode = AsyncMock()
     device.ip = "192.168.1.100"
     device.media_image_url = None
     device.device = MagicMock()
@@ -97,15 +90,10 @@ async def setup_integration(
     return entry
 
 
-def _get_entity(hass: HomeAssistant, entry: MockConfigEntry):
-    """Return the media player entity from the coordinator."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    return next(e for e in coordinator.entities if e.entity_id == ENTITY_ID)
-
-
 async def test_translation_key(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
     """Test that the media player entity uses the zone translation key."""
-    entity = _get_entity(hass, setup_integration)
-    assert entity.translation_key == "zone"
+    entry = er.async_get(hass).async_get("media_player.test_musiccast")
+    assert entry is not None
+    assert entry.translation_key == "zone"
