@@ -41,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'balkonbewässerung Valve',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -93,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Garden Valve Yard Valve',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -145,6 +147,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 1',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -197,6 +200,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 2',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -249,6 +253,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 3',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -301,6 +306,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 4',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -353,6 +359,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 5',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -405,6 +412,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 6',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -457,6 +465,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 7',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -509,6 +518,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': '接HA水阀 Valve 8',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -613,6 +623,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Sprinkler Cesare Valve',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
