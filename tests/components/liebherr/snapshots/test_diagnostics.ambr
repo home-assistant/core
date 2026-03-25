@@ -87,6 +87,12 @@
               'type': 'BioFreshPlusControl',
               'zone_id': 1,
             }),
+            dict({
+              'max': 5,
+              'name': 'presentationlight',
+              'type': 'PresentationLightControl',
+              'value': 3,
+            }),
           ]),
           'device': dict({
             'device_id': 'test_device_id',
