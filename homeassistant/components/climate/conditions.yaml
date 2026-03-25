@@ -1,9 +1,9 @@
 .condition_common: &condition_common
-  target:
+  target: &condition_climate_target
     entity:
       domain: climate
   fields:
-    behavior:
+    behavior: &condition_behavior
       required: true
       default: any
       selector:
@@ -13,8 +13,76 @@
             - all
             - any
 
+.number_or_entity_humidity: &number_or_entity_humidity
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+              unit_of_measurement: "%"
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement: "%"
+                - domain: sensor
+                  device_class: humidity
+                - domain: number
+                  device_class: humidity
+      translation_key: number_or_entity
+
+.number_or_entity_temperature: &number_or_entity_temperature
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "°C"
+                    - "°F"
+                - domain: sensor
+                  device_class: temperature
+                - domain: number
+                  device_class: temperature
+      translation_key: number_or_entity
+
+.condition_unit_temperature: &condition_unit_temperature
+  required: false
+  selector:
+    select:
+      options:
+        - "°C"
+        - "°F"
+
 is_off: *condition_common
 is_on: *condition_common
 is_cooling: *condition_common
 is_drying: *condition_common
 is_heating: *condition_common
+
+target_humidity:
+  target: *condition_climate_target
+  fields:
+    behavior: *condition_behavior
+    above: *number_or_entity_humidity
+    below: *number_or_entity_humidity
+
+target_temperature:
+  target: *condition_climate_target
+  fields:
+    behavior: *condition_behavior
+    above: *number_or_entity_temperature
+    below: *number_or_entity_temperature
+    unit: *condition_unit_temperature

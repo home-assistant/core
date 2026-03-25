@@ -1,0 +1,692 @@
+.trigger_common_fields:
+  behavior: &trigger_behavior
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+.number_or_entity_co: &number_or_entity_co
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "ppb"
+                    - "ppm"
+                    - "mg/m³"
+                    - "μg/m³"
+                - domain: sensor
+                  device_class: carbon_monoxide
+                - domain: number
+                  device_class: carbon_monoxide
+      translation_key: number_or_entity
+
+.number_or_entity_co2: &number_or_entity_co2
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+              unit_of_measurement: "ppm"
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement: "ppm"
+                - domain: sensor
+                  device_class: carbon_dioxide
+                - domain: number
+                  device_class: carbon_dioxide
+      translation_key: number_or_entity
+
+.number_or_entity_pm1: &number_or_entity_pm1
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+              unit_of_measurement: "μg/m³"
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement: "μg/m³"
+                - domain: sensor
+                  device_class: pm1
+                - domain: number
+                  device_class: pm1
+      translation_key: number_or_entity
+
+.number_or_entity_pm25: &number_or_entity_pm25
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+              unit_of_measurement: "μg/m³"
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement: "μg/m³"
+                - domain: sensor
+                  device_class: pm25
+                - domain: number
+                  device_class: pm25
+      translation_key: number_or_entity
+
+.number_or_entity_pm4: &number_or_entity_pm4
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+              unit_of_measurement: "μg/m³"
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement: "μg/m³"
+                - domain: sensor
+                  device_class: pm4
+                - domain: number
+                  device_class: pm4
+      translation_key: number_or_entity
+
+.number_or_entity_pm10: &number_or_entity_pm10
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+              unit_of_measurement: "μg/m³"
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement: "μg/m³"
+                - domain: sensor
+                  device_class: pm10
+                - domain: number
+                  device_class: pm10
+      translation_key: number_or_entity
+
+.number_or_entity_ozone: &number_or_entity_ozone
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "ppb"
+                    - "ppm"
+                    - "μg/m³"
+                - domain: sensor
+                  device_class: ozone
+                - domain: number
+                  device_class: ozone
+      translation_key: number_or_entity
+
+.number_or_entity_voc: &number_or_entity_voc
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "μg/m³"
+                    - "mg/m³"
+                - domain: sensor
+                  device_class: volatile_organic_compounds
+                - domain: number
+                  device_class: volatile_organic_compounds
+      translation_key: number_or_entity
+
+.number_or_entity_voc_ratio: &number_or_entity_voc_ratio
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "ppb"
+                    - "ppm"
+                - domain: sensor
+                  device_class: volatile_organic_compounds_parts
+                - domain: number
+                  device_class: volatile_organic_compounds_parts
+      translation_key: number_or_entity
+
+.number_or_entity_no: &number_or_entity_no
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "ppb"
+                    - "μg/m³"
+                - domain: sensor
+                  device_class: nitrogen_monoxide
+                - domain: number
+                  device_class: nitrogen_monoxide
+      translation_key: number_or_entity
+
+.number_or_entity_no2: &number_or_entity_no2
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "ppb"
+                    - "ppm"
+                    - "μg/m³"
+                - domain: sensor
+                  device_class: nitrogen_dioxide
+                - domain: number
+                  device_class: nitrogen_dioxide
+      translation_key: number_or_entity
+
+.number_or_entity_n2o: &number_or_entity_n2o
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+              unit_of_measurement: "μg/m³"
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement: "μg/m³"
+                - domain: sensor
+                  device_class: nitrous_oxide
+                - domain: number
+                  device_class: nitrous_oxide
+      translation_key: number_or_entity
+
+.number_or_entity_so2: &number_or_entity_so2
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "ppb"
+                    - "μg/m³"
+                - domain: sensor
+                  device_class: sulphur_dioxide
+                - domain: number
+                  device_class: sulphur_dioxide
+      translation_key: number_or_entity
+
+.unit_co: &unit_co
+  required: false
+  selector:
+    select:
+      options:
+        - "ppb"
+        - "ppm"
+        - "mg/m³"
+        - "μg/m³"
+
+.unit_ozone: &unit_ozone
+  required: false
+  selector:
+    select:
+      options:
+        - "ppb"
+        - "ppm"
+        - "μg/m³"
+
+.unit_no2: &unit_no2
+  required: false
+  selector:
+    select:
+      options:
+        - "ppb"
+        - "ppm"
+        - "μg/m³"
+
+.unit_no: &unit_no
+  required: false
+  selector:
+    select:
+      options:
+        - "ppb"
+        - "μg/m³"
+
+.unit_so2: &unit_so2
+  required: false
+  selector:
+    select:
+      options:
+        - "ppb"
+        - "μg/m³"
+
+.unit_voc: &unit_voc
+  required: false
+  selector:
+    select:
+      options:
+        - "μg/m³"
+        - "mg/m³"
+
+.unit_voc_ratio: &unit_voc_ratio
+  required: false
+  selector:
+    select:
+      options:
+        - "ppb"
+        - "ppm"
+
+.trigger_threshold_type: &trigger_threshold_type
+  required: true
+  default: above
+  selector:
+    select:
+      options:
+        - above
+        - below
+        - between
+        - outside
+      translation_key: trigger_threshold_type
+
+# Binary sensor detected/cleared trigger fields
+.trigger_binary_fields: &trigger_binary_fields
+  behavior: *trigger_behavior
+
+# --- Binary sensor targets ---
+
+.target_gas: &target_gas
+  entity:
+    - domain: binary_sensor
+      device_class: gas
+
+.target_co_binary: &target_co_binary
+  entity:
+    - domain: binary_sensor
+      device_class: carbon_monoxide
+
+.target_smoke: &target_smoke
+  entity:
+    - domain: binary_sensor
+      device_class: smoke
+
+# --- Sensor targets ---
+
+.target_co_sensor: &target_co_sensor
+  entity:
+    - domain: sensor
+      device_class: carbon_monoxide
+
+.target_co2: &target_co2
+  entity:
+    - domain: sensor
+      device_class: carbon_dioxide
+
+.target_pm1: &target_pm1
+  entity:
+    - domain: sensor
+      device_class: pm1
+
+.target_pm25: &target_pm25
+  entity:
+    - domain: sensor
+      device_class: pm25
+
+.target_pm4: &target_pm4
+  entity:
+    - domain: sensor
+      device_class: pm4
+
+.target_pm10: &target_pm10
+  entity:
+    - domain: sensor
+      device_class: pm10
+
+.target_ozone: &target_ozone
+  entity:
+    - domain: sensor
+      device_class: ozone
+
+.target_voc: &target_voc
+  entity:
+    - domain: sensor
+      device_class: volatile_organic_compounds
+
+.target_voc_ratio: &target_voc_ratio
+  entity:
+    - domain: sensor
+      device_class: volatile_organic_compounds_parts
+
+.target_no: &target_no
+  entity:
+    - domain: sensor
+      device_class: nitrogen_monoxide
+
+.target_no2: &target_no2
+  entity:
+    - domain: sensor
+      device_class: nitrogen_dioxide
+
+.target_n2o: &target_n2o
+  entity:
+    - domain: sensor
+      device_class: nitrous_oxide
+
+.target_so2: &target_so2
+  entity:
+    - domain: sensor
+      device_class: sulphur_dioxide
+
+# --- Binary sensor triggers ---
+
+gas_detected:
+  fields: *trigger_binary_fields
+  target: *target_gas
+
+gas_cleared:
+  fields: *trigger_binary_fields
+  target: *target_gas
+
+co_detected:
+  fields: *trigger_binary_fields
+  target: *target_co_binary
+
+co_cleared:
+  fields: *trigger_binary_fields
+  target: *target_co_binary
+
+smoke_detected:
+  fields: *trigger_binary_fields
+  target: *target_smoke
+
+smoke_cleared:
+  fields: *trigger_binary_fields
+  target: *target_smoke
+
+# --- Numerical sensor triggers ---
+
+co_changed:
+  target: *target_co_sensor
+  fields:
+    above: *number_or_entity_co
+    below: *number_or_entity_co
+    unit: *unit_co
+
+co_crossed_threshold:
+  target: *target_co_sensor
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_co
+    upper_limit: *number_or_entity_co
+    unit: *unit_co
+
+co2_changed:
+  target: *target_co2
+  fields:
+    above: *number_or_entity_co2
+    below: *number_or_entity_co2
+
+co2_crossed_threshold:
+  target: *target_co2
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_co2
+    upper_limit: *number_or_entity_co2
+
+pm1_changed:
+  target: *target_pm1
+  fields:
+    above: *number_or_entity_pm1
+    below: *number_or_entity_pm1
+
+pm1_crossed_threshold:
+  target: *target_pm1
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_pm1
+    upper_limit: *number_or_entity_pm1
+
+pm25_changed:
+  target: *target_pm25
+  fields:
+    above: *number_or_entity_pm25
+    below: *number_or_entity_pm25
+
+pm25_crossed_threshold:
+  target: *target_pm25
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_pm25
+    upper_limit: *number_or_entity_pm25
+
+pm4_changed:
+  target: *target_pm4
+  fields:
+    above: *number_or_entity_pm4
+    below: *number_or_entity_pm4
+
+pm4_crossed_threshold:
+  target: *target_pm4
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_pm4
+    upper_limit: *number_or_entity_pm4
+
+pm10_changed:
+  target: *target_pm10
+  fields:
+    above: *number_or_entity_pm10
+    below: *number_or_entity_pm10
+
+pm10_crossed_threshold:
+  target: *target_pm10
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_pm10
+    upper_limit: *number_or_entity_pm10
+
+ozone_changed:
+  target: *target_ozone
+  fields:
+    above: *number_or_entity_ozone
+    below: *number_or_entity_ozone
+    unit: *unit_ozone
+
+ozone_crossed_threshold:
+  target: *target_ozone
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_ozone
+    upper_limit: *number_or_entity_ozone
+    unit: *unit_ozone
+
+voc_changed:
+  target: *target_voc
+  fields:
+    above: *number_or_entity_voc
+    below: *number_or_entity_voc
+    unit: *unit_voc
+
+voc_crossed_threshold:
+  target: *target_voc
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_voc
+    upper_limit: *number_or_entity_voc
+    unit: *unit_voc
+
+voc_ratio_changed:
+  target: *target_voc_ratio
+  fields:
+    above: *number_or_entity_voc_ratio
+    below: *number_or_entity_voc_ratio
+    unit: *unit_voc_ratio
+
+voc_ratio_crossed_threshold:
+  target: *target_voc_ratio
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_voc_ratio
+    upper_limit: *number_or_entity_voc_ratio
+    unit: *unit_voc_ratio
+
+no_changed:
+  target: *target_no
+  fields:
+    above: *number_or_entity_no
+    below: *number_or_entity_no
+    unit: *unit_no
+
+no_crossed_threshold:
+  target: *target_no
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_no
+    upper_limit: *number_or_entity_no
+    unit: *unit_no
+
+no2_changed:
+  target: *target_no2
+  fields:
+    above: *number_or_entity_no2
+    below: *number_or_entity_no2
+    unit: *unit_no2
+
+no2_crossed_threshold:
+  target: *target_no2
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_no2
+    upper_limit: *number_or_entity_no2
+    unit: *unit_no2
+
+n2o_changed:
+  target: *target_n2o
+  fields:
+    above: *number_or_entity_n2o
+    below: *number_or_entity_n2o
+
+n2o_crossed_threshold:
+  target: *target_n2o
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_n2o
+    upper_limit: *number_or_entity_n2o
+
+so2_changed:
+  target: *target_so2
+  fields:
+    above: *number_or_entity_so2
+    below: *number_or_entity_so2
+    unit: *unit_so2
+
+so2_crossed_threshold:
+  target: *target_so2
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity_so2
+    upper_limit: *number_or_entity_so2
+    unit: *unit_so2

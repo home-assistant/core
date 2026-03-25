@@ -2,6 +2,7 @@
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     EntityTransitionTriggerBase,
     Trigger,
@@ -14,7 +15,7 @@ from .const import ATTR_NEXT_EVENT, DOMAIN
 class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
     """Trigger for back-to-back schedule blocks."""
 
-    _domains = {DOMAIN}
+    _domain_specs = {DOMAIN: DomainSpec()}
     _from_states = {STATE_OFF, STATE_ON}
     _to_states = {STATE_ON}
 
