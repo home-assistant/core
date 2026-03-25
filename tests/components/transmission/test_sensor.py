@@ -1,21 +1,17 @@
 """Tests for the Transmission sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from transmission_rpc.session import SessionStats
 
 from homeassistant.components.transmission.const import (
     STATE_DOWNLOADING,
     STATE_SEEDING,
     STATE_UP_DOWN,
 )
-from homeassistant.components.transmission.sensor import (
-    _compute_ratio,
-    get_state,
-)
-from homeassistant.const import STATE_IDLE, STATE_UNKNOWN, Platform
+from homeassistant.components.transmission.sensor import _compute_ratio, get_state
+from homeassistant.const import STATE_IDLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -78,7 +74,6 @@ async def test_stats_sensors(
     assert float(state.state) == pytest.approx(0.8, rel=1e-3)
 
 
-
 def test_get_state_combinations() -> None:
     """Test get_state with all upload/download combinations."""
 
@@ -100,5 +95,3 @@ def test_helper_functions() -> None:
 
     # _compute_ratio - normal
     assert _compute_ratio(500, 1000) == 0.5
-
-
