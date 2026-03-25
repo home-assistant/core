@@ -404,6 +404,7 @@ async def test_firmware_update_success(
                 # After a successful OTA, zigpy sends a post-OTA image_notify
                 # which triggers a query_next_image -> NO_IMAGE_AVAILABLE exchange
                 if cmd.status == foundation.Status.NO_IMAGE_AVAILABLE:
+                    assert ota_completed
                     return
 
                 assert cmd.status == foundation.Status.SUCCESS
