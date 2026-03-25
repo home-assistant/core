@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "light_sensitive": {
+        "default": "mdi:brightness-auto"
+      }
+    },
     "climate": {
       "climate": {
         "state_attributes": {
@@ -155,12 +160,6 @@
         "state": {
           "off": "mdi:lock-open",
           "on": "mdi:lock"
-        }
-      },
-      "light_sensitive": {
-        "state": {
-          "off": "mdi:weather-night",
-          "on": "mdi:weather-sunny"
         }
       },
       "wireless_charging": {
