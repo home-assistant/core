@@ -8,7 +8,7 @@ from unifi_access_api import Door, DoorLockRuleType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
@@ -24,15 +24,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Access sensor entities."""
     coordinator = entry.runtime_data
-    if coordinator.data.supports_lock_rules:
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_lock_rule_sensors() -> None:
+        new_door_ids = sorted(coordinator.get_lock_rule_sensor_door_ids() - added_doors)
+        if not new_door_ids:
+            return
+
         async_add_entities(
-            sensor_class(coordinator, door)
-            for door in coordinator.data.doors.values()
+            sensor_class(coordinator, coordinator.data.doors[door_id])
+            for door_id in new_door_ids
+            if door_id in coordinator.data.doors
             for sensor_class in (
                 UnifiAccessDoorLockRuleSensor,
                 UnifiAccessDoorLockRuleEndTimeSensor,
             )
         )
+        added_doors.update(new_door_ids)
+
+    _async_add_lock_rule_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_lock_rule_sensors))
 
 
 class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
@@ -59,6 +71,13 @@ class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
             return None
         return rule_status.type.value
 
+    @property
+    def available(self) -> bool:
+        """Return whether the sensor should currently be shown as available."""
+        return super().available and (
+            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
+        )
+
 
 class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
     """Sensor reporting when the current lock rule expires."""
@@ -82,3 +101,10 @@ class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
         if rule_status is None or not rule_status.ended_time:
             return None
         return datetime.fromtimestamp(rule_status.ended_time, tz=UTC)
+
+    @property
+    def available(self) -> bool:
+        """Return whether the sensor should currently be shown as available."""
+        return super().available and (
+            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
+        )

@@ -43,7 +43,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SCRUBBED  Air Temperature',
+      'friendly_name': 'SCRUBBED Air Temperature',
       'hayward_temperature': '70',
       'hayward_unit_of_measure': <UnitOfTemperature.FAHRENHEIT: '°F'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -100,7 +100,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SCRUBBED  Spa Water Temperature',
+      'friendly_name': 'SCRUBBED Spa Water Temperature',
       'hayward_temperature': '71',
       'hayward_unit_of_measure': <UnitOfTemperature.FAHRENHEIT: '°F'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,

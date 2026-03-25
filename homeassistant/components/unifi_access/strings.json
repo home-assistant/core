@@ -62,29 +62,9 @@
         }
       }
     },
-    "switch": {
-      "evacuation": {
-        "name": "Evacuation"
-      },
-      "lockdown": {
-        "name": "Lockdown"
-      }
-    },
-    "sensor": {
-      "door_lock_rule": {
-        "name": "Door Lock Rule",
-        "state": {
-          "custom": "Custom",
-          "keep_lock": "Locked",
-          "keep_unlock": "Unlocked",
-          "lock_early": "Lock Early",
-          "lock_now": "Lock Now",
-          "reset": "Reset",
-          "schedule": "Schedule"
-        }
-      },
-      "door_lock_rule_ended_time": {
-        "name": "Rule End Time"
+    "image": {
+      "door_thumbnail": {
+        "name": "Thumbnail"
       }
     },
     "select": {
@@ -99,17 +79,42 @@
           "schedule": "Schedule"
         }
       }
+    },
+    "sensor": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Locked",
+          "keep_unlock": "Unlocked",
+          "lock_early": "Lock early",
+          "lock_now": "Lock now",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      },
+      "door_lock_rule_ended_time": {
+        "name": "Rule end time"
+      }
+    },
+    "switch": {
+      "evacuation": {
+        "name": "Evacuation"
+      },
+      "lockdown": {
+        "name": "Lockdown"
+      }
     }
   },
   "exceptions": {
     "emergency_failed": {
       "message": "Failed to set emergency status."
     },
-    "unlock_failed": {
-      "message": "Failed to unlock the door."
-    },
     "lock_rule_failed": {
       "message": "Failed to update the door lock rule."
+    },
+    "unlock_failed": {
+      "message": "Failed to unlock the door."
     }
   }
 }

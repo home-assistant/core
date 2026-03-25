@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_TARGET,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.trigger import async_validate_trigger_config
@@ -191,7 +192,10 @@ async def test_climate_state_trigger_behavior_any(
             "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.target_temperature_changed", HVACMode.AUTO, ATTR_TEMPERATURE
+            "climate.target_temperature_changed",
+            HVACMode.AUTO,
+            ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
@@ -200,6 +204,7 @@ async def test_climate_state_trigger_behavior_any(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -318,6 +323,7 @@ async def test_climate_state_trigger_behavior_first(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -436,6 +442,7 @@ async def test_climate_state_trigger_behavior_last(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
