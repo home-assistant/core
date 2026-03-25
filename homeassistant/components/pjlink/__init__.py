@@ -5,9 +5,10 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.const import CONF_PLATFORM, Platform
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -17,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 
-# Deprecated: Will get removed with next release
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create config entry from YAML."""
     if Platform.MEDIA_PLAYER not in config:
@@ -25,34 +25,56 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for entry in config[Platform.MEDIA_PLAYER]:
         if entry[CONF_PLATFORM] == DOMAIN:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
+            hass.async_create_task(_async_setup(hass, entry))
 
     return True
+
+
+async def _async_setup(hass: HomeAssistant, entry: ConfigType) -> None:
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "PJLink",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.8.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "PJLink",
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PJLink from a config entry."""
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-    # Temporary to take over the given name from yaml
-    if CONF_NAME not in entry.data:
-        return True
-    ent_reg = er.async_get(hass)
-    entity = next(
-        (
-            ent
-            for ent in ent_reg.entities.values()
-            if ent.config_entry_id == entry.entry_id
-        ),
-        None,
-    )
-    if entity and entity.name is None:
-        ent_reg.async_update_entity(entity.entity_id, name=entry.data[CONF_NAME])
 
     return True
 

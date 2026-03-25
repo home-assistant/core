@@ -10,8 +10,7 @@ from pypjlink.projector import ProjectorError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
@@ -30,29 +29,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 def validate_projector_connection(
     host: str, port: int | None, password: str | None
-) -> dict[str, Any]:
+) -> str:
     """Validate that we can connect to the projector."""
     projector = Projector.from_address(host, port)
     projector.authenticate(password)
-    return {"title": projector.get_name()}
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-
-    try:
-        info = await hass.async_add_executor_job(
-            validate_projector_connection,
-            data[CONF_HOST],
-            data[CONF_PORT],
-            data.get(CONF_PASSWORD),
-        )
-    except (TimeoutError, OSError) as e:
-        raise CannotConnect from e
-    except (RuntimeError, ProjectorError) as e:
-        raise InvalidAuth from e
-
-    return {"title": info["title"]}
+    return projector.get_name()
 
 
 class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -68,16 +49,21 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
+                projector_name = await self.hass.async_add_executor_job(
+                    validate_projector_connection,
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input.get(CONF_PASSWORD),
+                )
+            except TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except RuntimeError, ProjectorError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=projector_name, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -87,18 +73,26 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_config: dict[str, Any]
     ) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
-        _LOGGER.warning(
-            "Configuration of the PJLink integration in YAML is deprecated and "
-            "will be removed in a future version of Home Assistant; "
-            "Your existing configuration has been imported into the UI automatically "
-            "and can be safely removed from your configuration.yaml file"
-        )
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                return self.async_abort(reason="already_configured")
-        if CONF_PORT not in import_config:
-            import_config[CONF_PORT] = 4352
-        return await self.async_step_user(import_config)
+
+        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
+        try:
+            projector_name = await self.hass.async_add_executor_job(
+                validate_projector_connection,
+                import_config[CONF_HOST],
+                import_config.get(CONF_PORT, 4352),
+                import_config.get(CONF_PASSWORD),
+            )
+        except TimeoutError, OSError:
+            return self.async_abort(reason="cannot_connect")
+        except RuntimeError, ProjectorError:
+            return self.async_abort(reason="invalid_auth")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        else:
+            return self.async_create_entry(
+                title=import_config.get(CONF_NAME, projector_name), data=import_config
+            )
 
 
 class CannotConnect(HomeAssistantError):

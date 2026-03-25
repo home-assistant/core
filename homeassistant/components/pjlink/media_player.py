@@ -20,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_ENCODING
+
 ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
@@ -27,6 +29,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=4352): cv.port,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_ENCODING, default="utf-8"): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
     }
 )

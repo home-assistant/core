@@ -7,13 +7,19 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.pjlink.const import DOMAIN
+from homeassistant.components.pjlink.const import CONF_ENCODING, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 _DEFAULT_DATA = {CONF_HOST: "1.1.1.1", CONF_PORT: 4352, CONF_PASSWORD: "test-password"}
 _DEFAULT_DATA_WO_PORT = {CONF_HOST: "1.1.1.1", CONF_PASSWORD: "test-password"}
+_DEFAULT_DATA_W_ENCODING = {
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: 4352,
+    CONF_PASSWORD: "test-password",
+    CONF_ENCODING: "utf-8",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -90,7 +96,7 @@ async def test_form_invalid_inputs(
 
 @pytest.mark.parametrize(
     "import_data",
-    [_DEFAULT_DATA, _DEFAULT_DATA_WO_PORT],
+    [_DEFAULT_DATA, _DEFAULT_DATA_WO_PORT, _DEFAULT_DATA_W_ENCODING],
 )
 async def test_import_creates_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, import_data: dict[str, Any]
