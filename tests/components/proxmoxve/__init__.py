@@ -28,7 +28,7 @@ POWER_PERMISSIONS = {
     "/": {"VM.PowerMgmt": 1},
     "/nodes": {"VM.PowerMgmt": 1},
     "/vms": {"VM.PowerMgmt": 1},
-    "/vms/101": {"VM.PowerMgmt": 0, "VM.Snapshot": 0},
+    "/vms/101": {"VM.PowerMgmt": 0},
 }
 
 SNAPSHOT_PERMISSIONS = {
