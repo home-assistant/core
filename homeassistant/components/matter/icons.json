@@ -140,6 +140,14 @@
       "pump_status": {
         "default": "mdi:pump"
       },
+      "setpoint_change_source": {
+        "default": "mdi:hand-back-right",
+        "state": {
+          "external": "mdi:webhook",
+          "manual": "mdi:hand-back-right",
+          "schedule": "mdi:calendar-clock"
+        }
+      },
       "tank_percentage": {
         "default": "mdi:water-boiler"
       },

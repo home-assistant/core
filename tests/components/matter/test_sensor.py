@@ -233,6 +233,100 @@ async def test_eve_thermo_sensor(
     assert state.state == "18.0"
 
 
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_eve_thermo_v5_setpoint_change_source(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Eve Thermo v5 SetpointChangeSource sensor."""
+    entity_id = "sensor.eve_thermo_20ecd1701_last_change_source"
+
+    # Initial state and options
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "manual"
+    assert state.attributes["options"] == ["manual", "schedule", "external"]
+
+    # Change to schedule
+    set_node_attribute(matter_node, 1, 513, 48, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "schedule"
+
+    # Change to external
+    set_node_attribute(matter_node, 1, 513, 48, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "external"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_eve_thermo_v5_setpoint_change_timestamp(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Eve Thermo v5 SetpointChangeSourceTimestamp sensor."""
+    entity_id = "sensor.eve_thermo_20ecd1701_last_change"
+
+    # Initial is unknown per snapshot
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
+    # Update to 2024-01-01 00:00:00+00:00 (Matter epoch seconds since 2000)
+    set_node_attribute(matter_node, 1, 513, 50, 757382400)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2024-01-01T00:00:00+00:00"
+
+    # Set to zero should yield unknown
+    set_node_attribute(matter_node, 1, 513, 50, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_eve_thermo_v5_setpoint_change_amount(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Eve Thermo v5 SetpointChangeAmount sensor."""
+    entity_id = "sensor.eve_thermo_20ecd1701_last_change_amount"
+
+    # Initial per snapshot
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+
+    # Update to 2.0°C (200 in Matter units)
+    set_node_attribute(matter_node, 1, 513, 49, 200)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2.0"
+
+    # Update to -0.5°C (-50 in Matter units)
+    set_node_attribute(matter_node, 1, 513, 49, -50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "-0.5"
+
+
 @pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_outdoor(
     hass: HomeAssistant,
