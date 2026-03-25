@@ -151,13 +151,15 @@ def is_opening_state_notification_value(value: ZwaveValue) -> bool:
     )
 
 
-def get_opening_state_notification_value(node: ZwaveNode) -> ZwaveValue | None:
+def get_opening_state_notification_value(
+    node: ZwaveNode, endpoint: int | None = None
+) -> ZwaveValue | None:
     """Return the Access Control Opening state value for a node."""
     value_id = get_value_id_str(
         node,
         CommandClass.NOTIFICATION,
         NOTIFICATION_ACCESS_CONTROL_PROPERTY,
-        None,
+        endpoint,
         OPENING_STATE_PROPERTY_KEY,
     )
     return node.values.get(value_id)
