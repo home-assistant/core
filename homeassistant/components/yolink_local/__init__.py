@@ -8,7 +8,6 @@ from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.local_hub_client import YoLinkLocalHubClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -17,13 +16,9 @@ from homeassistant.helpers import aiohttp_client
 from .const import CONF_NET_ID
 from .coordinator import YoLinkLocalCoordinator
 from .message_listener import LocalHubMessageListener
+from .model import YoLinkLocalConfigEntry, YoLinkLocalData
 
 _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
-
-
-type YoLinkLocalConfigEntry = ConfigEntry[
-    tuple[YoLinkLocalHubClient, dict[str, YoLinkLocalCoordinator]]
-]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YoLinkLocalConfigEntry) -> bool:
@@ -76,16 +71,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkLocalConfigEntry) 
             coordinator.data = {}
         coordinators[device.device_id] = coordinator
 
-    entry.runtime_data = (client, coordinators)
+    entry.runtime_data = YoLinkLocalData(client, coordinators)
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: YoLinkLocalConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
         if entry.runtime_data is not None:
-            client: YoLinkLocalHubClient = entry.runtime_data[0]
+            client: YoLinkLocalHubClient = entry.runtime_data.client
             await client.async_unload()
     return unload_ok

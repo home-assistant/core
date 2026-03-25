@@ -6,6 +6,7 @@ CONF_NET_ID = "net_id"
 
 ATTR_DEVICE_STATE = "state"
 ATTR_LORA_INFO = "loraInfo"
+ATTR_REPORT_AT = "reportAt"
 
 
 SUPPORTED_BINARY_SENSORS_MODELS = [

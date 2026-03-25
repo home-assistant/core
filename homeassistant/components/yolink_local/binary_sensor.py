@@ -18,12 +18,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import YoLinkLocalCoordinator
 from .entity import YoLinkEntity
+from .model import YoLinkLocalConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -91,11 +91,13 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[YoLinkBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkLocalConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensor from a config entry."""
-    coordinators: dict[str, YoLinkLocalCoordinator] = config_entry.runtime_data[1]
+    coordinators: dict[str, YoLinkLocalCoordinator] = (
+        config_entry.runtime_data.coordinators
+    )
     binary_sensor_coordinators = [
         coordinator
         for coordinator in coordinators.values()
@@ -107,7 +109,7 @@ async def async_setup_entry(
         ]
     ]
     async_add_entities(
-        YoLinkBinarySensorEntity(config_entry, binary_sensor_coordinator, description)
+        YoLinkBinarySensorEntity(binary_sensor_coordinator, description)
         for binary_sensor_coordinator in binary_sensor_coordinators
         for description in BINARY_SENSOR_DESCRIPTIONS
         if description.exists_fn(binary_sensor_coordinator.device)
@@ -121,16 +123,13 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
         coordinator: YoLinkLocalCoordinator,
         description: YoLinkBinarySensorEntityDescription,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(config_entry, coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.device.device_id} {self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.device.device_id}{description.key}"
 
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:

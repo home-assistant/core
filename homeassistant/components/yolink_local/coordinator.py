@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_DEVICE_STATE, DOMAIN
+from .const import ATTR_DEVICE_STATE, ATTR_REPORT_AT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,11 +49,12 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
         )
         self.device = device
         self.paired_device = paired_device
+        self.last_report_at: float | None = None
 
     async def _async_exchange_state_with_paired_device(
         self,
         device_state_data,
-    ):
+    ) -> None:
         """Exchange state with paired device."""
         if self.paired_device is not None and device_state_data is not None:
             paired_device_ret = await self.paired_device.fetch_state()
@@ -69,6 +70,15 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
                     ATTR_DEVICE_STATE
                 ]
 
+    @property
+    def is_device_online(self) -> bool:
+        """Determine if the device is online based on last report time."""
+        if self.last_report_at is None:
+            return False
+        now_timestamp = datetime.now().timestamp()
+        keepalive_time = self.device.keepalive_time
+        return now_timestamp - self.last_report_at < keepalive_time
+
     async def _async_update_data(self) -> dict[str, Any] | None:
         """Fetch device state."""
         try:
@@ -81,17 +91,20 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
                     if self.device.is_hub
                     else device_state_ret.data.get(ATTR_DEVICE_STATE)
                 )
+                if (
+                    last_report_str := device_state_ret.data.get(ATTR_REPORT_AT)
+                ) is not None:
+                    self.last_report_at = datetime.fromisoformat(
+                        last_report_str
+                    ).timestamp()
                 await self._async_exchange_state_with_paired_device(device_state_data)
                 return device_state_data
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
-            _LOGGER.error(
-                "Failed to obtain device status, device: %s, error: %s ",
-                self.device.device_id,
-                yl_client_err,
-            )
-            raise UpdateFailed from yl_client_err
+            raise UpdateFailed(
+                f"Failed to obtain device status, device: {self.device.device_id}, error: {yl_client_err}"
+            ) from yl_client_err
 
     async def call_device(self, request: ClientRequest) -> dict[str, Any]:
         """Call device api."""
