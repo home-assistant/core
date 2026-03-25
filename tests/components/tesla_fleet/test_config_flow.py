@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from tesla_fleet_api.exceptions import (
     InvalidResponse,
+    LoginRequired,
     PreconditionFailed,
     TeslaFleetError,
 )
@@ -85,6 +86,121 @@ def mock_private_key():
         ),
     ]
     return private_key
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_partner_login_auth_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    access_token: str,
+    mock_private_key,
+) -> None:
+    """Test partner login auth errors abort the flow cleanly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi"
+    ) as mock_api_class:
+        mock_api = AsyncMock()
+        mock_api.private_key = mock_private_key
+        mock_api.get_private_key = AsyncMock()
+        mock_api.partner_login = AsyncMock(side_effect=LoginRequired)
+        mock_api_class.return_value = mock_api
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_partner_login_partial_failure(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    access_token: str,
+    mock_private_key,
+) -> None:
+    """Test partner login succeeds when one region fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    public_key = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+
+    mock_api_na = AsyncMock()
+    mock_api_na.private_key = mock_private_key
+    mock_api_na.get_private_key = AsyncMock()
+    mock_api_na.partner_login = AsyncMock()
+    mock_api_na.public_uncompressed_point = public_key
+    mock_api_na.partner.register.return_value = {"response": {"public_key": public_key}}
+
+    mock_api_eu = AsyncMock()
+    mock_api_eu.private_key = mock_private_key
+    mock_api_eu.get_private_key = AsyncMock()
+    mock_api_eu.partner_login = AsyncMock(
+        side_effect=TeslaFleetError("EU partner login failed")
+    )
+
+    with patch(
+        "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi",
+        side_effect=[mock_api_na, mock_api_eu],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "domain_input"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "registration_complete"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
