@@ -118,6 +118,7 @@ SERVICE_TRIGGER = "trigger"
 NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
     "battery",
@@ -129,6 +130,8 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "garage_door",
     "gate",
     "humidifier",
+    "humidity",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
@@ -136,11 +139,13 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "motion",
     "occupancy",
     "person",
+    "power",
     "schedule",
     "siren",
     "switch",
     "text",
     "vacuum",
+    "water_heater",
     "window",
 }
 
@@ -159,13 +164,16 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "gate",
     "humidifier",
     "humidity",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "moisture",
     "motion",
     "occupancy",
     "person",
+    "power",
     "remote",
     "scene",
     "schedule",

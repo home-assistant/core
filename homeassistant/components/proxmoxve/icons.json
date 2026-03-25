@@ -10,11 +10,23 @@
       "shutdown": {
         "default": "mdi:power"
       },
+      "snapshot_create": {
+        "default": "mdi:backup-restore"
+      },
       "start": {
+        "default": "mdi:play"
+      },
+      "start_all": {
         "default": "mdi:play"
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "stop_all": {
+        "default": "mdi:stop"
+      },
+      "suspend_all": {
+        "default": "mdi:pause"
       }
     },
     "sensor": {
