@@ -127,3 +127,32 @@ async def test_import_aborts_if_already_configured(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_str"),
+    [
+        (RuntimeError, "invalid_auth"),
+        (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_import_invalid_inputs(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_projector: AsyncMock,
+    side_effect: Exception,
+    error_str: str,
+) -> None:
+    """Test we handle invalid inputs."""
+
+    mock_instance = mock_projector.from_address.return_value
+    mock_instance.authenticate.side_effect = side_effect
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}, data=_DEFAULT_DATA
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == error_str
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
