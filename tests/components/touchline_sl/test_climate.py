@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.touchline_sl import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -77,12 +78,8 @@ async def test_zones_with_same_id_across_modules_get_distinct_devices(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_a = device_registry.async_get_device(
-        identifiers={("touchline_sl", "module-aaa-1")}
-    )
-    device_b = device_registry.async_get_device(
-        identifiers={("touchline_sl", "module-bbb-1")}
-    )
+    device_a = device_registry.async_get_device(identifiers={(DOMAIN, "module-aaa-1")})
+    device_b = device_registry.async_get_device(identifiers={(DOMAIN, "module-bbb-1")})
 
     assert device_a is not None
     assert device_b is not None
@@ -106,25 +103,23 @@ async def test_migrate_device_identifiers(
     # Create the module device as it would have existed in a previous run.
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={("touchline_sl", "deadbeef")},
+        identifiers={(DOMAIN, "deadbeef")},
     )
 
     # Create the legacy zone device with via_device pointing to the module.
     old_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={("touchline_sl", "1")},
-        via_device=("touchline_sl", "deadbeef"),
+        identifiers={(DOMAIN, "1")},
+        via_device=(DOMAIN, "deadbeef"),
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Old identifier should no longer exist.
-    assert device_registry.async_get_device(identifiers={("touchline_sl", "1")}) is None
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")}) is None
 
     # New identifier should exist and point to the same device entry.
-    migrated = device_registry.async_get_device(
-        identifiers={("touchline_sl", "deadbeef-1")}
-    )
+    migrated = device_registry.async_get_device(identifiers={(DOMAIN, "deadbeef-1")})
     assert migrated is not None
     assert migrated.id == old_device.id
