@@ -10,16 +10,9 @@
     "condition_unit_name": "Unit of measurement",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior",
-    "trigger_changed_above_name": "Above",
-    "trigger_changed_below_name": "Below",
-    "trigger_threshold_lower_limit_description": "The lower limit of the threshold.",
-    "trigger_threshold_lower_limit_name": "Lower limit",
-    "trigger_threshold_type_description": "The type of threshold to use.",
-    "trigger_threshold_type_name": "Threshold type",
-    "trigger_threshold_upper_limit_description": "The upper limit of the threshold.",
-    "trigger_threshold_upper_limit_name": "Upper limit",
-    "trigger_unit_description": "All values will be converted to this unit when evaluating the trigger.",
-    "trigger_unit_name": "Unit of measurement"
+    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
+    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
+    "trigger_threshold_name": "Threshold configuration"
   },
   "conditions": {
     "is_co2_value": {
@@ -364,14 +357,6 @@
         "first": "First",
         "last": "Last"
       }
-    },
-    "trigger_threshold_type": {
-      "options": {
-        "above": "Above",
-        "below": "Below",
-        "between": "Between",
-        "outside": "Outside"
-      }
     }
   },
   "title": "Air Quality",
@@ -379,13 +364,9 @@
     "co2_changed": {
       "description": "Triggers after one or more carbon dioxide levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when carbon dioxide level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when carbon dioxide level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Carbon dioxide level changed"
@@ -397,17 +378,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Carbon dioxide level crossed threshold"
@@ -415,17 +388,9 @@
     "co_changed": {
       "description": "Triggers after one or more carbon monoxide levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when carbon monoxide level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when carbon monoxide level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Carbon monoxide level changed"
@@ -447,21 +412,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Carbon monoxide level crossed threshold"
@@ -499,13 +452,9 @@
     "n2o_changed": {
       "description": "Triggers after one or more nitrous oxide levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when nitrous oxide level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when nitrous oxide level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Nitrous oxide level changed"
@@ -517,17 +466,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Nitrous oxide level crossed threshold"
@@ -535,17 +476,9 @@
     "no2_changed": {
       "description": "Triggers after one or more nitrogen dioxide levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when nitrogen dioxide level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when nitrogen dioxide level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Nitrogen dioxide level changed"
@@ -557,21 +490,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Nitrogen dioxide level crossed threshold"
@@ -579,17 +500,9 @@
     "no_changed": {
       "description": "Triggers after one or more nitrogen monoxide levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when nitrogen monoxide level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when nitrogen monoxide level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Nitrogen monoxide level changed"
@@ -601,21 +514,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Nitrogen monoxide level crossed threshold"
@@ -623,17 +524,9 @@
     "ozone_changed": {
       "description": "Triggers after one or more ozone levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when ozone level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when ozone level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Ozone level changed"
@@ -645,21 +538,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Ozone level crossed threshold"
@@ -667,13 +548,9 @@
     "pm10_changed": {
       "description": "Triggers after one or more PM10 levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when PM10 level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when PM10 level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM10 level changed"
@@ -685,17 +562,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM10 level crossed threshold"
@@ -703,13 +572,9 @@
     "pm1_changed": {
       "description": "Triggers after one or more PM1 levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when PM1 level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when PM1 level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM1 level changed"
@@ -721,17 +586,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM1 level crossed threshold"
@@ -739,13 +596,9 @@
     "pm25_changed": {
       "description": "Triggers after one or more PM2.5 levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when PM2.5 level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when PM2.5 level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM2.5 level changed"
@@ -757,17 +610,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM2.5 level crossed threshold"
@@ -775,13 +620,9 @@
     "pm4_changed": {
       "description": "Triggers after one or more PM4 levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when PM4 level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when PM4 level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM4 level changed"
@@ -793,17 +634,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "PM4 level crossed threshold"
@@ -831,17 +664,9 @@
     "so2_changed": {
       "description": "Triggers after one or more sulphur dioxide levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when sulphur dioxide level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when sulphur dioxide level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Sulphur dioxide level changed"
@@ -853,21 +678,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Sulphur dioxide level crossed threshold"
@@ -875,17 +688,9 @@
     "voc_changed": {
       "description": "Triggers after one or more volatile organic compound levels change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when volatile organic compounds level is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when volatile organic compounds level is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds level changed"
@@ -897,21 +702,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds level crossed threshold"
@@ -919,17 +712,9 @@
     "voc_ratio_changed": {
       "description": "Triggers after one or more volatile organic compound ratios change.",
       "fields": {
-        "above": {
-          "description": "Only trigger when volatile organic compounds ratio is above this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_above_name%]"
-        },
-        "below": {
-          "description": "Only trigger when volatile organic compounds ratio is below this value.",
-          "name": "[%key:component::air_quality::common::trigger_changed_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds ratio changed"
@@ -941,21 +726,9 @@
           "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_lower_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_lower_limit_name%]"
-        },
-        "threshold_type": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_type_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_type_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::trigger_unit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_unit_name%]"
-        },
-        "upper_limit": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_upper_limit_description%]",
-          "name": "[%key:component::air_quality::common::trigger_threshold_upper_limit_name%]"
+        "threshold": {
+          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds ratio crossed threshold"

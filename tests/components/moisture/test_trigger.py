@@ -10,18 +10,10 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-)
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -491,17 +483,22 @@ async def test_moisture_trigger_number_crossed_threshold_behavior_last(
         (
             "moisture.changed",
             {
-                CONF_ABOVE: "sensor.moisture_above",
-                CONF_BELOW: "sensor.moisture_below",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.moisture_above"},
+                    "value_max": {"entity": "sensor.moisture_below"},
+                },
             },
             ["sensor.moisture_above", "sensor.moisture_below"],
         ),
         (
             "moisture.crossed_threshold",
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: "sensor.moisture_lower",
-                CONF_UPPER_LIMIT: "sensor.moisture_upper",
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.moisture_lower"},
+                    "value_max": {"entity": "sensor.moisture_upper"},
+                },
             },
             ["sensor.moisture_lower", "sensor.moisture_upper"],
         ),

@@ -36,7 +36,10 @@
     "field_xy_color_name": "XY-color",
     "section_advanced_fields_name": "Advanced options",
     "trigger_behavior_description": "The behavior of the targeted lights to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Behavior",
+    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
+    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
+    "trigger_threshold_name": "Threshold configuration"
   },
   "conditions": {
     "is_off": {
@@ -311,12 +314,6 @@
         "short": "Short"
       }
     },
-    "number_or_entity": {
-      "choices": {
-        "entity": "Entity",
-        "number": "Number"
-      }
-    },
     "state": {
       "options": {
         "off": "[%key:common::state::off%]",
@@ -328,14 +325,6 @@
         "any": "Any",
         "first": "First",
         "last": "Last"
-      }
-    },
-    "trigger_threshold_type": {
-      "options": {
-        "above": "Above a value",
-        "below": "Below a value",
-        "between": "In a range",
-        "outside": "Outside a range"
       }
     }
   },
@@ -507,13 +496,9 @@
     "brightness_changed": {
       "description": "Triggers after the brightness of one or more lights changes.",
       "fields": {
-        "above": {
-          "description": "Trigger when the target brightness is above this value.",
-          "name": "Above"
-        },
-        "below": {
-          "description": "Trigger when the target brightness is below this value.",
-          "name": "Below"
+        "threshold": {
+          "description": "[%key:component::light::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::light::common::trigger_threshold_name%]"
         }
       },
       "name": "Light brightness changed"
@@ -525,17 +510,9 @@
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "Lower threshold limit.",
-          "name": "Lower threshold"
-        },
-        "threshold_type": {
-          "description": "Type of threshold crossing to trigger on.",
-          "name": "Threshold type"
-        },
-        "upper_limit": {
-          "description": "Upper threshold limit.",
-          "name": "Upper threshold"
+        "threshold": {
+          "description": "[%key:component::light::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::light::common::trigger_threshold_name%]"
         }
       },
       "name": "Light brightness crossed threshold"

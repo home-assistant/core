@@ -10,39 +10,19 @@
           - last
           - any
 
-.number_or_entity: &number_or_entity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-              unit_of_measurement: "%"
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement: "%"
-                - domain: number
-                  device_class: moisture
-                - domain: sensor
-                  device_class: moisture
-      translation_key: number_or_entity
+.moisture_threshold_entity: &moisture_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    device_class: moisture
+  - domain: sensor
+    device_class: moisture
 
-.trigger_threshold_type: &trigger_threshold_type
-  required: true
-  default: above
-  selector:
-    select:
-      options:
-        - above
-        - below
-        - between
-        - outside
-      translation_key: trigger_threshold_type
+.moisture_threshold_number: &moisture_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
 
 .trigger_binary_target: &trigger_binary_target
   entity:
@@ -67,13 +47,22 @@ cleared:
 changed:
   target: *trigger_numerical_target
   fields:
-    above: *number_or_entity
-    below: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *moisture_threshold_entity
+          mode: changed
+          number: *moisture_threshold_number
 
 crossed_threshold:
   target: *trigger_numerical_target
   fields:
     behavior: *trigger_behavior
-    threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity
-    upper_limit: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *moisture_threshold_entity
+          mode: crossed
+          number: *moisture_threshold_number
