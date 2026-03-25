@@ -178,10 +178,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ) from err
 
         data: dict[str, ProxmoxNodeData] = {}
-        for node, (vms, containers, storages) in zip(
+        for node, (vms, containers, storages, backups) in zip(
             nodes, vms_containers, strict=True
         ):
-        for node, (vms, containers, backups) in zip(nodes, vms_containers, strict=True):
             data[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
                 vms={int(vm["vmid"]): vm for vm in vms},
@@ -238,9 +237,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self,
     ) -> tuple[
         list[dict[str, Any]],
-        list[tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]],
+        list[
+            tuple[
+                list[dict[str, Any]],
+                list[dict[str, Any]],
+                list[dict[str, Any]],
+                list[dict[str, Any]],
+            ]
+        ],
     ]:
-        """Fetch all nodes, and then proceed to the VMs, containers, and backups."""
+        """Fetch all nodes, and then proceed to the VMs, containers, storages, and backups."""
         nodes = self.proxmox.nodes.get() or []
         node_data = [self._get_node_data(node) for node in nodes]
         return nodes, node_data
@@ -248,22 +254,29 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     def _get_node_data(
         self,
         node: dict[str, Any],
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-        """Get vms, containers, and backups for a node."""
+    ) -> tuple[
+        list[dict[str, Any]],
+        list[dict[str, Any]],
+        list[dict[str, Any]],
+        list[dict[str, Any]],
+    ]:
+        """Get vms, containers, storages, and backups for a node."""
         if node.get("status") != NODE_ONLINE:
             _LOGGER.debug(
-                "Node %s is offline, skipping VM/container fetch",
+                "Node %s is offline, skipping VM/container/storage fetch",
                 node[CONF_NODE],
             )
-            return [], [], []
+            return [], [], [], []
 
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
+        storages = self.proxmox.nodes(node[CONF_NODE]).storage.get() or []
         backups = (
             self.proxmox.nodes(node[CONF_NODE]).tasks.get(typefilter="vzdump", limit=1)
             or []
         )
-        return vms, containers, backups
+
+        return vms, containers, storages, backups
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
@@ -317,10 +330,17 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             for node_name, node_data in data.items()
             for storage_name in node_data.storages
         }
+        self.known_storages &= current_storages
         new_storages = current_storages - self.known_storages
         if new_storages:
             _LOGGER.debug("New storages found: %s", new_storages)
             self.known_storages.update(new_storages)
+            new_storage_data = [
+                (data[node_name], data[node_name].storages[storage_name])
+                for node_name, storage_name in new_storages
+            ]
+            for storages_callback in self.new_storages_callbacks:
+                storages_callback(new_storage_data)
 
 
 class ProxmoxSetupError(Exception):
