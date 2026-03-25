@@ -81,13 +81,13 @@ stopped_charging:
     behavior: *trigger_behavior
   target: *trigger_target_charging
 
-percentage_changed:
+level_changed:
   target: *trigger_target_percentage
   fields:
     above: *number_or_entity
     below: *number_or_entity
 
-percentage_crossed_threshold:
+level_crossed_threshold:
   target: *trigger_target_percentage
   fields:
     behavior: *trigger_behavior

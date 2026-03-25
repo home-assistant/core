@@ -42,10 +42,10 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "stopped_charging": make_entity_target_state_trigger(
         BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF
     ),
-    "percentage_changed": make_entity_numerical_state_changed_trigger(
+    "level_changed": make_entity_numerical_state_changed_trigger(
         BATTERY_PERCENTAGE_DOMAIN_SPECS, valid_unit="%"
     ),
-    "percentage_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+    "level_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
         BATTERY_PERCENTAGE_DOMAIN_SPECS, valid_unit="%"
     ),
 }

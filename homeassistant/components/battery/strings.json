@@ -96,27 +96,7 @@
   },
   "title": "Battery",
   "triggers": {
-    "low": {
-      "description": "Triggers after one or more batteries become low.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::battery::common::trigger_behavior_description%]",
-          "name": "[%key:component::battery::common::trigger_behavior_name%]"
-        }
-      },
-      "name": "Battery low"
-    },
-    "not_low": {
-      "description": "Triggers after one or more batteries are no longer low.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::battery::common::trigger_behavior_description%]",
-          "name": "[%key:component::battery::common::trigger_behavior_name%]"
-        }
-      },
-      "name": "Battery not low"
-    },
-    "percentage_changed": {
+    "level_changed": {
       "description": "Triggers after the battery level of one or more batteries changes.",
       "fields": {
         "above": {
@@ -130,7 +110,7 @@
       },
       "name": "Battery level changed"
     },
-    "percentage_crossed_threshold": {
+    "level_crossed_threshold": {
       "description": "Triggers after the battery level of one or more batteries crosses a threshold.",
       "fields": {
         "behavior": {
@@ -151,6 +131,26 @@
         }
       },
       "name": "Battery level crossed threshold"
+    },
+    "low": {
+      "description": "Triggers after one or more batteries become low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::trigger_behavior_description%]",
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Battery low"
+    },
+    "not_low": {
+      "description": "Triggers after one or more batteries are no longer low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::trigger_behavior_description%]",
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Battery not low"
     },
     "started_charging": {
       "description": "Triggers after one or more batteries start charging.",

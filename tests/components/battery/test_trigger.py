@@ -53,8 +53,8 @@ async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
         "battery.not_low",
         "battery.started_charging",
         "battery.stopped_charging",
-        "battery.percentage_changed",
-        "battery.percentage_crossed_threshold",
+        "battery.level_changed",
+        "battery.level_crossed_threshold",
     ],
 )
 async def test_battery_triggers_gated_by_labs_flag(
@@ -262,13 +262,13 @@ async def test_battery_binary_sensor_trigger_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_changed_trigger_states(
-            "battery.percentage_changed",
+            "battery.level_changed",
             device_class=SensorDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_changed_sensor_behavior_any(
+async def test_battery_level_changed_sensor_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
@@ -279,7 +279,7 @@ async def test_battery_percentage_changed_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_changed trigger fires for sensor entities."""
+    """Test battery level_changed trigger fires for sensor entities."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
@@ -302,13 +302,13 @@ async def test_battery_percentage_changed_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.percentage_crossed_threshold",
+            "battery.level_crossed_threshold",
             device_class=SensorDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_crossed_threshold_sensor_behavior_any(
+async def test_battery_level_crossed_threshold_sensor_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
@@ -319,7 +319,7 @@ async def test_battery_percentage_crossed_threshold_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_crossed_threshold trigger fires for sensor entities."""
+    """Test battery level_crossed_threshold trigger fires for sensor entities."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
@@ -342,13 +342,13 @@ async def test_battery_percentage_crossed_threshold_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.percentage_crossed_threshold",
+            "battery.level_crossed_threshold",
             device_class=SensorDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_crossed_threshold_sensor_behavior_first(
+async def test_battery_level_crossed_threshold_sensor_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
@@ -359,7 +359,7 @@ async def test_battery_percentage_crossed_threshold_sensor_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_crossed_threshold trigger fires on the first sensor state change."""
+    """Test battery level_crossed_threshold trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
         service_calls=service_calls,
@@ -382,13 +382,13 @@ async def test_battery_percentage_crossed_threshold_sensor_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.percentage_crossed_threshold",
+            "battery.level_crossed_threshold",
             device_class=SensorDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_crossed_threshold_sensor_behavior_last(
+async def test_battery_level_crossed_threshold_sensor_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
@@ -399,7 +399,7 @@ async def test_battery_percentage_crossed_threshold_sensor_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_crossed_threshold trigger fires when the last sensor changes state."""
+    """Test battery level_crossed_threshold trigger fires when the last sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
         service_calls=service_calls,
@@ -422,13 +422,13 @@ async def test_battery_percentage_crossed_threshold_sensor_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_changed_trigger_states(
-            "battery.percentage_changed",
+            "battery.level_changed",
             device_class=NumberDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_changed_number_behavior_any(
+async def test_battery_level_changed_number_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
@@ -439,7 +439,7 @@ async def test_battery_percentage_changed_number_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_changed trigger fires for number entities."""
+    """Test battery level_changed trigger fires for number entities."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
@@ -462,13 +462,13 @@ async def test_battery_percentage_changed_number_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.percentage_crossed_threshold",
+            "battery.level_crossed_threshold",
             device_class=NumberDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_crossed_threshold_number_behavior_any(
+async def test_battery_level_crossed_threshold_number_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
@@ -479,7 +479,7 @@ async def test_battery_percentage_crossed_threshold_number_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_crossed_threshold trigger fires for number entities."""
+    """Test battery level_crossed_threshold trigger fires for number entities."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
@@ -502,13 +502,13 @@ async def test_battery_percentage_crossed_threshold_number_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.percentage_crossed_threshold",
+            "battery.level_crossed_threshold",
             device_class=NumberDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_crossed_threshold_number_behavior_first(
+async def test_battery_level_crossed_threshold_number_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
@@ -519,7 +519,7 @@ async def test_battery_percentage_crossed_threshold_number_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_crossed_threshold trigger fires on the first number state change."""
+    """Test battery level_crossed_threshold trigger fires on the first number state change."""
     await assert_trigger_behavior_first(
         hass,
         service_calls=service_calls,
@@ -542,13 +542,13 @@ async def test_battery_percentage_crossed_threshold_number_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.percentage_crossed_threshold",
+            "battery.level_crossed_threshold",
             device_class=NumberDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
-async def test_battery_percentage_crossed_threshold_number_behavior_last(
+async def test_battery_level_crossed_threshold_number_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
@@ -559,7 +559,7 @@ async def test_battery_percentage_crossed_threshold_number_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery percentage_crossed_threshold trigger fires when the last number changes state."""
+    """Test battery level_crossed_threshold trigger fires when the last number changes state."""
     await assert_trigger_behavior_last(
         hass,
         service_calls=service_calls,
