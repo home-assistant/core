@@ -64,9 +64,6 @@ async def test_battery_triggers_gated_by_labs_flag(
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
-# --- Binary sensor triggers (low, not_low, started_charging, stopped_charging) ---
-
-
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
@@ -256,9 +253,6 @@ async def test_battery_binary_sensor_trigger_behavior_last(
     )
 
 
-# --- percentage_changed (sensor with device_class battery) ---
-
-
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
@@ -297,9 +291,6 @@ async def test_battery_percentage_changed_sensor_behavior_any(
         trigger_options=trigger_options,
         states=states,
     )
-
-
-# --- percentage_crossed_threshold (sensor with device_class battery) ---
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -422,9 +413,6 @@ async def test_battery_percentage_crossed_threshold_sensor_behavior_last(
     )
 
 
-# --- percentage_changed (number with device_class battery) ---
-
-
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
@@ -463,9 +451,6 @@ async def test_battery_percentage_changed_number_behavior_any(
         trigger_options=trigger_options,
         states=states,
     )
-
-
-# --- percentage_crossed_threshold (number with device_class battery) ---
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
