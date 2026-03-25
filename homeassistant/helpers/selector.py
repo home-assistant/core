@@ -1320,7 +1320,7 @@ class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a numeric threshold selector config."""
 
     mode: Required[NumericThresholdMode]
-    unit_of_measurement: list[str]
+    unit_of_measurement: list[str | None]
     number: NumberSelectorConfig
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
@@ -1394,7 +1394,7 @@ _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
             ),
             vol.Optional("number"): vol.Coerce(float),
             vol.Optional("entity"): cv.entity_id,
-            vol.Optional("unit_of_measurement"): str,
+            vol.Optional("unit_of_measurement"): vol.Any(str, None),
         }
     ),
     vol.Any(
@@ -1457,7 +1457,7 @@ _NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.All(
 
 
 def _validate_numeric_threshold_unit[_T: dict[str, Any]](
-    allowed_units: list[str],
+    allowed_units: list[str | None],
 ) -> Callable[[_T], _T]:
     """Generate a validator that checks unit_of_measurement against an allowed list."""
 
@@ -1471,8 +1471,12 @@ def _validate_numeric_threshold_unit[_T: dict[str, Any]](
         else:
             entries = (value.get("value_min", {}), value.get("value_max", {}))
         for entry in entries:
-            if "unit_of_measurement" not in entry:
+            if "number" not in entry:
                 continue
+            if "unit_of_measurement" not in entry:
+                raise vol.Invalid(
+                    f"Missing unit_of_measurement, expected one of {allowed_units}"
+                )
             unit = entry["unit_of_measurement"]
             if unit not in allowed_units:
                 raise vol.Invalid(
@@ -1535,7 +1539,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
             vol.Required("mode"): vol.All(
                 vol.Coerce(NumericThresholdMode), lambda val: val.value
             ),
-            vol.Optional("unit_of_measurement"): [str],
+            vol.Optional("unit_of_measurement"): [vol.Any(str, None)],
             vol.Optional("number"): NumberSelector.CONFIG_SCHEMA,
             vol.Optional("entity"): vol.All(
                 cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
