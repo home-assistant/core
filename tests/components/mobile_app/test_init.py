@@ -319,10 +319,11 @@ async def test_setup_entry_local_only_user_cleans_existing_cloudhook(
     """Test that existing cloudhook is cleaned up for local_only users during setup."""
     hass_admin_user.local_only = True
 
+    webhook_id = "test-webhook-id"
     config_entry = MockConfigEntry(
         data={
             **REGISTER_CLEARTEXT,
-            CONF_WEBHOOK_ID: "test-webhook-id",
+            CONF_WEBHOOK_ID: webhook_id,
             ATTR_DEVICE_NAME: "Test",
             ATTR_DEVICE_ID: "Test",
             CONF_USER_ID: hass_admin_user.id,
@@ -333,12 +334,20 @@ async def test_setup_entry_local_only_user_cleans_existing_cloudhook(
     )
     config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook",
+        ) as delete_cloudhook,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert config_entry.state is ConfigEntryState.LOADED
 
     # Existing cloudhook should be removed for local_only user
     assert CONF_CLOUDHOOK_URL not in config_entry.data
+    delete_cloudhook.assert_called_once_with(hass, webhook_id)
 
 
 async def test_remove_entry_on_user_remove(
