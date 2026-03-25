@@ -100,10 +100,10 @@
           "name": "Preannounce media ID"
         }
       },
-      "name": "Announce"
+      "name": "Announce on satellite"
     },
     "ask_question": {
-      "description": "Asks a question and gets the user's response.",
+      "description": "Asks a question on a satellite and gets the user's response.",
       "fields": {
         "answers": {
           "description": "Possible answers to the question.",
@@ -130,7 +130,7 @@
           "name": "Question media ID"
         }
       },
-      "name": "Ask question"
+      "name": "Ask satellite a question"
     },
     "start_conversation": {
       "description": "Starts a conversation from a satellite.",
@@ -156,7 +156,7 @@
           "name": "Message"
         }
       },
-      "name": "Start conversation"
+      "name": "Start conversation on satellite"
     }
   },
   "title": "Assist satellite",
