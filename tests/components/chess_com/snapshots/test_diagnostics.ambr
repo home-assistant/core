@@ -19,9 +19,48 @@
       'username': 'joostlek',
     }),
     'stats': dict({
-      'chess960_daily': None,
-      'chess_blitz': None,
-      'chess_bullet': None,
+      'chess960_daily': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 521,
+          'rd': 200,
+        }),
+        'record': dict({
+          'draw': 0,
+          'loss': 2,
+          'time_per_move': 7200,
+          'timeout_percent': 0,
+          'win': 1,
+        }),
+      }),
+      'chess_blitz': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 734,
+          'rd': 95,
+        }),
+        'record': dict({
+          'draw': 2,
+          'loss': 8,
+          'time_per_move': 18,
+          'timeout_percent': 0,
+          'win': 10,
+        }),
+      }),
+      'chess_bullet': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 650,
+          'rd': 120,
+        }),
+        'record': dict({
+          'draw': 0,
+          'loss': 6,
+          'time_per_move': 8,
+          'timeout_percent': 0,
+          'win': 2,
+        }),
+      }),
       'chess_daily': dict({
         'last': dict({
           'date': 1772800350,
@@ -36,7 +75,20 @@
           'win': 0,
         }),
       }),
-      'chess_rapid': None,
+      'chess_rapid': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 812,
+          'rd': 74,
+        }),
+        'record': dict({
+          'draw': 1,
+          'loss': 3,
+          'time_per_move': 42,
+          'timeout_percent': 0,
+          'win': 5,
+        }),
+      }),
       'lessons': None,
       'puzzle_rush': dict({
         'best': dict({

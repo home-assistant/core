@@ -1,0 +1,33 @@
+{
+  "chess_daily": {
+    "last": {
+      "rating": 495,
+      "date": 1772800350,
+      "rd": 196
+    },
+    "record": {
+      "win": 0,
+      "loss": 4,
+      "draw": 0,
+      "time_per_move": 6974,
+      "timeout_percent": 0
+    }
+  },
+  "fide": 0,
+  "tactics": {
+    "highest": {
+      "rating": 764,
+      "date": 1772782351
+    },
+    "lowest": {
+      "rating": 400,
+      "date": 1771584762
+    }
+  },
+  "puzzle_rush": {
+    "best": {
+      "total_attempts": 11,
+      "score": 8
+    }
+  }
+}

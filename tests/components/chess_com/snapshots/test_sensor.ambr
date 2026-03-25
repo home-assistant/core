@@ -1,4 +1,163 @@
 # serializer version: 1
+# name: test_all_entities[sensor.joost_blitz_chess_rating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.joost_blitz_chess_rating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blitz chess rating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blitz chess rating',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_blitz_rating',
+    'unique_id': '532748851.chess_blitz.rating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.joost_blitz_chess_rating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Blitz chess rating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_blitz_chess_rating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '734',
+  })
+# ---
+# name: test_all_entities[sensor.joost_bullet_chess_rating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.joost_bullet_chess_rating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bullet chess rating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bullet chess rating',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_bullet_rating',
+    'unique_id': '532748851.chess_bullet.rating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.joost_bullet_chess_rating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Bullet chess rating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_bullet_chess_rating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '650',
+  })
+# ---
+# name: test_all_entities[sensor.joost_daily_chess960_rating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.joost_daily_chess960_rating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Daily Chess960 rating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily Chess960 rating',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess960_daily_rating',
+    'unique_id': '532748851.chess960_daily.rating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.joost_daily_chess960_rating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Daily Chess960 rating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_daily_chess960_rating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '521',
+  })
+# ---
 # name: test_all_entities[sensor.joost_daily_chess_rating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -34,7 +193,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'chess_daily_rating',
-    'unique_id': '532748851.chess_daily_rating',
+    'unique_id': '532748851.chess_daily.rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -106,7 +265,60 @@
     'state': '2',
   })
 # ---
-# name: test_all_entities[sensor.joost_total_chess_games_drawn-entry]
+# name: test_all_entities[sensor.joost_rapid_chess_rating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.joost_rapid_chess_rating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rapid chess rating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rapid chess rating',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_rapid_rating',
+    'unique_id': '532748851.chess_rapid.rating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.joost_rapid_chess_rating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Rapid chess rating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_rapid_chess_rating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '812',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_blitz_chess_games_drawn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -122,7 +334,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.joost_total_chess_games_drawn',
+    'entity_id': 'sensor.joost_total_blitz_chess_games_drawn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -130,37 +342,199 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Total chess games drawn',
+    'object_id_base': 'Total blitz chess games drawn',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Total chess games drawn',
+    'original_name': 'Total blitz chess games drawn',
     'platform': 'chess_com',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_daily_draw',
-    'unique_id': '532748851.total_daily_draw',
+    'translation_key': 'chess_blitz_draw',
+    'unique_id': '532748851.chess_blitz.draw',
     'unit_of_measurement': 'games',
   })
 # ---
-# name: test_all_entities[sensor.joost_total_chess_games_drawn-state]
+# name: test_all_entities[sensor.joost_total_blitz_chess_games_drawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total chess games drawn',
+      'friendly_name': 'Joost Total blitz chess games drawn',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'games',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.joost_total_chess_games_drawn',
+    'entity_id': 'sensor.joost_total_blitz_chess_games_drawn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_blitz_chess_games_lost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_blitz_chess_games_lost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total blitz chess games lost',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total blitz chess games lost',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_blitz_lost',
+    'unique_id': '532748851.chess_blitz.lost',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_blitz_chess_games_lost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total blitz chess games lost',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_blitz_chess_games_lost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_blitz_chess_games_won-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_blitz_chess_games_won',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total blitz chess games won',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total blitz chess games won',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_blitz_won',
+    'unique_id': '532748851.chess_blitz.won',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_blitz_chess_games_won-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total blitz chess games won',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_blitz_chess_games_won',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_bullet_chess_games_drawn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_bullet_chess_games_drawn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total bullet chess games drawn',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total bullet chess games drawn',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_bullet_draw',
+    'unique_id': '532748851.chess_bullet.draw',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_bullet_chess_games_drawn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total bullet chess games drawn',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_bullet_chess_games_drawn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.joost_total_chess_games_lost-entry]
+# name: test_all_entities[sensor.joost_total_bullet_chess_games_lost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -176,7 +550,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.joost_total_chess_games_lost',
+    'entity_id': 'sensor.joost_total_bullet_chess_games_lost',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -184,37 +558,361 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Total chess games lost',
+    'object_id_base': 'Total bullet chess games lost',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Total chess games lost',
+    'original_name': 'Total bullet chess games lost',
     'platform': 'chess_com',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_daily_lost',
-    'unique_id': '532748851.total_daily_lost',
+    'translation_key': 'chess_bullet_lost',
+    'unique_id': '532748851.chess_bullet.lost',
     'unit_of_measurement': 'games',
   })
 # ---
-# name: test_all_entities[sensor.joost_total_chess_games_lost-state]
+# name: test_all_entities[sensor.joost_total_bullet_chess_games_lost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total chess games lost',
+      'friendly_name': 'Joost Total bullet chess games lost',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'games',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.joost_total_chess_games_lost',
+    'entity_id': 'sensor.joost_total_bullet_chess_games_lost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_bullet_chess_games_won-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_bullet_chess_games_won',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total bullet chess games won',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total bullet chess games won',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_bullet_won',
+    'unique_id': '532748851.chess_bullet.won',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_bullet_chess_games_won-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total bullet chess games won',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_bullet_chess_games_won',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess960_games_drawn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_daily_chess960_games_drawn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total daily Chess960 games drawn',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total daily Chess960 games drawn',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess960_daily_draw',
+    'unique_id': '532748851.chess960_daily.draw',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess960_games_drawn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total daily Chess960 games drawn',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_daily_chess960_games_drawn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess960_games_lost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_daily_chess960_games_lost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total daily Chess960 games lost',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total daily Chess960 games lost',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess960_daily_lost',
+    'unique_id': '532748851.chess960_daily.lost',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess960_games_lost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total daily Chess960 games lost',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_daily_chess960_games_lost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess960_games_won-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_daily_chess960_games_won',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total daily Chess960 games won',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total daily Chess960 games won',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess960_daily_won',
+    'unique_id': '532748851.chess960_daily.won',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess960_games_won-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total daily Chess960 games won',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_daily_chess960_games_won',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess_games_drawn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_daily_chess_games_drawn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total daily chess games drawn',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total daily chess games drawn',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_daily_draw',
+    'unique_id': '532748851.chess_daily.draw',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess_games_drawn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total daily chess games drawn',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_daily_chess_games_drawn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess_games_lost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_daily_chess_games_lost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total daily chess games lost',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total daily chess games lost',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_daily_lost',
+    'unique_id': '532748851.chess_daily.lost',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_daily_chess_games_lost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total daily chess games lost',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_daily_chess_games_lost',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_all_entities[sensor.joost_total_chess_games_won-entry]
+# name: test_all_entities[sensor.joost_total_daily_chess_games_won-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -230,7 +928,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.joost_total_chess_games_won',
+    'entity_id': 'sensor.joost_total_daily_chess_games_won',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -238,33 +936,195 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Total chess games won',
+    'object_id_base': 'Total daily chess games won',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Total chess games won',
+    'original_name': 'Total daily chess games won',
     'platform': 'chess_com',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_daily_won',
-    'unique_id': '532748851.total_daily_won',
+    'translation_key': 'chess_daily_won',
+    'unique_id': '532748851.chess_daily.won',
     'unit_of_measurement': 'games',
   })
 # ---
-# name: test_all_entities[sensor.joost_total_chess_games_won-state]
+# name: test_all_entities[sensor.joost_total_daily_chess_games_won-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total chess games won',
+      'friendly_name': 'Joost Total daily chess games won',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'games',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.joost_total_chess_games_won',
+    'entity_id': 'sensor.joost_total_daily_chess_games_won',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_rapid_chess_games_drawn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_rapid_chess_games_drawn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total rapid chess games drawn',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total rapid chess games drawn',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_rapid_draw',
+    'unique_id': '532748851.chess_rapid.draw',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_rapid_chess_games_drawn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total rapid chess games drawn',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_rapid_chess_games_drawn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_rapid_chess_games_lost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_rapid_chess_games_lost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total rapid chess games lost',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total rapid chess games lost',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_rapid_lost',
+    'unique_id': '532748851.chess_rapid.lost',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_rapid_chess_games_lost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total rapid chess games lost',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_rapid_chess_games_lost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_rapid_chess_games_won-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_rapid_chess_games_won',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total rapid chess games won',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total rapid chess games won',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chess_rapid_won',
+    'unique_id': '532748851.chess_rapid.won',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_rapid_chess_games_won-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total rapid chess games won',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_rapid_chess_games_won',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
   })
 # ---
