@@ -1319,7 +1319,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a numeric threshold selector config."""
 
-    mode: str
+    mode: Required[NumericThresholdMode]
     unit_of_measurement: list[str]
     number: NumberSelectorConfig
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
@@ -1328,9 +1328,9 @@ class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
 class NumericThresholdMode(StrEnum):
     """Possible modes for a numeric threshold selector."""
 
-    CROSSED = "crossed"
-    CHANGED = "changed"
-    IS = "is"
+    CROSSED = "crossed"  # value crossed a threshold
+    CHANGED = "changed"  # value changed and is matching the threshold
+    IS = "is"  # value is matching the threshold
 
 
 class NumericThresholdType(StrEnum):
@@ -1532,7 +1532,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("mode"): vol.All(
+            vol.Required("mode"): vol.All(
                 vol.Coerce(NumericThresholdMode), lambda val: val.value
             ),
             vol.Optional("unit_of_measurement"): [str],
@@ -1550,7 +1550,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         validators: list[Callable[[Any], Any]] = [_NUMERIC_THRESHOLD_VALUE_SCHEMA]
-        mode = self.config.get("mode", NumericThresholdMode.CROSSED)
+        mode = self.config["mode"]
         if mode != NumericThresholdMode.CHANGED:
             validators.append(_validate_numeric_threshold_not_any)
         if allowed_units := self.config.get("unit_of_measurement"):

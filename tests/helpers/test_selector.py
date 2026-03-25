@@ -521,12 +521,7 @@ def test_number_selector_schema_error(schema) -> None:
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
-            None,
-            ({"type": "above", "value": {"number": 10}},),
-            ({"type": "any"},),  # "any" not allowed without mode "changed"
-        ),
-        (
-            {},
+            {"mode": "crossed"},
             (
                 {"type": "above", "value": {"number": 10}},
                 {"type": "below", "value": {"entity": "sensor.temperature"}},
@@ -577,7 +572,7 @@ def test_number_selector_schema_error(schema) -> None:
             ),
         ),
         (
-            {"unit_of_measurement": ["°C", "°F"]},
+            {"mode": "crossed", "unit_of_measurement": ["°C", "°F"]},
             (
                 {
                     "type": "between",
@@ -598,7 +593,7 @@ def test_number_selector_schema_error(schema) -> None:
             ),
         ),
         (
-            {"number": {"min": 0, "max": 100}},
+            {"mode": "crossed", "number": {"min": 0, "max": 100}},
             ({"type": "above", "value": {"number": 50}},),
             (
                 {"type": "above", "value": {"number": -1}},  # Below min
@@ -607,12 +602,15 @@ def test_number_selector_schema_error(schema) -> None:
             ),
         ),
         (
-            {"entity": {"domain": "sensor"}},
+            {"mode": "crossed", "entity": {"domain": "sensor"}},
             ({"type": "above", "value": {"entity": "sensor.temperature"}},),
             (),
         ),
         (
-            {"entity": [{"domain": "sensor"}, {"domain": "input_number"}]},
+            {
+                "mode": "crossed",
+                "entity": [{"domain": "sensor"}, {"domain": "input_number"}],
+            },
             ({"type": "above", "value": {"entity": "sensor.temperature"}},),
             (),
         ),
@@ -640,7 +638,7 @@ def test_number_selector_schema_error(schema) -> None:
     ],
 )
 def test_numeric_threshold_selector_schema(
-    schema: dict[str, Any] | None,
+    schema: dict[str, Any],
     valid_selections: tuple[Any, ...],
     invalid_selections: tuple[Any, ...],
 ) -> None:
@@ -649,9 +647,13 @@ def test_numeric_threshold_selector_schema(
 
 
 def test_numeric_threshold_selector_invalid_config() -> None:
-    """Test numeric threshold selector rejects an invalid mode in config."""
+    """Test numeric threshold selector rejects an invalid or missing mode in config."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"numeric_threshold": {"mode": "invalid_mode"}})
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": {}})
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": None})
 
 
 @pytest.mark.parametrize(
