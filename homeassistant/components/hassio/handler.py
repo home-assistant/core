@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 import os
@@ -28,21 +27,6 @@ class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
 
 
-def api_data[**_P](
-    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
-) -> Callable[_P, Coroutine[Any, Any, Any]]:
-    """Return data of an api."""
-
-    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> Any:
-        """Wrap function."""
-        data = await funct(*argv, **kwargs)
-        if data["result"] == "ok":
-            return data["data"]
-        raise HassioAPIError(data["message"])
-
-    return _wrapper
-
-
 class HassIO:
     """Small API wrapper for Hass.io."""
 
@@ -63,14 +47,6 @@ class HassIO:
     def base_url(self) -> URL:
         """Return base url for Supervisor."""
         return self._base_url
-
-    @api_data
-    def get_ingress_panels(self) -> Coroutine:
-        """Return data for Add-on ingress panels.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/ingress/panels", method="get")
 
     async def send_command(
         self,
