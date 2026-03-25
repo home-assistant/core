@@ -681,6 +681,23 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         return True
 
 
+def make_entity_numerical_condition_with_unit(
+    domain_specs: Mapping[str, DomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalConditionWithUnitBase]:
+    """Create a condition for numerical state comparisons with unit conversion."""
+
+    class CustomCondition(EntityNumericalConditionWithUnitBase):
+        """Condition for numerical state with unit conversion."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
+
+    return CustomCondition
+
+
 class ConditionProtocol(Protocol):
     """Define the format of condition modules."""
 

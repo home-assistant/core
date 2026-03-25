@@ -7,6 +7,9 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
+from pyportainer.models.docker import DockerContainer
+from pyportainer.models.portainer import Endpoint
+from pyportainer.models.stacks import Stack
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,7 +29,7 @@ from homeassistant.setup import async_setup_component
 from . import setup_integration
 from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_array_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -296,3 +299,93 @@ async def test_container_stack_device_links(
 
     assert standalone_container_device is not None
     assert standalone_container_device.via_device_id == endpoint_device.id
+
+
+async def test_new_endpoint_callback(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a new endpoint appearing in a subsequent refresh fires the callback and creates entities."""
+    mock_portainer_client.get_endpoints.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 0
+
+    mock_portainer_client.get_endpoints.return_value = [
+        Endpoint.from_dict(endpoint)
+        for endpoint in await async_load_json_array_fixture(
+            hass, "endpoints.json", DOMAIN
+        )
+        if endpoint["Status"] == 1
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) > 0
+
+
+async def test_new_container_callback(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a new container appearing in a subsequent refresh fires the callback and creates entities."""
+    mock_portainer_client.get_containers.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    mock_portainer_client.get_containers.return_value = [
+        DockerContainer.from_dict(container)
+        for container in await async_load_json_array_fixture(
+            hass, "containers.json", DOMAIN
+        )
+        if "/focused_einstein" in container["Names"]
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    ) > len(entities)
+
+
+async def test_new_stack_callback(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a new stack appearing in a subsequent refresh fires the callback and creates entities."""
+    mock_portainer_client.get_stacks.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    mock_portainer_client.get_stacks.return_value = [
+        Stack.from_dict(stack)
+        for stack in await async_load_json_array_fixture(hass, "stacks.json", DOMAIN)
+        if stack["Name"] == "webstack"
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    ) > len(entities)
