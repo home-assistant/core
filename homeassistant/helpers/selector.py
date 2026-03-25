@@ -1319,9 +1319,18 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a numeric threshold selector config."""
 
+    mode: str
     unit_of_measurement: list[str]
     number: NumberSelectorConfig
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+
+
+class NumericThresholdMode(StrEnum):
+    """Possible modes for a numeric threshold selector."""
+
+    CROSSED = "crossed"
+    CHANGED = "changed"
+    IS = "is"
 
 
 class NumericThresholdType(StrEnum):
@@ -1331,6 +1340,7 @@ class NumericThresholdType(StrEnum):
     BELOW = "below"
     BETWEEN = "between"
     OUTSIDE = "outside"
+    ANY = "any"
 
 
 class NumericThresholdActiveChoice(StrEnum):
@@ -1436,6 +1446,11 @@ _NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.All(
                 vol.Required("value_max"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
             }
         ),
+        vol.Schema(
+            {
+                vol.Required("type"): vol.In([NumericThresholdType.ANY]),
+            }
+        ),
     ),
     _validate_numeric_threshold_range,
 )
@@ -1467,6 +1482,13 @@ def _validate_numeric_threshold_unit[_T: dict[str, Any]](
         return value
 
     return _validate
+
+
+def _validate_numeric_threshold_not_any[_T: dict[str, Any]](value: _T) -> _T:
+    """Validate that the threshold type is not 'any'."""
+    if value.get("type") == NumericThresholdType.ANY:
+        raise vol.Invalid("Threshold type 'any' is only allowed when mode is 'changed'")
+    return value
 
 
 def _validate_numeric_threshold_number_range[_T: dict[str, Any]](
@@ -1510,6 +1532,9 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
+            vol.Optional("mode"): vol.All(
+                vol.Coerce(NumericThresholdMode), lambda val: val.value
+            ),
             vol.Optional("unit_of_measurement"): [str],
             vol.Optional("number"): NumberSelector.CONFIG_SCHEMA,
             vol.Optional("entity"): vol.All(
@@ -1525,6 +1550,9 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         validators: list[Callable[[Any], Any]] = [_NUMERIC_THRESHOLD_VALUE_SCHEMA]
+        mode = self.config.get("mode", NumericThresholdMode.CROSSED)
+        if mode != NumericThresholdMode.CHANGED:
+            validators.append(_validate_numeric_threshold_not_any)
         if allowed_units := self.config.get("unit_of_measurement"):
             validators.append(_validate_numeric_threshold_unit(allowed_units))
         if number_config := cast(dict[str, Any] | None, self.config.get("number")):
