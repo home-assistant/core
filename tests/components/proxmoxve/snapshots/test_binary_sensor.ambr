@@ -236,7 +236,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_active',
-    'unique_id': '1234_local_storage_active',
+    'unique_id': '1234_pve1_local_storage_active',
     'unit_of_measurement': None,
   })
 # ---
@@ -286,7 +286,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_enabled',
-    'unique_id': '1234_local_storage_enabled',
+    'unique_id': '1234_pve1_local_storage_enabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -336,7 +336,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_shared',
-    'unique_id': '1234_local_storage_shared',
+    'unique_id': '1234_pve1_local_storage_shared',
     'unit_of_measurement': None,
   })
 # ---
@@ -386,7 +386,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_active',
-    'unique_id': '1234_synology_storage_active',
+    'unique_id': '1234_pve1_synology_storage_active',
     'unit_of_measurement': None,
   })
 # ---
@@ -436,7 +436,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_enabled',
-    'unique_id': '1234_synology_storage_enabled',
+    'unique_id': '1234_pve1_synology_storage_enabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -486,7 +486,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_shared',
-    'unique_id': '1234_synology_storage_shared',
+    'unique_id': '1234_pve1_synology_storage_shared',
     'unit_of_measurement': None,
   })
 # ---

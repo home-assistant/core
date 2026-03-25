@@ -101,7 +101,7 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
             ),
         )
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self._node_name}_{self.device_id}_{entity_description.key}"
 
     @property
     def available(self) -> bool:
