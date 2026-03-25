@@ -1,6 +1,6 @@
 """YoLink local hub message listener."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from yolink.device import YoLinkDevice
@@ -29,5 +29,5 @@ class LocalHubMessageListener(MessageListener):
         if not coordinators:
             return
         if (coordinator := coordinators.get(device.device_id)) is not None:
-            coordinator.last_report_at = datetime.now().timestamp()
+            coordinator.last_report_at = datetime.now(UTC).timestamp()
             coordinator.async_set_updated_data(msg_data)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
@@ -54,7 +54,7 @@ class YoLinkLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
         """Determine if the device is online based on last report time."""
         if self.last_report_at is None:
             return False
-        now_timestamp = datetime.now().timestamp()
+        now_timestamp = datetime.now(UTC).timestamp()
         keepalive_time = self.device.keepalive_time
         return now_timestamp - self.last_report_at < keepalive_time
 
