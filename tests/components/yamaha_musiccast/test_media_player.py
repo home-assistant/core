@@ -94,6 +94,8 @@ async def test_translation_key(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
     """Test that the media player entity uses the zone translation key."""
-    entry = er.async_get(hass).async_get("media_player.test_musiccast")
-    assert entry is not None
-    assert entry.translation_key == "zone"
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, setup_integration.entry_id)
+    mp_entries = [e for e in entries if e.domain == "media_player"]
+    assert len(mp_entries) > 0
+    assert all(e.translation_key == "zone" for e in mp_entries)
