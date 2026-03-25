@@ -11,7 +11,8 @@ set_preset_mode:
       required: true
       example: "away"
       selector:
-        text:
+        state:
+          attribute: preset_mode
 
 set_temperature:
   target:
@@ -91,7 +92,8 @@ set_fan_mode:
       required: true
       example: "low"
       selector:
-        text:
+        state:
+          attribute: fan_mode
 
 set_hvac_mode:
   target:
@@ -115,7 +117,8 @@ set_swing_mode:
       required: true
       example: "on"
       selector:
-        text:
+        state:
+          attribute: swing_mode
 
 set_swing_horizontal_mode:
   target:
@@ -128,7 +131,8 @@ set_swing_horizontal_mode:
       required: true
       example: "on"
       selector:
-        text:
+        state:
+          attribute: swing_horizontal_mode
 
 turn_on:
   target:
