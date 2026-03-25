@@ -3542,7 +3542,7 @@ async def test_initiate_backup_per_agent_encryption(
         await hass.async_block_till_done()
 
     assert mock_secure_tar_archive.mock_calls[0] == call(
-        ANY, ANY, "w", bufsize=4194304, create_version=2, password=inner_tar_password
+        ANY, ANY, "w", bufsize=4194304, create_version=3, password=inner_tar_password
     )
 
     result = await ws_client.receive_json()
