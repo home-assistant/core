@@ -904,7 +904,7 @@ class NodeEvents:
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
         value: Value,
     ) -> None:
-        """Fire value updated event."""
+        """Run discovery when a value is added, updated or its metadata is changed."""
         # If node isn't ready or a device for this node doesn't already
         # exist, we can let the node ready event handler perform discovery.
         # If a value has already been processed, we don't need to do it

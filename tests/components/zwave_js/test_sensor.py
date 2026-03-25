@@ -929,7 +929,7 @@ async def test_opening_state_sensor(
 async def test_opening_state_sensor_metadata_options_change(
     hass: HomeAssistant,
     hoppe_ehandle_connectsense: Node,
-    integration,
+    integration: MockConfigEntry,
 ) -> None:
     """Test Opening state sensor is rediscovered when metadata options change."""
     entity_id = "sensor.ehandle_connectsense_opening_state"
