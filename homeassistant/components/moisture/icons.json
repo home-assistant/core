@@ -1,4 +1,15 @@
 {
+  "conditions": {
+    "is_detected": {
+      "condition": "mdi:water"
+    },
+    "is_not_detected": {
+      "condition": "mdi:water-off"
+    },
+    "is_value": {
+      "condition": "mdi:water-percent"
+    }
+  },
   "triggers": {
     "changed": {
       "trigger": "mdi:water-percent"
