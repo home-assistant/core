@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
+    MATCH_ALL,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -262,6 +263,7 @@ async def async_setup_entry(
 class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
     """The generic BMS sensor implementation."""
 
+    _unrecorded_attributes: frozenset[str] = frozenset({MATCH_ALL})
     _attr_has_entity_name = True
     entity_description: BmsEntityDescription
 
