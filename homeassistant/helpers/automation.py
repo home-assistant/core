@@ -146,7 +146,7 @@ def move_options_fields_to_top_level(
 
 @dataclass(frozen=True, kw_only=True)
 class ThresholdConfig:
-    """Configuration for threshold triggers."""
+    """Configuration for threshold conditions and triggers."""
 
     numerical: bool
     entity: str | None
