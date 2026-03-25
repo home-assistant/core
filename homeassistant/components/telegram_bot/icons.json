@@ -43,6 +43,9 @@
     "send_location": {
       "service": "mdi:map-marker"
     },
+    "send_media_group": {
+      "service": "mdi:image-album"
+    },
     "send_message": {
       "service": "mdi:send"
     },

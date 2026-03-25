@@ -829,6 +829,53 @@
         }
       }
     },
+    "send_media_group": {
+      "description": "Sends a group of photos, videos, documents or audios as an album. Documents and audio files can only be grouped in an album with messages of the same type.",
+      "fields": {
+        "chat_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::chat_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the media group.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "disable_notification": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "media": {
+          "description": "A list of media to be sent.",
+          "name": "Media"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        },
+        "protect_content": {
+          "description": "Protects the contents of the sent message from forwarding and saving.",
+          "name": "Protect content"
+        },
+        "reply_to_message_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        }
+      },
+      "name": "Send media group",
+      "sections": {
+        "advanced": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        }
+      }
+    },
     "send_message": {
       "description": "Sends a notification.",
       "fields": {

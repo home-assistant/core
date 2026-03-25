@@ -46,6 +46,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_FILE_NAME,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
@@ -82,6 +83,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
+    SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
@@ -2404,3 +2406,60 @@ async def test_download_file_when_error_when_downloading(
     assert err.value.translation_placeholders is not None
     assert "error" in err.value.translation_placeholders
     assert err.value.translation_placeholders["error"] == "failed to download file"
+
+
+async def test_send_media_group(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test the send_media_group service with multiple media types."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+    ) as mock_get:
+        mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
+
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MEDIA_GROUP,
+            {
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo.jpg",
+                        ATTR_CAPTION: "mock photo",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.VIDEO,
+                        ATTR_URL: "https://mock/video.mp4",
+                        ATTR_CAPTION: "mock video",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.AUDIO,
+                        ATTR_URL: "https://mock/audio.mp3",
+                        ATTR_CAPTION: "mock url",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.DOCUMENT,
+                        ATTR_URL: "https://mock/doc.pdf",
+                        ATTR_CAPTION: "mock document",
+                    },
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "chats": [
+            {
+                ATTR_CHAT_ID: 123456,
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
+                ATTR_MESSAGE_ID: [12345, 12346, 12347, 12348],
+            }
+        ]
+    }
