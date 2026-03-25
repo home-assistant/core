@@ -1,4 +1,18 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:water-boiler-off"
+    },
+    "is_on": {
+      "condition": "mdi:water-boiler"
+    },
+    "is_operation_mode": {
+      "condition": "mdi:water-boiler"
+    },
+    "is_target_temperature": {
+      "condition": "mdi:thermometer"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:water-boiler",
