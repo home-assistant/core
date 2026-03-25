@@ -1,9 +1,57 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted entities.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if light is currently detected.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::illuminance::common::condition_behavior_description%]",
+          "name": "[%key:component::illuminance::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Light is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if light is currently not detected.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::illuminance::common::condition_behavior_description%]",
+          "name": "[%key:component::illuminance::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Light is not detected"
+    },
+    "is_value": {
+      "description": "Tests the illuminance value.",
+      "fields": {
+        "above": {
+          "description": "Require the illuminance to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::illuminance::common::condition_behavior_description%]",
+          "name": "[%key:component::illuminance::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the illuminance to be below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Illuminance"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "number_or_entity": {
       "choices": {
         "entity": "Entity",
