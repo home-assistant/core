@@ -281,17 +281,6 @@
         "any": "Any"
       }
     },
-    "hvac_mode": {
-      "options": {
-        "auto": "[%key:common::state::auto%]",
-        "cool": "Cool",
-        "dry": "Dry",
-        "fan_only": "Fan only",
-        "heat": "Heat",
-        "heat_cool": "Heat/cool",
-        "off": "[%key:common::state::off%]"
-      }
-    },
     "number_or_entity": {
       "choices": {
         "entity": "Entity",
