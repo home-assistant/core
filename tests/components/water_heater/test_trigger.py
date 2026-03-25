@@ -84,12 +84,6 @@ async def test_water_heater_triggers_gated_by_labs_flag(
         ),
         *parametrize_trigger_states(
             trigger="water_heater.operation_mode_changed",
-            trigger_options={"operation_mode": [STATE_ECO]},
-            target_states=[STATE_ECO],
-            other_states=[s for s in ALL_STATES if s != STATE_ECO],
-        ),
-        *parametrize_trigger_states(
-            trigger="water_heater.operation_mode_changed",
             trigger_options={"operation_mode": [STATE_ECO, STATE_ELECTRIC]},
             target_states=[STATE_ECO, STATE_ELECTRIC],
             other_states=[
@@ -188,11 +182,15 @@ async def test_water_heater_state_attribute_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_trigger_states(
-            trigger="water_heater.operation_mode_changed",
-            trigger_options={"operation_mode": [STATE_ECO]},
-            target_states=[STATE_ECO],
-            other_states=[s for s in ALL_STATES if s != STATE_ECO],
+        *(
+            param
+            for mode in ALL_STATES
+            for param in parametrize_trigger_states(
+                trigger="water_heater.operation_mode_changed",
+                trigger_options={"operation_mode": [mode]},
+                target_states=[mode],
+                other_states=[s for s in ALL_STATES if s != mode],
+            )
         ),
         *parametrize_trigger_states(
             trigger="water_heater.operation_mode_changed",
@@ -288,11 +286,15 @@ async def test_water_heater_state_attribute_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_trigger_states(
-            trigger="water_heater.operation_mode_changed",
-            trigger_options={"operation_mode": [STATE_ECO]},
-            target_states=[STATE_ECO],
-            other_states=[s for s in ALL_STATES if s != STATE_ECO],
+        *(
+            param
+            for mode in ALL_STATES
+            for param in parametrize_trigger_states(
+                trigger="water_heater.operation_mode_changed",
+                trigger_options={"operation_mode": [mode]},
+                target_states=[mode],
+                other_states=[s for s in ALL_STATES if s != mode],
+            )
         ),
         *parametrize_trigger_states(
             trigger="water_heater.operation_mode_changed",
