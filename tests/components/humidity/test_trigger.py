@@ -624,9 +624,14 @@ async def test_humidity_trigger_ignores_limit_entity_with_wrong_unit(
         trigger=trigger,
         trigger_options=trigger_options,
         entity_id="climate.test_climate",
-        entity_state=HVACMode.AUTO,
-        reset_attributes={CLIMATE_ATTR_CURRENT_HUMIDITY: 0},
-        trigger_attributes={CLIMATE_ATTR_CURRENT_HUMIDITY: 50},
+        reset_state={
+            "state": HVACMode.AUTO,
+            "attributes": {CLIMATE_ATTR_CURRENT_HUMIDITY: 0},
+        },
+        trigger_state={
+            "state": HVACMode.AUTO,
+            "attributes": {CLIMATE_ATTR_CURRENT_HUMIDITY: 50},
+        },
         limit_entities=[
             (limit_entities[0], "10"),
             (limit_entities[1], "90"),

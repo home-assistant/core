@@ -105,6 +105,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "node_backup_status": {
+        "name": "Backup status"
+      },
       "status": {
         "name": "Status"
       },
@@ -140,6 +143,9 @@
       "shutdown": {
         "name": "Shutdown"
       },
+      "snapshot_create": {
+        "name": "Create snapshot"
+      },
       "start": {
         "name": "Start"
       },
@@ -151,6 +157,9 @@
       },
       "stop_all": {
         "name": "Stop all"
+      },
+      "suspend_all": {
+        "name": "Suspend all"
       }
     },
     "sensor": {
@@ -191,6 +200,12 @@
       },
       "container_uptime": {
         "name": "Uptime"
+      },
+      "node_backup_duration": {
+        "name": "Backup duration"
+      },
+      "node_backup_last_backup": {
+        "name": "Last backup"
       },
       "node_cpu": {
         "name": "CPU usage"

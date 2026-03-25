@@ -54,6 +54,7 @@ class ProxmoxNodeData:
     vms: dict[int, dict[str, Any]] = field(default_factory=dict)
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
     storages: dict[str, dict[str, Any]] = field(default_factory=dict)
+    backups: list[dict[str, Any]] = field(default_factory=list)
 
 
 class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
@@ -179,6 +180,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         for node, (vms, containers, storages) in zip(
             nodes, vms_containers, strict=True
         ):
+        for node, (vms, containers, backups) in zip(nodes, vms_containers, strict=True):
             data[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
                 vms={int(vm["vmid"]): vm for vm in vms},
@@ -186,6 +188,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                     int(container["vmid"]): container for container in containers
                 },
                 storages={s["storage"]: s for s in storages},
+                backups=backups,
             )
 
         self._async_add_remove_nodes(data)
@@ -236,28 +239,35 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         list[dict[str, Any]],
         list[tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]],
     ]:
-        """Fetch all nodes, and then proceed to the VMs, containers, and storage."""
+        """Fetch all nodes, and then proceed to the VMs, containers, and backups."""
         nodes = self.proxmox.nodes.get() or []
-        node_resources = [self._get_node_resources(node) for node in nodes]
-        return nodes, node_resources
+        node_data = [self._get_node_data(node) for node in nodes]
+        return nodes, node_data
 
-    def _get_node_resources(
+    def _get_node_data(
         self,
         node: dict[str, Any],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-        """Get VMs, containers, and storage for a node."""
+        """Get vms, containers, and backups for a node."""
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
-        storages = self.proxmox.nodes(node[CONF_NODE]).storage.get() or []
-        return vms, containers, storages
+        backups = (
+            self.proxmox.nodes(node[CONF_NODE]).tasks.get(typefilter="vzdump", limit=1)
+            or []
+        )
+        return vms, containers, backups
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
         current_nodes = set(data.keys())
+        self.known_nodes &= current_nodes
         new_nodes = current_nodes - self.known_nodes
         if new_nodes:
             _LOGGER.debug("New nodes found: %s", new_nodes)
             self.known_nodes.update(new_nodes)
+            new_node_data = [data[node_name] for node_name in new_nodes]
+            for nodes_callback in self.new_nodes_callbacks:
+                nodes_callback(new_node_data)
 
         # And yes, track new VM's and containers as well
         current_vms = {
@@ -265,20 +275,34 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             for node_name, node_data in data.items()
             for vmid in node_data.vms
         }
+        self.known_vms &= current_vms
         new_vms = current_vms - self.known_vms
         if new_vms:
             _LOGGER.debug("New VMs found: %s", new_vms)
             self.known_vms.update(new_vms)
+            new_vm_data = [
+                (data[node_name], data[node_name].vms[vmid])
+                for node_name, vmid in new_vms
+            ]
+            for vms_callback in self.new_vms_callbacks:
+                vms_callback(new_vm_data)
 
         current_containers = {
             (node_name, vmid)
             for node_name, node_data in data.items()
             for vmid in node_data.containers
         }
+        self.known_containers &= current_containers
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+            new_container_data = [
+                (data[node_name], data[node_name].containers[vmid])
+                for node_name, vmid in new_containers
+            ]
+            for containers_callback in self.new_containers_callbacks:
+                containers_callback(new_container_data)
 
         current_storages = {
             (node_name, storage_name)
