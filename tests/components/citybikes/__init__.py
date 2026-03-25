@@ -43,4 +43,4 @@ async def setup_integration(
             ]
         },
     )
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()

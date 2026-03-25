@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_state[with_ebikes][with_ebikes]
+# name: test_sensor_state[with_ebikes]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the CityBikes Project (https://citybik.es/#about)',
@@ -21,7 +21,7 @@
     'state': '5',
   })
 # ---
-# name: test_sensor_state[without_ebikes][without_ebikes]
+# name: test_sensor_state[without_ebikes]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the CityBikes Project (https://citybik.es/#about)',

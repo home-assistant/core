@@ -37,16 +37,14 @@ def mock_citybikes_client_fixture() -> Generator[Mock]:
 
 
 @pytest.mark.parametrize(
-    ("extra", "snapshot_name"),
+    "extra",
     [
         pytest.param(
             {citybikes_sensor.ATTR_UID: "uid-1", citybikes_sensor.EXTRA_EBIKES: 2},
-            "with_ebikes",
             id="with_ebikes",
         ),
         pytest.param(
             {citybikes_sensor.ATTR_UID: "uid-1"},
-            "without_ebikes",
             id="without_ebikes",
         ),
     ],
@@ -57,10 +55,9 @@ async def test_sensor_state(
     mock_citybikes_client: Mock,
     station_factory: Callable[[dict[str, object]], citybikes_model.Station],
     extra: dict[str, object],
-    snapshot_name: str,
 ) -> None:
     """Test CityBikes sensor state snapshots."""
     await setup_integration(hass, mock_citybikes_client, station_factory(extra))
 
     assert (state := hass.states.get("sensor.mock_network_station_1"))
-    assert state == snapshot(name=snapshot_name)
+    assert state == snapshot
