@@ -85,6 +85,18 @@
           "on": "mdi:thermometer-alert"
         }
       },
+      "circulation_pump_status": {
+        "default": "mdi:pump",
+        "state": {
+          "on": "mdi:pump"
+        }
+      },
+      "flow_delay_status": {
+        "default": "mdi:timer-sand",
+        "state": {
+          "on": "mdi:timer-sand"
+        }
+      },
       "flow_rate_alarm": {
         "default": "mdi:autorenew",
         "state": {
@@ -101,6 +113,12 @@
         "default": "mdi:flask",
         "state": {
           "on": "mdi:flask-empty"
+        }
+      },
+      "power_on_delay_status": {
+        "default": "mdi:timer-sand",
+        "state": {
+          "on": "mdi:timer-sand"
         }
       },
       "pump_alarm": {
@@ -131,24 +149,6 @@
         "default": "mdi:electric-switch-closed",
         "state": {
           "on": "mdi:electric-switch"
-        }
-      },
-      "circulation_pump_status": {
-        "default": "mdi:pump",
-        "state": {
-          "on": "mdi:pump"
-        }
-      },
-      "flow_delay_status": {
-        "default": "mdi:timer-sand",
-        "state": {
-          "on": "mdi:timer-sand"
-        }
-      },
-      "power_on_delay_status": {
-        "default": "mdi:timer-sand",
-        "state": {
-          "on": "mdi:timer-sand"
         }
       }
     },
