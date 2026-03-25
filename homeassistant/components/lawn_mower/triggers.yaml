@@ -9,10 +9,7 @@
       selector:
         automation_behavior:
           translation_key: trigger_behavior
-          behavior:
-            - first
-            - last
-            - any
+          mode: trigger
 
 docked: *trigger_common
 errored: *trigger_common

@@ -5,15 +5,7 @@
     selector:
       automation_behavior:
         translation_key: trigger_behavior
-        behavior:
-          - first
-          - last
-          - any
-  for: &trigger_for
-    required: true
-    default: 00:00:00
-    selector:
-      duration:
+        mode: trigger
 
 .humidity_threshold_entity: &humidity_threshold_entity
   - domain: input_number

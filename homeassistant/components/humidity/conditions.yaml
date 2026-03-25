@@ -27,13 +27,6 @@ is_value:
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          behavior:
-            - all
-            - any
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *humidity_threshold_entity
-          mode: is
-          number: *humidity_threshold_number
+          mode: condition
+    above: *number_or_entity
+    below: *number_or_entity

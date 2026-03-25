@@ -6,9 +6,7 @@
   selector:
     automation_behavior:
       translation_key: condition_behavior
-      behavior:
-        - all
-        - any
+      mode: condition
 
 # --- Unit lists for multi-unit pollutants ---
 

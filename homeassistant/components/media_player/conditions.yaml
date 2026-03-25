@@ -9,9 +9,7 @@
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          behavior:
-            - all
-            - any
+          mode: condition
 
 .condition_common_with_for: &condition_common_with_for
   target: *condition_media_player_target

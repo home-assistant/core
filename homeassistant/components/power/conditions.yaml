@@ -53,9 +53,7 @@ is_value:
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          behavior:
-            - all
-            - any
+          mode: condition
     above: *number_or_entity_power
     below: *number_or_entity_power
     unit: *condition_unit_power

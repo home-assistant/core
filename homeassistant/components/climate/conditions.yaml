@@ -9,9 +9,7 @@
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          behavior:
-            - all
-            - any
+          mode: condition
 
 .humidity_threshold_entity: &humidity_threshold_entity
   - domain: input_number

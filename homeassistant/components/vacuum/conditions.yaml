@@ -9,14 +9,7 @@
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          behavior:
-            - all
-            - any
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
+          mode: condition
 
 is_cleaning: *condition_common
 is_docked: *condition_common

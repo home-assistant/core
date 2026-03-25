@@ -1234,20 +1234,17 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
-            {},
+            {"mode": "trigger"},
             ("first", "last", "any"),
             ("all", "invalid", None),
         ),
         (
-            {"behavior": ["all", "any"]},
+            {"mode": "condition"},
             ("all", "any"),
             ("first", "last", "invalid", None),
         ),
         (
-            {
-                "behavior": ["first", "last", "any"],
-                "translation_key": "trigger_behavior",
-            },
+            {"mode": "trigger", "translation_key": "trigger_behavior"},
             ("first", "last", "any"),
             ("all", "invalid", None),
         ),
@@ -1263,8 +1260,8 @@ def test_automation_behavior_selector_schema(
 @pytest.mark.parametrize(
     "schema",
     [
-        {"behavior": ["invalid_behavior"]},
-        {"behavior": ["first", "invalid"]},
+        {},
+        {"mode": "invalid_mode"},
     ],
 )
 def test_automation_behavior_selector_schema_error(schema) -> None:

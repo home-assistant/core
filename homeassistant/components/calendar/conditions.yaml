@@ -9,11 +9,4 @@ is_event_active:
       selector:
         automation_behavior:
           translation_key: condition_behavior
-          behavior:
-            - all
-            - any
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
+          mode: condition

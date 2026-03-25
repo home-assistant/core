@@ -5,9 +5,7 @@
     selector:
       automation_behavior:
         translation_key: condition_behavior
-        behavior:
-          - all
-          - any
+        mode: condition
   for:
     required: true
     default: 00:00:00

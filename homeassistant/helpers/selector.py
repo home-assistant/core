@@ -252,11 +252,31 @@ class AutomationBehavior(StrEnum):
     ANY = "any"
 
 
+class AutomationBehaviorSelectorMode(StrEnum):
+    """Possible modes for an automation behavior selector."""
+
+    TRIGGER = "trigger"
+    CONDITION = "condition"
+
+
+_AUTOMATION_BEHAVIOR_MODES: dict[AutomationBehaviorSelectorMode, list[str]] = {
+    AutomationBehaviorSelectorMode.TRIGGER: [
+        AutomationBehavior.FIRST,
+        AutomationBehavior.LAST,
+        AutomationBehavior.ANY,
+    ],
+    AutomationBehaviorSelectorMode.CONDITION: [
+        AutomationBehavior.ALL,
+        AutomationBehavior.ANY,
+    ],
+}
+
+
 class AutomationBehaviorConfig(BaseSelectorConfig, total=False):
     """Class to represent an automation behavior selector config."""
 
+    mode: Required[AutomationBehaviorSelectorMode]
     translation_key: str
-    behavior: list[str]
 
 
 @SELECTORS.register("automation_behavior")
@@ -267,9 +287,8 @@ class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("behavior"): vol.All(
-                cv.ensure_list,
-                [vol.All(vol.Coerce(AutomationBehavior), lambda val: val.value)],
+            vol.Required("mode"): vol.All(
+                vol.Coerce(AutomationBehaviorSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
         },
@@ -283,12 +302,8 @@ class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
         """Validate the passed selection."""
         if not isinstance(data, str):
             raise vol.Invalid("Value should be a string")
-        allowed = self.config.get("behavior") or [
-            AutomationBehavior.FIRST,
-            AutomationBehavior.LAST,
-            AutomationBehavior.ANY,
-        ]
-        return vol.In(allowed)(data)
+        mode = AutomationBehaviorSelectorMode(self.config["mode"])
+        return vol.In(_AUTOMATION_BEHAVIOR_MODES[mode])(data)
 
 
 class ActionSelectorConfig(BaseSelectorConfig):
