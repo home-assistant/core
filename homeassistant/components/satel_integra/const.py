@@ -17,5 +17,3 @@ CONF_SWITCHABLE_OUTPUT_NUMBER = "switchable_output_number"
 
 CONF_ARM_HOME_MODE = "arm_home_mode"
 CONF_ZONE_TYPE = "type"
-
-ZONES = "zones"
