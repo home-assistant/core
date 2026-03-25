@@ -13,8 +13,17 @@
       "start": {
         "default": "mdi:play"
       },
+      "start_all": {
+        "default": "mdi:play"
+      },
       "stop": {
         "default": "mdi:stop"
+      },
+      "stop_all": {
+        "default": "mdi:stop"
+      },
+      "suspend_all": {
+        "default": "mdi:pause"
       }
     },
     "sensor": {
@@ -38,6 +47,12 @@
       },
       "container_memory_percentage": {
         "default": "mdi:memory"
+      },
+      "container_netin": {
+        "default": "mdi:download-network"
+      },
+      "container_netout": {
+        "default": "mdi:upload-network"
       },
       "container_status": {
         "default": "mdi:server"
@@ -86,6 +101,12 @@
       },
       "vm_memory_percentage": {
         "default": "mdi:memory"
+      },
+      "vm_netin": {
+        "default": "mdi:download-network"
+      },
+      "vm_netout": {
+        "default": "mdi:upload-network"
       },
       "vm_status": {
         "default": "mdi:server"

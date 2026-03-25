@@ -2027,8 +2027,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         if limited:
-            # Only device_entities is available to limited templates, mark other
-            # functions and filters as unsupported.
+
             def unsupported(name: str) -> Callable[[], NoReturn]:
                 def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
                     raise TemplateError(
@@ -2056,6 +2055,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "entity_name",
                 "expand",
                 "has_value",
+                "state_attr",
+                "state_attr_translated",
+                "state_translated",
+                "states",
             ]
             hass_tests = [
                 "has_value",
@@ -2068,7 +2071,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
             for test in hass_tests:
-                self.filters[test] = unsupported(test)
+                self.tests[test] = unsupported(test)
             return
 
         self.globals["closest"] = hassfunction(closest)
