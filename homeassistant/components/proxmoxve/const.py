@@ -11,6 +11,8 @@ CONF_TOKEN_SECRET = "token_value"
 CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
 
+CONF_USER = "user"
+
 NODE_ONLINE = "online"
 VM_CONTAINER_RUNNING = "running"
 
