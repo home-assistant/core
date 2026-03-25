@@ -86,6 +86,12 @@
       "alarm_water_too_hot": {
         "name": "Water too hot"
       },
+      "circulation_pump_status": {
+        "name": "Circulation pump"
+      },
+      "flow_delay_status": {
+        "name": "Flow delay"
+      },
       "flow_rate_alarm": {
         "name": "Flow rate"
       },
@@ -94,6 +100,9 @@
       },
       "ph_level_alarm": {
         "name": "pH tank level"
+      },
+      "power_on_delay_status": {
+        "name": "Power-on delay"
       },
       "pump_alarm": {
         "name": "Recirculation"
