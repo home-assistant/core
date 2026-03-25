@@ -1,9 +1,57 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted entities.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if one or more moisture sensors are detecting moisture.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::moisture::common::condition_behavior_description%]",
+          "name": "[%key:component::moisture::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Moisture is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if one or more moisture sensors are not detecting moisture.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::moisture::common::condition_behavior_description%]",
+          "name": "[%key:component::moisture::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Moisture is not detected"
+    },
+    "is_value": {
+      "description": "Tests the moisture level of one or more entities.",
+      "fields": {
+        "above": {
+          "description": "Require the moisture level to be above this value.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::moisture::common::condition_behavior_description%]",
+          "name": "[%key:component::moisture::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "Require the moisture level to be below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Moisture level"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "number_or_entity": {
       "choices": {
         "entity": "Entity",
