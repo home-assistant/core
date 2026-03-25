@@ -156,6 +156,7 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
                 )
             )
         ),
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -198,6 +199,7 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
                 )
             )
         ),
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
