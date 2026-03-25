@@ -1,0 +1,23 @@
+{
+  "domain": "span_panel",
+  "name": "Span Panel",
+  "codeowners": ["@cayossarian"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/span_panel/",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["homeassistant.components.span_panel", "span_panel_api"],
+  "quality_scale": "gold",
+  "requirements": ["span-panel-api==2.4.1"],
+  "zeroconf": [
+    {
+      "type": "_span._tcp.local."
+    },
+    {
+      "type": "_ebus._tcp.local."
+    },
+    {
+      "type": "_secure-mqtt._tcp.local."
+    }
+  ]
+}

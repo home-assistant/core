@@ -486,6 +486,11 @@ ZEROCONF = {
             "name": "wac*",
         },
     ],
+    "_ebus._tcp.local.": [
+        {
+            "domain": "span_panel",
+        },
+    ],
     "_ecobee._tcp.local.": [
         {
             "domain": "ecobee",
@@ -894,6 +899,11 @@ ZEROCONF = {
             "domain": "russound_rio",
         },
     ],
+    "_secure-mqtt._tcp.local.": [
+        {
+            "domain": "span_panel",
+        },
+    ],
     "_shelly._tcp.local.": [
         {
             "domain": "shelly",
@@ -940,6 +950,11 @@ ZEROCONF = {
     "_soundtouch._tcp.local.": [
         {
             "domain": "soundtouch",
+        },
+    ],
+    "_span._tcp.local.": [
+        {
+            "domain": "span_panel",
         },
     ],
     "_ssh._tcp.local.": [

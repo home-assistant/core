@@ -513,6 +513,7 @@ homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
+homeassistant.components.span_panel.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.spotify.*
 homeassistant.components.sql.*

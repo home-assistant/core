@@ -1,0 +1,113 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: >
+      Draft PR home-assistant/brands#10018 adds core_integrations/span_panel;
+      will flip to done when merged.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: >
+      Service and WebSocket documentation will be added in the
+      home-assistant.io integration page PR (#44265).
+  docs-high-level-description:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-installation-instructions:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-removal-instructions:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: >
+      export_circuit_manifest is response-only; relay/priority actions raise
+      translated HomeAssistantError via exception-translations.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-installation-parameters:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: done
+    comment: Zeroconf discovery via _span._tcp.local., _ebus._tcp.local., _secure-mqtt._tcp.local.
+  discovery-update-info:
+    status: done
+    comment: Network info updated from zeroconf discovery data.
+  docs-data-update:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-examples:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-known-limitations:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-supported-devices:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-supported-functions:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-troubleshooting:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  docs-use-cases:
+    status: exempt
+    comment: Covered in the home-assistant.io integration page PR (#44265).
+  dynamic-devices:
+    status: done
+    comment: >
+      BESS, PV, and EVSE sub-devices created dynamically when hardware is
+      commissioned; coordinator triggers reload on new capability detection.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No actionable repair scenarios identified for this integration.
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: >
+      Integration passes mypy strict and py.typed is included in built
+      wheels. Hassfest rejects the editable dev install because the
+      RECORD does not list py.typed. Will pass in CI from PyPI install.
+      Flip to done and manifest to platinum after next span-panel-api
+      release.

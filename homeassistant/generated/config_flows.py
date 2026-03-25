@@ -672,6 +672,7 @@ FLOWS = {
         "songpal",
         "sonos",
         "soundtouch",
+        "span_panel",
         "speedtestdotnet",
         "splunk",
         "spotify",

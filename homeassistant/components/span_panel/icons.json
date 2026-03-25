@@ -1,0 +1,191 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "bess_connected": {
+        "default": "mdi:battery-check"
+      },
+      "door_state": {
+        "default": "mdi:door-closed",
+        "state": {
+          "off": "mdi:door-closed",
+          "on": "mdi:door-open"
+        }
+      },
+      "ethernet_link": {
+        "default": "mdi:ethernet"
+      },
+      "evse_charging": {
+        "default": "mdi:ev-station"
+      },
+      "evse_ev_connected": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "grid_islandable": {
+        "default": "mdi:island"
+      },
+      "panel_status": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "off": "mdi:lan-disconnect",
+          "on": "mdi:lan-connect"
+        }
+      },
+      "wifi_link": {
+        "default": "mdi:wifi"
+      }
+    },
+    "button": {
+      "gfe_override": {
+        "default": "mdi:transmission-tower"
+      }
+    },
+    "select": {
+      "circuit_priority": {
+        "default": "mdi:priority-high"
+      }
+    },
+    "sensor": {
+      "battery_level": {
+        "default": "mdi:battery"
+      },
+      "battery_power": {
+        "default": "mdi:battery-charging"
+      },
+      "bess_firmware_version": {
+        "default": "mdi:chip"
+      },
+      "bess_model": {
+        "default": "mdi:battery-outline"
+      },
+      "bess_nameplate_capacity": {
+        "default": "mdi:battery-high"
+      },
+      "bess_serial_number": {
+        "default": "mdi:identifier"
+      },
+      "bess_soe_kwh": {
+        "default": "mdi:battery-charging"
+      },
+      "bess_vendor": {
+        "default": "mdi:domain"
+      },
+      "current_run_config": {
+        "default": "mdi:cog",
+        "state": {
+          "panel_backup": "mdi:battery-arrow-up",
+          "panel_off_grid": "mdi:cog-off",
+          "panel_on_grid": "mdi:cog"
+        }
+      },
+      "downstream_l1_current": {
+        "default": "mdi:current-ac"
+      },
+      "downstream_l2_current": {
+        "default": "mdi:current-ac"
+      },
+      "dsm_grid_state": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "dsm_off_grid": "mdi:transmission-tower-off",
+          "dsm_on_grid": "mdi:transmission-tower"
+        }
+      },
+      "dsm_state": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "dsm_off_grid": "mdi:transmission-tower-off",
+          "dsm_on_grid": "mdi:transmission-tower"
+        }
+      },
+      "evse_advertised_current": {
+        "default": "mdi:current-ac"
+      },
+      "evse_lock_state": {
+        "default": "mdi:lock",
+        "state": {
+          "locked": "mdi:lock",
+          "unlocked": "mdi:lock-open"
+        }
+      },
+      "evse_status": {
+        "default": "mdi:ev-station",
+        "state": {
+          "available": "mdi:ev-plug-type2",
+          "charging": "mdi:ev-station",
+          "faulted": "mdi:alert-circle"
+        }
+      },
+      "feedthrough_power": {
+        "default": "mdi:flash"
+      },
+      "grid_forming_entity": {
+        "default": "mdi:lightning-bolt-circle",
+        "state": {
+          "battery": "mdi:battery",
+          "generator": "mdi:engine",
+          "grid": "mdi:transmission-tower",
+          "none": "mdi:lightning-bolt-circle",
+          "pv": "mdi:solar-power"
+        }
+      },
+      "grid_power_flow": {
+        "default": "mdi:transmission-tower"
+      },
+      "instant_grid_power": {
+        "default": "mdi:flash"
+      },
+      "l1_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "l2_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "main_breaker_rating": {
+        "default": "mdi:fuse"
+      },
+      "main_relay_state": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "closed": "mdi:electric-switch-closed",
+          "open": "mdi:electric-switch"
+        }
+      },
+      "pv_nameplate_capacity": {
+        "default": "mdi:solar-power"
+      },
+      "pv_power": {
+        "default": "mdi:solar-power"
+      },
+      "pv_product": {
+        "default": "mdi:solar-panel"
+      },
+      "pv_vendor": {
+        "default": "mdi:domain"
+      },
+      "site_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "software_version": {
+        "default": "mdi:information"
+      },
+      "upstream_l1_current": {
+        "default": "mdi:current-ac"
+      },
+      "upstream_l2_current": {
+        "default": "mdi:current-ac"
+      },
+      "vendor_cloud": {
+        "default": "mdi:cloud",
+        "state": {
+          "connected": "mdi:cloud-check",
+          "unconnected": "mdi:cloud-off-outline"
+        }
+      }
+    }
+  },
+  "services": {
+    "export_circuit_manifest": {
+      "service": "mdi:file-export-outline"
+    }
+  }
+}

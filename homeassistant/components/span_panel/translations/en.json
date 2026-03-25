@@ -1,0 +1,391 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Span Panel already configured. Only a single configuration is possible.",
+            "cannot_connect": "Failed to connect to Span Panel",
+            "no_devices_found": "No devices found on the network",
+            "no_host": "No host address was provided by the add-on.",
+            "no_serial": "Could not determine the panel serial number.",
+            "reauth_successful": "Authentication successful.",
+            "reconfigure_successful": "Host updated successfully.",
+            "unique_id_mismatch": "The panel at this address has a different serial number. You cannot switch to a different panel during reconfiguration.",
+            "v1_not_supported": "v1 firmware is not supported. Please upgrade your panel firmware to v2."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to Span Panel",
+            "fqdn_registration_failed": "Could not register the domain name with the panel or the TLS certificate was not updated in time.",
+            "host_required": "Host is required",
+            "invalid_auth": "Invalid authentication",
+            "proximity_failed": "Proximity not proven. Please open and close the panel door 3 times and try again.",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "Span Panel ({host})",
+        "progress": {
+            "registering_fqdn": "Registering domain name with the panel and waiting for TLS certificate update. This may take up to 60 seconds..."
+        },
+        "step": {
+            "auth_passphrase": {
+                "data": {
+                    "hop_passphrase": "Passphrase"
+                },
+                "data_description": {
+                    "hop_passphrase": "The passphrase used to authenticate with the SPAN Panel v2 API"
+                },
+                "description": "Enter the passphrase for your SPAN Panel. This is printed on the panel label or set by the panel owner.",
+                "title": "Panel Passphrase"
+            },
+            "auth_proximity": {
+                "description": "Open and close the SPAN Panel door 3 times, then select the confirmation below.",
+                "menu_options": {
+                    "auth_passphrase": "Use passphrase instead",
+                    "auth_proximity_confirm": "I have opened and closed the door"
+                },
+                "title": "Proximity Authentication"
+            },
+            "auth_proximity_confirm": {
+                "description": "Verifying proximity with the panel.",
+                "title": "Proximity Authentication"
+            },
+            "choose_entity_naming_initial": {
+                "data": {
+                    "entity_naming_pattern": "Naming pattern"
+                },
+                "data_description": {
+                    "entity_naming_pattern": "Friendly names use circuit labels from the panel. Tab-based names use breaker tab numbers for stable entity IDs."
+                },
+                "description": "Choose how circuit-related entities are named in Home Assistant.",
+                "title": "Circuit entity naming"
+            },
+            "choose_v2_auth": {
+                "menu_options": {
+                    "auth_passphrase": "Enter Panel Passphrase",
+                    "auth_proximity": "Proof of Proximity (open/close door)"
+                },
+                "title": "Choose Authentication Method"
+            },
+            "confirm_discovery": {
+                "description": "Do you want to setup Span Panel at {host}?",
+                "title": "Connect to the Span Panel"
+            },
+            "fqdn_failed": {
+                "description": "The domain name could not be registered with the panel, or the TLS certificate was not updated in time. You may continue, but the MQTT connection may fail if the panel's certificate does not include your domain name.",
+                "title": "Domain Registration"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "IP address or hostname of the SPAN Panel"
+                },
+                "description": "Update the host address for this SPAN Panel. The panel serial number must match.",
+                "title": "Reconfigure SPAN Panel"
+            },
+            "reconfigure_fqdn_done": {
+                "title": "Reconfiguration Complete"
+            },
+            "reconfigure_fqdn_failed": {
+                "description": "The domain name could not be registered with the panel, or the TLS certificate was not updated in time. You may continue, but the MQTT connection may fail if the panel's certificate does not include your domain name.",
+                "title": "Domain Registration"
+            },
+            "reconfigure_register_fqdn": {
+                "title": "Registering Domain Name"
+            },
+            "register_fqdn": {
+                "title": "Registering Domain Name"
+            },
+            "user": {
+                "data": {
+                    "enable_energy_dip_compensation": "Auto-Compensate Energy Dips",
+                    "energy_display_precision": "Energy Display Precision",
+                    "host": "Host",
+                    "http_port": "HTTP Port",
+                    "power_display_precision": "Power Display Precision"
+                },
+                "data_description": {
+                    "enable_energy_dip_compensation": "Automatically compensate when the panel reports lower energy readings, preventing spikes in the energy dashboard.",
+                    "energy_display_precision": "Number of decimal places for energy values (0-3)",
+                    "host": "IP address or hostname of SPAN Panel",
+                    "http_port": "HTTP port for the panel API (default: 80)",
+                    "power_display_precision": "Number of decimal places for power values (0-3)"
+                },
+                "description": "Enter the connection details for your SPAN Panel.",
+                "title": "Connect to the Span Panel"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "bess_connected": {
+                "name": "BESS Connected"
+            },
+            "door_state": {
+                "name": "Door State"
+            },
+            "ethernet_link": {
+                "name": "Ethernet Link"
+            },
+            "evse_charging": {
+                "name": "Charging"
+            },
+            "evse_ev_connected": {
+                "name": "EV Connected"
+            },
+            "grid_islandable": {
+                "name": "Grid Islandable"
+            },
+            "panel_status": {
+                "name": "Panel Status"
+            },
+            "wifi_link": {
+                "name": "Wi-Fi Link"
+            }
+        },
+        "button": {
+            "gfe_override": {
+                "name": "GFE Override: Grid Connected"
+            }
+        },
+        "select": {
+            "circuit_priority": {
+                "name": "Circuit Priority",
+                "state": {
+                    "never": "Stays on in an outage",
+                    "off_grid": "Turns off in an outage",
+                    "soc_threshold": "Stays on until battery threshold"
+                }
+            }
+        },
+        "sensor": {
+            "battery_level": {
+                "name": "Battery Level"
+            },
+            "battery_power": {
+                "name": "Battery Power"
+            },
+            "bess_firmware_version": {
+                "name": "Firmware Version"
+            },
+            "bess_model": {
+                "name": "Model"
+            },
+            "bess_nameplate_capacity": {
+                "name": "Nameplate Capacity"
+            },
+            "bess_serial_number": {
+                "name": "Serial Number"
+            },
+            "bess_soe_kwh": {
+                "name": "State of Energy"
+            },
+            "bess_vendor": {
+                "name": "Vendor"
+            },
+            "current_run_config": {
+                "name": "Current Run Config",
+                "state": {
+                    "panel_backup": "Backup",
+                    "panel_off_grid": "Off Grid",
+                    "panel_on_grid": "On Grid",
+                    "unknown": "Unknown"
+                }
+            },
+            "downstream_l1_current": {
+                "name": "Downstream L1 Current"
+            },
+            "downstream_l2_current": {
+                "name": "Downstream L2 Current"
+            },
+            "dsm_grid_state": {
+                "name": "DSM Grid State",
+                "state": {
+                    "dsm_off_grid": "Off Grid",
+                    "dsm_on_grid": "On Grid",
+                    "unknown": "Unknown"
+                }
+            },
+            "dsm_state": {
+                "name": "DSM State",
+                "state": {
+                    "dsm_off_grid": "Off Grid",
+                    "dsm_on_grid": "On Grid",
+                    "unknown": "Unknown"
+                }
+            },
+            "evse_advertised_current": {
+                "name": "Advertised Current"
+            },
+            "evse_lock_state": {
+                "name": "Lock State",
+                "state": {
+                    "locked": "Locked",
+                    "unknown": "Unknown",
+                    "unlocked": "Unlocked"
+                }
+            },
+            "evse_status": {
+                "name": "Charger Status",
+                "state": {
+                    "available": "Available",
+                    "charging": "Charging",
+                    "faulted": "Faulted",
+                    "finishing": "Finishing",
+                    "preparing": "Preparing",
+                    "reserved": "Reserved",
+                    "suspended_ev": "Suspended by Vehicle",
+                    "suspended_evse": "Suspended by Charger",
+                    "unavailable": "Unavailable",
+                    "unknown": "Unknown"
+                }
+            },
+            "feedthrough_consumed_energy": {
+                "name": "Feed Through Consumed Energy"
+            },
+            "feedthrough_net_energy": {
+                "name": "Feed Through Net Energy"
+            },
+            "feedthrough_power": {
+                "name": "Feed Through Power"
+            },
+            "feedthrough_produced_energy": {
+                "name": "Feed Through Produced Energy"
+            },
+            "grid_forming_entity": {
+                "name": "Grid Forming Entity",
+                "state": {
+                    "battery": "Battery",
+                    "generator": "Generator",
+                    "grid": "Grid",
+                    "none": "None",
+                    "pv": "PV",
+                    "unknown": "Unknown"
+                }
+            },
+            "grid_power_flow": {
+                "name": "Grid Power"
+            },
+            "instant_grid_power": {
+                "name": "Current Power"
+            },
+            "l1_voltage": {
+                "name": "L1 Voltage"
+            },
+            "l2_voltage": {
+                "name": "L2 Voltage"
+            },
+            "main_breaker_rating": {
+                "name": "Main Breaker Rating"
+            },
+            "main_meter_consumed_energy": {
+                "name": "Main Meter Consumed Energy"
+            },
+            "main_meter_net_energy": {
+                "name": "Main Meter Net Energy"
+            },
+            "main_meter_produced_energy": {
+                "name": "Main Meter Produced Energy"
+            },
+            "main_relay_state": {
+                "name": "Main Relay State",
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "unknown": "Unknown"
+                }
+            },
+            "pv_nameplate_capacity": {
+                "name": "PV Nameplate Capacity"
+            },
+            "pv_power": {
+                "name": "PV Power"
+            },
+            "pv_product": {
+                "name": "PV Product"
+            },
+            "pv_vendor": {
+                "name": "PV Vendor"
+            },
+            "site_power": {
+                "name": "Site Power"
+            },
+            "software_version": {
+                "name": "Software Version"
+            },
+            "upstream_l1_current": {
+                "name": "Upstream L1 Current"
+            },
+            "upstream_l2_current": {
+                "name": "Upstream L2 Current"
+            },
+            "vendor_cloud": {
+                "name": "Vendor Cloud",
+                "state": {
+                    "connected": "Connected",
+                    "unconnected": "Disconnected",
+                    "unknown": "Unknown"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "circuit_priority_failed": {
+            "message": "Failed to set circuit priority for {circuit}."
+        },
+        "circuit_relay_failed": {
+            "message": "Failed to set circuit relay state for {circuit}."
+        },
+        "export_manifest_no_entries": {
+            "message": "No SPAN panel configuration entries are loaded. Add and configure a SPAN panel before calling this service."
+        },
+        "gfe_override_failed": {
+            "message": "Failed to send GFE override to the panel."
+        },
+        "panel_auth_failed": {
+            "message": "Authentication with the SPAN Panel failed. Please reauthenticate."
+        },
+        "panel_connection_failed": {
+            "message": "Failed to connect to the SPAN Panel at {host}."
+        },
+        "panel_not_ready": {
+            "message": "The SPAN Panel is not ready. Please check that the panel is online."
+        }
+    },
+    "options": {
+        "step": {
+            "general_options": {
+                "data": {
+                    "enable_circuit_net_energy_sensors": "Circuit Net Energy",
+                    "enable_energy_dip_compensation": "Auto-Compensate Energy Dips",
+                    "enable_panel_net_energy_sensors": "Panel Net Energy",
+                    "enable_unmapped_circuit_sensors": "Unmapped Circuit Sensors",
+                    "energy_reporting_grace_period": "Energy Sensor Grace Period (minutes)",
+                    "snapshot_update_interval": "Snapshot Update Interval (seconds)"
+                },
+                "data_description": {
+                    "enable_circuit_net_energy_sensors": "Create net energy sensors for individual circuits. Shows true energy consumption accounting for reactive power and regenerative flows.",
+                    "enable_energy_dip_compensation": "Automatically compensate when the panel reports lower energy readings. Disabling clears all accumulated offsets.",
+                    "enable_panel_net_energy_sensors": "Create net energy sensors for panel-level energy flows (main meter and feed-through). Shows true energy balance accounting for bidirectional flows.",
+                    "enable_unmapped_circuit_sensors": "Create sensors for unmapped circuit tabs. These provide backing data for panels with circuits that are not assigned to named breakers.",
+                    "energy_reporting_grace_period": "How long energy sensors maintain their last known value when the panel becomes unavailable (0-60 minutes). Helps preserve energy statistics integrity during brief outages. Default: 15 minutes.",
+                    "snapshot_update_interval": "How often to rebuild the panel snapshot from MQTT data. Lower values give faster updates but use more CPU. Increase on low-power hardware (e.g., Raspberry Pi). Set to 0 for no debounce. Range: 0\u201315 seconds."
+                },
+                "description": "Configure SPAN Panel integration settings.",
+                "title": "General Options"
+            }
+        }
+    },
+    "selector": {
+        "entity_naming_pattern": {
+            "options": {
+                "circuit_numbers": "Circuit Numbers (e.g., span_panel_circuit_15_power)",
+                "friendly_names": "Friendly Names (e.g., span_panel_kitchen_outlets_power)"
+            }
+        }
+    },
+    "services": {
+        "export_circuit_manifest": {
+            "description": "Returns a structured circuit manifest for all configured SPAN panels: serial, host, and per-circuit power sensor entity IDs, layout template identifiers (clone_{{tab}}), device types, and breaker tab numbers. Intended for dashboard cards and automations that need panel topology without querying the entity registry. This is a response-only service; the response may list zero panels if nothing can be resolved.",
+            "name": "Export circuit manifest"
+        }
+    }
+}

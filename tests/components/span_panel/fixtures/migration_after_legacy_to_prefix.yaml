@@ -1,0 +1,49 @@
+version: "1.0"
+
+global_settings:
+  device_identifier: "sp3-simulation-001"
+  variables:
+    energy_grace_period_minutes: 15
+  metadata:
+    attribution: "Data from SPAN Panel"
+
+sensors:
+  span_sp3-simulation-001_current_power:
+    name: "Current Power"
+    entity_id: "sensor.span_sp3_simulation_001_current_power"
+    formula: "state"
+    metadata:
+      unit_of_measurement: "W"
+      device_class: "power"
+      state_class: "measurement"
+      suggested_display_precision: 0
+
+  span_sp3-simulation-001_feed_through_power:
+    name: "Feed Through Power"
+    entity_id: "sensor.span_sp3_simulation_001_feed_through_power"
+    formula: "state"
+    metadata:
+      unit_of_measurement: "W"
+      device_class: "power"
+      state_class: "measurement"
+      suggested_display_precision: 0
+
+  span_sp3-simulation-001_main_meter_produced_energy:
+    name: "Main Meter Produced Energy"
+    entity_id: "sensor.span_sp3_simulation_001_main_meter_produced_energy"
+    formula: "state"
+    metadata:
+      unit_of_measurement: "Wh"
+      device_class: "energy"
+      state_class: "total_increasing"
+      suggested_display_precision: 2
+
+  span_sp3-simulation-001_kitchen_outlets_power:
+    name: "Kitchen Outlets Power"
+    entity_id: "sensor.span_sp3_simulation_001_kitchen_outlets_power"
+    formula: "state"
+    metadata:
+      unit_of_measurement: "W"
+      device_class: "power"
+      state_class: "measurement"
+      suggested_display_precision: 0
