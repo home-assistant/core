@@ -113,8 +113,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if (
             not discovery_info.connectable
             and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+            and model_name not in NON_CONNECTABLE_SUPPORTED_MODEL_TYPES
         ):
-            # Source is not connectable but the model is connectable
+            # Source is not connectable but the model is connectable only
             return self.async_abort(reason="not_supported")
         self._discovered_adv = parsed
         data = parsed.data
