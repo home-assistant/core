@@ -3,7 +3,7 @@
 import logging
 from typing import Final
 
-from aiohttp.client_exceptions import ClientConnectionError
+from aiohttp import ClientError
 from cieloconnectapi.exceptions import CieloError
 
 from homeassistant.const import Platform
@@ -18,7 +18,7 @@ TIMEOUT: Final[int] = 20
 LOGGER: Final = logging.getLogger(__package__)
 
 CIELO_ERRORS: Final[tuple] = (
-    ClientConnectionError,
+    ClientError,
     TimeoutError,
     CieloError,
 )
