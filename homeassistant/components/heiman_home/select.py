@@ -39,7 +39,8 @@ async def async_setup_entry(
 
     # Get language preference
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -84,7 +85,9 @@ async def async_setup_entry(
             devices_config=devices_config,
         )
         _LOGGER.debug(
-            "  Device %s has %s select entities", device_name, len(select_entities),
+            "  Device %s has %s select entities",
+            device_name,
+            len(select_entities),
         )
         entities.extend(select_entities)
 
@@ -302,7 +305,9 @@ class HeimanSelectEntity(CoordinatorEntity, SelectEntity):
             result = self._value_list[description]
             if self._property_info.get("id") == "AlarmSoundOption":
                 _LOGGER.debug(
-                    "AlarmSoundOption _get_value: %s -> %s", description, result,
+                    "AlarmSoundOption _get_value: %s -> %s",
+                    description,
+                    result,
                 )
             return result
         # If not found, return the description itself
@@ -331,7 +336,10 @@ class HeimanSelectEntity(CoordinatorEntity, SelectEntity):
         value = self._get_value(description=option)
 
         _LOGGER.debug(
-            "Select %s setting option: %s -> value: %s", self._attr_name, option, value,
+            "Select %s setting option: %s -> value: %s",
+            self._attr_name,
+            option,
+            value,
         )
 
         await self._cloud_client.mqtt_client.async_write_property(
@@ -354,7 +362,8 @@ class HeimanSelectEntity(CoordinatorEntity, SelectEntity):
         """
         try:
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             property_id = self._property_info.get("id", "")
 
@@ -368,13 +377,15 @@ class HeimanSelectEntity(CoordinatorEntity, SelectEntity):
             # Only write state if cache update was successful (value changed)
             if self._update_current_option_from_cache():
                 _LOGGER.debug(
-                    "Select %s updated from coordinator (MQTT)", self._attr_name,
+                    "Select %s updated from coordinator (MQTT)",
+                    self._attr_name,
                 )
                 # Write the new state to Home Assistant immediately
                 self.async_write_ha_state()
             else:
                 _LOGGER.debug(
-                    "Select %s no value change from coordinator update", self._attr_name,
+                    "Select %s no value change from coordinator update",
+                    self._attr_name,
                 )
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(

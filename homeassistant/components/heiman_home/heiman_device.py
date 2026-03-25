@@ -39,12 +39,14 @@ try:
     _LOGGER.debug("Successfully imported heiman_device_mapping")
 except ImportError as import_err:
     _LOGGER.warning(
-        "heiman_device_mapping not available, using basic mapping: %s", import_err,
+        "heiman_device_mapping not available, using basic mapping: %s",
+        import_err,
     )
     HAS_MAPPING = False
 except Exception as err:  # noqa: BLE001
     _LOGGER.warning(
-        "Error importing heiman_device_mapping: %s, using basic mapping", err,
+        "Error importing heiman_device_mapping: %s, using basic mapping",
+        err,
     )
     HAS_MAPPING = False
 
@@ -131,7 +133,12 @@ class HeimanDevice:
     """Represents a Heiman device and its entities."""
 
     def __init__(
-        self, hass, device_info: dict, cloud_client, entry_id: str, i18n=None,
+        self,
+        hass,
+        device_info: dict,
+        cloud_client,
+        entry_id: str,
+        i18n=None,
     ) -> None:
         """Initialize the device."""
         self._hass = hass
@@ -210,7 +217,8 @@ class HeimanDevice:
 
         # Try to fetch device detail from API first
         if self._cloud_client and hasattr(
-            self._cloud_client, "async_get_device_instance_detail",
+            self._cloud_client,
+            "async_get_device_instance_detail",
         ):
             try:
                 _LOGGER.debug(
@@ -996,35 +1004,45 @@ class HeimanDevice:
                     # Translate RSSI level name and options
                     rssi_level_name = (
                         self._i18n.translate(
-                            "property", "RSSI_Level.name", "Signal Strength Level",
+                            "property",
+                            "RSSI_Level.name",
+                            "Signal Strength Level",
                         )
                         if self._i18n
                         else "Signal Strength Level"
                     )
                     strong = (
                         self._i18n.translate(
-                            "property", "RSSI_Level.options.strong", "Strong",
+                            "property",
+                            "RSSI_Level.options.strong",
+                            "Strong",
                         )
                         if self._i18n
                         else "Strong"
                     )
                     medium = (
                         self._i18n.translate(
-                            "property", "RSSI_Level.options.medium", "Medium",
+                            "property",
+                            "RSSI_Level.options.medium",
+                            "Medium",
                         )
                         if self._i18n
                         else "Medium"
                     )
                     weak = (
                         self._i18n.translate(
-                            "property", "RSSI_Level.options.weak", "Weak",
+                            "property",
+                            "RSSI_Level.options.weak",
+                            "Weak",
                         )
                         if self._i18n
                         else "Weak"
                     )
                     very_weak = (
                         self._i18n.translate(
-                            "property", "RSSI_Level.options.very_weak", "Very Weak",
+                            "property",
+                            "RSSI_Level.options.very_weak",
+                            "Very Weak",
                         )
                         if self._i18n
                         else "Very Weak"
@@ -1198,7 +1216,10 @@ class HeimanDevice:
             for keyword in ["hum", "humidity", "湿度", "ht"]
         ):
             properties.append(
-                {"id": "CurrentHumidity", **DEVICE_PROPERTY_MAPPING.get("humidity", {})},
+                {
+                    "id": "CurrentHumidity",
+                    **DEVICE_PROPERTY_MAPPING.get("humidity", {}),
+                },
             )
 
         if any(
@@ -1228,7 +1249,10 @@ class HeimanDevice:
             for keyword in ["door", "window", "magnetic", "门磁", "ds"]
         ):
             properties.append(
-                {"id": "ContactState", **DEVICE_PROPERTY_MAPPING.get("door_status", {})},
+                {
+                    "id": "ContactState",
+                    **DEVICE_PROPERTY_MAPPING.get("door_status", {}),
+                },
             )
 
         if any(
@@ -1247,7 +1271,10 @@ class HeimanDevice:
             for keyword in ["co", "carbon", "一氧化碳", "gas"]
         ):
             properties.append(
-                {"id": "GasSensorState", **DEVICE_PROPERTY_MAPPING.get("co_status", {})},
+                {
+                    "id": "GasSensorState",
+                    **DEVICE_PROPERTY_MAPPING.get("co_status", {}),
+                },
             )
 
         if any(
@@ -1281,7 +1308,8 @@ class HeimanDevice:
         return properties
 
     def get_sensor_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanSensorEntity]:
         """Get sensor entities for this device."""
         sensor_entity = _get_platform_entity("sensor", "HeimanSensorEntity")
@@ -1308,13 +1336,15 @@ class HeimanDevice:
         # 注册属性名称到 coordinator，用于批量获取
         if sensor_property_names and coordinator:
             coordinator.register_device_properties(
-                self._device_id, sensor_property_names,
+                self._device_id,
+                sensor_property_names,
             )
 
         return entities
 
     def get_binary_sensor_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanBinarySensorEntity]:
         """Get binary sensor entities for this device."""
         binary_sensor_entity = _get_platform_entity(
@@ -1344,13 +1374,15 @@ class HeimanDevice:
         # 注册属性名称到 coordinator，用于批量获取
         if binary_sensor_property_names and coordinator:
             coordinator.register_device_properties(
-                self._device_id, binary_sensor_property_names,
+                self._device_id,
+                binary_sensor_property_names,
             )
 
         return entities
 
     def get_switch_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanSwitchEntity]:
         """Get switch entities for this device."""
         switch_entity = _get_platform_entity("switch", "HeimanSwitchEntity")
@@ -1376,13 +1408,16 @@ class HeimanDevice:
         # 注册属性名称到 coordinator，用于批量获取
         if switch_property_names and coordinator:
             coordinator.register_device_properties(
-                self._device_id, switch_property_names,
+                self._device_id,
+                switch_property_names,
             )
 
         return entities
 
     def get_activity_sensor(
-        self, devices_config: dict | None = None, max_alarms: int = 10,
+        self,
+        devices_config: dict | None = None,
+        max_alarms: int = 10,
     ) -> HeimanActivitySensor | None:
         """Get activity sensor for this device.
 
@@ -1404,7 +1439,8 @@ class HeimanDevice:
         )
 
     def get_button_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanButtonEntity]:
         """Get button entities for this device."""
         button_entity = _get_platform_entity("button", "HeimanButtonEntity")
@@ -1423,7 +1459,8 @@ class HeimanDevice:
         ]
 
     def get_cover_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanCoverEntity]:
         """Get cover entities for this device."""
         cover_entity = _get_platform_entity("cover", "HeimanCoverEntity")
@@ -1442,7 +1479,8 @@ class HeimanDevice:
         ]
 
     def get_fan_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanFanEntity]:
         """Get fan entities for this device."""
         fan_entity = _get_platform_entity("fan", "HeimanFanEntity")
@@ -1461,7 +1499,8 @@ class HeimanDevice:
         ]
 
     def get_light_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanLightEntity]:
         """Get light entities for this device."""
         light_entity = _get_platform_entity("light", "HeimanLightEntity")
@@ -1480,7 +1519,8 @@ class HeimanDevice:
         ]
 
     def get_humidifier_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanHumidifierEntity]:
         """Get humidifier entities for this device."""
         humidifier_entity = _get_platform_entity(
@@ -1502,7 +1542,8 @@ class HeimanDevice:
         ]
 
     def get_number_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanNumberEntity]:
         """Get number entities for this device."""
         number_entity = _get_platform_entity("number", "HeimanNumberEntity")
@@ -1521,7 +1562,8 @@ class HeimanDevice:
         ]
 
     def get_select_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanSelectEntity]:
         """Get select entities for this device."""
         select_entity = _get_platform_entity("select", "HeimanSelectEntity")
@@ -1540,7 +1582,8 @@ class HeimanDevice:
         ]
 
     def get_event_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanEventEntity]:
         """Get event entities for this device."""
         event_entity = _get_platform_entity("event", "HeimanEventEntity")
@@ -1559,7 +1602,8 @@ class HeimanDevice:
         ]
 
     def get_text_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanTextEntity]:
         """Get text entities for this device."""
         text_entity = _get_platform_entity("text", "HeimanTextEntity")
@@ -1578,7 +1622,8 @@ class HeimanDevice:
         ]
 
     def get_device_tracker_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanDeviceTrackerEntity]:
         """Get device tracker entities for this device."""
         device_tracker_entity = _get_platform_entity(
@@ -1600,7 +1645,8 @@ class HeimanDevice:
         ]
 
     def get_media_player_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanMediaPlayerEntity]:
         """Get media player entities for this device."""
         media_player_entity = _get_platform_entity(
@@ -1622,7 +1668,8 @@ class HeimanDevice:
         ]
 
     def get_notify_entities(
-        self, devices_config: dict | None = None,
+        self,
+        devices_config: dict | None = None,
     ) -> list[HeimanNotifyEntity]:
         """Get notify entities for this device."""
         notify_entity = _get_platform_entity("media_player", "HeimanNotifyEntity")

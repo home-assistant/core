@@ -249,7 +249,8 @@ class HeimanBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         # Get property value from coordinator cache
         if self.coordinator and hasattr(self.coordinator, "get_device_property"):
             cached_value = self.coordinator.get_device_property(
-                device_id, property_name,
+                device_id,
+                property_name,
             )
             _LOGGER.debug(
                 "_update_from_cache: got cached_value=%s for %s.%s",
@@ -296,7 +297,8 @@ class HeimanBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
                     self._attr_name,
                 )
                 device_id = self._device_info.get("id") or self._device_info.get(
-                    "deviceId", "",
+                    "deviceId",
+                    "",
                 )
                 property_name = self._property_info["id"]
                 product_id = self._device_info.get("productId", "")
@@ -326,7 +328,8 @@ class HeimanBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         try:
             if self._update_from_cache():
                 _LOGGER.debug(
-                    "Binary sensor %s updated from coordinator (MQTT)", self._attr_name,
+                    "Binary sensor %s updated from coordinator (MQTT)",
+                    self._attr_name,
                 )
             # Write the new state to Home Assistant immediately
             self.async_write_ha_state()

@@ -266,7 +266,9 @@ class RefreshOptimizer:
             property_ids = []
 
         task = RefreshTask(
-            device_id=device_id, property_ids=property_ids, priority=priority,
+            device_id=device_id,
+            property_ids=property_ids,
+            priority=priority,
         )
 
         # Try to merge with pending requests
@@ -305,7 +307,8 @@ class RefreshOptimizer:
             self._queue.add_task(task)
 
         _LOGGER.info(
-            "Flushed %d merged refresh requests to queue", len(self._pending_merge),
+            "Flushed %d merged refresh requests to queue",
+            len(self._pending_merge),
         )
         self._pending_merge.clear()
         self._merge_timer = None
@@ -370,11 +373,15 @@ class RefreshOptimizer:
                     )
 
         _LOGGER.info(
-            "Batch complete: %d succeeded, %d failed", success_count, failure_count,
+            "Batch complete: %d succeeded, %d failed",
+            success_count,
+            failure_count,
         )
 
     async def _refresh_device_properties(
-        self, device_id: str, property_ids: list[str],
+        self,
+        device_id: str,
+        property_ids: list[str],
     ) -> None:
         """Refresh properties for a single device.
 
@@ -394,7 +401,8 @@ class RefreshOptimizer:
             for prop_id in property_ids:
                 try:
                     value = await self.cloud_client.async_get_property(
-                        device_id=device_id, property_id=prop_id,
+                        device_id=device_id,
+                        property_id=prop_id,
                     )
                     _LOGGER.debug(
                         "Refreshed property %s for device %s: %s",
@@ -514,7 +522,10 @@ class MultiLevelRefreshManager:
         self._optimizer.request_refresh(device_id, priority=priority)
 
     def refresh_property(
-        self, device_id: str, property_id: str, immediate: bool = False,
+        self,
+        device_id: str,
+        property_id: str,
+        immediate: bool = False,
     ) -> None:
         """Refresh a specific property.
 
@@ -525,7 +536,9 @@ class MultiLevelRefreshManager:
         """
         priority = RefreshPriority.CRITICAL if immediate else RefreshPriority.HIGH
         self._optimizer.request_refresh(
-            device_id, property_ids=[property_id], priority=priority,
+            device_id,
+            property_ids=[property_id],
+            priority=priority,
         )
 
     async def refresh_all_cloud_devices(self) -> None:

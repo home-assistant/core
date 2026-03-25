@@ -116,7 +116,8 @@ class NetworkDetector:
         self._results: list[NetworkDetectionResult] = []
 
     async def detect_network(
-        self, custom_addresses: list[str] | None = None,
+        self,
+        custom_addresses: list[str] | None = None,
     ) -> list[NetworkDetectionResult]:
         """Detect network connectivity.
 
@@ -142,7 +143,9 @@ class NetworkDetector:
             if isinstance(result, Exception):
                 self._results.append(
                     NetworkDetectionResult(
-                        address=addresses[i], success=False, error_message=str(result),
+                        address=addresses[i],
+                        success=False,
+                        error_message=str(result),
                     ),
                 )
             elif isinstance(result, NetworkDetectionResult):
@@ -178,7 +181,9 @@ class NetworkDetector:
                 # Parse latency from output
                 latency = self._parse_ping_latency(stdout.decode())
                 return NetworkDetectionResult(
-                    address=address, success=True, latency_ms=latency,
+                    address=address,
+                    success=True,
+                    latency_ms=latency,
                 )
             return NetworkDetectionResult(
                 address=address,
@@ -188,11 +193,15 @@ class NetworkDetector:
 
         except TimeoutError:
             return NetworkDetectionResult(
-                address=address, success=False, error_message="Ping timeout",
+                address=address,
+                success=False,
+                error_message="Ping timeout",
             )
         except Exception as err:  # noqa: BLE001
             return NetworkDetectionResult(
-                address=address, success=False, error_message=str(err),
+                address=address,
+                success=False,
+                error_message=str(err),
             )
 
     async def _detect_http(self, url: str) -> NetworkDetectionResult:
@@ -209,13 +218,16 @@ class NetworkDetector:
                 start_time = asyncio.get_event_loop().time()
 
                 async with session.get(
-                    url, timeout=aiohttp.ClientTimeout(total=5),
+                    url,
+                    timeout=aiohttp.ClientTimeout(total=5),
                 ) as response:
                     latency = (asyncio.get_event_loop().time() - start_time) * 1000
 
                     if response.status < 400:
                         return NetworkDetectionResult(
-                            address=url, success=True, latency_ms=round(latency, 2),
+                            address=url,
+                            success=True,
+                            latency_ms=round(latency, 2),
                         )
                     return NetworkDetectionResult(
                         address=url,
@@ -225,11 +237,15 @@ class NetworkDetector:
 
         except TimeoutError:
             return NetworkDetectionResult(
-                address=url, success=False, error_message="HTTP timeout",
+                address=url,
+                success=False,
+                error_message="HTTP timeout",
             )
         except Exception as err:  # noqa: BLE001
             return NetworkDetectionResult(
-                address=url, success=False, error_message=str(err),
+                address=url,
+                success=False,
+                error_message=str(err),
             )
 
     def _parse_ping_latency(self, output: str) -> float:
@@ -302,7 +318,8 @@ class ConfigFlowEnhanced:
         self._network_detector = NetworkDetector()
 
     async def perform_network_detection(
-        self, custom_addresses: list[str] | None = None,
+        self,
+        custom_addresses: list[str] | None = None,
     ) -> list[NetworkDetectionResult]:
         """Perform network detection.
 

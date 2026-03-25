@@ -22,7 +22,9 @@ class HeimanStorage:
     """Base class for Heiman storage system."""
 
     def __init__(
-        self, root_path: str, loop: asyncio.AbstractEventLoop | None = None,
+        self,
+        root_path: str,
+        loop: asyncio.AbstractEventLoop | None = None,
     ) -> None:
         """Initialize storage.
 
@@ -189,7 +191,10 @@ class AuthTokenStorage(HeimanStorage):
         return auth_data
 
     async def update_access_token(
-        self, user_id: str, access_token: str, expires_in: int,
+        self,
+        user_id: str,
+        access_token: str,
+        expires_in: int,
     ) -> None:
         """Update access token only.
 
@@ -207,7 +212,9 @@ class AuthTokenStorage(HeimanStorage):
             auth_data["updated_at"] = time.time()
 
             await self.save_async(
-                domain="auth_tokens", name=user_id, data={user_id: auth_data},
+                domain="auth_tokens",
+                name=user_id,
+                data={user_id: auth_data},
             )
             _LOGGER.debug("Updated access token for user: %s", user_id)
 
@@ -227,7 +234,10 @@ class UserConfigStorage(HeimanStorage):
     """Storage for user configurations."""
 
     async def save_user_config(
-        self, uid: str, cloud_server: str, config: dict[str, Any],
+        self,
+        uid: str,
+        cloud_server: str,
+        config: dict[str, Any],
     ) -> None:
         """Save user configuration.
 
@@ -241,7 +251,9 @@ class UserConfigStorage(HeimanStorage):
         _LOGGER.info("Saved user config: %s", config_key)
 
     async def load_user_config(
-        self, uid: str, cloud_server: str,
+        self,
+        uid: str,
+        cloud_server: str,
     ) -> dict[str, Any] | None:
         """Load user configuration.
 
@@ -257,7 +269,10 @@ class UserConfigStorage(HeimanStorage):
         return self.get(config_key)
 
     async def update_user_config(
-        self, uid: str, cloud_server: str, updates: dict[str, Any],
+        self,
+        uid: str,
+        cloud_server: str,
+        updates: dict[str, Any],
     ) -> None:
         """Update user configuration.
 
@@ -273,7 +288,9 @@ class UserConfigStorage(HeimanStorage):
         existing_config.update(updates)
 
         await self.save_async(
-            domain="user_configs", name=config_key, data=existing_config,
+            domain="user_configs",
+            name=config_key,
+            data=existing_config,
         )
         _LOGGER.debug("Updated user config: %s", config_key)
 
@@ -294,7 +311,10 @@ class DeviceCacheStorage(HeimanStorage):
     """Storage for device list caching."""
 
     async def cache_devices(
-        self, home_id: str, devices: dict[str, Any], ttl: int = 3600,
+        self,
+        home_id: str,
+        devices: dict[str, Any],
+        ttl: int = 3600,
     ) -> None:
         """Cache device list.
 
@@ -371,7 +391,10 @@ class LanguageDataStorage(HeimanStorage):
         return self.get(language)
 
     async def get_translation(
-        self, language: str, key: str, default: str | None = None,
+        self,
+        language: str,
+        key: str,
+        default: str | None = None,
     ) -> str | None:
         """Get a translation.
 
@@ -403,7 +426,10 @@ class SpecCacheStorage(HeimanStorage):
     """Storage for device specification caching."""
 
     async def cache_spec(
-        self, product_id: str, spec_data: dict[str, Any], ttl: int = 86400,
+        self,
+        product_id: str,
+        spec_data: dict[str, Any],
+        ttl: int = 86400,
     ) -> None:
         """Cache device specification.
 

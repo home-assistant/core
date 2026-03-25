@@ -38,7 +38,8 @@ async def async_setup_entry(
 
     # Get language preference
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -185,7 +186,8 @@ class HeimanCoverEntity(CoordinatorEntity, CoverEntity):
         # Try to get value from coordinator cache
         if self.coordinator and self.coordinator.device_data:
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             property_id = self._property_info.get("id", "")
             return self.coordinator.device_data.get(device_id, {}).get(property_id)
@@ -196,7 +198,8 @@ class HeimanCoverEntity(CoordinatorEntity, CoverEntity):
         """Return the current position of the cover."""
         if self.coordinator and self.coordinator.device_data:
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             property_id = self._property_info.get("id", "")
             value = self.coordinator.device_data.get(device_id, {}).get(property_id)
@@ -213,7 +216,9 @@ class HeimanCoverEntity(CoordinatorEntity, CoverEntity):
 
         open_value = self._property_info.get("open_value", 100)
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=open_value,
+            device_id=device_id,
+            property_id=property_id,
+            value=open_value,
         )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -223,7 +228,9 @@ class HeimanCoverEntity(CoordinatorEntity, CoverEntity):
 
         close_value = self._property_info.get("close_value", 0)
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=close_value,
+            device_id=device_id,
+            property_id=property_id,
+            value=close_value,
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -233,7 +240,9 @@ class HeimanCoverEntity(CoordinatorEntity, CoverEntity):
 
         stop_value = self._property_info.get("stop_value", 50)
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=stop_value,
+            device_id=device_id,
+            property_id=property_id,
+            value=stop_value,
         )
 
     async def async_set_cover_position(self, position: int, **kwargs: Any) -> None:
@@ -242,5 +251,7 @@ class HeimanCoverEntity(CoordinatorEntity, CoverEntity):
         device_id = self._device_info.get("id") or self._device_info.get("deviceId", "")
 
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=position,
+            device_id=device_id,
+            property_id=property_id,
+            value=position,
         )

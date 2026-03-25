@@ -45,7 +45,8 @@ async def async_setup_entry(
 
     # Get language preference
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -200,7 +201,8 @@ class HeimanLightEntity(CoordinatorEntity, LightEntity):
         """Return if the light is on."""
         if self.coordinator and self.coordinator.device_data:
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             property_id = self._property_info.get("id", "")
             return self.coordinator.device_data.get(device_id, {}).get(property_id)
@@ -211,10 +213,12 @@ class HeimanLightEntity(CoordinatorEntity, LightEntity):
         """Return the brightness."""
         if self.coordinator and self.coordinator.device_data:
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             brightness_property_id = self._property_info.get(
-                "brightness_property_id", "",
+                "brightness_property_id",
+                "",
             )
             if brightness_property_id:
                 value = self.coordinator.device_data.get(device_id, {}).get(
@@ -231,13 +235,16 @@ class HeimanLightEntity(CoordinatorEntity, LightEntity):
 
         # Turn on
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=True,
+            device_id=device_id,
+            property_id=property_id,
+            value=True,
         )
 
         # Set brightness if provided
         if ATTR_BRIGHTNESS in kwargs:
             brightness_property_id = self._property_info.get(
-                "brightness_property_id", "",
+                "brightness_property_id",
+                "",
             )
             if brightness_property_id:
                 await self._cloud_client.mqtt_client.async_write_property(
@@ -249,7 +256,8 @@ class HeimanLightEntity(CoordinatorEntity, LightEntity):
         # Set color temperature if provided
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             color_temp_property_id = self._property_info.get(
-                "color_temp_property_id", "",
+                "color_temp_property_id",
+                "",
             )
             if color_temp_property_id:
                 await self._cloud_client.mqtt_client.async_write_property(
@@ -267,7 +275,9 @@ class HeimanLightEntity(CoordinatorEntity, LightEntity):
                 b = kwargs[ATTR_RGB_COLOR][2]
                 rgb = (r << 16) | (g << 8) | b
                 await self._cloud_client.mqtt_client.async_write_property(
-                    device_id=device_id, property_id=rgb_property_id, value=rgb,
+                    device_id=device_id,
+                    property_id=rgb_property_id,
+                    value=rgb,
                 )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -276,5 +286,7 @@ class HeimanLightEntity(CoordinatorEntity, LightEntity):
         device_id = self._device_info.get("id") or self._device_info.get("deviceId", "")
 
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=False,
+            device_id=device_id,
+            property_id=property_id,
+            value=False,
         )

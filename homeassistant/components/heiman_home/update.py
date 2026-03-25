@@ -42,12 +42,15 @@ async def async_setup_entry(
         devices = devices_dict if isinstance(devices_dict, list) else []
 
     _LOGGER.debug(
-        "Total devices in hass.data[DOMAIN]['devices'][%s]: %s", entry_id, len(devices),
+        "Total devices in hass.data[DOMAIN]['devices'][%s]: %s",
+        entry_id,
+        len(devices),
     )
 
     # Get language preference
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -325,7 +328,8 @@ class HeimanUpdateEntity(CoordinatorEntity, UpdateEntity):
         # Try to get latest version from coordinator cache
         if self.coordinator and hasattr(self.coordinator, "get_device_property"):
             latest_version = self.coordinator.get_device_property(
-                device_id, "LatestFirmwareVersion",
+                device_id,
+                "LatestFirmwareVersion",
             )
             if latest_version:
                 latest_ver_str = str(latest_version)
@@ -338,7 +342,8 @@ class HeimanUpdateEntity(CoordinatorEntity, UpdateEntity):
 
                 # Update installed version if we have a newer version
                 if installed_version and self._version_is_newer(
-                    latest_ver_str, installed_version,
+                    latest_ver_str,
+                    installed_version,
                 ):
                     _LOGGER.debug(
                         "Firmware update available for device %s: %s -> %s",
@@ -426,7 +431,10 @@ class HeimanUpdateEntity(CoordinatorEntity, UpdateEntity):
             _LOGGER.exception("Error updating firmware info for %s", self._attr_name)
 
     async def async_install(
-        self, version: str | None, backup: bool, **kwargs: Any,
+        self,
+        version: str | None,
+        backup: bool,
+        **kwargs: Any,
     ) -> None:
         """Install an update.
 

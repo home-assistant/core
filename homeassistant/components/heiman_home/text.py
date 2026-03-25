@@ -37,12 +37,15 @@ async def async_setup_entry(
         devices = devices_dict if isinstance(devices_dict, list) else []
 
     _LOGGER.debug(
-        "Total devices in hass.data[DOMAIN]['devices'][%s]: %s", entry_id, len(devices),
+        "Total devices in hass.data[DOMAIN]['devices'][%s]: %s",
+        entry_id,
+        len(devices),
     )
 
     # Get language preference
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -87,7 +90,9 @@ async def async_setup_entry(
         # Add text entities based on device properties with device config
         text_entities = heiman_device.get_text_entities(devices_config=devices_config)
         _LOGGER.debug(
-            "  Device %s has %s text entities", device_name, len(text_entities),
+            "  Device %s has %s text entities",
+            device_name,
+            len(text_entities),
         )
         entities.extend(text_entities)
 
@@ -282,7 +287,8 @@ class HeimanTextEntity(CoordinatorEntity, TextEntity):
         # Try to get value from coordinator data
         if self.coordinator and hasattr(self.coordinator, "data"):
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             property_id = self._property_info.get("id", "")
             parent_property = self._property_info.get("parent_property")
@@ -312,7 +318,10 @@ class HeimanTextEntity(CoordinatorEntity, TextEntity):
         product_id = self._device_info.get("productId", "")
 
         _LOGGER.debug(
-            "Setting text value for %s: %s = %s", self._attr_name, property_id, value,
+            "Setting text value for %s: %s = %s",
+            self._attr_name,
+            property_id,
+            value,
         )
 
         await self._cloud_client.mqtt_client.async_write_property(

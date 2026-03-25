@@ -42,7 +42,8 @@ async def async_setup_entry(
 
     # Get language preference
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -195,7 +196,8 @@ class HeimanFanEntity(CoordinatorEntity, FanEntity):
         """Return if the fan is on."""
         if self.coordinator and self.coordinator.device_data:
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             property_id = self._property_info.get("id", "")
             return self.coordinator.device_data.get(device_id, {}).get(property_id)
@@ -206,13 +208,15 @@ class HeimanFanEntity(CoordinatorEntity, FanEntity):
         """Return the current percentage of the fan speed."""
         if self.coordinator and self.coordinator.device_data:
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             property_id = self._property_info.get("id", "")
             value = self.coordinator.device_data.get(device_id, {}).get(property_id)
             if value is not None:
                 return ranged_value_to_percentage(
-                    low_high_range=(self._speed_min, self._speed_max), value=value,
+                    low_high_range=(self._speed_min, self._speed_max),
+                    value=value,
                 )
         return None
 
@@ -228,7 +232,9 @@ class HeimanFanEntity(CoordinatorEntity, FanEntity):
 
         # Turn on
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=True,
+            device_id=device_id,
+            property_id=property_id,
+            value=True,
         )
 
         # Set percentage if provided
@@ -240,7 +246,9 @@ class HeimanFanEntity(CoordinatorEntity, FanEntity):
                 ),
             )
             await self._cloud_client.mqtt_client.async_write_property(
-                device_id=device_id, property_id=property_id, value=speed_value,
+                device_id=device_id,
+                property_id=property_id,
+                value=speed_value,
             )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -249,7 +257,9 @@ class HeimanFanEntity(CoordinatorEntity, FanEntity):
         device_id = self._device_info.get("id") or self._device_info.get("deviceId", "")
 
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=False,
+            device_id=device_id,
+            property_id=property_id,
+            value=False,
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -259,12 +269,15 @@ class HeimanFanEntity(CoordinatorEntity, FanEntity):
 
         speed_value = int(
             percentage_to_ranged_value(
-                low_high_range=(self._speed_min, self._speed_max), percentage=percentage,
+                low_high_range=(self._speed_min, self._speed_max),
+                percentage=percentage,
             ),
         )
 
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=speed_value,
+            device_id=device_id,
+            property_id=property_id,
+            value=speed_value,
         )
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -274,5 +287,7 @@ class HeimanFanEntity(CoordinatorEntity, FanEntity):
 
         if property_id:
             await self._cloud_client.mqtt_client.async_write_property(
-                device_id=device_id, property_id=property_id, value=oscillating,
+                device_id=device_id,
+                property_id=property_id,
+                value=oscillating,
             )

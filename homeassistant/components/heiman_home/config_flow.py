@@ -159,7 +159,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Initialize storage
         if not self._storage:
             self._storage = HeimanStorage(
-                root_path=self._storage_path, loop=self._main_loop,
+                root_path=self._storage_path,
+                loop=self._main_loop,
             )
             await self._storage.init_async()
             self.hass.data[DOMAIN]["storage"] = self._storage
@@ -192,7 +193,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._cloud_server = user_input.get("cloud_server", DEFAULT_REGION)
             self._integration_language = user_input.get(
-                "integration_language", DEFAULT_INTEGRATION_LANGUAGE,
+                "integration_language",
+                DEFAULT_INTEGRATION_LANGUAGE,
             )
             # Use fixed secure credentials
             self._secure_id = SECURE_ID
@@ -200,7 +202,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Initialize i18n
             self._i18n = HeimanI18n(
-                language=self._integration_language, loop=self._main_loop,
+                language=self._integration_language,
+                loop=self._main_loop,
             )
             await self._i18n.init_async()
 
@@ -237,10 +240,12 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         cloud_server_options,
                     ),
                     vol.Required(
-                        "integration_language", default=default_language,
+                        "integration_language",
+                        default=default_language,
                     ): vol.In(INTEGRATION_LANGUAGES),
                     vol.Required(
-                        "oauth_redirect_url", default=OAUTH2_REDIRECT_URL,
+                        "oauth_redirect_url",
+                        default=OAUTH2_REDIRECT_URL,
                     ): vol.In([OAUTH2_REDIRECT_URL]),
                 },
             ),
@@ -355,7 +360,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("OAuth Configuration Flow - Token Exchange Step")
         _LOGGER.debug("=" * 80)
         _LOGGER.debug(
-            ">>> Received OAuth code (first 10 chars): %s...", oauth_code[:10],
+            ">>> Received OAuth code (first 10 chars): %s...",
+            oauth_code[:10],
         )
         _LOGGER.debug(">>> Cloud server: %s", self._cloud_server)
         _LOGGER.debug(
@@ -637,7 +643,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             selected_home_ids = user_input.get("home_ids", [])
             self._area_name_rule = user_input.get(
-                "area_name_rule", self.DEFAULT_AREA_NAME_RULE,
+                "area_name_rule",
+                self.DEFAULT_AREA_NAME_RULE,
             )
 
             _LOGGER.info("=" * 80)
@@ -694,7 +701,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     _LOGGER.info("MQTT info response type: %s", type(mqtt_info))
                     _LOGGER.info(
-                        "MQTT info response (first 800 chars): %s", str(mqtt_info)[:800],
+                        "MQTT info response (first 800 chars): %s",
+                        str(mqtt_info)[:800],
                     )
 
                     # Merge devices from this home
@@ -725,7 +733,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             # Set room info from device data
                             room_id = device.get("roomId") or device.get("room_id", "")
                             room_name = device.get("roomName") or device.get(
-                                "room_name", "",
+                                "room_name",
+                                "",
                             )
                             device["room_id"] = room_id
                             device["room_name"] = room_name
@@ -734,7 +743,9 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         all_devices.update(device_dict)
                         total_device_count += total
                         _LOGGER.info(
-                            "Added %s devices from home %s", len(devices), home_id,
+                            "Added %s devices from home %s",
+                            len(devices),
+                            home_id,
                         )
 
                         if total != len(devices):
@@ -780,7 +791,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=self.__get_home_selection_schema(),
             description_placeholders={
                 "nick_name": self._user_info.get(
-                    "nickName", self._user_info.get("username", "User"),
+                    "nickName",
+                    self._user_info.get("username", "User"),
                 ),
             },
             last_step=False,
@@ -807,13 +819,16 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._i18n:
             area_name_rule_options = {
                 AREA_NAME_RULE_NONE: self._i18n.translate(
-                    "config.selector.area_name_rule.options.none", "Do not sync",
+                    "config.selector.area_name_rule.options.none",
+                    "Do not sync",
                 ),
                 AREA_NAME_RULE_ROOM: self._i18n.translate(
-                    "config.selector.area_name_rule.options.room", "Room name",
+                    "config.selector.area_name_rule.options.room",
+                    "Room name",
                 ),
                 AREA_NAME_RULE_HOME: self._i18n.translate(
-                    "config.selector.area_name_rule.options.home", "Home name",
+                    "config.selector.area_name_rule.options.home",
+                    "Home name",
                 ),
                 AREA_NAME_RULE_HOME_ROOM: self._i18n.translate(
                     "config.selector.area_name_rule.options.home_room",
@@ -834,7 +849,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required("home_ids", default=[]): cv.multi_select({}),
                     vol.Required(
-                        "area_name_rule", default=self._area_name_rule,
+                        "area_name_rule",
+                        default=self._area_name_rule,
                     ): vol.In(area_name_rule_options),
                 },
             )
@@ -938,14 +954,16 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         skip_all_text = (
             self._i18n.translate(
-                "config.device_config.action.skip_all", "Skip and finish",
+                "config.device_config.action.skip_all",
+                "Skip and finish",
             )
             if self._i18n
             else "Skip"
         )
         remaining_devices_text = (
             self._i18n.translate(
-                "config.device_config.remaining_devices", "devices remaining",
+                "config.device_config.remaining_devices",
+                "devices remaining",
             )
             if self._i18n
             else "devices"
@@ -1074,7 +1092,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return "No homes selected"
 
         selected_home_ids = self._auth_info.get(
-            "home_ids", [self._auth_info.get("home_id")],
+            "home_ids",
+            [self._auth_info.get("home_id")],
         )
 
         if not selected_home_ids or selected_home_ids == [None]:
@@ -1110,7 +1129,8 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "user_id": self._user_id,
             "home_id": self._auth_info.get("home_id"),
             "home_ids": self._auth_info.get(
-                "home_ids", [self._auth_info.get("home_id")],
+                "home_ids",
+                [self._auth_info.get("home_id")],
             ),
             "secure_id": self._secure_id,
             "secure_key": self._secure_key,
@@ -1141,18 +1161,21 @@ class HeimanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._update_entry_on_finish.entry_id,
             )
             self.hass.config_entries.async_update_entry(
-                self._update_entry_on_finish, data=data,
+                self._update_entry_on_finish,
+                data=data,
             )
             # Reload the entry to apply changes
             await self.hass.config_entries.async_reload(
                 self._update_entry_on_finish.entry_id,
             )
             return self.async_create_entry(
-                title=f"Heiman Home - {user_display_name}", data=data,
+                title=f"Heiman Home - {user_display_name}",
+                data=data,
             )
 
         return self.async_create_entry(
-            title=f"Heiman Home - {user_display_name}", data=data,
+            title=f"Heiman Home - {user_display_name}",
+            data=data,
         )
 
     @staticmethod
@@ -1179,7 +1202,9 @@ async def _handle_oauth_webhook(hass, webhook_id, request):
         if "error" in data:
             error_desc = data.get("error_description", "Unknown error")
             _LOGGER.error(
-                "OAuth error from provider: %s - %s", data["error"], error_desc,
+                "OAuth error from provider: %s - %s",
+                data["error"],
+                error_desc,
             )
             _raise_webhook_config_error(
                 f"OAuth error: {data['error']} - {error_desc}",
@@ -1193,7 +1218,8 @@ async def _handle_oauth_webhook(hass, webhook_id, request):
                 "present" if data.get("state") else "missing",
             )
             _raise_webhook_config_error(
-                "invalid oauth code or state", HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
+                "invalid oauth code or state",
+                HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
             )
 
         # Verify state parameter
@@ -1228,7 +1254,8 @@ async def _handle_oauth_webhook(hass, webhook_id, request):
                 body=await oauth_redirect_page(
                     title=success_trans.get("title", "Authentication Successful"),
                     content=success_trans.get(
-                        "content", "Please close this page and return to Home Assistant",
+                        "content",
+                        "Please close this page and return to Home Assistant",
                     ),
                     button=success_trans.get("button", "Close Page"),
                     success=True,
@@ -1254,7 +1281,8 @@ async def _handle_oauth_webhook(hass, webhook_id, request):
             body=await oauth_redirect_page(
                 title=success_trans.get("title", "Authentication Successful"),
                 content=success_trans.get(
-                    "content", "Please close this page and return to Home Assistant",
+                    "content",
+                    "Please close this page and return to Home Assistant",
                 ),
                 button=success_trans.get("button", "Close Page"),
                 success=True,
@@ -1313,7 +1341,8 @@ class HeimanOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        "home_id", default=self._entry_data.get("home_id"),
+                        "home_id",
+                        default=self._entry_data.get("home_id"),
                     ): str,
                 },
             ),

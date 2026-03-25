@@ -190,7 +190,10 @@ class HeimanI18n:
         # No actual async cleanup needed
 
     def translate(
-        self, category: str = "", key: str = "", default: str | None = None,
+        self,
+        category: str = "",
+        key: str = "",
+        default: str | None = None,
     ) -> dict | None | str:
         """Translate a key or get a nested translation dictionary.
 
@@ -279,7 +282,9 @@ class HeimanI18n:
         return self.translate_status("rssi_very_poor") or "Very Poor"
 
     def format_property_name(
-        self, property_name: str, device_name: str | None = None,
+        self,
+        property_name: str,
+        device_name: str | None = None,
     ) -> str:
         """Format a property name for display."""
         translated = self.translate_property(property_name)
@@ -288,7 +293,9 @@ class HeimanI18n:
         return translated
 
     def format_device_name(
-        self, device_name: str, device_type: str | None = None,
+        self,
+        device_name: str,
+        device_type: str | None = None,
     ) -> str:
         """Format a device name for display."""
         if device_type:

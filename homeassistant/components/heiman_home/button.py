@@ -29,21 +29,24 @@ async def async_setup_entry(
 
         _LOGGER.debug("=" * 80)
         _LOGGER.debug(
-            "BUTTON PLATFORM: Starting async_setup_entry for entry: %s", entry_id,
+            "BUTTON PLATFORM: Starting async_setup_entry for entry: %s",
+            entry_id,
         )
         _LOGGER.debug("=" * 80)
 
         # Check if DOMAIN data exists
         if DOMAIN not in hass.data:
             _LOGGER.error(
-                "BUTTON PLATFORM ERROR: DOMAIN %s not found in hass.data", DOMAIN,
+                "BUTTON PLATFORM ERROR: DOMAIN %s not found in hass.data",
+                DOMAIN,
             )
             return False
 
         # Check if devices data exists
         if "devices" not in hass.data[DOMAIN]:
             _LOGGER.error(
-                "BUTTON PLATFORM ERROR: 'devices' not found in hass.data[%s]", DOMAIN,
+                "BUTTON PLATFORM ERROR: 'devices' not found in hass.data[%s]",
+                DOMAIN,
             )
             return False
 
@@ -63,7 +66,8 @@ async def async_setup_entry(
 
         # Get language preference
         language = config_entry.options.get(
-            "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+            "language",
+            config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
         )
         i18n = get_i18n(language)
 
@@ -194,7 +198,8 @@ async def async_setup_entry(
                 return False
         else:
             _LOGGER.debug(
-                "BUTTON PLATFORM: No button entities to add for entry %s", entry_id,
+                "BUTTON PLATFORM: No button entities to add for entry %s",
+                entry_id,
             )
 
         _LOGGER.debug(

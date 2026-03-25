@@ -43,12 +43,15 @@ async def async_setup_entry(
         devices = devices_dict if isinstance(devices_dict, list) else []
 
     _LOGGER.info(
-        "Total devices in hass.data[DOMAIN]['devices'][%s]: %s", entry_id, len(devices),
+        "Total devices in hass.data[DOMAIN]['devices'][%s]: %s",
+        entry_id,
+        len(devices),
     )
 
     # Get language preference
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -95,7 +98,9 @@ async def async_setup_entry(
             devices_config=devices_config,
         )
         _LOGGER.debug(
-            "  Device %s has %s sensor entities", device_name, len(sensor_entities),
+            "  Device %s has %s sensor entities",
+            device_name,
+            len(sensor_entities),
         )
         entities.extend(sensor_entities)
 
@@ -193,7 +198,9 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
         if sw_version:
             device_info_dict["sw_version"] = sw_version
             _LOGGER.debug(
-                "Added firmware version %s to device info for %s", sw_version, device_id,
+                "Added firmware version %s to device info for %s",
+                sw_version,
+                device_id,
             )
 
         # Add suggested_area from device config
@@ -478,7 +485,8 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
             # Get parent property value from coordinator cache
             if self.coordinator and hasattr(self.coordinator, "get_device_property"):
                 parent_value = self.coordinator.get_device_property(
-                    device_id, parent_property,
+                    device_id,
+                    parent_property,
                 )
 
                 if parent_value is not None:
@@ -546,7 +554,9 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
         # This is for properties that map directly to device info fields
         if json_field and not parent_property:
             _LOGGER.debug(
-                "Processing direct device field %s: field=%s", property_name, json_field,
+                "Processing direct device field %s: field=%s",
+                property_name,
+                json_field,
             )
 
             # Try common device info field names
@@ -583,7 +593,9 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
                     return True
 
             _LOGGER.debug(
-                "Field %s not found in device info for %s", json_field, property_name,
+                "Field %s not found in device info for %s",
+                json_field,
+                property_name,
             )
             return False
 
@@ -591,7 +603,8 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
         # Get property value from coordinator cache
         if self.coordinator and hasattr(self.coordinator, "get_device_property"):
             cached_value = self.coordinator.get_device_property(
-                device_id, property_name,
+                device_id,
+                property_name,
             )
 
             # Special handling for RSSI_Level - convert RSSI raw value to signal strength level
@@ -677,7 +690,9 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
                 )
         except (ValueError, TypeError) as err:
             _LOGGER.warning(
-                "Failed to convert DBM value %s to signal level: %s", dbm_value, err,
+                "Failed to convert DBM value %s to signal level: %s",
+                dbm_value,
+                err,
             )
             return False
         else:
@@ -782,7 +797,9 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
 
         try:
             result = await self._cloud_client.async_read_device_property(
-                product_id=product_id, device_id=device_id, property_name=property_name,
+                product_id=product_id,
+                device_id=device_id,
+                property_name=property_name,
             )
             if result and "value" in result:
                 self._attr_native_value = result["value"]
@@ -828,13 +845,16 @@ class HeimanSensorEntity(CoordinatorEntity, SensorEntity):
             # Only write state if cache update was successful (value changed)
             if self._update_from_cache():
                 _LOGGER.debug(
-                    "Sensor %s updated from coordinator (MQTT)", self._attr_name,
+                    "Sensor %s updated from coordinator (MQTT)",
+                    self._attr_name,
                 )
                 # Write the new state to Home Assistant immediately
                 self.async_write_ha_state()
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
-                "Error handling coordinator update for %s: %s", self._attr_name, err,
+                "Error handling coordinator update for %s: %s",
+                self._attr_name,
+                err,
             )
 
 
@@ -939,7 +959,8 @@ class HeimanActivitySensor(CoordinatorEntity, SensorEntity):
         try:
             # Get device ID from various possible fields
             device_id = self._device_info.get("id") or self._device_info.get(
-                "deviceId", "",
+                "deviceId",
+                "",
             )
             home_id = self._device_info.get("homeId") or self._cloud_client.home_id
             _LOGGER.info("Initial alarm fetch for device %s", device_id)
@@ -968,11 +989,15 @@ class HeimanActivitySensor(CoordinatorEntity, SensorEntity):
             else:
                 self._attr_native_value = self._i18n.translate_alarm("no_records")
             _LOGGER.info(
-                "Device %s initial alarm loaded: %s", device_id, self._attr_native_value,
+                "Device %s initial alarm loaded: %s",
+                device_id,
+                self._attr_native_value,
             )
 
         except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Failed to update activity sensor %s: %s", self._attr_name, err)
+            _LOGGER.error(
+                "Failed to update activity sensor %s: %s", self._attr_name, err
+            )
             self._attr_native_value = self._i18n.translate_alarm("fetch_failed")
 
     def _format_alarm_summary(self, alarm: dict) -> str:
@@ -1113,7 +1138,8 @@ class HeimanActivitySensor(CoordinatorEntity, SensorEntity):
         await super().async_added_to_hass()
 
         _LOGGER.info(
-            "Activity sensor %s added to HA, starting initialization", self._device_id,
+            "Activity sensor %s added to HA, starting initialization",
+            self._device_id,
         )
 
         # Fetch alarms once during initialization
@@ -1131,7 +1157,8 @@ class HeimanActivitySensor(CoordinatorEntity, SensorEntity):
                 callback=self._on_event_received,
             )
             _LOGGER.info(
-                "Event callback registered successfully for device %s", self._device_id,
+                "Event callback registered successfully for device %s",
+                self._device_id,
             )
         else:
             _LOGGER.warning(
@@ -1192,7 +1219,9 @@ class HeimanActivitySensor(CoordinatorEntity, SensorEntity):
         try:
             home_id = self._device_info.get("homeId") or self._cloud_client.home_id
             _LOGGER.info(
-                "Fetching alarms for device %s, home_id=%s", self._device_id, home_id,
+                "Fetching alarms for device %s, home_id=%s",
+                self._device_id,
+                home_id,
             )
             result = await self._cloud_client.async_get_device_alarms(
                 device_id=self._device_id,
@@ -1208,7 +1237,9 @@ class HeimanActivitySensor(CoordinatorEntity, SensorEntity):
             if result and isinstance(result, dict):
                 alarms = result.get("data", [])
                 _LOGGER.info(
-                    "Got %d alarms for device %s", len(alarms), self._device_id,
+                    "Got %d alarms for device %s",
+                    len(alarms),
+                    self._device_id,
                 )
                 if isinstance(alarms, list) and alarms:
                     self._alarms_cache = alarms
@@ -1225,11 +1256,14 @@ class HeimanActivitySensor(CoordinatorEntity, SensorEntity):
                     _LOGGER.info("No alarms found for device %s", self._device_id)
             else:
                 _LOGGER.warning(
-                    "Invalid result format for device %s: %s", self._device_id, result,
+                    "Invalid result format for device %s: %s",
+                    self._device_id,
+                    result,
                 )
         except Exception:
             _LOGGER.exception(
-                "Failed to refresh alarms for device %s", self._device_id,
+                "Failed to refresh alarms for device %s",
+                self._device_id,
             )
 
     @callback

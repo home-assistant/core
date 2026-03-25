@@ -69,7 +69,8 @@ class HeimanOauthClient:
         self._auth_url = region_config.get("oauth_auth_url", OAUTH2_AUTH_URL)
         self._token_url = region_config.get("oauth_token_url", OAUTH2_TOKEN_URL)
         self._userinfo_url = region_config.get(
-            "oauth_userinfo_url", OAUTH2_USERINFO_URL,
+            "oauth_userinfo_url",
+            OAUTH2_USERINFO_URL,
         )
 
         # HTTP session
@@ -115,7 +116,8 @@ class HeimanOauthClient:
         """
         if not isinstance(redirect_url, str) or not redirect_url.strip():
             raise HeimanError(
-                "invalid redirect_url", HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
+                "invalid redirect_url",
+                HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
             )
         self._redirect_url = redirect_url
 
@@ -194,7 +196,8 @@ class HeimanOauthClient:
             _LOGGER.debug("<<< OAuth Token Response - Status: %d", http_res.status)
             _LOGGER.debug("<<< OAuth Token Response - Body: %s", res_str)
             _LOGGER.debug(
-                "<<< OAuth Token Response - Headers: %s", dict(http_res.headers),
+                "<<< OAuth Token Response - Headers: %s",
+                dict(http_res.headers),
             )
 
             if http_res.status == 401:
@@ -205,7 +208,8 @@ class HeimanOauthClient:
                     data.get("client_id"),
                 )
                 _raise_heiman_error(
-                    "unauthorized(401)", HeimanErrorCode.CODE_OAUTH_UNAUTHORIZED,
+                    "unauthorized(401)",
+                    HeimanErrorCode.CODE_OAUTH_UNAUTHORIZED,
                 )
             if http_res.status == 404:
                 _LOGGER.error("OAuth token endpoint not found (404)")
@@ -273,20 +277,23 @@ class HeimanOauthClient:
         except json.JSONDecodeError as err:
             _LOGGER.error("JSON decode error: %s", err)
             raise HeimanError(
-                f"json decode error: {err}", HeimanErrorCode.CODE_JSON_DECODE_ERROR,
+                f"json decode error: {err}",
+                HeimanErrorCode.CODE_JSON_DECODE_ERROR,
             ) from err
         except aiohttp.ClientConnectorError as err:
             _LOGGER.error("HTTP connection error: %s", err)
             _LOGGER.error("Cannot connect to token server: %s", self._token_url)
             _LOGGER.error("Please check your network connection")
             raise HeimanError(
-                f"connection error: {err}", HeimanErrorCode.CODE_HTTP_ERROR,
+                f"connection error: {err}",
+                HeimanErrorCode.CODE_HTTP_ERROR,
             ) from err
         except aiohttp.ServerTimeoutError as err:
             _LOGGER.error("HTTP timeout error: %s", err)
             _LOGGER.error("API request timeout")
             raise HeimanError(
-                f"timeout error: {err}", HeimanErrorCode.CODE_HTTP_ERROR,
+                f"timeout error: {err}",
+                HeimanErrorCode.CODE_HTTP_ERROR,
             ) from err
         except aiohttp.ClientError as err:
             _LOGGER.error("HTTP client error: %s", type(err).__name__)
@@ -297,7 +304,8 @@ class HeimanOauthClient:
             ) from err
         except Exception as err:
             _LOGGER.error(
-                "Unexpected error during token exchange: %s", type(err).__name__,
+                "Unexpected error during token exchange: %s",
+                type(err).__name__,
             )
             _LOGGER.error("Error details: %s", str(err))
             raise HeimanError(
@@ -326,7 +334,8 @@ class HeimanOauthClient:
         if not isinstance(code, str) or not code.strip():
             _LOGGER.error("Invalid authorization code: empty or not a string")
             raise HeimanError(
-                "invalid authorization code", HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
+                "invalid authorization code",
+                HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
             )
 
         _LOGGER.debug(">>> Authorization code (first 10 chars): %s...", code[:10])
@@ -379,7 +388,8 @@ class HeimanOauthClient:
         if not isinstance(refresh_token, str) or not refresh_token.strip():
             _LOGGER.error("Invalid refresh token: empty or not a string")
             raise HeimanError(
-                "invalid refresh token", HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
+                "invalid refresh token",
+                HeimanErrorCode.CODE_CONFIG_INVALID_INPUT,
             )
 
         _LOGGER.debug(">>> Refresh token (first 10 chars): %s...", refresh_token[:10])
@@ -505,7 +515,8 @@ class HeimanHttpClient:
 
             if http_res.status == 401:
                 _raise_heiman_error(
-                    "unauthorized(401)", HeimanErrorCode.CODE_HTTP_UNAUTHORIZED,
+                    "unauthorized(401)",
+                    HeimanErrorCode.CODE_HTTP_UNAUTHORIZED,
                 )
             if http_res.status != 200:
                 _raise_heiman_error(
@@ -531,7 +542,10 @@ class HeimanHttpClient:
                     res_obj.get("msg") or res_obj.get("message") or "unknown error"
                 )
                 _LOGGER.error(
-                    "API error: %s, path: %s, params: %s", error_msg, path, params,
+                    "API error: %s, path: %s, params: %s",
+                    error_msg,
+                    path,
+                    params,
                 )
                 _LOGGER.error(
                     "API response - status: %s, msg: %s, message: %s",
@@ -540,7 +554,8 @@ class HeimanHttpClient:
                     res_obj.get("message"),
                 )
                 _raise_heiman_error(
-                    f"api error: {error_msg}", HeimanErrorCode.CODE_API_ERROR,
+                    f"api error: {error_msg}",
+                    HeimanErrorCode.CODE_API_ERROR,
                 )
 
             _LOGGER.debug("API GET success: %s", path)
@@ -549,20 +564,23 @@ class HeimanHttpClient:
         except json.JSONDecodeError as err:
             _LOGGER.error("JSON decode error: %s", err)
             raise HeimanError(
-                f"json decode error: {err}", HeimanErrorCode.CODE_JSON_DECODE_ERROR,
+                f"json decode error: {err}",
+                HeimanErrorCode.CODE_JSON_DECODE_ERROR,
             ) from err
         except aiohttp.ClientConnectorError as err:
             _LOGGER.error("HTTP connection error: %s", err)
             _LOGGER.error("Cannot connect to token server: %s", self._token_url)
             _LOGGER.error("Please check your network connection")
             raise HeimanError(
-                f"connection error: {err}", HeimanErrorCode.CODE_HTTP_ERROR,
+                f"connection error: {err}",
+                HeimanErrorCode.CODE_HTTP_ERROR,
             ) from err
         except aiohttp.ServerTimeoutError as err:
             _LOGGER.error("HTTP timeout error: %s", err)
             _LOGGER.error("API request timeout")
             raise HeimanError(
-                f"timeout error: {err}", HeimanErrorCode.CODE_HTTP_ERROR,
+                f"timeout error: {err}",
+                HeimanErrorCode.CODE_HTTP_ERROR,
             ) from err
         except aiohttp.ClientError as err:
             _LOGGER.error("HTTP client error: %s", type(err).__name__)
@@ -573,7 +591,8 @@ class HeimanHttpClient:
             ) from err
         except Exception as err:
             _LOGGER.error(
-                "Unexpected error during token exchange: %s", type(err).__name__,
+                "Unexpected error during token exchange: %s",
+                type(err).__name__,
             )
             _LOGGER.error("Error details: %s", str(err))
             raise HeimanError(
@@ -627,7 +646,8 @@ class HeimanHttpClient:
 
             if http_res.status == 401:
                 _raise_heiman_error(
-                    "unauthorized(401)", HeimanErrorCode.CODE_HTTP_UNAUTHORIZED,
+                    "unauthorized(401)",
+                    HeimanErrorCode.CODE_HTTP_UNAUTHORIZED,
                 )
             if http_res.status != 200:
                 _raise_heiman_error(
@@ -653,7 +673,10 @@ class HeimanHttpClient:
                     res_obj.get("msg") or res_obj.get("message") or "unknown error"
                 )
                 _LOGGER.error(
-                    "API error: %s, path: %s, data: %s", error_msg, path, data,
+                    "API error: %s, path: %s, data: %s",
+                    error_msg,
+                    path,
+                    data,
                 )
                 _LOGGER.error(
                     "API response - code: %s, status: %s, msg: %s, message: %s",
@@ -663,7 +686,8 @@ class HeimanHttpClient:
                     res_obj.get("message"),
                 )
                 _raise_heiman_error(
-                    f"api error: {error_msg}", HeimanErrorCode.CODE_API_ERROR,
+                    f"api error: {error_msg}",
+                    HeimanErrorCode.CODE_API_ERROR,
                 )
 
             _LOGGER.debug("API POST success: %s", path)
@@ -672,20 +696,23 @@ class HeimanHttpClient:
         except json.JSONDecodeError as err:
             _LOGGER.error("JSON decode error: %s", err)
             raise HeimanError(
-                f"json decode error: {err}", HeimanErrorCode.CODE_JSON_DECODE_ERROR,
+                f"json decode error: {err}",
+                HeimanErrorCode.CODE_JSON_DECODE_ERROR,
             ) from err
         except aiohttp.ClientConnectorError as err:
             _LOGGER.error("HTTP connection error: %s", err)
             _LOGGER.error("Cannot connect to token server: %s", self._token_url)
             _LOGGER.error("Please check your network connection")
             raise HeimanError(
-                f"connection error: {err}", HeimanErrorCode.CODE_HTTP_ERROR,
+                f"connection error: {err}",
+                HeimanErrorCode.CODE_HTTP_ERROR,
             ) from err
         except aiohttp.ServerTimeoutError as err:
             _LOGGER.error("HTTP timeout error: %s", err)
             _LOGGER.error("API request timeout")
             raise HeimanError(
-                f"timeout error: {err}", HeimanErrorCode.CODE_HTTP_ERROR,
+                f"timeout error: {err}",
+                HeimanErrorCode.CODE_HTTP_ERROR,
             ) from err
         except aiohttp.ClientError as err:
             _LOGGER.error("HTTP client error: %s", type(err).__name__)
@@ -696,7 +723,8 @@ class HeimanHttpClient:
             ) from err
         except Exception as err:
             _LOGGER.error(
-                "Unexpected error during token exchange: %s", type(err).__name__,
+                "Unexpected error during token exchange: %s",
+                type(err).__name__,
             )
             _LOGGER.error("Error details: %s", str(err))
             raise HeimanError(
@@ -739,11 +767,15 @@ class HeimanHttpClient:
         """
         _LOGGER.debug("Getting homes list for user: %s", user_id)
         return await self._api_post_async(
-            "/api-app/homeUserRelation/get/homeList", data={"userId": user_id},
+            "/api-app/homeUserRelation/get/homeList",
+            data={"userId": user_id},
         )
 
     async def get_devices_async(
-        self, home_id: str, user_id: str, secure_id: str,
+        self,
+        home_id: str,
+        user_id: str,
+        secure_id: str,
     ) -> dict:
         """Get devices in a home.
 
@@ -836,7 +868,8 @@ class HeimanHttpClient:
         }
 
         return await self._api_post_async(
-            "/api-app/device/get/listByPage", data=request_data,
+            "/api-app/device/get/listByPage",
+            data=request_data,
         )
 
     async def get_device_info_async(self, device_id: str) -> dict:
@@ -853,5 +886,6 @@ class HeimanHttpClient:
         """
         _LOGGER.debug("Getting device info: %s", device_id)
         return await self._api_post_async(
-            "/api-app/device/get/info", data={"deviceId": device_id},
+            "/api-app/device/get/info",
+            data={"deviceId": device_id},
         )

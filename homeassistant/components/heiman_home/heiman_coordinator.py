@@ -66,10 +66,12 @@ class HeimanCoordinator(DataUpdateCoordinator):
         self._devices: dict[str, dict[str, Any]] = {}
         self._alarms: dict[str, list[dict]] = {}  # Cache for device alarms
         self._properties_cache: dict[
-            str, dict[str, Any],
+            str,
+            dict[str, Any],
         ] = {}  # Cache for device properties: {device_id: {prop_name: value}}
         self._device_property_names: dict[
-            str, list[str],
+            str,
+            list[str],
         ] = {}  # Cache for device property names: {device_id: [prop_names]}
         self._refresh_manager: MultiLevelRefreshManager | None = None
         self._last_notify_time = 0.0  # Track last notification time for debouncing
@@ -182,7 +184,10 @@ class HeimanCoordinator(DataUpdateCoordinator):
         self._schedule_refresh()
 
     def update_device_property(
-        self, device_id: str, property_name: str, value: Any,
+        self,
+        device_id: str,
+        property_name: str,
+        value: Any,
     ) -> None:
         """Update a single device property in cache.
 
@@ -204,7 +209,9 @@ class HeimanCoordinator(DataUpdateCoordinator):
         self._schedule_refresh()
 
     def update_device_properties(
-        self, device_id: str, properties: dict[str, Any],
+        self,
+        device_id: str,
+        properties: dict[str, Any],
     ) -> None:
         """Update multiple device properties in cache.
 
@@ -248,7 +255,9 @@ class HeimanCoordinator(DataUpdateCoordinator):
             )
 
     def register_device_properties(
-        self, device_id: str, property_names: list[str],
+        self,
+        device_id: str,
+        property_names: list[str],
     ) -> None:
         """注册设备的属性名称列表，用于批量获取。.
 
@@ -309,7 +318,8 @@ class HeimanCoordinator(DataUpdateCoordinator):
                     self._devices = await self._cloud_client.async_get_devices()
                     device_count = len(self._devices)
                     _LOGGER.info(
-                        "Fetched %s devices from cloud (fallback)", device_count,
+                        "Fetched %s devices from cloud (fallback)",
+                        device_count,
                     )
 
                 # 2. 从设备列表的 deriveMetadata 中提取属性值填充缓存
@@ -373,7 +383,8 @@ class HeimanCoordinator(DataUpdateCoordinator):
                 derive_metadata_str = result.get("deriveMetadata", "")
                 if not derive_metadata_str:
                     _LOGGER.debug(
-                        "No deriveMetadata in response for device %s", device_id,
+                        "No deriveMetadata in response for device %s",
+                        device_id,
                     )
                     continue
 
@@ -554,7 +565,8 @@ class HeimanCoordinator(DataUpdateCoordinator):
         processed_devices = 0
 
         _LOGGER.info(
-            "Extracting properties from device list: %s devices", total_devices,
+            "Extracting properties from device list: %s devices",
+            total_devices,
         )
 
         for device_id, device_info in self._devices.items():
@@ -712,7 +724,9 @@ class HeimanCoordinator(DataUpdateCoordinator):
             try:
                 _LOGGER.info("Fetching alarms for device %s", device_id)
                 result = await self._cloud_client.async_get_device_alarms(
-                    device_id=device_id, page_size=page_size, page_number=page_number,
+                    device_id=device_id,
+                    page_size=page_size,
+                    page_number=page_number,
                 )
                 # Cache the result
                 self._alarms[cache_key] = result
@@ -765,7 +779,8 @@ class HeimanCoordinator(DataUpdateCoordinator):
             # Query topology via MQTT
             _LOGGER.info("Querying child devices for gateway %s", gateway_device_id)
             topology_result = await self._mqtt_client.async_query_topology(
-                product_id=product_id, device_id=gateway_device_id,
+                product_id=product_id,
+                device_id=gateway_device_id,
             )
 
             if not topology_result:

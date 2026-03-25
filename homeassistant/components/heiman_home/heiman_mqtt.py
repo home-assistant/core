@@ -53,7 +53,11 @@ class HeimanMqttClient:
     """Enhanced Heiman MQTT client with full event support."""
 
     def __init__(
-        self, hass, cloud_client, entry_id: str, config: dict | None = None,
+        self,
+        hass,
+        cloud_client,
+        entry_id: str,
+        config: dict | None = None,
     ) -> None:
         """Initialize MQTT client."""
         if not PAHO_AVAILABLE:
@@ -113,7 +117,9 @@ class HeimanMqttClient:
 
         # Get user display name for device control payload (nickName优先，否则email)
         self._user_display_name = self._cloud_client.user_display_name
-        _LOGGER.debug(">>> User Display Name for device control: %s", self._user_display_name)
+        _LOGGER.debug(
+            ">>> User Display Name for device control: %s", self._user_display_name
+        )
 
         _LOGGER.debug(">>> Using secure_id: %s", self._secure_id)
         _LOGGER.debug(">>> Using secure_key length: %s", len(self._secure_key))
@@ -144,8 +150,14 @@ class HeimanMqttClient:
 
         # Log authentication info (sanitized)
         _LOGGER.info(">>> Authentication:")
-        _LOGGER.info(">>>   Client ID (first 30 chars): %s", (self._client_id[:30] if self._client_id else "None") + "...")
-        _LOGGER.info(">>>   Client ID length: %s", (len(self._client_id) if self._client_id else 0))
+        _LOGGER.info(
+            ">>>   Client ID (first 30 chars): %s",
+            (self._client_id[:30] if self._client_id else "None") + "...",
+        )
+        _LOGGER.info(
+            ">>>   Client ID length: %s",
+            (len(self._client_id) if self._client_id else 0),
+        )
         _LOGGER.info(">>>   Username: %s", self._username)
         _LOGGER.info(">>>   Password (MD5): %s", self._password)
         _LOGGER.info(">>>   Secure ID: %s", self._secure_id)
@@ -208,10 +220,14 @@ class HeimanMqttClient:
                 addr_info = socket.getaddrinfo(self._broker, self._port)
                 if addr_info:
                     results["dns_resolution"] = True
-                    _LOGGER.debug(">>> DNS resolved successfully: %s", addr_info[0][4][0])
+                    _LOGGER.debug(
+                        ">>> DNS resolved successfully: %s", addr_info[0][4][0]
+                    )
 
                 # Check TCP connection
-                _LOGGER.debug(">>> Checking TCP connection to %s:%s", self._broker, self._port)
+                _LOGGER.debug(
+                    ">>> Checking TCP connection to %s:%s", self._broker, self._port
+                )
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(5)
                 result = sock.connect_ex((self._broker, self._port))
@@ -219,7 +235,9 @@ class HeimanMqttClient:
                     results["tcp_connection"] = True
                     _LOGGER.debug(">>> TCP connection successful")
                 else:
-                    _LOGGER.debug(">>> TCP connection failed with error code: %s", result)
+                    _LOGGER.debug(
+                        ">>> TCP connection failed with error code: %s", result
+                    )
                 sock.close()
 
                 # Check SSL handshake for SSL ports
@@ -231,10 +249,12 @@ class HeimanMqttClient:
                         context = ssl.create_default_context()
                         with (
                             socket.create_connection(
-                                (self._broker, self._port), timeout=5,
+                                (self._broker, self._port),
+                                timeout=5,
                             ) as sock,
                             context.wrap_socket(
-                                sock, server_hostname=self._broker,
+                                sock,
+                                server_hostname=self._broker,
                             ) as ssock,
                         ):
                             results["ssl_handshake"] = True
@@ -266,13 +286,21 @@ class HeimanMqttClient:
             _LOGGER.info("=" * 80)
             _LOGGER.info(">>> MQTT Broker: %s", self._broker)
             _LOGGER.info(">>> MQTT Port: %s", self._port)
-            _LOGGER.info(">>> Client ID (first 20 chars): %s", (self._client_id[:20] if self._client_id else "None") + "...")
+            _LOGGER.info(
+                ">>> Client ID (first 20 chars): %s",
+                (self._client_id[:20] if self._client_id else "None") + "...",
+            )
             _LOGGER.info(">>> Username: %s", self._username)
-            _LOGGER.info(">>> Password (first 8 chars): %s", (self._password[:8] if self._password else "None") + "...")
+            _LOGGER.info(
+                ">>> Password (first 8 chars): %s",
+                (self._password[:8] if self._password else "None") + "...",
+            )
 
             # Create MQTT client
             self._client = mqtt.Client(
-                client_id=self._client_id, protocol=mqtt.MQTTv311, transport="tcp",
+                client_id=self._client_id,
+                protocol=mqtt.MQTTv311,
+                transport="tcp",
             )
 
             # Enable SSL/TLS for SSL port (1884)
@@ -306,9 +334,15 @@ class HeimanMqttClient:
             # Network diagnostics before connection
             _LOGGER.info(">>> Running network diagnostics...")
             net_results = await self._check_network_connectivity()
-            _LOGGER.info(">>> DNS Resolution: %s", "✓" if net_results["dns_resolution"] else "✗")
-            _LOGGER.info(">>> TCP Connection: %s", "✓" if net_results["tcp_connection"] else "✗")
-            _LOGGER.info(">>> SSL Handshake: %s", "✓" if net_results["ssl_handshake"] else "✗")
+            _LOGGER.info(
+                ">>> DNS Resolution: %s", "✓" if net_results["dns_resolution"] else "✗"
+            )
+            _LOGGER.info(
+                ">>> TCP Connection: %s", "✓" if net_results["tcp_connection"] else "✗"
+            )
+            _LOGGER.info(
+                ">>> SSL Handshake: %s", "✓" if net_results["ssl_handshake"] else "✗"
+            )
 
             if not net_results["dns_resolution"]:
                 _LOGGER.warning(">>> DNS resolution failed - check broker hostname")
@@ -333,11 +367,16 @@ class HeimanMqttClient:
             for i in range(total_checks):
                 if self._connected:
                     elapsed_time = (i + 1) * check_interval
-                    _LOGGER.info(">>> MQTT connected successfully after %.1f seconds", elapsed_time)
+                    _LOGGER.info(
+                        ">>> MQTT connected successfully after %.1f seconds",
+                        elapsed_time,
+                    )
                     break
                 if i % 50 == 0 and i > 0:  # Log every 10 seconds
                     elapsed_time = i * check_interval
-                    _LOGGER.debug(">>> Still connecting... (%.1fs elapsed)", elapsed_time)
+                    _LOGGER.debug(
+                        ">>> Still connecting... (%.1fs elapsed)", elapsed_time
+                    )
                 await asyncio.sleep(check_interval)
 
             if not self._connected:
@@ -397,7 +436,8 @@ class HeimanMqttClient:
                     product_id = device_info.get("productId", "")
                     if product_id:
                         topic = MQTT_TOPIC_PROPERTIES_REPORT.format(
-                            product_id=product_id, device_id=device_id,
+                            product_id=product_id,
+                            device_id=device_id,
                         )
                         client.subscribe(topic)
                         self._subscribed_topics.add(topic)
@@ -405,13 +445,15 @@ class HeimanMqttClient:
 
                         # Subscribe to reply topics
                         read_reply_topic = MQTT_TOPIC_PROPERTIES_READ_REPLY.format(
-                            product_id=product_id, device_id=device_id,
+                            product_id=product_id,
+                            device_id=device_id,
                         )
                         client.subscribe(read_reply_topic)
                         self._subscribed_topics.add(read_reply_topic)
 
                         write_reply_topic = MQTT_TOPIC_PROPERTIES_WRITE_REPLY.format(
-                            product_id=product_id, device_id=device_id,
+                            product_id=product_id,
+                            device_id=device_id,
                         )
                         client.subscribe(write_reply_topic)
                         self._subscribed_topics.add(write_reply_topic)
@@ -457,7 +499,9 @@ class HeimanMqttClient:
                 4: "Connection refused: bad user name or password",
                 5: "Connection refused: not authorized",
             }
-            _LOGGER.error(">>> Error meaning: %s", error_messages.get(rc, "Unknown error"))
+            _LOGGER.error(
+                ">>> Error meaning: %s", error_messages.get(rc, "Unknown error")
+            )
 
             if rc in [4, 5]:
                 _LOGGER.error(">>> Authentication failed! Possible causes:")
@@ -466,7 +510,9 @@ class HeimanMqttClient:
                 _LOGGER.error(">>>   3. Client ID already in use")
                 _LOGGER.error(">>>   4. Username/password mismatch")
                 _LOGGER.error(">>>   Current secure_id: %s", self._secure_id)
-                _LOGGER.error(">>>   Current secure_key: %s", "*" * len(self._secure_key))
+                _LOGGER.error(
+                    ">>>   Current secure_key: %s", "*" * len(self._secure_key)
+                )
 
             _LOGGER.error("=" * 80)
 
@@ -665,44 +711,61 @@ class HeimanMqttClient:
             event_data = payload.get("data", {})
 
             if device_id:
-                _LOGGER.info("Event %s from device %s: %s", event_type, device_id, event_data)
+                _LOGGER.info(
+                    "Event %s from device %s: %s", event_type, device_id, event_data
+                )
 
                 # Update coordinator cache with event data if available
                 # Event data often contains sensor states like {"SmokeSensorState": 1}
                 if self._coordinator and event_data:
                     self._coordinator.update_device_properties(device_id, event_data)
-                    _LOGGER.debug("Updated coordinator cache from event for %s", device_id)
+                    _LOGGER.debug(
+                        "Updated coordinator cache from event for %s", device_id
+                    )
 
                 # Call registered event callbacks
                 # First, call callbacks for specific event type
                 if event_type:
                     callbacks = self._event_callbacks.get(event_type, [])
-                    _LOGGER.debug("Found %s callbacks for specific event type: %s", len(callbacks), event_type)
+                    _LOGGER.debug(
+                        "Found %s callbacks for specific event type: %s",
+                        len(callbacks),
+                        event_type,
+                    )
                     for callback in callbacks:
                         try:
                             callback(device_id, payload)
                         except (ValueError, KeyError, TypeError, RuntimeError) as err:
-                            _LOGGER.error("Error in event callback for %s: %s", event_type, err)
+                            _LOGGER.error(
+                                "Error in event callback for %s: %s", event_type, err
+                            )
 
                 # Then, call callbacks that listen to all events
                 all_callbacks = self._event_callbacks.get("__all__", [])
                 _LOGGER.info("Found %s global event callbacks", len(all_callbacks))
                 for idx, callback in enumerate(all_callbacks):
                     try:
-                        _LOGGER.debug("Calling global event callback %s/%s for device %s", idx + 1, len(all_callbacks), device_id)
+                        _LOGGER.debug(
+                            "Calling global event callback %s/%s for device %s",
+                            idx + 1,
+                            len(all_callbacks),
+                            device_id,
+                        )
                         callback(device_id, payload)
-                    except (ValueError, KeyError, TypeError, RuntimeError):
+                    except ValueError, KeyError, TypeError, RuntimeError:
                         _LOGGER.exception("Error in global event callback")
 
                 # Call device callbacks
-                _LOGGER.debug("Calling %s device callbacks", len(self._device_callbacks))
+                _LOGGER.debug(
+                    "Calling %s device callbacks", len(self._device_callbacks)
+                )
                 for callback in self._device_callbacks:
                     try:
                         callback(device_id, f"event:{event_type}")
                     except (ValueError, KeyError, TypeError, RuntimeError) as err:
                         _LOGGER.error("Error in device callback: %s", err)
 
-        except (ValueError, KeyError, TypeError, RuntimeError, OSError):
+        except ValueError, KeyError, TypeError, RuntimeError, OSError:
             _LOGGER.exception("Error handling event")
 
     def _handle_child_register(self, topic: str, payload: dict) -> None:
@@ -712,7 +775,9 @@ class HeimanMqttClient:
             headers = payload.get("headers", {})
 
             if device_id:
-                _LOGGER.info("Child device registered: %s, headers: %s", device_id, headers)
+                _LOGGER.info(
+                    "Child device registered: %s, headers: %s", device_id, headers
+                )
 
                 # Extract child device info from headers
                 headers.get("productId")
@@ -723,7 +788,10 @@ class HeimanMqttClient:
                 if self._coordinator:
                     # Schedule a refresh to fetch the new device
                     self._coordinator.schedule_refresh()
-                    _LOGGER.debug("Scheduled coordinator refresh for new child device %s", device_id)
+                    _LOGGER.debug(
+                        "Scheduled coordinator refresh for new child device %s",
+                        device_id,
+                    )
 
                 # Call device callbacks
                 for callback in self._device_callbacks:
@@ -763,9 +831,14 @@ class HeimanMqttClient:
                 # Update coordinator cache
                 if self._coordinator:
                     # Mark device as online in cache via coordinator API
-                    self._coordinator.update_device_properties(device_id, {"online": True})
+                    self._coordinator.update_device_properties(
+                        device_id, {"online": True}
+                    )
                     self._coordinator.schedule_refresh()
-                    _LOGGER.debug("Scheduled coordinator refresh for online child device %s", device_id)
+                    _LOGGER.debug(
+                        "Scheduled coordinator refresh for online child device %s",
+                        device_id,
+                    )
 
                 # Call device callbacks
                 for callback in self._device_callbacks:
@@ -788,9 +861,14 @@ class HeimanMqttClient:
                 # Update coordinator cache
                 if self._coordinator:
                     # Mark device as offline in cache via coordinator API
-                    self._coordinator.update_device_properties(device_id, {"online": False})
+                    self._coordinator.update_device_properties(
+                        device_id, {"online": False}
+                    )
                     self._coordinator.schedule_refresh()
-                    _LOGGER.debug("Scheduled coordinator refresh for offline child device %s", device_id)
+                    _LOGGER.debug(
+                        "Scheduled coordinator refresh for offline child device %s",
+                        device_id,
+                    )
 
                 # Call device callbacks
                 for callback in self._device_callbacks:
@@ -825,7 +903,9 @@ class HeimanMqttClient:
             _LOGGER.error("Error handling topology query reply: %s", err)
 
     def register_property_callback(
-        self, property_name: str, callback: Callable[[str, dict], None],
+        self,
+        property_name: str,
+        callback: Callable[[str, dict], None],
     ) -> None:
         """Register a callback for property updates."""
         if property_name not in self._property_callbacks:
@@ -834,7 +914,9 @@ class HeimanMqttClient:
         _LOGGER.debug("Registered callback for property: %s", property_name)
 
     def unregister_property_callback(
-        self, property_name: str, callback: Callable[[str, dict], None],
+        self,
+        property_name: str,
+        callback: Callable[[str, dict], None],
     ) -> None:
         """Unregister a property callback."""
         if property_name in self._property_callbacks:
@@ -843,7 +925,9 @@ class HeimanMqttClient:
         _LOGGER.debug("Unregistered callback for property: %s", property_name)
 
     def register_event_callback(
-        self, event_type: str | None, callback: Callable[[str, dict], None],
+        self,
+        event_type: str | None,
+        callback: Callable[[str, dict], None],
     ) -> None:
         """Register a callback for events.
 
@@ -865,7 +949,9 @@ class HeimanMqttClient:
         )
 
     def unregister_event_callback(
-        self, event_type: str | None, callback: Callable[[str, dict], None],
+        self,
+        event_type: str | None,
+        callback: Callable[[str, dict], None],
     ) -> None:
         """Unregister an event callback."""
         if event_type is None:
@@ -882,7 +968,10 @@ class HeimanMqttClient:
         _LOGGER.debug("Registered device state callback")
 
     async def async_read_property(
-        self, product_id: str, device_id: str, property_name: str,
+        self,
+        product_id: str,
+        device_id: str,
+        property_name: str,
     ) -> dict | None:
         """Read a device property via MQTT."""
         if not self._connected or not self._client:
@@ -907,10 +996,13 @@ class HeimanMqttClient:
             # Publish to original topic with error handling
             try:
                 await self._loop.run_in_executor(
-                    None, lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
+                    None,
+                    lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
                 )
             except (OSError, RuntimeError, ValueError) as pub_err:
-                _LOGGER.debug("Failed to publish read request to topic %s: %s", topic, pub_err)
+                _LOGGER.debug(
+                    "Failed to publish read request to topic %s: %s", topic, pub_err
+                )
                 self._pending_requests.pop(message_id, None)
                 return None
 
@@ -965,7 +1057,10 @@ class HeimanMqttClient:
         return False
 
     def _build_write_topic(
-        self, product_id: str, device_id: str, device_info: dict | None,
+        self,
+        product_id: str,
+        device_id: str,
+        device_info: dict | None,
     ) -> str:
         """Build MQTT topic for writing device properties.
 
@@ -1037,7 +1132,8 @@ class HeimanMqttClient:
                         )
                         parent_product_id = parent_device.get("productId")
                         _LOGGER.info(
-                            "[CHILD-DEVICE] Parent product ID: %s", parent_product_id,
+                            "[CHILD-DEVICE] Parent product ID: %s",
+                            parent_product_id,
                         )
 
                 if parent_product_id:
@@ -1143,7 +1239,8 @@ class HeimanMqttClient:
             # Publish to original topic with error handling
             try:
                 await self._loop.run_in_executor(
-                    None, lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
+                    None,
+                    lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
                 )
             except Exception as pub_err:  # noqa: BLE001
                 _LOGGER.debug(
@@ -1169,7 +1266,9 @@ class HeimanMqttClient:
             return False
 
     async def async_query_topology(
-        self, product_id: str, device_id: str,
+        self,
+        product_id: str,
+        device_id: str,
     ) -> dict | None:
         """Query child device topology from gateway.
 
@@ -1201,7 +1300,8 @@ class HeimanMqttClient:
 
             # Publish query
             await self._loop.run_in_executor(
-                None, lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
+                None,
+                lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
             )
 
             # Wait for response
@@ -1261,7 +1361,8 @@ class HeimanMqttClient:
 
             # Publish registration
             await self._loop.run_in_executor(
-                None, lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
+                None,
+                lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
             )
 
             # Wait for response
@@ -1280,7 +1381,10 @@ class HeimanMqttClient:
             return None
 
     async def async_unregister_child_device(
-        self, product_id: str, device_id: str, child_device_id: str,
+        self,
+        product_id: str,
+        device_id: str,
+        child_device_id: str,
     ) -> bool:
         """Unregister a child device from gateway.
 
@@ -1313,7 +1417,8 @@ class HeimanMqttClient:
 
             # Publish unregistration
             await self._loop.run_in_executor(
-                None, lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
+                None,
+                lambda: self._safe_publish(topic, json.dumps(payload), qos=1),
             )
 
             # Wait for response

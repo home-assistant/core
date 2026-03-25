@@ -54,7 +54,9 @@ class HeimanCloudSpecParser:
     }
 
     def __init__(
-        self, hass: HomeAssistant, loop: asyncio.AbstractEventLoop | None = None,
+        self,
+        hass: HomeAssistant,
+        loop: asyncio.AbstractEventLoop | None = None,
     ):
         """Initialize the spec parser."""
         self.hass = hass
@@ -122,7 +124,9 @@ class HeimanCloudSpecParser:
             _LOGGER.error("Failed to load local specs: %s", err)
 
     async def parse_device_spec(
-        self, device_info: dict, cloud_client: Any | None = None,
+        self,
+        device_info: dict,
+        cloud_client: Any | None = None,
     ) -> dict | None:
         """Parse device specification.
 
@@ -278,7 +282,8 @@ class HeimanCloudSpecParser:
                     "type": "binary_sensor",
                     "data_type": "bool",
                     "device_class": self.DEVICE_TYPE_MAP.get(device_type, {}).get(
-                        "device_class", "safety",
+                        "device_class",
+                        "safety",
                     ),
                 },
             )
@@ -318,7 +323,8 @@ class HeimanCloudSpecParser:
             Mapping dictionary with platform and device_class
         """
         return self.DEVICE_TYPE_MAP.get(
-            device_type, {"platform": "sensor", "device_class": None},
+            device_type,
+            {"platform": "sensor", "device_class": None},
         )
 
     def map_device_to_platform(self, device_info: dict) -> str:
@@ -354,7 +360,7 @@ class HeimanCloudSpecParser:
                     spec_data = await asyncio.to_thread(_read_spec_file, json_file)
                     if "model" in spec_data:
                         models.add(spec_data["model"])
-                except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+                except OSError, json.JSONDecodeError, KeyError, TypeError, ValueError:
                     continue
 
         return models

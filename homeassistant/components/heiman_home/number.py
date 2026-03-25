@@ -33,7 +33,8 @@ async def async_setup_entry(
         devices = devices_dict if isinstance(devices_dict, list) else []
 
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 
@@ -149,5 +150,7 @@ class HeimanNumberEntity(CoordinatorEntity, NumberEntity):
         device_id = self._device_info.get("id") or self._device_info.get("deviceId", "")
 
         await self._cloud_client.mqtt_client.async_write_property(
-            device_id=device_id, property_id=property_id, value=int(value),
+            device_id=device_id,
+            property_id=property_id,
+            value=int(value),
         )

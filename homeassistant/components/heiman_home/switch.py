@@ -63,7 +63,9 @@ async def async_setup_entry(
             devices_config=devices_config,
         )
         _LOGGER.debug(
-            "  Device %s has %s switch entities", device_name, len(switch_entities),
+            "  Device %s has %s switch entities",
+            device_name,
+            len(switch_entities),
         )
         entities.extend(switch_entities)
 
@@ -277,7 +279,8 @@ class HeimanSwitchEntity(CoordinatorEntity, SwitchEntity):
         # Get property value from coordinator cache
         if self.coordinator and hasattr(self.coordinator, "get_device_property"):
             cached_value = self.coordinator.get_device_property(
-                device_id, property_name,
+                device_id,
+                property_name,
             )
 
             if cached_value is not None:
@@ -319,7 +322,9 @@ class HeimanSwitchEntity(CoordinatorEntity, SwitchEntity):
         )
 
         result = await self._cloud_client.async_read_device_property(
-            product_id=product_id, device_id=device_id, property_name=property_name,
+            product_id=product_id,
+            device_id=device_id,
+            property_name=property_name,
         )
         if result and "value" in result:
             self._attr_is_on = bool(result["value"])

@@ -60,12 +60,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.info("=" * 80)
 
     def ha_persistent_notify(
-        notify_id: str, title: str | None = None, message: str | None = None,
+        notify_id: str,
+        title: str | None = None,
+        message: str | None = None,
     ) -> None:
         """Send messages in Notifications dialog box."""
         if title:
             persistent_notification.async_create(
-                hass=hass, message=message or "", title=title, notification_id=notify_id,
+                hass=hass,
+                message=message or "",
+                title=title,
+                notification_id=notify_id,
             )
         else:
             persistent_notification.async_dismiss(hass=hass, notification_id=notify_id)
@@ -103,10 +108,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             "hide_non_standard": entry_data.get("hide_non_standard_entities", False),
             "action_debug_mode": entry_data.get("action_debug_mode", False),
             "binary_sensor_display_mode": entry_data.get(
-                "binary_sensor_display_mode", "bool",
+                "binary_sensor_display_mode",
+                "bool",
             ),
             "display_devices_changed_notify": entry_data.get(
-                "display_devices_changed_notify", [],
+                "display_devices_changed_notify",
+                [],
             ),
         }
 
@@ -210,7 +217,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
             except Exception as err:
                 _LOGGER.error("Failed to get devices for home %s: %s", home_id, err)
-                _LOGGER.exception("Traceback while getting devices for home %s", home_id)
+                _LOGGER.exception(
+                    "Traceback while getting devices for home %s", home_id
+                )
                 # Continue with other homes
 
         devices = all_devices
@@ -220,17 +229,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.info("=" * 80)
         total_device_count = len(devices)
         _LOGGER.info(
-            "Total unique devices across all selected homes: %s", total_device_count,
+            "Total unique devices across all selected homes: %s",
+            total_device_count,
         )
 
         # Log device distribution across homes
         if len(selected_home_ids) > 1:
             _LOGGER.info(
-                "Devices are distributed across %s homes", len(selected_home_ids),
+                "Devices are distributed across %s homes",
+                len(selected_home_ids),
             )
 
         _LOGGER.info(
-            "First 10 device IDs: %s", list(devices.keys())[:10] if devices else "None",
+            "First 10 device IDs: %s",
+            list(devices.keys())[:10] if devices else "None",
         )
         if len(devices) > 10:
             _LOGGER.debug("... and %s more device IDs", len(devices) - 10)
@@ -247,7 +259,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             _LOGGER.warning("  4. Selected homes have no devices")
             _LOGGER.warning("Troubleshooting:")
             _LOGGER.warning(
-                "  - Check network connection to: %s", entry_data.get("api_url"),
+                "  - Check network connection to: %s",
+                entry_data.get("api_url"),
             )
             _LOGGER.warning("  - Verify token is not expired")
             _LOGGER.warning("  - Try selecting different homes in config")
@@ -275,12 +288,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         # This ensures MQTT client can find parent devices across all homes
         cloud_client.set_all_devices(devices)
         _LOGGER.info(
-            "Updated cloud_client all_devices cache with %s devices", len(devices),
+            "Updated cloud_client all_devices cache with %s devices",
+            len(devices),
         )
 
         # Initialize MQTT client
         mqtt_client = HeimanMqttClient(
-            hass=hass, cloud_client=cloud_client, entry_id=entry_id, config=entry_data,
+            hass=hass,
+            cloud_client=cloud_client,
+            entry_id=entry_id,
+            config=entry_data,
         )
         await mqtt_client.async_connect()
 
@@ -314,7 +331,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             try:
                 # Debug: Log the full device info structure to check for firmwareInfo
                 _LOGGER.debug(
-                    "Device %s info keys: %s", device_id, list(device_info.keys()),
+                    "Device %s info keys: %s",
+                    device_id,
+                    list(device_info.keys()),
                 )
 
                 # Extract firmware version from firmwareInfo if available in device list
@@ -385,7 +404,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         # Store initialized devices in hass.data for platform reuse
         hass.data[DOMAIN]["heiman_devices"] = hass.data[DOMAIN].get(
-            "heiman_devices", {},
+            "heiman_devices",
+            {},
         )
         hass.data[DOMAIN]["heiman_devices"][entry_id] = initialized_devices
         _LOGGER.info(
@@ -408,11 +428,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         for idx, platform in enumerate(PLATFORMS):
             _LOGGER.warning(
-                "PLATFORMS[%d] = %s (type: %s)", idx, platform, type(platform),
+                "PLATFORMS[%d] = %s (type: %s)",
+                idx,
+                platform,
+                type(platform),
             )
         _LOGGER.warning("=" * 80)
         _LOGGER.warning(
-            "About to call async_forward_entry_setups with entry_id=%s", entry_id,
+            "About to call async_forward_entry_setups with entry_id=%s",
+            entry_id,
         )
         _LOGGER.info("Setting up platforms: %s", PLATFORMS)
         # Note: async_forward_entry_setups performs synchronous module imports,
@@ -430,7 +454,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             schema=None,
         )
         _LOGGER.info(
-            "Registered refresh service: %s.%s", DOMAIN, f"refresh_{entry_id[:8]}",
+            "Registered refresh service: %s.%s",
+            DOMAIN,
+            f"refresh_{entry_id[:8]}",
         )
 
         # Register remove device service for this entry
@@ -474,7 +500,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 
 async def _handle_remove_device_service(
-    hass: HomeAssistant, entry_id: str, call,
+    hass: HomeAssistant,
+    entry_id: str,
+    call,
 ) -> None:
     """Handle the remove device service call.
 
@@ -526,7 +554,8 @@ async def _handle_remove_device_service(
 
             # Get device registry entry
             device_reg_entry = device_registry_helper.async_get_device(
-                identifiers={(DOMAIN, device_id)}, connections=None,
+                identifiers={(DOMAIN, device_id)},
+                connections=None,
             )
 
             if device_reg_entry:
@@ -603,7 +632,9 @@ async def _handle_refresh_service(hass: HomeAssistant, entry_id: str, call) -> N
                             _LOGGER.debug("Refreshed entity: %s", entity.entity_id)
                         except Exception as err:  # noqa: BLE001
                             _LOGGER.warning(
-                                "Failed to refresh entity %s: %s", entity.entity_id, err,
+                                "Failed to refresh entity %s: %s",
+                                entity.entity_id,
+                                err,
                             )
 
             _LOGGER.info("Refresh service completed for entry: %s", entry_id)
@@ -729,7 +760,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS,
+        config_entry,
+        PLATFORMS,
     )
 
     if unload_ok:

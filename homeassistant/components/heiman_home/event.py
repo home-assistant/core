@@ -33,7 +33,8 @@ async def async_setup_entry(
         devices = devices_dict if isinstance(devices_dict, list) else []
 
     language = config_entry.options.get(
-        "language", config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
+        "language",
+        config_entry.data.get("language", DEFAULT_INTEGRATION_LANGUAGE),
     )
     i18n = get_i18n(language)
 

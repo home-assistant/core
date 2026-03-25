@@ -68,7 +68,7 @@ def parse_temperature(value: Any, default: float = 0.0) -> float:
         if value is None:
             return default
         return float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         _LOGGER.warning("Invalid temperature value: %s", value)
         return default
 
@@ -81,7 +81,7 @@ def parse_humidity(value: Any, default: int = 0) -> int:
         # Ensure value is in range 0-100
         parsed = int(float(value))
         return max(0, min(100, parsed))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         _LOGGER.warning("Invalid humidity value: %s", value)
         return default
 
@@ -114,7 +114,12 @@ def merge_dicts(*dicts: dict) -> dict:
 
 
 def get_initialized_device(
-    hass, entry_id: str, device_id: str, device_info: dict, cloud_client, i18n=None,
+    hass,
+    entry_id: str,
+    device_id: str,
+    device_info: dict,
+    cloud_client,
+    i18n=None,
 ):
     """Get initialized HeimanDevice object from hass.data or create new one.
 
@@ -141,7 +146,8 @@ def get_initialized_device(
 
     # Fallback: create new device object (should not happen normally)
     _LOGGER.warning(
-        "No initialized device object found for %s, creating new one", device_id,
+        "No initialized device object found for %s, creating new one",
+        device_id,
     )
 
     return HeimanDevice(

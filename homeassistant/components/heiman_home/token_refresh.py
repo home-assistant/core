@@ -167,7 +167,8 @@ class TokenRefreshManager:
 
         # Schedule using event loop timer
         self._refresh_timer = self.hass.loop.call_later(
-            delay_seconds, lambda: self.hass.async_create_task(self._on_refresh_timer()),
+            delay_seconds,
+            lambda: self.hass.async_create_task(self._on_refresh_timer()),
         )
 
     async def _on_refresh_timer(self) -> None:
@@ -207,7 +208,8 @@ class TokenRefreshManager:
                 }
                 self.on_token_refreshed(token_data)
             _LOGGER.info(
-                "Token refreshed successfully (attempt %d)", self._retry_count + 1,
+                "Token refreshed successfully (attempt %d)",
+                self._retry_count + 1,
             )
         except HeimanError as err:
             _LOGGER.error("Failed to refresh token: %s", err)

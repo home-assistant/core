@@ -176,13 +176,16 @@ class HeimanI18nEnhanced:
         if isinstance(result, str) and kwargs:
             try:
                 return result.format(**kwargs)
-            except (KeyError, ValueError):
+            except KeyError, ValueError:
                 return result
 
         return result
 
     def get_device_name_translation(
-        self, device_type: str, model: str | None = None, language: str | None = None,
+        self,
+        device_type: str,
+        model: str | None = None,
+        language: str | None = None,
     ) -> str:
         """Translate device type name.
 
@@ -205,7 +208,10 @@ class HeimanI18nEnhanced:
         return device_type.replace("-", " ").title()
 
     def get_property_name_translation(
-        self, property_id: str, service: str | None = None, language: str | None = None,
+        self,
+        property_id: str,
+        service: str | None = None,
+        language: str | None = None,
     ) -> str:
         """Translate property name.
 
@@ -234,7 +240,10 @@ class HeimanI18nEnhanced:
         return property_id
 
     def get_enum_translation(
-        self, property_id: str, enum_value: Any, language: str | None = None,
+        self,
+        property_id: str,
+        enum_value: Any,
+        language: str | None = None,
     ) -> str:
         """Translate enum value.
 
@@ -256,7 +265,9 @@ class HeimanI18nEnhanced:
         return str(enum_value)
 
     def get_event_translation(
-        self, event_type: str, language: str | None = None,
+        self,
+        event_type: str,
+        language: str | None = None,
     ) -> str:
         """Translate event description.
 
@@ -276,7 +287,9 @@ class HeimanI18nEnhanced:
         return event_type
 
     def get_service_translation(
-        self, service_name: str, language: str | None = None,
+        self,
+        service_name: str,
+        language: str | None = None,
     ) -> str:
         """Translate service name.
 
@@ -329,7 +342,9 @@ class HeimanI18nEnhanced:
         return state_value
 
     def add_device_translations(
-        self, device_type: str, translations: dict[str, str],
+        self,
+        device_type: str,
+        translations: dict[str, str],
     ) -> None:
         """Add device type translations dynamically.
 
@@ -340,7 +355,9 @@ class HeimanI18nEnhanced:
         self._device_translations[device_type] = translations
 
     def add_property_translations(
-        self, property_id: str, translations: dict[str, str],
+        self,
+        property_id: str,
+        translations: dict[str, str],
     ) -> None:
         """Add property translations dynamically.
 
@@ -351,7 +368,9 @@ class HeimanI18nEnhanced:
         self._property_translations[property_id] = translations
 
     def add_enum_translations(
-        self, property_id: str, enum_values: dict[Any, dict[str, str]],
+        self,
+        property_id: str,
+        enum_values: dict[Any, dict[str, str]],
     ) -> None:
         """Add enum value translations dynamically.
 
@@ -403,7 +422,9 @@ class HeimanI18nManager:
         self._instances: dict[str, HeimanI18nEnhanced] = {}
 
     def get_or_create_instance(
-        self, entry_id: str, language: str,
+        self,
+        entry_id: str,
+        language: str,
     ) -> HeimanI18nEnhanced:
         """Get or create an i18n instance for a config entry.
 

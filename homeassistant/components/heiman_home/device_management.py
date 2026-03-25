@@ -193,10 +193,7 @@ class DeviceFilterManager:
     def has_active_filters(self) -> bool:
         """Return whether any filter list is active."""
         return bool(
-            self._room_list
-            or self._type_list
-            or self._model_list
-            or self._device_list,
+            self._room_list or self._type_list or self._model_list or self._device_list,
         )
 
 
@@ -328,7 +325,9 @@ class AreaNameSyncManager:
         return self._mode
 
     def generate_area_name(
-        self, home_name: str | None = None, room_name: str | None = None,
+        self,
+        home_name: str | None = None,
+        room_name: str | None = None,
     ) -> str | None:
         """Generate area name based on sync mode.
 

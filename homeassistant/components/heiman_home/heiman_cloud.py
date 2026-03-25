@@ -122,7 +122,8 @@ class HeimanCloudClient:
             _LOGGER.debug("API URL: %s", self._api_url)
             _LOGGER.debug("Client ID: %s", OAUTH2_CLIENT_ID)
             _LOGGER.debug(
-                "Access token (first 20 chars): %s...", self._access_token[:20],
+                "Access token (first 20 chars): %s...",
+                self._access_token[:20],
             )
 
             self._http_client = HeimanHttpClient(
@@ -231,7 +232,8 @@ class HeimanCloudClient:
                 self._http_client.update_http_header(access_token=self._access_token)
 
             _LOGGER.info(
-                "Token refreshed successfully, expires at: %s", self._token_expires_ts,
+                "Token refreshed successfully, expires at: %s",
+                self._token_expires_ts,
             )
 
             # Update config in Hass data
@@ -407,7 +409,8 @@ class HeimanCloudClient:
 
             _LOGGER.debug(">>> Homes API response type: %s", type(result))
             _LOGGER.debug(
-                ">>> Homes API response (first 1000 chars): %s", str(result)[:1000],
+                ">>> Homes API response (first 1000 chars): %s",
+                str(result)[:1000],
             )
 
             # _make_api_request already extracts the 'result' field from the API response
@@ -416,14 +419,16 @@ class HeimanCloudClient:
             if isinstance(result, list):
                 homes = result
                 _LOGGER.debug(
-                    ">>> Response is already a list with %s items", len(homes),
+                    ">>> Response is already a list with %s items",
+                    len(homes),
                 )
             elif isinstance(result, dict):
                 # Check if result is wrapped in another dict
                 if "result" in result and isinstance(result["result"], list):
                     homes = result["result"]
                     _LOGGER.debug(
-                        ">>> Extracted list from 'result' key: %s items", len(homes),
+                        ">>> Extracted list from 'result' key: %s items",
+                        len(homes),
                     )
                 else:
                     _LOGGER.warning(
@@ -446,7 +451,9 @@ class HeimanCloudClient:
 
             if isinstance(homes, list) and homes:
                 _LOGGER.info(
-                    ">>> Found %s homes for user %s", len(homes), self._user_id,
+                    ">>> Found %s homes for user %s",
+                    len(homes),
+                    self._user_id,
                 )
                 for idx, home in enumerate(homes):
                     _LOGGER.debug(
@@ -643,7 +650,8 @@ class HeimanCloudClient:
                     )
                 if len(translated_devices) > 5:
                     _LOGGER.debug(
-                        "... and %s more devices", len(translated_devices) - 5,
+                        "... and %s more devices",
+                        len(translated_devices) - 5,
                     )
 
                 # Check if API total matches actual data count
@@ -659,7 +667,8 @@ class HeimanCloudClient:
                     )
             else:
                 _LOGGER.warning(
-                    "Unexpected devices format: %s", type(translated_devices),
+                    "Unexpected devices format: %s",
+                    type(translated_devices),
                 )
 
         except Exception as err:
@@ -711,7 +720,9 @@ class HeimanCloudClient:
             lang_file = lang_map.get(integration_language, "zh-Hans.json")
 
             translations_file = os.path.join(
-                os.path.dirname(__file__), "translations", lang_file,
+                os.path.dirname(__file__),
+                "translations",
+                lang_file,
             )
 
             if os.path.exists(translations_file):
@@ -834,7 +845,9 @@ class HeimanCloudClient:
             # Response should be: {deriveMetadata: "...", ...}
             if isinstance(result, dict):
                 _LOGGER.debug(
-                    "Got device detail for %s: keys=%s", device_id, list(result.keys()),
+                    "Got device detail for %s: keys=%s",
+                    device_id,
+                    list(result.keys()),
                 )
                 return result
             _LOGGER.warning(
@@ -879,7 +892,9 @@ class HeimanCloudClient:
                     return panels[0]
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
-                "Failed to get device panel for product %s: %s", product_id, err,
+                "Failed to get device panel for product %s: %s",
+                product_id,
+                err,
             )
             return None
         else:
@@ -943,7 +958,10 @@ class HeimanCloudClient:
             return {}
 
     async def async_read_device_property(
-        self, product_id: str, device_id: str, property_name: str,
+        self,
+        product_id: str,
+        device_id: str,
+        property_name: str,
     ) -> dict | None:
         """Read a device property via HTTP API.
 
@@ -1000,14 +1018,17 @@ class HeimanCloudClient:
             )
 
             result = await self._make_api_request(
-                endpoint="/api-saas/dashboard/_multi", method="POST", data=request_data,
+                endpoint="/api-saas/dashboard/_multi",
+                method="POST",
+                data=request_data,
             )
 
             # Parse the response
             # Response format: [{"data": {"value": {...}}, ...}, ...]
             if not isinstance(result, list):
                 _LOGGER.debug(
-                    "Unexpected response format for property read: %s", type(result),
+                    "Unexpected response format for property read: %s",
+                    type(result),
                 )
                 return None
 
@@ -1047,7 +1068,8 @@ class HeimanCloudClient:
                         else:
                             try:
                                 extracted_value = json.dumps(
-                                    extracted_value, ensure_ascii=False,
+                                    extracted_value,
+                                    ensure_ascii=False,
                                 )
                             except TypeError, ValueError:
                                 extracted_value = str(extracted_value)
@@ -1091,7 +1113,10 @@ class HeimanCloudClient:
             return None
 
     async def async_read_device_properties(
-        self, product_id: str, device_id: str, property_names: list[str],
+        self,
+        product_id: str,
+        device_id: str,
+        property_names: list[str],
     ) -> dict[str, Any]:
         """批量读取设备属性（优化版）.
 
@@ -1147,7 +1172,9 @@ class HeimanCloudClient:
             )
 
             result = await self._make_api_request(
-                endpoint="/api-saas/dashboard/_multi", method="POST", data=request_data,
+                endpoint="/api-saas/dashboard/_multi",
+                method="POST",
+                data=request_data,
             )
 
             # 解析响应，返回属性字典
@@ -1199,7 +1226,8 @@ class HeimanCloudClient:
                     else:
                         try:
                             extracted_value = json.dumps(
-                                extracted_value, ensure_ascii=False,
+                                extracted_value,
+                                ensure_ascii=False,
                             )
                         except TypeError, ValueError:
                             extracted_value = str(extracted_value)
