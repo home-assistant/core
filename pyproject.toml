@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.10.6",
+  "uv==0.11.1",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.2.0",
