@@ -93,7 +93,7 @@
   "services": {
     "reload": {
       "description": "Reloads generic thermostats from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload generic thermostats"
     }
   },
   "title": "Generic thermostat"

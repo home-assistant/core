@@ -242,7 +242,7 @@
   "services": {
     "reload": {
       "description": "Reloads filters from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload filters"
     }
   },
   "title": "Filter"
