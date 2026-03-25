@@ -155,6 +155,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "assist_satellite",
     "button",
     "climate",
+    "counter",
     "cover",
     "device_tracker",
     "door",

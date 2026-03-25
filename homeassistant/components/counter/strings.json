@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted counters to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::counter::title%]",
@@ -22,6 +26,15 @@
         "step": {
           "name": "Step"
         }
+      }
+    }
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -49,5 +62,45 @@
       "name": "Set"
     }
   },
-  "title": "Counter"
+  "title": "Counter",
+  "triggers": {
+    "decremented": {
+      "description": "Triggers after one or more counters decrement.",
+      "name": "Counter decremented"
+    },
+    "incremented": {
+      "description": "Triggers after one or more counters increment.",
+      "name": "Counter incremented"
+    },
+    "maximum_reached": {
+      "description": "Triggers after one or more counters reach their maximum value.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::counter::common::trigger_behavior_description%]",
+          "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Counter reached maximum"
+    },
+    "minimum_reached": {
+      "description": "Triggers after one or more counters reach their minimum value.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::counter::common::trigger_behavior_description%]",
+          "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Counter reached minimum"
+    },
+    "reset": {
+      "description": "Triggers after one or more counters are reset.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::counter::common::trigger_behavior_description%]",
+          "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Counter reset"
+    }
+  }
 }
