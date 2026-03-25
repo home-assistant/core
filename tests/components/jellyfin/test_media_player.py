@@ -461,10 +461,7 @@ async def test_browse_media(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]
-    assert (
-        response["error"]["message"]
-        == "Media not found: collection / COLLECTION-FOLDER-UUID"
-    )
+    assert response["error"]["message"] == "Media not found: COLLECTION-FOLDER-UUID"
 
     # browse for non-existent item
     mock_api.get_item.side_effect = None
@@ -483,10 +480,7 @@ async def test_browse_media(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]
-    assert (
-        response["error"]["message"]
-        == "Media not found: collection / COLLECTION-UUID-404"
-    )
+    assert response["error"]["message"] == "Media not found: COLLECTION-UUID-404"
 
 
 async def test_search_media(
