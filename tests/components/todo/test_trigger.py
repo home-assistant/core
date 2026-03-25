@@ -495,13 +495,16 @@ async def test_entity_rejoining_label_does_not_fire_trigger(
     entity_registry.async_update_entity(TODO_ENTITY_ID1, labels=set())
     await hass.async_block_till_done()
 
+    # Adding items should not fire for the now untracked entity
     await _add_item(hass, TODO_ENTITY_ID1, "untracked_item")
     _assert_service_calls(service_calls, [])
 
+    # Re-adding the label should not fire
     entity_registry.async_update_entity(TODO_ENTITY_ID1, labels={label_both_id})
     await hass.async_block_till_done()
     _assert_service_calls(service_calls, [])
 
+    # Adding new items should fire again
     await _add_item(hass, TODO_ENTITY_ID1, "new_item_after_rejoin")
     _assert_service_calls(
         service_calls,
