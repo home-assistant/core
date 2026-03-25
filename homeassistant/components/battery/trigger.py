@@ -18,7 +18,7 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-BATTERY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+BATTERY_LOW_DOMAIN_SPECS: dict[str, DomainSpec] = {
     BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.BATTERY),
 }
 
@@ -34,8 +34,8 @@ BATTERY_PERCENTAGE_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "low": make_entity_target_state_trigger(BATTERY_DOMAIN_SPECS, STATE_ON),
-    "not_low": make_entity_target_state_trigger(BATTERY_DOMAIN_SPECS, STATE_OFF),
+    "low": make_entity_target_state_trigger(BATTERY_LOW_DOMAIN_SPECS, STATE_ON),
+    "not_low": make_entity_target_state_trigger(BATTERY_LOW_DOMAIN_SPECS, STATE_OFF),
     "started_charging": make_entity_target_state_trigger(
         BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON
     ),
