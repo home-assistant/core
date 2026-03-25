@@ -9,7 +9,7 @@ from typing import Any, cast
 
 import jwt
 from tesla_fleet_api import TeslaFleetApi
-from tesla_fleet_api.const import SERVERS
+from tesla_fleet_api.const import SERVERS, Scope
 from tesla_fleet_api.exceptions import PreconditionFailed, TeslaFleetError
 import voluptuous as vol
 
@@ -85,7 +85,7 @@ class OAuth2FlowHandler(
             )
             await api.get_private_key(self.hass.config.path("tesla_fleet.key"))
             await api.partner_login(
-                implementation.client_id, implementation.client_secret
+                implementation.client_id, implementation.client_secret, [Scope.OPENID]
             )
             self.apis.append(api)
 
