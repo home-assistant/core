@@ -108,6 +108,27 @@ def _add_barrier_status_value(node_state: dict[str, Any]) -> dict[str, Any]:
     return updated_state
 
 
+def _move_notification_values_to_endpoint(
+    node_state: dict[str, Any], endpoint: int
+) -> dict[str, Any]:
+    """Return a node state with all Notification CC values moved to a different endpoint."""
+    updated_state = copy.deepcopy(node_state)
+    for value_data in updated_state["values"]:
+        if value_data.get("commandClass") == 113:
+            value_data["endpoint"] = endpoint
+    # Add the target endpoint to the endpoints list with the Notification CC.
+    ep0 = updated_state["endpoints"][0]
+    updated_state["endpoints"].append(
+        {
+            "nodeId": ep0["nodeId"],
+            "index": endpoint,
+            "deviceClass": ep0["deviceClass"],
+            "commandClasses": [cc for cc in ep0["commandClasses"] if cc["id"] == 113],
+        }
+    )
+    return updated_state
+
+
 def _add_lock_state_notification_states(node_state: dict[str, Any]) -> dict[str, Any]:
     """Return a node state with Access Control lock state notification states 1-4."""
     updated_state = copy.deepcopy(node_state)
@@ -641,6 +662,63 @@ async def test_legacy_door_state_entities_follow_opening_state(
         assert state, f"{e.entity_id} should have a state"
         assert state.state == STATE_OFF, (
             f"{e.entity_id} ({e.original_name}) should be OFF when Opening state=Open"
+        )
+
+
+async def test_legacy_door_state_non_zero_endpoint(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    hoppe_ehandle_connectsense_state: NodeDataType,
+) -> None:
+    """Test legacy door state entities work when notification values are on endpoint 1.
+
+    Regression test for https://github.com/home-assistant/core/issues/166365.
+    """
+    state = _move_notification_values_to_endpoint(
+        hoppe_ehandle_connectsense_state, endpoint=1
+    )
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Legacy door state entities should still be discovered and disabled by default
+    # (because the Opening state value exists on the same endpoint).
+    legacy_names = {
+        "Window/door is open",
+        "Window/door is closed",
+        "Window/door is open in regular position",
+        "Window/door is open in tilt position",
+    }
+    legacy_entries = [
+        e
+        for e in entity_registry.entities.values()
+        if e.domain == "binary_sensor"
+        and e.platform == "zwave_js"
+        and e.original_name in legacy_names
+    ]
+    assert len(legacy_entries) == 6
+
+    # Re-enable them to verify they can be initialized without errors.
+    for legacy_entry in legacy_entries:
+        entity_registry.async_update_entity(legacy_entry.entity_id, disabled_by=None)
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # All entities should have a valid state (no assertion errors during init).
+    for e in legacy_entries:
+        state = hass.states.get(e.entity_id)
+        assert state is not None, f"{e.entity_id} should have a state"
+        assert state.state != STATE_UNKNOWN, (
+            f"{e.entity_id} ({e.original_name}) should not be unknown"
         )
 
 
