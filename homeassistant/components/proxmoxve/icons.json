@@ -10,6 +10,9 @@
       "shutdown": {
         "default": "mdi:power"
       },
+      "snapshot_create": {
+        "default": "mdi:backup-restore"
+      },
       "start": {
         "default": "mdi:play"
       },

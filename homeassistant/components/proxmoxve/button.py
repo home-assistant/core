@@ -21,6 +21,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
@@ -141,6 +142,22 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    ProxmoxVMButtonEntityDescription(
+        key="snapshot_create",
+        translation_key="snapshot_create",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node)
+            .qemu(vmid)
+            .snapshot.post(
+                name=(
+                    "homeassistant_snapshot_"
+                    f"{coordinator.data[node].vms[vmid]['name']}_"
+                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+                )
+            )
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
@@ -167,6 +184,22 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
+    ),
+    ProxmoxContainerButtonEntityDescription(
+        key="snapshot_create",
+        translation_key="snapshot_create",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node)
+            .lxc(vmid)
+            .snapshot.post(
+                name=(
+                    "homeassistant_snapshot_"
+                    f"{coordinator.data[node].containers[vmid]['name']}_"
+                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+                )
+            )
+        ),
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

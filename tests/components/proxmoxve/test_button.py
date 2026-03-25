@@ -144,6 +144,50 @@ async def test_vm_buttons(
     assert len(method_mock.mock_calls) == pre_calls + 1
 
 
+async def test_vm_snapshot_button(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing a ProxmoxVE VM snapshot button triggers the correct API call."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_proxmox_client._node_mock.qemu(100)
+    method_mock = mock_proxmox_client._qemu_mocks[100].snapshot.post
+    pre_calls = len(method_mock.mock_calls)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.vm_web_create_snapshot"},
+        blocking=True,
+    )
+
+    assert len(method_mock.mock_calls) == pre_calls + 1
+
+
+async def test_container_snapshot_button(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing a ProxmoxVE container snapshot button triggers the correct API call."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_proxmox_client._node_mock.lxc(200)
+    method_mock = mock_proxmox_client._lxc_mocks[200].snapshot.post
+    pre_calls = len(method_mock.mock_calls)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.ct_nginx_create_snapshot"},
+        blocking=True,
+    )
+
+    assert len(method_mock.mock_calls) == pre_calls + 1
+
+
 @pytest.mark.parametrize(
     ("entity_id", "vmid", "action"),
     [
@@ -164,7 +208,10 @@ async def test_container_buttons(
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.lxc(vmid)
-    method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
+    if action == "snapshot":
+        method_mock = mock_proxmox_client._lxc_mocks[vmid].snapshot.post
+    else:
+        method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(

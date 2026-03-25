@@ -119,6 +119,9 @@
       "shutdown": {
         "name": "Shutdown"
       },
+      "snapshot_create": {
+        "name": "Create snapshot"
+      },
       "start": {
         "name": "Start"
       },
