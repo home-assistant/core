@@ -84,6 +84,12 @@ async def test_water_heater_triggers_gated_by_labs_flag(
         ),
         *parametrize_trigger_states(
             trigger="water_heater.operation_mode_changed",
+            trigger_options={"operation_mode": [STATE_ECO]},
+            target_states=[STATE_ECO],
+            other_states=[s for s in ALL_STATES if s != STATE_ECO],
+        ),
+        *parametrize_trigger_states(
+            trigger="water_heater.operation_mode_changed",
             trigger_options={"operation_mode": [STATE_ECO, STATE_ELECTRIC]},
             target_states=[STATE_ECO, STATE_ELECTRIC],
             other_states=[
@@ -189,6 +195,14 @@ async def test_water_heater_state_attribute_trigger_behavior_any(
             other_states=[s for s in ALL_STATES if s != STATE_ECO],
         ),
         *parametrize_trigger_states(
+            trigger="water_heater.operation_mode_changed",
+            trigger_options={"operation_mode": [STATE_ECO, STATE_ELECTRIC]},
+            target_states=[STATE_ECO, STATE_ELECTRIC],
+            other_states=[
+                s for s in ALL_STATES if s not in (STATE_ECO, STATE_ELECTRIC)
+            ],
+        ),
+        *parametrize_trigger_states(
             trigger="water_heater.turned_off",
             target_states=[STATE_OFF],
             other_states=ALL_ON_STATES,
@@ -279,6 +293,14 @@ async def test_water_heater_state_attribute_trigger_behavior_first(
             trigger_options={"operation_mode": [STATE_ECO]},
             target_states=[STATE_ECO],
             other_states=[s for s in ALL_STATES if s != STATE_ECO],
+        ),
+        *parametrize_trigger_states(
+            trigger="water_heater.operation_mode_changed",
+            trigger_options={"operation_mode": [STATE_ECO, STATE_ELECTRIC]},
+            target_states=[STATE_ECO, STATE_ELECTRIC],
+            other_states=[
+                s for s in ALL_STATES if s not in (STATE_ECO, STATE_ELECTRIC)
+            ],
         ),
         *parametrize_trigger_states(
             trigger="water_heater.turned_off",
