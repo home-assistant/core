@@ -109,6 +109,15 @@
       },
       "relay_aux3": {
         "name": "Auxiliary relay 3"
+      },
+      "circulation_pump_status": {
+        "name": "Circulation pump"
+      },
+      "flow_delay_status": {
+        "name": "Flow delay"
+      },
+      "power_on_delay_status": {
+        "name": "Power-on delay"
       }
     },
     "number": {
