@@ -110,6 +110,27 @@
       },
       "status": {
         "name": "Status"
+      },
+      "storage_active": {
+        "name": "Storage active",
+        "state": {
+          "off": "Inactive",
+          "on": "Active"
+        }
+      },
+      "storage_enabled": {
+        "name": "Storage enabled",
+        "state": {
+          "off": "Disabled",
+          "on": "Enabled"
+        }
+      },
+      "storage_shared": {
+        "name": "Storage shared",
+        "state": {
+          "off": "Not shared",
+          "on": "Shared"
+        }
       }
     },
     "button": {
@@ -216,6 +237,18 @@
       },
       "node_uptime": {
         "name": "Uptime"
+      },
+      "storage_available": {
+        "name": "Available storage"
+      },
+      "storage_total": {
+        "name": "Total storage"
+      },
+      "storage_used": {
+        "name": "Used storage"
+      },
+      "storage_used_percentage": {
+        "name": "Storage usage percentage"
       },
       "vm_cpu": {
         "name": "CPU usage"

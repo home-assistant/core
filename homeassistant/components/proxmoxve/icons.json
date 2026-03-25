@@ -1,5 +1,25 @@
 {
   "entity": {
+    "binary_sensor": {
+      "storage_active": {
+        "default": "mdi:play",
+        "state": {
+          "off": "mdi:stop"
+        }
+      },
+      "storage_enabled": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
+      },
+      "storage_shared": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "off": "mdi:lan-disconnect"
+        }
+      }
+    },
     "button": {
       "hibernate": {
         "default": "mdi:power-sleep"
@@ -83,6 +103,18 @@
       },
       "node_status": {
         "default": "mdi:server"
+      },
+      "storage_available": {
+        "default": "mdi:harddisk"
+      },
+      "storage_total": {
+        "default": "mdi:harddisk"
+      },
+      "storage_used": {
+        "default": "mdi:harddisk"
+      },
+      "storage_used_percentage": {
+        "default": "mdi:harddisk"
       },
       "vm_cpu": {
         "default": "mdi:cpu-64-bit"

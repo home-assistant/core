@@ -21,7 +21,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
-from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
+from .entity import (
+    ProxmoxContainerEntity,
+    ProxmoxNodeEntity,
+    ProxmoxStorageEntity,
+    ProxmoxVMEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -43,6 +48,13 @@ class ProxmoxVMSensorEntityDescription(SensorEntityDescription):
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox container sensor description."""
+
+    value_fn: Callable[[dict[str, Any]], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProxmoxStorageSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Proxmox storage sensor description."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
 
@@ -377,6 +389,50 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ),
 )
 
+STORAGE_SENSORS: tuple[ProxmoxStorageSensorEntityDescription, ...] = (
+    ProxmoxStorageSensorEntityDescription(
+        key="storage_used",
+        translation_key="storage_used",
+        value_fn=lambda data: data["used"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxStorageSensorEntityDescription(
+        key="storage_total",
+        translation_key="storage_total",
+        value_fn=lambda data: data["total"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxStorageSensorEntityDescription(
+        key="storage_available",
+        translation_key="storage_available",
+        value_fn=lambda data: data["avail"],
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxStorageSensorEntityDescription(
+        key="storage_used_percentage",
+        translation_key="storage_used_percentage",
+        value_fn=lambda data: round(data["used_fraction"] * 100, 1),
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -416,9 +472,20 @@ async def async_setup_entry(
             for entity_description in CONTAINER_SENSORS
         )
 
+    def _async_add_new_storages(
+        storages: list[tuple[ProxmoxNodeData, dict[str, Any]]],
+    ) -> None:
+        """Add new storage sensors."""
+        async_add_entities(
+            ProxmoxStorageSensor(coordinator, entity_description, storage, node_data)
+            for (node_data, storage) in storages
+            for entity_description in STORAGE_SENSORS
+        )
+
     coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
     coordinator.new_vms_callbacks.append(_async_add_new_vms)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    coordinator.new_storages_callbacks.append(_async_add_new_storages)
 
     _async_add_new_nodes(
         [
@@ -441,6 +508,14 @@ async def async_setup_entry(
             for node_data in coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
             if (node_data.node["node"], vmid) in coordinator.known_containers
+        ]
+    )
+    _async_add_new_storages(
+        [
+            (node_data, storage_data)
+            for node_data in coordinator.data.values()
+            for storage_name, storage_data in node_data.storages.items()
+            if (node_data.node["node"], storage_name) in coordinator.known_storages
         ]
     )
 
@@ -476,3 +551,14 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.container_data)
+
+
+class ProxmoxStorageSensor(ProxmoxStorageEntity, SensorEntity):
+    """Represents a Proxmox VE storage sensor."""
+
+    entity_description: ProxmoxStorageSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the native value of the sensor."""
+        return self.entity_description.value_fn(self.storage_data)

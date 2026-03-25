@@ -118,6 +118,9 @@ def mock_proxmox_client():
 
         node_mock.qemu.get.return_value = qemu_list
         node_mock.lxc.get.return_value = lxc_list
+        node_mock.storage.get.return_value = load_json_array_fixture(
+            "nodes/storage.json", DOMAIN
+        )
         node_mock.tasks.get.return_value = load_json_array_fixture(
             "nodes/tasks.json", DOMAIN
         )
