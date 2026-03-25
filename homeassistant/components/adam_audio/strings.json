@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This speaker is already configured. Its network address has been updated."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the device. Make sure the speaker is powered on and reachable on your local network, then try again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "IP address or hostname",
+          "port": "UDP port (default 49494)"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your ADAM Audio speaker.",
+          "port": "The UDP port of your ADAM Audio speaker."
+        },
+        "description": "Enter the IP address of your ADAM Audio A-Series speaker. If you don't know the port, leave it at the default ({default_port}).",
+        "title": "Add ADAM Audio speaker"
+      },
+      "zeroconf_confirm": {
+        "description": "Found **{name}** at `{host}`. Do you want to add it to Home Assistant?",
+        "title": "ADAM Audio speaker found"
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "bass": {
+        "name": "Bass"
+      },
+      "desk": {
+        "name": "Desk"
+      },
+      "presence": {
+        "name": "Presence"
+      },
+      "treble": {
+        "name": "Treble"
+      }
+    },
+    "select": {
+      "input_source": {
+        "name": "Input Source"
+      },
+      "voicing": {
+        "name": "Voicing"
+      }
+    },
+    "switch": {
+      "mute": {
+        "name": "Mute"
+      },
+      "sleep": {
+        "name": "Sleep"
+      }
+    }
+  }
+}

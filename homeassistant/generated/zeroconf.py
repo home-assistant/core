@@ -813,6 +813,12 @@ ZEROCONF = {
             "domain": "nut",
         },
     ],
+    "_oca._udp.local.": [
+        {
+            "domain": "adam_audio",
+            "name": "aseries*",
+        },
+    ],
     "_octoprint._tcp.local.": [
         {
             "domain": "octoprint",

@@ -29,6 +29,7 @@ FLOWS = {
         "accuweather",
         "acmeda",
         "actron_air",
+        "adam_audio",
         "adax",
         "adguard",
         "advantage_air",
