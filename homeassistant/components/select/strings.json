@@ -38,42 +38,42 @@
   },
   "services": {
     "select_first": {
-      "description": "Selects the first option.",
-      "name": "First"
+      "description": "Selects the first option of a select.",
+      "name": "Select first option"
     },
     "select_last": {
-      "description": "Selects the last option.",
-      "name": "Last"
+      "description": "Selects the last option of a select.",
+      "name": "Select last option"
     },
     "select_next": {
-      "description": "Selects the next option.",
+      "description": "Selects the next option of a select.",
       "fields": {
         "cycle": {
           "description": "If the option should cycle from the last to the first.",
           "name": "Cycle"
         }
       },
-      "name": "Next"
+      "name": "Select next option"
     },
     "select_option": {
-      "description": "Selects an option.",
+      "description": "Selects an option of a select.",
       "fields": {
         "option": {
           "description": "Option to be selected.",
           "name": "Option"
         }
       },
-      "name": "Select"
+      "name": "Select option"
     },
     "select_previous": {
-      "description": "Selects the previous option.",
+      "description": "Selects the previous option of a select.",
       "fields": {
         "cycle": {
           "description": "If the option should cycle from the first to the last.",
           "name": "Cycle"
         }
       },
-      "name": "Previous"
+      "name": "Select previous option"
     }
   },
   "title": "Select",
