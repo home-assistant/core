@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_binary_sensors[binary_sensor.pool_device_alarm_relay_status-entry]
+# name: test_all_binary_sensors[binary_sensor.pool_device_alarm_relay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.pool_device_alarm_relay_status',
+    'entity_id': 'binary_sensor.pool_device_alarm_relay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Alarm relay status',
+    'object_id_base': 'Alarm relay',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Alarm relay status',
+    'original_name': 'Alarm relay',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_alarm_relay_status-state]
+# name: test_all_binary_sensors[binary_sensor.pool_device_alarm_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Pool Device Alarm relay status',
+      'friendly_name': 'Pool Device Alarm relay',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_alarm_relay_status',
+    'entity_id': 'binary_sensor.pool_device_alarm_relay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_1_status-entry]
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_1_status',
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Auxiliary relay 1 status',
+    'object_id_base': 'Auxiliary relay 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Auxiliary relay 1 status',
+    'original_name': 'Auxiliary relay 1',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,21 +87,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_1_status-state]
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Pool Device Auxiliary relay 1 status',
+      'friendly_name': 'Pool Device Auxiliary relay 1',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_1_status',
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_2_status-entry]
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_2_status',
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,12 +123,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Auxiliary relay 2 status',
+    'object_id_base': 'Auxiliary relay 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Auxiliary relay 2 status',
+    'original_name': 'Auxiliary relay 2',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -138,21 +138,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_2_status-state]
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Pool Device Auxiliary relay 2 status',
+      'friendly_name': 'Pool Device Auxiliary relay 2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_2_status',
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_3_status-entry]
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -166,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_3_status',
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Auxiliary relay 3 status',
+    'object_id_base': 'Auxiliary relay 3',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Auxiliary relay 3 status',
+    'original_name': 'Auxiliary relay 3',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -189,21 +189,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_3_status-state]
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Pool Device Auxiliary relay 3 status',
+      'friendly_name': 'Pool Device Auxiliary relay 3',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_3_status',
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_tank_level-entry]
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_overfeed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -217,7 +217,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.pool_device_chlorine_tank_level',
+    'entity_id': 'binary_sensor.pool_device_chlorine_overfeed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -225,12 +225,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Chlorine tank level',
+    'object_id_base': 'Chlorine overfeed',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Chlorine tank level',
+    'original_name': 'Chlorine overfeed',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -240,14 +240,218 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_tank_level-state]
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_overfeed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Pool Device Chlorine tank level',
+      'friendly_name': 'Pool Device Chlorine overfeed',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_chlorine_tank_level',
+    'entity_id': 'binary_sensor.pool_device_chlorine_overfeed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_overfeed_alternative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_overfeed_alternative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine overfeed alternative',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Chlorine overfeed alternative',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_ofa_cl_alternative',
+    'unique_id': 'TEST123456789_alarm_ofa2_cl',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_overfeed_alternative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device Chlorine overfeed alternative',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_overfeed_alternative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_high-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_too_high',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine too high',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Chlorine too high',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_cl_too_high',
+    'unique_id': 'TEST123456789_alarm_cl_too_high',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_high-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device Chlorine too high',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_too_high',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_high_orp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_too_high_orp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine too high (ORP)',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Chlorine too high (ORP)',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_cl_too_high_orp',
+    'unique_id': 'TEST123456789_alarm_cl_too_high_orp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_high_orp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device Chlorine too high (ORP)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_too_high_orp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_low_orp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_too_low_orp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine too low (ORP)',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Chlorine too low (ORP)',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_cl_too_low_orp',
+    'unique_id': 'TEST123456789_alarm_cl_too_low_orp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_chlorine_too_low_orp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device Chlorine too low (ORP)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_chlorine_too_low_orp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -356,6 +560,57 @@
     'state': 'off',
   })
 # ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_orp_overfeed_alternative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_orp_overfeed_alternative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ORP overfeed alternative',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'ORP overfeed alternative',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_ofa_orp_alternative',
+    'unique_id': 'TEST123456789_alarm_ofa2_orp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_orp_overfeed_alternative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device ORP overfeed alternative',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_orp_overfeed_alternative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_orp_tank_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -458,6 +713,57 @@
     'state': 'off',
   })
 # ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_ph_overfeed_alternative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_ph_overfeed_alternative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH overfeed alternative',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'pH overfeed alternative',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_ofa_ph_alternative',
+    'unique_id': 'TEST123456789_alarm_ofa2_ph',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_ph_overfeed_alternative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device pH overfeed alternative',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_ph_overfeed_alternative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_ph_tank_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -503,6 +809,108 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pool_device_ph_tank_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_ph_too_high-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_ph_too_high',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH too high',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'pH too high',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_ph_too_high',
+    'unique_id': 'TEST123456789_alarm_ph_too_high',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_ph_too_high-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device pH too high',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_ph_too_high',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_ph_too_low-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_ph_too_low',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH too low',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'pH too low',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_ph_too_low',
+    'unique_id': 'TEST123456789_alarm_ph_too_low',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_ph_too_low-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device pH too low',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_ph_too_low',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -558,5 +966,158 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_system_standby-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_system_standby',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'System standby',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'System standby',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_system_standby',
+    'unique_id': 'TEST123456789_alarm_system_standby',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_system_standby-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device System standby',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_system_standby',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_water_too_cold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_water_too_cold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water too cold',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Water too cold',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_water_too_cold',
+    'unique_id': 'TEST123456789_alarm_water_too_cold',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_water_too_cold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device Water too cold',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_water_too_cold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_water_too_hot-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_water_too_hot',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water too hot',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Water too hot',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_water_too_hot',
+    'unique_id': 'TEST123456789_alarm_water_too_hot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_water_too_hot-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Pool Device Water too hot',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_water_too_hot',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

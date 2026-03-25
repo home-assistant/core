@@ -463,9 +463,8 @@ async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
         trigger=trigger,
         trigger_options=trigger_options,
         entity_id="light.test_light",
-        entity_state=STATE_ON,
-        reset_attributes={ATTR_BRIGHTNESS: 0},
-        trigger_attributes={ATTR_BRIGHTNESS: 128},
+        reset_state={"state": STATE_ON, "attributes": {ATTR_BRIGHTNESS: 0}},
+        trigger_state={"state": STATE_ON, "attributes": {ATTR_BRIGHTNESS: 128}},
         limit_entities=[
             (limit_entities[0], "10"),
             (limit_entities[1], "90"),

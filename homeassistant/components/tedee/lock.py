@@ -84,7 +84,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._lock.is_state_jammed
+        return self._lock.is_jammed
 
     @property
     def available(self) -> bool:
@@ -101,13 +101,13 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             self._lock.state = TedeeLockState.UNLOCKING
             self.async_write_ha_state()
 
-            await self.coordinator.tedee_client.unlock(self._lock.lock_id)
+            await self.coordinator.tedee_client.unlock(self._lock.id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unlock_failed",
-                translation_placeholders={"lock_id": str(self._lock.lock_id)},
+                translation_placeholders={"lock_id": str(self._lock.id)},
             ) from ex
 
     async def async_lock(self, **kwargs: Any) -> None:
@@ -116,13 +116,13 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             self._lock.state = TedeeLockState.LOCKING
             self.async_write_ha_state()
 
-            await self.coordinator.tedee_client.lock(self._lock.lock_id)
+            await self.coordinator.tedee_client.lock(self._lock.id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="lock_failed",
-                translation_placeholders={"lock_id": str(self._lock.lock_id)},
+                translation_placeholders={"lock_id": str(self._lock.id)},
             ) from ex
 
 
@@ -140,11 +140,11 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
             self._lock.state = TedeeLockState.UNLOCKING
             self.async_write_ha_state()
 
-            await self.coordinator.tedee_client.open(self._lock.lock_id)
+            await self.coordinator.tedee_client.open(self._lock.id)
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="open_failed",
-                translation_placeholders={"lock_id": str(self._lock.lock_id)},
+                translation_placeholders={"lock_id": str(self._lock.id)},
             ) from ex
