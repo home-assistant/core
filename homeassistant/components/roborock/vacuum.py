@@ -150,6 +150,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             coordinator.duid_slug,
             coordinator,
         )
+        self._status_trait = coordinator.properties_api.status
         self._home_trait = coordinator.properties_api.home
         self._maps_trait = coordinator.properties_api.maps
 
@@ -176,31 +177,37 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     @property
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speeds."""
-        return [mode.value for mode in self._device_status.fan_speed_options]
+        if self.coordinator.data is None:
+            return []
+        return [mode.value for mode in self._status_trait.fan_speed_options]
 
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        assert self._device_status.state is not None
-        return STATE_CODE_TO_STATE.get(self._device_status.state)
+        if self.coordinator.data is None or self._status_trait.state is None:
+            return None
+        return STATE_CODE_TO_STATE.get(self._status_trait.state)
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self._device_status.fan_speed_name
+        if self.coordinator.data is None:
+            return None
+        return self._status_trait.fan_speed_name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        if self._device_status.in_returning == 1:
-            await self.send(RoborockCommand.APP_CHARGE)
-        elif self._device_status.in_cleaning == 2:
-            await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
-        elif self._device_status.in_cleaning == 3:
-            await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
-        elif self._device_status.in_cleaning == 4:
-            await self.send(RoborockCommand.APP_RESUME_BUILD_MAP)
-        else:
-            await self.send(RoborockCommand.APP_START)
+        command = RoborockCommand.APP_START
+        if self.coordinator.data is not None:
+            if self._status_trait.in_returning == 1:
+                command = RoborockCommand.APP_CHARGE
+            elif self._status_trait.in_cleaning == 2:
+                command = RoborockCommand.RESUME_ZONED_CLEAN
+            elif self._status_trait.in_cleaning == 3:
+                command = RoborockCommand.RESUME_SEGMENT_CLEAN
+            elif self._status_trait.in_cleaning == 4:
+                command = RoborockCommand.APP_RESUME_BUILD_MAP
+        await self.send(command)
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -224,10 +231,15 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
+        if self.coordinator.data is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            )
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
             [
-                {v: k for k, v in self._device_status.fan_speed_mapping.items()}[
+                {v: k for k, v in self._status_trait.fan_speed_mapping.items()}[
                     fan_speed
                 ]
             ],

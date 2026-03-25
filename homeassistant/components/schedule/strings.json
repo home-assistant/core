@@ -70,7 +70,7 @@
     },
     "reload": {
       "description": "Reloads schedules from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload schedules"
     }
   },
   "title": "Schedule",
