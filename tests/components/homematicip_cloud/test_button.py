@@ -1,5 +1,7 @@
 """Tests for HomematicIP Cloud button."""
 
+from typing import Any
+
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -37,6 +39,44 @@ async def test_hmip_garage_door_controller_button(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == now.isoformat()
+
+
+async def test_hmip_full_flush_lock_controller_button(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    default_mock_hap_factory: HomeFactory,
+    full_flush_lock_controller_device_data: dict[str, Any],
+) -> None:
+    """Test HomematicIP full flush lock controller opener button."""
+    entity_id = "button.universal_motorschloss_controller_door_opener"
+    entity_name = "Universal Motorschloss Controller Door opener"
+    device_model = "HmIP-FLC"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Universal Motorschloss Controller"],
+        extra_devices=[full_flush_lock_controller_device_data],
+    )
+
+    get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
+    freezer.move_to(now)
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    assert hmip_device.mock_calls[-1][0] == "send_start_impulse_async"
 
     state = hass.states.get(entity_id)
     assert state
