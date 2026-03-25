@@ -1,0 +1,12 @@
+play_rtttl:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: smlight
+    tone:
+      required: true
+      example: "Doorbell:d=4,o=5,b=100:e,c"
+      selector:
+        text:
