@@ -125,6 +125,9 @@ async def _async_setup_cloudhook(
 
     if local_only:
         # Local-only user should not have a cloudhook
+        if cloud.async_is_logged_in(hass) and CONF_CLOUDHOOK_URL in entry.data:
+            with suppress(cloud.CloudNotAvailable, ValueError):
+                await cloud.async_delete_cloudhook(hass, webhook_id)
         clean_cloudhook()
         return
 
