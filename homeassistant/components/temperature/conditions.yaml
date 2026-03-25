@@ -1,0 +1,52 @@
+.number_or_entity_temperature: &number_or_entity_temperature
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                - domain: input_number
+                  unit_of_measurement:
+                    - "°C"
+                    - "°F"
+                - domain: sensor
+                  device_class: temperature
+                - domain: number
+                  device_class: temperature
+      translation_key: number_or_entity
+
+.condition_unit_temperature: &condition_unit_temperature
+  required: false
+  selector:
+    select:
+      options:
+        - "°C"
+        - "°F"
+
+is_value:
+  target:
+    entity:
+      - domain: sensor
+        device_class: temperature
+      - domain: climate
+      - domain: water_heater
+      - domain: weather
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+    above: *number_or_entity_temperature
+    below: *number_or_entity_temperature
+    unit: *condition_unit_temperature
