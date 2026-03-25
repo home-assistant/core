@@ -601,6 +601,7 @@ class ControllerEvents:
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
 
+        self.node_events.value_updates_disc_info.pop(node.node_id, None)
         self.remove_device(device)
 
     @callback
