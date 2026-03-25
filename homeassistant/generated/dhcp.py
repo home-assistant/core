@@ -9,6 +9,19 @@ from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
     {
+        "domain": "actron_air",
+        "hostname": "neo-*",
+        "macaddress": "FC0FE7*",
+    },
+    {
+        "domain": "airobot",
+        "hostname": "airobot-thermostat-*",
+    },
+    {
+        "domain": "airos",
+        "registered_devices": True,
+    },
+    {
         "domain": "airthings",
         "hostname": "airthings-view",
     },
@@ -389,6 +402,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "litter-robot4",
     },
     {
+        "domain": "litterrobot",
+        "hostname": "whiskerrobots",
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*",
@@ -562,6 +579,22 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "playstation_network",
         "macaddress": "84E657*",
+    },
+    {
+        "domain": "playstation_network",
+        "hostname": "ps5-*",
+    },
+    {
+        "domain": "playstation_network",
+        "hostname": "ps4-*",
+    },
+    {
+        "domain": "playstation_network",
+        "hostname": "ps3",
+    },
+    {
+        "domain": "pooldose",
+        "hostname": "kommspot",
     },
     {
         "domain": "powerwall",
@@ -789,6 +822,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "286D97*",
     },
     {
+        "domain": "smartthings",
+        "hostname": "smarthub",
+        "macaddress": "683A48*",
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "samsung-*",
+    },
+    {
         "domain": "smlight",
         "registered_devices": True,
     },
@@ -817,12 +859,24 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "001E0C*",
     },
     {
+        "domain": "sunricher_dali",
+        "registered_devices": True,
+    },
+    {
         "domain": "tado",
         "hostname": "tado*",
     },
     {
         "domain": "tailwind",
         "registered_devices": True,
+    },
+    {
+        "domain": "teltonika",
+        "macaddress": "209727*",
+    },
+    {
+        "domain": "teltonika",
+        "macaddress": "001E42*",
     },
     {
         "domain": "tesla_wall_connector",
@@ -1314,6 +1368,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "0023C1*",
     },
     {
+        "domain": "vesync",
+        "hostname": "levoit-*",
+    },
+    {
         "domain": "vicare",
         "macaddress": "B87424*",
     },
@@ -1352,6 +1410,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "wmspro",
         "registered_devices": True,
+    },
+    {
+        "domain": "xbox",
+        "hostname": "xbox*",
     },
     {
         "domain": "yale",

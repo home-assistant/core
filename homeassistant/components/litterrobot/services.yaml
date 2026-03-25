@@ -3,6 +3,7 @@
 set_sleep_mode:
   target:
     entity:
+      domain: vacuum
       integration: litterrobot
   fields:
     enabled:

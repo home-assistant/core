@@ -3,7 +3,6 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import freeze_time
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
     PSNAWPForbiddenError,
@@ -63,7 +62,7 @@ async def test_notify_platform(
         "notify.testuser_direct_message_publicuniversalfriend",
     ],
 )
-@freeze_time("2025-07-28T00:00:00+00:00")
+@pytest.mark.freeze_time("2025-07-28T00:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_send_message(
     hass: HomeAssistant,
@@ -101,7 +100,12 @@ async def test_send_message(
 
 @pytest.mark.parametrize(
     "exception",
-    [PSNAWPClientError, PSNAWPForbiddenError, PSNAWPNotFoundError, PSNAWPServerError],
+    [
+        PSNAWPClientError("error msg"),
+        PSNAWPForbiddenError("error msg"),
+        PSNAWPNotFoundError("error msg"),
+        PSNAWPServerError("error msg"),
+    ],
 )
 async def test_send_message_exceptions(
     hass: HomeAssistant,

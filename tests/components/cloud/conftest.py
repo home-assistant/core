@@ -66,6 +66,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             certificate_status=None,
             instance_domain=None,
             is_connected=False,
+            latency_by_location={},
         )
         mock_cloud.auth = MagicMock(spec=CognitoAuth)
         mock_cloud.iot = MagicMock(
@@ -85,6 +86,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
                 return_value=lambda: "mock-unregister"
             ),
         )
+        mock_cloud.llm = MagicMock(async_ensure_token=AsyncMock())
 
         def set_up_mock_cloud(
             cloud_client: CloudClient, mode: str, **kwargs: Any
@@ -244,6 +246,7 @@ async def cloud_prefs(hass: HomeAssistant) -> CloudPreferences:
 async def mock_cloud_setup(hass: HomeAssistant) -> None:
     """Set up the cloud."""
     await mock_cloud(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture

@@ -7,13 +7,12 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, final
 
-import aiohttp
+from universal_silabs_flasher.flasher import YellowFlasher
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
-    HassioAPIError,
-    async_get_yellow_settings,
-    async_set_yellow_settings,
+    SupervisorError,
+    YellowOptions,
     get_supervisor_client,
 )
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
@@ -27,6 +26,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    probe_silabs_firmware_info,
 )
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
@@ -82,6 +82,9 @@ else:
 class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
+    ZIGBEE_BAUDRATE = 115200
+    _flasher_cls = YellowFlasher
+
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -105,7 +108,7 @@ class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             firmware_name="OpenThread",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             step_id="install_thread_firmware",
-            next_step_id="start_otbr_addon",
+            next_step_id="finish_thread_installation",
         )
 
 
@@ -141,8 +144,13 @@ class HomeAssistantYellowConfigFlow(
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        assert self._device is not None
+
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        await self._probe_firmware_info()
+        self._probed_firmware_info = await probe_silabs_firmware_info(
+            self._device,
+            flasher_cls=self._flasher_cls,
+        )
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
         if (
@@ -216,21 +224,22 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
                 return self.async_create_entry(data={})
             try:
                 async with asyncio.timeout(10):
-                    await async_set_yellow_settings(self.hass, user_input)
-            except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                    await self._supervisor_client.os.set_yellow_options(
+                        YellowOptions.from_dict(user_input)
+                    )
+            except (TimeoutError, SupervisorError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
                 return self.async_abort(reason="write_hw_settings_error")
             return await self.async_step_reboot_menu()
 
         try:
             async with asyncio.timeout(10):
-                self._hw_settings: dict[str, bool] = await async_get_yellow_settings(
-                    self.hass
-                )
-        except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                yellow_info = await self._supervisor_client.os.yellow_info()
+        except (TimeoutError, SupervisorError) as err:
             _LOGGER.warning("Failed to read hardware settings", exc_info=err)
             return self.async_abort(reason="read_hw_settings_error")
 
+        self._hw_settings: dict[str, bool] = yellow_info.to_dict()
         schema = self.add_suggested_values_to_schema(
             STEP_HW_SETTINGS_SCHEMA, self._hw_settings
         )
@@ -343,7 +352,7 @@ class HomeAssistantYellowOptionsFlowHandler(
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_type=ApplicationType(self._config_entry.data["firmware"]),
             firmware_version=None,
             source="guess",
             owners=[],

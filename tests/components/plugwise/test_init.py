@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
+    InvalidSetupError,
     InvalidXMLError,
     PlugwiseError,
     ResponseError,
@@ -14,7 +15,11 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from homeassistant.components.plugwise.const import DOMAIN
+from homeassistant.components.plugwise.const import (
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    P1_UPDATE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -89,6 +94,7 @@ async def test_load_unload_config_entry(
     [
         (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
         (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
+        (InvalidSetupError, ConfigEntryState.SETUP_ERROR),
         (InvalidXMLError, ConfigEntryState.SETUP_RETRY),
         (PlugwiseError, ConfigEntryState.SETUP_RETRY),
         (ResponseError, ConfigEntryState.SETUP_RETRY),
@@ -169,7 +175,7 @@ async def test_migrate_unique_id_temperature(
     """Test migration of unique_id."""
     mock_config_entry.add_to_hass(hass)
 
-    entity: entity_registry.RegistryEntry = entity_registry.async_get_or_create(
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
     )
@@ -257,7 +263,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 38
+        == 56
     )
     assert (
         len(
@@ -265,7 +271,7 @@ async def test_update_device(
                 device_registry, mock_config_entry.entry_id
             )
         )
-        == 8
+        == 11
     )
 
     # Add a 2nd Tom/Floor
@@ -289,7 +295,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 45
+            == 63
         )
         assert (
             len(
@@ -297,12 +303,12 @@ async def test_update_device(
                     device_registry, mock_config_entry.entry_id
                 )
             )
-            == 9
+            == 12
         )
-        item_list: list[str] = []
-        for device_entry in list(device_registry.devices.values()):
-            item_list.extend(x[1] for x in device_entry.identifiers)
-        assert "01234567890abcdefghijklmnopqrstu" in item_list
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, "01234567890abcdefghijklmnopqrstu")}
+        )
+        assert device_entry is not None
 
     # Remove the existing Tom/Floor
     data["f871b8c4d63549319221e294e4f88074"]["thermostats"].update(
@@ -320,7 +326,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 38
+            == 56
         )
         assert (
             len(
@@ -328,9 +334,119 @@ async def test_update_device(
                     device_registry, mock_config_entry.entry_id
                 )
             )
-            == 8
+            == 11
         )
-        item_list: list[str] = []
-        for device_entry in list(device_registry.devices.values()):
-            item_list.extend(x[1] for x in device_entry.identifiers)
-        assert "1772a4ea304041adb83f357b751341ff" not in item_list
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, "1772a4ea304041adb83f357b751341ff")}
+        )
+        assert device_entry is None
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_delete_removed_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device removal after a coordinator refresh."""
+    data = mock_smile_adam_heat_cool.async_update.return_value
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6")}
+    )
+    assert device_entry is not None
+
+    data.pop("14df5c4dc8cb4ba69f9d1ac0eaf7c5c6")
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6")}
+    )
+    assert device_entry is None
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_update_device_firmware(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device firmware update via coordinator."""
+    data = mock_smile_adam_heat_cool.async_update.return_value
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "da224107914542988a88561b4452b0f6")}
+    )
+    assert device_entry is not None
+    assert str(device_entry.sw_version) == "3.9.0"
+
+    data["da224107914542988a88561b4452b0f6"]["firmware"] = "3.10.13"
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "da224107914542988a88561b4452b0f6")}
+    )
+    assert device_entry is not None
+    assert str(device_entry.sw_version) == "3.10.13"
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_update_interval_adam(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Adam update interval."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_smile_adam_heat_cool.async_update.call_count == 1
+
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_smile_adam_heat_cool.async_update.call_count == 2
+
+
+@pytest.mark.parametrize("chosen_env", ["p1v4_442_single"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True
+)
+async def test_update_interval_p1(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_p1: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Smile P1 update interval."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_smile_p1.async_update.call_count == 1
+
+    freezer.tick(P1_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_smile_p1.async_update.call_count == 2

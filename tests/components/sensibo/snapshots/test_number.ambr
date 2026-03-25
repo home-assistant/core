@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[load_platforms0][number.bedroom_humidity_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -60,8 +62,9 @@
 # ---
 # name: test_number[load_platforms0][number.bedroom_temperature_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -84,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -119,8 +123,9 @@
 # ---
 # name: test_number[load_platforms0][number.hallway_humidity_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -143,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -178,8 +184,9 @@
 # ---
 # name: test_number[load_platforms0][number.hallway_temperature_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -202,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -237,8 +245,9 @@
 # ---
 # name: test_number[load_platforms0][number.kitchen_humidity_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -261,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -296,8 +306,9 @@
 # ---
 # name: test_number[load_platforms0][number.kitchen_temperature_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -320,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

@@ -26,9 +26,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import WLEDConfigEntry
-from .coordinator import WLEDDataUpdateCoordinator
+from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,7 +73,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: (utcnow() - device.info.uptime),
+        value_fn=lambda device: utcnow() - device.info.uptime,
     ),
     WLEDSensorEntityDescription(
         key="free_heap",

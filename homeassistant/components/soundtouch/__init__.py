@@ -4,11 +4,13 @@ import logging
 
 from libsoundtouch import soundtouch_device
 from libsoundtouch.device import SoundTouchDevice
+import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -130,7 +132,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bose SoundTouch from a config entry."""
-    device = await hass.async_add_executor_job(soundtouch_device, entry.data[CONF_HOST])
+    try:
+        device = await hass.async_add_executor_job(
+            soundtouch_device, entry.data[CONF_HOST]
+        )
+    except requests.exceptions.ConnectionError as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to SoundTouch device at {entry.data[CONF_HOST]}"
+        ) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SoundTouchData(device)
 

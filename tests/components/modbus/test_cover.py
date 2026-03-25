@@ -16,7 +16,7 @@ from homeassistant.components.modbus.const import (
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
-    MODBUS_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -187,7 +187,7 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
     """Run test for service homeassistant.update_entity."""
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
-        "update_entity",
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -305,7 +305,7 @@ async def test_no_discovery_info_cover(
     assert await async_setup_component(
         hass,
         COVER_DOMAIN,
-        {COVER_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {COVER_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert COVER_DOMAIN in hass.config.components

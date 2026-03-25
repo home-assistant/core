@@ -27,6 +27,10 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
+CONF_DOCUMENTATION_URL = "documentation_url"
+DOCUMENTATION_URL = (
+    "https://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
+)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -84,7 +88,10 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+                description_placeholders={
+                    CONF_URL: self._oauth_values.auth_url,
+                    CONF_DOCUMENTATION_URL: DOCUMENTATION_URL,
+                },
             )
 
         auth_code = user_input[CONF_AUTH_CODE]
@@ -102,7 +109,10 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
                 errors={CONF_AUTH_CODE: "invalid_auth_code_length"},
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+                description_placeholders={
+                    CONF_URL: self._oauth_values.auth_url,
+                    CONF_DOCUMENTATION_URL: DOCUMENTATION_URL,
+                },
             )
 
         errors = {}
@@ -124,7 +134,10 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
                 errors=errors,
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+                description_placeholders={
+                    CONF_URL: self._oauth_values.auth_url,
+                    CONF_DOCUMENTATION_URL: DOCUMENTATION_URL,
+                },
             )
 
         simplisafe_user_id = str(simplisafe.user_id)

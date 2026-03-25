@@ -56,13 +56,8 @@ async def async_get_last_network_settings(
 
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    async with radio_mgr.connect_zigpy_app() as app:
-        try:
-            settings = max(app.backups, key=lambda b: b.backup_time)
-        except ValueError:
-            settings = None
-
-    return settings
+    async with radio_mgr.create_zigpy_app(connect=False) as app:
+        return app.backups.most_recent_backup()
 
 
 async def async_get_network_settings(

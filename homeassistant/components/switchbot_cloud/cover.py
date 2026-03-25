@@ -109,15 +109,13 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=str(0))
+        await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=0)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.send_api_command(
-            RollerShadeCommands.SET_POSITION, parameters=str(100)
-        )
+        await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=100)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
@@ -126,7 +124,7 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
         position: int | None = kwargs.get("position")
         if position is not None:
             await self.send_api_command(
-                RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
+                RollerShadeCommands.SET_POSITION, parameters=(100 - position)
             )
             await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()

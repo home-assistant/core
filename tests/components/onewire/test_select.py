@@ -72,6 +72,7 @@ async def test_selects_delayed(
 
 
 @pytest.mark.parametrize("device_id", ["28.111111111111"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_selection_option_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

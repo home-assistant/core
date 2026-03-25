@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.energy_site_backup_capable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup capable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.energy_site_grid_services_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.energy_site_grid_services_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -143,10 +149,62 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.energy_site_grid_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_grid_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid status',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Grid status',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_status',
+    'unique_id': '123456-grid_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.energy_site_grid_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Grid status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_grid_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.energy_site_storm_watch_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storm watch active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +252,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_auto_seat_climate_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto seat climate left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +302,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_auto_seat_climate_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto seat climate right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,8 +352,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_auto_steering_wheel_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto steering wheel heater',
     'options': dict({
     }),
     'original_device_class': None,
@@ -337,8 +402,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_battery_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery heater',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -386,8 +453,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -405,6 +473,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -435,8 +504,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_cabin_overheat_protection_actively_cooling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -454,6 +524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection actively cooling',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -484,8 +555,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_charge_cable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -503,6 +575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge cable',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -533,8 +606,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -552,6 +626,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -582,8 +657,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_dashcam-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -601,6 +677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dashcam',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -631,8 +708,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_front_driver_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -650,6 +728,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front driver door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -680,8 +759,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_front_driver_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -699,6 +779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front driver window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -729,8 +810,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_front_passenger_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -748,6 +830,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front passenger door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -778,8 +861,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_front_passenger_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -797,6 +881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front passenger window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -827,8 +912,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_preconditioning_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -846,6 +932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preconditioning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -875,8 +962,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_rear_driver_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -894,6 +982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear driver door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -924,8 +1013,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_rear_driver_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -943,6 +1033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear driver window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -973,8 +1064,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_rear_passenger_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -992,6 +1084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear passenger door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1022,8 +1115,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_rear_passenger_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1041,6 +1135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear passenger window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -1071,8 +1166,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_scheduled_charging_pending-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1090,6 +1186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scheduled charging pending',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1119,8 +1216,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1138,6 +1236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1168,8 +1267,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_tire_pressure_warning_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1187,6 +1287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning front left',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1217,8 +1318,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_tire_pressure_warning_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1236,6 +1338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning front right',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1266,8 +1369,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_tire_pressure_warning_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1285,6 +1389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning rear left',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1315,8 +1420,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_tire_pressure_warning_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1334,6 +1440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning rear right',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1364,8 +1471,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_trip_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1383,6 +1491,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip charging',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1412,8 +1521,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.test_user_present-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1431,6 +1541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User present',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,

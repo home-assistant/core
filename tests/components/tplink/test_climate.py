@@ -225,6 +225,14 @@ async def test_unknown_mode(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert "Unknown thermostat state, defaulting to OFF" in caplog.text
 
+    # Second update, make sure the warning is not logged again
+    caplog.clear()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+    assert "Unknown thermostat state, defaulting to OFF" not in caplog.text
+
 
 async def test_missing_feature_attributes(
     hass: HomeAssistant,

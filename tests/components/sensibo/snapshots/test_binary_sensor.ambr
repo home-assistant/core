@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_filter_clean_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_pure_boost_linked_with_ac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with AC',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_pure_boost_linked_with_indoor_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with indoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_pure_boost_linked_with_outdoor_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -197,8 +205,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_pure_boost_linked_with_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -246,8 +256,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_filter_clean_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -265,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -295,8 +307,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_motion_sensor_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -314,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -344,8 +358,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_motion_sensor_main_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -363,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -392,8 +408,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_motion_sensor_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -411,6 +428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -441,8 +459,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_room_occupied-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -460,6 +479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room occupied',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -490,8 +510,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_filter_clean_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -509,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -539,8 +561,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_pure_boost_linked_with_ac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -558,6 +581,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with AC',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -588,8 +612,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_pure_boost_linked_with_indoor_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -607,6 +632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with indoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -637,8 +663,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_pure_boost_linked_with_outdoor_air_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -656,6 +683,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -686,8 +714,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_pure_boost_linked_with_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -705,6 +734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,

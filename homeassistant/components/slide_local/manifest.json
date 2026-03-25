@@ -10,8 +10,8 @@
   "requirements": ["goslide-api==0.7.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "slide*"
+      "name": "slide*",
+      "type": "_http._tcp.local."
     }
   ]
 }

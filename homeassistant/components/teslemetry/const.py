@@ -9,6 +9,11 @@ DOMAIN = "teslemetry"
 
 LOGGER = logging.getLogger(__package__)
 
+# OAuth
+AUTHORIZE_URL = "https://teslemetry.com/connect"
+TOKEN_URL = "https://api.teslemetry.com/oauth/token"
+CLIENT_ID = "homeassistant"
+
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
     "generator_energy_exported",

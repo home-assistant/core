@@ -23,11 +23,12 @@ def normalize_hue_transition(transition: float | None) -> float | None:
     return transition
 
 
-def normalize_hue_colortemp(colortemp_k: int | None) -> int | None:
+def normalize_hue_colortemp(
+    colortemp_k: int | None, min_mireds: int, max_mireds: int
+) -> int | None:
     """Return color temperature within Hue's ranges."""
     if colortemp_k is None:
         return None
-    colortemp = color_util.color_temperature_kelvin_to_mired(colortemp_k)
-    # Hue only accepts a range between 153..500
-    colortemp = min(colortemp, 500)
-    return max(colortemp, 153)
+    colortemp_mireds = color_util.color_temperature_kelvin_to_mired(colortemp_k)
+    # Hue only accepts a range between min_mireds..max_mireds
+    return min(max(colortemp_mireds, min_mireds), max_mireds)

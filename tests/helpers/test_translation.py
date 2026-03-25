@@ -450,10 +450,10 @@ async def test_caching(hass: HomeAssistant) -> None:
         side_effect=translation.build_resources,
     ) as mock_build_resources:
         load1 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 7
+        assert len(mock_build_resources.mock_calls) == 9
 
         load2 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 7
+        assert len(mock_build_resources.mock_calls) == 9
 
         assert load1 == load2
 
@@ -681,6 +681,92 @@ async def test_translate_state(hass: HomeAssistant) -> None:
             ]
         )
         assert result == "on"
+
+
+async def test_translate_state_attr(hass: HomeAssistant) -> None:
+    """Test the state attribute translation helper."""
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.platform.entity.climate.translation_key.state_attributes.fan_mode.state.auto": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass,
+            "auto",
+            "climate",
+            "platform",
+            "translation_key",
+            None,
+            "fan_mode",
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.climate.entity_component.device_class.state_attributes.fan_mode.state.auto": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass,
+            "auto",
+            "climate",
+            "platform",
+            None,
+            "device_class",
+            "fan_mode",
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity_component")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.climate.entity_component._.state_attributes.fan_mode.state.auto": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass, "auto", "climate", "platform", None, None, "fan_mode"
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity_component")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={},
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass, "auto", "climate", "platform", None, None, "fan_mode"
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity_component"),
+            ]
+        )
+        assert result == "auto"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={},
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass,
+            "auto",
+            "climate",
+            "platform",
+            "translation_key",
+            "device_class",
+            "fan_mode",
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity"),
+                call(hass, hass.config.language, "entity_component"),
+            ]
+        )
+        assert result == "auto"
 
 
 async def test_get_translations_still_has_title_without_translations_files(

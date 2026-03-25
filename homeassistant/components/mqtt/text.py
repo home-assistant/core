@@ -27,7 +27,14 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_MAX,
+    CONF_MIN,
+    CONF_PATTERN,
+    CONF_STATE_TOPIC,
+)
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
@@ -42,12 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-CONF_MAX = "max"
-CONF_MIN = "min"
-CONF_PATTERN = "pattern"
-
 DEFAULT_NAME = "MQTT Text"
-DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
     {

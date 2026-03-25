@@ -59,8 +59,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Skybeacon sensor."""
-    name = config.get(CONF_NAME)
-    mac = config.get(CONF_MAC)
+    name: str = config[CONF_NAME]
+    mac: str = config[CONF_MAC]
     _LOGGER.debug("Setting up")
 
     mon = Monitor(hass, mac, name)
@@ -79,54 +79,36 @@ def setup_platform(
 class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
 
+    _attr_extra_state_attributes = {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, name, mon):
+    def __init__(self, name: str, mon: Monitor) -> None:
         """Initialize a sensor."""
         self.mon = mon
-        self._name = name
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_name = name
 
     @property
     def native_value(self):
         """Return the state of the device."""
         return self.mon.data["humid"]
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
-
 
 class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_extra_state_attributes = {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
-    def __init__(self, name, mon):
+    def __init__(self, name: str, mon: Monitor) -> None:
         """Initialize a sensor."""
         self.mon = mon
-        self._name = name
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_name = name
 
     @property
     def native_value(self):
         """Return the state of the device."""
         return self.mon.data["temp"]
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
 class Monitor(threading.Thread, SensorEntity):

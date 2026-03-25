@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from dataclasses import fields
 import logging
 from types import MethodType
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 from aiohasupervisor.models import (
     AddonsOptions,
@@ -85,6 +84,7 @@ def mock_addon_store_info(
     supervisor_client.store.addon_info.return_value = addon_info = Mock(
         spec=StoreAddonComplete,
         slug="test",
+        name="test",
         repository="core",
         available=True,
         installed=False,
@@ -110,15 +110,18 @@ def mock_addon_info(
     supervisor_client.addons.addon_info.return_value = addon_info = Mock(
         spec=InstalledAddonComplete,
         slug="test",
+        name="test",
         repository="core",
         available=False,
         hostname="",
         options={},
         state="unknown",
         update_available=False,
-        version=None,
+        version="1.0.0",
+        version_latest="1.0.0",
         supervisor_api=False,
         supervisor_role="default",
+        icon=False,
     )
     addon_info.name = "test"
     addon_info.to_dict = MethodType(
@@ -195,14 +198,6 @@ def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | N
         addon_options.update(options.config)
 
     return set_addon_options
-
-
-def mock_create_backup() -> Generator[AsyncMock]:
-    """Mock create backup."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_create_backup"
-    ) as create_backup:
-        yield create_backup
 
 
 def mock_addon_stats(supervisor_client: AsyncMock) -> AsyncMock:

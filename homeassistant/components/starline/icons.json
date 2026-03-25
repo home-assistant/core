@@ -1,31 +1,31 @@
 {
   "entity": {
     "binary_sensor": {
+      "autostart": {
+        "default": "mdi:auto-mode"
+      },
       "hand_brake": {
         "default": "mdi:car-brake-parking"
       },
       "handsfree": {
         "default": "mdi:hand-back-right"
       },
-      "neutral": {
-        "default": "mdi:car-shift-pattern"
+      "ignition": {
+        "default": "mdi:key-variant"
       },
       "moving_ban": {
         "default": "mdi:car-off"
       },
-      "ignition": {
-        "default": "mdi:key-variant"
-      },
-      "autostart": {
-        "default": "mdi:auto-mode"
+      "neutral": {
+        "default": "mdi:car-shift-pattern"
       }
     },
     "button": {
-      "horn": {
-        "default": "mdi:bullhorn-outline"
-      },
       "flex": {
         "default": "mdi:star-circle-outline"
+      },
+      "horn": {
+        "default": "mdi:bullhorn-outline"
       },
       "panic": {
         "default": "mdi:alarm-note"
@@ -40,36 +40,30 @@
       "balance": {
         "default": "mdi:cash-multiple"
       },
-      "fuel": {
-        "default": "mdi:fuel"
-      },
       "errors": {
         "default": "mdi:alert-octagon"
       },
-      "mileage": {
-        "default": "mdi:counter"
+      "fuel": {
+        "default": "mdi:fuel"
       },
       "gps_count": {
         "default": "mdi:satellite-variant"
+      },
+      "mileage": {
+        "default": "mdi:counter"
       }
     },
     "switch": {
-      "engine": {
-        "default": "mdi:engine-off-outline",
-        "state": {
-          "on": "mdi:engine-outline"
-        }
-      },
-      "webasto": {
-        "default": "mdi:radiator-off",
-        "state": {
-          "on": "mdi:radiator"
-        }
-      },
       "additional_channel": {
         "default": "mdi:access-point-network-off",
         "state": {
           "on": "mdi:access-point-network"
+        }
+      },
+      "engine": {
+        "default": "mdi:engine-off-outline",
+        "state": {
+          "on": "mdi:engine-outline"
         }
       },
       "service_mode": {
@@ -77,18 +71,24 @@
         "state": {
           "on": "mdi:wrench-clock"
         }
+      },
+      "webasto": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator"
+        }
       }
     }
   },
   "services": {
-    "update_state": {
-      "service": "mdi:reload"
-    },
     "set_scan_interval": {
       "service": "mdi:timer"
     },
     "set_scan_obd_interval": {
       "service": "mdi:timer"
+    },
+    "update_state": {
+      "service": "mdi:reload"
     }
   }
 }

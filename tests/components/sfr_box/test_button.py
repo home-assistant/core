@@ -12,7 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
 
@@ -32,7 +34,6 @@ def override_platforms() -> Generator[None]:
 async def test_buttons(
     hass: HomeAssistant,
     config_entry_with_auth: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -40,21 +41,9 @@ async def test_buttons(
     await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry_with_auth.entry_id
+    await snapshot_platform(
+        hass, entity_registry, snapshot, config_entry_with_auth.entry_id
     )
-    assert device_entries == snapshot
-
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry_with_auth.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
 
 
 async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) -> None:

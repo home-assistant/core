@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[select.3dprinter_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -60,8 +62,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.3dprinter_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -85,11 +88,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -102,7 +106,7 @@
 # name: test_platform_setup_and_discovery[select.3dprinter_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '3DPrinter Power on behavior',
+      'friendly_name': '3DPrinter Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -119,8 +123,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.4_433_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -144,11 +149,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -161,7 +167,7 @@
 # name: test_platform_setup_and_discovery[select.4_433_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '4-433 Power on behavior',
+      'friendly_name': '4-433 Power-on behavior',
       'options': list([
         '0',
         '1',
@@ -178,8 +184,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.6294ha_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -203,11 +210,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -220,7 +228,7 @@
 # name: test_platform_setup_and_discovery[select.6294ha_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '6294HA Power on behavior',
+      'friendly_name': '6294HA Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -237,8 +245,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aqi_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -263,6 +272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -296,10 +306,131 @@
     'state': 'mute',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.arida_stavern_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Countdown',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.8u5ftxkt52smougesccountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arida Stavern  Countdown',
+      'options': list([
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.arida_stavern_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_target_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '40',
+        '50',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.arida_stavern_target_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target humidity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_humidity',
+    'unique_id': 'tuya.8u5ftxkt52smougescdehumidify_set_enum',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_target_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arida Stavern  Target humidity',
+      'options': list([
+        '40',
+        '50',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.arida_stavern_target_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.aubess_cooker_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -323,6 +454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -357,8 +489,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_cooker_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -382,11 +515,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -399,7 +533,7 @@
 # name: test_platform_setup_and_discovery[select.aubess_cooker_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aubess Cooker Power on behavior',
+      'friendly_name': 'Aubess Cooker Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -416,8 +550,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_washing_machine_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -441,6 +576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -475,8 +611,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_washing_machine_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -500,11 +637,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -517,7 +655,7 @@
 # name: test_platform_setup_and_discovery[select.aubess_washing_machine_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aubess Washing Machine Power on behavior',
+      'friendly_name': 'Aubess Washing Machine Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -534,8 +672,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.balkonbewasserung_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -560,6 +699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -595,8 +735,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.bathroom_light_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -620,6 +761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -654,8 +796,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.bathroom_light_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -679,11 +822,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -696,7 +840,7 @@
 # name: test_platform_setup_and_discovery[select.bathroom_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'bathroom light Power on behavior',
+      'friendly_name': 'bathroom light Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -713,8 +857,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.blinds_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -737,6 +882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -770,8 +916,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.bree_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -798,6 +945,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -835,8 +983,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_anti_flicker-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -860,6 +1009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anti-flicker',
     'options': dict({
     }),
     'original_device_class': None,
@@ -894,8 +1044,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -919,6 +1070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -953,8 +1105,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_night_vision-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -978,6 +1131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night vision',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1012,8 +1166,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1036,6 +1191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1069,8 +1225,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.burocam_sound_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1093,6 +1250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1126,8 +1284,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.c9_ipc_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1150,6 +1309,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPC mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1183,8 +1343,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.c9_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1208,6 +1369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1242,8 +1404,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.c9_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1266,6 +1429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1299,8 +1463,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1324,6 +1489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1358,8 +1524,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_night_vision-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1383,6 +1550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night vision',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1417,8 +1585,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1441,6 +1610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1474,8 +1644,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_garage_sound_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1498,6 +1669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1531,8 +1703,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_porch_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1556,6 +1729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1590,8 +1764,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_porch_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1614,6 +1789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1647,8 +1823,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cam_porch_sound_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1671,6 +1848,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1704,8 +1882,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.cbe_pro_2_inverter_work_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1728,6 +1907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter work mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1761,8 +1941,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ceiling_fan_with_light_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1788,6 +1969,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1824,8 +2006,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.dehumidifer_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1850,6 +2033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1885,8 +2069,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.dehumidifier_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1911,6 +2096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1944,10 +2130,375 @@
     'state': 'cancel',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_indicator_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dehumidifier_indicator_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Indicator light mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indicator light mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': 'tuya.jgsopsvzh2ec3itjzclight_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_indicator_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifier  Indicator light mode',
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dehumidifier_indicator_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'relay',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dehumidifier_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.jgsopsvzh2ec3itjzcrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifier  Power-on behavior',
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dehumidifier_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'last',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Countdown',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.ake0bre784zriw0usccountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Countdown',
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cancel',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dining_1_motor_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dining_1_motor_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motor mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motor mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'curtain_motor_mode',
+    'unique_id': 'tuya.slkkzcxa7yjqmetqlccontrol_back_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dining_1_motor_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dining 1 Motor mode',
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dining_1_motor_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'forward',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dolni_vchod_zapad_anti_flicker-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dolni_vchod_zapad_anti_flicker',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Anti-flicker',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Anti-flicker',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'basic_anti_flicker',
+    'unique_id': 'tuya.o4hpbl5uarjfbzhepsbasic_anti_flicker',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dolni_vchod_zapad_anti_flicker-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dolní vchod - západ Anti-flicker',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dolni_vchod_zapad_anti_flicker',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dolni_vchod_zapad_ipc_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dolni_vchod_zapad_ipc_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IPC mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPC mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipc_work_mode',
+    'unique_id': 'tuya.o4hpbl5uarjfbzhepsipc_work_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dolni_vchod_zapad_ipc_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dolní vchod - západ IPC mode',
+      'options': list([
+        '0',
+        '1',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dolni_vchod_zapad_ipc_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.elivco_kitchen_socket_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1971,6 +2522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2005,8 +2557,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.elivco_kitchen_socket_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2030,11 +2583,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2047,7 +2601,7 @@
 # name: test_platform_setup_and_discovery[select.elivco_kitchen_socket_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Elivco Kitchen Socket Power on behavior',
+      'friendly_name': 'Elivco Kitchen Socket Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -2064,8 +2618,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.elivco_tv_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2089,6 +2644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2123,8 +2679,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.elivco_tv_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2148,11 +2705,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2165,7 +2723,7 @@
 # name: test_platform_setup_and_discovery[select.elivco_tv_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Elivco TV Power on behavior',
+      'friendly_name': 'Elivco TV Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -2182,8 +2740,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.framboisier_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2207,6 +2766,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2241,8 +2801,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.framboisier_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2266,11 +2827,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2283,7 +2845,7 @@
 # name: test_platform_setup_and_discovery[select.framboisier_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Framboisier Power on behavior',
+      'friendly_name': 'Framboisier Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -2300,8 +2862,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.framboisiers_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2325,11 +2888,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2342,7 +2906,7 @@
 # name: test_platform_setup_and_discovery[select.framboisiers_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Framboisiers Power on behavior',
+      'friendly_name': 'Framboisiers Power-on behavior',
       'options': list([
         '0',
         '1',
@@ -2359,8 +2923,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.garage_camera_motion_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2384,6 +2949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2418,8 +2984,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.garage_camera_record_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2442,6 +3009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2475,8 +3043,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.garden_valve_yard_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2501,6 +3070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2534,10 +3104,133 @@
     'state': 'cancel',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.ha_socket_delta_test_indicator_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ha_socket_delta_test_indicator_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Indicator light mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indicator light mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': 'tuya.sxa4ealyi9cotiugzclight_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ha_socket_delta_test_indicator_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HA Socket Delta Test Indicator light mode',
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ha_socket_delta_test_indicator_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'relay',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ha_socket_delta_test_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ha_socket_delta_test_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.sxa4ealyi9cotiugzcrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ha_socket_delta_test_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HA Socket Delta Test Power-on behavior',
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ha_socket_delta_test_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'power_off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.hoover_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2562,6 +3255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2597,8 +3291,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.ineox_sp2_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2622,11 +3317,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2639,7 +3335,7 @@
 # name: test_platform_setup_and_discovery[select.ineox_sp2_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ineox SP2 Power on behavior',
+      'friendly_name': 'Ineox SP2 Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -2654,10 +3350,72 @@
     'state': 'last',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.intercom_motion_detection_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.intercom_motion_detection_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion detection sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion detection sensitivity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_sensitivity',
+    'unique_id': 'tuya.qt0o5jlatiqf2rscpsmotion_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.intercom_motion_detection_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Intercom Motion detection sensitivity',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.intercom_motion_detection_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.ion1000pro_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2684,6 +3442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2694,7 +3453,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'countdown',
-    'unique_id': 'tuya.owozxdzgbibizu4sjkcountdown_set',
+    'unique_id': 'tuya.owozxdzgbibizu4sjkcountdown',
     'unit_of_measurement': None,
   })
 # ---
@@ -2719,10 +3478,139 @@
     'state': 'unknown',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.ion1000pro_countdown_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ion1000pro_countdown_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Countdown',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.owozxdzgbibizu4sjkcountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ion1000pro_countdown_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ION1000PRO Countdown',
+      'options': list([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ion1000pro_countdown_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jardim_frontal_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.jardim_frontal_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.xms6qowipdvjnkdgqdtrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jardim_frontal_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Jardim frontal  Power-on behavior',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.jardim_frontal_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.jardin_fraises_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2746,11 +3634,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2763,7 +3652,7 @@
 # name: test_platform_setup_and_discovery[select.jardin_fraises_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'jardin Fraises Power on behavior',
+      'friendly_name': 'jardin Fraises Power-on behavior',
       'options': list([
         '0',
         '1',
@@ -2780,8 +3669,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2805,6 +3695,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2839,8 +3730,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2864,11 +3756,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2881,7 +3774,7 @@
 # name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '接HA双向计量插座 Power on behavior',
+      'friendly_name': '接HA双向计量插座 Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -2898,8 +3791,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.kalado_air_purifier_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2926,6 +3820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2963,8 +3858,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.kitchen_blinds_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2987,6 +3883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3018,10 +3915,84 @@
     'state': 'forward',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.klarta_humea_spraying_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
+        'level_5',
+        'level_6',
+        'level_7',
+        'level_8',
+        'level_9',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.klarta_humea_spraying_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Spraying level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Spraying level',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidifier_level',
+    'unique_id': 'tuya.btpss2f6kwfi294rqsjlevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.klarta_humea_spraying_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'KLARTA HUMEA Spraying level',
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
+        'level_5',
+        'level_6',
+        'level_7',
+        'level_8',
+        'level_9',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.klarta_humea_spraying_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.lave_linge_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3045,6 +4016,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3079,8 +4051,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.lave_linge_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3104,11 +4077,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3121,7 +4095,7 @@
 # name: test_platform_setup_and_discovery[select.lave_linge_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Lave linge Power on behavior',
+      'friendly_name': 'Lave linge Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -3136,10 +4110,74 @@
     'state': 'power_on',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.living_room_dehumidifier_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.living_room_dehumidifier_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Countdown',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.g1qorlffoy2iyo9bsccountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.living_room_dehumidifier_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living room dehumidifier Countdown',
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.living_room_dehumidifier_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cancel',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.mesa_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3164,6 +4202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3199,8 +4238,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.mesa_up_down-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3224,6 +4264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Up/Down',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3258,8 +4299,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3283,6 +4325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anti-flicker',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3317,8 +4360,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.mirilla_puerta_ipc_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3341,6 +4385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPC mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3374,8 +4419,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.office_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3399,6 +4445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3433,8 +4480,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.office_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3458,11 +4506,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3475,7 +4524,7 @@
 # name: test_platform_setup_and_discovery[select.office_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Power on behavior',
+      'friendly_name': 'Office Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -3492,8 +4541,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.persiana_do_quarto_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3516,6 +4566,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3547,10 +4598,131 @@
     'state': 'back',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.projector_screen_motor_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.projector_screen_motor_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motor mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motor mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'curtain_motor_mode',
+    'unique_id': 'tuya.aiag5pku0x39rkfllccontrol_back_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.projector_screen_motor_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Projector Screen Motor mode',
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.projector_screen_motor_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'forward',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.puerta_casa_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.puerta_casa_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.w9hdtm88xj5crtc1qdtrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.puerta_casa_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Puerta Casa  Power-on behavior',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.puerta_casa_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.raspy4_home_assistant_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3574,6 +4746,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3608,8 +4781,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.raspy4_home_assistant_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3633,11 +4807,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3650,7 +4825,7 @@
 # name: test_platform_setup_and_discovery[select.raspy4_home_assistant_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Raspy4 - Home Assistant Power on behavior',
+      'friendly_name': 'Raspy4 - Home Assistant Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -3665,10 +4840,72 @@
     'state': 'power_on',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.seating_side_6_ch_smart_switch_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.seating_side_6_ch_smart_switch_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.seating_side_6_ch_smart_switch_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Seating side 6-ch Smart Switch  Power-on behavior',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.seating_side_6_ch_smart_switch_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.security_light_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3692,6 +4929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3726,8 +4964,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.security_light_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3751,11 +4990,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3768,7 +5008,7 @@
 # name: test_platform_setup_and_discovery[select.security_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Light Power on behavior',
+      'friendly_name': 'Security Light Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -3783,10 +5023,135 @@
     'state': 'power_on',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.server_fan_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.server_fan_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.cxbmhihohohk5bmeqdtrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.server_fan_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Server Fan Power-on behavior',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.server_fan_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.siren_siren_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'alarm_sound',
+        'alarm_light',
+        'alarm_sound_light',
+        'normal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.siren_siren_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Siren mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'siren_mode',
+    'unique_id': 'tuya.okwwus27jhqqe2mijbgsalarm_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.siren_siren_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Siren Siren mode',
+      'options': list([
+        'alarm_sound',
+        'alarm_light',
+        'alarm_sound_light',
+        'normal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.siren_siren_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.siren_veranda_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3811,6 +5176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3846,8 +5212,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.siren_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3872,6 +5239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3907,8 +5275,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.smart_odor_eliminator_pro_odor_elimination_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3931,6 +5300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odor elimination mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3964,8 +5334,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.smart_water_timer_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3990,6 +5361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4025,8 +5397,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.socket3_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4050,11 +5423,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4067,7 +5441,7 @@
 # name: test_platform_setup_and_discovery[select.socket3_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Socket3 Power on behavior',
+      'friendly_name': 'Socket3 Power-on behavior',
       'options': list([
         '0',
         '1',
@@ -4084,8 +5458,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.socket4_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4109,6 +5484,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4143,8 +5519,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.socket4_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4168,11 +5545,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4185,7 +5563,7 @@
 # name: test_platform_setup_and_discovery[select.socket4_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Socket4 Power on behavior',
+      'friendly_name': 'Socket4 Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -4202,8 +5580,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.spot_1_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4227,6 +5606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4261,8 +5641,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.spot_1_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4286,11 +5667,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4303,7 +5685,7 @@
 # name: test_platform_setup_and_discovery[select.spot_1_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Spot 1 Power on behavior',
+      'friendly_name': 'Spot 1 Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -4320,8 +5702,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.sunbeam_bedding_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4352,6 +5735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4394,8 +5778,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4426,6 +5811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4468,8 +5854,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4500,6 +5887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4542,8 +5930,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.v20_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4568,6 +5957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4603,8 +5993,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.v20_water_tank_adjustment-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4628,6 +6019,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water tank adjustment',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4662,8 +6054,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.valve_controller_2_weather_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4688,6 +6081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4723,8 +6117,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.vividstorm_screen_motor_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4747,6 +6142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4780,8 +6176,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.wallwasher_front_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4805,6 +6202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4839,8 +6237,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.wallwasher_front_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4864,11 +6263,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4881,7 +6281,7 @@
 # name: test_platform_setup_and_discovery[select.wallwasher_front_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'wallwasher front Power on behavior',
+      'friendly_name': 'wallwasher front Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -4898,8 +6298,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.weihnachtsmann_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4923,6 +6324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4957,8 +6359,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.weihnachtsmann_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4982,11 +6385,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4999,7 +6403,7 @@
 # name: test_platform_setup_and_discovery[select.weihnachtsmann_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Weihnachtsmann  Power on behavior',
+      'friendly_name': 'Weihnachtsmann  Power-on behavior',
       'options': list([
         'power_off',
         'power_on',
@@ -5016,8 +6420,9 @@
 # ---
 # name: test_platform_setup_and_discovery[select.wi_fi_hub_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5041,11 +6446,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power on behavior',
+    'original_name': 'Power-on behavior',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5058,7 +6464,7 @@
 # name: test_platform_setup_and_discovery[select.wi_fi_hub_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wi-Fi hub Power on behavior',
+      'friendly_name': 'Wi-Fi hub Power-on behavior',
       'options': list([
         'power_off',
         'power_on',

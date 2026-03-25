@@ -37,8 +37,10 @@ CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = 
         key="status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=(
-            lambda status_sensor: status_sensor.coordinator.last_update_success
-            and status_sensor.controller.online
+            lambda status_sensor: (
+                status_sensor.coordinator.last_update_success
+                and status_sensor.controller.online
+            )
         ),
         # Connectivtiy sensor is always available
         always_available=True,
@@ -60,8 +62,9 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
         translation_key="watering",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=(
-            lambda watering_sensor: watering_sensor.zone.scheduled_runs.current_run
-            is not None
+            lambda watering_sensor: (
+                watering_sensor.zone.scheduled_runs.current_run is not None
+            )
         ),
     ),
 )
@@ -122,11 +125,24 @@ async def async_setup_entry(
     coordinators.main.new_zones_callbacks.append(_add_new_zones)
 
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RESUME, None, "resume")
     platform.async_register_entity_service(
-        SERVICE_START_WATERING, SCHEMA_START_WATERING, "start_watering"
+        SERVICE_RESUME,
+        None,
+        "resume",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
     )
-    platform.async_register_entity_service(SERVICE_SUSPEND, SCHEMA_SUSPEND, "suspend")
+    platform.async_register_entity_service(
+        SERVICE_START_WATERING,
+        SCHEMA_START_WATERING,
+        "start_watering",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
+    )
+    platform.async_register_entity_service(
+        SERVICE_SUSPEND,
+        SCHEMA_SUSPEND,
+        "suspend",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
+    )
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):

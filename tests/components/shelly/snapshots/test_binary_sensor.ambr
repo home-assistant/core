@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_blu_trv_binary_sensor_entity[binary_sensor.trv_name_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibration',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -29,7 +31,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'calibration',
     'unique_id': '123456789ABC-blutrv:200-calibration',
     'unit_of_measurement': None,
   })
@@ -48,10 +50,62 @@
     'state': 'off',
   })
 # ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_cable_unplugged-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_kitchen_cable_unplugged',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Kitchen cable unplugged',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Kitchen cable unplugged',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cable_unplugged_with_channel_name',
+    'unique_id': '123456789ABC-flood:0-flood_cable_unplugged',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_cable_unplugged-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test name Kitchen cable unplugged',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_kitchen_cable_unplugged',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_flood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen flood',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -78,7 +133,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'flood_with_channel_name',
     'unique_id': '123456789ABC-flood:0-flood',
     'unit_of_measurement': None,
   })
@@ -99,8 +154,9 @@
 # ---
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_mute-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen mute',
     'options': dict({
     }),
     'original_device_class': None,
@@ -127,7 +184,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'mute_with_channel_name',
     'unique_id': '123456789ABC-flood:0-mute',
     'unit_of_measurement': None,
   })

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.192_168_1_1_disk_free_inodes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -52,8 +54,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_free_inodes_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -73,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -103,8 +107,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_free_inodes_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -124,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -154,8 +160,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -175,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -213,8 +221,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_free_space_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -234,6 +243,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -272,8 +282,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_free_space_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -293,6 +304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -331,8 +343,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_inode_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -352,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -383,8 +397,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_inode_usage_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -404,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -435,8 +451,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_inode_usage_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -456,6 +473,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -487,8 +505,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_total_inodes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -508,6 +527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -538,8 +558,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_total_inodes_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -559,6 +580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -589,8 +611,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_total_inodes_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -610,6 +633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -640,8 +664,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_total_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -661,6 +686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -699,8 +725,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_total_space_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -720,6 +747,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -758,8 +786,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_total_space_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -779,6 +808,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -817,8 +847,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -838,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -869,8 +901,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_usage_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -890,6 +923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -921,8 +955,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_usage_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -942,6 +977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -973,8 +1009,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_used_inodes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -994,6 +1031,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1024,8 +1062,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_used_inodes_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1045,6 +1084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1075,8 +1115,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_used_inodes_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1096,6 +1137,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1126,8 +1168,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_used_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1147,6 +1190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1185,8 +1229,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_used_space_media_disk1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1206,6 +1251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1244,8 +1290,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disk_used_space_media_disk2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1265,6 +1312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1303,8 +1351,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disks_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1324,6 +1373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1362,8 +1412,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disks_total_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1383,6 +1434,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks total space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1421,8 +1473,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_disks_used_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1442,6 +1495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks used space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1480,8 +1534,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_load_15_min-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1501,6 +1556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (15 min)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1531,8 +1587,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_load_1_min-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1552,6 +1609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (1 min)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1582,8 +1640,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_load_5_min-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1603,6 +1662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (5 min)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1633,8 +1693,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_memory_free-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1654,6 +1715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1692,8 +1754,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_memory_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1713,6 +1776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1751,8 +1815,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_swap_free-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1772,6 +1837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swap free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1810,8 +1876,9 @@
 # ---
 # name: test_sensor[sensor.192_168_1_1_swap_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1831,6 +1898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swap total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

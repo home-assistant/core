@@ -8,6 +8,7 @@ import logging
 from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
+    ModelType,
     ProtectAdoptableDeviceModel,
     StateType,
 )
@@ -29,9 +30,10 @@ from .const import (
 )
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import get_camera_base_name
+from .utils import async_ufp_instance_command, get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 @callback
@@ -91,7 +93,11 @@ def _get_camera_channels(
 
         # no RTSP enabled use first channel with no stream
         if is_default and not camera.is_third_party_camera:
-            _create_rtsp_repair(hass, entry, data, camera)
+            # Only create repair issue if RTSP is not disabled globally
+            if not data.disable_stream:
+                _create_rtsp_repair(hass, entry, data, camera)
+            else:
+                ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
             yield camera, camera.channels[0], True
         else:
             ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
@@ -109,7 +115,7 @@ def _async_camera_entities(
         hass, entry, data, ufp_device
     ):
         # do not enable streaming for package camera
-        # 2 FPS causes a lot of buferring
+        # 2 FPS causes a lot of buffering
         entities.append(
             ProtectCamera(
                 data,
@@ -145,7 +151,8 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if not isinstance(device, UFPCamera):
+        # AiPort inherits from Camera but should not create camera entities
+        if not isinstance(device, UFPCamera) or device.model is ModelType.AIPORT:
             return
         async_add_entities(_async_camera_entities(hass, entry, data, ufp_device=device))
 
@@ -153,6 +160,11 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
+
+    # Clean up any erroneously created RTSP issues for AI Ports
+    for device in data.get_by_types({ModelType.AIPORT}):
+        ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{device.id}")
+
     async_add_entities(_async_camera_entities(hass, entry, data))
 
 
@@ -255,10 +267,12 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         """Return the Stream Source."""
         return self._stream_source
 
+    @async_ufp_instance_command
     async def async_enable_motion_detection(self) -> None:
         """Call the job and enable motion detection."""
         await self.device.set_motion_detection(True)
 
+    @async_ufp_instance_command
     async def async_disable_motion_detection(self) -> None:
         """Call the job and disable motion detection."""
         await self.device.set_motion_detection(False)

@@ -19,6 +19,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/lyric",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aiolyric"],
   "requirements": ["aiolyric==2.0.2"]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any
 
@@ -26,10 +27,11 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
     HVACMode.OFF: 0,
@@ -122,6 +124,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # support fan-only mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x118C, 0x2022),
     (0x1209, 0x8000),
     (0x1209, 0x8001),
     (0x1209, 0x8002),
@@ -152,6 +155,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8027),
     (0x1209, 0x8028),
     (0x1209, 0x8029),
+    (0x131A, 0x1000),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
@@ -179,6 +183,11 @@ async def async_setup_entry(
     """Set up Matter climate platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescription):
+    """Describe Matter Climate entities."""
 
 
 class MatterClimate(MatterEntity, ClimateEntity):
@@ -261,6 +270,18 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+
+        self._attr_current_humidity = (
+            int(raw_measured_humidity) / HUMIDITY_SCALING_FACTOR
+            if (
+                raw_measured_humidity := self.get_matter_attribute_value(
+                    clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
+                )
+            )
+            is not None
+            else None
+        )
+
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
             # if the mains power is off - treat it as if the HVAC mode is off
@@ -410,7 +431,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.CLIMATE,
-        entity_description=ClimateEntityDescription(
+        entity_description=MatterClimateEntityDescription(
             key="MatterThermostat",
             name=None,
         ),
@@ -428,6 +449,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
             clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),

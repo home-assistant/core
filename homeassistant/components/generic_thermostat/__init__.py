@@ -5,17 +5,14 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
 )
 
-from .const import CONF_HEATER, CONF_SENSOR, PLATFORMS
+from .const import CONF_DUR_COOLDOWN, CONF_HEATER, CONF_MIN_DUR, CONF_SENSOR, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,18 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
-    # This can be removed in HA Core 2026.2
-    async_remove_stale_devices_links_keep_entity_device(
-        hass,
-        entry.entry_id,
-        entry.options[CONF_HEATER],
-    )
-
     def set_humidifier_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
             entry,
             options={**entry.options, CONF_HEATER: source_entity_id},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         # We use async_handle_source_entity_changes to track changes to the heater, but
@@ -67,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             options={**entry.options, CONF_SENSOR: data["entity_id"]},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         async_track_entity_registry_updated_event(
@@ -75,7 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
 
 
@@ -100,8 +91,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
                 )
+        if config_entry.minor_version < 3:
+            # Set `cycle_cooldown` to `min_cycle_duration` to mimic the old behavior
+            if CONF_MIN_DUR in options:
+                options[CONF_DUR_COOLDOWN] = options[CONF_MIN_DUR]
+
         hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=2
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(
@@ -111,11 +107,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     )
 
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

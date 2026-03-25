@@ -12,6 +12,7 @@ from zwave_js_server.const.command_class.window_covering import (
 from homeassistant.const import APPLICATION_NAME, __version__ as HA_VERSION
 
 LR_ADDON_VERSION = AwesomeVersion("0.5.0")
+ESPHOME_ADDON_VERSION = AwesomeVersion("0.24.0")
 
 USER_AGENT = {APPLICATION_NAME: HA_VERSION}
 
@@ -23,7 +24,7 @@ CONF_ADDON_S2_AUTHENTICATED_KEY = "s2_authenticated_key"
 CONF_ADDON_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
 CONF_ADDON_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
-CONF_INSTALLER_MODE = "installer_mode"
+CONF_ADDON_SOCKET = "socket"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_KEEP_OLD_DEVICES = "keep_old_devices"
 CONF_NETWORK_KEY = "network_key"
@@ -33,6 +34,7 @@ CONF_S2_AUTHENTICATED_KEY = "s2_authenticated_key"
 CONF_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
 CONF_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
+CONF_SOCKET_PATH = "socket_path"
 CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"
 CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
@@ -40,6 +42,8 @@ DOMAIN = "zwave_js"
 
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
+EVENT_VALUE_ADDED = "value added"
+EVENT_VALUE_REMOVED = "value removed"
 EVENT_VALUE_UPDATED = "value updated"
 
 LOGGER = logging.getLogger(__package__)
@@ -54,6 +58,7 @@ ZWAVE_JS_NOTIFICATION_EVENT = f"{DOMAIN}_notification"
 ZWAVE_JS_VALUE_UPDATED_EVENT = f"{DOMAIN}_value_updated"
 ATTR_NODE_ID = "node_id"
 ATTR_HOME_ID = "home_id"
+ATTR_HOME_ID_HEX = "home_id_hex"
 ATTR_ENDPOINT = "endpoint"
 ATTR_LABEL = "label"
 ATTR_VALUE = "value"
@@ -97,6 +102,7 @@ ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 # service constants
 SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
+SERVICE_GET_LOCK_USERCODE = "get_lock_usercode"
 SERVICE_INVOKE_CC_API = "invoke_cc_api"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 SERVICE_PING = "ping"
@@ -136,7 +142,6 @@ ATTR_TWIST_ASSIST = "twist_assist"
 ADDON_SLUG = "core_zwave_js"
 
 # Sensor entity description constants
-ENTITY_DESC_KEY_BATTERY_LEVEL = "battery_level"
 ENTITY_DESC_KEY_BATTERY_LIST_STATE = "battery_list_state"
 ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY = "battery_maximum_capacity"
 ENTITY_DESC_KEY_BATTERY_TEMPERATURE = "battery_temperature"
@@ -152,13 +157,11 @@ ENTITY_DESC_KEY_HUMIDITY = "humidity"
 ENTITY_DESC_KEY_ILLUMINANCE = "illuminance"
 ENTITY_DESC_KEY_PRESSURE = "pressure"
 ENTITY_DESC_KEY_SIGNAL_STRENGTH = "signal_strength"
-ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_UV_INDEX = "uv_index"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
 
-ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER = "energy_production_power"
 ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME = "energy_production_time"
 ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL = "energy_production_total"
 ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY = "energy_production_today"
@@ -200,3 +203,7 @@ COVER_TILT_PROPERTY_KEYS: set[str | int | None] = {
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE,
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE_NO_POSITION,
 }
+
+# notification
+NOTIFICATION_ACCESS_CONTROL_PROPERTY = "Access Control"
+OPENING_STATE_PROPERTY_KEY = "Opening state"

@@ -6,7 +6,7 @@ from dataclasses import replace
 
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
-from homeassistant.components.assist_pipeline.select import (
+from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )
@@ -123,19 +123,13 @@ class EsphomeAssistSatelliteWakeWordSelect(
 
     def __init__(self, entry_data: RuntimeEntryData, index: int = 0) -> None:
         """Initialize a wake word selector."""
-        if index < 1:
-            # Keep compatibility
-            key_suffix = ""
-            placeholder = ""
-        else:
-            key_suffix = f"_{index + 1}"
-            placeholder = f" {index + 1}"
-
-        self.entity_description = replace(
-            self.entity_description,
-            key=f"wake_word{key_suffix}",
-            translation_placeholders={"index": placeholder},
-        )
+        if index >= 1:
+            self.entity_description = replace(
+                self.entity_description,
+                key=f"wake_word_{index + 1}",
+                translation_key="wake_word_n",
+                translation_placeholders={"index": str(index + 1)},
+            )
 
         EsphomeAssistEntity.__init__(self, entry_data)
 
@@ -194,6 +188,21 @@ class EsphomeAssistSatelliteWakeWordSelect(
         self._attr_options = [NO_WAKE_WORD, *sorted(self._wake_words)]
 
         option = self._attr_current_option
+
+        if (
+            (self._wake_word_index == 0)
+            and (len(config.active_wake_words) == 1)
+            and (option in (None, NO_WAKE_WORD))
+        ):
+            option = next(
+                (
+                    wake_word
+                    for wake_word, wake_word_id in self._wake_words.items()
+                    if wake_word_id == config.active_wake_words[0]
+                ),
+                None,
+            )
+
         if (
             (option is None)
             or ((wake_word_id := self._wake_words.get(option)) is None)

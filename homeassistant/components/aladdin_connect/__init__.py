@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import aiohttp
 from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -31,16 +33,23 @@ async def async_setup_entry(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed(err) from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
+
     client = AladdinConnectClient(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
 
-    doors = await client.get_doors()
+    coordinator = AladdinConnectCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = {
-        door.unique_id: AladdinConnectCoordinator(hass, entry, client, door)
-        for door in doors
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -82,7 +91,7 @@ def remove_stale_devices(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    all_device_ids = set(config_entry.runtime_data)
+    all_device_ids = set(config_entry.runtime_data.data)
 
     for device_entry in device_entries:
         device_id: str | None = None

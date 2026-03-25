@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from holidays import HolidayBase
 
@@ -10,12 +10,11 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import WorkdayConfigEntry
 from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
 from .entity import BaseWorkdayEntity
-
-CALENDAR_DAYS_AHEAD = 365
 
 
 async def async_setup_entry(
@@ -73,8 +72,10 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
     def update_data(self, now: datetime) -> None:
         """Update data."""
         event_list = []
-        for i in range(CALENDAR_DAYS_AHEAD):
-            future_date = now.date() + timedelta(days=i)
+        start_date = date(now.year, 1, 1)
+        end_number_of_days = date(now.year + 1, 12, 31) - start_date
+        for i in range(end_number_of_days.days + 1):
+            future_date = start_date + timedelta(days=i)
             if self.date_is_workday(future_date):
                 event = CalendarEvent(
                     summary=self._name,
@@ -87,11 +88,12 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return (
-            sorted(self.event_list, key=lambda e: e.start)[0]
-            if self.event_list
-            else None
+        sorted_list: list[CalendarEvent] | None = (
+            sorted(self.event_list, key=lambda e: e.start) if self.event_list else None
         )
+        if not sorted_list:
+            return None
+        return [d for d in sorted_list if d.start >= dt_util.utcnow().date()][0]
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime

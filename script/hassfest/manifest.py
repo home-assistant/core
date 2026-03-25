@@ -61,7 +61,9 @@ NO_IOT_CLASS = [
     "application_credentials",
     "auth",
     "automation",
+    "battery",
     "blueprint",
+    "brands",
     "color_extractor",
     "config",
     "configurator",
@@ -70,10 +72,13 @@ NO_IOT_CLASS = [
     "device_automation",
     "device_tracker",
     "diagnostics",
+    "door",
     "downloader",
     "ffmpeg",
     "file_upload",
     "frontend",
+    "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",
@@ -84,6 +89,8 @@ NO_IOT_CLASS = [
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
+    "humidity",
+    "illuminance",
     "image_upload",
     "input_boolean",
     "input_button",
@@ -97,10 +104,13 @@ NO_IOT_CLASS = [
     "logger",
     "lovelace",
     "media_source",
+    "motion",
     "my",
+    "occupancy",
     "onboarding",
     "panel_custom",
     "plant",
+    "power",
     "profiler",
     "proxy",
     "python_script",
@@ -113,10 +123,13 @@ NO_IOT_CLASS = [
     "system_health",
     "system_log",
     "tag",
+    "temperature",
     "timer",
     "trace",
+    "web_rtc",
     "webhook",
     "websocket_api",
+    "window",
     "zone",
 ]
 
@@ -279,6 +292,17 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
         vol.Optional("single_config_entry"): bool,
+        vol.Optional("preview_features"): vol.Schema(
+            {
+                cv.slug: vol.Schema(
+                    {
+                        vol.Optional("feedback_url"): vol.Url(),
+                        vol.Optional("learn_more_url"): vol.Url(),
+                        vol.Optional("report_issue_url"): vol.Url(),
+                    }
+                )
+            }
+        ),
     }
 )
 
@@ -415,7 +439,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.action == "generate" and manifests_resorted:
         subprocess.run(
             [
-                "pre-commit",
+                "prek",
                 "run",
                 "--hook-stage",
                 "manual",

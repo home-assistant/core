@@ -29,7 +29,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -181,9 +181,6 @@ class TemplateEntity(AbstractTemplateEntity):
         self._run_variables: ScriptVariables | dict
         self._attribute_templates = config.get(CONF_ATTRIBUTES)
         self._availability_template = config.get(CONF_AVAILABILITY)
-        self._icon_template = config.get(CONF_ICON)
-        self._entity_picture_template = config.get(CONF_PICTURE)
-        self._friendly_name_template = config.get(CONF_NAME)
         self._run_variables = config.get(CONF_VARIABLES, {})
         self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
@@ -200,29 +197,36 @@ class TemplateEntity(AbstractTemplateEntity):
                 """Name of this state."""
                 return "<None>"
 
-        variables = {"this": DummyState()}
+        # Render the current variables and add a dummy this variable to them.
+        variables = (
+            self._run_variables
+            if isinstance(self._run_variables, dict)
+            else self._run_variables.async_render(self.hass, {})
+        )
+        variables = {"this": DummyState(), **variables}
 
-        # Try to render the name as it can influence the entity ID
+        self.add_template(
+            CONF_AVAILABILITY, "_attr_available", on_update=self._update_available
+        )
+
+        # Render name, icon, and picture early. name is rendered early because it influences
+        # the entity_id.  icon and picture are rendered early to ensure they are populated even
+        # if the entity renders unavailable.
         self._attr_name = None
-        if self._friendly_name_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_name = self._friendly_name_template.async_render(
-                    variables=variables, parse_result=False
-                )
-
-        # Templates will not render while the entity is unavailable, try to render the
-        # icon and picture templates.
-        if self._entity_picture_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_entity_picture = self._entity_picture_template.async_render(
-                    variables=variables, parse_result=False
-                )
-
-        if self._icon_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_icon = self._icon_template.async_render(
-                    variables=variables, parse_result=False
-                )
+        for option, attribute, validator in (
+            (CONF_ICON, "_attr_icon", vol.Or(cv.whitespace, cv.icon)),
+            (CONF_PICTURE, "_attr_entity_picture", cv.string),
+            (CONF_NAME, "_attr_name", cv.string),
+        ):
+            if template := self.add_template(
+                option, attribute, validator, add_if_static=option != CONF_NAME
+            ):
+                with contextlib.suppress(TemplateError):
+                    setattr(
+                        self,
+                        attribute,
+                        template.async_render(variables=variables, parse_result=False),
+                    )
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:
@@ -260,16 +264,111 @@ class TemplateEntity(AbstractTemplateEntity):
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
+    def _get_this_variable(self) -> TemplateStateFromEntityId:
+        """Create a this variable for the entity."""
+        entity_id = self.entity_id
+        if self._preview_callback:
+            # During config flow, the registry entry and entity_id will be None. In this scenario,
+            # a temporary entity_id is created.
+            # During option flow, the preview entity_id will be None, however the registry entry
+            # will contain the target entity_id.
+            if self.registry_entry:
+                entity_id = self.registry_entry.entity_id
+            else:
+                entity_id = async_generate_entity_id(
+                    self._entity_id_format, self._attr_name or "preview", hass=self.hass
+                )
+
+        return TemplateStateFromEntityId(self.hass, entity_id)
+
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
             return self._run_variables
 
         return self._run_variables.async_render(
-            self.hass,
-            {
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            },
+            self.hass, {"this": self._get_this_variable()}
+        )
+
+    def setup_state_template(
+        self,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages the main state of the entity.
+
+        Requires _state_option to be set on the inheriting class. _state_option represents
+        the configuration option that derives the state. E.g. Template weather entities main state option
+        is 'condition', where switch is 'state'.
+        """
+
+        @callback
+        def _update_state(result: Any) -> None:
+            if isinstance(result, TemplateError):
+                setattr(self, attribute, None)
+                if self._availability_template:
+                    return
+
+                self._attr_available = False
+                return
+
+            # Recover from template errors if they happened before.
+            if not self._availability_template and not self._attr_available:
+                self._attr_available = True
+
+            state = validator(result) if validator else result
+
+            if on_update:
+                on_update(state)
+            else:
+                setattr(self, attribute, state)
+
+        if self._state_option is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+            )
+
+        self.add_template(
+            self._state_option,
+            attribute,
+            on_update=_update_state,
+            none_on_template_error=False,
+        )
+
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
+        none_on_template_error: bool = True,
+    ):
+        """Set up a template that manages any property or attribute of the entity.
+
+        Parameters
+        ----------
+        option
+            The configuration key provided by ConfigFlow or the yaml option
+        attribute
+            The name of the attribute to link to. This attribute must exist
+            unless a custom on_update method is supplied.
+        validator:
+            Optional function that validates the rendered result.
+        on_update:
+            Called to store the template result rather than storing it
+            the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
+        none_on_template_error (default=True)
+            If set to false, template errors will be supplied in the result to
+            on_update.
+        """
+        self.add_template(
+            option, attribute, validator, on_update, none_on_template_error
         )
 
     def add_template_attribute(
@@ -338,14 +437,21 @@ class TemplateEntity(AbstractTemplateEntity):
                 )
             return
 
+        errors = []
         for update in updates:
             for template_attr in self._template_attrs[update.template]:
                 template_attr.handle_result(
                     event, update.template, update.last_result, update.result
                 )
+                if isinstance(update.result, TemplateError):
+                    errors.append(update.result)
 
         if not self._preview_callback:
             self.async_write_ha_state()
+            return
+
+        if errors:
+            self._preview_callback(None, None, None, str(errors[-1]))
             return
 
         try:
@@ -372,7 +478,7 @@ class TemplateEntity(AbstractTemplateEntity):
         has_availability_template = False
 
         variables = {
-            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            "this": self._get_this_variable(),
             **self._render_script_variables(),
         }
 
@@ -404,30 +510,20 @@ class TemplateEntity(AbstractTemplateEntity):
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
-        if self._availability_template is not None:
-            self.add_template_attribute(
-                "_attr_available",
-                self._availability_template,
-                None,
-                self._update_available,
-            )
+
+        # Handle attributes as a dictionary.
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
                 self._add_attribute_template(key, value)
-        if self._icon_template is not None:
+
+        # Iterate all dynamic templates and add listeners.
+        for entity_template in self._templates.values():
             self.add_template_attribute(
-                "_attr_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
-            )
-        if self._entity_picture_template is not None:
-            self.add_template_attribute(
-                "_attr_entity_picture", self._entity_picture_template, cv.string
-            )
-        if (
-            self._friendly_name_template is not None
-            and not self._friendly_name_template.is_static
-        ):
-            self.add_template_attribute(
-                "_attr_name", self._friendly_name_template, cv.string
+                entity_template.attribute,
+                entity_template.template,
+                entity_template.validator,
+                entity_template.on_update,
+                entity_template.none_on_template_error,
             )
 
     @callback
@@ -445,13 +541,19 @@ class TemplateEntity(AbstractTemplateEntity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
-        def log_template_error(level: int, msg: str) -> None:
-            preview_callback(None, None, None, msg)
+        def suppress_preview_errors(level: int, msg: str) -> None:
+            """Suppress redundant template render errors.
+
+            Preview entities render templates at least 3 times before the preview entity
+            is created. If template contains an error, each render will produce an error.
+            Instead of overwhelming the client with errors, suppress them and raise
+            a single error through the self._handle_results method.
+            """
 
         self._preview_callback = preview_callback
         self._async_setup_templates()
         try:
-            self._async_template_startup(None, log_template_error)
+            self._async_template_startup(None, suppress_preview_errors)
         except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks

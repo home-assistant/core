@@ -1,7 +1,7 @@
 """Test hardware utilities."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
@@ -15,6 +15,7 @@ from homeassistant.components.hassio import (
     AddonManager,
     AddonState,
 )
+from homeassistant.components.homeassistant_hardware import DOMAIN
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_provider,
 )
@@ -23,6 +24,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    async_firmware_flashing_context,
     async_flash_silabs_firmware,
     get_otbr_addon_firmware_info,
     guess_firmware_info,
@@ -70,7 +72,7 @@ ZHA_CONFIG_ENTRY2 = MockConfigEntry(
 async def test_guess_firmware_info_unknown(hass: HomeAssistant) -> None:
     """Test guessing the firmware type."""
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     assert (await guess_firmware_info(hass, "/dev/missing")) == FirmwareInfo(
         device="/dev/missing",
@@ -84,7 +86,7 @@ async def test_guess_firmware_info_unknown(hass: HomeAssistant) -> None:
 async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
     """Test guessing the firmware via OTBR and ZHA."""
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     # One instance of ZHA and two OTBRs
     zha = MockConfigEntry(domain="zha", unique_id="some_unique_id_1")
@@ -489,36 +491,28 @@ async def test_probe_silabs_firmware_info(
 ) -> None:
     """Test getting the firmware info."""
 
-    def probe_app_type() -> None:
+    def probe_app_type(only: Sequence[FlasherApplicationType] | None = None) -> None:
         mock_flasher.app_type = app_type
         mock_flasher.app_version = firmware_version
 
-    mock_flasher = MagicMock()
+    mock_flasher_cls = MagicMock()
+    mock_flasher = mock_flasher_cls.return_value
     mock_flasher.app_type = None
     mock_flasher.app_version = None
     mock_flasher.probe_app_type = AsyncMock(side_effect=probe_app_type)
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.util.Flasher",
-        return_value=mock_flasher,
-    ):
-        result = await probe_silabs_firmware_info("/dev/ttyUSB0")
-        assert result == expected_fw_info
+    result = await probe_silabs_firmware_info(
+        "/dev/ttyUSB0",
+        flasher_cls=mock_flasher_cls,
+    )
+    assert result == expected_fw_info
 
 
 @pytest.mark.parametrize(
     ("probe_result", "expected"),
     [
-        (
-            FirmwareInfo(
-                device="/dev/ttyUSB0",
-                firmware_type=ApplicationType.EZSP,
-                firmware_version=None,
-                source="unknown",
-                owners=[],
-            ),
-            ApplicationType.EZSP,
-        ),
+        (FlasherApplicationType.EZSP, ApplicationType.EZSP),
+        (RuntimeError("some error"), None),
         (None, None),
     ],
 )
@@ -526,17 +520,36 @@ async def test_probe_silabs_firmware_type(
     probe_result: FirmwareInfo | None, expected: ApplicationType | None
 ) -> None:
     """Test getting the firmware type from the probe result."""
+
+    def probe_app_type(only: Sequence[FlasherApplicationType] | None = None) -> None:
+        if isinstance(probe_result, BaseException):
+            raise probe_result
+
+        mock_flasher.app_type = probe_result
+
+    mock_flasher = Mock()
+    mock_flasher.probe_app_type = AsyncMock(side_effect=probe_app_type)
+    mock_flasher.app_type = None
+
     with patch(
-        "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
+        "homeassistant.components.homeassistant_hardware.util.Flasher",
         autospec=True,
-        return_value=probe_result,
+        return_value=mock_flasher,
     ):
-        result = await probe_silabs_firmware_type("/dev/ttyUSB0")
+        result = await probe_silabs_firmware_type(
+            "/dev/ttyUSB0",
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
+        )
         assert result == expected
 
 
 async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware."""
+    await async_setup_component(hass, DOMAIN, {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
@@ -554,7 +567,8 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         progress_callback(100, 100)
         await asyncio.sleep(0)
 
-    mock_flasher = Mock()
+    mock_flasher_cls = MagicMock()
+    mock_flasher = mock_flasher_cls.return_value
     mock_flasher.enter_bootloader = AsyncMock()
     mock_flasher.flash_firmware = AsyncMock(side_effect=mock_flash_firmware)
 
@@ -578,10 +592,6 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             ),
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.Flasher",
-            return_value=mock_flasher,
-        ),
-        patch(
             "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
         patch(
@@ -589,14 +599,20 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             return_value=expected_firmware_info,
         ),
     ):
-        after_flash_info = await async_flash_silabs_firmware(
-            hass=hass,
-            device="/dev/ttyUSB0",
-            fw_data=b"firmware contents",
-            expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
-            progress_callback=progress_callback,
-        )
+        async with async_firmware_flashing_context(
+            hass, "/dev/ttyUSB0", "homeassistant_hardware"
+        ):
+            after_flash_info = await async_flash_silabs_firmware(
+                hass=hass,
+                device="/dev/ttyUSB0",
+                fw_data=b"firmware contents",
+                expected_installed_firmware_type=ApplicationType.SPINEL,
+                flasher_cls=mock_flasher_cls,
+                progress_callback=progress_callback,
+            )
+
+    assert mock_flasher_cls.call_count == 1
+    mock_flasher_cls.assert_called_once_with(device="/dev/ttyUSB0")
 
     assert progress_callback.mock_calls == [call(0, 100), call(50, 100), call(100, 100)]
     assert after_flash_info == expected_firmware_info
@@ -606,7 +622,6 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
 
@@ -614,19 +629,36 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
 
 
-async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error_msg"),
+    [
+        (
+            RuntimeError("Failure!"),
+            "Failed to flash firmware",
+        ),
+        (
+            PermissionError("The serial port is locked by another application"),
+            "Failed to flash firmware: Device is used by another application",
+        ),
+    ],
+)
+async def test_async_flash_silabs_firmware_flash_failure(
+    hass: HomeAssistant, side_effect: Exception, expected_error_msg: str
+) -> None:
     """Test async_flash_silabs_firmware flash failure."""
+    await async_setup_component(hass, DOMAIN, {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
-    mock_flasher = Mock()
+    mock_flasher_cls = MagicMock()
+    mock_flasher = mock_flasher_cls.return_value
     mock_flasher.enter_bootloader = AsyncMock()
-    mock_flasher.flash_firmware = AsyncMock(side_effect=RuntimeError("Failure!"))
+    mock_flasher.flash_firmware = AsyncMock(side_effect=side_effect)
 
     with (
         patch(
@@ -640,45 +672,45 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
             ),
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.Flasher",
-            return_value=mock_flasher,
-        ),
-        patch(
             "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
-        pytest.raises(HomeAssistantError, match="Failed to flash firmware") as exc,
+        pytest.raises(HomeAssistantError, match=expected_error_msg) as exc,
     ):
-        await async_flash_silabs_firmware(
-            hass=hass,
-            device="/dev/ttyUSB0",
-            fw_data=b"firmware contents",
-            expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
-        )
+        async with async_firmware_flashing_context(
+            hass, "/dev/ttyUSB0", "homeassistant_hardware"
+        ):
+            await async_flash_silabs_firmware(
+                hass=hass,
+                device="/dev/ttyUSB0",
+                fw_data=b"firmware contents",
+                expected_installed_firmware_type=ApplicationType.SPINEL,
+                flasher_cls=mock_flasher_cls,
+            )
 
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
     assert owner2.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
 
 
 async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware probe failure."""
+    await async_setup_component(hass, DOMAIN, {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
-    mock_flasher = Mock()
+    mock_flasher_cls = MagicMock()
+    mock_flasher = mock_flasher_cls.return_value
     mock_flasher.enter_bootloader = AsyncMock()
     mock_flasher.flash_firmware = AsyncMock()
 
@@ -694,10 +726,6 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
             ),
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.Flasher",
-            return_value=mock_flasher,
-        ),
-        patch(
             "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
         patch(
@@ -706,28 +734,29 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
         ),
         pytest.raises(
             HomeAssistantError, match="Failed to probe the firmware after flashing"
-        ),
+        ) as exc,
     ):
-        await async_flash_silabs_firmware(
-            hass=hass,
-            device="/dev/ttyUSB0",
-            fw_data=b"firmware contents",
-            expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
-        )
+        async with async_firmware_flashing_context(
+            hass, "/dev/ttyUSB0", "homeassistant_hardware"
+        ):
+            await async_flash_silabs_firmware(
+                hass=hass,
+                device="/dev/ttyUSB0",
+                fw_data=b"firmware contents",
+                expected_installed_firmware_type=ApplicationType.SPINEL,
+                flasher_cls=mock_flasher_cls,
+            )
 
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
-        call().__aexit__(ANY, None, None, None),
+        call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
     assert owner2.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
-        call().__aexit__(ANY, None, None, None),
+        call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]

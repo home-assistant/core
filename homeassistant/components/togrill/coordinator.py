@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TypeVar
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
@@ -32,14 +32,12 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PROBE_COUNT, DOMAIN
+from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, DOMAIN
 
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 LOGGER = logging.getLogger(__name__)
-
-PacketType = TypeVar("PacketType", bound=Packet)
 
 
 def get_version_string(packet: PacketA0Notify) -> str:
@@ -139,16 +137,22 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             raise DeviceNotFound("Unable to find device")
 
         try:
-            client = await Client.connect(device, self._notify_callback)
+            client = await Client.connect(
+                device,
+                self._notify_callback,
+                disconnected_callback=self._disconnected_callback,
+            )
         except BleakError as exc:
             self.logger.debug("Connection failed", exc_info=True)
-            raise DeviceNotFound("Unable to connect to device") from exc
+            raise DeviceFailed("Unable to connect to device") from exc
 
         try:
-            packet_a0 = await client.read(PacketA0Notify)
-        except (BleakError, DecodeError) as exc:
+            async with asyncio.timeout(10):
+                packet_a0 = await client.read(PacketA0Notify)
+        except (BleakError, DecodeError, TimeoutError) as exc:
+            self.logger.debug("Configuration read failed", exc_info=True)
             await client.disconnect()
-            raise DeviceFailed(f"Device failed {exc}") from exc
+            raise DeviceFailed("Failed to read device configuration") from exc
 
         config_entry = self.config_entry
 
@@ -169,18 +173,15 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.client = None
 
     async def _get_connected_client(self) -> Client:
-        if self.client and not self.client.is_connected:
-            await self.client.disconnect()
-            self.client = None
         if self.client:
             return self.client
 
         self.client = await self._connect_and_update_registry()
         return self.client
 
-    def get_packet(
-        self, packet_type: type[PacketType], probe=None
-    ) -> PacketType | None:
+    def get_packet[PacketT: Packet](
+        self, packet_type: type[PacketT], probe=None
+    ) -> PacketT | None:
         """Get a cached packet of a certain type."""
 
         if packet := self.data.get((packet_type.type, probe)):
@@ -196,15 +197,32 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
 
     async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
         """Poll the device."""
-        client = await self._get_connected_client()
+        if self.client and not self.client.is_connected:
+            await self.client.disconnect()
+            self.client = None
+            self._debounced_refresh.async_schedule_call()
+            raise DeviceFailed("Device was disconnected")
+
+        try:
+            client = await self._get_connected_client()
+        except DeviceNotFound:
+            return {}
+
         try:
             await client.request(PacketA0Notify)
             await client.request(PacketA1Notify)
             for probe in range(1, self.config_entry.data[CONF_PROBE_COUNT] + 1):
                 await client.write(PacketA8Write(probe=probe))
+            if self.config_entry.data.get(CONF_HAS_AMBIENT):
+                await client.write(PacketA8Write(probe=0))
         except BleakError as exc:
             raise DeviceFailed(f"Device failed {exc}") from exc
         return self.data
+
+    @callback
+    def _disconnected_callback(self) -> None:
+        """Handle Bluetooth device being disconnected."""
+        self._debounced_refresh.async_schedule_call()
 
     @callback
     def _async_handle_bluetooth_event(
@@ -213,5 +231,5 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        if not self.client and isinstance(self.last_exception, DeviceNotFound):
-            self.hass.async_create_task(self.async_refresh())
+        if self.client is None:
+            self._debounced_refresh.async_schedule_call()

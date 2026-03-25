@@ -27,7 +27,7 @@ def mock_zha():
 
     with (
         patch(
-            "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.create_zigpy_app",
             return_value=mock_connect_app,
         ),
         patch(
@@ -57,3 +57,14 @@ def mock_usb_path_exists() -> Generator[None]:
         return_value=True,
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_firmware_update_client() -> Generator[MagicMock]:
+    """Mock the FirmwareUpdateClient to avoid network requests."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateClient",
+        autospec=True,
+    ) as mock_client:
+        mock_client.return_value.async_update_data = AsyncMock(return_value=None)
+        yield mock_client

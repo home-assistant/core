@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_antenna_gain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Antenna gain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_cpu_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -109,8 +113,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_download_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -130,6 +135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -168,8 +174,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_network_role-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -192,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Network role',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -226,8 +234,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_receive_actual-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -247,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Throughput receive (actual)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -285,8 +295,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_transmit_actual-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -306,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Throughput transmit (actual)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -344,8 +356,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_upload_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -365,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -403,8 +417,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -422,6 +437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -459,8 +475,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -478,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -515,8 +533,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -536,6 +555,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless frequency',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
@@ -568,8 +588,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -592,6 +613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -626,8 +648,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_role-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -650,6 +673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless role',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -684,8 +708,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_ssid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -703,6 +728,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless SSID',
     'options': dict({
     }),
     'original_device_class': None,

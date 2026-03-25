@@ -1,34 +1,33 @@
 {
-  "title": "Holiday",
   "config": {
     "abort": {
       "already_configured": "Already configured. Only a single configuration for country/province/categories combination is possible.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "country": "[%key:common::config_flow::data::country%]"
-        }
-      },
       "options": {
         "data": {
-          "province": "Province",
-          "categories": "Categories"
+          "categories": "Categories",
+          "province": "Province"
         },
         "data_description": {
-          "province": "Optionally choose a province / subdivision of {country}",
-          "categories": "Optionally choose additional holiday categories, public holidays are already included"
+          "categories": "Optionally choose additional holiday categories, public holidays are already included",
+          "province": "Optionally choose a province / subdivision of {country}"
         }
       },
       "reconfigure": {
         "data": {
-          "province": "[%key:component::holiday::config::step::options::data::province%]",
-          "categories": "[%key:component::holiday::config::step::options::data::categories%]"
+          "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+          "province": "[%key:component::holiday::config::step::options::data::province%]"
         },
         "data_description": {
-          "province": "[%key:component::holiday::config::step::options::data_description::province%]",
-          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]"
+          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+          "province": "[%key:component::holiday::config::step::options::data_description::province%]"
+        }
+      },
+      "user": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]"
         }
       }
     }
@@ -68,5 +67,6 @@
         "workday": "Workday"
       }
     }
-  }
+  },
+  "title": "Holiday"
 }

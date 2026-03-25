@@ -62,7 +62,7 @@ async def test_update_process(
         ),
         UpdateDetails(
             status=UpdateStatus.UPDATED,
-            command_status=None,
+            command_status=UpdateStatus.UPDATED,
             progress_info=None,
             progress_percentage=None,
         ),

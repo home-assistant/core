@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "{name}",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
@@ -10,18 +9,19 @@
       "device_not_found": "Device could not be found.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
         "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
       },
       "user": {
-        "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
           "address": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "address": "Select Acaia scale you want to set up"
-        }
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
     }
   },
@@ -32,14 +32,14 @@
       }
     },
     "button": {
-      "tare": {
-        "name": "Tare"
-      },
       "reset_timer": {
         "name": "Reset timer"
       },
       "start_stop": {
         "name": "Start/stop timer"
+      },
+      "tare": {
+        "name": "Tare"
       }
     }
   }

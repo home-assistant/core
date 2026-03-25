@@ -7,7 +7,16 @@ import socket
 from unittest.mock import AsyncMock, Mock, NonCallableMock, patch
 
 from psutil import NoSuchProcess, Process
-from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr, sswap
+from psutil._common import (
+    sbattery,
+    sdiskpart,
+    sdiskusage,
+    sfan,
+    shwtemp,
+    snetio,
+    snicaddr,
+    sswap,
+)
 import pytest
 
 from homeassistant.components.systemmonitor.const import DOMAIN
@@ -15,6 +24,18 @@ from homeassistant.components.systemmonitor.coordinator import VirtualMemory
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+MOCK_PRESSURE_INFO = {
+    "cpu": {"some": {"avg10": 1.1, "avg60": 2.2, "avg300": 3.3, "total": 12345}},
+    "memory": {
+        "some": {"avg10": 4.4, "avg60": 5.5, "avg300": 6.6, "total": 54321},
+        "full": {"avg10": 0.4, "avg60": 0.5, "avg300": 0.6, "total": 432},
+    },
+    "io": {
+        "some": {"avg10": 7.7, "avg60": 8.8, "avg300": 9.9, "total": 67890},
+        "full": {"avg10": 0.7, "avg60": 0.8, "avg300": 0.9, "total": 789},
+    },
+}
 
 
 @pytest.fixture(autouse=True)
@@ -27,18 +48,45 @@ def mock_sys_platform() -> Generator[None]:
 class MockProcess(Process):
     """Mock a Process class."""
 
-    def __init__(self, name: str, ex: bool = False) -> None:
+    def __init__(
+        self,
+        name: str,
+        ex: bool = False,
+        num_fds: int | None = None,
+        raise_os_error: bool = False,
+    ) -> None:
         """Initialize the process."""
         super().__init__(1)
         self._name = name
         self._ex = ex
         self._create_time = 1708700400
+        self._num_fds = num_fds
+        self._raise_os_error = raise_os_error
 
     def name(self):
         """Return a name."""
         if self._ex:
             raise NoSuchProcess(1, self._name)
         return self._name
+
+    def num_fds(self):
+        """Return the number of file descriptors opened by this process."""
+        if self._ex:
+            raise NoSuchProcess(1, self._name)
+
+        if self._raise_os_error:
+            raise OSError("Permission denied")
+
+        # Use explicit num_fds if provided, otherwise use defaults
+        if self._num_fds is not None:
+            return self._num_fds
+
+        # Return different values for different processes for testing
+        if self._name == "python3":
+            return 42
+        if self._name == "pip":
+            return 15
+        return 10
 
 
 @pytest.fixture
@@ -97,9 +145,15 @@ def mock_process() -> list[MockProcess]:
 @pytest.fixture
 def mock_psutil(mock_process: list[MockProcess]) -> Generator:
     """Mock psutil."""
-    with patch(
-        "homeassistant.components.systemmonitor.ha_psutil.PsutilWrapper",
-    ) as psutil_wrapper:
+    with (
+        patch(
+            "homeassistant.components.systemmonitor.ha_psutil.PsutilWrapper",
+        ) as psutil_wrapper,
+        patch(
+            "homeassistant.components.systemmonitor.coordinator.get_all_pressure_info",
+            return_value=MOCK_PRESSURE_INFO,
+        ),
+    ):
         _wrapper = psutil_wrapper.return_value
         _wrapper.psutil = NonCallableMock()
         mock_psutil = _wrapper.psutil
@@ -176,12 +230,17 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
         mock_psutil.disk_partitions.return_value = [
             sdiskpart("test", "/", "ext4", ""),
             sdiskpart("test2", "/media/share", "ext4", ""),
-            sdiskpart("test3", "/incorrect", "", ""),
             sdiskpart("hosts", "/etc/hosts", "bind", ""),
             sdiskpart("proc", "/proc/run", "proc", ""),
         ]
         mock_psutil.boot_time.return_value = 1708786800.0
         mock_psutil.NoSuchProcess = NoSuchProcess
+        mock_psutil.sensors_fans.return_value = {
+            "asus": [sfan("cpu-fan", 1200), sfan("another-fan", 1300)],
+        }
+        mock_psutil.sensors_battery.return_value = sbattery(
+            percent=93, secsleft=16628, power_plugged=False
+        )
         yield mock_psutil
 
 
@@ -197,7 +256,6 @@ def mock_os() -> Generator:
         patch("homeassistant.components.systemmonitor.coordinator.os") as mock_os,
         patch("homeassistant.components.systemmonitor.util.os") as mock_os_util,
     ):
-        mock_os_util.name = "nt"
         mock_os.getloadavg.return_value = (1, 2, 3)
         mock_os_util.path.isdir = isdir
         yield mock_os

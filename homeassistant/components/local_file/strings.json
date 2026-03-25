@@ -9,14 +9,19 @@
     "step": {
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "file_path": "File path"
+          "file_path": "File path",
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "name": "Name for the created entity.",
-          "file_path": "The full path to the image file to be displayed. Be sure the path of the file is in the allowed paths, you can read more about this in the documentation."
+          "file_path": "The full path to the image file to be displayed. Be sure the path of the file is in the allowed paths, you can read more about this in the documentation.",
+          "name": "Name for the created entity."
         }
       }
+    }
+  },
+  "exceptions": {
+    "file_path_not_accessible": {
+      "message": "Path {file_path} is not accessible"
     }
   },
   "options": {
@@ -39,19 +44,14 @@
   },
   "services": {
     "update_file_path": {
-      "name": "Update file path",
       "description": "Changes the file displayed by the camera.",
       "fields": {
         "file_path": {
-          "name": "File path",
-          "description": "[%key:component::local_file::config::step::user::data_description::file_path%]"
+          "description": "[%key:component::local_file::config::step::user::data_description::file_path%]",
+          "name": "File path"
         }
-      }
-    }
-  },
-  "exceptions": {
-    "file_path_not_accessible": {
-      "message": "Path {file_path} is not accessible"
+      },
+      "name": "Update file path"
     }
   }
 }

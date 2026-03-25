@@ -1,7 +1,9 @@
 """Tests for the OpenAI integration."""
 
-from unittest.mock import AsyncMock, patch
+import datetime
+from unittest.mock import AsyncMock
 
+from freezegun import freeze_time
 import httpx
 from openai import AuthenticationError, RateLimitError
 from openai.types.responses import (
@@ -17,10 +19,12 @@ from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.openai_conversation.const import (
     CONF_CODE_INTERPRETER,
+    CONF_SERVICE_TIER,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -28,6 +32,7 @@ from homeassistant.components.openai_conversation.const import (
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.helpers.llm import ToolInput
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -95,18 +100,16 @@ async def test_error_handling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
     exception,
     message,
 ) -> None:
     """Test that we handle errors when calling completion API."""
-    with patch(
-        "openai.resources.responses.AsyncResponses.create",
-        new_callable=AsyncMock,
-        side_effect=exception,
-    ):
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
-        )
+    mock_create_stream.return_value = [exception]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
@@ -239,6 +242,7 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_reasoning_model: MockConfigEntry,
@@ -248,6 +252,44 @@ async def test_function_call(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test function call from the assistant."""
+
+    # Add some pre-existing content from conversation.default_agent
+    mock_chat_log.async_add_user_content(
+        conversation.UserContent(content="What time is it?")
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            tool_calls=[
+                ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="mock-tool-call-id",
+                    external=True,
+                )
+            ],
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id="conversation.openai_conversation",
+            tool_call_id="mock-tool-call-id",
+            tool_name="HassGetCurrentTime",
+            tool_result={
+                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                "response_type": "action_done",
+                "speech_slots": {"time": datetime.time(12, 0, 0, 0)},
+                "data": {"success": [], "failed": []},
+            },
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            content="12:00 PM",
+        )
+    )
+
     mock_create_stream.return_value = [
         # Initial conversation
         (
@@ -298,6 +340,7 @@ async def test_function_call(
     assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
+@freeze_time("2025-10-31 18:00:00")
 async def test_function_call_without_reasoning(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -429,6 +472,7 @@ async def test_assist_api_tools_conversion(
     assert tools
 
 
+@pytest.mark.parametrize("inline_citations", [True, False])
 async def test_web_search(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -436,6 +480,7 @@ async def test_web_search(
     mock_create_stream,
     mock_chat_log: MockChatLog,  # noqa: F811
     snapshot: SnapshotAssertion,
+    inline_citations: bool,
 ) -> None:
     """Test web_search_tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -451,11 +496,17 @@ async def test_web_search(
             CONF_WEB_SEARCH_COUNTRY: "US",
             CONF_WEB_SEARCH_REGION: "California",
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            CONF_WEB_SEARCH_INLINE_CITATIONS: inline_citations,
         },
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    message = "Home Assistant now supports ChatGPT Search in Assist"
+    message = [
+        "Home Assistant now supports ",
+        "ChatGPT Search in Assist",
+        " ([release notes](https://www.home-assistant.io/blog/categories/release-notes/)",
+        ").",
+    ]
     mock_create_stream.return_value = [
         # Initial conversation
         (
@@ -474,7 +525,7 @@ async def test_web_search(
 
     assert mock_create_stream.mock_calls[0][2]["tools"] == [
         {
-            "type": "web_search_preview",
+            "type": "web_search",
             "search_context_size": "low",
             "user_location": {
                 "type": "approximate",
@@ -486,7 +537,6 @@ async def test_web_search(
         }
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
     # Test follow-up message in multi-turn conversation
     mock_create_stream.return_value = [
@@ -501,6 +551,11 @@ async def test_web_search(
         agent_id="conversation.openai_conversation",
     )
 
+    assert (
+        isinstance(mock_create_stream.mock_calls[0][2]["input"][0]["content"], list)
+        and "do not include source citations"
+        in mock_create_stream.mock_calls[0][2]["input"][0]["content"][1]["text"]
+    ) is not inline_citations
     assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
 
 
@@ -565,3 +620,50 @@ async def test_code_interpreter(
     )
 
     assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
+
+
+async def test_flex_tier_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream,
+) -> None:
+    """Test retry with default tier if flex tier unavailable."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_SERVICE_TIER: "flex",
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    mock_create_stream.return_value = [
+        RateLimitError(
+            response=httpx.Response(
+                status_code=429,
+                request=httpx.Request("POST", "https://api.openai.com/v1/responses"),
+            ),
+            body=None,
+            message="Resource Unavailable",
+        ),
+        create_message_item(id="msg_A", text="How can I assist?", output_index=0),
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Hi!",
+        None,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.call_count == 2
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "How can I assist?", (
+        result.response.speech
+    )
+    assert mock_create_stream.mock_calls[0][2]["service_tier"] == "flex"
+    assert mock_create_stream.mock_calls[1][2]["service_tier"] == "default"

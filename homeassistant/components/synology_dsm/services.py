@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from synology_dsm.exceptions import SynologyDSMException
 
@@ -27,7 +27,8 @@ async def _service_handler(call: ServiceCall) -> None:
         entry: SynologyDSMConfigEntry | None = (
             call.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         )
-        assert entry
+        if TYPE_CHECKING:
+            assert entry
         dsm_device = entry.runtime_data
     elif len(dsm_devices) == 1:
         dsm_device = next(iter(dsm_devices.values()))

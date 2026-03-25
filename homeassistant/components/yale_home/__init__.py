@@ -1,1 +1,0 @@
-"""Virtual integration: Yale Home."""

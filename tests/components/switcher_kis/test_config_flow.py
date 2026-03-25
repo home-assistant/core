@@ -1,6 +1,6 @@
 """Test the Switcher config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry
     indirect=True,
 )
 async def test_user_setup(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge: MagicMock
 ) -> None:
     """Test we can finish a config flow."""
     with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
@@ -69,7 +69,7 @@ async def test_user_setup(
     indirect=True,
 )
 async def test_user_setup_found_token_device_valid_token(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge: MagicMock
 ) -> None:
     """Test we can finish a config flow with token device found."""
     with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
@@ -102,6 +102,8 @@ async def test_user_setup_found_token_device_valid_token(
         CONF_TOKEN: DUMMY_TOKEN,
     }
 
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.parametrize(
     "mock_bridge",
@@ -113,8 +115,9 @@ async def test_user_setup_found_token_device_valid_token(
     ],
     indirect=True,
 )
+@pytest.mark.usefixtures("mock_bridge")
 async def test_user_setup_found_token_device_invalid_token(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we can finish a config flow with token device found."""
     with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
@@ -142,9 +145,27 @@ async def test_user_setup_found_token_device_invalid_token(
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "invalid_auth"}
 
+    with patch(
+        "homeassistant.components.switcher_kis.config_flow.validate_token",
+        return_value=True,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
+        )
+
+        assert result4["type"] is FlowResultType.CREATE_ENTRY
+        assert result4["title"] == "Switcher"
+        assert result4["result"].data == {
+            CONF_USERNAME: DUMMY_USERNAME,
+            CONF_TOKEN: DUMMY_TOKEN,
+        }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_user_setup_abort_no_devices_found(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge: MagicMock
 ) -> None:
     """Test we abort a config flow if no devices found."""
     with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
@@ -236,3 +257,15 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.switcher_kis.config_flow.validate_token",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
+        )
+
+        assert result3["type"] is FlowResultType.ABORT
+        assert result3["reason"] == "reauth_successful"

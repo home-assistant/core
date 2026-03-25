@@ -15,6 +15,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -30,7 +31,7 @@ from .const import (
     UPDATE_INTERVAL_OBSERVATION,
 )
 
-EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
+EXCEPTIONS = (ApiError, ClientConnectorError, RequestsExceededError)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,8 @@ class AccuWeatherObservationDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, Any]]
 ):
     """Class to manage fetching AccuWeather data API."""
+
+    config_entry: AccuWeatherConfigEntry
 
     def __init__(
         self,
@@ -87,6 +90,12 @@ class AccuWeatherObservationDataUpdateCoordinator(
                 translation_key="current_conditions_update_error",
                 translation_placeholders={"error": repr(error)},
             ) from error
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={"entry": self.config_entry.title},
+            ) from err
 
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
 
@@ -97,6 +106,8 @@ class AccuWeatherForecastDataUpdateCoordinator(
     TimestampDataUpdateCoordinator[list[dict[str, Any]]]
 ):
     """Base class for AccuWeather forecast."""
+
+    config_entry: AccuWeatherConfigEntry
 
     def __init__(
         self,
@@ -137,6 +148,12 @@ class AccuWeatherForecastDataUpdateCoordinator(
                 translation_key="forecast_update_error",
                 translation_placeholders={"error": repr(error)},
             ) from error
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={"entry": self.config_entry.title},
+            ) from err
 
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
         return result

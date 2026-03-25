@@ -5,18 +5,13 @@
       'domain': 'group',
       'services': dict({
         'reload': dict({
-          'description': 'Reloads group configuration, entities, and notify services from YAML-configuration.',
           'fields': dict({
           }),
-          'name': 'Reload',
         }),
         'remove': dict({
-          'description': 'Removes a group.',
           'fields': dict({
             'object_id': dict({
-              'description': 'Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id].',
               'example': 'test_group',
-              'name': 'Object ID',
               'required': True,
               'selector': dict({
                 'object': dict({
@@ -25,15 +20,11 @@
               }),
             }),
           }),
-          'name': 'Remove',
         }),
         'set': dict({
-          'description': 'Creates/Updates a group.',
           'fields': dict({
             'add_entities': dict({
-              'description': 'List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove entities`.',
               'example': 'domain.entity_id1, domain.entity_id2',
-              'name': 'Add entities',
               'selector': dict({
                 'entity': dict({
                   'multiple': True,
@@ -42,17 +33,13 @@
               }),
             }),
             'all': dict({
-              'description': 'Enable this option if the group should only be used when all entities are in state `on`.',
-              'name': 'All',
               'selector': dict({
                 'boolean': dict({
                 }),
               }),
             }),
             'entities': dict({
-              'description': 'List of all members in the group. Cannot be used in combination with `Add entities` or `Remove entities`.',
               'example': 'domain.entity_id1, domain.entity_id2',
-              'name': 'Entities',
               'selector': dict({
                 'entity': dict({
                   'multiple': True,
@@ -61,18 +48,14 @@
               }),
             }),
             'icon': dict({
-              'description': 'Name of the icon for the group.',
               'example': 'mdi:camera',
-              'name': 'Icon',
               'selector': dict({
                 'icon': dict({
                 }),
               }),
             }),
             'name': dict({
-              'description': 'Name of the group.',
               'example': 'My test group',
-              'name': 'Name',
               'selector': dict({
                 'text': dict({
                   'multiline': False,
@@ -81,9 +64,7 @@
               }),
             }),
             'object_id': dict({
-              'description': 'Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id].',
               'example': 'test_group',
-              'name': 'Object ID',
               'required': True,
               'selector': dict({
                 'text': dict({
@@ -93,9 +74,7 @@
               }),
             }),
             'remove_entities': dict({
-              'description': 'List of members to be removed from a group. Cannot be used in combination with `Entities` or `Add entities`.',
               'example': 'domain.entity_id1, domain.entity_id2',
-              'name': 'Remove entities',
               'selector': dict({
                 'entity': dict({
                   'multiple': True,
@@ -104,7 +83,6 @@
               }),
             }),
           }),
-          'name': 'Set',
         }),
       }),
     }),
@@ -139,10 +117,8 @@
         'name': 'Translated name',
       }),
       'set_level': dict({
-        'description': '',
         'fields': dict({
         }),
-        'name': '',
       }),
     }),
   })

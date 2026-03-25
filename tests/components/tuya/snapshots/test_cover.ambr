@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[cover.bedroom_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -40,6 +42,7 @@
       'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'bedroom blinds Curtain',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -52,8 +55,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -71,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -91,6 +96,7 @@
       'current_position': 36,
       'device_class': 'curtain',
       'friendly_name': 'blinds Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -101,10 +107,172 @@
     'state': 'open',
   })
 # ---
+# name: test_platform_setup_and_discovery[cover.dining_1_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.dining_1_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Curtain',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.slkkzcxa7yjqmetqlccontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.dining_1_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'curtain',
+      'friendly_name': 'Dining 1 Curtain',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.dining_1_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.estore_sala_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.estore_sala_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Curtain',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.gtcinipmdp5rgx3nlccontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.estore_sala_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'curtain',
+      'friendly_name': 'Estore Sala Curtain',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.estore_sala_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.fenster_kuche_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.fenster_kuche_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Curtain',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.7xpq8plg06p46j7ygklccontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.fenster_kuche_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'curtain',
+      'friendly_name': 'Fenster Küche Curtain',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.fenster_kuche_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cover.garage_door_door_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -122,6 +290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door 1',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -141,6 +310,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Garage door  Door 1',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -151,10 +321,64 @@
     'state': 'open',
   })
 # ---
+# name: test_platform_setup_and_discovery[cover.kit_blinds_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kit_blinds_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Curtain',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.xR2ASpOQgAAqu7Drlccontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.kit_blinds_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'curtain',
+      'friendly_name': 'Kit-Blinds Curtain',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kit_blinds_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -172,6 +396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blind',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
@@ -192,6 +417,7 @@
       'current_position': 100,
       'device_class': 'blind',
       'friendly_name': 'Kitchen Blinds Blind',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -204,8 +430,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -223,6 +450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -243,6 +471,7 @@
       'current_position': 48,
       'device_class': 'curtain',
       'friendly_name': 'Kitchen Blinds Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -255,8 +484,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.lounge_dark_blind_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -274,6 +504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -294,6 +525,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Lounge Dark Blind Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -304,10 +536,65 @@
     'state': 'open',
   })
 # ---
+# name: test_platform_setup_and_discovery[cover.pergola_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.pergola_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Curtain',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.shga3pmbkwhthvqxgklccontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.pergola_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'curtain',
+      'friendly_name': 'Pergola Curtain',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.pergola_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -325,6 +612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -345,6 +633,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Persiana do Quarto Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -355,10 +644,65 @@
     'state': 'open',
   })
 # ---
+# name: test_platform_setup_and_discovery[cover.projector_screen_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.projector_screen_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Curtain',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.aiag5pku0x39rkfllccontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cover.projector_screen_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'curtain',
+      'friendly_name': 'Projector Screen Curtain',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.projector_screen_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cover.roller_shutter_living_room_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -376,6 +720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -396,6 +741,7 @@
       'current_position': 75,
       'device_class': 'curtain',
       'friendly_name': 'Roller shutter Living Room Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -408,8 +754,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -427,6 +774,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -447,6 +795,7 @@
       'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'Tapparelle studio Curtain',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -459,8 +808,9 @@
 # ---
 # name: test_platform_setup_and_discovery[cover.vividstorm_screen_curtain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -478,6 +828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -498,6 +849,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'VIVIDSTORM SCREEN Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

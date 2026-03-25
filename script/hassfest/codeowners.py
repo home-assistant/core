@@ -22,7 +22,7 @@ BASE = """
 .yamllint @home-assistant/core
 pyproject.toml @home-assistant/core
 requirements_test.txt @home-assistant/core
-/.devcontainer/ @home-assistant/core
+/.devcontainer/ @home-assistant/core @edenhaus
 /.github/ @home-assistant/core
 /.vscode/ @home-assistant/core
 /homeassistant/*.py @home-assistant/core

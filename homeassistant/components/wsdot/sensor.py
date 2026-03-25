@@ -7,27 +7,29 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from wsdot import TravelTime, WsdotTravelError, WsdotTravelTimes
+import wsdot as wsdot_api
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import WsdotConfigEntry
+from .const import ATTRIBUTION, CONF_TRAVEL_TIMES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by WSDOT"
-
-CONF_TRAVEL_TIMES = "travel_time"
-
 ICON = "mdi:car"
-DOMAIN = "wsdot"
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -44,22 +46,61 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the WSDOT sensor."""
-    sensors = []
-    session = async_get_clientsession(hass)
-    api_key = config[CONF_API_KEY]
-    wsdot_travel = WsdotTravelTimes(api_key=api_key, session=session)
-    for travel_time in config[CONF_TRAVEL_TIMES]:
-        name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
-        travel_time_id = int(travel_time[CONF_ID])
-        sensors.append(
-            WashingtonStateTravelTimeSensor(name, wsdot_travel, travel_time_id)
+    """Migrate a platform-style wsdot to entry-style."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.7.0",
+            is_fixable=False,
+            is_persistent=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={"domain": DOMAIN, "integration_title": "WSDOT"},
         )
+        return
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.7.0",
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "WSDOT"},
+    )
 
-    add_entities(sensors, True)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: WsdotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the WSDOT sensor."""
+    for subentry_id, subentry in entry.subentries.items():
+        name = subentry.data[CONF_NAME]
+        travel_time_id = subentry.data[CONF_ID]
+        sensor = WashingtonStateTravelTimeSensor(
+            name, entry.runtime_data, travel_time_id
+        )
+        async_add_entities(
+            [sensor], config_subentry_id=subentry_id, update_before_add=True
+        )
 
 
 class WashingtonStateTransportSensor(SensorEntity):
@@ -70,6 +111,7 @@ class WashingtonStateTransportSensor(SensorEntity):
     can read them and make them available.
     """
 
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
 
     def __init__(self, name: str) -> None:
@@ -91,23 +133,23 @@ class WashingtonStateTransportSensor(SensorEntity):
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
-    _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, name: str, wsdot_travel: WsdotTravelTimes, travel_time_id: int
+        self, name: str, wsdot_travel: wsdot_api.WsdotTravelTimes, travel_time_id: int
     ) -> None:
         """Construct a travel time sensor."""
         super().__init__(name)
-        self._data: TravelTime | None = None
+        self._data: wsdot_api.TravelTime | None = None
         self._travel_time_id = travel_time_id
         self._wsdot_travel = wsdot_travel
+        self._attr_unique_id = f"travel_time-{travel_time_id}"
 
     async def async_update(self) -> None:
         """Get the latest data from WSDOT."""
         try:
             travel_time = await self._wsdot_travel.get_travel_time(self._travel_time_id)
-        except WsdotTravelError:
+        except wsdot_api.WsdotTravelError:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = travel_time

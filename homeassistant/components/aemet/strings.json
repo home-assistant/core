@@ -14,7 +14,7 @@
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "name": "Name of the integration"
         },
-        "description": "To generate API key go to https://opendata.aemet.es/centrodedescargas/altaUsuario"
+        "description": "To generate API key go to {api_key_url}"
       }
     }
   },

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_SSL
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, SECTION_ADVANCED_SETTINGS
 from .coordinator import AirOSDataUpdateCoordinator
 
 
@@ -20,17 +20,27 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         airos_data = self.coordinator.data
+        url_schema = (
+            "https"
+            if coordinator.config_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL]
+            else "http"
+        )
 
         configuration_url: str | None = (
-            f"https://{coordinator.config_entry.data[CONF_HOST]}"
+            f"{url_schema}://{coordinator.config_entry.data[CONF_HOST]}"
         )
 
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, airos_data.derived.mac)},
             configuration_url=configuration_url,
-            identifiers={(DOMAIN, str(airos_data.host.device_id))},
+            identifiers={(DOMAIN, airos_data.derived.mac)},
             manufacturer=MANUFACTURER,
             model=airos_data.host.devmodel,
+            model_id=(
+                sku
+                if (sku := airos_data.derived.sku) not in ["UNKNOWN", "AMBIGUOUS"]
+                else None
+            ),
             name=airos_data.host.hostname,
             sw_version=airos_data.host.fwversion,
         )

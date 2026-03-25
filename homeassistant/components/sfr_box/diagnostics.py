@@ -6,11 +6,9 @@ import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .models import DomainData
+from .coordinator import SFRConfigEntry
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
@@ -25,10 +23,10 @@ def _async_redact_data(obj: DataclassInstance | None) -> dict[str, Any] | None:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: SFRConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: DomainData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     return {
         "entry": {

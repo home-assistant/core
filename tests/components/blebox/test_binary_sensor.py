@@ -26,7 +26,7 @@ def airsensor_fixture() -> tuple[AsyncMock, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My rain sensor")
     type(product).model = PropertyMock(return_value="rainSensor")
-    return feature, "binary_sensor.windrainsensor_0_rain"
+    return feature, "binary_sensor.my_rain_sensor_windrainsensor_0_rain"
 
 
 async def test_init(
@@ -38,7 +38,7 @@ async def test_init(
     assert entry.unique_id == "BleBox-windRainSensor-ea68e74f4f49-0.rain"
 
     state = hass.states.get(entity_id)
-    assert state.name == "windRainSensor-0.rain"
+    assert state.name == "My rain sensor windRainSensor-0.rain"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOISTURE
     assert state.state == STATE_ON

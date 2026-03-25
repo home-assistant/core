@@ -282,6 +282,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
+        self._update_assumed_state_from_members()
         for entity_id in self._entity_ids:
             if not (state := self.hass.states.get(entity_id)):
                 continue

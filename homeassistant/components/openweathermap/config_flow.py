@@ -14,12 +14,17 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_MODE,
-    CONF_NAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    LanguageSelector,
+    LanguageSelectorConfig,
+    LocationSelector,
+    LocationSelectorConfig,
+)
 
 from .const import (
     CONFIG_FLOW_VERSION,
@@ -34,10 +39,12 @@ from .utils import build_data_and_options, validate_api_key
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
+        vol.Required(CONF_LOCATION): LocationSelector(
+            LocationSelectorConfig(radius=False)
+        ),
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+            LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
+        ),
         vol.Required(CONF_API_KEY): str,
         vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
     }
@@ -45,7 +52,9 @@ USER_SCHEMA = vol.Schema(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+            LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
+        ),
         vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
     }
 )
@@ -70,8 +79,8 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
 
         if user_input is not None:
-            latitude = user_input[CONF_LATITUDE]
-            longitude = user_input[CONF_LONGITUDE]
+            latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
+            longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
             mode = user_input[CONF_MODE]
 
             await self.async_set_unique_id(f"{latitude}-{longitude}")
@@ -82,15 +91,21 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
+                # Flatten location
+                location = user_input.pop(CONF_LOCATION)
+                user_input[CONF_LATITUDE] = location[CONF_LATITUDE]
+                user_input[CONF_LONGITUDE] = location[CONF_LONGITUDE]
                 data, options = build_data_and_options(user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=data, options=options
+                    title=DEFAULT_NAME, data=data, options=options
                 )
             schema_data = user_input
         else:
             schema_data = {
-                CONF_LATITUDE: self.hass.config.latitude,
-                CONF_LONGITUDE: self.hass.config.longitude,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                },
                 CONF_LANGUAGE: self.hass.config.language,
             }
 

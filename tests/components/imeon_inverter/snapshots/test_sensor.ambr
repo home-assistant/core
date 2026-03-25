@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.imeon_inverter_air_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -57,8 +59,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -113,8 +117,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -169,8 +175,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_state_of_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -190,6 +197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state of charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -222,8 +230,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -247,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -282,8 +292,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_stored-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -303,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery stored',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -338,8 +350,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_building_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -359,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Building consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -394,8 +408,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_charging_current_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -415,6 +430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging current limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -450,8 +466,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_component_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -471,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Component temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -504,10 +522,121 @@
     'state': '45.5',
   })
 # ---
+# name: test_sensors[sensor.imeon_inverter_forecast_remaining_energy_consumption_for_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.imeon_inverter_forecast_remaining_energy_consumption_for_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Forecast remaining energy consumption for today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Forecast remaining energy consumption for today',
+    'platform': 'imeon_inverter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'forecast_cons_remaining_today',
+    'unique_id': '111111111111111_forecast_cons_remaining_today',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_forecast_remaining_energy_consumption_for_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Imeon inverter Forecast remaining energy consumption for today',
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.imeon_inverter_forecast_remaining_energy_consumption_for_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3000.0',
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_forecast_remaining_energy_production_for_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.imeon_inverter_forecast_remaining_energy_production_for_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Forecast remaining energy production for today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Forecast remaining energy production for today',
+    'platform': 'imeon_inverter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'forecast_prod_remaining_today',
+    'unique_id': '111111111111111_forecast_prod_remaining_today',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensors[sensor.imeon_inverter_forecast_remaining_energy_production_for_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Imeon inverter Forecast remaining energy production for today',
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.imeon_inverter_forecast_remaining_energy_production_for_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7000.0',
+  })
+# ---
 # name: test_sensors[sensor.imeon_inverter_grid_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -527,6 +656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -562,8 +692,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -583,6 +714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid current L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -618,8 +750,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -639,6 +772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid current L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -674,8 +808,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -695,6 +830,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid current L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -730,8 +866,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -751,6 +888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -786,8 +924,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_injection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -807,6 +946,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid injection',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -842,8 +982,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_power_flow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -863,6 +1004,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid power flow',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -898,8 +1040,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -919,6 +1062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid voltage L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -954,8 +1098,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -975,6 +1120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid voltage L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1010,8 +1156,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1031,6 +1178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid voltage L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1066,8 +1214,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_injection_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1087,6 +1236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Injection power limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1122,8 +1272,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1143,6 +1294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input power L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1178,8 +1330,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1199,6 +1352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input power L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1234,8 +1388,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1255,6 +1410,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input power L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1290,8 +1446,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1311,6 +1468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input power total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1346,8 +1504,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_inverter_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1373,6 +1532,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1410,8 +1570,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_meter_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1431,6 +1592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1466,8 +1628,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1487,6 +1650,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output current L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1522,8 +1686,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1543,6 +1708,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output current L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1578,8 +1744,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1599,6 +1766,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output current L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1634,8 +1802,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1655,6 +1824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1690,8 +1860,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1711,6 +1882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output power L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1746,8 +1918,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1767,6 +1940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output power L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1802,8 +1976,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1823,6 +1998,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output power L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1858,8 +2034,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1879,6 +2056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output power total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1914,8 +2092,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1935,6 +2114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output voltage L1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1970,8 +2150,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1991,6 +2172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output voltage L2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2026,8 +2208,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2047,6 +2230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output voltage L3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2082,8 +2266,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2103,6 +2288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PV consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2138,8 +2324,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_injected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2159,6 +2346,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PV injected',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2194,8 +2382,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2215,6 +2404,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PV power 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2250,8 +2440,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2271,6 +2462,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PV power 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2306,8 +2498,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2327,6 +2520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PV power total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2362,8 +2556,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_self_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2383,6 +2578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2417,8 +2613,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_self_sufficiency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2438,6 +2635,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-sufficiency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2472,8 +2670,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_solar_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2493,6 +2692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2528,8 +2728,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_timeline_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2564,6 +2765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timeline status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2610,8 +2812,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_battery_consumed_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2631,6 +2834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Today battery-consumed energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2666,8 +2870,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_battery_stored_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2687,6 +2892,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Today battery-stored energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2722,8 +2928,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_building_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2743,6 +2950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Today building consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2778,8 +2986,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_grid_consumed_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2799,6 +3008,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Today grid-consumed energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2834,8 +3044,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_grid_injected_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2855,6 +3066,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Today grid-injected energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2890,8 +3102,9 @@
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_pv_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2911,6 +3124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Today PV energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

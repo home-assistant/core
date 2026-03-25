@@ -112,7 +112,7 @@ class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     options: list[str] | None = None
-    state_class: SensorStateClass | str | None = None
+    state_class: SensorStateClass | None = None
     suggested_display_precision: int | None = None
     suggested_unit_of_measurement: str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
@@ -120,7 +120,7 @@ class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 def _numeric_state_expected(
     device_class: SensorDeviceClass | None,
-    state_class: SensorStateClass | str | None,
+    state_class: SensorStateClass | None,
     native_unit_of_measurement: str | None,
     suggested_display_precision: int | None,
 ) -> bool:
@@ -188,7 +188,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_options: list[str] | None
-    _attr_state_class: SensorStateClass | str | None
+    _attr_state_class: SensorStateClass | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_suggested_display_precision: int | None
     _attr_suggested_unit_of_measurement: str | None
@@ -329,7 +329,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
-    def state_class(self) -> SensorStateClass | str | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
             return self._attr_state_class
@@ -862,16 +862,25 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return a custom unit, or UNDEFINED if not compatible with the native unit."""
         assert self.registry_entry
         if (
-            (sensor_options := self.registry_entry.options.get(primary_key))
-            and secondary_key in sensor_options
-            and (device_class := self.device_class) in UNIT_CONVERTERS
-            and self.__native_unit_of_measurement_compat
-            in UNIT_CONVERTERS[device_class].VALID_UNITS
-            and (custom_unit := sensor_options[secondary_key])
-            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            sensor_options := self.registry_entry.options.get(primary_key)
+        ) is None or secondary_key not in sensor_options:
+            return UNDEFINED
+
+        if (device_class := self.device_class) not in UNIT_CONVERTERS:
+            return UNDEFINED
+
+        if (
+            self.__native_unit_of_measurement_compat
+            not in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
-            return cast(str, custom_unit)
-        return UNDEFINED
+            return UNDEFINED
+
+        if (custom_unit := sensor_options[secondary_key]) not in UNIT_CONVERTERS[
+            device_class
+        ].VALID_UNITS:
+            return UNDEFINED
+
+        return cast(str, custom_unit)
 
     @callback
     def async_registry_entry_updated(self) -> None:

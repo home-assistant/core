@@ -78,19 +78,13 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         index: int = 0,
     ) -> None:
         """Initialize a pipeline selector."""
-        if index < 1:
-            # Keep compatibility
-            key_suffix = ""
-            placeholder = ""
-        else:
-            key_suffix = f"_{index + 1}"
-            placeholder = f" {index + 1}"
-
-        self.entity_description = replace(
-            self.entity_description,
-            key=f"pipeline{key_suffix}",
-            translation_placeholders={"index": placeholder},
-        )
+        if index >= 1:
+            self.entity_description = replace(
+                self.entity_description,
+                key=f"pipeline_{index + 1}",
+                translation_key="pipeline_n",
+                translation_placeholders={"index": str(index + 1)},
+            )
 
         self._domain = domain
         self._unique_id_prefix = unique_id_prefix
@@ -109,7 +103,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         )
 
         state = await self.async_get_last_state()
-        if state is not None and state.state in self.options:
+        if (state is not None) and (state.state in self.options):
             self._attr_current_option = state.state
 
         if self.registry_entry and (device_id := self.registry_entry.device_id):
@@ -119,7 +113,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
             def cleanup() -> None:
                 """Clean up registered device."""
-                pipeline_data.pipeline_devices.pop(device_id)
+                pipeline_data.pipeline_devices.pop(device_id, None)
 
             self.async_on_remove(cleanup)
 

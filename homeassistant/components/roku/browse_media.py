@@ -131,7 +131,7 @@ async def root_payload(
         )
 
     for child in children:
-        child.thumbnail = "https://brands.home-assistant.io/_/roku/logo.png"
+        child.thumbnail = "/api/brands/integration/roku/logo.png"
 
     try:
         browse_item = await media_source.async_browse_media(hass, None)
@@ -142,7 +142,7 @@ async def root_payload(
                 children.extend(browse_item.children)
         else:
             children.append(browse_item)
-    except media_source.BrowseError:
+    except BrowseError:
         pass
 
     if len(children) == 1:

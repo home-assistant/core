@@ -6,7 +6,6 @@ from python_overseerr import (
     OverseerrAuthenticationError,
     OverseerrClient,
     OverseerrConnectionError,
-    RequestCount,
 )
 from yarl import URL
 
@@ -18,11 +17,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+from .models import OverseerrData
 
 type OverseerrConfigEntry = ConfigEntry[OverseerrCoordinator]
 
 
-class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
+class OverseerrCoordinator(DataUpdateCoordinator[OverseerrData]):
     """Class to manage fetching Overseerr data."""
 
     config_entry: OverseerrConfigEntry
@@ -49,10 +49,12 @@ class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
         self.url = URL.build(host=host, port=port, scheme="https" if ssl else "http")
         self.push = False
 
-    async def _async_update_data(self) -> RequestCount:
+    async def _async_update_data(self) -> OverseerrData:
         """Fetch data from API endpoint."""
         try:
-            return await self.client.get_request_count()
+            requests = await self.client.get_request_count()
+            issues = await self.client.get_issue_count()
+            return OverseerrData(requests=requests, issues=issues)
         except OverseerrAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,

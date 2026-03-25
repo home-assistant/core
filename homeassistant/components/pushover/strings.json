@@ -10,17 +10,17 @@
       "invalid_user_key": "Invalid user key"
     },
     "step": {
-      "user": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "user_key": "User key"
-        }
-      },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "user_key": "User key"
         }
       }
     }
