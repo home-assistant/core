@@ -33,7 +33,7 @@ class CounterBaseIntegerTrigger(EntityTriggerBase):
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute is valid."""
+        """Check if the new state is valid."""
         return _is_integer_state(state)
 
 
