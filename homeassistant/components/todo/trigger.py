@@ -56,6 +56,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
         hass: HomeAssistant,
         target_selection: TargetSelection,
         listener: Callable[[TodoItemChangeEvent], None],
+        entities_updated: Callable[[set[str]], None],
     ) -> None:
         """Initialize the item change tracker."""
 
@@ -68,6 +69,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
 
         super().__init__(hass, target_selection, entity_filter)
         self._listener = listener
+        self._entities_updated = entities_updated
 
         self._pending_listener_task: asyncio.Task[None] | None = None
         self._unsubscribe_listeners: list[CALLBACK_TYPE] = []
@@ -87,6 +89,8 @@ class ItemChangeListener(TargetEntityChangeTracker):
         _LOGGER.debug("Tracking items for todos: %s", tracked_entities)
         for unsub in self._unsubscribe_listeners:
             unsub()
+
+        self._entities_updated(tracked_entities)
 
         def _listener_wrapper(entity_id: str, items: list[TodoItem] | None) -> None:
             self._listener(TodoItemChangeEvent(entity_id=entity_id, items=items))
@@ -146,6 +150,7 @@ class ItemTriggerBase(Trigger, abc.ABC):
             self._hass,
             target_selection,
             functools.partial(self._handle_item_change, run_action=run_action),
+            self._handle_entities_updated,
         )
         return listener.async_setup()
 
@@ -155,6 +160,11 @@ class ItemTriggerBase(Trigger, abc.ABC):
         self, event: TodoItemChangeEvent, run_action: TriggerActionRunner
     ) -> None:
         """Handle todo item change event."""
+
+    @callback
+    @abc.abstractmethod
+    def _handle_entities_updated(self, tracked_entities: set[str]) -> None:
+        """Handle entities being added/removed from the target."""
 
 
 class ItemAddedTrigger(ItemTriggerBase):
@@ -195,6 +205,13 @@ class ItemAddedTrigger(ItemTriggerBase):
             }
             run_action(payload, description="todo item added trigger")
 
+    @override
+    @callback
+    def _handle_entities_updated(self, tracked_entities: set[str]) -> None:
+        """Clear stale state for entities that left the tracked set."""
+        for entity_id in set(self._entity_item_ids) - tracked_entities:
+            del self._entity_item_ids[entity_id]
+
 
 class ItemRemovedTrigger(ItemTriggerBase):
     """todo item removed trigger."""
@@ -233,6 +250,13 @@ class ItemRemovedTrigger(ItemTriggerBase):
                 "item_ids": sorted(removed_item_ids),
             }
             run_action(payload, description="todo item removed trigger")
+
+    @override
+    @callback
+    def _handle_entities_updated(self, tracked_entities: set[str]) -> None:
+        """Clear stale state for entities that left the tracked set."""
+        for entity_id in set(self._entity_item_ids) - tracked_entities:
+            del self._entity_item_ids[entity_id]
 
 
 class ItemCompletedTrigger(ItemTriggerBase):
@@ -276,6 +300,13 @@ class ItemCompletedTrigger(ItemTriggerBase):
                 "item_ids": sorted(new_completed_item_ids),
             }
             run_action(payload, description="todo item completed trigger")
+
+    @override
+    @callback
+    def _handle_entities_updated(self, tracked_entities: set[str]) -> None:
+        """Clear stale state for entities that left the tracked set."""
+        for entity_id in set(self._entity_completed_item_ids) - tracked_entities:
+            del self._entity_completed_item_ids[entity_id]
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

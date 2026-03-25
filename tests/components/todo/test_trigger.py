@@ -471,6 +471,45 @@ async def test_trigger_skips_missing_entity(
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+async def test_entity_rejoining_label_does_not_fire_trigger(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test removing and re-adding an entity to a target does not fire stale triggers."""
+    label_both = label_registry.async_get_label_by_name("label_both_lists")
+    assert label_both is not None
+    label_both_id = label_both.label_id
+
+    await _setup_automation(hass, {ATTR_LABEL_ID: label_both_id})
+
+    # Verify triggers fire normally for list_one
+    await _add_item(hass, TODO_ENTITY_ID1, "tracked_item")
+    _assert_service_calls(
+        service_calls,
+        [{"platform": "todo.item_added", "entity_id": TODO_ENTITY_ID1}],
+    )
+    service_calls.clear()
+
+    entity_registry.async_update_entity(TODO_ENTITY_ID1, labels=set())
+    await hass.async_block_till_done()
+
+    await _add_item(hass, TODO_ENTITY_ID1, "untracked_item")
+    _assert_service_calls(service_calls, [])
+
+    entity_registry.async_update_entity(TODO_ENTITY_ID1, labels={label_both_id})
+    await hass.async_block_till_done()
+    _assert_service_calls(service_calls, [])
+
+    await _add_item(hass, TODO_ENTITY_ID1, "new_item_after_rejoin")
+    _assert_service_calls(
+        service_calls,
+        [{"platform": "todo.item_added", "entity_id": TODO_ENTITY_ID1}],
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
 @pytest.mark.parametrize(
     "trigger_target",
     [
