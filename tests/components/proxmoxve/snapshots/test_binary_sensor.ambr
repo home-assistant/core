@@ -101,6 +101,57 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[binary_sensor.pve1_backup_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pve1_backup_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Backup status',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Backup status',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'node_backup_status',
+    'unique_id': '1234_node/pve1_node_backup_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_backup_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'pve1 Backup status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve1_backup_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[binary_sensor.pve1_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import NODE_ONLINE, VM_CONTAINER_RUNNING
+from .const import NODE_ONLINE, STATUS_OK, VM_CONTAINER_RUNNING
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 
@@ -49,6 +49,15 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
         translation_key="status",
         state_fn=lambda data: data.node["status"] == NODE_ONLINE,
         device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ProxmoxNodeBinarySensorEntityDescription(
+        key="node_backup_status",
+        translation_key="node_backup_status",
+        state_fn=lambda data: bool(
+            data.backups and data.backups[0]["status"] != STATUS_OK
+        ),
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
