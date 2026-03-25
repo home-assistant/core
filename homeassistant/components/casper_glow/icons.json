@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "paused": {
+        "default": "mdi:timer-pause"
+      }
+    }
+  }
+}

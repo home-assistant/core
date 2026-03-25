@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import CasperGlowConfigEntry, CasperGlowCoordinator
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> bool:

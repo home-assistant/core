@@ -26,6 +26,13 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "paused": {
+        "name": "Dimming paused"
+      }
+    }
+  },
   "exceptions": {
     "communication_error": {
       "message": "An error occurred while communicating with the Casper Glow: {error}"
