@@ -47,7 +47,7 @@ rules:
     comment: Not discoverable, infrastructure components are static
   discovery:
     status: exempt
-    comment: Not discoverable 
+    comment: Not discoverable
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
