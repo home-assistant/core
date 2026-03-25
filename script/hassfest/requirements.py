@@ -502,6 +502,12 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     return deptree
 
 
+@cache
+def metadata_cache(package: str) -> dict:
+    """Return package metadata, cached."""
+    return metadata(package)
+
+
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     deptree = get_pipdeptree()
@@ -530,11 +536,6 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         integration.domain, {}
     )
     needs_python_version_check_exception = False
-
-    @cache
-    def metadata_cache(package: str) -> dict:
-        """Return package metadata, cached."""
-        return metadata(package)
 
     while to_check:
         package = to_check.popleft()
