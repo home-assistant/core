@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from functools import partial
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any
+from typing import cast
 
 from jaraco.abode.client import Client as Abode
 import jaraco.abode.config
@@ -15,6 +15,7 @@ from jaraco.abode.exceptions import (
     Exception as AbodeException,
 )
 from jaraco.abode.helpers.timeline import Groups as GROUPS
+from requests import Response
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
@@ -65,38 +66,37 @@ class AbodeSystem:
 
     abode: Abode
     polling: bool
-    hass: HomeAssistant
-    entry: ConfigEntry
     entity_ids: set[str | None] = field(default_factory=set)
     logout_listener: CALLBACK_TYPE | None = None
-    reauth_started: bool = False
 
-    def start_reauth(self, error: Exception) -> None:
-        """Start a reauthentication flow once when auth fails at runtime."""
-        if self.reauth_started:
-            return
-
-        self.reauth_started = True
-        LOGGER.warning(
-            "Abode authentication failed at runtime: %s. Starting reauthentication",
-            error,
-        )
-
-        # Stop event stream first to avoid aggressive retries while user reauthenticates.
-        if not self.polling:
-            try:
-                self.abode.events.stop()
-            except Exception as ex:  # noqa: BLE001
-                LOGGER.debug("Failed stopping Abode event stream: %s", ex)
-
-        self.hass.add_job(self.entry.async_start_reauth, self.hass)
-
-
-AUTH_STATUS_CODES = {
+AUTH_STATUS_CODES: set[int] = {
     HTTPStatus.BAD_REQUEST,
     HTTPStatus.UNAUTHORIZED,
     HTTPStatus.FORBIDDEN,
 }
+
+
+def _start_reauth(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    abode: Abode,
+    polling: bool,
+    error: Exception,
+) -> None:
+    """Start a reauthentication flow when auth fails at runtime."""
+    LOGGER.warning(
+        "Abode authentication failed at runtime: %s. Starting reauthentication",
+        error,
+    )
+
+    # Stop event stream first to avoid aggressive retries while user reauthenticates.
+    if not polling:
+        try:
+            abode.events.stop()
+        except Exception as ex:  # noqa: BLE001
+            LOGGER.debug("Failed stopping Abode event stream: %s", ex)
+
+    entry.async_start_reauth(hass)
 
 
 def _is_auth_error(error: Exception) -> bool:
@@ -104,11 +104,11 @@ def _is_auth_error(error: Exception) -> bool:
     if isinstance(error, AbodeAuthenticationException):
         return True
 
-    if isinstance(error, HTTPError) and error.response:
-        return HTTPStatus(error.response.status_code) in AUTH_STATUS_CODES
+    if isinstance(error, HTTPError) and error.response is not None:
+        return error.response.status_code in AUTH_STATUS_CODES
 
     if isinstance(error, AbodeException):
-        if error.errcode in AUTH_STATUS_CODES:
+        if int(error.errcode) in AUTH_STATUS_CODES:
             return True
 
         message = error.message.lower()
@@ -121,12 +121,16 @@ def _is_auth_error(error: Exception) -> bool:
     return False
 
 
-def _is_auth_like_response(response: Any) -> bool:
+def _is_auth_like_response(response: Response) -> bool:
     """Return True if a response payload indicates auth failure despite 200 status."""
-    status_code = getattr(response, "status_code", None)
+    status_code = response.status_code
     if status_code in AUTH_STATUS_CODES:
         return True
     if status_code != HTTPStatus.OK:
+        return False
+
+    content_type = response.headers.get("Content-Type", "")
+    if "application/json" not in content_type.lower():
         return False
 
     try:
@@ -148,7 +152,9 @@ def _is_auth_like_response(response: Any) -> bool:
     )
 
 
-def _install_runtime_auth_guard(abode_system: AbodeSystem) -> None:
+def _install_runtime_auth_guard(
+    abode_system: AbodeSystem, hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     """Wrap Abode requests to trigger reauth on runtime auth failures."""
     original_send_request = abode_system.abode.send_request
 
@@ -157,12 +163,14 @@ def _install_runtime_auth_guard(abode_system: AbodeSystem) -> None:
         path: str,
         headers: dict[str, str] | None = None,
         data: dict[str, str] | None = None,
-    ) -> Any:
+    ) -> Response:
         try:
-            response = original_send_request(method, path, headers, data)
+            response = cast(Response, original_send_request(method, path, headers, data))
         except Exception as ex:
             if _is_auth_error(ex):
-                abode_system.start_reauth(ex)
+                _start_reauth(
+                    hass, entry, abode_system.abode, abode_system.polling, ex
+                )
             raise
 
         if _is_auth_like_response(response):
@@ -172,7 +180,9 @@ def _install_runtime_auth_guard(abode_system: AbodeSystem) -> None:
                     "Abode returned an authentication error payload",
                 )
             )
-            abode_system.start_reauth(auth_error)
+            _start_reauth(
+                hass, entry, abode_system.abode, abode_system.polling, auth_error
+            )
             raise auth_error
 
         return response
@@ -213,8 +223,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Abode: {ex}") from ex
 
-    hass.data[DOMAIN_DATA] = AbodeSystem(abode, polling, hass, entry)
-    _install_runtime_auth_guard(hass.data[DOMAIN_DATA])
+    hass.data[DOMAIN_DATA] = AbodeSystem(abode, polling)
+    _install_runtime_auth_guard(hass.data[DOMAIN_DATA], hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

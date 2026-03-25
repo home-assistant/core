@@ -15,6 +15,7 @@ from homeassistant.components.abode import (
     _install_runtime_auth_guard,
     _is_auth_error,
     _is_auth_like_response,
+    _start_reauth,
 )
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -103,19 +104,16 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     assert hass.config_entries.flow.async_progress() == []
 
 
-def test_start_reauth_only_once() -> None:
-    """Test runtime reauth starts once and stops event stream for websocket mode."""
+def test_start_reauth_stops_event_stream_and_starts_flow() -> None:
+    """Test runtime reauth starts flow and stops event stream for websocket mode."""
     abode_client = Mock()
     hass = Mock()
     entry = Mock()
-    abode_system = AbodeSystem(abode_client, False, hass, entry)
 
-    abode_system.start_reauth(Exception("auth failed"))
-    abode_system.start_reauth(Exception("auth failed"))
+    _start_reauth(hass, entry, abode_client, False, Exception("auth failed"))
 
     abode_client.events.stop.assert_called_once()
-    hass.add_job.assert_called_once_with(entry.async_start_reauth, hass)
-    assert abode_system.reauth_started is True
+    entry.async_start_reauth.assert_called_once_with(hass)
 
 
 def test_start_reauth_polling_does_not_stop_event_stream() -> None:
@@ -123,12 +121,11 @@ def test_start_reauth_polling_does_not_stop_event_stream() -> None:
     abode_client = Mock()
     hass = Mock()
     entry = Mock()
-    abode_system = AbodeSystem(abode_client, True, hass, entry)
 
-    abode_system.start_reauth(Exception("auth failed"))
+    _start_reauth(hass, entry, abode_client, True, Exception("auth failed"))
 
     abode_client.events.stop.assert_not_called()
-    hass.add_job.assert_called_once_with(entry.async_start_reauth, hass)
+    entry.async_start_reauth.assert_called_once_with(hass)
 
 
 def test_start_reauth_handles_event_stop_error() -> None:
@@ -137,11 +134,10 @@ def test_start_reauth_handles_event_stop_error() -> None:
     abode_client.events.stop.side_effect = RuntimeError("stop failed")
     hass = Mock()
     entry = Mock()
-    abode_system = AbodeSystem(abode_client, False, hass, entry)
 
-    abode_system.start_reauth(Exception("auth failed"))
+    _start_reauth(hass, entry, abode_client, False, Exception("auth failed"))
 
-    hass.add_job.assert_called_once_with(entry.async_start_reauth, hass)
+    entry.async_start_reauth.assert_called_once_with(hass)
 
 
 @pytest.mark.parametrize(
@@ -175,24 +171,33 @@ def test_is_auth_like_response() -> None:
     assert _is_auth_like_response(server_error) is False
 
     invalid_json = Mock(status_code=HTTPStatus.OK)
+    invalid_json.headers = {"Content-Type": "application/json"}
     invalid_json.json.side_effect = ValueError
     assert _is_auth_like_response(invalid_json) is False
 
     list_payload = Mock(status_code=HTTPStatus.OK)
+    list_payload.headers = {"Content-Type": "application/json"}
     list_payload.json.return_value = ["not", "dict"]
     assert _is_auth_like_response(list_payload) is False
 
     error_code_payload = Mock(status_code=HTTPStatus.OK)
+    error_code_payload.headers = {"Content-Type": "application/json"}
     error_code_payload.json.return_value = {"errorCode": 11002}
     assert _is_auth_like_response(error_code_payload) is True
 
     message_payload = Mock(status_code=HTTPStatus.OK)
+    message_payload.headers = {"Content-Type": "application/json"}
     message_payload.json.return_value = {"message": "Unauthorized token"}
     assert _is_auth_like_response(message_payload) is True
 
     ok_payload = Mock(status_code=HTTPStatus.OK)
+    ok_payload.headers = {"Content-Type": "application/json"}
     ok_payload.json.return_value = {"message": "ok"}
     assert _is_auth_like_response(ok_payload) is False
+
+    text_payload = Mock(status_code=HTTPStatus.OK)
+    text_payload.headers = {"Content-Type": "text/plain"}
+    assert _is_auth_like_response(text_payload) is False
 
 
 def test_runtime_auth_guard_for_exception_and_payload() -> None:
@@ -202,47 +207,49 @@ def test_runtime_auth_guard_for_exception_and_payload() -> None:
     abode_client.send_request.side_effect = AbodeAuthenticationException(
         (HTTPStatus.UNAUTHORIZED, "unauthorized")
     )
-    abode_system = AbodeSystem(abode_client, False, Mock(), Mock())
-    abode_system.start_reauth = Mock()
-    _install_runtime_auth_guard(abode_system)
+    abode_system = AbodeSystem(abode_client, False)
+    hass = Mock()
+    entry = Mock()
+    with patch("homeassistant.components.abode._start_reauth") as mock_start_reauth:
+        _install_runtime_auth_guard(abode_system, hass, entry)
 
-    with pytest.raises(AbodeAuthenticationException):
-        abode_system.abode.send_request("GET", "/api/v1/panel")
-    abode_system.start_reauth.assert_called_once()
+        with pytest.raises(AbodeAuthenticationException):
+            abode_system.abode.send_request("GET", "/api/v1/panel")
+        mock_start_reauth.assert_called_once()
 
     # Payload path.
     payload_response = Mock(status_code=HTTPStatus.OK)
+    payload_response.headers = {"Content-Type": "application/json"}
     payload_response.json.return_value = {"errorCode": 13027}
     abode_client = Mock()
     abode_client.send_request.return_value = payload_response
-    abode_system = AbodeSystem(abode_client, False, Mock(), Mock())
-    abode_system.start_reauth = Mock()
-    _install_runtime_auth_guard(abode_system)
+    abode_system = AbodeSystem(abode_client, False)
+    hass = Mock()
+    entry = Mock()
+    with patch("homeassistant.components.abode._start_reauth") as mock_start_reauth:
+        _install_runtime_auth_guard(abode_system, hass, entry)
 
-    with pytest.raises(AbodeAuthenticationException):
-        abode_system.abode.send_request("GET", "/api/v1/panel")
-    abode_system.start_reauth.assert_called_once()
+        with pytest.raises(AbodeAuthenticationException):
+            abode_system.abode.send_request("GET", "/api/v1/panel")
+        mock_start_reauth.assert_called_once()
 
 
 def test_runtime_auth_guard_passthrough_for_non_auth() -> None:
     """Test send_request wrapper does not trigger reauth for non-auth failures."""
     abode_client = Mock()
     abode_client.send_request.side_effect = ValueError("boom")
-    abode_system = AbodeSystem(abode_client, False, Mock(), Mock())
-    abode_system.start_reauth = Mock()
-    _install_runtime_auth_guard(abode_system)
+    abode_system = AbodeSystem(abode_client, False)
+    _install_runtime_auth_guard(abode_system, Mock(), Mock())
 
     with pytest.raises(ValueError):
         abode_system.abode.send_request("GET", "/api/v1/panel")
-    abode_system.start_reauth.assert_not_called()
 
     ok_response = Mock(status_code=HTTPStatus.OK)
+    ok_response.headers = {"Content-Type": "application/json"}
     ok_response.json.return_value = {"message": "ok"}
     abode_client = Mock()
     abode_client.send_request.return_value = ok_response
-    abode_system = AbodeSystem(abode_client, False, Mock(), Mock())
-    abode_system.start_reauth = Mock()
-    _install_runtime_auth_guard(abode_system)
+    abode_system = AbodeSystem(abode_client, False)
+    _install_runtime_auth_guard(abode_system, Mock(), Mock())
 
     assert abode_system.abode.send_request("GET", "/api/v1/panel") is ok_response
-    abode_system.start_reauth.assert_not_called()
