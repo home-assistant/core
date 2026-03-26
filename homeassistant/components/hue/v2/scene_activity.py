@@ -23,6 +23,7 @@ from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartScene
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
+from ..bridge import HueConfigEntry
 from ..const import DOMAIN
 
 UpdateListener = Callable[[str], None]
@@ -162,12 +163,19 @@ class HueSceneActivityManager:
 
 
 def get_or_create_scene_activity_manager(
-    hass: HomeAssistant, api: HueBridgeV2
+    hass: HomeAssistant, api: HueBridgeV2, config_entry: HueConfigEntry
 ) -> HueSceneActivityManager:
-    """Return a shared manager instance for this hass instance + bridge."""
-    key = f"{DOMAIN}_scene_activity_{id(api)}"
+    """Return a shared manager instance, cleaned up on entry unload."""
+    key = f"{DOMAIN}_scene_activity_{config_entry.entry_id}"
     if (mgr := hass.data.get(key)) is None:
         mgr = HueSceneActivityManager(hass, api)
         mgr.start()
         hass.data[key] = mgr
+
+        @callback
+        def _cleanup() -> None:
+            mgr.stop()
+            hass.data.pop(key, None)
+
+        config_entry.async_on_unload(_cleanup)
     return mgr

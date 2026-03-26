@@ -212,7 +212,7 @@ async def async_setup_entry(
     """Set up Hue scene select entities from a config entry."""
     bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
-    manager = get_or_create_scene_activity_manager(hass, api)
+    manager = get_or_create_scene_activity_manager(hass, api, config_entry)
 
     @callback
     def _add_group_entities(group_controller) -> None:
