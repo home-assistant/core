@@ -160,10 +160,7 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
             "homeassistant.components.mysensors.config_flow.try_connect",
             return_value=True,
         ),
-        patch(
-            "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
-            return_value=[(None, None, None, None, None)],
-        ),
+        patch("homeassistant.components.mysensors.gateway.socket.getaddrinfo"),
         patch(
             "homeassistant.components.mysensors.async_setup_entry",
             return_value=True,
@@ -202,10 +199,7 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
             "homeassistant.components.mysensors.config_flow.try_connect",
             return_value=False,
         ),
-        patch(
-            "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
-            return_value=[(None, None, None, None, None)],
-        ),
+        patch("homeassistant.components.mysensors.gateway.socket.getaddrinfo"),
         patch(
             "homeassistant.components.mysensors.async_setup_entry",
             return_value=True,
@@ -685,10 +679,7 @@ async def test_duplicate(
             "homeassistant.components.mysensors.config_flow.try_connect",
             return_value=True,
         ),
-        patch(
-            "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
-            return_value=[(None, None, None, None, None)],
-        ),
+        patch("homeassistant.components.mysensors.gateway.socket.getaddrinfo"),
         patch(
             "homeassistant.components.mysensors.async_setup_entry",
             return_value=True,
