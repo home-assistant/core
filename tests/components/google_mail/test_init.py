@@ -21,11 +21,6 @@ from .conftest import GOOGLE_TOKEN_URI, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-REAUTH_ISSUE_TRANSLATIONS = [
-    "component.homeassistant.issues.config_entry_reauth.title",
-    "component.homeassistant.issues.config_entry_reauth.description",
-]
-
 
 async def test_setup_success(
     hass: HomeAssistant, setup_integration: ComponentSetup
@@ -70,31 +65,27 @@ async def test_expired_token_refresh_success(
 
 
 @pytest.mark.parametrize(
-    ("expires_at", "status", "expected_state", "ignore_missing_translations"),
+    ("expires_at", "status", "expected_state"),
     [
         (
             time.time() - 3600,
             http.HTTPStatus.UNAUTHORIZED,
             ConfigEntryState.SETUP_ERROR,
-            REAUTH_ISSUE_TRANSLATIONS,
         ),
         (
             time.time() - 3600,
             http.HTTPStatus.INTERNAL_SERVER_ERROR,
             ConfigEntryState.SETUP_RETRY,
-            [],
         ),
         (
             time.time() - 3600,
             http.HTTPStatus.TOO_MANY_REQUESTS,
             ConfigEntryState.SETUP_RETRY,
-            [],
         ),
         (
             time.time() - 3600,
             http.HTTPStatus.BAD_REQUEST,
             ConfigEntryState.SETUP_ERROR,
-            REAUTH_ISSUE_TRANSLATIONS,
         ),
     ],
     ids=[
@@ -110,7 +101,6 @@ async def test_expired_token_refresh_failure(
     aioclient_mock: AiohttpClientMocker,
     status: http.HTTPStatus,
     expected_state: ConfigEntryState,
-    ignore_missing_translations: list[str],
 ) -> None:
     """Test failure while refreshing token with a transient error."""
 
@@ -144,10 +134,6 @@ async def test_expired_token_refresh_client_error(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [REAUTH_ISSUE_TRANSLATIONS],
-)
 async def test_token_refresh_reauth_error_during_setup(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,

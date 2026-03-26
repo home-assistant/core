@@ -24,11 +24,6 @@ from .conftest import SENSOR, TOKEN, ComponentSetup
 
 from tests.common import async_fire_time_changed, async_load_fixture
 
-REAUTH_ISSUE_TRANSLATIONS = [
-    "component.homeassistant.issues.config_entry_reauth.title",
-    "component.homeassistant.issues.config_entry_reauth.description",
-]
-
 
 @pytest.mark.parametrize(
     ("fixture", "result"),
@@ -67,25 +62,18 @@ async def test_sensors(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "ignore_missing_translations"),
+    "side_effect",
     [
-        (RefreshError, REAUTH_ISSUE_TRANSLATIONS),
-        (
-            OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
-            REAUTH_ISSUE_TRANSLATIONS,
-        ),
-        (
-            ClientResponseError(request_info=Mock(), history=(), status=401),
-            REAUTH_ISSUE_TRANSLATIONS,
-        ),
+        RefreshError,
+        OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
+        ClientResponseError(request_info=Mock(), history=(), status=401),
     ],
     ids=["legacy_refresh_error", "oauth_reauth_error", "legacy_client_response_4xx"],
 )
 async def test_sensor_reauth_trigger(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    side_effect,
-    ignore_missing_translations: list[str],
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test reauth is triggered after a refresh error."""
     await setup_integration()
@@ -116,7 +104,7 @@ async def test_sensor_reauth_trigger(
 async def test_sensor_token_error_no_reauth(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    side_effect,
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test retryable/runtime token errors do not start reauth."""
     await setup_integration()

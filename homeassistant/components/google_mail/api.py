@@ -52,11 +52,11 @@ class AsyncConfigEntryAuth:
                     "OAuth session is not valid, reauth required"
                 ) from ex
             self.oauth_session.config_entry.async_start_reauth(self.oauth_session.hass)
-            raise HomeAssistantError(ex) from ex
+            raise
         except OAuth2TokenRequestError as ex:
             if setup_in_progress:
                 raise ConfigEntryNotReady from ex
-            raise HomeAssistantError(ex) from ex
+            raise
         except (RefreshError, ClientResponseError, ClientError) as ex:
             if setup_in_progress:
                 if (
