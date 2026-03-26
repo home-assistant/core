@@ -5,16 +5,24 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.weather import (
+    ATTR_WEATHER_OZONE,
+    DOMAIN as WEATHER_DOMAIN,
+)
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
 from homeassistant.helpers.trigger import (
+    EntityNumericalStateChangedTriggerWithUnitBase,
+    EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
+    EntityNumericalStateTriggerWithUnitBase,
     EntityTargetStateTriggerBase,
     Trigger,
     make_entity_numerical_state_changed_trigger,
@@ -54,6 +62,40 @@ def _make_cleared_trigger(
     )
 
 
+OZONE_DOMAIN_SPECS = {
+    SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.OZONE),
+    WEATHER_DOMAIN: NumericalDomainSpec(value_source=ATTR_WEATHER_OZONE),
+}
+
+
+class _OzoneTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
+    """Mixin for ozone triggers providing entity filtering, value extraction, and unit conversion."""
+
+    _base_unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    _domain_specs = OZONE_DOMAIN_SPECS
+    _unit_converter = OzoneConcentrationConverter
+
+    def _get_entity_unit(self, state: State) -> str | None:
+        """Get the ozone unit of an entity from its state."""
+        if state.domain == WEATHER_DOMAIN:
+            # Weather entities report ozone without a unit attribute;
+            # assume the base unit (μg/m³) so no conversion is applied.
+            return self._base_unit
+        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+
+class OzoneChangedTrigger(
+    _OzoneTriggerMixin, EntityNumericalStateChangedTriggerWithUnitBase
+):
+    """Trigger for ozone value changes across sensor and weather domains."""
+
+
+class OzoneCrossedThresholdTrigger(
+    _OzoneTriggerMixin, EntityNumericalStateCrossedThresholdTriggerWithUnitBase
+):
+    """Trigger for ozone value crossing a threshold across sensor and weather domains."""
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     # Binary sensor triggers (detected/cleared)
     "gas_detected": _make_detected_trigger(BinarySensorDeviceClass.GAS),
@@ -73,16 +115,8 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CarbonMonoxideConcentrationConverter,
     ),
-    "ozone_changed": make_entity_numerical_state_changed_with_unit_trigger(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.OZONE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        OzoneConcentrationConverter,
-    ),
-    "ozone_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.OZONE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        OzoneConcentrationConverter,
-    ),
+    "ozone_changed": OzoneChangedTrigger,
+    "ozone_crossed_threshold": OzoneCrossedThresholdTrigger,
     "voc_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {
             SENSOR_DOMAIN: NumericalDomainSpec(

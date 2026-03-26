@@ -5,12 +5,14 @@ from typing import Any
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.weather import ATTR_WEATHER_OZONE
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
 )
@@ -22,6 +24,7 @@ from tests.components.common import (
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
     assert_numerical_condition_unit_conversion,
+    create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_numerical_condition_above_below_all,
@@ -500,6 +503,76 @@ async def test_air_quality_numerical_no_unit_condition_behavior_all(
         condition_options=condition_options,
         states=states,
     )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_air_quality_ozone_condition_weather_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the ozone condition works with weather entities.
+
+    Weather entities report ozone via the 'ozone' attribute without a unit;
+    the value is assumed to be in μg/m³.
+    """
+    entity_id = "weather.test"
+
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 50})
+    await hass.async_block_till_done()
+
+    cond = await create_target_condition(
+        hass,
+        condition="air_quality.is_ozone_value",
+        target={CONF_ENTITY_ID: [entity_id]},
+        behavior="any",
+        condition_options={
+            "threshold": {
+                "type": "above",
+                "value": {
+                    "number": 40,
+                    "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                },
+            }
+        },
+    )
+
+    # 50 μg/m³ is above 40 — condition should be true
+    assert cond(hass) is True
+
+    # Change ozone to 30, below threshold — condition should be false
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 30})
+    await hass.async_block_till_done()
+    assert cond(hass) is False
+
+    # Verify a sensor ozone entity is also matched by the same condition
+    sensor_id = "sensor.test_ozone"
+    hass.states.async_set(
+        sensor_id,
+        "60",
+        {
+            ATTR_DEVICE_CLASS: "ozone",
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        },
+    )
+    await hass.async_block_till_done()
+
+    cond_both = await create_target_condition(
+        hass,
+        condition="air_quality.is_ozone_value",
+        target={CONF_ENTITY_ID: [entity_id, sensor_id]},
+        behavior="any",
+        condition_options={
+            "threshold": {
+                "type": "above",
+                "value": {
+                    "number": 40,
+                    "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                },
+            }
+        },
+    )
+
+    # Weather at 30 (fail), sensor at 60 (pass) — 'any' should be true
+    assert cond_both(hass) is True
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")

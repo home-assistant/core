@@ -217,6 +217,7 @@
   entity:
     - domain: sensor
       device_class: ozone
+    - domain: weather
 
 .target_voc: &target_voc
   entity:

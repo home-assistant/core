@@ -5,17 +5,23 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.weather import (
+    ATTR_WEATHER_OZONE,
+    DOMAIN as WEATHER_DOMAIN,
+)
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
 from homeassistant.helpers.condition import (
     Condition,
+    EntityNumericalConditionWithUnitBase,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
     make_entity_state_condition,
@@ -49,6 +55,28 @@ def _make_cleared_condition(
     )
 
 
+OZONE_DOMAIN_SPECS = {
+    SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.OZONE),
+    WEATHER_DOMAIN: NumericalDomainSpec(value_source=ATTR_WEATHER_OZONE),
+}
+
+
+class OzoneCondition(EntityNumericalConditionWithUnitBase):
+    """Condition for ozone value across sensor and weather domains."""
+
+    _base_unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    _domain_specs = OZONE_DOMAIN_SPECS
+    _unit_converter = OzoneConcentrationConverter
+
+    def _get_entity_unit(self, entity_state: State) -> str | None:
+        """Get the ozone unit of an entity from its state."""
+        if entity_state.domain == WEATHER_DOMAIN:
+            # Weather entities report ozone without a unit attribute;
+            # assume the base unit (μg/m³) so no conversion is applied.
+            return self._base_unit
+        return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     # Binary sensor conditions (detected/cleared)
     "is_gas_detected": _make_detected_condition(BinarySensorDeviceClass.GAS),
@@ -63,11 +91,7 @@ CONDITIONS: dict[str, type[Condition]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CarbonMonoxideConcentrationConverter,
     ),
-    "is_ozone_value": make_entity_numerical_condition_with_unit(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.OZONE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        OzoneConcentrationConverter,
-    ),
+    "is_ozone_value": OzoneCondition,
     "is_voc_value": make_entity_numerical_condition_with_unit(
         {
             SENSOR_DOMAIN: NumericalDomainSpec(

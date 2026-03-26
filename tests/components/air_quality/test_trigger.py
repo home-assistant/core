@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.weather import ATTR_WEATHER_OZONE
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -793,6 +794,97 @@ async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
         },
     )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_air_quality_ozone_crossed_threshold_trigger_weather_entity(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test ozone crossed_threshold trigger works with weather entities.
+
+    Weather entities report ozone via the 'ozone' attribute without a unit;
+    the value is assumed to be in μg/m³.
+    """
+    entity_id = "weather.test"
+
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 30})
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass,
+        "air_quality.ozone_crossed_threshold",
+        {
+            "threshold": {
+                "type": "above",
+                "value": {
+                    "number": 100,
+                    "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                },
+            }
+        },
+        {CONF_ENTITY_ID: [entity_id]},
+    )
+
+    # 30 → 50 μg/m³, both below 100 — should NOT trigger
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # 50 → 120 μg/m³, crosses above 100 — should trigger
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 120})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # 120 → 150 μg/m³, still above — should NOT re-trigger (already crossed)
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 150})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_air_quality_ozone_changed_trigger_weather_entity(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test ozone changed trigger works with weather entities.
+
+    Weather entities report ozone via the 'ozone' attribute without a unit;
+    the value is assumed to be in μg/m³.
+    """
+    entity_id = "weather.test"
+
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 30})
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass,
+        "air_quality.ozone_changed",
+        {
+            "threshold": {
+                "type": "any",
+            }
+        },
+        {CONF_ENTITY_ID: [entity_id]},
+    )
+
+    # 30 → 50 μg/m³ — should trigger
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # 50 → 50 μg/m³ (no change) — should NOT trigger
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # 50 → 80 μg/m³ — should trigger again
+    hass.states.async_set(entity_id, "sunny", {ATTR_WEATHER_OZONE: 80})
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     service_calls.clear()
