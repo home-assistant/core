@@ -396,14 +396,16 @@ async def test_dhcp_discovery_ip_update(
     mock_config_entry_ethernet.add_to_hass(hass)
     old_ip = mock_config_entry_ethernet.data[CONF_HOST]
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY_NEW_IP
-    )
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY_NEW_IP
+        )
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert mock_config_entry_ethernet.data[CONF_HOST] == DHCP_DISCOVERY_NEW_IP.ip
     assert mock_config_entry_ethernet.data[CONF_HOST] != old_ip
+    mock_reload.assert_called_once_with(mock_config_entry_ethernet.entry_id)
 
 
 async def test_dhcp_discovery_existing_device_connection_type(
@@ -424,21 +426,23 @@ async def test_dhcp_discovery_existing_device_connection_type(
     )
 
     # Simulate DHCP discovery with new IP
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.168.1.200",
-            hostname="saj-test-device-001",
-            macaddress=MOCK_MAC_ADDRESS_FORMATTED,
-        ),
-    )
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="192.168.1.200",
+                hostname="saj-test-device-001",
+                macaddress=MOCK_MAC_ADDRESS_FORMATTED,
+            ),
+        )
 
     # Should update IP and use existing connection type (WiFi)
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert mock_config_entry_wifi.data[CONF_HOST] == "192.168.1.200"
     assert mock_config_entry_wifi.data[CONF_TYPE] == CONNECTION_TYPES[1]
+    mock_reload.assert_called_once_with(mock_config_entry_wifi.entry_id)
 
 
 async def test_dhcp_discovery_not_saj_device(
