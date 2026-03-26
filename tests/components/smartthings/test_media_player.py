@@ -379,6 +379,37 @@ async def test_vd_capability_select_source(
 
 
 @pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_select_source_legacy_raw_id(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test select source falls back to raw ID when not found in source map.
+
+    When a legacy/raw source ID (e.g. 'HDMI1') is passed directly instead of the
+    slugified HA name ('hdmi1'), it should be forwarded as-is to SmartThings.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            ATTR_ENTITY_ID: "media_player.tv_samsung_8_series_49",
+            ATTR_INPUT_SOURCE: "HDMI1",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        Command.SET_INPUT_SOURCE,
+        MAIN,
+        argument="HDMI1",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
 async def test_vd_capability_source_update(
     hass: HomeAssistant,
     devices: AsyncMock,
