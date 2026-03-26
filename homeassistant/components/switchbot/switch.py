@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import logging
 from typing import Any
 
 import switchbot
 
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,6 +23,39 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import AIRPURIFIER_BASIC_MODELS, AIRPURIFIER_TABLE_MODELS, DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotSwitchedEntity, exception_handler
+
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchbotSwitchEntityDescription(SwitchEntityDescription):
+    """Describes a Switchbot switch entity."""
+
+    is_on_fn: Callable[[switchbot.SwitchbotDevice], bool | None]
+    turn_on_fn: Callable[[switchbot.SwitchbotDevice], Awaitable[Any]]
+    turn_off_fn: Callable[[switchbot.SwitchbotDevice], Awaitable[Any]]
+
+
+AIRPURIFIER_BASIC_SWITCHES: tuple[SwitchbotSwitchEntityDescription, ...] = (
+    SwitchbotSwitchEntityDescription(
+        key="child_lock",
+        translation_key="child_lock",
+        device_class=SwitchDeviceClass.SWITCH,
+        is_on_fn=lambda device: device.is_child_lock_on(),
+        turn_on_fn=lambda device: device.open_child_lock(),
+        turn_off_fn=lambda device: device.close_child_lock(),
+    ),
+)
+
+AIRPURIFIER_TABLE_SWITCHES: tuple[SwitchbotSwitchEntityDescription, ...] = (
+    *AIRPURIFIER_BASIC_SWITCHES,
+    SwitchbotSwitchEntityDescription(
+        key="wireless_charging",
+        translation_key="wireless_charging",
+        device_class=SwitchDeviceClass.SWITCH,
+        is_on_fn=lambda device: device.is_wireless_charging_on(),
+        turn_on_fn=lambda device: device.open_wireless_charging(),
+        turn_off_fn=lambda device: device.close_wireless_charging(),
+    ),
+)
 
 PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
@@ -37,79 +76,60 @@ async def async_setup_entry(
         ]
         async_add_entities(entries)
     elif coordinator.model in AIRPURIFIER_BASIC_MODELS:
-        async_add_entities([SwitchbotChildLockSwitch(coordinator)])
+        async_add_entities(
+            [
+                SwitchbotGenericSwitch(coordinator, desc)
+                for desc in AIRPURIFIER_BASIC_SWITCHES
+            ]
+        )
     elif coordinator.model in AIRPURIFIER_TABLE_MODELS:
         async_add_entities(
             [
-                SwitchbotChildLockSwitch(coordinator),
-                SwitchbotWirelessChargingSwitch(coordinator),
+                SwitchbotGenericSwitch(coordinator, desc)
+                for desc in AIRPURIFIER_TABLE_SWITCHES
             ]
         )
     else:
         async_add_entities([SwitchBotSwitch(coordinator)])
 
 
-class SwitchbotWirelessChargingSwitch(SwitchbotSwitchedEntity, SwitchEntity):
-    """Representation of a Switchbot wireless charging switch."""
+class SwitchbotGenericSwitch(SwitchbotSwitchedEntity, SwitchEntity):
+    """Representation of a Switchbot switch controlled via entity description."""
 
-    _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_translation_key = "wireless_charging"
+    entity_description: SwitchbotSwitchEntityDescription
     _device: switchbot.SwitchbotDevice
 
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
-        """Initialize the Switchbot wireless charging switch."""
+    def __init__(
+        self,
+        coordinator: SwitchbotDataUpdateCoordinator,
+        description: SwitchbotSwitchEntityDescription,
+    ) -> None:
+        """Initialize the Switchbot generic switch."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}-wireless_charging"
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.base_unique_id}-{description.key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self._device.is_wireless_charging_on()
+        return self.entity_description.is_on_fn(self._device)
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn wireless charging on."""
-        _LOGGER.debug("Turn wireless charging on for %s", self._address)
-        await self._device.open_wireless_charging()
+        """Turn on."""
+        _LOGGER.debug(
+            "Turning on %s for %s", self.entity_description.key, self._address
+        )
+        await self.entity_description.turn_on_fn(self._device)
         self.async_write_ha_state()
 
     @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn wireless charging off."""
-        _LOGGER.debug("Turn wireless charging off for %s", self._address)
-        await self._device.close_wireless_charging()
-        self.async_write_ha_state()
-
-
-class SwitchbotChildLockSwitch(SwitchbotSwitchedEntity, SwitchEntity):
-    """Representation of a Switchbot child lock switch."""
-
-    _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_translation_key = "child_lock"
-    _device: switchbot.SwitchbotDevice
-
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
-        """Initialize the Switchbot child lock switch."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}-child_lock"
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._device.is_child_lock_on()
-
-    @exception_handler
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn child lock on."""
-        _LOGGER.debug("Turn child lock on for %s", self._address)
-        await self._device.open_child_lock()
-        self.async_write_ha_state()
-
-    @exception_handler
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn child lock off."""
-        _LOGGER.debug("Turn child lock off for %s", self._address)
-        await self._device.close_child_lock()
+        """Turn off."""
+        _LOGGER.debug(
+            "Turning off %s for %s", self.entity_description.key, self._address
+        )
+        await self.entity_description.turn_off_fn(self._device)
         self.async_write_ha_state()
 
 

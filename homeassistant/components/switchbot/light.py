@@ -53,6 +53,8 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     _device: switchbot.SwitchbotAirPurifier
     _attr_translation_key = "air_purifier_light"
     _attr_is_on: bool | None = None
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -62,21 +64,9 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
             self._attr_is_on = last_state.state == STATE_ON
 
     @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Return the supported color modes."""
-        return {SWITCHBOT_COLOR_MODE_TO_HASS[mode] for mode in self._device.color_modes}
-
-    @property
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return max(0, min(255, round(self._device.brightness * 2.55)))
-
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        return SWITCHBOT_COLOR_MODE_TO_HASS.get(
-            self._device.color_mode, ColorMode.UNKNOWN
-        )
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:

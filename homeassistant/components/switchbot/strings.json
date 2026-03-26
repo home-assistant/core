@@ -210,7 +210,7 @@
     },
     "light": {
       "air_purifier_light": {
-        "name": "Light"
+        "name": "[%key:component::light::title%]"
       },
       "light": {
         "state_attributes": {
