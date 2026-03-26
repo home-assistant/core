@@ -54,7 +54,12 @@ async def test_setup_entry_exceptions(
 
     assert mock_config_entry.state is expected_state
 
-
+    if isinstance(exception, (Forbidden, NotAuthenticated)):
+        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert len(flows) == 1
+        assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    else:
+        assert hass.config_entries.flow.async_progress_by_handler(DOMAIN) == []
 @pytest.mark.usefixtures("init_integration")
 async def test_device_entry(
     device_registry: dr.DeviceRegistry,
