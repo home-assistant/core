@@ -21,9 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 type TiltBLEConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: TiltBLEConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TiltBLEConfigEntry) -> bool:
     """Set up Tilt BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -43,8 +41,6 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: TiltBLEConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TiltBLEConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
