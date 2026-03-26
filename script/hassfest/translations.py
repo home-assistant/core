@@ -14,7 +14,7 @@ from voluptuous.humanize import humanize_error
 import homeassistant.helpers.config_validation as cv
 from script.translations import upload
 
-from .model import Config, Integration
+from .model import Config, Integration, IntegrationType
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -345,7 +345,9 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 flow_title=REMOVED,
                 require_step_title=False,
                 mandatory_description=(
-                    "user" if integration.integration_type == "helper" else None
+                    "user"
+                    if integration.integration_type == IntegrationType.HELPER
+                    else None
                 ),
             ),
             vol.Optional("config_subentries"): cv.schema_with_slug_keys(
