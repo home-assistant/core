@@ -1,6 +1,6 @@
 {
   "conditions": {
-    "event_is_active": {
+    "is_event_active": {
       "condition": "mdi:calendar-check"
     }
   },

@@ -28,7 +28,7 @@ async def target_calendars(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "condition",
     [
-        "calendar.event_is_active",
+        "calendar.is_event_active",
     ],
 )
 async def test_calendar_conditions_gated_by_labs_flag(
@@ -47,7 +47,7 @@ async def test_calendar_conditions_gated_by_labs_flag(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_any(
-            condition="calendar.event_is_active",
+            condition="calendar.is_event_active",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
@@ -85,7 +85,7 @@ async def test_calendar_condition_behavior_any(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_all(
-            condition="calendar.event_is_active",
+            condition="calendar.is_event_active",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),

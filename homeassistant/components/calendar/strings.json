@@ -4,7 +4,7 @@
     "condition_behavior_name": "Behavior"
   },
   "conditions": {
-    "event_is_active": {
+    "is_event_active": {
       "description": "Tests if one or more calendars have an active event.",
       "fields": {
         "behavior": {

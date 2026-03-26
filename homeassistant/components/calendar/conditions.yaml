@@ -1,4 +1,4 @@
-event_is_active:
+is_event_active:
   target:
     entity:
       - domain: calendar
