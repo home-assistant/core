@@ -462,19 +462,13 @@ def make_entity_state_condition(
     return CustomCondition
 
 
-NUMERICAL_CONDITION_SCHEMA = vol.Schema(
+NUMERICAL_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_ANY, BEHAVIOR_ALL]
-                ),
-                vol.Required("threshold"): NumericThresholdSelector(
-                    NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
-                ),
-            },
-        ),
+        vol.Required(CONF_OPTIONS): {
+            vol.Required("threshold"): NumericThresholdSelector(
+                NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
+            ),
+        },
     }
 )
 
@@ -588,22 +582,16 @@ def _make_numerical_condition_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
 ) -> vol.Schema:
     """Factory for numerical condition schema with unit option."""
-    return vol.Schema(
+    return ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
         {
-            vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-            vol.Required(CONF_OPTIONS): vol.All(
-                {
-                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                        [BEHAVIOR_ANY, BEHAVIOR_ALL]
-                    ),
-                    vol.Required("threshold"): NumericThresholdSelector(
-                        NumericThresholdSelectorConfig(
-                            mode=NumericThresholdMode.IS,
-                            unit_of_measurement=list(unit_converter.VALID_UNITS),
-                        )
-                    ),
-                },
-            ),
+            vol.Required(CONF_OPTIONS): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.IS,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
         }
     )
 
