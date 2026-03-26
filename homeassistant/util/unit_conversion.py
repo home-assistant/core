@@ -113,7 +113,7 @@ class UnitConvertOpType(StrEnum):
     """Unit conversion operations."""
 
     SCALE = "scale"  # Multiply by a scale factor (factor != 0)
-    OFFSET = "offset"  # Add a value to (offset is numeeric)
+    OFFSET = "offset"  # Add on an offset (offset is numeric)
     POWER = "power"  # Raise to the power (power != 0)
     ROUND = "round"  # Round to integer (argument unused). Applies only when converting to a unit.
 
@@ -136,7 +136,7 @@ _UNIT_CONVERT_FROM_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
     UnitConvertOpType.SCALE: (lambda val, scale: val / scale),
     UnitConvertOpType.OFFSET: (lambda val, offset: val - offset),
     UnitConvertOpType.POWER: (lambda val, power: val ** (1 / power)),
-    UnitConvertOpType.ROUND: (lambda val, unused: val),  # Unused when converting from
+    UnitConvertOpType.ROUND: (lambda val, unused: val),  # Skip op when converting from
 }
 _UNIT_CONVERT_TO_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
     UnitConvertOpType.SCALE: (lambda val, scale: val * scale),
@@ -204,12 +204,13 @@ class BaseUnitConverter:
     @classmethod
     @lru_cache
     def _get_inverse_op(
-        cls, from_unit: str | None, to_unit: str | None
+        cls, from_unit: str | None, to_unit: str | None, for_ratio: bool
     ) -> list[UnitConvertOpInfo]:
         """Return inverse operation if units are inverses."""
         return (
             [(UnitConvertOpType.POWER, -1)]
-            if (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
+            if not for_ratio
+            and (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
             else []
         )
 
@@ -219,13 +220,14 @@ class BaseUnitConverter:
     ) -> list[UnitConvertOp]:
         """Get operations to convert between units of measurement."""
         from_op_info = cls._get_ops(from_unit, for_ratio)
+        inverse_op_info = cls._get_inverse_op(from_unit, to_unit, for_ratio)
         to_op_info = cls._get_ops(to_unit, for_ratio)
         from_op = list(map(BaseUnitConverter._map_from_op, from_op_info))
         from_op.reverse()
         to_op = list(
             map(
                 BaseUnitConverter._map_to_op,
-                [*cls._get_inverse_op(from_unit, to_unit), *to_op_info],
+                [*inverse_op_info, *to_op_info],
             )
         )
         return [*from_op, *to_op]
