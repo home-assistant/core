@@ -19,6 +19,8 @@
     unit_of_measurement: "%"
   - domain: sensor
     device_class: battery
+  - domain: number
+    device_class: battery
 
 .battery_threshold_number: &battery_threshold_number
   min: 0
