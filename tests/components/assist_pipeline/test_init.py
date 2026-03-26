@@ -270,25 +270,28 @@ async def test_pipeline_from_audio_stream_no_stt(
     pipeline_id = msg["result"]["id"]
 
     # Try to use the created pipeline
-    with pytest.raises(assist_pipeline.pipeline.PipelineRunValidationError):
-        await assist_pipeline.async_pipeline_from_audio_stream(
-            hass,
-            context=Context(),
-            event_callback=events.append,
-            stt_metadata=stt.SpeechMetadata(
-                language="en-UK",
-                format=stt.AudioFormats.WAV,
-                codec=stt.AudioCodecs.PCM,
-                bit_rate=stt.AudioBitRates.BITRATE_16,
-                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                channel=stt.AudioChannels.CHANNEL_MONO,
-            ),
-            stt_stream=audio_data(),
-            pipeline_id=pipeline_id,
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        )
+    await assist_pipeline.async_pipeline_from_audio_stream(
+        hass,
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=stt.SpeechMetadata(
+            language="en-UK",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        pipeline_id=pipeline_id,
+        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+    )
 
-    assert not events
+    assert len(events) == 3
+    assert events[0].type == assist_pipeline.PipelineEventType.RUN_START
+    assert events[1].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[1].data["code"] == "validation-error"
+    assert events[2].type == assist_pipeline.PipelineEventType.RUN_END
 
 
 async def test_pipeline_from_audio_stream_unknown_pipeline(
@@ -328,6 +331,49 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
         )
 
     assert not events
+
+
+async def test_pipeline_from_audio_stream_validation_pipeline_error(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    init_components,
+) -> None:
+    """Test validation pipeline errors are emitted as terminal events."""
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    await assist_pipeline.async_update_pipeline(
+        hass,
+        assist_pipeline.async_get_pipeline(hass),
+        conversation_engine="conversation.non_existing",
+    )
+
+    async def audio_data():
+        yield b"audio"
+
+    await assist_pipeline.async_pipeline_from_audio_stream(
+        hass,
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=stt.SpeechMetadata(
+            language="",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        end_stage=assist_pipeline.PipelineStage.INTENT,
+    )
+
+    assert len(events) == 3
+    assert events[0].type == assist_pipeline.PipelineEventType.RUN_START
+    assert events[1].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[1].data == {
+        "code": "intent-not-supported",
+        "message": "Intent recognition engine conversation.non_existing is not found",
+    }
+    assert events[2].type == assist_pipeline.PipelineEventType.RUN_END
 
 
 async def test_pipeline_from_audio_stream_wake_word(

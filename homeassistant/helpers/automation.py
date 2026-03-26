@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Final, Self
 
 import voluptuous as vol
 
@@ -11,7 +11,9 @@ from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, split_entity_id
 
 from .entity import get_device_class_or_undefined
-from .typing import ConfigType
+from .typing import UNDEFINED, ConfigType, UndefinedType
+
+CONF_UNIT: Final = "unit"
 
 
 class AnyDeviceClassType(Enum):
@@ -39,7 +41,7 @@ class DomainSpec:
 class NumericalDomainSpec(DomainSpec):
     """DomainSpec with an optional value converter for numerical triggers."""
 
-    value_converter: Callable[[Any], float] | None = None
+    value_converter: Callable[[float], float] | None = None
     """Optional converter for numerical values (e.g. uint8 → percentage)."""
 
 
@@ -140,3 +142,31 @@ def move_options_fields_to_top_level(
     new_config.update(options)
 
     return new_config
+
+
+@dataclass(frozen=True, kw_only=True)
+class ThresholdConfig:
+    """Configuration for threshold conditions and triggers."""
+
+    numerical: bool
+    entity: str | None
+    number: float | None
+    unit: str | None | UndefinedType
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any] | None) -> Self | None:
+        """Create ThresholdConfig from config dict."""
+        if config is None:
+            return None
+
+        entity: str | None = None
+        number: float | None = None
+        unit: str | None | UndefinedType = UNDEFINED
+        numerical = "number" in config
+        if numerical:
+            number = config["number"]
+            unit = config.get("unit_of_measurement", UNDEFINED)
+        else:
+            entity = config["entity"]
+
+        return cls(numerical=numerical, number=number, entity=entity, unit=unit)

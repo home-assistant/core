@@ -36,6 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Template Button"
 DEFAULT_OPTIMISTIC = False
 
+SCRIPT_FIELDS = (CONF_PRESS,)
+
 BUTTON_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
@@ -66,6 +68,7 @@ async def async_setup_platform(
         None,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -81,6 +84,7 @@ async def async_setup_entry(
         async_add_entities,
         StateButtonEntity,
         BUTTON_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 

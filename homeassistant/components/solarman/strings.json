@@ -1,0 +1,114 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "another_device": "The configured device is not the same found on this IP address",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout": "Connection timed out while trying to connect to the device"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {model} ({sn}) at {host}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the Solarman device."
+        },
+        "description": "Enter the IP address of Solarman device to integrate with Home Assistant.",
+        "title": "Configure Solarman Device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "a_act_power": {
+        "name": "Active power phase-A"
+      },
+      "a_act_ret_power": {
+        "name": "Active returned power phase-A"
+      },
+      "a_current": {
+        "name": "AC Phase-A current"
+      },
+      "a_voltage": {
+        "name": "AC Phase-A voltage"
+      },
+      "active_power": {
+        "name": "Active power"
+      },
+      "b_act_power": {
+        "name": "Active power phase-B"
+      },
+      "b_act_ret_power": {
+        "name": "Active returned power phase-B"
+      },
+      "b_current": {
+        "name": "AC Phase-B current"
+      },
+      "b_voltage": {
+        "name": "AC Phase-B voltage"
+      },
+      "c_act_power": {
+        "name": "Active power phase-C"
+      },
+      "c_act_ret_power": {
+        "name": "Active returned power phase-C"
+      },
+      "c_current": {
+        "name": "AC Phase-C current"
+      },
+      "c_voltage": {
+        "name": "AC Phase-C voltage"
+      },
+      "positive_active_energy": {
+        "name": "Positive active energy"
+      },
+      "power_factor": {
+        "name": "Power factor"
+      },
+      "reverse_active_energy": {
+        "name": "Reverse active energy"
+      },
+      "total_act_energy": {
+        "name": "Total actual energy"
+      },
+      "total_act_energy_lt": {
+        "name": "Total actual energy low tariff"
+      },
+      "total_act_energy_nt": {
+        "name": "Total actual energy normal tariff"
+      },
+      "total_act_power": {
+        "name": "Total actual power"
+      },
+      "total_act_ret_energy": {
+        "name": "Total actual returned energy"
+      },
+      "total_act_ret_energy_lt": {
+        "name": "Total actual returned energy low tariff"
+      },
+      "total_act_ret_energy_nt": {
+        "name": "Total actual returned energy normal tariff"
+      },
+      "total_act_ret_power": {
+        "name": "Total actual returned power"
+      },
+      "total_gas": {
+        "name": "Total gas consumption"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Unable to fetch data."
+    }
+  }
+}

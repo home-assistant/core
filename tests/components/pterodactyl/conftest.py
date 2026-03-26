@@ -53,10 +53,10 @@ def mock_pterodactyl() -> Generator[AsyncMock]:
         mock.return_value.client.servers.list_servers.return_value = PaginatedResponse(
             mock.return_value, "client", server_list_data
         )
-        mock.return_value.client.servers.get_server.side_effect = [
-            server_1_data,
-            server_2_data,
-        ]
+        server_data = {"1": server_1_data, "2": server_2_data}
+        mock.return_value.client.servers.get_server.side_effect = lambda identifier: (
+            server_data[identifier]
+        )
         mock.return_value.client.servers.get_server_utilization.return_value = (
             utilization_data
         )
