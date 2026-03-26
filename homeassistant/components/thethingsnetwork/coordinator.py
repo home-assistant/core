@@ -44,7 +44,9 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             entry.data[CONF_HOST],
             entry.data[CONF_APP_ID],
             entry.data[CONF_API_KEY],
-            first_fetch_h=int(entry.data.get(CONF_FIRST_FETCH_H, DEFAULT_FIRST_FETCH_H)),
+            first_fetch_h=int(
+                entry.data.get(CONF_FIRST_FETCH_H, DEFAULT_FIRST_FETCH_H)
+            ),
             push_callback=self._push_callback,
         )
 
