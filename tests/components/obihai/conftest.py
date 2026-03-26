@@ -12,7 +12,7 @@ def patch_gethostbyname():
     """Patch gethostbyname to return the host string (no DNS lookup)."""
     with patch(
         "homeassistant.components.obihai.config_flow.gethostbyname",
-        return_value="host",
+        return_value="192.168.10.100",
     ):
         yield
 
