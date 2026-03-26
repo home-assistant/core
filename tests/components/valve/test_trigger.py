@@ -99,7 +99,7 @@ async def test_valve_state_trigger_behavior_any(
 @pytest.mark.parametrize(("trigger", "trigger_options", "states"), TRIGGER_STATES)
 async def test_valve_state_trigger_behavior_first(
     hass: HomeAssistant,
-    target_valves: list[str],
+    target_valves: dict[str, list[str]],
     trigger_target_config: dict,
     entities_in_target: int,
     entity_id: str,
@@ -128,7 +128,7 @@ async def test_valve_state_trigger_behavior_first(
 @pytest.mark.parametrize(("trigger", "trigger_options", "states"), TRIGGER_STATES)
 async def test_valve_state_trigger_behavior_last(
     hass: HomeAssistant,
-    target_valves: list[str],
+    target_valves: dict[str, list[str]],
     trigger_target_config: dict,
     entities_in_target: int,
     entity_id: str,
