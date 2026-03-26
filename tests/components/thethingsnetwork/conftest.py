@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from ttn_client import TTNSensorValue
+from ttn_client import TTNSensorAttribute, TTNSensorValue
 
 from homeassistant.components.thethingsnetwork.const import (
     CONF_APP_ID,
@@ -24,13 +24,25 @@ DEVICE_FIELD = "a_field"
 DEVICE_FIELD_2 = "a_field_2"
 DEVICE_FIELD_VALUE = 42
 
+_BASE_MESSAGE = {
+    "end_device_ids": {"device_id": DEVICE_ID},
+    "received_at": "2024-03-11T08:49:11.153738893Z",
+}
+
+_UPDATED_MESSAGE = {
+    "end_device_ids": {"device_id": DEVICE_ID},
+    "received_at": "2024-03-12T08:49:11.153738893Z",
+}
+
+_UPDATED_MESSAGE_2 = {
+    "end_device_ids": {"device_id": DEVICE_ID_2},
+    "received_at": "2024-03-12T08:49:11.153738893Z",
+}
+
 DATA = {
     DEVICE_ID: {
         DEVICE_FIELD: TTNSensorValue(
-            {
-                "end_device_ids": {"device_id": DEVICE_ID},
-                "received_at": "2024-03-11T08:49:11.153738893Z",
-            },
+            _BASE_MESSAGE,
             DEVICE_FIELD,
             DEVICE_FIELD_VALUE,
         )
@@ -40,24 +52,103 @@ DATA = {
 DATA_UPDATE = {
     DEVICE_ID: {
         DEVICE_FIELD: TTNSensorValue(
-            {
-                "end_device_ids": {"device_id": DEVICE_ID},
-                "received_at": "2024-03-12T08:49:11.153738893Z",
-            },
+            _UPDATED_MESSAGE,
             DEVICE_FIELD,
             DEVICE_FIELD_VALUE,
         )
     },
     DEVICE_ID_2: {
         DEVICE_FIELD_2: TTNSensorValue(
-            {
-                "end_device_ids": {"device_id": DEVICE_ID_2},
-                "received_at": "2024-03-12T08:49:11.153738893Z",
-            },
+            _UPDATED_MESSAGE_2,
             DEVICE_FIELD_2,
             DEVICE_FIELD_VALUE,
         )
     },
+}
+
+DATA_WITH_ATTRS = {
+    DEVICE_ID: {
+        "BatV": TTNSensorValue(
+            _BASE_MESSAGE,
+            "BatV",
+            3.6,
+        ),
+        "temperature": TTNSensorValue(
+            _BASE_MESSAGE,
+            "temperature",
+            22.5,
+        ),
+        "_sensor_attr_BatV_unit": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_BatV_unit",
+            "V",
+        ),
+        "_sensor_attr_BatV_device_class": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_BatV_device_class",
+            "voltage",
+        ),
+        "_sensor_attr_BatV_state_class": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_BatV_state_class",
+            "measurement",
+        ),
+        "_sensor_attr_temperature_unit": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_temperature_unit",
+            "°C",
+        ),
+        "_sensor_attr_temperature_device_class": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_temperature_device_class",
+            "temperature",
+        ),
+        "_sensor_attr_temperature_state_class": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_temperature_state_class",
+            "measurement",
+        ),
+        "_sensor_attr_temperature_friendly_name": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_temperature_friendly_name",
+            "Room Temperature",
+        ),
+        "_sensor_attr_temperature_suggested_display_precision": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_temperature_suggested_display_precision",
+            "1",
+        ),
+    }
+}
+
+DATA_WITH_ENTITY_CATEGORY = {
+    DEVICE_ID: {
+        "rssi": TTNSensorValue(
+            _BASE_MESSAGE,
+            "rssi",
+            -80,
+        ),
+        "_sensor_attr_rssi_entity_category": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_rssi_entity_category",
+            "diagnostic",
+        ),
+    }
+}
+
+DATA_WITH_INVALID_ATTRS = {
+    DEVICE_ID: {
+        "sensor_x": TTNSensorValue(
+            _BASE_MESSAGE,
+            "sensor_x",
+            99,
+        ),
+        "_sensor_attr_sensor_x_device_class": TTNSensorAttribute(
+            _BASE_MESSAGE,
+            "_sensor_attr_sensor_x_device_class",
+            "not_a_real_class",
+        ),
+    }
 }
 
 
