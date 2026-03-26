@@ -216,6 +216,8 @@ class BaseUnitConverter:
 
     @classmethod
     def _get_ops(cls, unit: str | None, for_ratio: bool) -> list[UnitConvertOpInfo]:
+        if unit == cls.BASE_UNIT:
+            return []  # Don't have any operations to perform if unit is already the base unit.
         try:
             ops = cls._UNIT_CONVERSION[unit]
         except KeyError as err:
