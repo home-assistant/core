@@ -432,6 +432,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     # Entity Properties
+    entity_description: CameraEntityDescription
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
     _attr_is_on: bool = True

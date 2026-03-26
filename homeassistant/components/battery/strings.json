@@ -1,0 +1,73 @@
+{
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted batteries.",
+    "condition_behavior_name": "Behavior",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration"
+  },
+  "conditions": {
+    "is_charging": {
+      "description": "Tests if one or more batteries are charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is charging"
+    },
+    "is_level": {
+      "description": "Tests the battery level of one or more batteries.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::battery::common::condition_threshold_description%]",
+          "name": "[%key:component::battery::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Battery level"
+    },
+    "is_low": {
+      "description": "Tests if one or more batteries are low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is low"
+    },
+    "is_not_charging": {
+      "description": "Tests if one or more batteries are not charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is not charging"
+    },
+    "is_not_low": {
+      "description": "Tests if one or more batteries are not low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is not low"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    }
+  },
+  "title": "Battery"
+}

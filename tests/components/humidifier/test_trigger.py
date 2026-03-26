@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
@@ -81,7 +81,6 @@ async def test_humidifier_triggers_gated_by_labs_flag(
 )
 async def test_humidifier_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -93,7 +92,6 @@ async def test_humidifier_state_trigger_behavior_any(
     """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -141,7 +139,6 @@ async def test_humidifier_state_trigger_behavior_any(
 )
 async def test_humidifier_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -153,7 +150,6 @@ async def test_humidifier_state_attribute_trigger_behavior_any(
     """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -186,7 +182,6 @@ async def test_humidifier_state_attribute_trigger_behavior_any(
 )
 async def test_humidifier_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -198,7 +193,6 @@ async def test_humidifier_state_trigger_behavior_first(
     """Test that the humidifier state trigger fires when the first humidifier changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -246,7 +240,6 @@ async def test_humidifier_state_trigger_behavior_first(
 )
 async def test_humidifier_state_attribute_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -258,7 +251,6 @@ async def test_humidifier_state_attribute_trigger_behavior_first(
     """Test that the humidifier state trigger fires when the first humidifier state changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -291,7 +283,6 @@ async def test_humidifier_state_attribute_trigger_behavior_first(
 )
 async def test_humidifier_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -303,7 +294,6 @@ async def test_humidifier_state_trigger_behavior_last(
     """Test that the humidifier state trigger fires when the last humidifier changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -351,7 +341,6 @@ async def test_humidifier_state_trigger_behavior_last(
 )
 async def test_humidifier_state_attribute_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -363,7 +352,6 @@ async def test_humidifier_state_attribute_trigger_behavior_last(
     """Test that the humidifier state trigger fires when the last humidifier state changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
