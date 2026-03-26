@@ -6,6 +6,7 @@ from collections.abc import Callable
 from enum import StrEnum
 from functools import lru_cache
 from math import floor, log10
+from typing import Any, NotRequired, Required, TypedDict
 
 from homeassistant.const import (
     PERCENTAGE,
@@ -122,6 +123,14 @@ class UnitConvertOpType(StrEnum):
 type UnitConvertOpInfo = tuple[UnitConvertOpType, float]
 
 
+# Dictionary equivalent type for unit converter when serialisng to JSON for frontend
+class _UnitClassConversion(TypedDict):
+    needs_class: NotRequired[bool]
+    base: Required[str]
+    units: Required[dict[str, float | list[UnitConvertOpInfo]]]
+    inverse: NotRequired[list[str]]
+
+
 # When determining unit ratios, offset and rounding operations are not applicable
 def _is_ratio_op(opInfo: UnitConvertOpInfo) -> bool:
     (op, _unused) = opInfo
@@ -213,6 +222,21 @@ class BaseUnitConverter:
         """Get floored base10 log ratio between units of measurement."""
         ratio = cls.get_unit_ratio(from_unit, to_unit)
         return floor(max(0, log10(ratio)))
+
+    @classmethod
+    def as_dict(cls) -> dict[str, Any]:
+        """Represent unit converter as a dictionary."""
+        data: _UnitClassConversion = {
+            "base": cls.BASE_UNIT if cls.BASE_UNIT is not None else "",
+            "inverse": [val if val is not None else "" for val in cls._UNIT_INVERSES],
+            "units": {
+                unit if unit is not None else "": factor
+                for unit, factor in cls._UNIT_CONVERSION.items()
+            },
+        }
+        if not cls.IS_PRIMARY:
+            data["needs_class"] = True
+        return {cls.UNIT_CLASS: data}
 
     @classmethod
     @lru_cache
