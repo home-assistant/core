@@ -37,12 +37,6 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.fixture
-async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple number entities associated with different targets."""
-    return await target_entities(hass, "number")
-
-
-@pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple climate entities associated with different targets."""
     return await target_entities(hass, "climate")
@@ -130,78 +124,6 @@ async def test_humidity_sensor_condition_behavior_all(
     await assert_condition_behavior_all(
         hass,
         target_entities=target_sensors,
-        condition_target_config=condition_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        condition=condition,
-        condition_options=condition_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("condition", "condition_options", "states"),
-    parametrize_numerical_condition_above_below_any(
-        "humidity.is_value",
-        device_class="humidity",
-        unit_attributes=_HUMIDITY_UNIT_ATTRS,
-    ),
-)
-async def test_humidity_number_condition_behavior_any(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    condition_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    condition: str,
-    condition_options: dict[str, Any],
-    states: list[ConditionStateDescription],
-) -> None:
-    """Test the humidity number condition with 'any' behavior."""
-    await assert_condition_behavior_any(
-        hass,
-        target_entities=target_numbers,
-        condition_target_config=condition_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        condition=condition,
-        condition_options=condition_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("condition", "condition_options", "states"),
-    parametrize_numerical_condition_above_below_all(
-        "humidity.is_value",
-        device_class="humidity",
-        unit_attributes=_HUMIDITY_UNIT_ATTRS,
-    ),
-)
-async def test_humidity_number_condition_behavior_all(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    condition_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    condition: str,
-    condition_options: dict[str, Any],
-    states: list[ConditionStateDescription],
-) -> None:
-    """Test the humidity number condition with 'all' behavior."""
-    await assert_condition_behavior_all(
-        hass,
-        target_entities=target_numbers,
         condition_target_config=condition_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,
