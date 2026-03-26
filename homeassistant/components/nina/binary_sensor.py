@@ -23,7 +23,6 @@ from .const import (
     ATTR_SEVERITY,
     ATTR_START,
     ATTR_WEB,
-    BINARY_SENSOR_SUFFIX,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
 )
@@ -70,7 +69,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         super().__init__(coordinator, region, region_name, slot_id)
 
         self._attr_translation_key = "warning"
-        self._attr_unique_id = f"{region}-{slot_id}{BINARY_SENSOR_SUFFIX}"
+        self._attr_unique_id = f"{region}-{slot_id}"
 
     @property
     def is_on(self) -> bool:

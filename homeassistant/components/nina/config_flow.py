@@ -22,7 +22,6 @@ from homeassistant.helpers.typing import VolDictType
 from .const import (
     _LOGGER,
     ALL_MATCH_REGEX,
-    BINARY_SENSOR_SUFFIX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
@@ -273,9 +272,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             entity_registry, self.config_entry.entry_id
         )
 
-        id_type_suffix = [f"-{sensor_id}" for sensor_id in SENSOR_SUFFIXES] + [
-            BINARY_SENSOR_SUFFIX
-        ]
+        id_type_suffix = [f"-{sensor_id}" for sensor_id in SENSOR_SUFFIXES] + [""]
 
         removed_entities_slots = [
             f"{region}-{slot_id}{suffix}"

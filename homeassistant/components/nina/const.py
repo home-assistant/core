@@ -36,7 +36,6 @@ ATTR_SENT: str = "sent"
 ATTR_START: str = "start"
 ATTR_EXPIRES: str = "expires"
 
-BINARY_SENSOR_SUFFIX: str = ""
 SENSOR_SUFFIXES: list[str] = [
     "headline",
     "sender",
