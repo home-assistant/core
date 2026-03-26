@@ -4,12 +4,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
-    UnitOfPower,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
@@ -23,8 +18,6 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
-
-_POWER_CONDITION_OPTIONS = {"unit": UnitOfPower.WATT}
 
 
 @pytest.fixture
@@ -60,7 +53,7 @@ async def test_power_conditions_gated_by_labs_flag(
     parametrize_numerical_condition_above_below_any(
         "power.is_value",
         device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
+        threshold_unit=UnitOfPower.WATT,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
     ),
 )
@@ -97,7 +90,7 @@ async def test_power_sensor_condition_behavior_any(
     parametrize_numerical_condition_above_below_all(
         "power.is_value",
         device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
+        threshold_unit=UnitOfPower.WATT,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
     ),
 )
@@ -134,7 +127,7 @@ async def test_power_sensor_condition_behavior_all(
     parametrize_numerical_condition_above_below_any(
         "power.is_value",
         device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
+        threshold_unit=UnitOfPower.WATT,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
     ),
 )
@@ -171,7 +164,7 @@ async def test_power_number_condition_behavior_any(
     parametrize_numerical_condition_above_below_all(
         "power.is_value",
         device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
+        threshold_unit=UnitOfPower.WATT,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
     ),
 )
@@ -230,12 +223,39 @@ async def test_power_condition_unit_conversion_sensor(
             }
         ],
         numerical_condition_options=[
-            {CONF_ABOVE: 0.2, CONF_BELOW: 0.8, "unit": UnitOfPower.KILO_WATT},
-            {CONF_ABOVE: 200, CONF_BELOW: 800, "unit": UnitOfPower.WATT},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 0.2,
+                        "unit_of_measurement": UnitOfPower.KILO_WATT,
+                    },
+                    "value_max": {
+                        "number": 0.8,
+                        "unit_of_measurement": UnitOfPower.KILO_WATT,
+                    },
+                }
+            },
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 200,
+                        "unit_of_measurement": UnitOfPower.WATT,
+                    },
+                    "value_max": {
+                        "number": 800,
+                        "unit_of_measurement": UnitOfPower.WATT,
+                    },
+                }
+            },
         ],
         limit_entity_condition_options={
-            CONF_ABOVE: "sensor.above",
-            CONF_BELOW: "sensor.below",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
         },
         limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[

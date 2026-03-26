@@ -2016,16 +2016,11 @@ async def hassio_stubs(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Create mock hassio http client."""
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.get_ingress_panels",
-            return_value={"panels": []},
-        ),
-        patch(
-            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-        ),
+    with patch(
+        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
     ):
         await async_setup_component(hass, "hassio", {})
 

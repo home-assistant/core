@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -21,7 +21,6 @@ from tests.components.common import (
     target_entities,
 )
 
-_POWER_TRIGGER_OPTIONS = {"unit": UnitOfPower.WATT}
 _POWER_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
 
 
@@ -62,20 +61,19 @@ async def test_power_triggers_gated_by_labs_flag(
         *parametrize_numerical_state_value_changed_trigger_states(
             "power.changed",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_sensor_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -87,7 +85,6 @@ async def test_power_trigger_sensor_behavior_any(
     """Test power trigger fires for sensor entities with device_class power."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -109,14 +106,13 @@ async def test_power_trigger_sensor_behavior_any(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_sensor_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -128,7 +124,6 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_first(
     """Test power crossed_threshold trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -150,14 +145,13 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_first(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=SensorDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_sensor_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -169,7 +163,6 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_last(
     """Test power crossed_threshold trigger fires when the last sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -194,20 +187,19 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_last(
         *parametrize_numerical_state_value_changed_trigger_states(
             "power.changed",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_number_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -219,7 +211,6 @@ async def test_power_trigger_number_behavior_any(
     """Test power trigger fires for number entities with device_class power."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -241,14 +232,13 @@ async def test_power_trigger_number_behavior_any(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_number_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -260,7 +250,6 @@ async def test_power_trigger_number_crossed_threshold_behavior_first(
     """Test power crossed_threshold trigger fires on the first number state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -282,14 +271,13 @@ async def test_power_trigger_number_crossed_threshold_behavior_first(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "power.crossed_threshold",
             device_class=NumberDeviceClass.POWER,
-            trigger_options=_POWER_TRIGGER_OPTIONS,
+            threshold_unit=UnitOfPower.WATT,
             unit_attributes=_POWER_UNIT_ATTRIBUTES,
         ),
     ],
 )
 async def test_power_trigger_number_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -301,7 +289,6 @@ async def test_power_trigger_number_crossed_threshold_behavior_last(
     """Test power crossed_threshold trigger fires when the last number changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

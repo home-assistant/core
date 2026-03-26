@@ -248,6 +248,7 @@ DEFAULT_INTEGRATIONS = {
     "gate",
     "humidity",
     "illuminance",
+    "moisture",
     "motion",
     "occupancy",
     "power",

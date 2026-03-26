@@ -376,8 +376,7 @@ async def test_update_time_segment_invalid_time_format(
             blocking=True,
         )
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "invalid_time_format"
-    assert excinfo.value.translation_placeholders == {"field_name": "start_time"}
+    assert excinfo.value.translation_key == "invalid_time_format_start_time"
 
 
 @pytest.mark.usefixtures("mock_growatt_v1_api")
@@ -653,8 +652,7 @@ async def test_update_time_segment_invalid_end_time_format(
             blocking=True,
         )
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "invalid_time_format"
-    assert excinfo.value.translation_placeholders == {"field_name": "end_time"}
+    assert excinfo.value.translation_key == "invalid_time_format_end_time"
 
 
 async def test_service_with_unloaded_config_entry(
@@ -1056,8 +1054,8 @@ async def test_write_ac_charge_times_invalid_period_time(
             blocking=True,
         )
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "invalid_time_format"
-    assert excinfo.value.translation_placeholders == {"field_name": "period_1_start"}
+    assert excinfo.value.translation_key == "invalid_time_format_period_start"
+    assert excinfo.value.translation_placeholders == {"period": "1"}
 
 
 async def test_no_sph_devices_fails_gracefully(
