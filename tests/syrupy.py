@@ -204,6 +204,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         serialized.pop("categories")
         serialized.pop("compat_aliases")
         serialized.pop("compat_name")
+        serialized.pop("original_name_unprefixed")
         serialized.pop("_cache")
         serialized["aliases"] = er._serialize_aliases(serialized["aliases"])
         return cls._remove_created_and_modified_at(serialized)

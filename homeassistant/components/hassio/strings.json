@@ -211,6 +211,10 @@
       "description": "System is currently unhealthy because Docker is configured incorrectly. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Docker misconfigured"
     },
+    "unhealthy_docker_gateway_unprotected": {
+      "description": "System is currently unhealthy because Supervisor was not able to apply firewall protection for the Docker gateway IP. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - Docker gateway unprotected"
+    },
     "unhealthy_duplicate_os_installation": {
       "description": "System is currently unhealthy because it has detected multiple Home Assistant OS installations. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Duplicate Home Assistant OS installation"

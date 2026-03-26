@@ -14,70 +14,31 @@
             - last
             - any
 
-.number_or_entity_humidity: &number_or_entity_humidity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-              unit_of_measurement: "%"
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement: "%"
-                - domain: sensor
-                  device_class: humidity
-                - domain: number
-                  device_class: humidity
-      translation_key: number_or_entity
+.humidity_threshold_entity: &humidity_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: sensor
+    device_class: humidity
+  - domain: number
+    device_class: humidity
 
-.number_or_entity_temperature: &number_or_entity_temperature
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement:
-                    - "°C"
-                    - "°F"
-                - domain: sensor
-                  device_class: temperature
-                - domain: number
-                  device_class: temperature
-      translation_key: number_or_entity
+.humidity_threshold_number: &humidity_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
 
-.trigger_unit_temperature: &trigger_unit_temperature
-  required: false
-  selector:
-    select:
-      options:
-        - "°C"
-        - "°F"
+.temperature_units: &temperature_units
+  - "°C"
+  - "°F"
 
-.trigger_threshold_type: &trigger_threshold_type
-  required: true
-  default: above
-  selector:
-    select:
-      options:
-        - above
-        - below
-        - between
-        - outside
-      translation_key: trigger_threshold_type
+.temperature_threshold_entity: &temperature_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *temperature_units
+  - domain: sensor
+    device_class: temperature
+  - domain: number
+    device_class: temperature
 
 started_cooling: *trigger_common
 started_drying: *trigger_common
@@ -103,29 +64,49 @@ hvac_mode_changed:
 target_humidity_changed:
   target: *trigger_climate_target
   fields:
-    above: *number_or_entity_humidity
-    below: *number_or_entity_humidity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *humidity_threshold_entity
+          mode: changed
+          number: *humidity_threshold_number
 
 target_humidity_crossed_threshold:
   target: *trigger_climate_target
   fields:
     behavior: *trigger_behavior
-    threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity_humidity
-    upper_limit: *number_or_entity_humidity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *humidity_threshold_entity
+          mode: crossed
+          number: *humidity_threshold_number
 
 target_temperature_changed:
   target: *trigger_climate_target
   fields:
-    above: *number_or_entity_temperature
-    below: *number_or_entity_temperature
-    unit: *trigger_unit_temperature
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: changed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units
 
 target_temperature_crossed_threshold:
   target: *trigger_climate_target
   fields:
     behavior: *trigger_behavior
-    threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity_temperature
-    upper_limit: *number_or_entity_temperature
-    unit: *trigger_unit_temperature
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: crossed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units

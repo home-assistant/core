@@ -58,15 +58,15 @@
   },
   "services": {
     "toggle": {
-      "description": "Toggles the siren on/off.",
-      "name": "[%key:common::action::toggle%]"
+      "description": "Toggles a siren on/off.",
+      "name": "Toggle siren"
     },
     "turn_off": {
-      "description": "Turns the siren off.",
-      "name": "[%key:common::action::turn_off%]"
+      "description": "Turns off a siren.",
+      "name": "Turn off siren"
     },
     "turn_on": {
-      "description": "Turns the siren on.",
+      "description": "Turns on a siren.",
       "fields": {
         "duration": {
           "description": "Number of seconds the sound is played. Must be supported by the integration.",
@@ -81,7 +81,7 @@
           "name": "Volume"
         }
       },
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on siren"
     }
   },
   "title": "Siren",
