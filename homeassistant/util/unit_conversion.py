@@ -112,20 +112,20 @@ _SULPHUR_DIOXIDE_MOLAR_MASS = 64.066
 class UnitConvertOpType(StrEnum):
     """Unit conversion operations."""
 
-    SCALE = "scale"
-    OFFSET = "offset"
-    POWER = "power"
-    ROUND = "round"
+    SCALE = "scale"  # Multiply by a scale factor (factor != 0)
+    OFFSET = "offset"  # Add a value to (offset is numeeric)
+    POWER = "power"  # Raise to the power (power != 0)
+    ROUND = "round"  # Round to integer (argument unused)
 
 
 # Description of a conversion operation - type and factor
 type UnitConvertOpInfo = tuple[UnitConvertOpType, float]
 
 
-# When determining unit ratios, only scale operations are applicable
+# When determining unit ratios, offset operations are not applicable
 def _is_ratio_op(opInfo: UnitConvertOpInfo) -> bool:
-    (op, _factor) = opInfo
-    return op == UnitConvertOpType.SCALE
+    (op, _unused) = opInfo
+    return op != UnitConvertOpType.OFFSET
 
 
 # Maps of operation info to executable functions, in both the from and to directions.
@@ -133,16 +133,16 @@ type UnitConvertOpFn = Callable[[float, float], float]
 type UnitConvertOp = tuple[UnitConvertOpFn, float]
 
 _UNIT_CONVERT_FROM_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
-    UnitConvertOpType.SCALE: (lambda val, factor: val / factor),
-    UnitConvertOpType.OFFSET: (lambda val, factor: val - factor),
-    UnitConvertOpType.POWER: (lambda val, factor: val ** (1 / factor)),
-    UnitConvertOpType.ROUND: (lambda val, factor: round(val)),
+    UnitConvertOpType.SCALE: (lambda val, scale: val / scale),
+    UnitConvertOpType.OFFSET: (lambda val, offset: val - offset),
+    UnitConvertOpType.POWER: (lambda val, power: val ** (1 / power)),
+    UnitConvertOpType.ROUND: (lambda val, unused: round(val)),
 }
 _UNIT_CONVERT_TO_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
-    UnitConvertOpType.SCALE: (lambda val, factor: val * factor),
-    UnitConvertOpType.OFFSET: (lambda val, factor: val + factor),
-    UnitConvertOpType.POWER: (lambda val, factor: val**factor),
-    UnitConvertOpType.ROUND: (lambda val, factor: round(val)),
+    UnitConvertOpType.SCALE: (lambda val, scale: val * scale),
+    UnitConvertOpType.OFFSET: (lambda val, offset: val + offset),
+    UnitConvertOpType.POWER: (lambda val, power: val**power),
+    UnitConvertOpType.ROUND: (lambda val, unused: round(val)),
 }
 
 
@@ -167,7 +167,7 @@ class BaseUnitConverter:
     ) -> Callable[[float], float]:
         """Return a function to convert one unit of measurement to another."""
         if from_unit == to_unit:
-            return lambda value: value
+            return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
         return lambda val: BaseUnitConverter._convert_fn(val, convert_ops)
 
@@ -178,11 +178,9 @@ class BaseUnitConverter:
     ) -> Callable[[float | None], float | None]:
         """Return a function to convert one unit of measurement to another which allows None."""
         if from_unit == to_unit:
-            return lambda value: value
+            return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
-        return lambda val: (
-            None if val is None else BaseUnitConverter._convert_fn(val, convert_ops)
-        )
+        return lambda val: BaseUnitConverter._convert_allow_none_fn(val, convert_ops)
 
     @classmethod
     @lru_cache
@@ -245,6 +243,20 @@ class BaseUnitConverter:
         """Execute a list of conversion operations one by one."""
         for op, factor in convert_ops:
             val = op(val, factor)
+        return val
+
+    @staticmethod
+    def _convert_allow_none_fn(
+        val: float | None, convert_ops: list[UnitConvertOp]
+    ) -> float | None:
+        """Execute a list of conversion operations one by one."""
+        for op, factor in convert_ops:
+            if val is None:
+                break
+            try:
+                val = op(val, factor)
+            except ZeroDivisionError:
+                val = None  # On math failure treat result as None
         return val
 
 
