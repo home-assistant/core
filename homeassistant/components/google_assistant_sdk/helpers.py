@@ -8,7 +8,6 @@ import logging
 from typing import Any
 import uuid
 
-import aiohttp
 from aiohttp import web
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
@@ -26,7 +25,11 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_call_later
 
@@ -79,9 +82,8 @@ async def async_send_text_commands(
     session = entry.runtime_data.session
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            entry.async_start_reauth(hass)
+    except OAuth2TokenRequestReauthError:
+        entry.async_start_reauth(hass)
         raise
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
