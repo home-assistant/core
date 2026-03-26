@@ -24,7 +24,6 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA,
-    ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
@@ -53,7 +52,6 @@ from .const import (
     ATTR_TAG,
     ATTR_TIMESTAMP,
     ATTR_TTL,
-    ATTR_URGENCY,
     ATTR_VAPID_EMAIL,
     ATTR_VAPID_PRV_KEY,
     ATTR_VAPID_PUB_KEY,
@@ -622,48 +620,40 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
         await self._webpush(**kwargs)
         self._async_record_notification()
 
-    async def _webpush(self, **kwargs: Any) -> None:
+    async def _webpush(
+        self,
+        message: str | None = None,
+        timestamp: datetime | None = None,
+        ttl: timedelta | None = None,
+        urgency: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Shared internal helper to push messages."""
-
-        timestamp = (
-            int(cast(datetime, kwargs.pop(ATTR_TIMESTAMP)).timestamp())
-            if ATTR_TIMESTAMP in kwargs
-            else int(time.time())
-        )
         payload: dict[str, Any] = kwargs
-        if ATTR_MESSAGE in kwargs:
-            kwargs["body"] = kwargs.pop(ATTR_MESSAGE)
+
+        if message is not None:
+            payload["body"] = message
 
         payload.setdefault(ATTR_TAG, str(uuid.uuid4()))
-        payload[ATTR_TIMESTAMP] = timestamp * 1000
-
-        urgency = payload.pop(ATTR_URGENCY, None)
+        ts = int(timestamp.timestamp()) if timestamp else int(time.time())
+        payload[ATTR_TIMESTAMP] = ts * 1000
 
         if ATTR_REQUIRE_INTERACTION in payload:
             payload["requireInteraction"] = payload.pop(ATTR_REQUIRE_INTERACTION)
 
-        ttl = (
-            int(cast(timedelta, payload.pop(ATTR_TTL)).total_seconds())
-            if ATTR_TTL in payload
-            else DEFAULT_TTL
-        )
-
-        payload.setdefault(ATTR_DATA, {}).update(
-            {
-                ATTR_JWT: add_jwt(
-                    timestamp,
-                    self.target,
-                    payload[ATTR_TAG],
-                    self.registration["subscription"]["keys"]["auth"],
-                )
-            }
+        payload.setdefault(ATTR_DATA, {})
+        payload[ATTR_DATA][ATTR_JWT] = add_jwt(
+            ts,
+            self.target,
+            payload[ATTR_TAG],
+            self.registration["subscription"]["keys"]["auth"],
         )
 
         endpoint = urlparse(self.registration["subscription"]["endpoint"])
         vapid_claims = {
             "sub": f"mailto:{self.config_entry.data[ATTR_VAPID_EMAIL]}",
             "aud": f"{endpoint.scheme}://{endpoint.netloc}",
-            "exp": timestamp + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
+            "exp": ts + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
         }
 
         try:
@@ -672,7 +662,7 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
                 json.dumps(payload),
                 self.config_entry.data[ATTR_VAPID_PRV_KEY],
                 vapid_claims,
-                ttl=ttl,
+                ttl=int(ttl.total_seconds()) if ttl else DEFAULT_TTL,
                 headers={"Urgency": urgency} if urgency else None,
                 aiohttp_session=self.session,
             )

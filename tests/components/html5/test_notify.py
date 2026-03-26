@@ -1054,7 +1054,7 @@ async def test_send_message_unavailable(
         ),
         (
             {ATTR_DATA: {"customKey": "customValue"}},
-            {"customKey": "customValue"},
+            {"data": {"jwt": "JWT", "customKey": "customValue"}},
             DEFAULT_TTL,
             None,
         ),
