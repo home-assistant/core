@@ -4,7 +4,6 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -38,12 +37,6 @@ async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
 async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple sensor entities associated with different targets."""
     return await target_entities(hass, "sensor")
-
-
-@pytest.fixture
-async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple number entities associated with different targets."""
-    return await target_entities(hass, "number")
 
 
 @pytest.mark.parametrize(
@@ -357,125 +350,6 @@ async def test_battery_level_crossed_threshold_sensor_behavior_last(
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_sensors,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_changed_trigger_states(
-            "battery.level_changed",
-            device_class=NumberDeviceClass.BATTERY,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
-        ),
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.level_crossed_threshold",
-            device_class=NumberDeviceClass.BATTERY,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
-        ),
-    ],
-)
-async def test_battery_number_trigger_behavior_any(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test battery number triggers with 'any' behavior."""
-    await assert_trigger_behavior_any(
-        hass,
-        target_entities=target_numbers,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.level_crossed_threshold",
-            device_class=NumberDeviceClass.BATTERY,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
-        ),
-    ],
-)
-async def test_battery_level_crossed_threshold_number_behavior_first(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test battery level_crossed_threshold trigger fires on the first number state change."""
-    await assert_trigger_behavior_first(
-        hass,
-        target_entities=target_numbers,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "battery.level_crossed_threshold",
-            device_class=NumberDeviceClass.BATTERY,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
-        ),
-    ],
-)
-async def test_battery_level_crossed_threshold_number_behavior_last(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test battery level_crossed_threshold trigger fires when the last number changes state."""
-    await assert_trigger_behavior_last(
-        hass,
-        target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,
