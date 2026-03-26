@@ -142,7 +142,7 @@ _UNIT_CONVERT_TO_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
     UnitConvertOpType.SCALE: (lambda val, scale: val * scale),
     UnitConvertOpType.OFFSET: (lambda val, offset: val + offset),
     UnitConvertOpType.POWER: (lambda val, power: val**power),
-    UnitConvertOpType.ROUND: (lambda val, unused: round(val)),
+    UnitConvertOpType.ROUND: (lambda val, unused: float(round(val))),
 }
 
 
