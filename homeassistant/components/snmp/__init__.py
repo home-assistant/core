@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
     privkey = entry.data.get(CONF_PRIV_KEY)
     privproto = entry.data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
     context_name = entry.data.get(CONF_CONTEXT_NAME)
-    port = int(entry.data.get(CONF_PORT, DEFAULT_PORT))
+    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
 
     if version == "3":
         if not authkey:
