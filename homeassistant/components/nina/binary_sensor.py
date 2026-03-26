@@ -75,7 +75,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        if self._active_warning_count <= self._warning_index:
+        if self._get_active_warnings_count() <= self._warning_index:
             return False
 
         return self._get_warning_data().is_valid
