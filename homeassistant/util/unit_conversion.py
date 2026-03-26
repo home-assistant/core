@@ -115,7 +115,7 @@ class UnitConvertOpType(StrEnum):
     SCALE = "scale"  # Multiply by a scale factor (factor != 0)
     OFFSET = "offset"  # Add a value to (offset is numeeric)
     POWER = "power"  # Raise to the power (power != 0)
-    ROUND = "round"  # Round to integer (argument unused)
+    ROUND = "round"  # Round to integer (argument unused). Applies only when converting to a unit.
 
 
 # Description of a conversion operation - type and factor
@@ -136,7 +136,7 @@ _UNIT_CONVERT_FROM_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
     UnitConvertOpType.SCALE: (lambda val, scale: val / scale),
     UnitConvertOpType.OFFSET: (lambda val, offset: val - offset),
     UnitConvertOpType.POWER: (lambda val, power: val ** (1 / power)),
-    UnitConvertOpType.ROUND: (lambda val, unused: round(val)),
+    UnitConvertOpType.ROUND: (lambda val, unused: val),  # Unused when converting from
 }
 _UNIT_CONVERT_TO_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
     UnitConvertOpType.SCALE: (lambda val, scale: val * scale),
