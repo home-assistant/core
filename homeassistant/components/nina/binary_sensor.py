@@ -31,7 +31,7 @@ from .entity import NinaEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     config_entry: NinaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -66,9 +66,9 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         slot_id: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, region, slot_id)
+        super().__init__(coordinator, region, region_name, slot_id)
 
-        self._attr_name = f"Warning: {region_name} {slot_id}"
+        self._attr_translation_key = "warning"
         self._attr_unique_id = f"{region}-{slot_id}"
         self._attr_device_info = coordinator.device_info
 
