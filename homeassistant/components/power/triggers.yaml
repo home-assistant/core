@@ -24,6 +24,8 @@
     unit_of_measurement: *power_units
   - domain: sensor
     device_class: power
+  - domain: number
+    device_class: power
 
 .trigger_target: &trigger_target
   entity:

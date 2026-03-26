@@ -22,6 +22,8 @@
     unit_of_measurement: *power_units
   - domain: sensor
     device_class: power
+  - domain: number
+    device_class: power
 
 is_value:
   target:
