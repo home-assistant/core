@@ -47,6 +47,7 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
         "climate.is_cooling",
         "climate.is_drying",
         "climate.is_heating",
+        "climate.is_hvac_mode",
         "climate.target_humidity",
         "climate.target_temperature",
     ],
@@ -82,6 +83,24 @@ async def test_climate_conditions_gated_by_labs_flag(
                 HVACMode.HEAT_COOL,
             ],
             other_states=[HVACMode.OFF],
+        ),
+        *(
+            param
+            for mode in HVACMode
+            for param in parametrize_condition_states_any(
+                condition="climate.is_hvac_mode",
+                condition_options={"hvac_mode": [mode]},
+                target_states=[mode],
+                other_states=[m for m in HVACMode if m != mode],
+            )
+        ),
+        *parametrize_condition_states_any(
+            condition="climate.is_hvac_mode",
+            condition_options={"hvac_mode": [HVACMode.HEAT, HVACMode.COOL]},
+            target_states=[HVACMode.HEAT, HVACMode.COOL],
+            other_states=[
+                m for m in HVACMode if m not in (HVACMode.HEAT, HVACMode.COOL)
+            ],
         ),
     ],
 )
@@ -132,6 +151,24 @@ async def test_climate_state_condition_behavior_any(
                 HVACMode.HEAT_COOL,
             ],
             other_states=[HVACMode.OFF],
+        ),
+        *(
+            param
+            for mode in HVACMode
+            for param in parametrize_condition_states_all(
+                condition="climate.is_hvac_mode",
+                condition_options={"hvac_mode": [mode]},
+                target_states=[mode],
+                other_states=[m for m in HVACMode if m != mode],
+            )
+        ),
+        *parametrize_condition_states_all(
+            condition="climate.is_hvac_mode",
+            condition_options={"hvac_mode": [HVACMode.HEAT, HVACMode.COOL]},
+            target_states=[HVACMode.HEAT, HVACMode.COOL],
+            other_states=[
+                m for m in HVACMode if m not in (HVACMode.HEAT, HVACMode.COOL)
+            ],
         ),
     ],
 )
