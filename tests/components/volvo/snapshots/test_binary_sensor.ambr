@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -151,8 +154,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -201,8 +205,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -251,8 +256,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -301,8 +307,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -351,8 +358,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -401,8 +409,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -451,8 +460,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -501,8 +511,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -551,8 +562,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -601,8 +613,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -651,8 +664,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -701,8 +715,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -751,8 +766,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -801,8 +817,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -851,8 +868,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -901,8 +919,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -951,8 +970,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1001,8 +1021,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1051,8 +1072,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1101,8 +1123,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1151,8 +1174,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1201,8 +1225,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1251,8 +1276,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1301,8 +1327,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1351,8 +1378,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1401,8 +1429,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1451,8 +1480,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1501,8 +1531,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1551,8 +1582,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1601,8 +1633,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1651,8 +1684,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1701,8 +1735,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1751,8 +1786,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1801,8 +1837,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1851,8 +1888,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1901,8 +1939,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1951,8 +1990,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2001,8 +2041,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2051,8 +2092,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2101,8 +2143,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2151,8 +2194,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2201,8 +2245,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2251,8 +2296,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2301,8 +2347,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2351,8 +2398,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2401,8 +2449,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2451,8 +2500,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2501,8 +2551,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2551,8 +2602,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2601,8 +2653,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2651,8 +2704,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2701,8 +2755,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2751,8 +2806,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2801,8 +2857,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2851,8 +2908,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2901,8 +2959,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2951,8 +3010,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3001,8 +3061,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3051,8 +3112,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3101,8 +3163,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3151,8 +3214,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3201,8 +3265,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3251,8 +3316,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3301,8 +3367,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3351,8 +3418,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3401,8 +3469,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3451,8 +3520,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3501,8 +3571,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3551,8 +3622,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3601,8 +3673,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3651,8 +3724,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3701,8 +3775,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3751,8 +3826,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3801,8 +3877,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3851,8 +3928,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3901,8 +3979,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3951,8 +4030,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4001,8 +4081,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4051,8 +4132,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4101,8 +4183,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4151,8 +4234,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4201,8 +4285,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4251,8 +4336,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4301,8 +4387,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4351,8 +4438,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4401,8 +4489,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4451,8 +4540,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4501,8 +4591,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4551,8 +4642,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4601,8 +4693,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4651,8 +4744,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4701,8 +4795,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4751,8 +4846,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4801,8 +4897,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4851,8 +4948,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4901,8 +4999,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4951,8 +5050,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5001,8 +5101,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5051,8 +5152,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5101,8 +5203,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5151,8 +5254,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5201,8 +5305,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5251,8 +5356,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5301,8 +5407,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5351,8 +5458,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5401,8 +5509,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5451,8 +5560,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5501,8 +5611,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5551,8 +5662,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5601,8 +5713,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5651,8 +5764,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5701,8 +5815,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5751,8 +5866,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5801,8 +5917,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5851,8 +5968,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5901,8 +6019,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5951,8 +6070,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6001,8 +6121,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6051,8 +6172,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6101,8 +6223,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6151,8 +6274,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6201,8 +6325,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6251,8 +6376,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6301,8 +6427,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6351,8 +6478,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6401,8 +6529,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6451,8 +6580,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6501,8 +6631,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6551,8 +6682,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6601,8 +6733,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6651,8 +6784,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6701,8 +6835,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6751,8 +6886,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6801,8 +6937,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6851,8 +6988,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6901,8 +7039,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6951,8 +7090,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7001,8 +7141,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7051,8 +7192,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7101,8 +7243,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7151,8 +7294,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7201,8 +7345,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7251,8 +7396,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7301,8 +7447,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7351,8 +7498,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7401,8 +7549,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7451,8 +7600,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7501,8 +7651,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7551,8 +7702,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7601,8 +7753,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7651,8 +7804,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7701,8 +7855,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7751,8 +7906,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7801,8 +7957,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7851,8 +8008,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7901,8 +8059,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7951,8 +8110,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8001,8 +8161,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8051,8 +8212,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8101,8 +8263,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8151,8 +8314,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8201,8 +8365,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8251,8 +8416,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8301,8 +8467,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8351,8 +8518,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8401,8 +8569,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8451,8 +8620,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8501,8 +8671,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8551,8 +8722,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8601,8 +8773,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8651,8 +8824,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8701,8 +8875,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8751,8 +8926,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

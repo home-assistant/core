@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_generate_structured_data
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -54,6 +55,7 @@
 # ---
 # name: test_generate_structured_data_legacy
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -111,6 +113,7 @@
 # ---
 # name: test_generate_structured_data_legacy_extended_thinking
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -181,6 +184,7 @@
 # ---
 # name: test_generate_structured_data_legacy_extra_text_block
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -255,6 +259,7 @@
 # ---
 # name: test_generate_structured_data_legacy_tools
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({

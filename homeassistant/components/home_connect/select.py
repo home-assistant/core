@@ -355,7 +355,7 @@ def _get_entities_for_appliance(
 def _get_option_entities_for_appliance(
     appliance_coordinator: HomeConnectApplianceCoordinator,
     entity_registry: er.EntityRegistry,
-) -> list[HomeConnectOptionEntity]:
+) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
         HomeConnectSelectOptionEntity(appliance_coordinator, desc)
@@ -403,7 +403,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in self.appliance.programs
-            if program.key != ProgramKey.UNKNOWN
+            if program.key in PROGRAMS_TRANSLATION_KEYS_MAP
             and (
                 program.constraints is None
                 or program.constraints.execution
@@ -430,10 +430,23 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     def update_native_value(self) -> None:
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
-        self._attr_current_option = (
-            PROGRAMS_TRANSLATION_KEYS_MAP.get(ProgramKey(event_value))
+        program_key = (
+            ProgramKey(event_value)
             if event and isinstance(event_value := event.value, str)
             else None
+        )
+        if (
+            program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+            and (
+                base_program_event := self.appliance.events.get(
+                    EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
+                )
+            )
+            and isinstance(base_program_event.value, str)
+        ):
+            program_key = ProgramKey(base_program_event.value)
+        self._attr_current_option = (
+            PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key) if program_key else None
         )
 
     async def async_select_option(self, option: str) -> None:

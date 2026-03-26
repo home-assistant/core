@@ -13,10 +13,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import AUDIT_PERMISSIONS, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -82,9 +82,10 @@ async def test_node_buttons(
     [
         ("button.pve1_start_all", "startall"),
         ("button.pve1_stop_all", "stopall"),
+        ("button.pve1_suspend_all", "suspendall"),
     ],
 )
-async def test_node_startall_stopall_buttons(
+async def test_node_all_actions_buttons(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -112,9 +113,10 @@ async def test_node_startall_stopall_buttons(
     [
         ("button.vm_web_start", 100, "start"),
         ("button.vm_web_stop", 100, "stop"),
-        ("button.vm_web_restart", 100, "restart"),
+        ("button.vm_web_restart", 100, "reboot"),
         ("button.vm_web_hibernate", 100, "hibernate"),
         ("button.vm_web_reset", 100, "reset"),
+        ("button.vm_web_shutdown", 100, "shutdown"),
     ],
 )
 async def test_vm_buttons(
@@ -142,12 +144,56 @@ async def test_vm_buttons(
     assert len(method_mock.mock_calls) == pre_calls + 1
 
 
+async def test_vm_snapshot_button(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing a ProxmoxVE VM snapshot button triggers the correct API call."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_proxmox_client._node_mock.qemu(100)
+    method_mock = mock_proxmox_client._qemu_mocks[100].snapshot.post
+    pre_calls = len(method_mock.mock_calls)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.vm_web_create_snapshot"},
+        blocking=True,
+    )
+
+    assert len(method_mock.mock_calls) == pre_calls + 1
+
+
+async def test_container_snapshot_button(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing a ProxmoxVE container snapshot button triggers the correct API call."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_proxmox_client._node_mock.lxc(200)
+    method_mock = mock_proxmox_client._lxc_mocks[200].snapshot.post
+    pre_calls = len(method_mock.mock_calls)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.ct_nginx_create_snapshot"},
+        blocking=True,
+    )
+
+    assert len(method_mock.mock_calls) == pre_calls + 1
+
+
 @pytest.mark.parametrize(
     ("entity_id", "vmid", "action"),
     [
         ("button.ct_nginx_start", 200, "start"),
         ("button.ct_nginx_stop", 200, "stop"),
-        ("button.ct_nginx_restart", 200, "restart"),
+        ("button.ct_nginx_restart", 200, "reboot"),
     ],
 )
 async def test_container_buttons(
@@ -162,7 +208,10 @@ async def test_container_buttons(
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.lxc(vmid)
-    method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
+    if action == "snapshot":
+        method_mock = mock_proxmox_client._lxc_mocks[vmid].snapshot.post
+    else:
+        method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
@@ -278,7 +327,7 @@ async def test_vm_buttons_exceptions(
         (
             "button.ct_nginx_restart",
             200,
-            "restart",
+            "reboot",
             ConnectTimeout("timeout"),
         ),
         (
@@ -311,5 +360,53 @@ async def test_container_buttons_exceptions(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "translation_key"),
+    [
+        ("button.pve1_start_all", "no_permission_node_power"),
+        ("button.ct_nginx_start", "no_permission_vm_lxc_power"),
+        ("button.vm_web_start", "no_permission_vm_lxc_power"),
+    ],
+)
+async def test_node_buttons_permission_denied_for_auditor_role(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    translation_key: str,
+) -> None:
+    """Test that buttons are raising accordingly for Auditor permissions."""
+    mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
+
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+
+
+async def test_vm_buttons_denied_for_specific_vm(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that button only works on actual permissions."""
+    await setup_integration(hass, mock_config_entry)
+    mock_proxmox_client._node_mock.qemu(101)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.vm_db_start"},
             blocking=True,
         )
