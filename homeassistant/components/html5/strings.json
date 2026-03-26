@@ -117,7 +117,7 @@
           "name": "Extra data"
         },
         "dir": {
-          "description": "The direction of the notification’s text. Adopts the browser’s language setting behavior by default.",
+          "description": "The direction of the notification's text. Adopts the browser's language setting behavior by default.",
           "name": "Text direction"
         },
         "icon": {
@@ -145,7 +145,7 @@
           "name": "Require interaction"
         },
         "silent": {
-          "description": "If enabled, the notification will not play sounds or trigger vibration, regardless of the device’s notification settings.",
+          "description": "If enabled, the notification will not play sounds or trigger vibration, regardless of the device's notification settings.",
           "name": "Silent"
         },
         "tag": {
@@ -161,7 +161,7 @@
           "name": "Title"
         },
         "ttl": {
-          "description": "Specifies how long the push service should retain the message if the user’s browser or device is offline. After this period, the notification expires. A value of 0 means the notification is discarded immediately if the target is not connected. Defaults to 1 day.",
+          "description": "Specifies how long the push service should retain the message if the user's browser or device is offline. After this period, the notification expires. A value of 0 means the notification is discarded immediately if the target is not connected. Defaults to 1 day.",
           "name": "Time to live"
         },
         "urgency": {
