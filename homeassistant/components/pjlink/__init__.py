@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -14,7 +12,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .media_player import PLATFORM_SCHEMA  # noqa: F401 Needed for async_setup
 
-_LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 
