@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import datetime
@@ -771,6 +772,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
     _device_data: dict[str, DeviceEntry]
+    _loaded_event: asyncio.Event | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
@@ -1463,6 +1465,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     async def _async_load(self) -> None:
         """Load the device registry."""
+        self._loaded_event = asyncio.Event()
+
         async_setup_cleanup(self.hass, self)
 
         data = await self._store.async_load()
@@ -1559,6 +1563,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.devices = devices
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
+
+        self._loaded_event.set()
+
+    async def async_wait_loaded(self) -> None:
+        """Wait until the device registry is fully loaded."""
+        if self._loaded_event is not None:
+            await self._loaded_event.wait()
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
