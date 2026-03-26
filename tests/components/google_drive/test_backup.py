@@ -61,9 +61,14 @@ TEST_AGENT_BACKUP_RESULT = {
 }
 
 
-async def consume_stream(*args: Any, **kwargs: Any) -> None:
+async def consume_stream(
+    file_metadata: Any,
+    open_stream: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
     """Consume the stream from the open_stream callable."""
-    stream = await args[1]()
+    stream = await open_stream()
     async for _ in stream:
         pass
 

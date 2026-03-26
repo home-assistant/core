@@ -93,9 +93,9 @@ class GoogleDriveBackupAgent(BackupAgent):
             async def _progress_stream() -> AsyncIterator[bytes]:
                 bytes_uploaded = 0
                 async for chunk in stream:
+                    yield chunk
                     bytes_uploaded += len(chunk)
                     on_progress(bytes_uploaded=bytes_uploaded)
-                    yield chunk
 
             return _progress_stream()
 
