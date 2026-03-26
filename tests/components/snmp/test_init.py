@@ -39,17 +39,22 @@ async def test_async_setup_entry_custom_port(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    async def mock_walk(*args, **kwargs):
+        return
+        yield
+
     with (
         patch(
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value=Mock(),
         ) as mock_create,
         patch(
-            "homeassistant.components.snmp.SnmpUpdateCoordinator.async_config_entry_first_refresh",
-        ),
-        patch(
             "homeassistant.components.snmp.coordinator.get_cmd",
             return_value=(None, None, None, []),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -112,6 +117,10 @@ async def test_async_setup_entry_ipv6_fallback(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    async def mock_walk(*args, **kwargs):
+        return
+        yield
+
     with (
         patch(
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
@@ -122,11 +131,12 @@ async def test_async_setup_entry_ipv6_fallback(hass: HomeAssistant) -> None:
             return_value=Mock(),
         ) as mock_create6,
         patch(
-            "homeassistant.components.snmp.SnmpUpdateCoordinator.async_config_entry_first_refresh",
-        ),
-        patch(
             "homeassistant.components.snmp.coordinator.get_cmd",
             return_value=(None, None, None, []),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

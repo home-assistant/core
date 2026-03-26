@@ -15,11 +15,26 @@ from pysnmp.hlapi.v3arch.asyncio import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
-from .util import RequestArgsType
+from .const import (
+    CONF_BASEOID,
+    CONF_CONTEXT_NAME,
+    CONF_VERSION,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VERSION,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
+from .util import (
+    RequestArgsType,
+    async_create_request_cmd_args,
+    async_create_transport_target,
+    create_auth_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +46,6 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        request_args: RequestArgsType,
     ) -> None:
         """Initialize the manager."""
         super().__init__(
@@ -41,15 +55,51 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self.request_args = request_args
+        self._request_args: RequestArgsType | None = None
         self.manufacturer: str | None = None
         self.model: str | None = None
         self.sw_version: str | None = None
         self.sys_name: str | None = None
 
+    async def _async_ensure_request_args(self) -> RequestArgsType:
+        """Build and cache the SNMP request arguments.
+
+        Creates the transport target, auth data, and engine once, then
+        reuses them on subsequent calls.
+        """
+        if self._request_args is not None:
+            return self._request_args
+
+        assert self.config_entry is not None
+        data = self.config_entry.data
+        version = data.get(CONF_VERSION, DEFAULT_VERSION)
+        port = data.get(CONF_PORT, DEFAULT_PORT)
+        context_name = data.get(CONF_CONTEXT_NAME)
+        baseoid = data[CONF_BASEOID]
+
+        target = await async_create_transport_target(
+            data[CONF_HOST], port, DEFAULT_TIMEOUT
+        )
+        auth_data = create_auth_data(data, version)
+        self._request_args = await async_create_request_cmd_args(
+            self.hass,
+            auth_data,
+            target,
+            baseoid,
+            context_name,
+        )
+        return self._request_args
+
     async def _async_fetch_host_info(self) -> None:
         """Fetch host-specific info for the device registry."""
-        engine, auth_data, target, context_data, _ = self.request_args
+        try:
+            request_args = await self._async_ensure_request_args()
+        except (PySnmpError, Exception) as err:  # noqa: BLE001
+            _LOGGER.warning("Failed to setup SNMP for host info: %s", err)
+            self.model = ""  # Prevent re-fetching
+            return
+
+        engine, auth_data, target, context_data, _ = request_args
 
         # OID sysDescr.0 (1.3.6.1.2.1.1.1.0) and sysName.0 (1.3.6.1.2.1.1.5.0)
         try:
@@ -85,7 +135,15 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             await self._async_fetch_host_info()
 
         devices: dict[str, str | None] = {}
-        engine, auth_data, target, context_data, object_type = self.request_args
+
+        try:
+            request_args = await self._async_ensure_request_args()
+        except PySnmpError as err:
+            raise UpdateFailed(f"SNMP setup failed: {err}") from err
+        except Exception as err:  # pylint: disable=broad-except
+            raise UpdateFailed(f"Unexpected error during SNMP setup: {err}") from err
+
+        engine, auth_data, target, context_data, object_type = request_args
 
         walker = bulk_walk_cmd(
             engine,
@@ -108,30 +166,32 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                     err_msg = f"SNMP error: {errstatus.prettyPrint()} at {(errindex and res[int(errindex) - 1][0]) or '?'}"
                     raise UpdateFailed(err_msg)
 
+                if is_end_of_mib(res):
+                    break
+
                 for oid, value in res:
-                    if not is_end_of_mib(res):
-                        try:
-                            octets = value.asOctets()
-                            if len(octets) == 6:
-                                mac = binascii.hexlify(octets).decode("utf-8")
-                            else:
-                                mac = octets.decode("utf-8", "ignore")
+                    try:
+                        octets = value.asOctets()
+                        if len(octets) == 6:
+                            mac = binascii.hexlify(octets).decode("utf-8")
+                        else:
+                            mac = octets.decode("utf-8", "ignore")
 
-                            # Normalize: remove non-hex chars, lowercase, and re-format
-                            mac = "".join(c for c in mac if c.isalnum()).lower()
-                            if len(mac) != 12:
-                                continue
-                            mac = ":".join([mac[i : i + 2] for i in range(0, 12, 2)])
-                        except AttributeError, UnicodeDecodeError:
+                        # Normalize: remove non-hex chars, lowercase, and re-format
+                        mac = "".join(c for c in mac if c.isalnum()).lower()
+                        if len(mac) != 12:
                             continue
+                        mac = ":".join([mac[i : i + 2] for i in range(0, 12, 2)])
+                    except AttributeError, UnicodeDecodeError:
+                        continue
 
-                        # Extract IP address from OID suffix (last 4 parts)
-                        ip = None
-                        if hasattr(oid, "asTuple"):
-                            oid_tuple = oid.asTuple()
-                            if len(oid_tuple) >= 4:
-                                ip = ".".join(map(str, oid_tuple[-4:]))
-                        devices[mac] = ip
+                    # Extract IP address from OID suffix (last 4 parts)
+                    ip = None
+                    if hasattr(oid, "asTuple"):
+                        oid_tuple = oid.asTuple()
+                        if len(oid_tuple) >= 4:
+                            ip = ".".join(map(str, oid_tuple[-4:]))
+                    devices[mac] = ip
         except PySnmpError as err:
             raise UpdateFailed(f"SNMP error during walk: {err}") from err
 

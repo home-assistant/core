@@ -31,8 +31,10 @@ async def test_coordinator_mac_normalization(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test MAC address normalization with various formats."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
     # Test cases: (input_octets, expected_mac)
@@ -65,8 +67,10 @@ async def test_coordinator_ip_extraction(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test IP address extraction from OID suffix."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
     mac_bytes = binascii.unhexlify("001122334455")
@@ -95,10 +99,12 @@ async def test_coordinator_ip_extraction(
             assert data[mac_str] == expected_ip
 
 
-async def test_coordinator_walk_error(hass: HomeAssistant, mock_request_args) -> None:
+async def test_coordinator_walk_error(hass: HomeAssistant) -> None:
     """Test handling of PySnmpError during walk iteration."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
     async def mock_walk_error(*args, **kwargs):
@@ -123,8 +129,10 @@ async def test_coordinator_host_info_error(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test handling of PySnmpError during host info fetching."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
 
     with patch(
         "homeassistant.components.snmp.coordinator.get_cmd",
@@ -138,8 +146,10 @@ async def test_coordinator_walk_errindication(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test handling of errindication (string vs exception) during walk."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
     # 1. Test errindication as a string
@@ -177,8 +187,10 @@ async def test_coordinator_host_info_no_space(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test host info fetching where sysDescr has no spaces."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
 
     with patch(
         "homeassistant.components.snmp.coordinator.get_cmd",
@@ -198,8 +210,10 @@ async def test_coordinator_walk_errstatus(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test handling of errstatus during walk."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
     mock_err_status = Mock()
@@ -222,8 +236,10 @@ async def test_coordinator_invalid_mac_length(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test ignoring MAC addresses with invalid length."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
     oid = Mock()
@@ -245,8 +261,10 @@ async def test_coordinator_mac_processing_exception(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test handling of exceptions during MAC processing."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
     oid = Mock()
@@ -269,8 +287,10 @@ async def test_coordinator_host_info_with_space(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test host info fetching where sysDescr has spaces."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
 
     with patch(
         "homeassistant.components.snmp.coordinator.get_cmd",
@@ -290,8 +310,10 @@ async def test_coordinator_auto_fetch_host_info(
     hass: HomeAssistant, mock_request_args
 ) -> None:
     """Test that host info is automatically fetched if model is None."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    coordinator = SnmpUpdateCoordinator(hass, entry, mock_request_args)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
     assert coordinator.model is None
 
     oid = Mock()

@@ -193,16 +193,18 @@ async def test_device_tracker_update(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id_1 = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str)
-    assert entity_id_1 is not None
-    assert hass.states.get(entity_id_1).state == STATE_HOME
-    assert hass.states.get(entity_id_1).attributes["ip"] == "192.168.1.1"
+        ent_reg = er.async_get(hass)
+        entity_id_1 = ent_reg.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str
+        )
+        assert entity_id_1 is not None
+        assert hass.states.get(entity_id_1).state == STATE_HOME
+        assert hass.states.get(entity_id_1).attributes["ip"] == "192.168.1.1"
 
-    mock_walk.side_effect = mock_walk_2
+        mock_walk.side_effect = mock_walk_2
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
-    await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+        await hass.async_block_till_done()
 
     # mac2 is a newly discovered device (no legacy state) → disabled
     entity_id_2 = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac2_str)
