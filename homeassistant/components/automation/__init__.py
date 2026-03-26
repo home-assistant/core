@@ -155,6 +155,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "air_quality",
     "alarm_control_panel",
     "assist_satellite",
+    "battery",
     "button",
     "climate",
     "counter",
