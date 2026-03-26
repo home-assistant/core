@@ -21,23 +21,53 @@
   },
   "entity": {
     "binary_sensor": {
-      "dout_srcpmp_val": {
-        "name": "Source pump"
+      "al_dewpoint_active": {
+        "name": "Alarm: Dewpoint"
       },
-      "dout_usrpmp_val": {
-        "name": "User pump"
+      "al_maxtime_antileg_active": {
+        "name": "Alarm: Anti-legionella timeout"
       },
-      "dout_fourwayvlv_val": {
-        "name": "Four-way valve"
+      "al_maxtime_dhw_active": {
+        "name": "Alarm: DHW timeout"
+      },
+      "al_underfloorsafety_active": {
+        "name": "Alarm: Supply too hot"
+      },
+      "alarmmng_al_pwrplus": {
+        "name": "Alarm: Compressor"
+      },
+      "alarmmng_al_workinghour": {
+        "name": "Alarm: Working hours"
+      },
+      "alrm_flw": {
+        "name": "Alarm: Flow"
+      },
+      "bms_demand": {
+        "name": "Heat demand"
+      },
+      "boostersecurity": {
+        "name": "Booster"
+      },
+      "bufferprb_en": {
+        "name": "Buffer sensor enabled"
+      },
+      "coolingalrms": {
+        "name": "Alarm: Cooling"
+      },
+      "daynightmode": {
+        "name": "Day mode"
+      },
+      "dewpoint": {
+        "name": "Dewpoint"
+      },
+      "dout_bufferpmp_val": {
+        "name": "Buffer pump"
       },
       "dout_cooling_val": {
         "name": "Cooling output"
       },
-      "dout_threewayvlv_val": {
-        "name": "Three-way valve"
-      },
-      "dout_bufferpmp_val": {
-        "name": "Buffer pump"
+      "dout_fourwayvlv_val": {
+        "name": "Four-way valve"
       },
       "dout_heaterstep1_val": {
         "name": "Heater step 1"
@@ -48,89 +78,59 @@
       "dout_heaterstep3_val": {
         "name": "Heater step 3"
       },
-      "keybonoff": {
-        "name": "Keypad"
+      "dout_srcpmp_val": {
+        "name": "Source pump"
       },
-      "daynightmode": {
-        "name": "Day mode"
+      "dout_threewayvlv_val": {
+        "name": "Three-way valve"
       },
-      "al_maxtime_antileg_active": {
-        "name": "Alarm: Anti-legionella timeout"
-      },
-      "al_maxtime_dhw_active": {
-        "name": "Alarm: DHW timeout"
-      },
-      "al_dewpoint_active": {
-        "name": "Alarm: Dewpoint"
-      },
-      "al_underfloorsafety_active": {
-        "name": "Alarm: Supply too hot"
-      },
-      "alrm_flw": {
-        "name": "Alarm: Flow"
-      },
-      "usralrms": {
-        "name": "Alarm: Central heating"
-      },
-      "coolingalrms": {
-        "name": "Alarm: Cooling"
-      },
-      "heatingalrms": {
-        "name": "Alarm: Heating"
-      },
-      "alarmmng_al_workinghour": {
-        "name": "Alarm: Working hours"
-      },
-      "srsalrm": {
-        "name": "Alarm: Source"
-      },
-      "glbal": {
-        "name": "Alarm: Global"
-      },
-      "alarmmng_al_pwrplus": {
-        "name": "Alarm: Compressor"
-      },
-      "roomprb_en": {
-        "name": "Room sensor enabled"
-      },
-      "plantprb_en": {
-        "name": "Plant sensor enabled"
-      },
-      "bufferprb_en": {
-        "name": "Buffer sensor enabled"
+      "dout_usrpmp_val": {
+        "name": "User pump"
       },
       "en_dhwpid": {
         "name": "DHW controller enabled"
       },
-      "plantdemand": {
-        "name": "Plant demand"
+      "glbal": {
+        "name": "Alarm: Global"
+      },
+      "heatingalrms": {
+        "name": "Alarm: Heating"
       },
       "id_demand": {
         "name": "External demand"
       },
-      "thermostatdemand": {
-        "name": "Thermostat demand"
-      },
-      "bms_demand": {
-        "name": "Heat demand"
-      },
       "id_summerwinter": {
         "name": "Summer mode"
       },
-      "dewpoint": {
-        "name": "Dewpoint"
+      "keybonoff": {
+        "name": "Keypad"
       },
-      "boostersecurity": {
-        "name": "Booster"
+      "plantdemand": {
+        "name": "Plant demand"
       },
-      "srcflw": {
-        "name": "Source flow"
+      "plantprb_en": {
+        "name": "Plant sensor enabled"
       },
       "req_antileg_1": {
         "name": "Anti-legionella"
       },
+      "roomprb_en": {
+        "name": "Room sensor enabled"
+      },
+      "srcflw": {
+        "name": "Source flow"
+      },
+      "srsalrm": {
+        "name": "Alarm: Source"
+      },
       "surplus_pv": {
         "name": "PV surplus"
+      },
+      "thermostatdemand": {
+        "name": "Thermostat demand"
+      },
+      "usralrms": {
+        "name": "Alarm: Central heating"
       }
     },
     "sensor": {
