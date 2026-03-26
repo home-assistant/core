@@ -283,7 +283,13 @@ async def test_agents_upload(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test agent upload backup."""
-    mock_api.resumable_upload_file = AsyncMock(return_value=None)
+
+    async def consume_stream(*args, **kwargs):
+        stream = await args[1]()
+        async for _ in stream:
+            pass
+
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
 
     client = await hass_client()
 
@@ -320,11 +326,17 @@ async def test_agents_upload_create_folder_if_missing(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test agent upload backup creates folder if missing."""
+
+    async def consume_stream(*args, **kwargs):
+        stream = await args[1]()
+        async for _ in stream:
+            pass
+
     mock_api.list_files = AsyncMock(return_value={"files": []})
     mock_api.create_file = AsyncMock(
         return_value={"id": "new folder id", "name": "Home Assistant"}
     )
-    mock_api.resumable_upload_file = AsyncMock(return_value=None)
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
 
     client = await hass_client()
 
