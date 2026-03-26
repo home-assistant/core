@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -104,9 +104,8 @@ async def test_battery_triggers_gated_by_labs_flag(
 )
 async def test_battery_binary_sensor_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -116,7 +115,6 @@ async def test_battery_binary_sensor_trigger_behavior_any(
     """Test the battery binary sensor triggers with 'any' behavior."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -167,9 +165,8 @@ async def test_battery_binary_sensor_trigger_behavior_any(
 )
 async def test_battery_binary_sensor_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -179,7 +176,6 @@ async def test_battery_binary_sensor_trigger_behavior_first(
     """Test the battery binary sensor triggers with 'first' behavior."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -230,9 +226,8 @@ async def test_battery_binary_sensor_trigger_behavior_first(
 )
 async def test_battery_binary_sensor_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -242,7 +237,6 @@ async def test_battery_binary_sensor_trigger_behavior_last(
     """Test the battery binary sensor triggers with 'last' behavior."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -275,9 +269,8 @@ async def test_battery_binary_sensor_trigger_behavior_last(
 )
 async def test_battery_sensor_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -287,7 +280,6 @@ async def test_battery_sensor_trigger_behavior_any(
     """Test battery sensor triggers with 'any' behavior."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -315,9 +307,8 @@ async def test_battery_sensor_trigger_behavior_any(
 )
 async def test_battery_level_crossed_threshold_sensor_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -327,7 +318,6 @@ async def test_battery_level_crossed_threshold_sensor_behavior_first(
     """Test battery level_crossed_threshold trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -355,9 +345,8 @@ async def test_battery_level_crossed_threshold_sensor_behavior_first(
 )
 async def test_battery_level_crossed_threshold_sensor_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -367,7 +356,6 @@ async def test_battery_level_crossed_threshold_sensor_behavior_last(
     """Test battery level_crossed_threshold trigger fires when the last sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -400,9 +388,8 @@ async def test_battery_level_crossed_threshold_sensor_behavior_last(
 )
 async def test_battery_number_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -412,7 +399,6 @@ async def test_battery_number_trigger_behavior_any(
     """Test battery number triggers with 'any' behavior."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -440,9 +426,8 @@ async def test_battery_number_trigger_behavior_any(
 )
 async def test_battery_level_crossed_threshold_number_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -452,7 +437,6 @@ async def test_battery_level_crossed_threshold_number_behavior_first(
     """Test battery level_crossed_threshold trigger fires on the first number state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -480,9 +464,8 @@ async def test_battery_level_crossed_threshold_number_behavior_first(
 )
 async def test_battery_level_crossed_threshold_number_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
+    trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
@@ -492,7 +475,6 @@ async def test_battery_level_crossed_threshold_number_behavior_last(
     """Test battery level_crossed_threshold trigger fires when the last number changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
