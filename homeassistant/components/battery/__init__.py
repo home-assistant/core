@@ -1,4 +1,4 @@
-"""Integration for battery conditions."""
+"""Integration for battery triggers and conditions."""
 
 from __future__ import annotations
 

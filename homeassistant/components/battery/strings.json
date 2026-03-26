@@ -3,7 +3,12 @@
     "condition_behavior_description": "How the state should match on the targeted batteries.",
     "condition_behavior_name": "Behavior",
     "condition_threshold_description": "What to test for and threshold values.",
-    "condition_threshold_name": "Threshold configuration"
+    "condition_threshold_name": "Threshold configuration",
+    "trigger_behavior_description": "The behavior of the targeted batteries to trigger on.",
+    "trigger_behavior_name": "Behavior",
+    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
+    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
+    "trigger_threshold_name": "Threshold configuration"
   },
   "conditions": {
     "is_charging": {
@@ -67,7 +72,80 @@
         "all": "All",
         "any": "Any"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
-  "title": "Battery"
+  "title": "Battery",
+  "triggers": {
+    "level_changed": {
+      "description": "Triggers after the battery level of one or more batteries changes.",
+      "fields": {
+        "threshold": {
+          "description": "[%key:component::battery::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::battery::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Battery level changed"
+    },
+    "level_crossed_threshold": {
+      "description": "Triggers after the battery level of one or more batteries crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::trigger_behavior_description%]",
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::battery::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::battery::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Battery level crossed threshold"
+    },
+    "low": {
+      "description": "Triggers after one or more batteries become low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::trigger_behavior_description%]",
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Battery low"
+    },
+    "not_low": {
+      "description": "Triggers after one or more batteries are no longer low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::trigger_behavior_description%]",
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Battery not low"
+    },
+    "started_charging": {
+      "description": "Triggers after one or more batteries start charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::trigger_behavior_description%]",
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Battery started charging"
+    },
+    "stopped_charging": {
+      "description": "Triggers after one or more batteries stop charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::trigger_behavior_description%]",
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Battery stopped charging"
+    }
+  }
 }
