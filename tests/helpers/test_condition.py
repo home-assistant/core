@@ -42,7 +42,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.automation import (
     DomainSpec,
-    NumericalDomainSpec,
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
@@ -3610,7 +3609,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
     test = await _setup_numerical_condition_with_unit(
         hass,
         domain_specs={
-            "test": NumericalDomainSpec(value_source="temperature"),
+            "test": DomainSpec(value_source="temperature"),
         },
         condition_options={
             "threshold": {
@@ -3656,7 +3655,7 @@ async def test_numerical_condition_with_unit_get_entity_unit_override(
     class CustomCondition(EntityNumericalConditionWithUnitBase):
         """Condition that always reports entities as °F regardless of attributes."""
 
-        _domain_specs = {"test": NumericalDomainSpec(value_source="temperature")}
+        _domain_specs = {"test": DomainSpec(value_source="temperature")}
         _base_unit = UnitOfTemperature.CELSIUS
         _unit_converter = TemperatureConverter
 

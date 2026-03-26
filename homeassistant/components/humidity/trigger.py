@@ -16,24 +16,24 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     Trigger,
     make_entity_numerical_state_changed_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
 )
 
-HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
-    CLIMATE_DOMAIN: NumericalDomainSpec(
+HUMIDITY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
-    HUMIDIFIER_DOMAIN: NumericalDomainSpec(
+    HUMIDIFIER_DOMAIN: DomainSpec(
         value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
-    SENSOR_DOMAIN: NumericalDomainSpec(
+    SENSOR_DOMAIN: DomainSpec(
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-    WEATHER_DOMAIN: NumericalDomainSpec(
+    WEATHER_DOMAIN: DomainSpec(
         value_source=ATTR_WEATHER_HUMIDITY,
     ),
 }
