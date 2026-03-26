@@ -29,13 +29,18 @@ async def test_disabled_by_default_sensors(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the disabled by default IPP sensors."""
-    state = hass.states.get("sensor.test_ha_1000_series_uptime")
+    entry = entity_registry.async_get_entity_id(
+        "sensor", "ipp", f"{init_integration.unique_id}_uptime"
+    )
+    assert entry is not None
+
+    state = hass.states.get(entry)
     assert state is None
 
-    entry = entity_registry.async_get("sensor.test_ha_1000_series_uptime")
-    assert entry
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    entity_entry = entity_registry.async_get(entry)
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_missing_entry_unique_id(
@@ -69,14 +74,14 @@ async def test_no_page_count_sensors_when_unsupported(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.states.get("sensor.test_ha_1000_series_pages_completed")
-    assert not hass.states.get("sensor.test_ha_1000_series_impressions_completed")
-    assert not hass.states.get("sensor.test_ha_1000_series_media_sheets_completed")
-    assert not hass.states.get(
-        "sensor.test_ha_1000_series_monochrome_impressions_completed"
-    )
-    assert not hass.states.get("sensor.test_ha_1000_series_color_impressions_completed")
-    assert not entity_registry.async_get("sensor.test_ha_1000_series_pages_completed")
-    assert not entity_registry.async_get(
-        "sensor.test_ha_1000_series_impressions_completed"
-    )
+    unique_id = mock_config_entry.unique_id
+    for key in (
+        "pages_completed",
+        "impressions_completed",
+        "media_sheets_completed",
+        "impressions_completed_monochrome",
+        "impressions_completed_full_color",
+    ):
+        assert not entity_registry.async_get_entity_id(
+            "sensor", "ipp", f"{unique_id}_{key}"
+        )
