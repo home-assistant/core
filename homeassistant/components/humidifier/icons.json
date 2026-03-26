@@ -67,6 +67,9 @@
     }
   },
   "triggers": {
+    "mode_changed": {
+      "trigger": "mdi:air-humidifier"
+    },
     "started_drying": {
       "trigger": "mdi:arrow-down-bold"
     },
