@@ -476,7 +476,7 @@ def test_migration_map_completeness() -> None:
     for filename in platform_files:
         filepath = integration_path / filename
         assert filepath.exists(), f"Platform file not found: {filepath}"
-        source = filepath.read_text()
+        source = filepath.read_text(encoding="utf-8")
         tree = ast.parse(source)
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and node.name not in excluded_classes:
