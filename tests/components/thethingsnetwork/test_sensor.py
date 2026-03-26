@@ -1,7 +1,7 @@
 """Define tests for the The Things Network sensor."""
 
 import logging
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -17,6 +17,7 @@ from .conftest import (
     DATA_WITH_ATTRS,
     DATA_WITH_ENTITY_CATEGORY,
     DATA_WITH_INVALID_ATTRS,
+    DATA_WITH_UNDERSCORE_FIELD,
     DEVICE_FIELD,
     DEVICE_FIELD_2,
     DEVICE_ID,
@@ -24,13 +25,15 @@ from .conftest import (
     DOMAIN,
 )
 
+from tests.common import MockConfigEntry
+
 
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_ttnclient,
-    mock_config_entry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a working configurations."""
 
@@ -56,8 +59,8 @@ async def test_sensor(
 async def test_sensor_with_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_ttnclient,
-    mock_config_entry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors with decoder attributes (unit, device_class, state_class)."""
     mock_ttnclient.return_value.fetch_data = AsyncMock(return_value=DATA_WITH_ATTRS)
@@ -90,8 +93,8 @@ async def test_sensor_with_attributes(
 async def test_sensor_friendly_name(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_ttnclient,
-    mock_config_entry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that friendly_name from decoder overrides entity name."""
     mock_ttnclient.return_value.fetch_data = AsyncMock(return_value=DATA_WITH_ATTRS)
@@ -110,8 +113,8 @@ async def test_sensor_friendly_name(
 async def test_sensor_display_precision(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_ttnclient,
-    mock_config_entry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test suggested_display_precision is set from decoder attributes."""
     mock_ttnclient.return_value.fetch_data = AsyncMock(return_value=DATA_WITH_ATTRS)
@@ -127,8 +130,8 @@ async def test_sensor_display_precision(
 async def test_sensor_entity_category(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_ttnclient,
-    mock_config_entry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test entity_category is set from decoder attributes."""
     mock_ttnclient.return_value.fetch_data = AsyncMock(
@@ -145,8 +148,8 @@ async def test_sensor_entity_category(
 async def test_sensor_invalid_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_ttnclient,
-    mock_config_entry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that invalid decoder attributes log warnings but still create entities."""
@@ -168,21 +171,41 @@ async def test_sensor_invalid_attributes(
 async def test_sensor_attr_fields_filtered(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_ttnclient,
-    mock_config_entry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that TTNSensorAttribute fields are not created as entities."""
     mock_ttnclient.return_value.fetch_data = AsyncMock(return_value=DATA_WITH_ATTRS)
 
     await init_integration(hass, mock_config_entry)
 
-    # Attribute fields should NOT create entities
-    assert not entity_registry.async_get(f"sensor.{DEVICE_ID}__sensor_attr_batv_unit")
+    # Attribute fields should NOT create entities (single underscore after slug collapse)
+    assert not entity_registry.async_get(f"sensor.{DEVICE_ID}_sensor_attr_batv_unit")
     assert not entity_registry.async_get(
-        f"sensor.{DEVICE_ID}__sensor_attr_batv_device_class"
+        f"sensor.{DEVICE_ID}_sensor_attr_batv_device_class"
     )
 
     # Only actual sensor fields should exist
     assert entity_registry.async_get(f"sensor.{DEVICE_ID}_batv")
     # friendly_name "Room Temperature" changes entity_id slug
     assert entity_registry.async_get(f"sensor.{DEVICE_ID}_room_temperature")
+
+
+async def test_underscore_sensor_value_filtered(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_ttnclient: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that TTNSensorValue fields starting with _ are not created as entities."""
+    mock_ttnclient.return_value.fetch_data = AsyncMock(
+        return_value=DATA_WITH_UNDERSCORE_FIELD
+    )
+
+    await init_integration(hass, mock_config_entry)
+
+    # Fields starting with _ should NOT create entities
+    assert not entity_registry.async_get(f"sensor.{DEVICE_ID}_internal_field")
+
+    # Regular fields should still be created
+    assert entity_registry.async_get(f"sensor.{DEVICE_ID}_{DEVICE_FIELD}")

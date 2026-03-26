@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final, TypedDict, TypeVar
+from typing import Final, TypedDict, TypeVar, cast
 
 from ttn_client import TTNSensorAttribute, TTNSensorValue
 
@@ -61,19 +61,18 @@ VALID_ENTITY_CATEGORIES: Final[frozenset[str]] = frozenset(
 )
 
 
-def _parse_enum(enum_cls: type[EnumT], raw: str | None) -> EnumT | None:
-    """Parse a raw decoder string into a Home Assistant enum."""
-    if not raw:
+def _parse_enum(enum_cls: type[EnumT], raw: object | None) -> EnumT | None:
+    """Parse a raw decoder value into a Home Assistant enum.
+
+    TTN decoder output is external data — invalid or non-string values are possible.
+    Invalid values are already warned about by _validate_sensor_attr.
+    """
+    if raw is None:
         return None
 
     try:
-        return enum_cls(raw)
-    except ValueError:
-        _LOGGER.warning(
-            "Unsupported %s value from TTN decoder: %r",
-            enum_cls.__name__,
-            raw,
-        )
+        return enum_cls(str(raw))
+    except ValueError, TypeError:
         return None
 
 
@@ -110,7 +109,9 @@ def _extract_sensor_attr(
                 continue
 
             field_name = remainder[: -(len(attr_key) + 1)]
-            sensor_attr.setdefault(field_name, {})[attr_key] = value.value  # type: ignore[literal-required]
+            cast(dict[str, str], sensor_attr.setdefault(field_name, {}))[attr_key] = (
+                str(value.value)
+            )
             break
 
     return sensor_attr
@@ -218,9 +219,10 @@ class TtnDataSensor(TTNEntity, SensorEntity):
             self._attr_entity_category = entity_category
 
         if precision := attr.get("suggested_display_precision"):
+            # Value from TTN decoder JSON, not HA Core — convert to int
             try:
                 self._attr_suggested_display_precision = int(precision)
-            except ValueError:
+            except ValueError, TypeError:
                 _LOGGER.warning(
                     "Invalid suggested_display_precision for %s: %r",
                     ttn_value.field_id,

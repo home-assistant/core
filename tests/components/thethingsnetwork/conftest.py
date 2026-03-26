@@ -151,6 +151,21 @@ DATA_WITH_INVALID_ATTRS = {
     }
 }
 
+DATA_WITH_UNDERSCORE_FIELD = {
+    DEVICE_ID: {
+        "_internal_field": TTNSensorValue(
+            _BASE_MESSAGE,
+            "_internal_field",
+            99,
+        ),
+        DEVICE_FIELD: TTNSensorValue(
+            _BASE_MESSAGE,
+            DEVICE_FIELD,
+            DEVICE_FIELD_VALUE,
+        ),
+    }
+}
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
