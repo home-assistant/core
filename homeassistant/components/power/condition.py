@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
@@ -14,7 +13,6 @@ from homeassistant.helpers.condition import (
 from homeassistant.util.unit_conversion import PowerConverter
 
 POWER_DOMAIN_SPECS = {
-    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.POWER),
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.POWER),
 }
 
