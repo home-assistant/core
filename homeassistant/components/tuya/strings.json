@@ -1113,12 +1113,6 @@
       "message": "Device with ID {device_id} is not a Tuya feeder."
     }
   },
-  "issues": {
-    "deprecated_entity_new_valve": {
-      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
-      "title": "{name} is deprecated"
-    }
-  },
   "selector": {
     "days_of_week": {
       "options": {

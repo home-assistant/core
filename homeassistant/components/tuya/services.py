@@ -10,6 +10,7 @@ from tuya_device_handlers.device_wrapper.service_feeder_schedule import (
 )
 from tuya_sharing import CustomerDevice, Manager
 import voluptuous as vol
+from typing import Any
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
@@ -85,7 +86,7 @@ def _get_tuya_device(
 
 async def async_get_feeder_meal_plan(
     call: ServiceCall,
-) -> dict[str, list[FeederSchedule]]:
+) -> dict[str, Any]:
     """Handle get_feeder_meal_plan service call."""
     device, _ = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 

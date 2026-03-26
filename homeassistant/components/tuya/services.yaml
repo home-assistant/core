@@ -1,5 +1,5 @@
 get_feeder_meal_plan:
-  fields:
+  target:
     device_id:
       required: true
       selector:
@@ -7,7 +7,7 @@ get_feeder_meal_plan:
           integration: tuya
 
 set_feeder_meal_plan:
-  fields:
+  target:
     device_id:
       required: true
       selector:
