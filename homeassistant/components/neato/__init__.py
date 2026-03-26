@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as ex:
-        raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+        raise ConfigEntryAuthFailed from ex
     except (OAuth2TokenRequestError, ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
