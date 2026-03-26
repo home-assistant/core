@@ -59,7 +59,10 @@ SERVICE_REQUEST_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_MEDIA_TYPE): vol.In(["movie", "tv"]),
-        vol.Required(ATTR_MEDIA_ID): vol.Coerce(int),
+        vol.Required(ATTR_MEDIA_ID): vol.All(
+            vol.Coerce(int),
+            vol.Range(min=1),
+        ),
         vol.Optional(ATTR_SEASONS): vol.Any(
             vol.Coerce(int),
             [vol.Coerce(int)],
