@@ -44,7 +44,7 @@ async def test_config_import(
             },
         )
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
     assert (HOMEASSISTANT_DOMAIN, "deprecated_yaml") in issue_registry.issues
