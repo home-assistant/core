@@ -125,7 +125,7 @@ async def test_button_start_charge(
             BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
-    assert mock_action.mock_calls[0][1] == ()
+    assert mock_action.mock_calls[0][1] == (None,)
 
 
 @pytest.mark.usefixtures("fixtures_with_data")

@@ -257,6 +257,20 @@
         }
       },
       "name": "Update charge schedule"
+    },
+    "charge_start": {
+      "description": "Starts Charging on vehicle.",
+      "fields": {
+        "vehicle": {
+          "description": "The vehicle to send the command to.",
+          "name": "Vehicle"
+        },
+        "when": {
+          "description": "Timestamp for charging to start (optional - defaults to now).",
+          "name": "When"
+        }
+      },
+      "name": "Start Charging"
     }
   }
 }
