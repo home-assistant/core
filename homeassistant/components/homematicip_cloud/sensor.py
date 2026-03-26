@@ -856,7 +856,7 @@ class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):
         key: str,
         value_fn: Callable[[FunctionalChannel], StateType],
         type_fn: Callable[[FunctionalChannel], str],
-        feature_id: str | None = None,
+        feature_id: str,
     ) -> None:
         """Initialize Sensor Entity."""
         super().__init__(
