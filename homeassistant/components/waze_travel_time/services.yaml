@@ -69,3 +69,8 @@ get_travel_times:
       required: false
       selector:
         duration:
+    base_coordinates:
+      required: false
+      example: "51.5074,-0.1278"
+      selector:
+        location:
