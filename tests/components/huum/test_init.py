@@ -1,16 +1,19 @@
 """Tests for the Huum __init__."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from huum.exceptions import Forbidden, NotAuthenticated
+from freezegun.api import FrozenDateTimeFactory
+from huum.exceptions import Forbidden, NotAuthenticated, RequestError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import config_entries
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -27,21 +30,70 @@ async def test_loading_and_unloading_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("side_effect", [Forbidden, NotAuthenticated])
-async def test_auth_error_triggers_reauth(
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (Forbidden("Forbidden"), ConfigEntryState.SETUP_ERROR),
+        (NotAuthenticated("Not authenticated"), ConfigEntryState.SETUP_ERROR),
+        (RequestError("Request error"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_entry_exceptions(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_huum_client: AsyncMock,
-    side_effect: type[Exception],
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test that an auth error during coordinator refresh triggers reauth."""
+    """Test setup fails with various exceptions."""
     mock_config_entry.add_to_hass(hass)
-    mock_huum_client.status.side_effect = side_effect
+    mock_huum_client.status.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert any(
-        mock_config_entry.async_get_active_flows(hass, {config_entries.SOURCE_REAUTH})
+    assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_entry(
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test device registry entry."""
+    assert (
+        device_entry := device_registry.async_get_device(
+            identifiers={(DOMAIN, mock_config_entry.entry_id)}
+        )
     )
+    assert device_entry == snapshot
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        Forbidden("Forbidden"),
+        NotAuthenticated("Not authenticated"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_huum_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
+) -> None:
+    """Test that an auth error during coordinator refresh triggers reauth."""
+    mock_huum_client.status.side_effect = side_effect
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
