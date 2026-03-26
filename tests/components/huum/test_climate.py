@@ -101,7 +101,7 @@ async def test_set_hvac_mode_off(
         blocking=True,
     )
 
-    mock_huum_client.turn_off.assert_called_once()
+    mock_huum_client.turn_off.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("init_integration")
