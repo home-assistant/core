@@ -97,7 +97,12 @@ async def test_expired_token_refresh_success(
             REAUTH_ISSUE_TRANSLATIONS,
         ),
     ],
-    ids=["failure_requires_reauth", "transient_failure", "rate_limited", "revoked_auth"],
+    ids=[
+        "failure_requires_reauth",
+        "transient_failure",
+        "rate_limited",
+        "revoked_auth",
+    ],
 )
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,
