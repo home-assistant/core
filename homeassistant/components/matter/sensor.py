@@ -48,6 +48,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -742,6 +743,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.OzoneConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="RadonSensor",
+            native_unit_of_measurement=CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="radon_concentration",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.RadonConcentrationMeasurement.Attributes.MeasuredValue,
         ),
     ),
     MatterDiscoverySchema(

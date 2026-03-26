@@ -549,6 +549,9 @@
       "pump_speed": {
         "name": "Rotation speed"
       },
+      "radon_concentration": {
+        "name": "Radon concentration"
+      },
       "reactive_current": {
         "name": "Reactive current"
       },
