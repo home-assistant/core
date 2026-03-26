@@ -88,11 +88,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     try:
         target = await async_create_transport_target(host, port, DEFAULT_TIMEOUT)
     except PySnmpError as err:
-        # We don't have both error objects anymore, so we just raise the last one/generic
+        _LOGGER.warning("SNMP target creation failed: %s", err)
         raise CannotConnect(f"SNMP target creation failed: {err}") from None
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected error during SNMP target creation")
-        raise CannotConnect(str(err)) from None
 
     try:
         auth_data = create_auth_data(data, version)
@@ -150,7 +147,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 ObjectIdentity(user_input[CONF_BASEOID])
-            except Exception:  # pylint: disable=broad-except # noqa: BLE001
+            except PySnmpError:
                 errors["baseoid"] = "invalid_oid"
             else:
                 self._user_data = user_input
@@ -188,9 +185,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth as err:
                 errors["base"] = "invalid_auth"
                 description_placeholders["error"] = str(err)
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            except PySnmpError as err:
+                _LOGGER.warning("Unexpected SNMP error during validation: %s", err)
+                errors["base"] = "cannot_connect"
                 description_placeholders["error"] = str(err)
             else:
                 return self.async_create_entry(title=data[CONF_HOST], data=data)
@@ -224,9 +221,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 except InvalidAuth as err:
                     errors["base"] = "invalid_auth"
                     description_placeholders["error"] = str(err)
-                except Exception as err:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
+                except PySnmpError as err:
+                    _LOGGER.warning("Unexpected SNMP error during validation: %s", err)
+                    errors["base"] = "cannot_connect"
                     description_placeholders["error"] = str(err)
                 else:
                     return self.async_create_entry(title=data[CONF_HOST], data=data)

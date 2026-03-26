@@ -360,7 +360,7 @@ async def test_user_flow_invalid_oid_exception(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.snmp.config_flow.ObjectIdentity",
-        side_effect=Exception,
+        side_effect=PySnmpError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -409,14 +409,14 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.snmp.config_flow.validate_input",
-        side_effect=Exception("Unknown error"),
+        side_effect=PySnmpError("Unknown error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> None:
@@ -449,14 +449,14 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.snmp.config_flow.validate_input",
-        side_effect=Exception("Unknown error"),
+        side_effect=PySnmpError("Unknown error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "user", "auth_key": "pass"}
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_validate_input_ipv6_fallback(hass: HomeAssistant) -> None:
@@ -516,7 +516,7 @@ async def test_validate_input_unexpected_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            side_effect=Exception,
+            side_effect=PySnmpError,
         ),
         pytest.raises(CannotConnect),
     ):

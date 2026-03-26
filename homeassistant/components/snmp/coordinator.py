@@ -94,7 +94,7 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         """Fetch host-specific info for the device registry."""
         try:
             request_args = await self._async_ensure_request_args()
-        except (PySnmpError, Exception) as err:  # noqa: BLE001
+        except PySnmpError as err:
             _LOGGER.warning("Failed to setup SNMP for host info: %s", err)
             self.model = ""  # Prevent re-fetching
             return
@@ -140,8 +140,6 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             request_args = await self._async_ensure_request_args()
         except PySnmpError as err:
             raise UpdateFailed(f"SNMP setup failed: {err}") from err
-        except Exception as err:  # pylint: disable=broad-except
-            raise UpdateFailed(f"Unexpected error during SNMP setup: {err}") from err
 
         engine, auth_data, target, context_data, object_type = request_args
 

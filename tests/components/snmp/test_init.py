@@ -185,7 +185,7 @@ async def test_async_setup_entry_unexpected_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            side_effect=Exception,
+            side_effect=PySnmpError,
         ),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
