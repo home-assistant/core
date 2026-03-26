@@ -18,7 +18,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.automation import NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     EntityNumericalConditionWithUnitBase,
@@ -26,16 +26,16 @@ from homeassistant.helpers.condition import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 TEMPERATURE_DOMAIN_SPECS = {
-    CLIMATE_DOMAIN: NumericalDomainSpec(
+    CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_TEMPERATURE,
     ),
-    SENSOR_DOMAIN: NumericalDomainSpec(
+    SENSOR_DOMAIN: DomainSpec(
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    WATER_HEATER_DOMAIN: NumericalDomainSpec(
+    WATER_HEATER_DOMAIN: DomainSpec(
         value_source=WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
     ),
-    WEATHER_DOMAIN: NumericalDomainSpec(
+    WEATHER_DOMAIN: DomainSpec(
         value_source=ATTR_WEATHER_TEMPERATURE,
     ),
 }

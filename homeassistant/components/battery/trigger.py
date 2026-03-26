@@ -10,7 +10,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDevic
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     Trigger,
     make_entity_numerical_state_changed_trigger,
@@ -28,9 +28,9 @@ BATTERY_CHARGING_DOMAIN_SPECS: dict[str, DomainSpec] = {
     ),
 }
 
-BATTERY_PERCENTAGE_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
-    SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.BATTERY),
-    NUMBER_DOMAIN: NumericalDomainSpec(device_class=NumberDeviceClass.BATTERY),
+BATTERY_PERCENTAGE_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.BATTERY),
+    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.BATTERY),
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
