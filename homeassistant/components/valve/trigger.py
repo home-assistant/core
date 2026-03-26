@@ -17,12 +17,14 @@ class ValveTriggerBase(EntityTriggerBase):
         """Check if the transition is valid for a valve state change."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
-        if (from_value := from_state.attributes.get(ATTR_IS_CLOSED)) is None or (
-            to_value := to_state.attributes.get(ATTR_IS_CLOSED)
-        ) is None:
+
+        from_value: bool | None = from_state.attributes.get(ATTR_IS_CLOSED)
+        to_value: bool | None = to_state.attributes.get(ATTR_IS_CLOSED)
+
+        if to_value is None:
             return False
 
-        return bool(from_value) is not bool(to_value)
+        return from_value is not to_value
 
 
 class ValveClosedTrigger(ValveTriggerBase):
