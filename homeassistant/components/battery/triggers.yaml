@@ -13,8 +13,6 @@
 .battery_threshold_entity: &battery_threshold_entity
   - domain: input_number
     unit_of_measurement: "%"
-  - domain: number
-    device_class: battery
   - domain: sensor
     device_class: battery
 
@@ -37,8 +35,6 @@
 .trigger_target_percentage: &trigger_target_percentage
   entity:
     - domain: sensor
-      device_class: battery
-    - domain: number
       device_class: battery
 
 low:
