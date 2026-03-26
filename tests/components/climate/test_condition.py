@@ -32,16 +32,6 @@ from tests.components.common import (
     target_entities,
 )
 
-_ALL_HVAC_MODES = [
-    HVACMode.AUTO,
-    HVACMode.COOL,
-    HVACMode.DRY,
-    HVACMode.FAN_ONLY,
-    HVACMode.HEAT,
-    HVACMode.HEAT_COOL,
-    HVACMode.OFF,
-]
-
 
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -96,12 +86,12 @@ async def test_climate_conditions_gated_by_labs_flag(
         ),
         *(
             param
-            for mode in _ALL_HVAC_MODES
+            for mode in HVACMode
             for param in parametrize_condition_states_any(
                 condition="climate.is_hvac_mode",
                 condition_options={"hvac_mode": [mode]},
                 target_states=[mode],
-                other_states=[m for m in _ALL_HVAC_MODES if m != mode],
+                other_states=[m for m in HVACMode if m != mode],
             )
         ),
         *parametrize_condition_states_any(
@@ -109,7 +99,7 @@ async def test_climate_conditions_gated_by_labs_flag(
             condition_options={"hvac_mode": [HVACMode.HEAT, HVACMode.COOL]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=[
-                m for m in _ALL_HVAC_MODES if m not in (HVACMode.HEAT, HVACMode.COOL)
+                m for m in HVACMode if m not in (HVACMode.HEAT, HVACMode.COOL)
             ],
         ),
     ],
@@ -164,12 +154,12 @@ async def test_climate_state_condition_behavior_any(
         ),
         *(
             param
-            for mode in _ALL_HVAC_MODES
+            for mode in HVACMode
             for param in parametrize_condition_states_all(
                 condition="climate.is_hvac_mode",
                 condition_options={"hvac_mode": [mode]},
                 target_states=[mode],
-                other_states=[m for m in _ALL_HVAC_MODES if m != mode],
+                other_states=[m for m in HVACMode if m != mode],
             )
         ),
         *parametrize_condition_states_all(
@@ -177,7 +167,7 @@ async def test_climate_state_condition_behavior_any(
             condition_options={"hvac_mode": [HVACMode.HEAT, HVACMode.COOL]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=[
-                m for m in _ALL_HVAC_MODES if m not in (HVACMode.HEAT, HVACMode.COOL)
+                m for m in HVACMode if m not in (HVACMode.HEAT, HVACMode.COOL)
             ],
         ),
     ],
