@@ -3,6 +3,8 @@
     unit_of_measurement: "%"
   - domain: sensor
     device_class: humidity
+  - domain: number
+    device_class: humidity
 
 .humidity_threshold_number: &humidity_threshold_number
   min: 0
