@@ -7,8 +7,8 @@ from pyaprilaire.const import Attribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-
 from .conftest import MOCK_MAC, setup_integration
+
 from tests.common import MockConfigEntry
 
 
