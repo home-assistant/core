@@ -16,9 +16,7 @@ from homeassistant.helpers.condition import (
     EntityStateConditionBase,
 )
 
-from .const import DOMAIN
-
-CONF_OPTION = "option"
+from .const import CONF_OPTION, DOMAIN
 
 IS_OPTION_SELECTED_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
