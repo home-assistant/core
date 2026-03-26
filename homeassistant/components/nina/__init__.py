@@ -6,7 +6,6 @@ from typing import Any
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 
 from .const import (
     _LOGGER,
@@ -15,13 +14,11 @@ from .const import (
     CONF_FILTER_CORONA,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
-    DOMAIN,
     NO_MATCH_REGEX,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
