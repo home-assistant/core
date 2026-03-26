@@ -14,7 +14,7 @@
           "name": "[%key:component::siren::common::condition_behavior_name%]"
         }
       },
-      "name": "If a siren is off"
+      "name": "Siren is off"
     },
     "is_on": {
       "description": "Tests if one or more sirens are on.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::siren::common::condition_behavior_name%]"
         }
       },
-      "name": "If a siren is on"
+      "name": "Siren is on"
     }
   },
   "entity_component": {
