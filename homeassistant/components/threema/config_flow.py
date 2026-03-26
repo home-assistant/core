@@ -61,7 +61,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step - choose setup type."""
         if user_input is not None:
-            if user_input.get("setup_type") == "new":
+            if user_input.get("setup_type") == "generate_keys":
                 return await self.async_step_setup_new()
             return await self.async_step_credentials()
 
@@ -69,8 +69,8 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("setup_type", default="existing"): vol.In(
-                        ["existing", "new"]
+                    vol.Required("setup_type", default="add_gateway"): vol.In(
+                        ["add_gateway", "generate_keys"]
                     ),
                 }
             ),

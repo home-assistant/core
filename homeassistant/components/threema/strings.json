@@ -57,7 +57,7 @@
           "setup_type": "Setup type"
         },
         "data_description": {
-          "setup_type": "Choose 'existing' to enter your Gateway credentials, or 'new' to generate encryption keys first."
+          "setup_type": "Choose 'add_gateway' to enter your Gateway credentials, or 'generate_keys' to create a new key pair first."
         },
         "description": "Choose whether to generate encryption keys for a new Gateway ID (to be registered at gateway.threema.ch) or configure an existing Gateway ID.",
         "title": "Threema setup"

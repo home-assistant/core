@@ -46,7 +46,7 @@ async def test_user_flow_existing_gateway(
     # Choose existing gateway
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "existing"},
+        user_input={"setup_type": "add_gateway"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
@@ -79,7 +79,7 @@ async def test_user_flow_existing_with_keys(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "existing"},
+        user_input={"setup_type": "add_gateway"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -116,7 +116,7 @@ async def test_user_flow_new_gateway(
         # Choose new gateway
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"setup_type": "new"},
+            user_input={"setup_type": "generate_keys"},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "setup_new"
@@ -159,7 +159,7 @@ async def test_user_flow_key_generation_failure(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"setup_type": "new"},
+            user_input={"setup_type": "generate_keys"},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -175,7 +175,7 @@ async def test_credentials_invalid_gateway_id(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "existing"},
+        user_input={"setup_type": "add_gateway"},
     )
 
     # Gateway ID not starting with *
@@ -214,7 +214,7 @@ async def test_credentials_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "existing"},
+        user_input={"setup_type": "add_gateway"},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -246,7 +246,7 @@ async def test_credentials_cannot_connect(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"setup_type": "existing"},
+            user_input={"setup_type": "add_gateway"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -271,7 +271,7 @@ async def test_credentials_invalid_auth(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"setup_type": "existing"},
+            user_input={"setup_type": "add_gateway"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
