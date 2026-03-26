@@ -18,17 +18,26 @@ from zwave_js_server.const.command_class.notification import (
 )
 from zwave_js_server.model.driver import Driver
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
@@ -130,6 +139,45 @@ class OpeningStateZWaveJSEntityDescription(BinarySensorEntityDescription):
 
     state_key: int
     parse_opening_state: Callable[[OpeningState], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
+class LegacyDoorStateRepairDescription:
+    """Describe how a legacy door state entity should be migrated."""
+
+    issue_translation_key: str
+    replacement_state_key: OpeningState
+
+
+LEGACY_DOOR_STATE_REPAIR_DESCRIPTIONS: dict[str, LegacyDoorStateRepairDescription] = {
+    "legacy_access_control_door_state_simple_open": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_open_state",
+        replacement_state_key=OpeningState.OPEN,
+    ),
+    "legacy_access_control_door_state_open": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_open_state",
+        replacement_state_key=OpeningState.OPEN,
+    ),
+    "legacy_access_control_door_state_open_regular": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_open_state",
+        replacement_state_key=OpeningState.OPEN,
+    ),
+    "legacy_access_control_door_state_open_tilt": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_tilt_state",
+        replacement_state_key=OpeningState.TILTED,
+    ),
+    "legacy_access_control_door_tilt_state_tilted": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_tilt_state",
+        replacement_state_key=OpeningState.TILTED,
+    ),
+}
+
+LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
+    {
+        description.issue_translation_key
+        for description in LEGACY_DOOR_STATE_REPAIR_DESCRIPTIONS.values()
+    }
+)
 
 
 # Mappings for Notification sensors
@@ -404,6 +452,104 @@ def is_valid_notification_binary_sensor(
     return len(info.primary_value.metadata.states) > 1
 
 
+@callback
+def _async_delete_legacy_entity_repairs(hass: HomeAssistant, entity_id: str) -> None:
+    """Delete all stale legacy door state repair issues for an entity."""
+    for issue_key in LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS:
+        async_delete_issue(hass, DOMAIN, f"{issue_key}.{entity_id}")
+
+
+@callback
+def _async_check_legacy_entity_repair(
+    hass: HomeAssistant,
+    driver: Driver,
+    entity: ZWaveLegacyDoorStateBinarySensor,
+) -> None:
+    """Schedule a repair issue check once HA has fully started."""
+
+    @callback
+    def _async_do_check(hass: HomeAssistant) -> None:
+        """Create or delete a repair issue for a deprecated legacy door state entity."""
+        ent_reg = er.async_get(hass)
+        if entity.unique_id is None:
+            return
+        entity_id = ent_reg.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, entity.unique_id
+        )
+        if entity_id is None:
+            return
+
+        repair_description = LEGACY_DOOR_STATE_REPAIR_DESCRIPTIONS.get(
+            entity.entity_description.key
+        )
+        if repair_description is None:
+            _async_delete_legacy_entity_repairs(hass, entity_id)
+            return
+
+        entity_entry = ent_reg.async_get(entity_id)
+        if entity_entry is None or entity_entry.disabled:
+            _async_delete_legacy_entity_repairs(hass, entity_id)
+            return
+
+        entity_automations = automations_with_entity(hass, entity_id)
+        entity_scripts = scripts_with_entity(hass, entity_id)
+        if not entity_automations and not entity_scripts:
+            _async_delete_legacy_entity_repairs(hass, entity_id)
+            return
+
+        opening_state_value = get_opening_state_notification_value(
+            entity.info.node, entity.info.primary_value.endpoint
+        )
+        if opening_state_value is None:
+            _async_delete_legacy_entity_repairs(hass, entity_id)
+            return
+
+        replacement_unique_id = (
+            f"{driver.controller.home_id}.{opening_state_value.value_id}."
+            f"{repair_description.replacement_state_key}"
+        )
+        replacement_entity_id = ent_reg.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, replacement_unique_id
+        )
+        if replacement_entity_id is None:
+            _async_delete_legacy_entity_repairs(hass, entity_id)
+            return
+
+        items = [
+            f"- [{item.name or item.original_name or eid}](/config/{domain}/edit/{item.unique_id})"
+            for domain, entity_ids in (
+                ("automation", entity_automations),
+                ("script", entity_scripts),
+            )
+            for eid in entity_ids
+            if (item := ent_reg.async_get(eid))
+        ]
+
+        for issue_key in LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS:
+            if issue_key != repair_description.issue_translation_key:
+                async_delete_issue(hass, DOMAIN, f"{issue_key}.{entity_id}")
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"{repair_description.issue_translation_key}.{entity_id}",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=repair_description.issue_translation_key,
+            translation_placeholders={
+                "entity_id": entity_id,
+                "entity_name": entity_entry.name
+                or entity_entry.original_name
+                or entity_id,
+                "replacement_entity_id": replacement_entity_id,
+                "items": "\n".join(items),
+            },
+        )
+
+    async_at_started(hass, _async_do_check)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ZwaveJSConfigEntry,
@@ -455,9 +601,9 @@ async def async_setup_entry(
             isinstance(info, NewZwaveDiscoveryInfo)
             and info.entity_class is ZWaveLegacyDoorStateBinarySensor
         ):
-            entities.append(
-                ZWaveLegacyDoorStateBinarySensor(config_entry, driver, info)
-            )
+            entity = ZWaveLegacyDoorStateBinarySensor(config_entry, driver, info)
+            entities.append(entity)
+            _async_check_legacy_entity_repair(hass, driver, entity)
         elif isinstance(info, NewZwaveDiscoveryInfo):
             pass  # other entity classes are not migrated yet
         elif info.platform_hint == "notification":
