@@ -52,9 +52,9 @@ class HTML5EventEntity(HTML5Entity, EventEntity):
             self._trigger_event(
                 event_type,
                 {
+                    **data.get("data", {}),
                     "action": data.get("action"),
                     "tag": data.get("tag"),
-                    **data.get("data", {}),
                 },
             )
             self.async_write_ha_state()

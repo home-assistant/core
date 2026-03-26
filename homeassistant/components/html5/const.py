@@ -9,5 +9,3 @@ ATTR_VAPID_PRV_KEY = "vapid_prv_key"
 ATTR_VAPID_EMAIL = "vapid_email"
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
-ATTR_TYPE = "type"
-ATTR_TARGET = "target"
