@@ -266,41 +266,6 @@ async def test_battery_binary_sensor_trigger_behavior_last(
             device_class=SensorDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
-    ],
-)
-async def test_battery_level_changed_sensor_behavior_any(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_sensors: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test battery level_changed trigger fires for sensor entities."""
-    await assert_trigger_behavior_any(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_sensors,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("sensor"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "battery.level_crossed_threshold",
             device_class=SensorDeviceClass.BATTERY,
@@ -308,7 +273,7 @@ async def test_battery_level_changed_sensor_behavior_any(
         ),
     ],
 )
-async def test_battery_level_crossed_threshold_sensor_behavior_any(
+async def test_battery_sensor_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
@@ -319,7 +284,7 @@ async def test_battery_level_crossed_threshold_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery level_crossed_threshold trigger fires for sensor entities."""
+    """Test battery sensor triggers with 'any' behavior."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
@@ -426,41 +391,6 @@ async def test_battery_level_crossed_threshold_sensor_behavior_last(
             device_class=NumberDeviceClass.BATTERY,
             unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
-    ],
-)
-async def test_battery_level_changed_number_behavior_any(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict[str, Any],
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test battery level_changed trigger fires for number entities."""
-    await assert_trigger_behavior_any(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_numbers,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "battery.level_crossed_threshold",
             device_class=NumberDeviceClass.BATTERY,
@@ -468,7 +398,7 @@ async def test_battery_level_changed_number_behavior_any(
         ),
     ],
 )
-async def test_battery_level_crossed_threshold_number_behavior_any(
+async def test_battery_number_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_numbers: dict[str, list[str]],
@@ -479,7 +409,7 @@ async def test_battery_level_crossed_threshold_number_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery level_crossed_threshold trigger fires for number entities."""
+    """Test battery number triggers with 'any' behavior."""
     await assert_trigger_behavior_any(
         hass,
         service_calls=service_calls,
