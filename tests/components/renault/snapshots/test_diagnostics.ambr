@@ -14,6 +14,10 @@
         'plugStatus': 1,
         'timestamp': '2020-01-12T21:40:16Z',
       }),
+      'battery_soc': dict({
+        'socMin': 15,
+        'socTarget': 80,
+      }),
       'charge_mode': dict({
         'chargeMode': 'always',
       }),
@@ -218,6 +222,10 @@
             'chargingStatus': 1.0,
             'plugStatus': 1,
             'timestamp': '2020-01-12T21:40:16Z',
+          }),
+          'battery_soc': dict({
+            'socMin': 15,
+            'socTarget': 80,
           }),
           'charge_mode': dict({
             'chargeMode': 'always',
