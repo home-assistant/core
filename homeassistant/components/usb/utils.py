@@ -52,7 +52,7 @@ def usb_serial_device_from_port(port: ListPortInfo) -> USBDevice | SerialDevice:
 
 
 def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
-    """Scan serial ports for USB devices."""
+    """Scan serial ports and return USB and other serial devices."""
 
     # Scan all symlinks first
     by_id = "/dev/serial/by-id"
