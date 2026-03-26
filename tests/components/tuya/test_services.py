@@ -198,9 +198,7 @@ async def test_get_tuya_device_error_cases(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     # Case 1: Device ID not found
-    with pytest.raises(
-        ServiceValidationError, match="device_not_found"
-    ):
+    with pytest.raises(ServiceValidationError, match="device_not_found"):
         _get_tuya_device(hass, "invalid_device_id")
 
     # Case 2: Device exists but is not a Tuya device
@@ -210,9 +208,7 @@ async def test_get_tuya_device_error_cases(
         identifiers={("other_domain", "some_id")},
         name="Non-Tuya Device",
     )
-    with pytest.raises(
-        ServiceValidationError, match="device_not_tuya_device"
-    ):
+    with pytest.raises(ServiceValidationError, match="device_not_tuya_device"):
         _get_tuya_device(hass, non_tuya_device.id)
 
     # Case 3: Tuya device exists in registry but not in manager.device_map
@@ -221,7 +217,5 @@ async def test_get_tuya_device_error_cases(
         identifiers={(DOMAIN, "unknown_tuya_id")},
         name="Unknown Tuya Device",
     )
-    with pytest.raises(
-        ServiceValidationError, match="device_not_found"
-    ):
+    with pytest.raises(ServiceValidationError, match="device_not_found"):
         _get_tuya_device(hass, tuya_device.id)
