@@ -36,7 +36,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device1',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line0',
     'unit_of_measurement': None,
   })
 # ---
@@ -97,7 +97,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device2',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line1',
     'unit_of_measurement': None,
   })
 # ---
@@ -121,7 +121,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup[light.lunatone_be37ca9c47c24498a38bc62c7c711840_line0-entry]
+# name: test_setup[light.device_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -139,8 +139,8 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lunatone_be37ca9c47c24498a38bc62c7c711840_line0',
-    'has_entity_name': False,
+    'entity_id': 'light.device_1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -158,11 +158,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line0',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[light.lunatone_be37ca9c47c24498a38bc62c7c711840_line0-state]
+# name: test_setup[light.device_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
@@ -173,14 +173,14 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lunatone_be37ca9c47c24498a38bc62c7c711840_line0',
+    'entity_id': 'light.device_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup[light.lunatone_be37ca9c47c24498a38bc62c7c711840_line1-entry]
+# name: test_setup[light.device_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -198,8 +198,8 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lunatone_be37ca9c47c24498a38bc62c7c711840_line1',
-    'has_entity_name': False,
+    'entity_id': 'light.device_2',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -217,11 +217,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line1',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[light.lunatone_be37ca9c47c24498a38bc62c7c711840_line1-state]
+# name: test_setup[light.device_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -233,7 +233,7 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lunatone_be37ca9c47c24498a38bc62c7c711840_line1',
+    'entity_id': 'light.device_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
