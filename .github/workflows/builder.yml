@@ -112,7 +112,7 @@ jobs:
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@2536c51d3d126276eb39f74d6bc9c72ac6ef30d3 # v16
+        uses: dawidd6/action-download-artifact@8a338493df3d275e4a7a63bcff3b8fe97e51a927 # v19
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -123,7 +123,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@2536c51d3d126276eb39f74d6bc9c72ac6ef30d3 # v16
+        uses: dawidd6/action-download-artifact@8a338493df3d275e4a7a63bcff3b8fe97e51a927 # v19
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: OHF-Voice/intents-package
@@ -224,7 +224,6 @@ jobs:
       matrix:
         machine:
           - generic-x86-64
-          - intel-nuc
           - khadas-vim3
           - odroid-c2
           - odroid-c4
@@ -246,10 +245,6 @@ jobs:
             arch: amd64
             runs-on: ubuntu-24.04
           - machine: qemux86-64
-            arch: amd64
-            runs-on: ubuntu-24.04
-          # TODO: remove, intel-nuc is a legacy name for x86-64, renamed in 2021
-          - machine: intel-nuc
             arch: amd64
             runs-on: ubuntu-24.04
     steps:
