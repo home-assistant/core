@@ -753,6 +753,7 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
+CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
 CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
