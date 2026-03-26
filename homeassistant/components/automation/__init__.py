@@ -146,6 +146,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "switch",
     "temperature",
     "text",
+    "timer",
     "vacuum",
     "water_heater",
     "window",
