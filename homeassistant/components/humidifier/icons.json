@@ -6,6 +6,9 @@
     "is_humidifying": {
       "condition": "mdi:arrow-up-bold"
     },
+    "is_mode": {
+      "condition": "mdi:air-humidifier"
+    },
     "is_off": {
       "condition": "mdi:air-humidifier-off"
     },

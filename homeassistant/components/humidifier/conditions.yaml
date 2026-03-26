@@ -32,6 +32,19 @@ is_on: *condition_common
 is_drying: *condition_common
 is_humidifying: *condition_common
 
+is_mode:
+  target: *condition_humidifier_target
+  fields:
+    behavior: *condition_behavior
+    mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: available_modes
+          multiple: true
+
 is_target_humidity:
   target: *condition_humidifier_target
   fields:
