@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_all_appliances[fenix_oven]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900412569_00:43319382-443E0748CCD4',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'OE9XS',
+    'model_id': None,
+    'name': 'Fenix',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '43319382',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[pux_oven]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '949288049_00:11112225-443E076A37D6',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'NBX7P631SB',
+    'model_id': None,
+    'name': 'PUX pizza oven',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '11112225',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

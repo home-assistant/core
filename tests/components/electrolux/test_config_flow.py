@@ -1,6 +1,6 @@
 """Unit test for Electrolux config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from electrolux_group_developer_sdk.auth.invalid_credentials_exception import (
     InvalidCredentialsException,
@@ -14,77 +14,77 @@ from homeassistant.components.electrolux.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 
-async def test_user_flow_success(hass: HomeAssistant) -> None:
+valid_user_input = {
+    CONF_API_KEY: "test_api_key",
+    CONF_ACCESS_TOKEN: "test_access_token",
+    CONF_REFRESH_TOKEN: "test_refresh_token",
+}
+
+invalid_user_input = {
+    CONF_API_KEY: "api_key",
+    CONF_ACCESS_TOKEN: "invalid_token",
+    CONF_REFRESH_TOKEN: "invalid_token",
+}
+
+
+async def test_user_flow_success(
+    hass: HomeAssistant, appliances: AsyncMock, mock_token_manager: AsyncMock
+) -> None:
     """Test a successful user config flow."""
-    with (
-        patch(
-            "homeassistant.components.electrolux.config_flow.TokenManager"
-        ) as mock_token_manager,
-        patch(
-            "homeassistant.components.electrolux.config_flow.ApplianceClient"
-        ) as mock_appliance_client,
-    ):
-        mock_token_manager_instance = mock_token_manager.return_value
-        mock_token_manager_instance.get_user_id.return_value = "userId"
-
-        mock_appliance_client_instance = AsyncMock()
-        mock_appliance_client_instance.test_connection.return_value = None
-        mock_appliance_client.return_value = mock_appliance_client_instance
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        assert result.get("type") == "form"
-        assert result.get("errors") == {}
-
-        user_input = {
-            CONF_ACCESS_TOKEN: "test_access_token",
-            CONF_REFRESH_TOKEN: "test_refresh_token",
-            CONF_API_KEY: "test_api_key",
-        }
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=user_input
-        )
-
-        assert result2.get("type") == "create_entry"
-        assert result2.get("title") == "Electrolux"
-        assert result2.get("data") == user_input
-
-
-async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
-    """Test an invalid auth config flow."""
+    mock_token_manager.get_user_id.return_value = "userId"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result.get("type") == "form"
+    assert result.get("errors") == {}
 
-    with patch(
-        "homeassistant.components.electrolux.config_flow.TokenManager"
-    ) as mock_token_manager:
-        mock_token_manager_instance = mock_token_manager.return_value
-        mock_token_manager_instance.ensure_credentials.side_effect = (
-            InvalidCredentialsException()
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                "api_key": "api_key",
-                "refresh_token": "invalid_token",
-                "access_token": "invalid_token",
-            },
-        )
+    assert result2.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == "Electrolux"
+    assert result2.get("data") == valid_user_input
+
+
+async def test_user_flow_invalid_auth(
+    hass: HomeAssistant, appliances: AsyncMock, mock_token_manager: AsyncMock
+) -> None:
+    """Test an invalid auth config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+
+    mock_token_manager.ensure_credentials.side_effect = InvalidCredentialsException
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=invalid_user_input,
+    )
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("errors") == {"base": "auth_failed"}
+    assert result2.get("errors") == {"base": "invalid_auth"}
+
+    mock_token_manager.ensure_credentials.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input=valid_user_input
+    )
+
+    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3.get("title") == "Electrolux"
+    assert result3.get("data") == valid_user_input
 
 
-async def test_user_flow_failed_connection(hass: HomeAssistant) -> None:
+async def test_user_flow_failed_connection(
+    hass: HomeAssistant, appliances: AsyncMock, mock_token_manager: AsyncMock
+) -> None:
     """Test an invalid auth config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -93,79 +93,46 @@ async def test_user_flow_failed_connection(hass: HomeAssistant) -> None:
 
     assert result.get("type") == "form"
 
-    with patch(
-        "homeassistant.components.electrolux.config_flow.ApplianceClient"
-    ) as mock_appliance_client:
-        mock_appliance_client_instance = AsyncMock()
-        mock_appliance_client_instance = mock_appliance_client.return_value
-        mock_appliance_client_instance.test_connection.side_effect = (
-            FailedConnectionException()
-        )
+    appliances.test_connection.side_effect = FailedConnectionException()
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                "api_key": "api_key",
-                "refresh_token": "invalid_token",
-                "access_token": "invalid_token",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=invalid_user_input,
+    )
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
 
+    appliances.test_connection.side_effect = None
 
-async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input=valid_user_input
+    )
+
+    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3.get("title") == "Electrolux"
+    assert result3.get("data") == valid_user_input
+
+
+async def test_user_flow_duplicate_entry(
+    hass: HomeAssistant,
+    appliances: AsyncMock,
+    mock_token_manager: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test an invalid auth config flow."""
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result.get("type") == "form"
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.electrolux.config_flow.ApplianceClient"
-    ) as mock_appliance_client:
-        mock_appliance_client_instance = AsyncMock()
-        mock_appliance_client_instance = mock_appliance_client.return_value
-        mock_appliance_client_instance.test_connection.side_effect = Exception()
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                "api_key": "api_key",
-                "refresh_token": "invalid_token",
-                "access_token": "invalid_token",
-            },
-        )
-
-    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("errors") == {"base": "unknown"}
-
-
-async def test_user_flow_abort_flow(hass: HomeAssistant) -> None:
-    """Test an invalid auth config flow."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=valid_user_input,
     )
 
-    assert result.get("type") == "form"
-
-    # Patch _authenticate_user to raise AbortFlow
-    with patch(
-        "homeassistant.components.electrolux.config_flow.ElectroluxConfigFlow._authenticate_user",
-        side_effect=data_entry_flow.AbortFlow("already_in_progress"),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                "api_key": "some_api_key",
-                "refresh_token": "some_refresh_token",
-                "access_token": "some_access_token",
-            },
-        )
-
-    assert result2.get("type") == "abort"
-    assert result2.get("reason") == "already_in_progress"
+    assert result2.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"

@@ -1,0 +1,1104 @@
+{
+  "applianceInfo": {
+    "serialNumber": "43319382",
+    "pnc": "900412569",
+    "brand": "ELECTROLUX",
+    "deviceType": "BUILT-IN OVEN",
+    "model": "OE9XS",
+    "variant": "FENIXBRASILDVT",
+    "colour": "BLACK/MIRROR"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "BRUSHLESS_MOTOR_CONTROL_BOARD_ALARMS_H103": {},
+        "COMM_FAIL_CHC_HOOD_MOTOR_CONTROL_H101": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "RUNNING",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "PAUSED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "START": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "READY_TO_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "$self": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "ALARM",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DELAYED_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "START": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "ALARM": {},
+        "DELAYED_START": {},
+        "END_OF_CYCLE": {},
+        "IDLE": {},
+        "OFF": {},
+        "PAUSED": {},
+        "READY_TO_START": {},
+        "RUNNING": {}
+      }
+    },
+    "cavityLight": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "displayFoodProbeTemperatureC": {
+      "access": "read",
+      "type": "temperature"
+    },
+    "displayFoodProbeTemperatureF": {
+      "access": "read",
+      "type": "temperature"
+    },
+    "displayTemperatureC": {
+      "access": "read",
+      "type": "temperature"
+    },
+    "displayTemperatureF": {
+      "access": "read",
+      "type": "temperature"
+    },
+    "doorState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "CLOSED": {},
+        "OPEN": {}
+      }
+    },
+    "executeCommand": {
+      "access": "write",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {},
+        "PAUSE": {},
+        "RESUME": {},
+        "START": {},
+        "STOPRESET": {}
+      }
+    },
+    "fPPN_BeforeEndCycle": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "fPPN_DoorOpened": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "fPPN_OVAlerts": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "fPPN_OVFoodProbeEndOfCooking": {
+      "access": "constant",
+      "type": "int"
+    },
+    "fPPN_SWOEndOfCycle": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "fPPN_SWOPreheatEnded": {
+      "access": "constant",
+      "default": 1,
+      "type": "int"
+    },
+    "foodProbeInsertionState": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "targetDuration": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "NOT_INSERTED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "foodProbeSupported",
+              "operand_2": "SUPPORTED",
+              "operator": "eq"
+            },
+            "operator": "and"
+          }
+        },
+        {
+          "action": {
+            "targetDuration": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "INSERTED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "foodProbeSupported",
+              "operand_2": "SUPPORTED",
+              "operator": "eq"
+            },
+            "operator": "and"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "INSERTED": {},
+        "NOT_INSERTED": {}
+      }
+    },
+    "foodProbeSupported": {
+      "access": "constant",
+      "triggers": [
+        {
+          "action": {
+            "targetDuration": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "NOT_SUPPORTED",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "enum",
+      "values": {
+        "NOT_SUPPORTED": {},
+        "SUPPORTED": {}
+      }
+    },
+    "hideExecuteCommand": {
+      "access": "constant",
+      "default": 0,
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": 0,
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": 1,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "int"
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "APPLIANCE_AUTHORIZE": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "preheatComplete": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "KEY_ERROR": {
+          "disabled": true
+        }
+      }
+    },
+    "processPhase": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "FAST_HEAT_UP": {},
+        "HEAT_AND_HOLD": {},
+        "NONE": {},
+        "NORMAL_HEATING": {},
+        "TIME_EXTENSION": {}
+      }
+    },
+    "program": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "AIR_SOUS_VIDE": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 50,
+            "disabled": false,
+            "max": 100,
+            "min": 35,
+            "step": 1,
+            "type": "temperature"
+          }
+        },
+        "BOTTOM": {
+          "foodProbeSupported": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "NOT_SUPPORTED": {},
+              "SUPPORTED": {}
+            }
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetFoodProbeTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 80,
+            "min": 55,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetFoodProbeTemperatureF": {
+            "access": "readwrite",
+            "default": 140,
+            "disabled": false,
+            "max": 176,
+            "min": 131,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 210,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "BREAD_STEAMED": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 2400,
+            "disabled": false,
+            "max": 35940,
+            "min": 600,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 230,
+            "min": 100,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "CHEESE_BREAD_AIRFRY": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 2400,
+            "disabled": false,
+            "max": 35940,
+            "min": 1800,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 190,
+            "disabled": false,
+            "max": 220,
+            "min": 180,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "CHIPS_AIRFRY": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1200,
+            "disabled": false,
+            "max": 35940,
+            "min": 600,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 200,
+            "disabled": false,
+            "max": 220,
+            "min": 180,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "CONVENTIONAL_COOKING": {
+          "foodProbeSupported": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "NOT_SUPPORTED": {},
+              "SUPPORTED": {}
+            }
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetFoodProbeTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 80,
+            "min": 55,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetFoodProbeTemperatureF": {
+            "access": "readwrite",
+            "default": 140,
+            "disabled": false,
+            "max": 176,
+            "min": 131,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "DIRECT_STEAM_REGENERATE": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 100,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "DIRECT_STEAM_STEAM_BAKE": {
+          "foodProbeSupported": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "NOT_SUPPORTED": {},
+              "SUPPORTED": {}
+            }
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetFoodProbeTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 80,
+            "min": 55,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetFoodProbeTemperatureF": {
+            "access": "readwrite",
+            "default": 140,
+            "disabled": false,
+            "max": 176,
+            "min": 131,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "DOUGH_PROVING": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 35940,
+            "min": 600,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 30,
+            "min": 30,
+            "step": 0,
+            "type": "temperature"
+          }
+        },
+        "DRYING": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 160,
+            "min": 60,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "FROZEN_FOOD": {
+          "foodProbeSupported": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "NOT_SUPPORTED": {},
+              "SUPPORTED": {}
+            }
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetFoodProbeTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 80,
+            "min": 55,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetFoodProbeTemperatureF": {
+            "access": "readwrite",
+            "default": 140,
+            "disabled": false,
+            "max": 176,
+            "min": 131,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "FROZEN_FRENCH_FRIES_AIRFRY": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 35940,
+            "min": 1800,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 200,
+            "disabled": false,
+            "max": 220,
+            "min": 180,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "GRILL": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 600,
+            "disabled": false,
+            "max": 3540,
+            "min": 300,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 250,
+            "disabled": false,
+            "max": 250,
+            "min": 125,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "GRILL_FAN": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 600,
+            "disabled": false,
+            "max": 3540,
+            "min": 300,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 250,
+            "disabled": false,
+            "max": 250,
+            "min": 125,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "KEEP_WARM": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 50,
+            "disabled": false,
+            "max": 50,
+            "min": 50,
+            "step": 0,
+            "type": "temperature"
+          }
+        },
+        "MANUAL_AIRFRY": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 3600,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "MEAT_AND_FISH_STEAMED": {
+          "foodProbeSupported": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "NOT_SUPPORTED": {},
+              "SUPPORTED": {}
+            }
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 3600,
+            "disabled": false,
+            "max": 35940,
+            "min": 600,
+            "step": 60
+          },
+          "targetFoodProbeTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 80,
+            "min": 55,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetFoodProbeTemperatureF": {
+            "access": "readwrite",
+            "default": 140,
+            "disabled": false,
+            "max": 176,
+            "min": 131,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 230,
+            "min": 110,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "NUGGETS_AIRFRY": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 3300,
+            "disabled": false,
+            "max": 35940,
+            "min": 1800,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 200,
+            "disabled": false,
+            "max": 220,
+            "min": 180,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PASTA_AND_PIZZA_STEAMED": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 3000,
+            "disabled": false,
+            "max": 35940,
+            "min": 600,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 110,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PIES_AND_CAKES_STEAMED": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 3600,
+            "disabled": false,
+            "max": 35940,
+            "min": 600,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 230,
+            "min": 110,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PIZZA": {
+          "foodProbeSupported": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "NOT_SUPPORTED": {},
+              "SUPPORTED": {}
+            }
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetFoodProbeTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 80,
+            "min": 55,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetFoodProbeTemperatureF": {
+            "access": "readwrite",
+            "default": 140,
+            "disabled": false,
+            "max": 176,
+            "min": 131,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "POTATO_NATURA_AIRFRY": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 2400,
+            "disabled": false,
+            "max": 35940,
+            "min": 1800,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 200,
+            "disabled": false,
+            "max": 220,
+            "min": 180,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "SLOW_COOK": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 130,
+            "disabled": false,
+            "max": 160,
+            "min": 100,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "TRUE_FAN": {
+          "foodProbeSupported": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "NOT_SUPPORTED": {},
+              "SUPPORTED": {}
+            }
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetFoodProbeTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 80,
+            "min": 55,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetFoodProbeTemperatureF": {
+            "access": "readwrite",
+            "default": 140,
+            "disabled": false,
+            "max": 176,
+            "min": 131,
+            "step": 1,
+            "type": "temperature"
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 250,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "VEGETABLES_STEAMED": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 35940,
+            "min": 600,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 230,
+            "min": 110,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "WATER_BATH": {
+          "targetDuration": {
+            "access": "readwrite",
+            "default": 1800,
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 150,
+            "disabled": false,
+            "max": 200,
+            "min": 100,
+            "step": 5,
+            "type": "temperature"
+          }
+        }
+      }
+    },
+    "remoteControl": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {},
+        "NOT_SAFETY_RELEVANT_ENABLED": {},
+        "TEMPORARY_LOCKED": {}
+      }
+    },
+    "runningTime": {
+      "access": "read",
+      "default": 0,
+      "type": "number"
+    },
+    "startTime": {
+      "access": "readwrite",
+      "type": "number"
+    },
+    "targetDuration": {
+      "access": "readwrite",
+      "type": "number"
+    },
+    "targetFoodProbeTemperatureC": {
+      "access": "readwrite",
+      "type": "temperature"
+    },
+    "targetFoodProbeTemperatureF": {
+      "access": "readwrite",
+      "type": "temperature"
+    },
+    "targetTemperatureC": {
+      "access": "readwrite",
+      "type": "temperature"
+    },
+    "timeToEnd": {
+      "access": "read",
+      "type": "number"
+    }
+  }
+}

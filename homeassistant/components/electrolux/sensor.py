@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import cast
 
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     StateType,
 )
 from homeassistant.const import UnitOfTemperature
@@ -48,7 +49,7 @@ class ElectroluxSensorDescription(SensorEntityDescription):
     """Custom sensor description for Electrolux sensors."""
 
     value_fn: Callable[..., StateType]
-    is_supported_fn: Callable[..., Any] = lambda *args: None
+    exists_fn: Callable[[ApplianceData], bool] = lambda *args: True
     feature_name: str | None = None
     options: list[str] | None = None
 
@@ -61,9 +62,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         value_fn=lambda appliance: appliance.get_current_appliance_state(),
         device_class=SensorDeviceClass.ENUM,
         feature_name=APPLIANCE_STATE,
-        is_supported_fn=lambda appliance: appliance.is_feature_supported(
-            APPLIANCE_STATE
-        ),
+        exists_fn=lambda appliance: appliance.is_feature_supported(APPLIANCE_STATE),
     ),
     ElectroluxSensorDescription(
         key="food_probe_state",
@@ -72,9 +71,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         value_fn=lambda appliance: appliance.get_current_food_probe_insertion_state(),
         device_class=SensorDeviceClass.ENUM,
         feature_name=FOOD_PROBE_STATE,
-        is_supported_fn=lambda appliance: appliance.is_feature_supported(
-            FOOD_PROBE_STATE
-        ),
+        exists_fn=lambda appliance: appliance.is_feature_supported(FOOD_PROBE_STATE),
     ),
     ElectroluxSensorDescription(
         key="door_state",
@@ -83,7 +80,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         value_fn=lambda appliance: appliance.get_current_door_state(),
         device_class=SensorDeviceClass.ENUM,
         feature_name=DOOR_STATE,
-        is_supported_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
+        exists_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
     ),
     ElectroluxSensorDescription(
         key="remote_control",
@@ -92,9 +89,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         value_fn=lambda appliance: appliance.get_current_remote_control(),
         device_class=SensorDeviceClass.ENUM,
         feature_name=REMOTE_CONTROL,
-        is_supported_fn=lambda appliance: appliance.is_feature_supported(
-            REMOTE_CONTROL
-        ),
+        exists_fn=lambda appliance: appliance.is_feature_supported(REMOTE_CONTROL),
     ),
 )
 
@@ -104,12 +99,13 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         translation_key="food_probe_temperature",
         icon="mdi:thermometer-probe",
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class="measurement",
-        value_fn=lambda appliance,
-        temp_unit=None: appliance.get_current_display_food_probe_temperature_f()
-        if temp_unit == UnitOfTemperature.FAHRENHEIT
-        else appliance.get_current_display_food_probe_temperature_c(),
-        is_supported_fn=lambda appliance: appliance.is_feature_supported(
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda appliance, temp_unit=None: (
+            appliance.get_current_display_food_probe_temperature_f()
+            if temp_unit == UnitOfTemperature.FAHRENHEIT
+            else appliance.get_current_display_food_probe_temperature_c()
+        ),
+        exists_fn=lambda appliance: appliance.is_feature_supported(
             [DISPLAY_FOOD_PROBE_TEMPERATURE_F, DISPLAY_FOOD_PROBE_TEMPERATURE_C]
         ),
     ),
@@ -118,12 +114,13 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         translation_key="display_temperature",
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class="measurement",
-        value_fn=lambda appliance,
-        temp_unit=None: appliance.get_current_display_temperature_f()
-        if temp_unit == UnitOfTemperature.FAHRENHEIT
-        else appliance.get_current_display_temperature_c(),
-        is_supported_fn=lambda appliance: appliance.is_feature_supported(
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda appliance, temp_unit=None: (
+            appliance.get_current_display_temperature_f()
+            if temp_unit == UnitOfTemperature.FAHRENHEIT
+            else appliance.get_current_display_temperature_c()
+        ),
+        exists_fn=lambda appliance: appliance.is_feature_supported(
             [DISPLAY_TEMPERATURE_C, DISPLAY_TEMPERATURE_F]
         ),
     ),
@@ -143,13 +140,13 @@ def build_entities_for_appliance(
         entities.extend(
             ElectroluxSensor(appliance_data, coordinator, description)
             for description in OVEN_ELECTROLUX_SENSORS
-            if description.is_supported_fn(appliance_data)
+            if description.exists_fn(appliance_data)
         )
 
         entities.extend(
             ElectroluxTemperatureSensor(appliance_data, coordinator, description)
             for description in OVEN_TEMPERATURE_ELECTROLUX_SENSORS
-            if description.is_supported_fn(appliance_data)
+            if description.exists_fn(appliance_data)
         )
 
     return entities
