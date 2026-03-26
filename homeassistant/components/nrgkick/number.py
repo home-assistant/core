@@ -120,6 +120,7 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
     """Representation of an NRGkick number entity."""
 
     entity_description: NRGkickNumberEntityDescription
+    _last_phase_count: float | None
 
     def __init__(
         self,
@@ -128,6 +129,7 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
     ) -> None:
         """Initialize the number entity."""
         self.entity_description = description
+        self._last_phase_count = None
         super().__init__(coordinator, description.key)
 
     @property
@@ -146,10 +148,17 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
         data = self.coordinator.data
         if TYPE_CHECKING:
             assert data is not None
-        return self.entity_description.value_fn(data)
+        value = self.entity_description.value_fn(data)
+        if self.entity_description.key == "phase_count":
+            if value != 0:
+                self._last_phase_count = value
+            return self._last_phase_count
+        return value
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
+        if self.entity_description.key == "phase_count":
+            self._last_phase_count = int(value)
         await self._async_call_api(
             self.entity_description.set_value_fn(self.coordinator, value)
         )

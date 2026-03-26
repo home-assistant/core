@@ -114,7 +114,7 @@ async def test_set_phase_count(
     assert (state := hass.states.get(entity_id))
     assert state.state == "3"
 
-    # Set to 1 phase
+    # Set phase count to 1
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 1
     mock_nrgkick_api.get_control.return_value = control_data
@@ -128,6 +128,40 @@ async def test_set_phase_count(
     assert state.state == "1"
 
     mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
+
+
+async def test_phase_count_ignores_transient_zero(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+) -> None:
+    """Test that a transient phase count of 0 is ignored.
+
+    During a phase-count switch the device briefly reports 0 phases.
+    The entity should keep the optimistic value instead of exposing 0.
+    """
+    await setup_integration(hass, mock_config_entry, platforms=[Platform.NUMBER])
+
+    entity_id = "number.nrgkick_test_phase_count"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "3"
+
+    # Simulate the device returning 0 during a phase switch.
+    control_data = mock_nrgkick_api.get_control.return_value.copy()
+    control_data[CONTROL_KEY_PHASE_COUNT] = 0
+    mock_nrgkick_api.get_control.return_value = control_data
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1},
+        blocking=True,
+    )
+
+    # State must not show 0; the entity keeps the optimistic value.
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "1"
 
 
 async def test_number_command_rejected_by_device(
