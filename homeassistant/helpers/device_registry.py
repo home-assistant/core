@@ -1575,7 +1575,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     async def async_wait_loaded(self) -> None:
         """Wait until the device registry is fully loaded.
 
-        Will only wait if the registry was already setup.
+        Will only wait if the registry had already been set up.
         """
         if self._loaded_event is not None:
             await self._loaded_event.wait()
