@@ -38,15 +38,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
-  test-coverage:
-    status: todo
-    comment: |
-      PLANNED: Use freezer-based time advancement instead of directly calling async_refresh().
+  reauthentication-flow: done
+  test-coverage: todo
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery: todo
   discovery-update-info: todo
   docs-data-update: done
@@ -78,4 +75,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
