@@ -19,6 +19,8 @@
     unit_of_measurement: "%"
   - domain: sensor
     device_class: moisture
+  - domain: number
+    device_class: moisture
 
 .moisture_threshold_number: &moisture_threshold_number
   min: 0
