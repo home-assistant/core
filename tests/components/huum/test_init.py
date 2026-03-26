@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.huum.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -94,6 +94,6 @@ async def test_coordinator_update_auth_error(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
-    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
