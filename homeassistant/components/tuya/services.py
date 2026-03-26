@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any
 
+from tuya_device_handlers.device_wrapper.service_feeder_schedule import (
+    FeederSchedule,
+    get_feeder_schedule_wrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 import voluptuous as vol
 
@@ -14,15 +17,15 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .device_quirks import DAYS, get_meal_plan_serializer
+
+DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 FEEDING_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Optional("days"): [vol.In(DAYS)],
-        vol.Required("hour"): int,
-        vol.Required("minute"): int,
+        vol.Required("time"): str,
         vol.Required("portion"): int,
-        vol.Required("enabled"): int,
+        vol.Required("enabled"): bool,
     }
 )
 
@@ -80,11 +83,13 @@ def _get_tuya_device(
     )
 
 
-async def async_get_feeder_meal_plan(call: ServiceCall) -> dict[str, Any]:
+async def async_get_feeder_meal_plan(
+    call: ServiceCall,
+) -> dict[str, list[FeederSchedule]]:
     """Handle get_feeder_meal_plan service call."""
     device, _ = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
-    if not (serializer := get_meal_plan_serializer(device)):
+    if not (wrapper := get_feeder_schedule_wrapper(device)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_support_meal_plan_status",
@@ -93,14 +98,24 @@ async def async_get_feeder_meal_plan(call: ServiceCall) -> dict[str, Any]:
             },
         )
 
-    return serializer.get_meal_data(device)
+    meal_plan = wrapper.read_device_status(device)
+    if meal_plan is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_meal_plan_data",
+            translation_placeholders={
+                "device_id": device.id,
+            },
+        )
+
+    return {"data": meal_plan}
 
 
 async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
     """Handle set_feeder_meal_plan service call."""
     device, manager = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
-    if not (serializer := get_meal_plan_serializer(device)):
+    if not (wrapper := get_feeder_schedule_wrapper(device)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_support_meal_plan_function",
@@ -109,10 +124,12 @@ async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
             },
         )
 
+    meal_plan: list[FeederSchedule] = call.data["data"]
+
     await call.hass.async_add_executor_job(
         manager.send_commands,
         device.id,
-        serializer.get_meal_plan_update_commands(device, call.data["data"]),
+        wrapper.get_update_commands(device, meal_plan),
     )
 
 

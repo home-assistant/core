@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tuya_device_handlers.device_wrapper.service_feeder_schedule import FeederSchedule
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import DOMAIN
@@ -31,7 +30,7 @@ def find_device_id(mock_device: CustomerDevice, hass: HomeAssistant) -> str:
     raise ValueError(f"Device with Tuya ID {tuya_device_id} not found in registry")
 
 
-def decoded_meal_plan() -> list[dict[str, Any]]:
+def decoded_meal_plan() -> list[FeederSchedule]:
     """Return raw meal plan data for testing."""
     return [
         {
@@ -44,10 +43,9 @@ def decoded_meal_plan() -> list[dict[str, Any]]:
                 "saturday",
                 "sunday",
             ],
-            "hour": 9,
-            "minute": 0,
+            "time": "09:00",
             "portion": 1,
-            "enabled": 1,
+            "enabled": True,
         },
         {
             "days": [
@@ -59,10 +57,9 @@ def decoded_meal_plan() -> list[dict[str, Any]]:
                 "saturday",
                 "sunday",
             ],
-            "hour": 9,
-            "minute": 30,
+            "time": "09:30",
             "portion": 1,
-            "enabled": 1,
+            "enabled": True,
         },
         {
             "days": [
@@ -74,10 +71,9 @@ def decoded_meal_plan() -> list[dict[str, Any]]:
                 "saturday",
                 "sunday",
             ],
-            "hour": 12,
-            "minute": 0,
+            "time": "12:00",
             "portion": 1,
-            "enabled": 1,
+            "enabled": True,
         },
         {
             "days": [
@@ -89,10 +85,9 @@ def decoded_meal_plan() -> list[dict[str, Any]]:
                 "saturday",
                 "sunday",
             ],
-            "hour": 15,
-            "minute": 0,
+            "time": "15:00",
             "portion": 2,
-            "enabled": 1,
+            "enabled": True,
         },
         {
             "days": [
@@ -104,10 +99,9 @@ def decoded_meal_plan() -> list[dict[str, Any]]:
                 "saturday",
                 "sunday",
             ],
-            "hour": 21,
-            "minute": 0,
+            "time": "21:00",
             "portion": 2,
-            "enabled": 1,
+            "enabled": True,
         },
     ]
 
@@ -137,8 +131,8 @@ async def test_get_feeder_meal_plan(
     # Error case: no meal_plan in device status
     mock_device.status.pop("meal_plan", None)
     with pytest.raises(
-        ValueError,
-        match="Invalid Base64 meal plan data",
+        ServiceValidationError,
+        match="invalid_meal_plan_data",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -176,11 +170,11 @@ async def test_set_feeder_meal_plan(
         [{"code": "meal_plan", "value": "fwkAAQF/CR4BAX8MAAEBfw8AAgF/FQACAQ=="}],
     )
 
-    # Error case: unsupported meal_plan function
-    mock_device.function = []
+    # Error case: unsupported device (not in DEFAULT_PROFILE_DEVICES)
+    mock_device.product_id = "unsupported_product"
     with pytest.raises(
-        ValueError,
-        match="Feeder with ID iomszlsve0yyzkfwqswwc does not support meal plan functionality",
+        ServiceValidationError,
+        match="device_not_support_meal_plan_function",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -205,7 +199,7 @@ async def test_get_tuya_device_error_cases(
 
     # Case 1: Device ID not found
     with pytest.raises(
-        ServiceValidationError, match="Feeder with ID .+? could not be found"
+        ServiceValidationError, match="device_not_found"
     ):
         _get_tuya_device(hass, "invalid_device_id")
 
@@ -217,7 +211,7 @@ async def test_get_tuya_device_error_cases(
         name="Non-Tuya Device",
     )
     with pytest.raises(
-        ServiceValidationError, match="Device with ID .+? is not a Tuya feeder"
+        ServiceValidationError, match="device_not_tuya_device"
     ):
         _get_tuya_device(hass, non_tuya_device.id)
 
@@ -228,6 +222,6 @@ async def test_get_tuya_device_error_cases(
         name="Unknown Tuya Device",
     )
     with pytest.raises(
-        ServiceValidationError, match="Feeder with ID .+? could not be found"
+        ServiceValidationError, match="device_not_found"
     ):
         _get_tuya_device(hass, tuya_device.id)
