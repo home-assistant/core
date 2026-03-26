@@ -214,31 +214,24 @@ async def async_setup_entry(
     api: HueBridgeV2 = bridge.api
     manager = get_or_create_scene_activity_manager(hass, api)
 
-    def _group_has_smart_scenes(group_id: str) -> bool:
-        """Return True if the group has at least one smart scene."""
-        return any(s for s in api.scenes.smart_scene if s.group.rid == group_id)
-
     @callback
     def _add_group_entities(group_controller) -> None:
         """Create select entities for all groups in the given controller."""
         entities: list[SceneActivityBaseEntity] = []
         for group in group_controller:
             entities.append(HueSceneSelectEntity(bridge, manager, group.id))
-            if _group_has_smart_scenes(group.id):
-                entities.append(HueSmartSceneSelectEntity(bridge, manager, group.id))
+            entities.append(HueSmartSceneSelectEntity(bridge, manager, group.id))
         if entities:
             async_add_entities(entities)
 
         @callback
         def _on_group_added(event_type: EventType, group) -> None:
-            new_entities: list[SceneActivityBaseEntity] = [
-                HueSceneSelectEntity(bridge, manager, group.id)
-            ]
-            if _group_has_smart_scenes(group.id):
-                new_entities.append(
-                    HueSmartSceneSelectEntity(bridge, manager, group.id)
-                )
-            async_add_entities(new_entities)
+            async_add_entities(
+                [
+                    HueSceneSelectEntity(bridge, manager, group.id),
+                    HueSmartSceneSelectEntity(bridge, manager, group.id),
+                ]
+            )
 
         config_entry.async_on_unload(
             group_controller.subscribe(
