@@ -47,7 +47,9 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             try:
                 projector_name = await self.hass.async_add_executor_job(
                     validate_projector_connection,
@@ -74,13 +76,14 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
 
-        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
+        host: str = import_config[CONF_HOST]
+        port: int = import_config.get(CONF_PORT, 4352)
+        password: str | None = import_config.get(CONF_PASSWORD)
+
+        self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
         try:
             projector_name = await self.hass.async_add_executor_job(
-                validate_projector_connection,
-                import_config[CONF_HOST],
-                import_config.get(CONF_PORT, 4352),
-                import_config.get(CONF_PASSWORD),
+                validate_projector_connection, host, port, password
             )
         except TimeoutError, OSError:
             return self.async_abort(reason="cannot_connect")
@@ -90,11 +93,8 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
-            import_data: dict[str, Any] = {
-                CONF_HOST: import_config[CONF_HOST],
-                CONF_PORT: import_config.get(CONF_PORT, 4352),
-            }
-            if password := import_config.get(CONF_PASSWORD):
+            import_data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
+            if password:
                 import_data[CONF_PASSWORD] = password
             return self.async_create_entry(
                 title=import_config.get(CONF_NAME, projector_name), data=import_data

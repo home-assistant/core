@@ -123,7 +123,7 @@ async def test_import_aborts_if_already_configured(
     )
     await hass.async_block_till_done()
 
-    # Second import with same host should abort
+    # Second import with same host and same port should abort
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "import"}, data=_DEFAULT_DATA
     )
