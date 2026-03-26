@@ -266,10 +266,11 @@ async def async_setup_entry(
         SFRBoxSensor(data.wan, description, system_info)
         for description in WAN_SENSOR_TYPES
     )
-    entities.extend(
-        SFRBoxSensor(data.voip, description, system_info)
-        for description in VOIP_SENSOR_TYPES
-    )
+    if data.voip is not None:
+        entities.extend(
+            SFRBoxSensor(data.voip, description, system_info)
+            for description in VOIP_SENSOR_TYPES
+        )
     if system_info.net_infra == "adsl":
         entities.extend(
             SFRBoxSensor(data.dsl, description, system_info)

@@ -90,10 +90,11 @@ async def async_setup_entry(
         SFRBoxBinarySensor(data.wan, description, system_info)
         for description in WAN_SENSOR_TYPES
     ]
-    entities.extend(
-        SFRBoxBinarySensor(data.voip, description, system_info)
-        for description in VOIP_SENSOR_TYPES
-    )
+    if data.voip is not None:
+        entities.extend(
+            SFRBoxBinarySensor(data.voip, description, system_info)
+            for description in VOIP_SENSOR_TYPES
+        )
     if (net_infra := system_info.net_infra) == "adsl":
         entities.extend(
             SFRBoxBinarySensor(data.dsl, description, system_info)

@@ -32,7 +32,7 @@ class SFRRuntimeData:
     dsl: SFRDataUpdateCoordinator[DslInfo]
     ftth: SFRDataUpdateCoordinator[FtthInfo]
     system: SFRDataUpdateCoordinator[SystemInfo]
-    voip: SFRDataUpdateCoordinator[VoipInfo]
+    voip: SFRDataUpdateCoordinator[VoipInfo] | None
     wan: SFRDataUpdateCoordinator[WanInfo]
 
 
