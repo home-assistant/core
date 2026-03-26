@@ -20,6 +20,119 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "dout_srcpmp_val": {
+        "name": "Source pump"
+      },
+      "dout_usrpmp_val": {
+        "name": "User pump"
+      },
+      "dout_fourwayvlv_val": {
+        "name": "Four-way valve"
+      },
+      "dout_cooling_val": {
+        "name": "Cooling output"
+      },
+      "dout_threewayvlv_val": {
+        "name": "Three-way valve"
+      },
+      "dout_bufferpmp_val": {
+        "name": "Buffer pump"
+      },
+      "dout_heaterstep1_val": {
+        "name": "Heater step 1"
+      },
+      "dout_heaterstep2_val": {
+        "name": "Heater step 2"
+      },
+      "dout_heaterstep3_val": {
+        "name": "Heater step 3"
+      },
+      "keybonoff": {
+        "name": "Keypad"
+      },
+      "daynightmode": {
+        "name": "Day mode"
+      },
+      "al_maxtime_antileg_active": {
+        "name": "Alarm: Anti-legionella timeout"
+      },
+      "al_maxtime_dhw_active": {
+        "name": "Alarm: DHW timeout"
+      },
+      "al_dewpoint_active": {
+        "name": "Alarm: Dewpoint"
+      },
+      "al_underfloorsafety_active": {
+        "name": "Alarm: Supply too hot"
+      },
+      "alrm_flw": {
+        "name": "Alarm: Flow"
+      },
+      "usralrms": {
+        "name": "Alarm: Central heating"
+      },
+      "coolingalrms": {
+        "name": "Alarm: Cooling"
+      },
+      "heatingalrms": {
+        "name": "Alarm: Heating"
+      },
+      "alarmmng_al_workinghour": {
+        "name": "Alarm: Working hours"
+      },
+      "srsalrm": {
+        "name": "Alarm: Source"
+      },
+      "glbal": {
+        "name": "Alarm: Global"
+      },
+      "alarmmng_al_pwrplus": {
+        "name": "Alarm: Compressor"
+      },
+      "roomprb_en": {
+        "name": "Room sensor enabled"
+      },
+      "plantprb_en": {
+        "name": "Plant sensor enabled"
+      },
+      "bufferprb_en": {
+        "name": "Buffer sensor enabled"
+      },
+      "en_dhwpid": {
+        "name": "DHW controller enabled"
+      },
+      "plantdemand": {
+        "name": "Plant demand"
+      },
+      "id_demand": {
+        "name": "External demand"
+      },
+      "thermostatdemand": {
+        "name": "Thermostat demand"
+      },
+      "bms_demand": {
+        "name": "Heat demand"
+      },
+      "id_summerwinter": {
+        "name": "Summer mode"
+      },
+      "dewpoint": {
+        "name": "Dewpoint"
+      },
+      "boostersecurity": {
+        "name": "Booster"
+      },
+      "srcflw": {
+        "name": "Source flow"
+      },
+      "req_antileg_1": {
+        "name": "Anti-legionella"
+      },
+      "surplus_pv": {
+        "name": "PV surplus"
+      }
+    },
     "sensor": {
       "compressor_speed": {
         "name": "Compressor speed"
