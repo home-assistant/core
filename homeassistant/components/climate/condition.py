@@ -1,10 +1,18 @@
 """Provides conditions for climates."""
 
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from typing import TYPE_CHECKING
+
+import voluptuous as vol
+
+from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
+    ConditionConfig,
+    EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
     make_entity_numerical_condition,
     make_entity_state_condition,
@@ -12,6 +20,36 @@ from homeassistant.helpers.condition import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import ATTR_HUMIDITY, ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
+
+CONF_HVAC_MODE = "hvac_mode"
+
+_HVAC_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(CONF_HVAC_MODE): vol.All(
+                cv.ensure_list, vol.Length(min=1), [vol.Coerce(HVACMode)]
+            ),
+        },
+    }
+)
+
+
+class ClimateHVACModeCondition(EntityConditionBase):
+    """Condition for climate HVAC mode."""
+
+    _domain_specs = {DOMAIN: DomainSpec()}
+    _schema = _HVAC_MODE_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the HVAC mode condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._hvac_modes: set[str] = set(config.options[CONF_HVAC_MODE])
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches any of the expected HVAC modes."""
+        return entity_state.state in self._hvac_modes
 
 
 class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
@@ -28,6 +66,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
+    "is_hvac_mode": ClimateHVACModeCondition,
     "is_off": make_entity_state_condition(DOMAIN, HVACMode.OFF),
     "is_on": make_entity_state_condition(
         DOMAIN,

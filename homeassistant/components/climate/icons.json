@@ -9,6 +9,9 @@
     "is_heating": {
       "condition": "mdi:fire"
     },
+    "is_hvac_mode": {
+      "condition": "mdi:thermostat"
+    },
     "is_off": {
       "condition": "mdi:power-off"
     },
