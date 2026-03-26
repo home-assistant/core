@@ -126,7 +126,7 @@ async def test_diagnostic_sensors(
             registry = er.async_get(hass)
             entry_id = mock_config_entry_ethernet.entry_id
             ip_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, f"{entry_id}_TEST123 IP address"
+                "sensor", DOMAIN, f"{entry_id}_ip_address"
             )
             assert ip_entity_id is not None
             ip_sensor = hass.states.get(ip_entity_id)
@@ -134,7 +134,7 @@ async def test_diagnostic_sensors(
             assert ip_sensor.state == mock_config_entry_ethernet.data["host"]
 
             connection_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, f"{entry_id}_TEST123 Connection type"
+                "sensor", DOMAIN, f"{entry_id}_connection_type"
             )
             assert connection_entity_id is not None
             connection_type_sensor = hass.states.get(connection_entity_id)
@@ -144,7 +144,7 @@ async def test_diagnostic_sensors(
             )
 
             serial_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, f"{entry_id}_TEST123 Serial number"
+                "sensor", DOMAIN, f"{entry_id}_serial_number"
             )
             assert serial_entity_id is not None
             serial_sensor = hass.states.get(serial_entity_id)

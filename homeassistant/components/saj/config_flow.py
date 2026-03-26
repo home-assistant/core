@@ -145,10 +145,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml (sensor platform)."""
-        _LOGGER.warning(
-            "Importing SAJ from YAML is deprecated and will be removed; %s",
-            import_config,
-        )
+        _LOGGER.warning("Importing SAJ from YAML is deprecated and will be removed")
         entry_input: dict[str, Any] = {
             CONF_HOST: import_config[CONF_HOST],
             CONF_TYPE: import_config.get(CONF_TYPE, CONNECTION_TYPES[0]),
@@ -459,14 +456,17 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
                     current_ip,
                     host,
                 )
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-            else:
-                _LOGGER.debug(
-                    "SAJ device %s already configured with IP %s",
-                    mac_unique_id,
-                    host,
+                return self.async_update_reload_and_abort(
+                    existing_entry,
+                    data_updates={CONF_HOST: host},
+                    reason="already_configured",
                 )
-                return self.async_abort(reason="already_configured")
+            _LOGGER.debug(
+                "SAJ device %s already configured with IP %s",
+                mac_unique_id,
+                host,
+            )
+            return self.async_abort(reason="already_configured")
 
         self._abort_if_unique_id_configured()
 

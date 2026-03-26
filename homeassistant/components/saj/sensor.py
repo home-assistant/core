@@ -35,11 +35,14 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SAJConfigEntry
+from . import SAJConfigEntry, SAJRuntimeData
 from .const import CONNECTION_TYPES, DOMAIN, INTEGRATION_TITLE
-from .coordinator import SAJDataUpdateCoordinator
+
+# Stable translation_key / unique_id suffixes (see strings.json entity.sensor.*).
+DIAG_KEY_IP = "ip_address"
+DIAG_KEY_CONNECTION_TYPE = "connection_type"
+DIAG_KEY_SERIAL_NUMBER = "serial_number"
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
@@ -68,26 +71,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SAJ sensors from a config entry."""
     runtime = entry.runtime_data
-    coordinator = runtime.coordinator
     saj = runtime.saj
-    sensor_def = coordinator.sensor_def
+    sensor_def = runtime.sensor_def
 
     hass_sensors = [
-        SAJsensor(coordinator, saj.serialnumber, sensor, inverter_name=None)
+        SAJsensor(runtime, saj.serialnumber, sensor, inverter_name=None)
         for sensor in sensor_def
         if sensor.enabled
     ]
 
-    name_prefix = (
-        saj.serialnumber or entry.title or entry.data.get(CONF_NAME) or entry.entry_id
-    )
     diagnostic_sensors = [
-        SAJDiagnosticSensor(entry, f"{name_prefix} IP address", entry.data[CONF_HOST]),
+        SAJDiagnosticSensor(entry, DIAG_KEY_IP, entry.data[CONF_HOST]),
+        SAJDiagnosticSensor(entry, DIAG_KEY_CONNECTION_TYPE, entry.data[CONF_TYPE]),
         SAJDiagnosticSensor(
-            entry, f"{name_prefix} Connection type", entry.data[CONF_TYPE]
-        ),
-        SAJDiagnosticSensor(
-            entry, f"{name_prefix} Serial number", saj.serialnumber or "Unknown"
+            entry, DIAG_KEY_SERIAL_NUMBER, saj.serialnumber or "Unknown"
         ),
     ]
 
@@ -142,20 +139,21 @@ async def async_setup_platform(
     )
 
 
-class SAJsensor(CoordinatorEntity[SAJDataUpdateCoordinator], SensorEntity):
+class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
 
+    _attr_should_poll = False
     _state: StateType
 
     def __init__(
         self,
-        coordinator: SAJDataUpdateCoordinator,
+        runtime: SAJRuntimeData,
         serialnumber: str | None,
         pysaj_sensor: pysaj.Sensor,
         inverter_name: str | None = None,
     ) -> None:
         """Initialize the SAJ sensor."""
-        super().__init__(coordinator)
+        self._runtime = runtime
         self._sensor = pysaj_sensor
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
@@ -183,6 +181,13 @@ class SAJsensor(CoordinatorEntity[SAJDataUpdateCoordinator], SensorEntity):
         ):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
+    async def async_added_to_hass(self) -> None:
+        """Register for inverter poll updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._runtime.polling.async_add_poll_listener(self._on_poll_success)
+        )
+
     @property
     def available(self) -> bool:
         """Keep reporting entity state; unknown values use None (same as before coordinator)."""
@@ -209,13 +214,8 @@ class SAJsensor(CoordinatorEntity[SAJDataUpdateCoordinator], SensorEntity):
         return self._sensor.date
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update state from the inverter data fetched by the coordinator."""
-        success = self.coordinator.data
-        if success is None:
-            super()._handle_coordinator_update()
-            return
-
+    def _on_poll_success(self, success: bool) -> None:
+        """Update state from the inverter after a poll."""
         state_unknown = False
         if not success and (
             (self.per_day_basis and date.today() > self.date_updated)
@@ -245,14 +245,12 @@ class SAJDiagnosticSensor(SensorEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        key: str,
+        translation_key: str,
         value: str | None,
     ) -> None:
         """Initialize the SAJ diagnostic sensor."""
-        self._entry = entry
-        self._key = key
-        self._attr_unique_id = f"{entry.entry_id}_{key}"
-        self._attr_translation_key = key
+        self._attr_unique_id = f"{entry.entry_id}_{translation_key}"
+        self._attr_translation_key = translation_key
         self._attr_native_value = value
 
     @property
