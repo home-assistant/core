@@ -171,7 +171,7 @@ def async_setup_services(
     """Register the Supervisor services."""
     async_register_app_services(hass, supervisor_client)
     async_register_host_services(hass, supervisor_client)
-    async_register_network_storage_services(hass, supervisor_client)
+    async_register_backup_restore_services(hass, supervisor_client)
     async_register_network_storage_services(hass, supervisor_client)
 
 
@@ -355,7 +355,10 @@ def async_register_backup_restore_services(
     async def async_full_restore_service_handler(service: ServiceCall) -> None:
         """Handler for full restore service."""
         backup_slug = service.data[ATTR_SLUG]
-        options = FullRestoreOptions(password=service.data.get(ATTR_PASSWORD))
+        options: FullRestoreOptions | None = None
+        if ATTR_PASSWORD in service.data:
+            options = FullRestoreOptions(password=service.data[ATTR_PASSWORD])
+
         try:
             await supervisor_client.backups.full_restore(backup_slug, options)
         except SupervisorError as err:
