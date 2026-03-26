@@ -18,7 +18,9 @@ VALIDATE_AUTH_PATCH = "homeassistant.components.obihai.config_flow.validate_auth
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_user_form(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, patch_gethostbyname
+) -> None:
     """Test we get the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -28,13 +30,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.obihai.config_flow.gethostbyname",
-            side_effect=lambda host: host,
-        ),
-        patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()),
-    ):
+    with patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -48,19 +44,13 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_auth_failure(hass: HomeAssistant) -> None:
+async def test_auth_failure(hass: HomeAssistant, patch_gethostbyname) -> None:
     """Test we get the authentication error for user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.obihai.config_flow.gethostbyname",
-            side_effect=lambda host: host,
-        ),
-        patch(VALIDATE_AUTH_PATCH, return_value=False),
-    ):
+    with patch(VALIDATE_AUTH_PATCH, return_value=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -90,19 +80,10 @@ async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) ->
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_dhcp_flow(hass: HomeAssistant) -> None:
+async def test_dhcp_flow(hass: HomeAssistant, patch_gethostbyname) -> None:
     """Test that DHCP discovery works."""
 
-    with (
-        patch(
-            "homeassistant.components.obihai.config_flow.gethostbyname",
-            side_effect=lambda host: host,
-        ),
-        patch(
-            VALIDATE_AUTH_PATCH,
-            return_value=MockPyObihai(),
-        ),
-    ):
+    with patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DHCP_SERVICE_INFO,
@@ -135,19 +116,10 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
+async def test_dhcp_flow_auth_failure(hass: HomeAssistant, patch_gethostbyname) -> None:
     """Test that DHCP fails if creds aren't default."""
 
-    with (
-        patch(
-            "homeassistant.components.obihai.config_flow.gethostbyname",
-            side_effect=lambda host: host,
-        ),
-        patch(
-            VALIDATE_AUTH_PATCH,
-            return_value=False,
-        ),
-    ):
+    with patch(VALIDATE_AUTH_PATCH, return_value=False):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DHCP_SERVICE_INFO,
@@ -162,19 +134,15 @@ async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
             == DHCP_SERVICE_INFO.ip
         )
 
-    # Verify we get dropped into the normal user flow with non-default credentials
-    with patch(
-        "homeassistant.components.obihai.config_flow.gethostbyname",
-        side_effect=lambda host: host,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: DHCP_SERVICE_INFO.ip,
-                CONF_USERNAME: "",
-                CONF_PASSWORD: "",
-            },
-        )
+    # patch_gethostbyname fixture is active
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: DHCP_SERVICE_INFO.ip,
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+        },
+    )
 
     assert result["errors"]["base"] == "invalid_auth"
     assert result["step_id"] == "user"
