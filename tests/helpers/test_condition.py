@@ -2540,6 +2540,10 @@ async def test_async_get_all_descriptions(
           target:
             entity:
               domain: light
+        is_brightness:
+          target:
+            entity:
+              domain: light
         """
 
     ws_client = await hass_ws_client(hass)
@@ -2725,6 +2729,18 @@ async def test_async_get_all_descriptions(
                 ],
             },
         },
+        "light.is_brightness": {
+            "fields": {},
+            "target": {
+                "entity": [
+                    {
+                        "domain": [
+                            "light",
+                        ],
+                    },
+                ],
+            },
+        },
     }
 
     # Verify the cache returns the same object
@@ -2898,7 +2914,7 @@ async def test_subscribe_conditions(
 @pytest.mark.parametrize(
     ("new_triggers_conditions_enabled", "expected_events"),
     [
-        (True, [{"light.is_off", "light.is_on"}]),
+        (True, [{"light.is_off", "light.is_on", "light.is_brightness"}]),
         (False, []),
     ],
 )
