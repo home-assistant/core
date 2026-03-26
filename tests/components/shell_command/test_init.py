@@ -10,9 +10,11 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from homeassistant.components import shell_command
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockUser
 
 
 def mock_process_creator(error: bool = False):
@@ -276,3 +278,31 @@ async def test_do_not_run_forever(
     mock_process.kill.assert_called_once()
     assert "Timed out" in caplog.text
     assert "mock_sleep 10000" in caplog.text
+
+
+async def test_reload_service(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
+    """Test that the reload service re-registers commands from YAML."""
+    assert await async_setup_component(
+        hass,
+        shell_command.DOMAIN,
+        {shell_command.DOMAIN: {"initial_cmd": "echo initial"}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(shell_command.DOMAIN, "initial_cmd")
+
+    new_config = {shell_command.DOMAIN: {"reloaded_cmd": "echo reloaded"}}
+    with patch(
+        "homeassistant.components.shell_command.conf_util.async_hass_config_yaml",
+        return_value=new_config,
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            "reload",
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(shell_command.DOMAIN, "initial_cmd")
+    assert hass.services.has_service(shell_command.DOMAIN, "reloaded_cmd")

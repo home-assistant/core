@@ -6,5 +6,11 @@
     "timeout": {
       "message": "Timed out running command: `{command}`, after: {timeout} seconds"
     }
+  },
+  "services": {
+    "reload": {
+      "description": "Reloads shell commands from the YAML configuration.",
+      "name": "Reload"
+    }
   }
 }
