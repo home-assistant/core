@@ -224,9 +224,9 @@ class BaseUnitConverter:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
             ) from err
-        if isinstance(ops, list):
-            return ops if not for_ratio else list(filter(_is_ratio_op, ops))
-        return [(UnitConvertOpType.SCALE, ops)]
+        if not isinstance(ops, list):
+            ops = [(UnitConvertOpType.SCALE, ops)]
+        return ops if not for_ratio else list(filter(_is_ratio_op, ops))
 
     @staticmethod
     def _map_from_op(opInfo: UnitConvertOpInfo) -> UnitConvertOp:
