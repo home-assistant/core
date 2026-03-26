@@ -58,17 +58,6 @@ def get_config_entry_with_auth(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
-async def ensure_token(hass: HomeAssistant) -> AsyncGenerator[str]:
-    """Fixture for SFRBox._ensure_token."""
-    token = "afd1baa4cb261bfc08ec2dc0ade3b4"
-    with patch(
-        "homeassistant.components.sfr_box.coordinator.SFRBox._ensure_token",
-        return_value=token,
-    ):
-        yield token
-
-
-@pytest.fixture
 async def dsl_get_info(hass: HomeAssistant) -> AsyncGenerator[DslInfo]:
     """Fixture for SFRBox.dsl_get_info."""
     dsl_info = DslInfo(
