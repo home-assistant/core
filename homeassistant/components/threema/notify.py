@@ -43,7 +43,7 @@ class ThreemaNotifyEntity(NotifyEntity):
         self._recipient_id: str = subentry.data[CONF_RECIPIENT]
         gateway_id = entry.data[CONF_GATEWAY_ID]
 
-        self._attr_unique_id = f"{gateway_id}_{subentry.subentry_id}"
+        self._attr_unique_id = f"{gateway_id}_{self._recipient_id}"
         self._attr_name = subentry.title
         self._attr_device_info = DeviceInfo(
             name=entry.title,

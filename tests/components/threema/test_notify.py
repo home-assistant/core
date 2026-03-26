@@ -39,7 +39,7 @@ async def test_notify_entity_created(
     )
     notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
     assert len(notify_entities) == 1
-    assert notify_entities[0].unique_id == f"{MOCK_GATEWAY_ID}_{MOCK_SUBENTRY_ID}"
+    assert notify_entities[0].unique_id == f"{MOCK_GATEWAY_ID}_{MOCK_RECIPIENT_ID}"
 
 
 async def test_notify_entity_not_created_without_subentry(
