@@ -741,7 +741,7 @@ async def test_service_calls_core(
 
 @pytest.mark.parametrize(
     "app_or_addon",
-    ["app", "addon"],
+    ["apps", "addons"],
 )
 @pytest.mark.usefixtures("hassio_env", "supervisor_client")
 async def test_invalid_service_calls_app_duplicates(
@@ -750,12 +750,12 @@ async def test_invalid_service_calls_app_duplicates(
     """Test invalid backup/restore service calls due to duplicates in apps list."""
     assert await async_setup_component(hass, "hassio", {})
 
-    with pytest.raises(Invalid):
+    with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
             "hassio", "backup_partial", {app_or_addon: ["test", "test"]}
         )
 
-    with pytest.raises(Invalid):
+    with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
             "hassio", "restore_partial", {app_or_addon: ["test", "test"]}
         )
@@ -766,12 +766,12 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
     """Test invalid backup/restore service calls due to duplicates in folder list."""
     assert await async_setup_component(hass, "hassio", {})
 
-    with pytest.raises(Invalid):
+    with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
             "hassio", "backup_partial", {"folders": ["ssl", "ssl"]}
         )
 
-    with pytest.raises(Invalid):
+    with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
             "hassio", "restore_partial", {"folders": ["ssl", "ssl"]}
         )

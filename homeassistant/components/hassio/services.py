@@ -374,7 +374,7 @@ def async_register_backup_restore_services(
     )
 
     async def async_partial_restore_service_handler(service: ServiceCall) -> None:
-        """Handler or partial restore service."""
+        """Handler for partial restore service."""
         data = service.data.copy()
         backup_slug = data.pop(ATTR_SLUG)
         if ATTR_APPS in data:
