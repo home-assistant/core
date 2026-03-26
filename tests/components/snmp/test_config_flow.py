@@ -47,7 +47,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
         patch(
@@ -100,7 +100,7 @@ async def test_user_flow_v3_success(hass: HomeAssistant) -> None:
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
         patch(
@@ -149,7 +149,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
             return_value=("Timeout", None, None, None),
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
     ):
@@ -268,7 +268,7 @@ async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
     ):
@@ -309,7 +309,7 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
             return_value=(None, mock_err_status, None, None),
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
     ):
@@ -339,7 +339,7 @@ async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
             return_value=("No response", None, None, None),
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
     ):
@@ -463,11 +463,11 @@ async def test_validate_input_ipv6_fallback(hass: HomeAssistant) -> None:
     """Test validate_input with IPv6 fallback."""
     with (
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             side_effect=PySnmpError,
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.Udp6TransportTarget.create",
+            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
             return_value="mock_target",
         ) as mock_create6,
         patch(
@@ -491,11 +491,11 @@ async def test_validate_input_fail_all(hass: HomeAssistant) -> None:
     """Test validate_input failing both IPv4 and IPv6."""
     with (
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             side_effect=PySnmpError,
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.Udp6TransportTarget.create",
+            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
             side_effect=PySnmpError,
         ),
         pytest.raises(CannotConnect),
@@ -515,7 +515,7 @@ async def test_validate_input_unexpected_error(hass: HomeAssistant) -> None:
     """Test validate_input with an unexpected error during target creation."""
     with (
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             side_effect=Exception,
         ),
         pytest.raises(CannotConnect),
@@ -535,7 +535,7 @@ async def test_validate_input_v3_no_keys(hass: HomeAssistant) -> None:
     """Test validate_input with SNMP v3 and no auth/priv keys."""
     with (
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
         patch(
@@ -558,11 +558,11 @@ async def test_validate_input_pysnmp_error_auth(hass: HomeAssistant) -> None:
     """Test validate_input with PySnmpError during auth creation."""
     with (
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
         patch(
-            "homeassistant.components.snmp.config_flow.UsmUserData",
+            "homeassistant.components.snmp.util.UsmUserData",
             side_effect=PySnmpError,
         ),
         pytest.raises(InvalidAuth),
@@ -582,7 +582,7 @@ async def test_validate_input_wrong_value_error(hass: HomeAssistant) -> None:
     """Test validate_input with WrongValueError during get_cmd."""
     with (
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
         patch(
@@ -606,7 +606,7 @@ async def test_validate_input_pysnmp_error_get(hass: HomeAssistant) -> None:
     """Test validate_input with PySnmpError during get_cmd."""
     with (
         patch(
-            "homeassistant.components.snmp.config_flow.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value="mock_target",
         ),
         patch(

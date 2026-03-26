@@ -41,7 +41,7 @@ async def test_async_setup_entry_custom_port(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.snmp.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value=Mock(),
         ) as mock_create,
         patch(
@@ -76,7 +76,7 @@ async def test_async_setup_entry_v3_no_keys(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.snmp.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value=Mock(),
         ),
         patch(
@@ -114,11 +114,11 @@ async def test_async_setup_entry_ipv6_fallback(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.snmp.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             side_effect=PySnmpError,
         ),
         patch(
-            "homeassistant.components.snmp.Udp6TransportTarget.create",
+            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
             return_value=Mock(),
         ) as mock_create6,
         patch(
@@ -148,11 +148,11 @@ async def test_async_setup_entry_fail_all(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.snmp.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             side_effect=PySnmpError,
         ),
         patch(
-            "homeassistant.components.snmp.Udp6TransportTarget.create",
+            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
             side_effect=PySnmpError,
         ),
     ):
@@ -174,7 +174,7 @@ async def test_async_setup_entry_unexpected_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.snmp.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             side_effect=Exception,
         ),
     ):
@@ -196,7 +196,7 @@ async def test_async_setup_entry_refresh_fail(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.snmp.UdpTransportTarget.create",
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value=Mock(),
         ),
         patch(

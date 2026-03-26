@@ -3,43 +3,30 @@
 import logging
 
 from pysnmp.error import PySnmpError
-import pysnmp.hlapi.v3arch.asyncio as hlapi
-from pysnmp.hlapi.v3arch.asyncio import (
-    CommunityData,
-    Udp6TransportTarget,
-    UdpTransportTarget,
-    UsmUserData,
-)
 from pysnmp.smi.error import WrongValueError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
-    CONF_AUTH_KEY,
-    CONF_AUTH_PROTOCOL,
     CONF_BASEOID,
-    CONF_COMMUNITY,
     CONF_CONTEXT_NAME,
-    CONF_PRIV_KEY,
-    CONF_PRIV_PROTOCOL,
     CONF_VERSION,
-    DEFAULT_AUTH_PROTOCOL,
-    DEFAULT_COMMUNITY,
     DEFAULT_PORT,
-    DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
     DOMAIN,
-    MAP_AUTH_PROTOCOLS,
-    MAP_PRIV_PROTOCOLS,
-    SNMP_VERSIONS,
 )
 from .coordinator import SnmpUpdateCoordinator
-from .util import async_create_request_cmd_args, async_get_snmp_engine
+from .util import (
+    async_create_request_cmd_args,
+    async_create_transport_target,
+    async_get_snmp_engine,
+    create_auth_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,43 +40,18 @@ __all__ = ["async_get_snmp_engine"]
 async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool:
     """Set up SNMP from a config entry."""
     host = entry.data[CONF_HOST]
-    community = entry.data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
     baseoid = entry.data[CONF_BASEOID]
     version = entry.data.get(CONF_VERSION, DEFAULT_VERSION)
-    username = entry.data.get(CONF_USERNAME)
-    authkey = entry.data.get(CONF_AUTH_KEY)
-    authproto = entry.data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
-    privkey = entry.data.get(CONF_PRIV_KEY)
-    privproto = entry.data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
     context_name = entry.data.get(CONF_CONTEXT_NAME)
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
 
-    if version == "3":
-        if not authkey:
-            authproto = "none"
-        if not privkey:
-            privproto = "none"
-
-        auth_data = UsmUserData(
-            username,
-            authKey=authkey or None,
-            privKey=privkey or None,
-            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-        )
-    else:
-        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
-
+    auth_data = create_auth_data(entry.data, version)
     try:
-        target = await UdpTransportTarget.create((host, port), timeout=DEFAULT_TIMEOUT)
-    except PySnmpError:
-        try:
-            target = await Udp6TransportTarget.create(
-                (host, port), timeout=DEFAULT_TIMEOUT
-            )
-        except PySnmpError as err:
-            raise ConfigEntryNotReady(f"Cannot reach SNMP host: {err}") from err
+        target = await async_create_transport_target(host, port, DEFAULT_TIMEOUT)
+    except PySnmpError as err:
+        raise ConfigEntryNotReady(f"Cannot reach SNMP host: {err}") from err
     except Exception as err:
+        _LOGGER.exception("Unexpected error during SNMP target creation")
         raise ConfigEntryNotReady(
             f"Unexpected error during SNMP target creation: {err}"
         ) from err

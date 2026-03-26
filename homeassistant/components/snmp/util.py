@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
+from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     ContextData,
@@ -17,9 +20,21 @@ from pysnmp.hlapi.v3arch.asyncio import (
 from pysnmp.hlapi.v3arch.asyncio.cmdgen import LCD
 from pysnmp.smi import view
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
+
+from .const import (
+    CONF_AUTH_KEY,
+    CONF_AUTH_PROTOCOL,
+    CONF_COMMUNITY,
+    CONF_PRIV_KEY,
+    CONF_PRIV_PROTOCOL,
+    DEFAULT_COMMUNITY,
+    DEFAULT_PRIV_PROTOCOL,
+    MAP_AUTH_PROTOCOLS,
+    MAP_PRIV_PROTOCOLS,
+)
 
 DATA_SNMP_ENGINE = "snmp_engine"
 
@@ -40,6 +55,41 @@ type RequestArgsType = tuple[
     ContextData,
     ObjectType,
 ]
+
+
+def create_auth_data(
+    data: Mapping[str, Any], version: str
+) -> UsmUserData | CommunityData:
+    """Create SNMP auth data from config dict."""
+    if version == "3":
+        username: str = data[CONF_USERNAME]
+        auth_key: str | None = data.get(CONF_AUTH_KEY)
+        auth_proto: str | None = data.get(CONF_AUTH_PROTOCOL)
+        priv_key: str | None = data.get(CONF_PRIV_KEY)
+        priv_proto: str = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
+
+        return UsmUserData(
+            username,
+            authKey=auth_key,
+            authProtocol=MAP_AUTH_PROTOCOLS.get(auth_proto) if auth_proto else None,
+            privKey=priv_key,
+            privProtocol=MAP_PRIV_PROTOCOLS.get(priv_proto)
+            if (data.get(CONF_PRIV_PROTOCOL) or priv_key)
+            else None,
+        )
+
+    community: str = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
+    return CommunityData(community, mpModel=1 if version == "2c" else 0)
+
+
+async def async_create_transport_target(
+    host: str, port: int, timeout: float
+) -> UdpTransportTarget | Udp6TransportTarget:
+    """Create SNMP transport target with IPv4 / IPv6 fallback."""
+    try:
+        return await UdpTransportTarget.create((host, port), timeout=timeout)
+    except PySnmpError:
+        return await Udp6TransportTarget.create((host, port), timeout=timeout)
 
 
 async def async_create_command_cmd_args(

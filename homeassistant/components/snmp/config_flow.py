@@ -6,15 +6,7 @@ import logging
 from typing import Any
 
 from pysnmp.error import PySnmpError
-import pysnmp.hlapi.v3arch.asyncio as hlapi
-from pysnmp.hlapi.v3arch.asyncio import (
-    CommunityData,
-    ObjectIdentity,
-    Udp6TransportTarget,
-    UdpTransportTarget,
-    UsmUserData,
-    get_cmd,
-)
+from pysnmp.hlapi.v3arch.asyncio import ObjectIdentity, get_cmd
 from pysnmp.smi.error import WrongValueError
 import voluptuous as vol
 
@@ -44,7 +36,11 @@ from .const import (
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
-from .util import async_create_request_cmd_args
+from .util import (
+    async_create_request_cmd_args,
+    async_create_transport_target,
+    create_auth_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,45 +81,21 @@ STEP_V3_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     host = data[CONF_HOST]
-    port = int(data.get(CONF_PORT, DEFAULT_PORT))
-    community = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
+    port = data.get(CONF_PORT, DEFAULT_PORT)
     version = data.get(CONF_VERSION, DEFAULT_VERSION)
-    username = data.get(CONF_USERNAME)
-    authkey = data.get(CONF_AUTH_KEY)
-    authproto = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
-    privkey = data.get(CONF_PRIV_KEY)
-    privproto = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
     context_name = data.get(CONF_CONTEXT_NAME)
 
     try:
-        target = await UdpTransportTarget.create((host, port), timeout=DEFAULT_TIMEOUT)
-    except PySnmpError as err1:
-        try:
-            target = await Udp6TransportTarget.create(
-                (host, port), timeout=DEFAULT_TIMEOUT
-            )
-        except PySnmpError as err2:
-            raise CannotConnect(f"{err1} / {err2}") from None
+        target = await async_create_transport_target(host, port, DEFAULT_TIMEOUT)
+    except PySnmpError as err:
+        # We don't have both error objects anymore, so we just raise the last one/generic
+        raise CannotConnect(f"SNMP target creation failed: {err}") from None
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected error during SNMP target creation")
         raise CannotConnect(str(err)) from None
 
     try:
-        if version == "3":
-            if not authkey:
-                authproto = "none"
-            if not privkey:
-                privproto = "none"
-
-            auth_data = UsmUserData(
-                username,
-                authKey=authkey or None,
-                privKey=privkey or None,
-                authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-            )
-        else:
-            auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+        auth_data = create_auth_data(data, version)
     except PySnmpError as err:
         raise InvalidAuth(str(err)) from None
 

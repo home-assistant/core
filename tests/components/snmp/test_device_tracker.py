@@ -84,7 +84,7 @@ async def test_device_tracker_setup_with_legacy_state(
     hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -128,7 +128,7 @@ async def test_device_tracker_new_entity_disabled_by_default(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -187,7 +187,7 @@ async def test_device_tracker_update(
     mock_walk.side_effect = mock_walk_1
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -237,7 +237,7 @@ async def test_device_tracker_device_registry_linking(
     mac = "00:11:22:33:44:55"
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -280,7 +280,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
     hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -324,7 +324,7 @@ async def test_device_tracker_enabled_if_device_exists(
     )
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -372,7 +372,7 @@ async def test_device_tracker_initial_macs(
     ent_reg.async_get_or_create(DEVICE_TRACKER_DOMAIN, DOMAIN, mac, config_entry=entry)
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -422,7 +422,7 @@ async def test_device_tracker_state_cleanup(
     hass.states.async_set(reg_entry.entity_id, STATE_HOME)
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -449,7 +449,7 @@ async def test_device_tracker_update_empty_data(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.snmp.UdpTransportTarget.create",
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
         return_value=Mock(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
