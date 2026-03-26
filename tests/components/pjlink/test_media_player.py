@@ -59,11 +59,6 @@ async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Manually trigger an update to ensure state is set
-    entity_id = "media_player.test"
-    entity = hass.data["entity_components"]["media_player"].get_entity(entity_id)
-    await entity.async_update_ha_state(force_refresh=True)
-
     return entry
 
 

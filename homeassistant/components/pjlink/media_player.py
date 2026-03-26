@@ -41,7 +41,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PJLink media player."""
-    async_add_entities([PjLinkDevice(entry)])
+    async_add_entities([PjLinkDevice(entry)], update_before_add=True)
 
 
 def format_input_source(input_source_name, input_source_number):
