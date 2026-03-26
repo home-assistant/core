@@ -7,9 +7,9 @@ from pyaprilaire.const import Attribute
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 
 from .conftest import MOCK_MAC, setup_integration
+from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

@@ -7,9 +7,9 @@ from pyaprilaire.const import Attribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
 
 from .conftest import MOCK_MAC, setup_integration
+from tests.common import MockConfigEntry
 
 
 async def test_coordinator_listener_management(

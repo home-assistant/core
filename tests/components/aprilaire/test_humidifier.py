@@ -15,9 +15,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 
 from .conftest import setup_integration
+from tests.common import MockConfigEntry
 
 HUMIDIFIER_ENTITY = "humidifier.test_thermostat"
 DEHUMIDIFIER_ENTITY = "humidifier.test_thermostat_2"

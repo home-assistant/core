@@ -8,9 +8,9 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 from .conftest import setup_integration
+
+from tests.common import MockConfigEntry
 
 AIR_CLEANING_EVENT = "select.test_thermostat"
 AIR_CLEANING_MODE = "select.test_thermostat_2"

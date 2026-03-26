@@ -23,9 +23,9 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 
 from .conftest import setup_integration
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "climate.test_thermostat"
 
