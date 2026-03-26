@@ -60,6 +60,8 @@ async def test_setup_entry_exceptions(
         assert flows[0]["context"]["source"] == SOURCE_REAUTH
     else:
         assert hass.config_entries.flow.async_progress_by_handler(DOMAIN) == []
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_device_entry(
     device_registry: dr.DeviceRegistry,
