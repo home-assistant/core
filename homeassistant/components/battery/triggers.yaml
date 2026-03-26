@@ -13,6 +13,8 @@
 .battery_threshold_entity: &battery_threshold_entity
   - domain: input_number
     unit_of_measurement: "%"
+  - domain: number
+    device_class: battery
   - domain: sensor
     device_class: battery
 
