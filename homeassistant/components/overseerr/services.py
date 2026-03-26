@@ -31,7 +31,6 @@ from .const import (
     LOGGER,
 )
 from .coordinator import OverseerrConfigEntry
-from ..music_assistant.const import ATTR_MEDIA_ID
 
 SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
