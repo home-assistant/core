@@ -1743,6 +1743,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "prosegur",
     "prowl",
     "proximity",
+    "proxmoxve",
     "prusalink",
     "ps4",
     "pulseaudio_loopback",
