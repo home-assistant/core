@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,8 +21,6 @@ from .const import (
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .migration import async_migrate_entry  # noqa: F401
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {

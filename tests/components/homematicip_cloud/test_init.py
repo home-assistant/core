@@ -315,12 +315,12 @@ async def test_migrate_group_entity(
     )
 
 
-async def test_migrate_unknown_class_warns(
+async def test_migrate_stable_unique_id_skipped(
     hass: HomeAssistant,
     mock_config_entry_v1: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that an unknown class name warns and preserves the old unique_id."""
+    """Test that a non-class-name unique_id is silently skipped and preserved."""
     entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
