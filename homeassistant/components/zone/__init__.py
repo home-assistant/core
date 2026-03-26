@@ -113,17 +113,19 @@ DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
 DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
 
 
-@bind_hass
-def async_active_zone(
+def async_active_zones(
     hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
-) -> State | None:
+) -> tuple[State | None, list[str]]:
     """Find the active zone for given latitude, longitude.
+
+    Returns a tuple of the closest zone and a list of all zones that are active.
 
     This method must be run in the event loop.
     """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     min_dist: float = sys.maxsize
     closest: State | None = None
+    active_zones: list[str] = []
 
     # This can be called before async_setup by device tracker
     zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
@@ -151,6 +153,8 @@ def async_active_zone(
         ):
             continue
 
+        active_zones.append(zone.entity_id)
+
         # If have a closest and its not closer than the closest skip it
         if closest and not (
             zone_dist < min_dist
@@ -166,7 +170,18 @@ def async_active_zone(
         min_dist = zone_dist
         closest = zone
 
-    return closest
+    return (closest, active_zones)
+
+
+@bind_hass
+def async_active_zone(
+    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+) -> State | None:
+    """Find the active zone for given latitude, longitude.
+
+    This method must be run in the event loop.
+    """
+    return async_active_zones(hass, latitude, longitude, radius)[0]
 
 
 @callback

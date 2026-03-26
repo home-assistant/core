@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import final
+from typing import Any, final
 
 from propcache.api import cached_property
 
@@ -33,6 +33,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_HOST_NAME,
+    ATTR_IN_ZONES,
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -278,12 +279,15 @@ class TrackerEntity(
 
     @final
     @property
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, StateType] = {}
+        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
+            attr[ATTR_IN_ZONES] = zone.async_active_zones(
+                self.hass, self.latitude, self.longitude, self.location_accuracy
+            )[1]
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy
