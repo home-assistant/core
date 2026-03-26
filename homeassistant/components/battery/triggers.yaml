@@ -18,6 +18,12 @@
   - domain: sensor
     device_class: battery
 
+.battery_threshold_number: &battery_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
 .trigger_target_battery: &trigger_target_battery
   entity:
     - domain: binary_sensor
@@ -64,9 +70,7 @@ level_changed:
         numeric_threshold:
           entity: *battery_threshold_entity
           mode: changed
-          number:
-            mode: box
-            unit_of_measurement: "%"
+          number: *battery_threshold_number
 
 level_crossed_threshold:
   target: *trigger_target_percentage
@@ -78,6 +82,4 @@ level_crossed_threshold:
         numeric_threshold:
           entity: *battery_threshold_entity
           mode: crossed
-          number:
-            mode: box
-            unit_of_measurement: "%"
+          number: *battery_threshold_number
