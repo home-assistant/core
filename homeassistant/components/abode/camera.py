@@ -303,6 +303,9 @@ class AbodeCamera(AbodeDevice, Camera):
         except TypeError, json.JSONDecodeError:
             return None
 
+        if not isinstance(message_data, dict):
+            return None
+
         message_type = message_data.get("messageType")
         encoded_payload = message_data.get("messagePayload")
         if not isinstance(message_type, str) or not isinstance(encoded_payload, str):
@@ -331,12 +334,20 @@ class AbodeCamera(AbodeDevice, Camera):
                 return None
             sdp_mid = payload.get("sdpMid")
             sdp_m_line_index = payload.get("sdpMLineIndex")
+            sdp_m_line_index_int: int | None
+            if isinstance(sdp_m_line_index, int):
+                sdp_m_line_index_int = sdp_m_line_index
+            elif isinstance(sdp_m_line_index, str):
+                try:
+                    sdp_m_line_index_int = int(sdp_m_line_index)
+                except TypeError, ValueError:
+                    sdp_m_line_index_int = None
+            else:
+                sdp_m_line_index_int = None
             return RTCIceCandidateInit(
                 candidate,
                 sdp_mid=sdp_mid if isinstance(sdp_mid, str) else None,
-                sdp_m_line_index=(
-                    sdp_m_line_index if isinstance(sdp_m_line_index, int) else None
-                ),
+                sdp_m_line_index=sdp_m_line_index_int,
             )
 
     async def _async_listen_webrtc_messages(

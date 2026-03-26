@@ -638,6 +638,12 @@ def test_decode_signaling_message_invalid_payloads() -> None:
         )
         is None
     )
+    assert (
+        AbodeCamera._decode_signaling_message(
+            SimpleNamespace(type=WSMsgType.TEXT, data=json.dumps(["not", "dict"]))
+        )
+        is None
+    )
     encoded_list_payload = base64.b64encode(
         json.dumps(["not", "dict"]).encode()
     ).decode()
@@ -664,13 +670,13 @@ def test_parse_remote_ice_candidate_fallback_and_invalid() -> None:
         side_effect=ValueError("invalid"),
     ):
         candidate = AbodeCamera._parse_remote_ice_candidate(
-            {"candidate": "candidate-line", "sdpMid": 1, "sdpMLineIndex": "0"}
+            {"candidate": "candidate-line", "sdpMid": 1, "sdpMLineIndex": "3"}
         )
 
     assert candidate is not None
     assert candidate.candidate == "candidate-line"
     assert candidate.sdp_mid is None
-    assert candidate.sdp_m_line_index == 0
+    assert candidate.sdp_m_line_index == 3
 
     with patch(
         "homeassistant.components.abode.camera.RTCIceCandidateInit.from_dict",
