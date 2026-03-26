@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from sfrbox_api.models import DslInfo, SystemInfo, WanInfo
+from sfrbox_api.models import DslInfo, SystemInfo, VoipInfo, WanInfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -183,6 +183,32 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         value_fn=lambda x: _get_temperature(x.temperature),
     ),
 )
+VOIP_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[VoipInfo], ...] = (
+    SFRBoxSensorEntityDescription[VoipInfo](
+        key="infra",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[
+            "adsl",
+            "ftth",
+            "gprs",
+        ],
+        translation_key="voip_infra",
+        value_fn=lambda x: _value_to_option(x.infra),
+    ),
+    SFRBoxSensorEntityDescription[VoipInfo](
+        key="hook_status",
+        device_class=SensorDeviceClass.ENUM,
+        entity_registry_enabled_default=True,
+        options=[
+            "idle",
+            "offhook",
+        ],
+        translation_key="voip_hook_status",
+        value_fn=lambda x: _get_phone_status(x.hook_status),
+    ),
+)
 WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
     SFRBoxSensorEntityDescription[WanInfo](
         key="mode",
@@ -199,6 +225,14 @@ WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
         value_fn=lambda x: _value_to_option(x.mode),
     ),
 )
+
+
+def _get_phone_status(value: str | None) -> str | None:
+    if value == "onhook":
+        return "idle"
+    if value == "offhook":
+        return value
+    return None
 
 
 def _value_to_option(value: str | None) -> str | None:
@@ -231,6 +265,10 @@ async def async_setup_entry(
     entities.extend(
         SFRBoxSensor(data.wan, description, system_info)
         for description in WAN_SENSOR_TYPES
+    )
+    entities.extend(
+        SFRBoxSensor(data.voip, description, system_info)
+        for description in VOIP_SENSOR_TYPES
     )
     if system_info.net_infra == "adsl":
         entities.extend(

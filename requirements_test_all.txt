@@ -2490,7 +2490,7 @@ sentry-sdk==2.48.0
 serialx==0.6.2
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.1.0
+sfrbox-api==0.1.1
 
 # homeassistant.components.sharkiq
 sharkiq==1.5.0
