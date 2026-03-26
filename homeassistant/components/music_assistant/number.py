@@ -24,7 +24,7 @@ async def async_setup_entry(
     entry: MusicAssistantConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Music Assistant MediaPlayer(s) from Config Entry."""
+    """Set up Music Assistant Number Entities (Player Options) from Config Entry."""
     mass = entry.runtime_data.mass
 
     def add_player(player_id: str) -> None:
