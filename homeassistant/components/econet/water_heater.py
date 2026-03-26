@@ -36,6 +36,7 @@ ECONET_STATE_TO_HA = {
     WaterHeaterOperationMode.ELECTRIC_MODE: STATE_ELECTRIC,
     WaterHeaterOperationMode.GAS: STATE_GAS,
     WaterHeaterOperationMode.PERFORMANCE: STATE_PERFORMANCE,
+    WaterHeaterOperationMode.VACATION: STATE_OFF,
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
