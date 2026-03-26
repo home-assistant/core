@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=4352): cv.port,
+        vol.Required(CONF_PORT, default=4352): cv.port,
         vol.Optional(CONF_PASSWORD): str,
     }
 )
@@ -90,8 +90,14 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
+            import_data: dict[str, Any] = {
+                CONF_HOST: import_config[CONF_HOST],
+                CONF_PORT: import_config.get(CONF_PORT, 4352),
+            }
+            if password := import_config.get(CONF_PASSWORD):
+                import_data[CONF_PASSWORD] = password
             return self.async_create_entry(
-                title=import_config.get(CONF_NAME, projector_name), data=import_config
+                title=import_config.get(CONF_NAME, projector_name), data=import_data
             )
 
 

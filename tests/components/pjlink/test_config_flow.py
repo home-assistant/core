@@ -109,7 +109,7 @@ async def test_import_creates_entry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test name"
-    assert result["data"] == import_data
+    assert result["data"] == _DEFAULT_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
