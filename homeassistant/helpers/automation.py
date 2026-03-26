@@ -3,16 +3,17 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Final, Self
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, split_entity_id
 
-from . import config_validation as cv
 from .entity import get_device_class_or_undefined
-from .typing import ConfigType
+from .typing import UNDEFINED, ConfigType, UndefinedType
+
+CONF_UNIT: Final = "unit"
 
 
 class AnyDeviceClassType(Enum):
@@ -143,23 +144,29 @@ def move_options_fields_to_top_level(
     return new_config
 
 
-_NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
-    {
-        vol.Required("active_choice"): vol.In(["number", "entity"]),
-        vol.Optional("entity"): cv.entity_id,
-        vol.Optional("number"): vol.Coerce(float),
-    }
-)
+@dataclass(frozen=True, kw_only=True)
+class ThresholdConfig:
+    """Configuration for threshold conditions and triggers."""
 
+    numerical: bool
+    entity: str | None
+    number: float | None
+    unit: str | None | UndefinedType
 
-def _validate_number_or_entity(value: dict | float | str) -> float | str:
-    """Validate number or entity selector result."""
-    if isinstance(value, dict):
-        _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["active_choice"]]  # type: ignore[no-any-return]
-    return value
+    @classmethod
+    def from_config(cls, config: dict[str, Any] | None) -> Self | None:
+        """Create ThresholdConfig from config dict."""
+        if config is None:
+            return None
 
+        entity: str | None = None
+        number: float | None = None
+        unit: str | None | UndefinedType = UNDEFINED
+        numerical = "number" in config
+        if numerical:
+            number = config["number"]
+            unit = config.get("unit_of_measurement", UNDEFINED)
+        else:
+            entity = config["entity"]
 
-number_or_entity = vol.All(
-    _validate_number_or_entity, vol.Any(vol.Coerce(float), cv.entity_id)
-)
+        return cls(numerical=numerical, number=number, entity=entity, unit=unit)

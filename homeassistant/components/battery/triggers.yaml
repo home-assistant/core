@@ -10,39 +10,13 @@
           - last
           - any
 
-.number_or_entity: &number_or_entity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              mode: box
-              unit_of_measurement: "%"
-        entity:
-          selector:
-            entity:
-              filter:
-                - domain: input_number
-                  unit_of_measurement: "%"
-                - domain: number
-                  device_class: battery
-                - domain: sensor
-                  device_class: battery
-      translation_key: number_or_entity
-
-.trigger_threshold_type: &trigger_threshold_type
-  required: true
-  default: above
-  selector:
-    select:
-      options:
-        - above
-        - below
-        - between
-        - outside
-      translation_key: trigger_threshold_type
+.battery_threshold_entity: &battery_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    device_class: battery
+  - domain: sensor
+    device_class: battery
 
 .trigger_target_battery: &trigger_target_battery
   entity:
@@ -84,13 +58,26 @@ stopped_charging:
 level_changed:
   target: *trigger_target_percentage
   fields:
-    above: *number_or_entity
-    below: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *battery_threshold_entity
+          mode: changed
+          number:
+            mode: box
+            unit_of_measurement: "%"
 
 level_crossed_threshold:
   target: *trigger_target_percentage
   fields:
     behavior: *trigger_behavior
-    threshold_type: *trigger_threshold_type
-    lower_limit: *number_or_entity
-    upper_limit: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *battery_threshold_entity
+          mode: crossed
+          number:
+            mode: box
+            unit_of_measurement: "%"

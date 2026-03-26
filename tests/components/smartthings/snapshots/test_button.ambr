@@ -499,6 +499,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_all_entities[da_ref_normal_100001][button.kjoleskap_reset_water_filter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.kjoleskap_reset_water_filter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset water filter',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset water filter',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_water_filter',
+    'unique_id': 'C097277F-0DCF-0000-0000-000000000000_main_custom.waterFilter_resetWaterFilter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_100001][button.kjoleskap_reset_water_filter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kjøleskap Reset water filter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kjoleskap_reset_water_filter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[da_rvc_map_01011][button.robot_vacuum_reset_hepa_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
