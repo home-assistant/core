@@ -6,7 +6,7 @@ from collections.abc import Callable
 from enum import StrEnum
 from functools import lru_cache
 from math import floor, log10
-from typing import Any, NotRequired, Required, TypedDict
+from typing import Any, Final, NotRequired, Required, TypedDict
 
 from homeassistant.const import (
     PERCENTAGE,
@@ -913,3 +913,41 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
         / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
+
+
+# A list of all available unit converters
+ALL_UNIT_CONVERTERS: Final[list[type[BaseUnitConverter]]] = [
+    ApparentPowerConverter,
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
+    ConductivityConverter,
+    DataRateConverter,
+    DistanceConverter,
+    DurationConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    EnergyConverter,
+    EnergyDistanceConverter,
+    InformationConverter,
+    MassConverter,
+    MassVolumeConcentrationConverter,
+    PowerConverter,
+    PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    UnitlessRatioConverter,
+    VolumeConverter,
+    VolumeFlowRateConverter,
+    CarbonMonoxideConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
+    SulphurDioxideConcentrationConverter,
+    TemperatureDeltaConverter,
+]
+
+PRIMARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+    conv for conv in ALL_UNIT_CONVERTERS if conv.IS_PRIMARY
+]

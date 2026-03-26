@@ -20,8 +20,6 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.statistics import (
-    _PRIMARY_UNIT_CONVERTERS,
-    _SECONDARY_UNIT_CONVERTERS,
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
@@ -52,6 +50,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import (
+    ALL_UNIT_CONVERTERS,
+    PRIMARY_UNIT_CONVERTERS,
+)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .common import (
@@ -111,6 +113,11 @@ async def _setup_mock_domain(
     """Set up a mock domain."""
     mock_platform(hass, "some_domain.recorder", platform or MockPlatform())
     assert await async_setup_component(hass, "some_domain", {})
+
+
+_SECONDARY_UNIT_CONVERTERS = list(
+    set(ALL_UNIT_CONVERTERS) - set(PRIMARY_UNIT_CONVERTERS)
+)
 
 
 def test_converters_align_with_sensor() -> None:
@@ -4552,7 +4559,7 @@ def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
     if other := next(
         (
             c
-            for c in _PRIMARY_UNIT_CONVERTERS
+            for c in PRIMARY_UNIT_CONVERTERS
             if unit_converter is not c and uom in c.VALID_UNITS
         ),
         None,

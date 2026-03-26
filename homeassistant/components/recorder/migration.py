@@ -41,6 +41,7 @@ from sqlalchemy.types import BINARY
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.ulid import ulid_at_time, ulid_to_bytes
+from homeassistant.util.unit_conversion import PRIMARY_UNIT_CONVERTERS
 
 from .auto_repairs.events.schema import (
     correct_db_schema as events_correct_db_schema,
@@ -112,11 +113,7 @@ from .queries import (
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
 )
-from .statistics import (
-    _PRIMARY_UNIT_CONVERTERS,
-    cleanup_statistics_timestamp_migration,
-    get_start_time,
-)
+from .statistics import cleanup_statistics_timestamp_migration, get_start_time
 from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
@@ -2069,7 +2066,7 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
         _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
-            for conv in _PRIMARY_UNIT_CONVERTERS:
+            for conv in PRIMARY_UNIT_CONVERTERS:
                 case_sensitive_units = {
                     u.encode("utf-8") if u else u for u in conv.VALID_UNITS
                 }
@@ -2109,7 +2106,7 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
         _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
-            for conv in _PRIMARY_UNIT_CONVERTERS:
+            for conv in PRIMARY_UNIT_CONVERTERS:
                 # Set the correct unit_class. Unlike MySQL, Postgres and SQLite
                 # have case sensitive string comparisons by default, so we
                 # can directly match on the valid units.
