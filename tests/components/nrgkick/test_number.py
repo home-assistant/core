@@ -163,6 +163,8 @@ async def test_phase_count_ignores_transient_zero(
     assert (state := hass.states.get(entity_id))
     assert state.state == "1"
 
+    mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
+
 
 async def test_number_command_rejected_by_device(
     hass: HomeAssistant,

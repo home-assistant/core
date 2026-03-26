@@ -150,7 +150,7 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
             assert data is not None
         value = self.entity_description.value_fn(data)
         if self.entity_description.key == "phase_count":
-            if value != 0:
+            if value is not None and value != 0:
                 self._last_phase_count = value
             return self._last_phase_count
         return value
