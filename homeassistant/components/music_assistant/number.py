@@ -68,7 +68,6 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         self.entity_description = NumberEntityDescription(
             name=player_option.name,
             key=player_option.key,
-            translation_key=player_option.translation_key,
         )
 
     @catch_musicassistant_error
