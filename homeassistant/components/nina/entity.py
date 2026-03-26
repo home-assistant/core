@@ -21,8 +21,6 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
         self._region = region
         self._warning_index = slot_id - 1
 
-        self._active_warning_count: int = len(coordinator.data[self._region])
-
         self._attr_translation_placeholders = {
             "region_name": region_name,
             "slot_id": str(slot_id),

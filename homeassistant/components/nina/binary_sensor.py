@@ -70,7 +70,6 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
 
         self._attr_translation_key = "warning"
         self._attr_unique_id = f"{region}-{slot_id}"
-        self._attr_device_info = coordinator.device_info
 
     @property
     def is_on(self) -> bool:
