@@ -18,8 +18,8 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._region: str = region
-        self._warning_index: int = slot_id - 1
+        self._region = region
+        self._warning_index = slot_id - 1
 
         self._active_warning_count: int = len(coordinator.data[self._region])
 
