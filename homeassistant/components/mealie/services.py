@@ -2,7 +2,7 @@
 
 from dataclasses import asdict
 from datetime import date
-from typing import cast
+from typing import Any, cast
 
 from aiomealie import (
     MealieConnectionError,
@@ -117,17 +117,19 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
 
 
 def _get_image_base_url(hass: HomeAssistant) -> str:
-    """Return the external base URL for building image proxy URLs."""
+    """Return the base URL for building image proxy URLs."""
     try:
-        return get_url(hass, allow_internal=False)
+        return get_url(hass, prefer_external=False)
     except NoURLAvailableError:
         _LOGGER.warning(
-            "No external URL available; Mealie image proxy URLs will be relative"
+            "No URL available for Mealie image proxy URLs; image fields will be omitted"
         )
         return ""
 
 
-def _inject_recipe_image_url(base_url: str, entry_id: str, recipe: dict) -> None:
+def _inject_recipe_image_url(
+    base_url: str, entry_id: str, recipe: dict[str, Any]
+) -> None:
     """Replace the raw image field with the HA proxy URL."""
     if recipe.get("image") and recipe.get("recipe_id"):
         recipe["image"] = (

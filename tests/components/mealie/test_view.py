@@ -72,6 +72,28 @@ async def test_view_proxies_image(
     assert response.headers["Cache-Control"] == "max-age=3600"
 
 
+async def test_view_returns_not_found_for_wrong_domain_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the view returns 404 for a config entry from a different domain."""
+    other_entry = MockConfigEntry(
+        domain="other_integration",
+        title="Other",
+        data={},
+    )
+    other_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/api/mealie_image_proxy/{other_entry.entry_id}/{RECIPE_ID}"
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+
+
 async def test_view_returns_not_found_for_unknown_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -121,6 +143,51 @@ async def test_view_returns_unavailable_on_client_error(
     response = await client.get(PROXY_URL)
 
     assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+async def test_view_returns_bad_gateway_for_invalid_content_type(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the view returns 502 for an unexpected content-type."""
+    aioclient_mock.get(
+        IMAGE_URL,
+        content=b"<html>not an image</html>",
+        headers={"Content-Type": "text/html"},
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.get(PROXY_URL)
+
+    assert response.status == HTTPStatus.BAD_GATEWAY
+
+
+async def test_view_returns_bad_gateway_for_oversized_image(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the view returns 502 when Content-Length exceeds the size limit."""
+    aioclient_mock.get(
+        IMAGE_URL,
+        content=b"fake_webp_data",
+        headers={
+            "Content-Type": "image/webp",
+            "Content-Length": str(11 * 1024 * 1024),  # 11 MiB > 10 MiB limit
+        },
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.get(PROXY_URL)
+
+    assert response.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_view_returns_unavailable_on_timeout(
