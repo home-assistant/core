@@ -45,6 +45,21 @@ is_cooling: *condition_common
 is_drying: *condition_common
 is_heating: *condition_common
 
+is_hvac_mode:
+  target: *condition_climate_target
+  fields:
+    behavior: *condition_behavior
+    hvac_mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
+
 target_humidity:
   target: *condition_climate_target
   fields:
