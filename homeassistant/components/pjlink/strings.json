@@ -28,7 +28,7 @@
       "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
     },
     "deprecated_yaml_import_issue_unknown": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unexpected exception occured. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unexpected exception occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
     }
   }
