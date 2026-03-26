@@ -1,6 +1,7 @@
 """API for Google Mail bound to Home Assistant OAuth."""
 
 from functools import partial
+from http import HTTPStatus
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
@@ -58,14 +59,20 @@ class AsyncConfigEntryAuth:
             raise HomeAssistantError(ex) from ex
         except (RefreshError, ClientResponseError, ClientError) as ex:
             if setup_in_progress:
-                if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
+                if (
+                    isinstance(ex, ClientResponseError)
+                    and 400 <= ex.status < 500
+                    and ex.status != HTTPStatus.TOO_MANY_REQUESTS
+                ):
                     raise ConfigEntryAuthFailed(
                         "OAuth session is not valid, reauth required"
                     ) from ex
                 raise ConfigEntryNotReady from ex
             status = getattr(ex, "status", None)
             if isinstance(ex, RefreshError) or (
-                isinstance(status, int) and 400 <= status < 500
+                isinstance(status, int)
+                and 400 <= status < 500
+                and status != HTTPStatus.TOO_MANY_REQUESTS
             ):
                 self.oauth_session.config_entry.async_start_reauth(
                     self.oauth_session.hass

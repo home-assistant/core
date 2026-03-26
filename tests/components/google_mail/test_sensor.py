@@ -14,6 +14,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
@@ -103,19 +104,24 @@ async def test_sensor_reauth_trigger(
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
 
 
-async def test_sensor_transient_token_error_no_reauth(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        OAuth2TokenRequestTransientError(request_info=Mock(), domain=DOMAIN),
+        OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
+        ClientResponseError(request_info=Mock(), history=(), status=429),
+    ],
+    ids=["oauth_transient_error", "oauth_generic_error", "legacy_rate_limited"],
+)
+async def test_sensor_token_error_no_reauth(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    side_effect,
 ) -> None:
-    """Test transient OAuth errors do not start reauth."""
+    """Test retryable/runtime token errors do not start reauth."""
     await setup_integration()
 
-    with patch(
-        TOKEN,
-        side_effect=OAuth2TokenRequestTransientError(
-            request_info=Mock(),
-            domain=DOMAIN,
-        ),
-    ):
+    with patch(TOKEN, side_effect=side_effect):
         next_update = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done(wait_background_tasks=True)
