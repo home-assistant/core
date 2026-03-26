@@ -18,9 +18,7 @@ VALIDATE_AUTH_PATCH = "homeassistant.components.obihai.config_flow.validate_auth
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_user_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, patch_gethostbyname
-) -> None:
+async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -30,7 +28,10 @@ async def test_user_form(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()):
+    with (
+        patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()),
+        patch("homeassistant.components.obihai.config_flow.gethostbyname"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -44,13 +45,16 @@ async def test_user_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_auth_failure(hass: HomeAssistant, patch_gethostbyname) -> None:
+async def test_auth_failure(hass: HomeAssistant) -> None:
     """Test we get the authentication error for user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(VALIDATE_AUTH_PATCH, return_value=False):
+    with (
+        patch(VALIDATE_AUTH_PATCH, return_value=False),
+        patch("homeassistant.components.obihai.config_flow.gethostbyname"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -80,10 +84,13 @@ async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) ->
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_dhcp_flow(hass: HomeAssistant, patch_gethostbyname) -> None:
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Test that DHCP discovery works."""
 
-    with patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()):
+    with (
+        patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()),
+        patch("homeassistant.components.obihai.config_flow.gethostbyname"),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DHCP_SERVICE_INFO,
@@ -116,10 +123,13 @@ async def test_dhcp_flow(hass: HomeAssistant, patch_gethostbyname) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_dhcp_flow_auth_failure(hass: HomeAssistant, patch_gethostbyname) -> None:
+async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
     """Test that DHCP fails if creds aren't default."""
 
-    with patch(VALIDATE_AUTH_PATCH, return_value=False):
+    with (
+        patch(VALIDATE_AUTH_PATCH, return_value=False),
+        patch("homeassistant.components.obihai.config_flow.gethostbyname"),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DHCP_SERVICE_INFO,
