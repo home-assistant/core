@@ -55,15 +55,6 @@
       "battery_level": {
         "name": "Battery level"
       },
-      "battery_state": {
-        "name": "Battery state",
-        "state": {
-          "charging": "Charging",
-          "fully_charged": "Fully Charged",
-          "not_charging": "Not Charging",
-          "unknown": "Unknown"
-        }
-      },
       "last_interaction": {
         "name": "Last interaction"
       },

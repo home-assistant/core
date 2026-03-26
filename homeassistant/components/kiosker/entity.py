@@ -18,13 +18,12 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: KioskerDataUpdateCoordinator,
-        description: EntityDescription | None = None,
+        description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        if description:
-            self.entity_description = description
+        self.entity_description = description
 
         status = coordinator.data.status
         device_id = status.device_id
@@ -34,12 +33,9 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
         os_version = status.os_version
 
         # Use uppercased truncated device ID for display purposes (device name, titles)
-        if device_id is not None:
-            try:
-                device_id_short_display = device_id[:8].upper()
-            except TypeError, AttributeError:
-                device_id_short_display = "unknown"
-        else:
+        try:
+            device_id_short_display = device_id[:8].upper()
+        except TypeError, AttributeError:
             device_id_short_display = "unknown"
 
         # Set device info
@@ -66,4 +62,4 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.data is not None
+        return super().available
