@@ -38,8 +38,11 @@ async def test_scene_select_initial_state(
     assert state.state == "Dynamic Test Scene"
     assert "Dynamic Test Scene" in state.attributes["options"]
 
-    # Test Zone has no smart scenes, so no smart scene select should exist
-    assert hass.states.get("select.test_zone_smart_scene") is None
+    # Test Zone has no smart scenes — entity exists but with empty options
+    state = hass.states.get("select.test_zone_smart_scene")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["options"] == []
 
 
 async def test_scene_select_becomes_inactive(
@@ -165,6 +168,7 @@ async def test_smart_scene_select_activate_option(
         ("select.test_room_scene", ["Regular Test Scene"]),
         ("select.test_room_smart_scene", ["Smart Test Scene"]),
         ("select.test_zone_scene", ["Dynamic Test Scene"]),
+        ("select.test_zone_smart_scene", []),
     ],
 )
 async def test_scene_select_options(
