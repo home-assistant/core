@@ -1452,7 +1452,7 @@ livisi==0.0.25
 locationsharinglib==5.0.1
 
 # homeassistant.components.lojack
-lojack-api==0.7.1
+lojack-api==0.7.2
 
 # homeassistant.components.london_underground
 london-tube-status==0.5
@@ -2651,7 +2651,7 @@ python-overseerr==0.9.0
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.8.6
+python-pooldose==0.9.0
 
 # homeassistant.components.hr_energy_qube
 python-qube-heatpump==1.7.0
