@@ -225,6 +225,7 @@ send_media_group:
           multiple: true
           label_field: url
           description_field: caption
+          translation_key: "media"
           fields:
             media_type:
               label: Media type
