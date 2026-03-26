@@ -9,13 +9,13 @@ from python_overseerr.models import MediaType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr.const import (
+    ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
     ATTR_QUERY,
     ATTR_REQUESTED_BY,
     ATTR_SEASONS,
     ATTR_SORT_ORDER,
     ATTR_STATUS,
-    ATTR_MEDIA_ID,
     DOMAIN,
 )
 from homeassistant.components.overseerr.services import (

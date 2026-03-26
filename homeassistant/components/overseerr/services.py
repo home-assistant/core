@@ -20,13 +20,13 @@ from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
 from .const import (
+    ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
     ATTR_QUERY,
     ATTR_REQUESTED_BY,
     ATTR_SEASONS,
     ATTR_SORT_ORDER,
     ATTR_STATUS,
-    ATTR_MEDIA_ID,
     DOMAIN,
     LOGGER,
 )
@@ -138,9 +138,7 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
     return {"requests": cast(list[JsonValueType], result)}
 
 
-async def _search_media(
-    client: OverseerrClient, query: str
-) -> list[Any]:
+async def _search_media(client: OverseerrClient, query: str) -> list[Any]:
     """Search for media in Seerr."""
     LOGGER.debug("Searching for '%s'", query)
     try:
@@ -151,7 +149,6 @@ async def _search_media(
             translation_key="connection_error",
             translation_placeholders={"error": str(err)},
         ) from err
-
 
     return search_results
 

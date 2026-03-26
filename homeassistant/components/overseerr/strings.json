@@ -180,6 +180,10 @@
           "description": "The Seerr instance to create the request on.",
           "name": "Seerr instance"
         },
+        "media_id": {
+          "description": "The TMDB ID or TVDB ID of the media to request.",
+          "name": "Media ID"
+        },
         "media_type": {
           "description": "Type of media to request.",
           "name": "Media type"
@@ -187,10 +191,6 @@
         "seasons": {
           "description": "For TV requests: seasons to request. Optional list of integers (e.g., [1, 2, 4]). If omitted, all seasons will be requested.",
           "name": "Seasons"
-        },
-        "media_id": {
-          "description": "The TMDB ID or TVDB ID of the media to request.",
-          "name": "Media ID"
         }
       },
       "name": "Request media"
