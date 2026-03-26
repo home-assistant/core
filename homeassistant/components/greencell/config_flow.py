@@ -55,15 +55,10 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle incoming MQTT messages on the discovery topic."""
         try:
             payload = json.loads(msg.payload)
-        except json.JSONDecodeError:
-            _LOGGER.debug("Invalid JSON in discovery payload: %s", msg.payload)
+        except json.JSONDecodeError, AttributeError:
             return
 
-        if not isinstance(payload, dict):
-            _LOGGER.debug("Ignoring non-object discovery payload: %s", msg.payload)
-            return
-
-        serial = payload.get("id")
+        serial = payload["id"]
         if isinstance(serial, str) and serial.strip():
             self._discovered[serial] = payload
             if self._discovery_event:

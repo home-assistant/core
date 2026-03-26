@@ -416,3 +416,40 @@ async def test_mqtt_discovery_invalid_payload(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_data"
+
+
+async def test_mqtt_discovery_attribute_error(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test MQTT discovery aborts when json.loads raises AttributeError."""
+    with patch(
+        "homeassistant.components.greencell.config_flow.json.loads",
+        side_effect=AttributeError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_MQTT},
+            data=_mqtt_service_info('{"id": "anything"}'),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_data"
+
+
+async def test_user_setup_mqtt_subscription_value_error(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test user setup aborts when MQTT subscription raises ValueError."""
+    with patch(
+        "homeassistant.components.greencell.config_flow.mqtt.async_subscribe",
+        side_effect=ValueError("bad topic"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_subscription_failed"
