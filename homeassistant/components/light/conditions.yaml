@@ -1,9 +1,9 @@
 .condition_common: &condition_common
-  target:
+  target: &condition_light_target
     entity:
       domain: light
   fields:
-    behavior:
+    behavior: &condition_behavior
       required: true
       default: any
       selector:
@@ -13,5 +13,31 @@
             - all
             - any
 
+.brightness_threshold_entity: &brightness_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    unit_of_measurement: "%"
+  - domain: sensor
+    unit_of_measurement: "%"
+
+.brightness_threshold_number: &brightness_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
 is_off: *condition_common
 is_on: *condition_common
+
+is_brightness:
+  target: *condition_light_target
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *brightness_threshold_entity
+          mode: is
+          number: *brightness_threshold_number
