@@ -42,7 +42,12 @@ class HomematicipWateringValve(HomematicipGenericEntity, ValveEntity):
     def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
         """Initialize the valve."""
         super().__init__(
-            hap, device=device, channel=channel, post="watering", is_multi_channel=True
+            hap,
+            device=device,
+            channel=channel,
+            post="watering",
+            is_multi_channel=True,
+            feature_id="watering",
         )
 
     async def async_open_valve(self) -> None:

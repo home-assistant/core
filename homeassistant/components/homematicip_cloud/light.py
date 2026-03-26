@@ -126,7 +126,7 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the light entity."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="light")
 
     @property
     def is_on(self) -> bool:
@@ -147,7 +147,13 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
 
     def __init__(self, hap: HomematicipHAP, device: Device, channel_index: int) -> None:
         """Initialize the light entity."""
-        super().__init__(hap, device, channel=channel_index, is_multi_channel=True)
+        super().__init__(
+            hap,
+            device,
+            channel=channel_index,
+            is_multi_channel=True,
+            feature_id="color_light",
+        )
 
     def _supports_color(self) -> bool:
         """Return true if device supports hue/saturation color control."""
@@ -243,7 +249,11 @@ class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
     ) -> None:
         """Initialize the dimmer light entity."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            feature_id="dimmer",
         )
 
     @property
@@ -290,7 +300,14 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
 
     def __init__(self, hap: HomematicipHAP, device, channel: int, post: str) -> None:
         """Initialize the notification light entity."""
-        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+        super().__init__(
+            hap,
+            device,
+            post=post,
+            channel=channel,
+            is_multi_channel=True,
+            feature_id="notification_light",
+        )
 
         self._color_switcher: dict[str, tuple[float, float]] = {
             RGBColorState.WHITE: (0.0, 0.0),
@@ -334,11 +351,6 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
             state_attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState
 
         return state_attr
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.__class__.__name__}_{self._post}_{self._device.id}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -513,6 +525,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
             channel=channel_index,
             is_multi_channel=True,
             channel_real_index=channel_index,
+            feature_id="optical_signal_light",
         )
 
     @property
@@ -614,7 +627,13 @@ class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntit
         self, hap: HomematicipHAP, device: CombinationSignallingDevice
     ) -> None:
         """Initialize the combination signalling light entity."""
-        super().__init__(hap, device, channel=1, is_multi_channel=False)
+        super().__init__(
+            hap,
+            device,
+            channel=1,
+            is_multi_channel=False,
+            feature_id="combination_signalling_light",
+        )
 
     @property
     def _func_channel(self) -> NotificationMp3SoundChannel:

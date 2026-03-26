@@ -109,7 +109,11 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
     ) -> None:
         """Initialize the multi switch device."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            feature_id="switch",
         )
 
     @property
@@ -143,7 +147,7 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
     def __init__(self, hap: HomematicipHAP, device, post: str = "Group") -> None:
         """Initialize switching group."""
         device.modelType = f"HmIP-{post}"
-        super().__init__(hap, device, post)
+        super().__init__(hap, device, post, feature_id="switch")
 
     @property
     def is_on(self) -> bool:

@@ -46,6 +46,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
         self._home: AsyncHome = hap.home
+        self._feature_id = "alarm"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -127,4 +128,4 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self.__class__.__name__}_{self._home.id}"
+        return f"{self._home.id}_{self._feature_id}"
