@@ -122,7 +122,7 @@ def _get_image_base_url(hass: HomeAssistant) -> str:
         return get_url(hass, prefer_external=False)
     except NoURLAvailableError:
         _LOGGER.warning(
-            "No URL available for Mealie image proxy URLs; image fields will be omitted"
+            "No URL available for Mealie image proxy URLs; using relative proxy URLs instead"
         )
         return ""
 
