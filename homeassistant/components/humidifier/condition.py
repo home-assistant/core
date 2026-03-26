@@ -2,7 +2,7 @@
 
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     make_entity_numerical_condition,
@@ -21,7 +21,7 @@ CONDITIONS: dict[str, type[Condition]] = {
         {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.HUMIDIFYING
     ),
     "is_target_humidity": make_entity_numerical_condition(
-        {DOMAIN: NumericalDomainSpec(value_source=ATTR_HUMIDITY)},
+        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
         valid_unit=PERCENTAGE,
     ),
 }
