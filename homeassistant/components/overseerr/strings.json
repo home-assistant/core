@@ -196,7 +196,7 @@
       "name": "Request media"
     },
     "search_and_request": {
-      "description": "Searches for media and creates a request for the best match.",
+      "description": "Searches for media and creates a request for the first search result.",
       "fields": {
         "config_entry_id": {
           "description": "The Seerr instance to use.",
