@@ -36,7 +36,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -44,7 +43,6 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
     store_info: AsyncMock,
     addon_stats: AsyncMock,
@@ -60,10 +58,9 @@ def mock_all(
     os_info: AsyncMock,
     homeassistant_stats: AsyncMock,
     supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     homeassistant_info.return_value = replace(
         homeassistant_info.return_value,
         version="1.0.0dev221",
@@ -80,9 +77,6 @@ def mock_all(
         supervisor_info.return_value,
         version_latest="1.0.1dev222",
         update_available=True,
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
 
     def mock_addon_info(slug: str):
@@ -130,7 +124,6 @@ async def test_update_entities(
     entity_id,
     expected_state,
     auto_update,
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
 ) -> None:
     """Test update entities."""
@@ -1399,10 +1392,7 @@ async def test_update_core_with_backup_and_error(
 
 
 async def test_release_notes_between_versions(
-    hass: HomeAssistant,
-    addon_changelog: AsyncMock,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, addon_changelog: AsyncMock, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test release notes between versions."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -1437,10 +1427,7 @@ async def test_release_notes_between_versions(
 
 
 async def test_release_notes_full(
-    hass: HomeAssistant,
-    addon_changelog: AsyncMock,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, addon_changelog: AsyncMock, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test release notes no match."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -1487,10 +1474,7 @@ async def test_release_notes_full(
 
 
 async def test_not_release_notes(
-    hass: HomeAssistant,
-    addon_changelog: AsyncMock,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, addon_changelog: AsyncMock, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test handling where there are no release notes."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
