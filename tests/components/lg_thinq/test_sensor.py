@@ -23,7 +23,7 @@ from tests.common import (
 )
 
 
-@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.parametrize("device_fixture", ["air_conditioner", "kimchi_refrigerator"])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.freeze_time(datetime(2024, 10, 10, tzinfo=UTC))
 async def test_sensor_entities(
