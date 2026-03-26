@@ -6,10 +6,15 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.humidifier.const import ATTR_ACTION, HumidifierAction
+from homeassistant.components.humidifier.const import (
+    ATTR_ACTION,
+    HumidifierAction,
+    HumidifierEntityFeature,
+)
 from homeassistant.components.humidifier.trigger import CONF_MODE
 from homeassistant.const import (
     ATTR_MODE,
+    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_TARGET,
@@ -127,6 +132,10 @@ async def test_humidifier_state_trigger_behavior_any(
             other_states=[
                 (STATE_ON, {ATTR_MODE: "normal"}),
             ],
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+            },
+            trigger_from_none=False,
         ),
     ],
 )
@@ -228,6 +237,10 @@ async def test_humidifier_state_trigger_behavior_first(
             other_states=[
                 (STATE_ON, {ATTR_MODE: "normal"}),
             ],
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+            },
+            trigger_from_none=False,
         ),
     ],
 )
@@ -329,6 +342,10 @@ async def test_humidifier_state_trigger_behavior_last(
             other_states=[
                 (STATE_ON, {ATTR_MODE: "normal"}),
             ],
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+            },
+            trigger_from_none=False,
         ),
     ],
 )

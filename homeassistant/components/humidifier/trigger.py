@@ -4,8 +4,10 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
     EntityTargetStateTriggerBase,
@@ -14,7 +16,7 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-from .const import ATTR_ACTION, DOMAIN, HumidifierAction
+from .const import ATTR_ACTION, DOMAIN, HumidifierAction, HumidifierEntityFeature
 
 CONF_MODE = "mode"
 
@@ -27,6 +29,14 @@ MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
 )
 
 
+def _supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool:
+    """Test if an entity supports the specified features."""
+    try:
+        return bool(get_supported_features(hass, entity_id) & features)
+    except HomeAssistantError:
+        return False
+
+
 class ModeChangedTrigger(EntityTargetStateTriggerBase):
     """Trigger for humidifier mode changes."""
 
@@ -37,6 +47,15 @@ class ModeChangedTrigger(EntityTargetStateTriggerBase):
         """Initialize the mode trigger."""
         super().__init__(hass, config)
         self._to_states = set(self._options[CONF_MODE])
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities of this domain."""
+        entities = super().entity_filter(entities)
+        return {
+            entity_id
+            for entity_id in entities
+            if _supports_feature(self._hass, entity_id, HumidifierEntityFeature.MODES)
+        }
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
