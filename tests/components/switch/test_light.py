@@ -62,11 +62,13 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
     assert hass.states.get("light.light_switch").state == "on"
 
     await common.async_toggle(hass, "light.light_switch")
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == "off"
     assert hass.states.get("light.light_switch").state == "off"
 
     await common.async_turn_on(hass, "light.light_switch")
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == "on"
     assert hass.states.get("light.light_switch").state == "on"
