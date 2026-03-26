@@ -15,8 +15,6 @@
     unit_of_measurement: "lx"
   - domain: sensor
     device_class: illuminance
-  - domain: number
-    device_class: illuminance
 
 .illuminance_threshold_number: &illuminance_threshold_number
   mode: box
@@ -29,8 +27,6 @@
 
 .trigger_numerical_target: &trigger_numerical_target
   entity:
-    - domain: number
-      device_class: illuminance
     - domain: sensor
       device_class: illuminance
 
