@@ -46,7 +46,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=config_entry.entry_id,
+            name=config_entry.title,
             update_interval=timedelta(seconds=30),
         )
 
