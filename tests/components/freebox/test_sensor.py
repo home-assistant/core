@@ -25,8 +25,14 @@ async def test_network_speed(
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
-    assert hass.states.get("sensor.freebox_download_speed").state == "198.9"
-    assert hass.states.get("sensor.freebox_upload_speed").state == "1440.0"
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state
+        == "198.9"
+    )
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state
+        == "1440.0"
+    )
 
     # Simulate a changed speed
     data_connection_get_status_changed = deepcopy(DATA_CONNECTION_GET_STATUS)
@@ -38,8 +44,14 @@ async def test_network_speed(
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.freebox_download_speed").state == "123.4"
-    assert hass.states.get("sensor.freebox_upload_speed").state == "432.1"
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state
+        == "123.4"
+    )
+    assert (
+        hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state
+        == "432.1"
+    )
 
 
 async def test_call(
@@ -48,7 +60,7 @@ async def test_call(
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
-    assert hass.states.get("sensor.freebox_missed_calls").state == "3"
+    assert hass.states.get("sensor.freebox_server_r2_freebox_missed_calls").state == "3"
 
     # Simulate we marked calls as read
     data_call_get_calls_marked_as_read = []
@@ -58,7 +70,7 @@ async def test_call(
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.freebox_missed_calls").state == "0"
+    assert hass.states.get("sensor.freebox_server_r2_freebox_missed_calls").state == "0"
 
 
 async def test_disk(
@@ -78,7 +90,7 @@ async def test_disk(
         == 1730000000000
     )
 
-    assert hass.states.get("sensor.freebox_free_space").state == "88.27"
+    assert hass.states.get("sensor.disk_3000_freebox_free_space").state == "88.27"
 
     # Simulate a changed storage size
     data_storage_get_disks_changed = deepcopy(DATA_STORAGE_GET_DISKS)
@@ -89,7 +101,7 @@ async def test_disk(
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.freebox_free_space").state == "44.9"
+    assert hass.states.get("sensor.disk_3000_freebox_free_space").state == "44.9"
 
 
 async def test_battery(
