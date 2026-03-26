@@ -1,12 +1,28 @@
 """Test humidifier trigger."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
 import pytest
+import voluptuous as vol
 
-from homeassistant.components.humidifier.const import ATTR_ACTION, HumidifierAction
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.humidifier.const import (
+    ATTR_ACTION,
+    HumidifierAction,
+    HumidifierEntityFeature,
+)
+from homeassistant.components.humidifier.trigger import CONF_MODE
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -29,6 +45,7 @@ async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "humidifier.mode_changed",
         "humidifier.started_drying",
         "humidifier.started_humidifying",
         "humidifier.turned_off",
@@ -102,6 +119,21 @@ async def test_humidifier_state_trigger_behavior_any(
             trigger="humidifier.started_humidifying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+        ),
+        *parametrize_trigger_states(
+            trigger="humidifier.mode_changed",
+            trigger_options={CONF_MODE: ["eco", "sleep"]},
+            target_states=[
+                (STATE_ON, {ATTR_MODE: "eco"}),
+                (STATE_ON, {ATTR_MODE: "sleep"}),
+            ],
+            other_states=[
+                (STATE_ON, {ATTR_MODE: "normal"}),
+            ],
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+            },
+            trigger_from_none=False,
         ),
     ],
 )
@@ -189,6 +221,21 @@ async def test_humidifier_state_trigger_behavior_first(
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
         ),
+        *parametrize_trigger_states(
+            trigger="humidifier.mode_changed",
+            trigger_options={CONF_MODE: ["eco", "sleep"]},
+            target_states=[
+                (STATE_ON, {ATTR_MODE: "eco"}),
+                (STATE_ON, {ATTR_MODE: "sleep"}),
+            ],
+            other_states=[
+                (STATE_ON, {ATTR_MODE: "normal"}),
+            ],
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+            },
+            trigger_from_none=False,
+        ),
     ],
 )
 async def test_humidifier_state_attribute_trigger_behavior_first(
@@ -275,6 +322,21 @@ async def test_humidifier_state_trigger_behavior_last(
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
         ),
+        *parametrize_trigger_states(
+            trigger="humidifier.mode_changed",
+            trigger_options={CONF_MODE: ["eco", "sleep"]},
+            target_states=[
+                (STATE_ON, {ATTR_MODE: "eco"}),
+                (STATE_ON, {ATTR_MODE: "sleep"}),
+            ],
+            other_states=[
+                (STATE_ON, {ATTR_MODE: "normal"}),
+            ],
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+            },
+            trigger_from_none=False,
+        ),
     ],
 )
 async def test_humidifier_state_attribute_trigger_behavior_last(
@@ -298,3 +360,53 @@ async def test_humidifier_state_attribute_trigger_behavior_last(
         trigger_options=trigger_options,
         states=states,
     )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "expected_result"),
+    [
+        # Valid configurations
+        (
+            "humidifier.mode_changed",
+            {CONF_MODE: ["eco", "sleep"]},
+            does_not_raise(),
+        ),
+        (
+            "humidifier.mode_changed",
+            {CONF_MODE: "eco"},
+            does_not_raise(),
+        ),
+        # Invalid configurations
+        (
+            "humidifier.mode_changed",
+            # Empty mode list
+            {CONF_MODE: []},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            "humidifier.mode_changed",
+            # Missing CONF_MODE
+            {},
+            pytest.raises(vol.Invalid),
+        ),
+    ],
+)
+async def test_humidifier_mode_changed_trigger_validation(
+    hass: HomeAssistant,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test humidifier mode_changed trigger config validation."""
+    with expected_result:
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": trigger,
+                    CONF_TARGET: {CONF_ENTITY_ID: "humidifier.test"},
+                    CONF_OPTIONS: trigger_options,
+                }
+            ],
+        )

@@ -10,7 +10,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDevic
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     Trigger,
     make_entity_numerical_state_changed_trigger,
@@ -22,9 +22,9 @@ MOISTURE_BINARY_DOMAIN_SPECS: dict[str, DomainSpec] = {
     BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOISTURE),
 }
 
-MOISTURE_NUMERICAL_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
-    NUMBER_DOMAIN: NumericalDomainSpec(device_class=NumberDeviceClass.MOISTURE),
-    SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.MOISTURE),
+MOISTURE_NUMERICAL_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.MOISTURE),
+    SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.MOISTURE),
 }
 
 

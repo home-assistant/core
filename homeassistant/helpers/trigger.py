@@ -68,7 +68,6 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, selector
 from .automation import (
     DomainSpec,
-    NumericalDomainSpec,
     ThresholdConfig,
     filter_by_domain_specs,
     get_absolute_description_key,
@@ -336,15 +335,14 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
         },
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
 
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
+class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
+    _domain_specs: Mapping[str, DomainSpec]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -535,7 +533,7 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
+class EntityNumericalStateTriggerBase(EntityTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
     _valid_unit: str | None | UndefinedType = UNDEFINED
@@ -596,20 +594,11 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
             # Entity state is not a valid number
             return None
 
-    def _get_converter(self, state: State) -> Callable[[float], float]:
-        """Get the value converter for an entity."""
-        domain_spec = self._domain_specs[state.domain]
-        if domain_spec.value_converter is not None:
-            return domain_spec.value_converter
-        return lambda x: x
-
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
-        if (_attribute_value := self._get_tracked_value(state)) is None:
+        if (current_value := self._get_tracked_value(state)) is None:
             return False
-
-        current_value = self._get_converter(state)(_attribute_value)
 
         if self._threshold_type == NumericThresholdType.ANY:
             # If the threshold type is "any" we always trigger on valid state
@@ -746,19 +735,16 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
         cls._schema = make_numerical_state_changed_with_unit_schema(cls._unit_converter)
 
 
-NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
-    {
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                ),
+NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
+    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(mode=NumericThresholdMode.CROSSED)
                 ),
             },
-        )
-    }
+        }
+    )
 )
 
 
@@ -787,21 +773,16 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
         {
-            vol.Required(CONF_OPTIONS, default={}): vol.All(
-                {
-                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                        [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                    ),
-                    vol.Required("threshold"): NumericThresholdSelector(
-                        NumericThresholdSelectorConfig(
-                            mode=NumericThresholdMode.CROSSED,
-                            unit_of_measurement=list(unit_converter.VALID_UNITS),
-                        )
-                    ),
-                },
-            )
+            vol.Required(CONF_OPTIONS, default={}): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.CROSSED,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
         }
     )
 
@@ -899,7 +880,7 @@ def make_entity_origin_state_trigger(
 
 
 def make_entity_numerical_state_changed_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
@@ -914,7 +895,7 @@ def make_entity_numerical_state_changed_trigger(
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
@@ -929,7 +910,7 @@ def make_entity_numerical_state_crossed_threshold_trigger(
 
 
 def make_entity_numerical_state_changed_with_unit_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     base_unit: str,
     unit_converter: type[BaseUnitConverter],
 ) -> type[EntityNumericalStateChangedTriggerWithUnitBase]:
@@ -946,7 +927,7 @@ def make_entity_numerical_state_changed_with_unit_trigger(
 
 
 def make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     base_unit: str,
     unit_converter: type[BaseUnitConverter],
 ) -> type[EntityNumericalStateCrossedThresholdTriggerWithUnitBase]:
