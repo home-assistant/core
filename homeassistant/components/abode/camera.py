@@ -285,7 +285,9 @@ class AbodeCamera(AbodeDevice, Camera):
         return ice_servers
 
     @staticmethod
-    def _build_signaling_message(action: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def _build_signaling_message(
+        action: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         """Build a KVS signaling message."""
         encoded_payload = base64.b64encode(json.dumps(payload).encode()).decode()
         return {
@@ -298,7 +300,7 @@ class AbodeCamera(AbodeDevice, Camera):
         """Decode a signaling message from KVS."""
         try:
             message_data = json.loads(msg.data)
-        except (TypeError, json.JSONDecodeError):
+        except TypeError, json.JSONDecodeError:
             return None
 
         message_type = message_data.get("messageType")
@@ -308,7 +310,7 @@ class AbodeCamera(AbodeDevice, Camera):
 
         try:
             payload = json.loads(base64.b64decode(encoded_payload))
-        except (TypeError, ValueError, binascii.Error, json.JSONDecodeError):
+        except TypeError, ValueError, binascii.Error, json.JSONDecodeError:
             return None
 
         if not isinstance(payload, dict):
@@ -317,11 +319,13 @@ class AbodeCamera(AbodeDevice, Camera):
         return message_type, payload
 
     @staticmethod
-    def _parse_remote_ice_candidate(payload: dict[str, Any]) -> RTCIceCandidateInit | None:
+    def _parse_remote_ice_candidate(
+        payload: dict[str, Any],
+    ) -> RTCIceCandidateInit | None:
         """Parse a remote ICE candidate payload."""
         try:
             return RTCIceCandidateInit.from_dict(payload)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             candidate = payload.get("candidate")
             if not isinstance(candidate, str):
                 return None
@@ -418,9 +422,11 @@ class AbodeCamera(AbodeDevice, Camera):
         if not self._supports_snapshot:
             raise HomeAssistantError("Camera does not support WebRTC")
 
-        if not self._kvs_signaling_is_fresh() and (
-            await self._async_refresh_kvs_signaling_info()
-        ) is None and not self._kvs_channel_endpoint:
+        if (
+            not self._kvs_signaling_is_fresh()
+            and (await self._async_refresh_kvs_signaling_info()) is None
+            and not self._kvs_channel_endpoint
+        ):
             raise HomeAssistantError("Failed to refresh Abode WebRTC signaling info")
 
         if not self._kvs_channel_endpoint:

@@ -30,8 +30,8 @@ from homeassistant.components.camera import (
     WebRTCCandidate,
     async_get_image,
     async_get_stream_source,
+    get_camera_from_entity_id,
 )
-from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -339,7 +339,9 @@ async def test_camera_webrtc_offer_sends_offer_and_receives_events(
     }
     ws = _FakeWebSocket(
         [
-            _kvs_signaling_message("SDP_ANSWER", {"type": "answer", "sdp": "answer-sdp"}),
+            _kvs_signaling_message(
+                "SDP_ANSWER", {"type": "answer", "sdp": "answer-sdp"}
+            ),
             _kvs_signaling_message(
                 "ICE_CANDIDATE",
                 {
@@ -437,7 +439,9 @@ async def test_camera_refresh_image_handles_auth_error(hass: HomeAssistant) -> N
     assert image is None
 
 
-async def test_camera_snapshot_refresh_handles_snapshot_error(hass: HomeAssistant) -> None:
+async def test_camera_snapshot_refresh_handles_snapshot_error(
+    hass: HomeAssistant,
+) -> None:
     """Test snapshot refresh returns False when snapshot request raises."""
     await setup_platform(hass, CAMERA_DOMAIN)
     camera = cast(AbodeCamera, get_camera_from_entity_id(hass, "camera.test_cam"))
@@ -634,13 +638,18 @@ def test_decode_signaling_message_invalid_payloads() -> None:
         )
         is None
     )
-    encoded_list_payload = base64.b64encode(json.dumps(["not", "dict"]).encode()).decode()
+    encoded_list_payload = base64.b64encode(
+        json.dumps(["not", "dict"]).encode()
+    ).decode()
     assert (
         AbodeCamera._decode_signaling_message(
             SimpleNamespace(
                 type=WSMsgType.TEXT,
                 data=json.dumps(
-                    {"messageType": "SDP_ANSWER", "messagePayload": encoded_list_payload}
+                    {
+                        "messageType": "SDP_ANSWER",
+                        "messagePayload": encoded_list_payload,
+                    }
                 ),
             )
         )
@@ -739,7 +748,9 @@ async def test_camera_webrtc_offer_requires_supported_camera(
     camera._supports_snapshot = False
 
     with pytest.raises(HomeAssistantError, match="does not support WebRTC"):
-        await camera.async_handle_async_webrtc_offer("offer-sdp", "session-1", list.append)
+        await camera.async_handle_async_webrtc_offer(
+            "offer-sdp", "session-1", list.append
+        )
 
 
 async def test_camera_webrtc_offer_fails_when_refresh_fails_and_no_endpoint(
@@ -756,7 +767,9 @@ async def test_camera_webrtc_offer_fails_when_refresh_fails_and_no_endpoint(
             HomeAssistantError, match="Failed to refresh Abode WebRTC signaling info"
         ),
     ):
-        await camera.async_handle_async_webrtc_offer("offer-sdp", "session-1", list.append)
+        await camera.async_handle_async_webrtc_offer(
+            "offer-sdp", "session-1", list.append
+        )
 
 
 async def test_camera_webrtc_offer_fails_without_channel_endpoint(
@@ -769,9 +782,13 @@ async def test_camera_webrtc_offer_fails_without_channel_endpoint(
 
     with (
         patch.object(camera, "_kvs_signaling_is_fresh", return_value=True),
-        pytest.raises(HomeAssistantError, match="Missing Abode WebRTC channel endpoint"),
+        pytest.raises(
+            HomeAssistantError, match="Missing Abode WebRTC channel endpoint"
+        ),
     ):
-        await camera.async_handle_async_webrtc_offer("offer-sdp", "session-1", list.append)
+        await camera.async_handle_async_webrtc_offer(
+            "offer-sdp", "session-1", list.append
+        )
 
 
 async def test_camera_webrtc_offer_fails_when_ws_connect_fails(
@@ -791,10 +808,13 @@ async def test_camera_webrtc_offer_fails_when_ws_connect_fails(
             return_value=session,
         ),
         pytest.raises(
-            HomeAssistantError, match="Failed to connect to Abode WebRTC signaling endpoint"
+            HomeAssistantError,
+            match="Failed to connect to Abode WebRTC signaling endpoint",
         ),
     ):
-        await camera.async_handle_async_webrtc_offer("offer-sdp", "session-1", list.append)
+        await camera.async_handle_async_webrtc_offer(
+            "offer-sdp", "session-1", list.append
+        )
 
 
 async def test_camera_webrtc_offer_fails_when_offer_send_fails(
@@ -820,7 +840,9 @@ async def test_camera_webrtc_offer_fails_when_offer_send_fails(
         ),
         pytest.raises(HomeAssistantError, match="Failed to send WebRTC offer"),
     ):
-        await camera.async_handle_async_webrtc_offer("offer-sdp", "session-send-fail", list.append)
+        await camera.async_handle_async_webrtc_offer(
+            "offer-sdp", "session-send-fail", list.append
+        )
 
     assert "session-send-fail" not in camera._webrtc_sessions
 
@@ -854,7 +876,9 @@ async def test_camera_capture_callback_updates_state(hass: HomeAssistant) -> Non
     camera = cast(AbodeCamera, get_camera_from_entity_id(hass, "camera.test_cam"))
 
     with (
-        patch.object(camera._device, "update_image_location") as mock_update_image_location,
+        patch.object(
+            camera._device, "update_image_location"
+        ) as mock_update_image_location,
         patch.object(camera, "get_image") as mock_get_image,
         patch.object(camera, "schedule_update_ha_state") as mock_schedule_update,
     ):
