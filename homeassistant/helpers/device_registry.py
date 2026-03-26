@@ -787,6 +787,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
+    def async_setup(self) -> None:
+        """Set up the registry."""
+        self._loaded_event = asyncio.Event()
+
+    @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
         """Get device.
 
@@ -1465,7 +1470,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     async def _async_load(self) -> None:
         """Load the device registry."""
-        self._loaded_event = asyncio.Event()
+        assert self._loaded_event is not None
+        assert not self._loaded_event.is_set()
 
         async_setup_cleanup(self.hass, self)
 
@@ -1567,7 +1573,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self._loaded_event.set()
 
     async def async_wait_loaded(self) -> None:
-        """Wait until the device registry is fully loaded."""
+        """Wait until the device registry is fully loaded.
+
+        Will only wait if the registry was already setup.
+        """
         if self._loaded_event is not None:
             await self._loaded_event.wait()
 
@@ -1717,9 +1726,14 @@ def async_get(hass: HomeAssistant) -> DeviceRegistry:
     return DeviceRegistry(hass)
 
 
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up device registry."""
+    assert DATA_REGISTRY not in hass.data
+    async_get(hass).async_setup()
+
+
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load device registry."""
-    assert DATA_REGISTRY not in hass.data
     await async_get(hass).async_load(load_empty=load_empty)
 
 

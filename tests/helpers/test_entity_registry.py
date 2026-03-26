@@ -536,10 +536,12 @@ async def test_entity_registry_loading_waits_for_device_registry(
         await asyncio.sleep(0)
         return await original_load(self)
 
+    dr.async_setup(hass)
+
     with patch.object(dr.DeviceRegistryStore, "async_load", delayed_load):
         await asyncio.gather(
-            dr.async_load(hass),
             er.async_load(hass),
+            dr.async_load(hass),
         )
 
     registry = er.async_get(hass)
@@ -1589,6 +1591,7 @@ async def test_migration_1_20(
             "deleted_devices": [],
         },
     }
+    dr.async_setup(hass)
     await dr.async_load(hass)
 
     # Entity registry data at version 1.20
