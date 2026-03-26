@@ -28,6 +28,20 @@
       },
       "name": "Humidifier is humidifying"
     },
+    "is_mode": {
+      "description": "Tests if one or more humidifiers are set to a specific mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        },
+        "mode": {
+          "description": "The operation modes to check for.",
+          "name": "Mode"
+        }
+      },
+      "name": "Humidifier is in mode"
+    },
     "is_off": {
       "description": "Tests if one or more humidifiers are off.",
       "fields": {

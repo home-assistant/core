@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -30,7 +29,6 @@ BATTERY_CHARGING_DOMAIN_SPECS: dict[str, DomainSpec] = {
 
 BATTERY_PERCENTAGE_DOMAIN_SPECS: dict[str, DomainSpec] = {
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.BATTERY),
-    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.BATTERY),
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
