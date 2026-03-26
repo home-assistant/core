@@ -122,10 +122,10 @@ class UnitConvertOpType(StrEnum):
 type UnitConvertOpInfo = tuple[UnitConvertOpType, float]
 
 
-# When determining unit ratios, offset operations are not applicable
+# When determining unit ratios, offset and rounding operations are not applicable
 def _is_ratio_op(opInfo: UnitConvertOpInfo) -> bool:
     (op, _unused) = opInfo
-    return op != UnitConvertOpType.OFFSET
+    return op not in (UnitConvertOpType.OFFSET, UnitConvertOpType.ROUND)
 
 
 # Maps of operation info to executable functions, in both the from and to directions.
@@ -720,7 +720,8 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         UnitOfSpeed.BEAUFORT: [
             (UnitConvertOpType.SCALE, 1 / 0.836),
-            (UnitConvertOpType.POWER, 2 / 3),
+            (UnitConvertOpType.POWER, 2),
+            (UnitConvertOpType.POWER, 1 / 3),
             (UnitConvertOpType.ROUND, 0),
         ],
     }
