@@ -149,12 +149,24 @@ _UNIT_CONVERT_TO_OP: dict[UnitConvertOpType, UnitConvertOpFn] = {
 class BaseUnitConverter:
     """Define the format of a conversion utility."""
 
+    # Unit class to uniquely identify the converter
     UNIT_CLASS: str
+
+    # Base unit is the unit string which has a conversion ratio of 1 - all others are relative to this
     BASE_UNIT: str | None
+
+    # Valid units is a list of all unit strings which this class can convert between
     VALID_UNITS: set[str | None]
+
+    # A primary converter is the default choice for converting a set of units when unit class is unknown
+    # All valid units across all primary converters should be unique.
     IS_PRIMARY: bool = False
 
+    # Units in this set are inverse to the base unit (e.g. km/kWh is inverse to Wh/km)
     _UNIT_INVERSES: set[str | None] = set()
+
+    # Conversion operations for each unit, indicating how to map **to** the unit from the base unit
+    # Alternatively can provide a scalar float value which will be treated as (SCALE, value)
     _UNIT_CONVERSION: dict[str | None, list[UnitConvertOpInfo] | float]
 
     @classmethod
