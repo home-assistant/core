@@ -1070,7 +1070,7 @@ async def test_html5_send_message(
     service_data: dict[str, Any],
     expected_payload: dict[str, Any],
     expected_ttl: int,
-    expected_headers: dict[str, Any],
+    expected_headers: dict[str, Any] | None,
 ) -> None:
     """Test sending a message via html5.send_message action."""
     load_config.return_value = {"my-desktop": SUBSCRIPTION_1}

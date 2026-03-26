@@ -1,7 +1,5 @@
 """Service registration for HTML5 integration."""
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -65,7 +63,7 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
                 }
             ],
         ),
-        vol.Optional(ATTR_DATA): dict[str, Any],
+        vol.Optional(ATTR_DATA): dict,
     }
 )
 
