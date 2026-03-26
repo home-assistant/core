@@ -153,6 +153,7 @@ class BaseUnitConverter:
     BASE_UNIT: str | None
     VALID_UNITS: set[str | None]
 
+    _UNIT_INVERSES: set[str | None] = set()
     _UNIT_CONVERSION: dict[str | None, list[UnitConvertOpInfo] | float]
 
     @classmethod
@@ -201,6 +202,18 @@ class BaseUnitConverter:
         return floor(max(0, log10(ratio)))
 
     @classmethod
+    @lru_cache
+    def _get_inverse_op(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> list[UnitConvertOpInfo]:
+        """Return inverse operation if units are inverses."""
+        return (
+            [(UnitConvertOpType.POWER, -1)]
+            if (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
+            else []
+        )
+
+    @classmethod
     def _get_from_to_ops(
         cls, from_unit: str | None, to_unit: str | None, for_ratio: bool = False
     ) -> list[UnitConvertOp]:
@@ -209,7 +222,12 @@ class BaseUnitConverter:
         to_op_info = cls._get_ops(to_unit, for_ratio)
         from_op = list(map(BaseUnitConverter._map_from_op, from_op_info))
         from_op.reverse()
-        to_op = list(map(BaseUnitConverter._map_to_op, to_op_info))
+        to_op = list(
+            map(
+                BaseUnitConverter._map_to_op,
+                [*cls._get_inverse_op(from_unit, to_unit), *to_op_info],
+            )
+        )
         return [*from_op, *to_op]
 
     @classmethod
@@ -468,17 +486,15 @@ class EnergyDistanceConverter(BaseUnitConverter):
     UNIT_CLASS = "energy_distance"
     BASE_UNIT = UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM
     VALID_UNITS = set(UnitOfEnergyDistance)
+    _UNIT_INVERSES = {
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+    }
     _UNIT_CONVERSION = {
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
         UnitOfEnergyDistance.WATT_HOUR_PER_KM: 10,
-        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: [
-            (UnitConvertOpType.POWER, -1),
-            (UnitConvertOpType.SCALE, 100 * _KM_TO_M / _MILE_TO_M),
-        ],
-        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: [
-            (UnitConvertOpType.POWER, -1),
-            (UnitConvertOpType.SCALE, 100),
-        ],
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
     }
 
 
