@@ -1,7 +1,8 @@
 .condition_common: &condition_common
   target:
     entity:
-      domain: switch
+      - domain: switch
+      - domain: input_boolean
   fields:
     behavior:
       required: true
