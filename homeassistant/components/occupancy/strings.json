@@ -1,9 +1,39 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted occupancy sensors.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted occupancy sensors to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if one or more occupancy sensors are detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::occupancy::common::condition_behavior_description%]",
+          "name": "[%key:component::occupancy::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Occupancy is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if one or more occupancy sensors are not detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::occupancy::common::condition_behavior_description%]",
+          "name": "[%key:component::occupancy::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Occupancy is not detected"
+    }
+  },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

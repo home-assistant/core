@@ -1068,16 +1068,9 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Update intent slots to include any transformations done by the schemas
         intent_obj.slots = slots
 
-        response = await self.async_handle_states(
+        return await self.async_handle_states(
             intent_obj, match_result, match_constraints, match_preferences
         )
-
-        # Make the matched states available in the response
-        response.async_set_states(
-            matched_states=match_result.states, unmatched_states=[]
-        )
-
-        return response
 
     async def async_handle_states(
         self,
@@ -1371,7 +1364,6 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.error_code: IntentResponseErrorCode | None = None
-        self.intent_targets: list[IntentResponseTarget] = []
         self.success_results: list[IntentResponseTarget] = []
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
@@ -1422,14 +1414,6 @@ class IntentResponse:
         self.async_set_speech(message)
 
     @callback
-    def async_set_targets(
-        self,
-        intent_targets: list[IntentResponseTarget],
-    ) -> None:
-        """Set response targets."""
-        self.intent_targets = intent_targets
-
-    @callback
     def async_set_results(
         self,
         success_results: list[IntentResponseTarget],
@@ -1474,11 +1458,6 @@ class IntentResponse:
             response_data["code"] = self.error_code.value
         else:
             # action done or query answer
-            response_data["targets"] = [
-                dataclasses.asdict(target) for target in self.intent_targets
-            ]
-
-            # Add success/failed targets
             response_data["success"] = [
                 dataclasses.asdict(target) for target in self.success_results
             ]
