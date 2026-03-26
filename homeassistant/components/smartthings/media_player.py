@@ -101,6 +101,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             or device.device.components[MAIN].manufacturer_category,
         )
         self._source_to_smartthings_id: dict[str, str] = {}
+
+    def _update_attr(self) -> None:
+        """Update the attributes."""
         self._build_source_map()
 
     def _build_source_map(self) -> None:
@@ -378,7 +381,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str] | None:
         """List of input sources."""
-        self._build_source_map()
         if not self._source_to_smartthings_id:
             return None
         return list(self._source_to_smartthings_id)
