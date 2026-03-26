@@ -34,6 +34,8 @@ is_value:
               unit_of_measurement: "lx"
             - domain: sensor
               device_class: illuminance
+            - domain: number
+              device_class: illuminance
           mode: is
           number:
             min: 0
