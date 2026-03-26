@@ -29,8 +29,6 @@
 
 .trigger_numerical_target: &trigger_numerical_target
   entity:
-    - domain: number
-      device_class: illuminance
     - domain: sensor
       device_class: illuminance
 
