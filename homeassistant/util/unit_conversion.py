@@ -121,6 +121,13 @@ class UnitConvertOpType(StrEnum):
 # Description of a conversion operation - type and factor
 type UnitConvertOpInfo = tuple[UnitConvertOpType, float]
 
+
+# When determining unit ratios, only scale operations are applicable
+def _is_ratio_op(opInfo: UnitConvertOpInfo) -> bool:
+    (op, _factor) = opInfo
+    return op == UnitConvertOpType.SCALE
+
+
 # Maps of operation info to executable functions, in both the from and to directions.
 type UnitConvertOpFn = Callable[[float, float], float]
 type UnitConvertOp = tuple[UnitConvertOpFn, float]
@@ -181,7 +188,10 @@ class BaseUnitConverter:
     @lru_cache
     def get_unit_ratio(cls, from_unit: str | None, to_unit: str | None) -> float:
         """Get unit ratio between units of measurement."""
-        return cls.convert(1, to_unit, from_unit)
+        if from_unit == to_unit:
+            return 1
+        convert_ops = cls._get_from_to_ops(to_unit, from_unit, True)
+        return BaseUnitConverter._convert_fn(1, convert_ops)
 
     @classmethod
     @lru_cache
@@ -194,18 +204,18 @@ class BaseUnitConverter:
 
     @classmethod
     def _get_from_to_ops(
-        cls, from_unit: str | None, to_unit: str | None
+        cls, from_unit: str | None, to_unit: str | None, for_ratio: bool = False
     ) -> list[UnitConvertOp]:
         """Get operations to convert between units of measurement."""
-        from_op_info = cls._get_ops(from_unit)
-        to_op_info = cls._get_ops(to_unit)
+        from_op_info = cls._get_ops(from_unit, for_ratio)
+        to_op_info = cls._get_ops(to_unit, for_ratio)
         from_op = list(map(BaseUnitConverter._map_from_op, from_op_info))
         from_op.reverse()
         to_op = list(map(BaseUnitConverter._map_to_op, to_op_info))
         return [*from_op, *to_op]
 
     @classmethod
-    def _get_ops(cls, unit: str | None) -> list[UnitConvertOpInfo]:
+    def _get_ops(cls, unit: str | None, for_ratio: bool) -> list[UnitConvertOpInfo]:
         try:
             ops = cls._UNIT_CONVERSION[unit]
         except KeyError as err:
@@ -213,7 +223,7 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
             ) from err
         if isinstance(ops, list):
-            return ops
+            return ops if not for_ratio else list(filter(_is_ratio_op, ops))
         return [(UnitConvertOpType.SCALE, ops)]
 
     @staticmethod
