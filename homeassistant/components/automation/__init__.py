@@ -186,6 +186,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "switch",
     "temperature",
     "text",
+    "todo",
     "update",
     "vacuum",
     "water_heater",
