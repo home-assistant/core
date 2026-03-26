@@ -152,6 +152,7 @@ class BaseUnitConverter:
     UNIT_CLASS: str
     BASE_UNIT: str | None
     VALID_UNITS: set[str | None]
+    IS_PRIMARY: bool = False
 
     _UNIT_INVERSES: set[str | None] = set()
     _UNIT_CONVERSION: dict[str | None, list[UnitConvertOpInfo] | float]
@@ -284,6 +285,7 @@ class ApparentPowerConverter(BaseUnitConverter):
     """Utility to convert apparent power values."""
 
     UNIT_CLASS = "apparent_power"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfApparentPower.VOLT_AMPERE
     VALID_UNITS = set(UnitOfApparentPower)
     _UNIT_CONVERSION = {
@@ -297,6 +299,7 @@ class AreaConverter(BaseUnitConverter):
     """Utility to convert area values."""
 
     UNIT_CLASS = "area"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfArea.SQUARE_METERS
     VALID_UNITS = set(UnitOfArea)
     _UNIT_CONVERSION = {
@@ -317,6 +320,7 @@ class BloodGlucoseConcentrationConverter(BaseUnitConverter):
     """Utility to convert blood glucose concentration values."""
 
     UNIT_CLASS = "blood_glucose_concentration"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER
     VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
     _UNIT_CONVERSION = {
@@ -357,6 +361,7 @@ class ConductivityConverter(BaseUnitConverter):
     """Utility to convert electric current values."""
 
     UNIT_CLASS = "conductivity"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfConductivity.MICROSIEMENS_PER_CM
     VALID_UNITS = set(UnitOfConductivity)
     _UNIT_CONVERSION = {
@@ -370,6 +375,7 @@ class DataRateConverter(BaseUnitConverter):
     """Utility to convert data rate values."""
 
     UNIT_CLASS = "data_rate"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfDataRate.BITS_PER_SECOND
     VALID_UNITS = set(UnitOfDataRate)
     _UNIT_CONVERSION = {
@@ -391,6 +397,7 @@ class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
     UNIT_CLASS = "distance"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfLength.METERS
     VALID_UNITS = set(UnitOfLength)
     _UNIT_CONVERSION = {
@@ -410,6 +417,7 @@ class DurationConverter(BaseUnitConverter):
     """Utility to convert duration values."""
 
     UNIT_CLASS = "duration"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfTime.SECONDS
     VALID_UNITS = {
         UnitOfTime.MICROSECONDS,
@@ -435,6 +443,7 @@ class ElectricCurrentConverter(BaseUnitConverter):
     """Utility to convert electric current values."""
 
     UNIT_CLASS = "electric_current"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfElectricCurrent.AMPERE
     VALID_UNITS = set(UnitOfElectricCurrent)
     _UNIT_CONVERSION = {
@@ -447,6 +456,7 @@ class ElectricPotentialConverter(BaseUnitConverter):
     """Utility to convert electric potential values."""
 
     UNIT_CLASS = "voltage"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfElectricPotential.VOLT
     VALID_UNITS = set(UnitOfElectricPotential)
     _UNIT_CONVERSION = {
@@ -462,6 +472,7 @@ class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     UNIT_CLASS = "energy"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     VALID_UNITS = set(UnitOfEnergy)
     _UNIT_CONVERSION = {
@@ -486,6 +497,7 @@ class EnergyDistanceConverter(BaseUnitConverter):
     """Utility to convert vehicle energy consumption values."""
 
     UNIT_CLASS = "energy_distance"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM
     VALID_UNITS = set(UnitOfEnergyDistance)
     _UNIT_INVERSES = {
@@ -504,6 +516,7 @@ class InformationConverter(BaseUnitConverter):
     """Utility to convert information values."""
 
     UNIT_CLASS = "information"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfInformation.BITS
     VALID_UNITS = set(UnitOfInformation)
     _UNIT_CONVERSION = {
@@ -535,6 +548,7 @@ class MassConverter(BaseUnitConverter):
     """Utility to convert mass values."""
 
     UNIT_CLASS = "mass"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfMass.GRAMS
     VALID_UNITS = set(UnitOfMass)
     _UNIT_CONVERSION = {
@@ -552,6 +566,7 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
     """Utility to convert mass volume concentration values."""
 
     UNIT_CLASS = "concentration"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfConcentration.GRAMS_PER_CUBIC_METER
     VALID_UNITS = {
         UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER,
@@ -624,6 +639,7 @@ class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
     UNIT_CLASS = "power"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfPower.WATT
     VALID_UNITS = set(UnitOfPower)
     _UNIT_CONVERSION = {
@@ -641,6 +657,7 @@ class PressureConverter(BaseUnitConverter):
     """Utility to convert pressure values."""
 
     UNIT_CLASS = "pressure"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfPressure.PA
     VALID_UNITS = set(UnitOfPressure)
     _UNIT_CONVERSION = {
@@ -664,6 +681,7 @@ class ReactiveEnergyConverter(BaseUnitConverter):
     """Utility to convert reactive energy values."""
 
     UNIT_CLASS = "reactive_energy"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR
     VALID_UNITS = set(UnitOfReactiveEnergy)
     _UNIT_CONVERSION = {
@@ -676,6 +694,7 @@ class ReactivePowerConverter(BaseUnitConverter):
     """Utility to convert reactive power values."""
 
     UNIT_CLASS = "reactive_power"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfReactivePower.VOLT_AMPERE_REACTIVE
     VALID_UNITS = set(UnitOfReactivePower)
     _UNIT_CONVERSION = {
@@ -689,6 +708,7 @@ class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
     UNIT_CLASS = "speed"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfSpeed.METERS_PER_SECOND
     VALID_UNITS = {
         UnitOfVolumetricFlux.INCHES_PER_DAY,
@@ -748,6 +768,7 @@ class TemperatureConverter(BaseUnitConverter):
     """Utility to convert temperature values."""
 
     UNIT_CLASS = "temperature"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfTemperature.CELSIUS
     VALID_UNITS = set(UnitOfTemperature)
     _UNIT_CONVERSION = {
@@ -797,6 +818,7 @@ class UnitlessRatioConverter(BaseUnitConverter):
     """Utility to convert unitless ratios."""
 
     UNIT_CLASS = "unitless"
+    IS_PRIMARY = True
     BASE_UNIT = None
     VALID_UNITS = {
         None,
@@ -816,6 +838,7 @@ class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfVolume.CUBIC_METERS
     VALID_UNITS = set(UnitOfVolume)
     _UNIT_CONVERSION = {
@@ -834,6 +857,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume_flow_rate"
+    IS_PRIMARY = True
     BASE_UNIT = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
     VALID_UNITS = set(UnitOfVolumeFlowRate)
     _UNIT_CONVERSION = {
