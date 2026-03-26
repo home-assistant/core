@@ -750,7 +750,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="RadonSensor",
             native_unit_of_measurement=CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
-            device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="radon_concentration",
         ),
