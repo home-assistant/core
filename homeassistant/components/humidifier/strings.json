@@ -201,6 +201,20 @@
   },
   "title": "Humidifier",
   "triggers": {
+    "mode_changed": {
+      "description": "Triggers after the operation mode of one or more humidifiers changes.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        },
+        "mode": {
+          "description": "The operation modes to trigger on.",
+          "name": "Mode"
+        }
+      },
+      "name": "Humidifier mode changed"
+    },
     "started_drying": {
       "description": "Triggers after one or more humidifiers start drying.",
       "fields": {

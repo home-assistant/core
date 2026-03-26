@@ -14,14 +14,14 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDevic
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import Condition, make_entity_numerical_condition
 
 HUMIDITY_DOMAIN_SPECS = {
-    CLIMATE_DOMAIN: NumericalDomainSpec(
+    CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
-    HUMIDIFIER_DOMAIN: NumericalDomainSpec(
+    HUMIDIFIER_DOMAIN: DomainSpec(
         value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.HUMIDITY),

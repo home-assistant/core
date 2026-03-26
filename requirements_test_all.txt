@@ -523,7 +523,7 @@ async-upnp-client==0.46.2
 asyncarve==0.1.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.7.0
+asyncsleepiq==1.7.1
 
 # homeassistant.components.sftp_storage
 asyncssh==2.21.0
@@ -2401,7 +2401,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.6
+renault-api==0.5.7
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2459,7 +2459,7 @@ securetar==2026.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.13.8
+sense-energy==0.14.0
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1

@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
@@ -56,7 +56,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
     """Mixin for climate target temperature conditions with unit conversion."""
 
     _base_unit = UnitOfTemperature.CELSIUS
-    _domain_specs = {DOMAIN: NumericalDomainSpec(value_source=ATTR_TEMPERATURE)}
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
     def _get_entity_unit(self, entity_state: State) -> str | None:
@@ -89,7 +89,7 @@ CONDITIONS: dict[str, type[Condition]] = {
         {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
     ),
     "target_humidity": make_entity_numerical_condition(
-        {DOMAIN: NumericalDomainSpec(value_source=ATTR_HUMIDITY)},
+        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
         valid_unit="%",
     ),
     "target_temperature": ClimateTargetTemperatureCondition,
