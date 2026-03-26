@@ -154,7 +154,12 @@ class AbodeCamera(AbodeDevice, Camera):
             LOGGER.warning("Failed to refresh camera snapshot image: %s", err)
             return False
 
-        snapshot_data_url = self._device.snapshot_data_url(get_snapshot=False)
+        try:
+            snapshot_data_url = self._device.snapshot_data_url(get_snapshot=False)
+        except AbodeException as err:
+            LOGGER.warning("Failed to fetch camera snapshot data URL: %s", err)
+            return False
+
         _, separator, encoded_snapshot = snapshot_data_url.partition(",")
         if not separator:
             LOGGER.warning(
@@ -163,7 +168,7 @@ class AbodeCamera(AbodeDevice, Camera):
             return False
 
         try:
-            self._snapshot_image = base64.b64decode(encoded_snapshot)
+            self._snapshot_image = base64.b64decode(encoded_snapshot, validate=True)
         except (binascii.Error, ValueError) as err:
             LOGGER.warning("Failed to decode camera snapshot: %s", err)
             return False
@@ -201,7 +206,19 @@ class AbodeCamera(AbodeDevice, Camera):
             LOGGER.warning("Failed to get camera stream URL: %s", err)
             return None
 
-        playback_url = response.json().get("playbackUrl")
+        try:
+            playback_data = response.json()
+        except ValueError as err:
+            LOGGER.warning("Failed to decode camera stream response JSON: %s", err)
+            return None
+
+        if not isinstance(playback_data, dict):
+            LOGGER.warning(
+                "Failed to get camera stream URL: unexpected response format"
+            )
+            return None
+
+        playback_url = playback_data.get("playbackUrl")
         if not playback_url:
             LOGGER.warning("Failed to get camera stream URL: missing playbackUrl")
             return None

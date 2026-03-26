@@ -470,6 +470,23 @@ async def test_camera_snapshot_refresh_invalid_snapshot_format(
         assert camera._refresh_snapshot_image() is False
 
 
+async def test_camera_snapshot_refresh_snapshot_data_url_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test snapshot refresh handles snapshot data URL fetch errors."""
+    await setup_platform(hass, CAMERA_DOMAIN)
+    camera = cast(AbodeCamera, get_camera_from_entity_id(hass, "camera.test_cam"))
+
+    with (
+        patch("jaraco.abode.devices.camera.Camera.snapshot", return_value=True),
+        patch(
+            "jaraco.abode.devices.camera.Camera.snapshot_data_url",
+            side_effect=AbodeException((403, "forbidden")),
+        ),
+    ):
+        assert camera._refresh_snapshot_image() is False
+
+
 async def test_camera_snapshot_refresh_invalid_base64(hass: HomeAssistant) -> None:
     """Test snapshot refresh handles invalid base64 payloads."""
     await setup_platform(hass, CAMERA_DOMAIN)
@@ -479,7 +496,7 @@ async def test_camera_snapshot_refresh_invalid_base64(hass: HomeAssistant) -> No
         patch("jaraco.abode.devices.camera.Camera.snapshot", return_value=True),
         patch(
             "jaraco.abode.devices.camera.Camera.snapshot_data_url",
-            return_value="data:image/jpeg;base64,a",
+            return_value="data:image/jpeg;base64,!!!",
         ),
     ):
         assert camera._refresh_snapshot_image() is False
@@ -532,6 +549,32 @@ async def test_camera_stream_source_handles_request_error(hass: HomeAssistant) -
         "jaraco.abode.client.Client.send_request",
         side_effect=AbodeException((500, "error")),
     ):
+        stream_source = await async_get_stream_source(hass, "camera.test_cam")
+
+    assert stream_source is None
+
+
+async def test_camera_stream_source_handles_invalid_json(hass: HomeAssistant) -> None:
+    """Test stream source returns None when playback response JSON is invalid."""
+    await setup_platform(hass, CAMERA_DOMAIN)
+
+    response = Mock()
+    response.json.side_effect = ValueError("invalid json")
+
+    with patch("jaraco.abode.client.Client.send_request", return_value=response):
+        stream_source = await async_get_stream_source(hass, "camera.test_cam")
+
+    assert stream_source is None
+
+
+async def test_camera_stream_source_handles_non_dict_json(hass: HomeAssistant) -> None:
+    """Test stream source returns None when playback response JSON is not an object."""
+    await setup_platform(hass, CAMERA_DOMAIN)
+
+    response = Mock()
+    response.json.return_value = ["not", "a", "dict"]
+
+    with patch("jaraco.abode.client.Client.send_request", return_value=response):
         stream_source = await async_get_stream_source(hass, "camera.test_cam")
 
     assert stream_source is None
@@ -755,7 +798,7 @@ async def test_camera_webrtc_offer_requires_supported_camera(
 
     with pytest.raises(HomeAssistantError, match="does not support WebRTC"):
         await camera.async_handle_async_webrtc_offer(
-            "offer-sdp", "session-1", list.append
+            "offer-sdp", "session-1", lambda *_: None
         )
 
 
@@ -774,7 +817,7 @@ async def test_camera_webrtc_offer_fails_when_refresh_fails_and_no_endpoint(
         ),
     ):
         await camera.async_handle_async_webrtc_offer(
-            "offer-sdp", "session-1", list.append
+            "offer-sdp", "session-1", lambda *_: None
         )
 
 
@@ -793,7 +836,7 @@ async def test_camera_webrtc_offer_fails_without_channel_endpoint(
         ),
     ):
         await camera.async_handle_async_webrtc_offer(
-            "offer-sdp", "session-1", list.append
+            "offer-sdp", "session-1", lambda *_: None
         )
 
 
@@ -819,7 +862,7 @@ async def test_camera_webrtc_offer_fails_when_ws_connect_fails(
         ),
     ):
         await camera.async_handle_async_webrtc_offer(
-            "offer-sdp", "session-1", list.append
+            "offer-sdp", "session-1", lambda *_: None
         )
 
 
@@ -847,7 +890,7 @@ async def test_camera_webrtc_offer_fails_when_offer_send_fails(
         pytest.raises(HomeAssistantError, match="Failed to send WebRTC offer"),
     ):
         await camera.async_handle_async_webrtc_offer(
-            "offer-sdp", "session-send-fail", list.append
+            "offer-sdp", "session-send-fail", lambda *_: None
         )
 
     assert "session-send-fail" not in camera._webrtc_sessions
