@@ -265,7 +265,7 @@ class AreaConverter(BaseUnitConverter):
     """Utility to convert area values."""
 
     UNIT_CLASS = "area"
-    BASE_UNIT = UnitOfApparentPower.VOLT_AMPERE
+    BASE_UNIT = UnitOfArea.SQUARE_METERS
     VALID_UNITS = set(UnitOfArea)
     _UNIT_CONVERSION = {
         UnitOfArea.SQUARE_METERS: 1,
@@ -302,7 +302,7 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     """
 
     UNIT_CLASS = "carbon_monoxide"
-    BASE_UNIT = UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER
+    BASE_UNIT = UnitOfConcentration.PARTS_PER_BILLION
     VALID_UNITS = {
         UnitOfConcentration.PARTS_PER_BILLION,
         UnitOfConcentration.PARTS_PER_MILLION,
