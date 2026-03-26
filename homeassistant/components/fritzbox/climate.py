@@ -97,7 +97,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         super().__init__(coordinator, ain)
 
     @callback
-    def async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:
         """Write the state to the HASS state machine."""
         if self.data.holiday_active:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -109,7 +109,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             self._attr_supported_features = SUPPORTED_FEATURES
             self._attr_hvac_modes = HVAC_MODES
             self._attr_preset_modes = PRESET_MODES
-        return super().async_write_ha_state()
+        return super()._async_write_ha_state()
 
     @property
     def current_temperature(self) -> float:
