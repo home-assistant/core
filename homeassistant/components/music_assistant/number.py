@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import (
     PlayerOption,
     PlayerOptionType,
@@ -58,12 +59,17 @@ async def async_setup_entry(
 class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberEntity):
     """Representation of a Number entity to control player provider dependent settings."""
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the current value."""
-        if not isinstance(self.mass_value, int | float):
-            return None
-        return self.mass_value
+    def __init__(
+        self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
+    ) -> None:
+        """Initialize MusicAssistantPlayerConfigNumber."""
+        super().__init__(mass, player_id, player_option)
+
+        self.entity_description = NumberEntityDescription(
+            name=player_option.name,
+            key=player_option.key,
+            translation_key=player_option.translation_key,
+        )
 
     @catch_musicassistant_error
     async def async_set_native_value(self, value: float) -> None:
@@ -78,14 +84,13 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         """Update on player option update."""
         super().on_player_option_update(player_option)
 
-        self.entity_description = NumberEntityDescription(
-            name=player_option.name,
-            key=player_option.key,
-        )
-
         if player_option.min_value is not None:
             self._attr_native_min_value = player_option.min_value
         if player_option.max_value is not None:
             self._attr_native_max_value = player_option.max_value
         if player_option.step is not None:
             self._attr_native_step = player_option.step
+
+        self._attr_native_value = (
+            self.mass_value if isinstance(self.mass_value, (int, float)) else None
+        )

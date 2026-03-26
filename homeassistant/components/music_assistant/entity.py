@@ -90,6 +90,8 @@ class MusicAssistantEntity(Entity):
 class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
     """Base entity for Music Assistant Player Options."""
 
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(
         self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
     ) -> None:
@@ -99,10 +101,7 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
         self.mass_value = player_option.value
         self.mass_option_key = player_option.key
         self.mass_type = player_option.type
-        self.on_player_option_update(
-            player_option
-        )  # sets the entity_description as well
-        self._attr_entity_category = EntityCategory.CONFIG
+        self.on_player_option_update(player_option)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
