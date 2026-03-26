@@ -8,9 +8,9 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 from .conftest import setup_integration
+
+from tests.common import MockConfigEntry
 
 # Entity IDs are auto-generated based on device name + entity count
 # Indoor humidity sensor
