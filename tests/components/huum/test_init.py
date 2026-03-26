@@ -31,35 +31,46 @@ async def test_loading_and_unloading_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_state"),
+    "exception",
     [
-        (Forbidden("Forbidden"), ConfigEntryState.SETUP_ERROR),
-        (NotAuthenticated("Not authenticated"), ConfigEntryState.SETUP_ERROR),
-        (RequestError("Request error"), ConfigEntryState.SETUP_RETRY),
+        Forbidden("Forbidden"),
+        NotAuthenticated("Not authenticated"),
     ],
 )
-async def test_setup_entry_exceptions(
+async def test_setup_entry_auth_error(
     hass: HomeAssistant,
     mock_huum_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
-    expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup fails with various exceptions."""
+    """Test setup triggers reauth on auth errors."""
     mock_config_entry.add_to_hass(hass)
     mock_huum_client.status.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is expected_state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    if isinstance(exception, (Forbidden, NotAuthenticated)):
-        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-        assert len(flows) == 1
-        assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    else:
-        assert hass.config_entries.flow.async_progress_by_handler(DOMAIN) == []
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_setup_entry_connection_error(
+    hass: HomeAssistant,
+    mock_huum_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries on connection error."""
+    mock_config_entry.add_to_hass(hass)
+    mock_huum_client.status.side_effect = RequestError("Request error")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN) == []
 
 
 @pytest.mark.usefixtures("init_integration")
