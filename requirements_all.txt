@@ -3138,9 +3138,6 @@ toonapi==0.3.0
 # homeassistant.components.totalconnect
 total-connect-client==2025.12.2
 
-# homeassistant.components.tplink_lte
-tp-connected==0.0.4
-
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.5.6
 
