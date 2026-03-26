@@ -86,7 +86,8 @@ class HomematicipGenericEntity(Entity):
         channel: int | None = None,
         is_multi_channel: bool | None = False,
         channel_real_index: int | None = None,
-        feature_id: str | None = None,
+        *,
+        feature_id: str,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
@@ -239,17 +240,10 @@ class HomematicipGenericEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if self._feature_id is not None:
-            if not isinstance(self._device, Device):
-                return f"{self._device.id}_{self._feature_id}"
-            channel_index = self.get_channel_index()
-            return f"{self._device.id}_{channel_index}_{self._feature_id}"
-
-        # Legacy fallback
-        unique_id = f"{self.__class__.__name__}_{self._device.id}"
-        if self._is_multi_channel:
-            unique_id = f"{self.__class__.__name__}_Channel{self.get_channel_index()}_{self._device.id}"
-        return unique_id
+        if not isinstance(self._device, Device):
+            return f"{self._device.id}_{self._feature_id}"
+        channel_index = self.get_channel_index()
+        return f"{self._device.id}_{channel_index}_{self._feature_id}"
 
     @property
     def icon(self) -> str | None:

@@ -42,11 +42,11 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
     _attr_code_arm_required = False
+    _feature_id = "alarm"
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
         self._home: AsyncHome = hap.home
-        self._feature_id = "alarm"
 
     @property
     def device_info(self) -> DeviceInfo:

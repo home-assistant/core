@@ -8,11 +8,6 @@ from unittest.mock import AsyncMock, Mock, patch
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
 
-from homeassistant.components.homematicip_cloud import (
-    UNIQUE_ID_MIGRATION_MAP,
-    _migrate_unique_id,
-    async_migrate_entry,
-)
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
     CONF_AUTHTOKEN,
@@ -22,6 +17,11 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_NAME,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
+from homeassistant.components.homematicip_cloud.migration import (
+    UNIQUE_ID_MIGRATION_MAP,
+    _migrate_unique_id,
+    async_migrate_entry,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
