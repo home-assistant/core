@@ -167,6 +167,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SNMP."""
 
     VERSION = 1
+    MINOR_VERSION = 1
     _user_data: dict[str, Any]
 
     async def async_step_user(

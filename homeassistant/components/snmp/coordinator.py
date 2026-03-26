@@ -24,7 +24,7 @@ from .util import RequestArgsType
 _LOGGER = logging.getLogger(__name__)
 
 
-class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
+class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     """Class to manage fetching the list of MAC addresses from the router."""
 
     def __init__(
@@ -79,12 +79,12 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             else:
                 self.model = descr
 
-    async def _async_update_data(self) -> dict[str, str]:
+    async def _async_update_data(self) -> dict[str, str | None]:
         """Fetch the current list of MAC addresses via an SNMP Walk."""
         if self.model is None:
             await self._async_fetch_host_info()
 
-        devices: dict[str, str] = {}
+        devices: dict[str, str | None] = {}
         engine, auth_data, target, context_data, object_type = self.request_args
 
         walker = bulk_walk_cmd(
@@ -126,7 +126,7 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                             continue
 
                         # Extract IP address from OID suffix (last 4 parts)
-                        ip = "0.0.0.0"
+                        ip = None
                         if hasattr(oid, "asTuple"):
                             oid_tuple = oid.asTuple()
                             if len(oid_tuple) >= 4:

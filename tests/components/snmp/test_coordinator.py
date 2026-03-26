@@ -76,7 +76,7 @@ async def test_coordinator_ip_extraction(
     test_cases = [
         ((1, 3, 6, 1, 2, 1, 4, 22, 1, 6, 1, 192, 168, 1, 10), "192.168.1.10"),
         ((1, 1, 1, 1, 10, 20, 30, 40), "10.20.30.40"),
-        ((1, 2, 3), "0.0.0.0"),  # OID too short
+        ((1, 2, 3), None),  # OID too short
     ]
 
     for oid_tuple, expected_ip in test_cases:

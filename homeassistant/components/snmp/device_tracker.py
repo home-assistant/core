@@ -71,9 +71,7 @@ async def async_setup_entry(
 
     # 3. Add entities for all known MACs immediately
     if initial_macs:
-        async_add_entities(
-            SnmpTrackerEntity(coordinator, entry, mac) for mac in initial_macs
-        )
+        async_add_entities(SnmpTrackerEntity(coordinator, mac) for mac in initial_macs)
 
     tracked_macs = set(initial_macs)
 
@@ -97,7 +95,7 @@ async def async_setup_entry(
 
                 tracked_macs.add(mac)
                 new_entities.append(
-                    SnmpTrackerEntity(coordinator, entry, mac, default_enabled)
+                    SnmpTrackerEntity(coordinator, mac, default_enabled)
                 )
 
         if new_entities:
@@ -115,7 +113,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
     def __init__(
         self,
         coordinator: SnmpUpdateCoordinator,
-        entry: SnmpConfigEntry,
         mac: str,
         default_enabled: bool = False,
     ) -> None:
@@ -123,7 +120,9 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         super().__init__(coordinator)
         self._attr_mac_address = mac
         self._attr_entity_registry_enabled_default = default_enabled
-        self._entry = entry
+        self._attr_unique_id = mac
+        self._attr_ip_address = coordinator.data.get(mac)
+        self._attr_translation_key = "device_tracker"
 
     @property
     def is_connected(self) -> bool:
@@ -132,18 +131,12 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
             return False
         return self._attr_mac_address in self.coordinator.data
 
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attribute so base class can use it."""
         assert self._attr_mac_address is not None
-        return self._attr_mac_address
-
-    @property
-    def ip_address(self) -> str | None:
-        """Return the primary ip address of the device."""
-        if not self.coordinator.data or self._attr_mac_address is None:
-            return None
-        return self.coordinator.data.get(self._attr_mac_address)
+        self._attr_ip_address = self.coordinator.data.get(self._attr_mac_address)
+        super()._handle_coordinator_update()
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -152,12 +145,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
             self._attr_entity_registry_enabled_default
             or super().entity_registry_enabled_default
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this entity (just the MAC address)."""
-        assert self._attr_mac_address is not None
-        return self._attr_mac_address
 
     @property
     def name(self) -> str:

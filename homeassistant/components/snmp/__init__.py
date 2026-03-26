@@ -15,6 +15,7 @@ from pysnmp.smi.error import WrongValueError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -87,11 +88,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
                 (host, port), timeout=DEFAULT_TIMEOUT
             )
         except PySnmpError as err:
-            _LOGGER.error("Invalid SNMP host: %s", err)
-            return False
-    except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
-        _LOGGER.error("Unexpected error during SNMP target creation: %s", err)
-        return False
+            raise ConfigEntryNotReady(f"Cannot reach SNMP host: {err}") from err
+    except Exception as err:
+        raise ConfigEntryNotReady(
+            f"Unexpected error during SNMP target creation: {err}"
+        ) from err
 
     request_args = await async_create_request_cmd_args(
         hass,
@@ -105,9 +106,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
 
     try:
         await coordinator.async_config_entry_first_refresh()
-    except (WrongValueError, PySnmpError) as err:
-        _LOGGER.error("Invalid authentication credentials or protocols: %s", err)
-        return False
+    except WrongValueError as err:
+        raise ConfigEntryAuthFailed(
+            f"Invalid authentication credentials or protocols: {err}"
+        ) from err
+    except PySnmpError as err:
+        raise ConfigEntryNotReady(f"Router unreachable: {err}") from err
 
     if coordinator.sys_name:
         hass.config_entries.async_update_entry(entry, title=coordinator.sys_name)
