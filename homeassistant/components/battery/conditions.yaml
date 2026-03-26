@@ -27,12 +27,10 @@
           selector:
             entity:
               filter:
-                - domain: input_number
-                  unit_of_measurement: "%"
-                - domain: number
-                  device_class: battery
-                - domain: sensor
-                  device_class: battery
+                domain:
+                  - input_number
+                  - number
+                  - sensor
       translation_key: number_or_entity
 
 is_low: *condition_common
