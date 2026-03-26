@@ -21,5 +21,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["sense_energy"],
-  "requirements": ["sense-energy==0.13.8"]
+  "requirements": ["sense-energy==0.14.0"]
 }
