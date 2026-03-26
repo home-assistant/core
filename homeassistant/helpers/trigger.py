@@ -336,7 +336,6 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
         },
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
@@ -746,19 +745,16 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
         cls._schema = make_numerical_state_changed_with_unit_schema(cls._unit_converter)
 
 
-NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
-    {
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                ),
+NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
+    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(mode=NumericThresholdMode.CROSSED)
                 ),
             },
-        )
-    }
+        }
+    )
 )
 
 
@@ -787,21 +783,16 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
         {
-            vol.Required(CONF_OPTIONS, default={}): vol.All(
-                {
-                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                        [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                    ),
-                    vol.Required("threshold"): NumericThresholdSelector(
-                        NumericThresholdSelectorConfig(
-                            mode=NumericThresholdMode.CROSSED,
-                            unit_of_measurement=list(unit_converter.VALID_UNITS),
-                        )
-                    ),
-                },
-            )
+            vol.Required(CONF_OPTIONS, default={}): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.CROSSED,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
         }
     )
 
