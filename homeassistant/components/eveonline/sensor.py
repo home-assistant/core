@@ -16,6 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator, EveOnlineData
 from .entity import EveOnlineCharacterEntity, EveOnlineServerEntity
 
@@ -192,10 +193,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up Eve Online sensors from a config entry."""
     coordinator = entry.runtime_data
-    entities: list[EveOnlineSensor] = [
-        EveOnlineServerSensor(coordinator, description)
-        for description in SERVER_SENSORS
-    ]
+    entities: list[EveOnlineSensor] = []
+
+    # Only create shared Tranquility server entities for the first loaded entry
+    # to avoid duplicate unique_ids when multiple characters are configured.
+    if not any(
+        e
+        for e in hass.config_entries.async_loaded_entries(DOMAIN)
+        if e.entry_id != entry.entry_id
+    ):
+        entities.extend(
+            EveOnlineServerSensor(coordinator, description)
+            for description in SERVER_SENSORS
+        )
+
     entities.extend(
         EveOnlineCharacterSensor(coordinator, description)
         for description in CHARACTER_SENSORS

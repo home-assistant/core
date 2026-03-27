@@ -493,3 +493,95 @@ async def test_flow_aborts_on_jwt_missing_subject(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_flow_aborts_on_jwt_wrong_issuer(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a JWT with unexpected issuer namespace aborts the config flow."""
+    await _setup_credentials(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    # JWT with CHARACTER but wrong namespace (not EVE)
+    payload_data = {"sub": "CHARACTER:SERENITY:12345", "name": "Test"}
+    payload = base64.urlsafe_b64encode(json.dumps(payload_data).encode()).rstrip(b"=")
+    header = base64.urlsafe_b64encode(b'{"alg":"RS256"}').rstrip(b"=")
+    sig = base64.urlsafe_b64encode(b"fakesig").rstrip(b"=")
+    bad_jwt = f"{header.decode()}.{payload.decode()}.{sig.decode()}"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": bad_jwt,
+            "type": "Bearer",
+            "expires_in": 1200,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_flow_aborts_on_jwt_non_numeric_character_id(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a JWT with non-numeric character ID aborts the config flow."""
+    await _setup_credentials(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    # JWT with CHARACTER:EVE but non-numeric ID
+    payload_data = {"sub": "CHARACTER:EVE:not-a-number", "name": "Test"}
+    payload = base64.urlsafe_b64encode(json.dumps(payload_data).encode()).rstrip(b"=")
+    header = base64.urlsafe_b64encode(b'{"alg":"RS256"}').rstrip(b"=")
+    sig = base64.urlsafe_b64encode(b"fakesig").rstrip(b"=")
+    bad_jwt = f"{header.decode()}.{payload.decode()}.{sig.decode()}"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": bad_jwt,
+            "type": "Bearer",
+            "expires_in": 1200,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
