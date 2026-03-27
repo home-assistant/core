@@ -280,7 +280,9 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             self.soco.volume = level
 
     async def async_set_native_value(self, value: float) -> None:
-        """Run the blocking volume write in an executor, then schedule refresh on the loop."""
+        """Optimistically update state, run the blocking write in an executor, then schedule refresh."""
+        self._value = int(value + 0.5)
+        self.async_write_ha_state()
         await self.hass.async_add_executor_job(self.set_native_value, value)
         self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
 
