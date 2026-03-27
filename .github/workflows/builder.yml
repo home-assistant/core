@@ -35,6 +35,7 @@ jobs:
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
       architectures: ${{ env.ARCHITECTURES }}
+      translation_download_process: ${{ steps.translations.outputs.translation_download_process }}
       base_image_version: ${{ env.BASE_IMAGE_VERSION }}
     steps:
       - name: Checkout the repository
@@ -46,6 +47,26 @@ jobs:
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: ".python-version"
+
+      - name: Fail if translations files are checked in
+        run: |
+          if [ -n "$(find homeassistant/components/*/translations -type f)" ]; then
+              echo "Translations files are checked in, please remove the following files:"
+              find homeassistant/components/*/translations -type f
+              exit 1
+          fi
+
+      - name: Start translation download
+        id: translations
+        shell: bash
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
+        run: |
+          pip install -r script/translations/requirements.txt
+          PROCESS_OUTPUT=$(python3 -m script.translations download --async-start)
+          echo "$PROCESS_OUTPUT"
+          TRANSLATION_DOWNLOAD_PROCESS=$(echo "$PROCESS_OUTPUT" | sed -n 's/.*Process ID: //p')
+          echo "translation_download_process=$TRANSLATION_DOWNLOAD_PROCESS" >> "$GITHUB_OUTPUT"
 
       - name: Get information
         id: info
@@ -61,30 +82,6 @@ jobs:
         uses: home-assistant/actions/helpers/verify-version@master # zizmor: ignore[unpinned-uses]
         with:
           ignore-dev: true
-
-      - name: Fail if translations files are checked in
-        run: |
-          if [ -n "$(find homeassistant/components/*/translations -type f)" ]; then
-              echo "Translations files are checked in, please remove the following files:"
-              find homeassistant/components/*/translations -type f
-              exit 1
-          fi
-
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
-
-      - name: Archive translations
-        shell: bash
-        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
-
-      - name: Upload translations
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: translations
-          path: translations.tar.gz
-          if-no-files-found: error
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
@@ -133,7 +130,6 @@ jobs:
           name: package
 
       - name: Set up Python
-        if: needs.init.outputs.channel == 'dev'
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: ".python-version"
@@ -181,22 +177,35 @@ jobs:
             sed -i "s|home-assistant-intents==.*||" requirements_all.txt requirements.txt
           fi
 
-      - name: Download translations
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: translations
-
-      - name: Extract translations
-        run: |
-          tar xvf translations.tar.gz
-          rm translations.tar.gz
-
       - name: Write meta info file
         shell: bash
         run: |
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
-      - name: Build base image
+      - name: Build base image (deps stage only)
+        uses: edenhaus/builder/actions/build-image@b3ea9d4b1d98f979d671aa8442ad8373e38aea11
+        with:
+          arch: ${{ matrix.arch }}
+          build-args: |
+            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          cache-gha: false
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          cosign-base-identity: "https://github.com/home-assistant/docker/.*"
+          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          push: false
+          load: true
+          target: deps
+
+      - name: Download translations
+        shell: bash
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
+          TRANSLATION_PROCESS_ID: ${{ needs.init.outputs.translation_download_process }}
+        run: |
+          pip install -r script/translations/requirements.txt
+          python3 -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
+
+      - name: Build base image (fully)
         uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
         with:
           arch: ${{ matrix.arch }}
@@ -485,14 +494,13 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Download translations
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: translations
-
-      - name: Extract translations
+        shell: bash
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
+          TRANSLATION_PROCESS_ID: ${{ needs.init.outputs.translation_download_process }}
         run: |
-          tar xvf translations.tar.gz
-          rm translations.tar.gz
+          pip install -r script/translations/requirements.txt
+          python3 -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
 
       - name: Build package
         shell: bash
