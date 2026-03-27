@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from collections.abc import Mapping
 import json
 import logging
@@ -48,7 +49,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         token = data["token"]["access_token"]
         try:
             character_info = _decode_eve_jwt(token)
-        except ValueError, KeyError:
+        except ValueError, KeyError, binascii.Error:
             return self.async_abort(reason="oauth_error")
 
         character_id = character_info["character_id"]
