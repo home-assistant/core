@@ -1,12 +1,12 @@
 """The tests for Radarr calendar platform."""
 
-from datetime import timedelta
+from datetime import date, timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.radarr.const import CONF_UPCOMING_DAYS
+from homeassistant.components.radarr.const import DEFAULT_UPCOMING_DAYS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -45,22 +45,20 @@ async def test_calendar(
 
 
 @pytest.mark.freeze_time("2021-12-02 00:00:00-08:00")
-async def test_calendar_respects_upcoming_days_option(
+async def test_calendar_uses_single_ranged_request(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test the calendar coordinator uses configured upcoming days."""
-    entry = await setup_integration(
-        hass,
-        aioclient_mock,
-        options={CONF_UPCOMING_DAYS: 1},
-    )
+    """Test the calendar coordinator fetches the fixed lookahead in one request."""
+    entry = await setup_integration(hass, aioclient_mock)
     coordinator = entry.runtime_data.calendar
 
     with patch.object(
-        coordinator, "async_get_events", AsyncMock(return_value=[])
-    ) as mock_async_get_events:
+        coordinator.api_client, "async_get_calendar", AsyncMock(return_value=[])
+    ) as mock_async_get_calendar:
         await coordinator.async_refresh()
 
-    start_date, end_date = mock_async_get_events.await_args.args
-    assert end_date - start_date == timedelta(days=1)
+    mock_async_get_calendar.assert_awaited_once_with(
+        start_date=date(2021, 12, 2),
+        end_date=date(2021, 12, 2) + timedelta(days=DEFAULT_UPCOMING_DAYS),
+    )

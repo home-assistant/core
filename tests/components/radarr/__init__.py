@@ -165,7 +165,6 @@ async def setup_integration(
     invalid_auth: bool = False,
     windows: bool = False,
     single_return: bool = False,
-    options: dict[str, int] | None = None,
 ) -> MockConfigEntry:
     """Set up the radarr integration in Home Assistant."""
     entry = MockConfigEntry(
@@ -176,7 +175,6 @@ async def setup_integration(
             CONF_API_KEY: api_key,
             CONF_VERIFY_SSL: False,
         },
-        options=options,
     )
 
     entry.add_to_hass(hass)

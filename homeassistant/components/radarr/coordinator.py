@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Generic, TypeVar, cast
@@ -25,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS, DOMAIN, LOGGER
+from .const import DEFAULT_UPCOMING_DAYS, DOMAIN, LOGGER
 
 
 @dataclass(kw_only=True, slots=True)
@@ -161,55 +160,35 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         """Initialize."""
         super().__init__(hass, config_entry, host_configuration, api_client)
         self.event: RadarrEvent | None = None
-        self._events: list[RadarrEvent] = []
 
     async def _fetch_data(self) -> None:
         """Fetch the calendar."""
         self.event = None
-        start_date = datetime.today()
-        await self.async_get_events(
-            start_date,
-            start_date
-            + timedelta(
-                days=self.config_entry.options.get(
-                    CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
-                )
-            ),
+        start_date = datetime.today().date()
+        events = await self._async_fetch_events(
+            start_date, start_date + timedelta(days=DEFAULT_UPCOMING_DAYS)
         )
-        for event in sorted(self._events, key=lambda event: event.start):
-            if event.start >= start_date.date():
+        for event in sorted(events, key=lambda event: event.start):
+            if event.start >= start_date:
                 self.event = event
                 break
 
     async def async_get_events(
         self, start_date: datetime, end_date: datetime
     ) -> list[RadarrEvent]:
-        """Get cached events and request missing dates."""
-        # remove older events to prevent memory leak
-        self._events = [
-            e
-            for e in self._events
-            if e.start >= datetime.now().date() - timedelta(days=30)
-        ]
-        _days = (end_date - start_date).days
-        await asyncio.gather(
-            *(
-                self._async_get_events(d)
-                for d in ((start_date + timedelta(days=x)).date() for x in range(_days))
-                if d not in (event.start for event in self._events)
-            )
-        )
-        return self._events
+        """Get events in a specific time frame."""
+        return await self._async_fetch_events(start_date.date(), end_date.date())
 
-    async def _async_get_events(self, _date: date) -> None:
-        """Return events from specified date."""
-        self._events.extend(
-            _get_calendar_event(evt)
-            for evt in await self.api_client.async_get_calendar(
-                start_date=_date, end_date=_date + timedelta(days=1)
+    async def _async_fetch_events(
+        self, start_date: date, end_date: date
+    ) -> list[RadarrEvent]:
+        """Fetch calendar events for a date range."""
+        return [
+            _get_calendar_event(event)
+            for event in await self.api_client.async_get_calendar(
+                start_date=start_date, end_date=end_date
             )
-            if evt.title not in (e.summary for e in self._events)
-        )
+        ]
 
 
 def _get_calendar_event(event: RadarrCalendarItem) -> RadarrEvent:
