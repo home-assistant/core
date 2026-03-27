@@ -142,6 +142,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "person",
     "power",
     "schedule",
+    "select",
     "siren",
     "switch",
     "temperature",
