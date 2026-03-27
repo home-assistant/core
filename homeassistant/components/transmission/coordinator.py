@@ -101,7 +101,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     def _async_notify_event_listeners(self, event: TransmissionEventData) -> None:
         """Notify event listeners in the event loop."""
         for listener in self._event_listeners.values():
-            self.hass.add_job(listener, event)
+            listener(event)
 
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
