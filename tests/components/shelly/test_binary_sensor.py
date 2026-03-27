@@ -9,6 +9,7 @@ from aioshelly.const import (
     MODEL_MOTION,
     MODEL_PLUS_SMOKE,
 )
+from aioshelly.exceptions import DeviceConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -332,6 +333,7 @@ async def test_rpc_sleeping_binary_sensor(
 ) -> None:
     """Test RPC online sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
+    mock_rpc_device.initialize.side_effect = DeviceConnectionError
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     config_entry = await init_integration(hass, 2, sleep_period=1000)
@@ -344,6 +346,7 @@ async def test_rpc_sleeping_binary_sensor(
     )
 
     # Make device online
+    mock_rpc_device.initialize.side_effect = None
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -373,6 +376,7 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
 ) -> None:
     """Test RPC online sleeping binary sensor with channel name."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel_name_smoke"
+    mock_rpc_device.initialize.side_effect = DeviceConnectionError
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
@@ -381,6 +385,7 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     assert hass.states.get(entity_id) is None
 
     # Make device online
+    mock_rpc_device.initialize.side_effect = None
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 

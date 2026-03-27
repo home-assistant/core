@@ -1,6 +1,6 @@
 """The tests for Shelly device triggers."""
 
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_BUTTON1
 import pytest
@@ -402,6 +402,10 @@ async def test_rpc_no_runtime_data(
 ) -> None:
     """Test the device trigger for the RPC device when there is no runtime_data in the entry."""
     entry = await init_integration(hass, 2)
+    monkeypatch.setattr(
+        "homeassistant.components.shelly.async_unload_entry",
+        AsyncMock(return_value=True),
+    )
     monkeypatch.delattr(entry, "runtime_data")
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 

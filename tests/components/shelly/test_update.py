@@ -409,6 +409,7 @@ async def test_rpc_sleeping_update(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC sleeping device update entity."""
+    mock_rpc_device.initialize.side_effect = DeviceConnectionError
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
@@ -426,6 +427,7 @@ async def test_rpc_sleeping_update(
     assert hass.states.get(entity_id) is None
 
     # Make device online
+    mock_rpc_device.initialize.side_effect = None
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 

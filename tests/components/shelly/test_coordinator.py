@@ -1097,16 +1097,14 @@ async def test_rpc_sleeping_device_late_setup(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     assert entry.data[CONF_SLEEP_PERIOD] == 1000
     register_device(device_registry, entry)
+    mock_rpc_device.initialize.side_effect = DeviceConnectionError
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    monkeypatch.setattr(mock_rpc_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.initialize.side_effect = None
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
-    monkeypatch.setattr(mock_rpc_device, "connected", True)
-    mock_rpc_device.mock_initialized()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("sensor.test_name_temperature")

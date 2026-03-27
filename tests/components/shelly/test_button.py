@@ -493,6 +493,7 @@ async def test_rpc_smoke_mute_alarm_button(
     entity_id = f"{BUTTON_DOMAIN}.test_name_mute_alarm"
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     monkeypatch.setattr(mock_rpc_device, "config", {"smoke:0": {"id": 0, "name": None}})
+    mock_rpc_device.initialize.side_effect = DeviceConnectionError
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
@@ -500,7 +501,9 @@ async def test_rpc_smoke_mute_alarm_button(
     assert hass.states.get(entity_id) is None
 
     # Make device online
+    mock_rpc_device.initialize.side_effect = None
     mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
