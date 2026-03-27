@@ -75,7 +75,7 @@ async def test_form_invalid_inputs(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_projector: AsyncMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
     error_str: str,
 ) -> None:
     """Test we handle invalid inputs."""
@@ -153,7 +153,7 @@ async def test_import_invalid_inputs(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_projector: AsyncMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
     error_str: str,
 ) -> None:
     """Test we handle invalid inputs."""

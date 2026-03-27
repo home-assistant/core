@@ -92,7 +92,7 @@ async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.mark.parametrize("side_effect", [socket.timeout, OSError])
 async def test_offline_initialization(
-    projector_from_address: MagicMock, hass: HomeAssistant, side_effect: Exception
+    projector_from_address: MagicMock, hass: HomeAssistant, side_effect: type[Exception]
 ) -> None:
     """Test initialization of a device that is offline."""
 
@@ -331,7 +331,7 @@ async def test_failed_yaml_import(
     issue_registry: ir.IssueRegistry,
     mocked_projector: MagicMock,
     caplog: pytest.LogCaptureFixture,
-    side_effect: Exception,
+    side_effect: type[Exception],
     error_str: str,
 ) -> None:
     """Test a YAML sensor is imported and becomes an operational config entry."""
