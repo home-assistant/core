@@ -833,7 +833,7 @@ class TemperatureConverter(BaseUnitConverter):
         skips floor adjustment.
         """
         # Perform conversion using TemperatureDeltaConverter.
-        return TemperatureDeltaConverter.converter_factory(from_unit, to_unit)(interval)
+        return TemperatureDeltaConverter.convert(interval, from_unit, to_unit)
 
 
 class TemperatureDeltaConverter(BaseUnitConverter):
