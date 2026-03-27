@@ -303,7 +303,7 @@ async def test_yaml_import(
     issue_registry: ir.IssueRegistry,
     mocked_projector: MagicMock,
 ) -> None:
-    """Test a YAML sensor is imported and becomes an operational config entry."""
+    """Test a YAML media player is imported and becomes an operational config entry."""
     assert await async_setup_component(
         hass, Platform.MEDIA_PLAYER, _EXAMPLE_YAML_CONFIG
     )
@@ -334,7 +334,7 @@ async def test_failed_yaml_import(
     side_effect: type[Exception],
     error_str: str,
 ) -> None:
-    """Test a YAML sensor is imported and becomes an operational config entry."""
+    """Test a YAML media player is imported and becomes an operational config entry."""
 
     with patch("pypjlink.Projector.from_address", side_effect=side_effect):
         assert await async_setup_component(
