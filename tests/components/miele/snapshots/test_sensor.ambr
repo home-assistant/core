@@ -5243,6 +5243,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -5294,6 +5295,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
@@ -5856,6 +5858,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program',
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -5907,6 +5910,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
@@ -9041,6 +9045,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -9092,6 +9097,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
@@ -9654,6 +9660,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program',
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -9705,6 +9712,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
