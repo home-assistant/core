@@ -78,6 +78,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
                 self.supported_data_sets,
                 hourly_start=dt_now,
                 hourly_end=dt_now + HOURLY_FORECAST_DURATION,
+                country_code=self.hass.config.country,
             )
         except WeatherKitApiClientError as exception:
             if self.data is None or (

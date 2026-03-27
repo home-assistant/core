@@ -512,7 +512,7 @@ anthropic==0.83.0
 anyio==4.10.0
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.1.3
+apple_weatherkit==1.2.0
 
 # homeassistant.components.apprise
 apprise==1.9.1
