@@ -509,6 +509,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/eurotronic_cometblue/ @rikroe
 /homeassistant/components/event/ @home-assistant/core
 /tests/components/event/ @home-assistant/core
+/homeassistant/components/eveonline/ @ronaldvdmeer
+/tests/components/eveonline/ @ronaldvdmeer
 /homeassistant/components/evohome/ @zxdavb
 /tests/components/evohome/ @zxdavb
 /homeassistant/components/ezviz/ @RenierM26

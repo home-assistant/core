@@ -2577,6 +2577,9 @@ python-ecobee-api==0.3.2
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
 
+# homeassistant.components.eveonline
+python-eveonline==0.2.1
+
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2
 
