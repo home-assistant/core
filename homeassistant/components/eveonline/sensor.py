@@ -79,7 +79,7 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         native_unit_of_measurement="ISK",
         suggested_display_precision=2,
         value_fn=lambda data: (
-            data.wallet_balance.balance if data.wallet_balance else None
+            round(data.wallet_balance.balance, 2) if data.wallet_balance else None
         ),
         available_fn=lambda data: data.wallet_balance is not None,
     ),
