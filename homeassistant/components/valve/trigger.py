@@ -2,7 +2,7 @@
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger
+from homeassistant.helpers.trigger import Trigger, make_entity_transition_trigger
 
 from . import ATTR_IS_CLOSED, DOMAIN
 
@@ -10,8 +10,12 @@ VALVE_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=ATTR_IS_CLOSED)}
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "closed": make_entity_target_state_trigger(VALVE_DOMAIN_SPECS, True),
-    "opened": make_entity_target_state_trigger(VALVE_DOMAIN_SPECS, False),
+    "closed": make_entity_transition_trigger(
+        VALVE_DOMAIN_SPECS, from_states={False}, to_states={True}
+    ),
+    "opened": make_entity_transition_trigger(
+        VALVE_DOMAIN_SPECS, from_states={True}, to_states={False}
+    ),
 }
 
 

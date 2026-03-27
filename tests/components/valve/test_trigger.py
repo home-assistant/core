@@ -23,11 +23,13 @@ TRIGGER_STATES = [
         trigger="valve.closed",
         target_states=[(ValveState.CLOSED, {ATTR_IS_CLOSED: True})],
         other_states=[
-            (ValveState.CLOSED, {ATTR_IS_CLOSED: False}),
             (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
             (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
             (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
+        ],
+        extra_invalid_states=[
             (ValveState.OPEN, {ATTR_IS_CLOSED: None}),
+            (ValveState.OPEN, {}),
         ],
     ),
     *parametrize_trigger_states(
@@ -39,10 +41,10 @@ TRIGGER_STATES = [
         ],
         other_states=[
             (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
-            (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
-            (ValveState.OPEN, {ATTR_IS_CLOSED: True}),
-            (ValveState.OPENING, {ATTR_IS_CLOSED: True}),
+        ],
+        extra_invalid_states=[
             (ValveState.CLOSED, {ATTR_IS_CLOSED: None}),
+            (ValveState.CLOSED, {}),
         ],
     ),
 ]
