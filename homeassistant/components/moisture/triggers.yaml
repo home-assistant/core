@@ -13,6 +13,8 @@
 .moisture_threshold_entity: &moisture_threshold_entity
   - domain: input_number
     unit_of_measurement: "%"
+  - domain: number
+    device_class: moisture
   - domain: sensor
     device_class: moisture
 
