@@ -17,7 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .api import AsyncConfigEntryAuth
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) -> bool:
