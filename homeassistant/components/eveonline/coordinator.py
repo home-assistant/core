@@ -161,8 +161,11 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch an optional endpoint, returning None on failure."""
         try:
             return await method(*args)
-        except EveOnlineAuthenticationError:
-            raise
+        except EveOnlineAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch %s: %s", method.__name__, err)
             return None
@@ -175,8 +178,11 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch a list endpoint, returning empty list on failure."""
         try:
             return await method(*args)
-        except EveOnlineAuthenticationError:
-            raise
+        except EveOnlineAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch %s: %s", method.__name__, err)
             return []

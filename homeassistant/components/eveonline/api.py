@@ -43,5 +43,6 @@ class AsyncConfigEntryAuth(AbstractAuth):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
             ) from err
         return cast(str, self._oauth_session.token["access_token"])
