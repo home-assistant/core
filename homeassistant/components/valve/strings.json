@@ -3,6 +3,28 @@
     "trigger_behavior_description": "The behavior of the targeted valves to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more valves are closed.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more valves are open.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is open"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::valve::title%]",
@@ -27,6 +49,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
