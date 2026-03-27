@@ -69,6 +69,8 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
+        if self.controller.id not in self.coordinator.data.controllers:
+            return
         self.controller = self.coordinator.data.controllers[self.controller.id]
         self._update_attrs()
         super()._handle_coordinator_update()

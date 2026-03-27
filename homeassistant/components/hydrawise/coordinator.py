@@ -111,6 +111,15 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
             # the test_connect_retry test in test_init.py fails.
             return  # type: ignore[unreachable]
 
+        # Sync zone and controller data to the water_use coordinator so that
+        # new entities created in callbacks below can access their data.
+        if hasattr(self.config_entry, "runtime_data"):
+            water_use = self.config_entry.runtime_data.water_use
+            if water_use.data is not None:
+                water_use.data.zones = self.data.zones
+                water_use.data.controllers = self.data.controllers
+                water_use.data.sensors = self.data.sensors
+
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
