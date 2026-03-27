@@ -278,7 +278,7 @@
       "name": "Update charge schedule"
     },
     "charge_start": {
-      "description": "Starts Charging on vehicle.",
+      "description": "Starts charging on vehicle.",
       "fields": {
         "vehicle": {
           "description": "The vehicle to send the command to.",
