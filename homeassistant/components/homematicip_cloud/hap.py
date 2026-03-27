@@ -215,11 +215,10 @@ class HomematicipHAP:
                 )
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, max_delay)
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.error(
-                    "Unexpected error during get_state, retrying in %s seconds: %s",
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception(
+                    "Unexpected error during get_state, retrying in %s seconds",
                     delay,
-                    err,
                 )
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, max_delay)

@@ -1,5 +1,6 @@
 """Test HomematicIP Cloud accesspoint."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.auth import Auth
@@ -366,6 +367,106 @@ async def test_async_connect(
     simple_mock_home.set_on_disconnected_handler.assert_called_once()
     simple_mock_home.set_on_reconnect_handler.assert_called_once()
     simple_mock_home.enable_events.assert_called_once()
+
+
+async def test_start_get_state_task_cancels_existing(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+) -> None:
+    """Test _start_get_state_task cancels an in-flight task before starting a new one."""
+    hass.config.components.add(DOMAIN)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    hap.home = MagicMock(spec=AsyncHome)
+    hap.home.websocket_is_connected = Mock(return_value=True)
+
+    # Create a mock task that appears to be still running
+    old_task = MagicMock()
+    old_task.done.return_value = False
+    hap._get_state_task = old_task
+
+    with patch.object(hap, "_try_get_state", new=AsyncMock()):
+        hap._start_get_state_task()
+
+    old_task.cancel.assert_called_once()
+    assert hap._get_state_task is not old_task
+
+
+async def test_async_update_cancels_previous_reconnect_task(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
+) -> None:
+    """Test repeated reconnect handling keeps only the latest recovery task."""
+    hass.config.components.add(DOMAIN)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+
+    simple_mock_home = MagicMock(spec=AsyncHome)
+    simple_mock_home.devices = []
+    simple_mock_home.websocket_is_connected = Mock(return_value=True)
+    simple_mock_home.connected = True
+    hap.home = simple_mock_home
+
+    call_count = 0
+
+    async def block_get_state() -> None:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            # First call blocks forever (simulates slow recovery).
+            await asyncio.sleep(3600)
+        else:
+            # Second call succeeds immediately.
+            return
+
+    with patch.object(hap, "get_state", side_effect=block_get_state):
+        hap._ws_connection_closed.set()
+        await hap.ws_connected_handler()
+        first_task = hap._get_state_task
+        assert first_task is not None
+
+        # Simulate another disconnect/reconnect signal while the recovery task
+        # is still retrying so we exercise the real race the fix is addressing.
+        hap._ws_connection_closed.set()
+        hap.async_update()
+
+        second_task = hap._get_state_task
+        assert second_task is not None
+        assert second_task is not first_task
+        await asyncio.sleep(0)
+        assert first_task.cancelled()
+
+        await hass.async_block_till_done()
+
+    assert not hap._ws_connection_closed.is_set()
+    assert not second_task.cancelled()
+
+
+async def test_try_get_state_retries_on_unexpected_exception() -> None:
+    """Test _try_get_state retries on unexpected (non-HmipConnectionError) exceptions."""
+    hap = HomematicipHAP(MagicMock(), MagicMock())
+    hap.home = MagicMock()
+    hap.home.websocket_is_connected = Mock(return_value=True)
+
+    hap.get_state = AsyncMock(
+        side_effect=[RuntimeError("unexpected"), None]
+    )
+
+    with patch("asyncio.sleep", new=AsyncMock()) as mock_sleep:
+        await hap._try_get_state()
+
+    assert mock_sleep.mock_calls[0].args[0] == 8
+    assert hap.get_state.call_count == 2
+
+
+async def test_get_state_finished_handles_cancelled_error() -> None:
+    """Test get_state_finished handles CancelledError gracefully without logging an error."""
+    hap = HomematicipHAP(MagicMock(), MagicMock())
+
+    future = AsyncMock()
+    future.result = Mock(side_effect=asyncio.CancelledError)
+
+    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as mock_logger:
+        hap.get_state_finished(future)
+
+    mock_logger.error.assert_not_called()
+    mock_logger.debug.assert_called_once_with("Get_state task was cancelled")
 
 
 async def test_try_get_state_auth_error_triggers_reauth(
