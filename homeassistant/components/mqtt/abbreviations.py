@@ -188,6 +188,7 @@ ABBREVIATIONS = {
     "rgbww_stat_t": "rgbww_state_topic",
     "rgbww_val_tpl": "rgbww_value_template",
     "segmnts": "segments",
+    "segmnts_t": "segments_topic",
     "send_cmd_t": "send_command_topic",
     "send_if_off": "send_if_off",
     "set_fan_spd_t": "set_fan_speed_topic",
