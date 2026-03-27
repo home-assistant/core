@@ -142,6 +142,7 @@ async def test_manual_step_cannot_connect(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+        mock_device.bind.assert_awaited_once()
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 0
@@ -245,6 +246,7 @@ async def test_manual_step_unexpected_error(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+        mock_device.bind.assert_awaited_once()
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 0

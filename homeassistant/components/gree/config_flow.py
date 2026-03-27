@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ipaddress
 import logging
 from typing import Any
 
@@ -14,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.util.network import is_ipv4_address
 
 from .const import DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN
 
@@ -21,11 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _validate_ip_address(value: str) -> str:
-    """Validate that value is a valid IP address."""
-    try:
-        ipaddress.ip_address(value)
-    except ValueError as err:
-        raise vol.Invalid("Not a valid IP address") from err
+    """Validate that value is a valid IPv4 address."""
+    if not is_ipv4_address(value):
+        raise vol.Invalid(f"Invalid IPv4 address: {value}")
     return value
 
 
