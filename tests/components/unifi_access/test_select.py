@@ -16,12 +16,11 @@ from unifi_access_api import (
     UnifiAccessError,
 )
 
+from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from homeassistant.components.unifi_access.const import DOMAIN
 
 from . import setup_integration
 
