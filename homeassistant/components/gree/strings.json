@@ -9,18 +9,18 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "user": {
-        "menu_options": {
-          "manual": "Enter IP address manually",
-          "scan": "Scan the network for devices"
+      "manual": {
+        "data": {
+          "ip_address": "IP address"
         }
       },
       "scan": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
-      "manual": {
-        "data": {
-          "ip_address": "IP address"
+      "user": {
+        "menu_options": {
+          "manual": "Enter IP address manually",
+          "scan": "Scan the network for devices"
         }
       }
     }
