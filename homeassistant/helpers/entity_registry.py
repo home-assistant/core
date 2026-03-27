@@ -80,7 +80,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 21
+STORAGE_VERSION_MINOR = 22
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -848,8 +848,10 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for entity in data["entities"]:
                     entity["object_id_base"] = entity["original_name"]
 
-            if old_minor_version < 21:
-                # Version 1.21 adds support for COMPUTED_NAME in aliases and starts preserving
+            # Version 1.21 has been reverted.
+
+            if old_minor_version < 22:
+                # Version 1.22 adds support for COMPUTED_NAME in aliases and starts preserving
                 # their order.
                 # To avoid a major version bump, we keep the old aliases as-is and use aliases_v2
                 # field instead.
