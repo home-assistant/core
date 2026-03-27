@@ -46,7 +46,10 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         character_name, then create a config entry for that character.
         """
         token = data["token"]["access_token"]
-        character_info = _decode_eve_jwt(token)
+        try:
+            character_info = _decode_eve_jwt(token)
+        except ValueError, KeyError:
+            return self.async_abort(reason="oauth_error")
 
         character_id = character_info["character_id"]
         character_name = character_info["character_name"]
