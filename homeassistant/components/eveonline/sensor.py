@@ -85,7 +85,7 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
     EveOnlineSensorDescription(
         key="total_sp",
         translation_key="total_sp",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="SP",
         value_fn=lambda data: data.skills.total_sp if data.skills else None,
         available_fn=lambda data: data.skills is not None,
