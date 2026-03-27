@@ -281,7 +281,7 @@
       "description": "Starts charging on vehicle.",
       "fields": {
         "vehicle": {
-          "description": "The vehicle to send the command to.",
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
           "name": "Vehicle"
         },
         "when": {
