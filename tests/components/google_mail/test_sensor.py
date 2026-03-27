@@ -66,9 +66,8 @@ async def test_sensors(
     [
         RefreshError,
         OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
-        ClientResponseError(request_info=Mock(), history=(), status=401),
     ],
-    ids=["legacy_refresh_error", "oauth_reauth_error", "legacy_client_response_4xx"],
+    ids=["legacy_refresh_error", "oauth_reauth_error"],
 )
 async def test_sensor_reauth_trigger(
     hass: HomeAssistant,
@@ -97,9 +96,15 @@ async def test_sensor_reauth_trigger(
     [
         OAuth2TokenRequestTransientError(request_info=Mock(), domain=DOMAIN),
         OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
+        ClientResponseError(request_info=Mock(), history=(), status=401),
         ClientResponseError(request_info=Mock(), history=(), status=429),
     ],
-    ids=["oauth_transient_error", "oauth_generic_error", "legacy_rate_limited"],
+    ids=[
+        "oauth_transient_error",
+        "oauth_generic_error",
+        "legacy_client_response_4xx",
+        "legacy_rate_limited",
+    ],
 )
 async def test_sensor_token_error_no_reauth(
     hass: HomeAssistant,

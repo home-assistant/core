@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from aiohttp.client_exceptions import ClientResponseError
 from google.auth.exceptions import RefreshError
 import pytest
 
@@ -64,7 +63,6 @@ async def test_set_vacation(
     ("side_effect"),
     [
         (RefreshError,),
-        (ClientResponseError("", (), status=400),),
     ],
 )
 async def test_reauth_trigger(
