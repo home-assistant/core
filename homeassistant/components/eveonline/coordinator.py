@@ -10,6 +10,7 @@ from typing import Any
 
 import aiohttp
 from eveonline import EveOnlineClient, EveOnlineError
+from eveonline.exceptions import EveOnlineAuthenticationError
 from eveonline.models import (
     CharacterLocation,
     CharacterOnlineStatus,
@@ -26,6 +27,7 @@ from eveonline.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -87,6 +89,11 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch server status and character data from ESI."""
         try:
             server_status = await self.client.async_get_server_status()
+        except EveOnlineAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (EveOnlineError, aiohttp.ClientError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -154,6 +161,11 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch an optional endpoint, returning None on failure."""
         try:
             return await method(*args)
+        except EveOnlineAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch %s: %s", method.__name__, err)
             return None
@@ -166,6 +178,11 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch a list endpoint, returning empty list on failure."""
         try:
             return await method(*args)
+        except EveOnlineAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch %s: %s", method.__name__, err)
             return []

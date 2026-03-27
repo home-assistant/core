@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import base64
 import binascii
+from collections.abc import Mapping
 import json
 import logging
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import DOMAIN, SCOPES
@@ -52,6 +57,18 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         await self.async_set_unique_id(str(character_id))
 
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                title=character_name,
+                data={
+                    **data,
+                    "character_id": character_id,
+                    "character_name": character_name,
+                },
+            )
+
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
             return self.async_update_reload_and_abort(
@@ -73,6 +90,25 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             title=character_name,
             data=data,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={
+                    "account": self._get_reauth_entry().title,
+                },
+            )
+        return await self.async_step_user()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
