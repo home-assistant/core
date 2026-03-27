@@ -117,7 +117,7 @@ async def test_function_call(
                 "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
                 "response_type": "action_done",
                 "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
-                "data": {"targets": [], "success": [], "failed": []},
+                "data": {"success": [], "failed": []},
             },
         )
     )

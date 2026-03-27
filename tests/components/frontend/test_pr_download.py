@@ -64,7 +64,7 @@ async def test_pr_download_uses_cache(
     frontend_dir = pr_cache_dir / "hass_frontend"
     frontend_dir.mkdir(parents=True)
     (frontend_dir / "index.html").write_text("test")
-    (pr_cache_dir / ".sha").write_text("abc123def456")
+    (pr_cache_dir / ".sha").write_text("abc123def456:base789abc012")
 
     with patch(
         "homeassistant.components.frontend.pr_download.GitHubAPI"
@@ -73,7 +73,10 @@ async def test_pr_download_uses_cache(
         mock_gh_class.return_value = mock_client
 
         pr_response = AsyncMock()
-        pr_response.data = {"head": {"sha": "abc123def456"}}
+        pr_response.data = {
+            "head": {"sha": "abc123def456"},
+            "base": {"sha": "base789abc012"},
+        }
         mock_client.generic.return_value = pr_response
 
         config = {
@@ -93,21 +96,29 @@ async def test_pr_download_uses_cache(
         assert "pulls" in str(calls[0])
 
 
+@pytest.mark.parametrize(
+    ("cache_key"),
+    [
+        ("old_head_sha:base789abc012"),
+        ("abc123def456:old_base_sha"),
+    ],
+)
 async def test_pr_download_cache_invalidated(
     hass: HomeAssistant,
     tmp_path: Path,
     mock_github_api,
     aioclient_mock: AiohttpClientMocker,
     mock_zipfile,
+    cache_key: str,
 ) -> None:
-    """Test that cache is invalidated when commit changes."""
+    """Test that cache is invalidated when head commit changes."""
     hass.config.config_dir = str(tmp_path)
 
     pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
     frontend_dir = pr_cache_dir / "hass_frontend"
     frontend_dir.mkdir(parents=True)
     (frontend_dir / "index.html").write_text("test")
-    (pr_cache_dir / ".sha").write_text("old_commit_sha")
+    (pr_cache_dir / ".sha").write_text(cache_key)
 
     aioclient_mock.get(
         "https://api.github.com/artifact/download",
@@ -124,7 +135,7 @@ async def test_pr_download_cache_invalidated(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    # Should download - commit changed
+    # Should download - head commit changed
     assert len(aioclient_mock.mock_calls) == 1
 
 
@@ -261,7 +272,10 @@ async def test_pr_download_artifact_search_github_errors(
         mock_gh_class.return_value = mock_client
 
         pr_response = AsyncMock()
-        pr_response.data = {"head": {"sha": "abc123def456"}}
+        pr_response.data = {
+            "head": {"sha": "abc123def456"},
+            "base": {"sha": "base789abc012"},
+        }
 
         async def generic_side_effect(endpoint, **_kwargs):
             if "pulls" in endpoint:
@@ -299,7 +313,10 @@ async def test_pr_download_artifact_not_found(
         mock_gh_class.return_value = mock_client
 
         pr_response = AsyncMock()
-        pr_response.data = {"head": {"sha": "abc123def456"}}
+        pr_response.data = {
+            "head": {"sha": "abc123def456"},
+            "base": {"sha": "base789abc012"},
+        }
 
         workflow_response = AsyncMock()
         workflow_response.data = {"workflow_runs": []}

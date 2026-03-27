@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiotractive
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     for item in filtered_trackables:
         for key in ("activity_label", "calories", "sleep_label"):
             if entity_id := entity_reg.async_get_entity_id(
-                SENSOR_PLATFORM, DOMAIN, f"{item.trackable['_id']}_{key}"
+                SENSOR_DOMAIN, DOMAIN, f"{item.trackable['_id']}_{key}"
             ):
                 entity_reg.async_remove(entity_id)
 

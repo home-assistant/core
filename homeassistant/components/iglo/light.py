@@ -68,7 +68,7 @@ class IGloLamp(LightEntity):
         return self._name
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int((self._lamp.state()["brightness"] / 200.0) * 255)
 
@@ -97,22 +97,22 @@ class IGloLamp(LightEntity):
         return self._lamp.min_kelvin
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs value."""
         return color_util.color_RGB_to_hs(*self._lamp.state()["rgb"])
 
     @property
-    def effect(self):
+    def effect(self) -> str:
         """Return the current effect."""
         return self._lamp.state()["effect"]
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._lamp.effect_list()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._lamp.state()["on"]
 

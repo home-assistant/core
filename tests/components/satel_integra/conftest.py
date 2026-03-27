@@ -16,6 +16,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    get_monitor_callbacks,
 )
 
 from tests.common import MockConfigEntry
@@ -32,11 +33,21 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def patch_debounce() -> Generator[None]:
+    """Override coordinator debounce time."""
+    with patch(
+        "homeassistant.components.satel_integra.coordinator.PARTITION_UPDATE_DEBOUNCE_DELAY",
+        0,
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_satel() -> Generator[AsyncMock]:
     """Override the satel test."""
     with (
         patch(
-            "homeassistant.components.satel_integra.AsyncSatel",
+            "homeassistant.components.satel_integra.client.AsyncSatel",
             autospec=True,
         ) as mock_client,
         patch(
@@ -45,11 +56,26 @@ def mock_satel() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+
         client.partition_states = {}
         client.violated_outputs = []
         client.violated_zones = []
+
         client.connect = AsyncMock(return_value=True)
         client.set_output = AsyncMock()
+
+        client.register_callbacks = MagicMock()
+
+        # Immediately push baseline values so entities have stable states for snapshots
+        async def _start(**_: object) -> None:
+            alarm_status_callback, zone_changed_callback, output_changed_callback = (
+                get_monitor_callbacks(client)
+            )
+            alarm_status_callback()
+            zone_changed_callback({1: 0})
+            output_changed_callback({1: 0})
+
+        client.start = AsyncMock(side_effect=_start)
 
         yield client
 

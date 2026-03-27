@@ -21,7 +21,7 @@ rules:
   test-before-setup: done
   unique-config-entry: done
 
-  # Silver tier
+  # Silver
   action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
@@ -35,7 +35,7 @@ rules:
     comment: Modbus TCP does not require authentication.
   test-coverage: done
 
-  # Gold tier
+  # Gold
   devices: done
   diagnostics: done
   discovery:

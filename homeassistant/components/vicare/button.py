@@ -8,12 +8,7 @@ import logging
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-import requests
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -102,14 +97,5 @@ class ViCareButton(ViCareEntity, ButtonEntity):
 
     def press(self) -> None:
         """Handle the button press."""
-        try:
-            with suppress(PyViCareNotSupportedFeatureError):
-                self.entity_description.value_setter(self._api)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
+            self.entity_description.value_setter(self._api)

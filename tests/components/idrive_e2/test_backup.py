@@ -9,7 +9,12 @@ from unittest.mock import AsyncMock, Mock, patch
 from botocore.exceptions import ConnectTimeoutError
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DATA_MANAGER,
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    UploadBackupEvent,
+)
 from homeassistant.components.idrive_e2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     BotoCoreError,
@@ -179,7 +184,9 @@ async def test_agents_get_backup_does_not_throw_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent get backup does not throw on a backup not found."""
-    mock_client.list_objects_v2.return_value = {"Contents": []}
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {"Contents": []}
+    ]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": "random"})
@@ -202,18 +209,20 @@ async def test_agents_list_backups_with_corrupted_metadata(
     agent = IDriveE2BackupAgent(hass, mock_config_entry)
 
     # Set up mock responses for both valid and corrupted metadata files
-    mock_client.list_objects_v2.return_value = {
-        "Contents": [
-            {
-                "Key": "valid_backup.metadata.json",
-                "LastModified": "2023-01-01T00:00:00+00:00",
-            },
-            {
-                "Key": "corrupted_backup.metadata.json",
-                "LastModified": "2023-01-01T00:00:00+00:00",
-            },
-        ]
-    }
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {
+            "Contents": [
+                {
+                    "Key": "valid_backup.metadata.json",
+                    "LastModified": "2023-01-01T00:00:00+00:00",
+                },
+                {
+                    "Key": "corrupted_backup.metadata.json",
+                    "LastModified": "2023-01-01T00:00:00+00:00",
+                },
+            ]
+        }
+    ]
 
     # Mock responses for get_object calls
     valid_metadata = json.dumps(agent_backup.as_dict())
@@ -270,7 +279,9 @@ async def test_agents_delete_not_throwing_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent delete backup does not throw on a backup not found."""
-    mock_client.list_objects_v2.return_value = {"Contents": []}
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {"Contents": []}
+    ]
 
     client = await hass_ws_client(hass)
 
@@ -284,7 +295,7 @@ async def test_agents_delete_not_throwing_on_not_found(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    assert mock_client.delete_object.call_count == 0
+    assert mock_client.delete_objects.call_count == 0
 
 
 async def test_agents_upload(
@@ -406,7 +417,7 @@ async def test_multipart_upload_consistent_part_sizes(
 
     mock_client.upload_part.side_effect = record_upload_part
 
-    await agent._upload_multipart("test.tar", open_stream)
+    await agent._upload_multipart("test.tar", open_stream, Mock())
 
     # Verify that all non-trailing parts have the same size
     assert len(uploaded_part_sizes) >= 2, "Expected at least 2 parts"
@@ -421,6 +432,68 @@ async def test_multipart_upload_consistent_part_sizes(
     if expected_trailing == 0:
         expected_trailing = MULTIPART_MIN_PART_SIZE_BYTES
     assert uploaded_part_sizes[-1] == expected_trailing
+
+
+@pytest.mark.parametrize(
+    "agent_backup",
+    [MULTIPART_MIN_PART_SIZE_BYTES * 2],
+    indirect=True,
+    ids=["large"],
+)
+async def test_agents_upload_on_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    agent_backup: AgentBackup,
+) -> None:
+    """Test agent upload backup emits UploadBackupEvent via on_progress."""
+    client = await hass_client()
+
+    manager = hass.data[DATA_MANAGER]
+    events: list[UploadBackupEvent] = []
+
+    def _collect(event: UploadBackupEvent) -> None:
+        if isinstance(event, UploadBackupEvent):
+            events.append(event)
+
+    unsub = manager.async_subscribe_events(_collect)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=agent_backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=agent_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * agent_backup.size,
+                b"",
+            ]
+        )
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    unsub()
+
+    assert resp.status == 201
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    agent_events = [e for e in events if e.agent_id == agent_id]
+    assert len(agent_events) >= 2
+    assert all(e.total_bytes == agent_backup.size for e in agent_events)
+    # Verify events report distinct increasing byte counts
+    uploaded_bytes = [e.uploaded_bytes for e in agent_events]
+    assert uploaded_bytes == sorted(uploaded_bytes)
+    assert len(set(uploaded_bytes)) == len(uploaded_bytes)
+    # Verify at least one intermediate event (uploaded_bytes < total_bytes)
+    assert agent_events[0].uploaded_bytes < agent_events[0].total_bytes
 
 
 async def test_agents_download(
@@ -490,20 +563,27 @@ async def test_cache_expiration(
     metadata_content = json.dumps(agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
-    mock_client.list_objects_v2.return_value = {
-        "Contents": [
-            {"Key": "test.metadata.json", "LastModified": "2023-01-01T00:00:00+00:00"}
-        ]
-    }
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {
+            "Contents": [
+                {
+                    "Key": "test.metadata.json",
+                    "LastModified": "2023-01-01T00:00:00+00:00",
+                }
+            ]
+        }
+    ]
+
+    mock_client.get_object.return_value = {"Body": mock_body}
 
     # First call should query IDrive e2
     await agent.async_list_backups()
-    assert mock_client.list_objects_v2.call_count == 1
+    assert mock_client.get_paginator.call_count == 1
     assert mock_client.get_object.call_count == 1
 
     # Second call should use cache
     await agent.async_list_backups()
-    assert mock_client.list_objects_v2.call_count == 1
+    assert mock_client.get_paginator.call_count == 1
     assert mock_client.get_object.call_count == 1
 
     # Set cache to expire
@@ -511,7 +591,7 @@ async def test_cache_expiration(
 
     # Third call should query IDrive e2 again
     await agent.async_list_backups()
-    assert mock_client.list_objects_v2.call_count == 2
+    assert mock_client.get_paginator.call_count == 2
     assert mock_client.get_object.call_count == 2
 
 
@@ -526,3 +606,88 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     remove_listener()
 
     assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
+
+
+async def test_list_backups_with_pagination(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test listing backups when paginating through multiple pages."""
+    # Create agent
+    agent = IDriveE2BackupAgent(hass, mock_config_entry)
+
+    # Create two different backups
+    backup1 = AgentBackup(
+        backup_id="backup1",
+        date="2023-01-01T00:00:00+00:00",
+        addons=[],
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=False,
+        homeassistant_version=None,
+        name="Backup 1",
+        protected=False,
+        size=0,
+    )
+    backup2 = AgentBackup(
+        backup_id="backup2",
+        date="2023-01-02T00:00:00+00:00",
+        addons=[],
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=False,
+        homeassistant_version=None,
+        name="Backup 2",
+        protected=False,
+        size=0,
+    )
+
+    # Setup two pages of results
+    page1 = {
+        "Contents": [
+            {
+                "Key": "backup1.metadata.json",
+                "LastModified": "2023-01-01T00:00:00+00:00",
+            },
+            {"Key": "backup1.tar", "LastModified": "2023-01-01T00:00:00+00:00"},
+        ]
+    }
+    page2 = {
+        "Contents": [
+            {
+                "Key": "backup2.metadata.json",
+                "LastModified": "2023-01-02T00:00:00+00:00",
+            },
+            {"Key": "backup2.tar", "LastModified": "2023-01-02T00:00:00+00:00"},
+        ]
+    }
+
+    # Setup mock client
+    mock_client = mock_config_entry.runtime_data
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        page1,
+        page2,
+    ]
+
+    # Mock get_object responses based on the key
+    async def mock_get_object(**kwargs):
+        """Mock get_object with different responses based on the key."""
+        key = kwargs.get("Key", "")
+        if "backup1" in key:
+            mock_body = AsyncMock()
+            mock_body.read.return_value = json.dumps(backup1.as_dict()).encode()
+            return {"Body": mock_body}
+        # backup2
+        mock_body = AsyncMock()
+        mock_body.read.return_value = json.dumps(backup2.as_dict()).encode()
+        return {"Body": mock_body}
+
+    mock_client.get_object.side_effect = mock_get_object
+
+    # List backups and verify we got both
+    backups = await agent.async_list_backups()
+    assert len(backups) == 2
+    backup_ids = {backup.backup_id for backup in backups}
+    assert backup_ids == {"backup1", "backup2"}

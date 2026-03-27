@@ -16,22 +16,30 @@ from onvif.client import (
 )
 from onvif.exceptions import ONVIFError
 from onvif.util import stringify_onvif_error
+import onvif_parsers
+import onvif_parsers.util
 from zeep.exceptions import Fault, TransportError, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
-from .parsers import PARSERS
 
 # Topics in this list are ignored because we do not want to create
 # entities for them.
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
+
+ENTITY_CATEGORY_MAPPING: dict[str, EntityCategory] = {
+    "diagnostic": EntityCategory.DIAGNOSTIC,
+    "config": EntityCategory.CONFIG,
+}
 
 SUBSCRIPTION_ERRORS = (Fault, TimeoutError, TransportError)
 CREATE_ERRORS = (
@@ -79,6 +87,18 @@ SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR = 60
 PULLPOINT_POLL_TIME = dt.timedelta(seconds=60)
 PULLPOINT_MESSAGE_LIMIT = 100
 PULLPOINT_COOLDOWN_TIME = 0.75
+
+
+def _local_datetime_or_none(value: str) -> dt.datetime | None:
+    """Convert strings to datetimes, if invalid, return None."""
+    # Handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. Hikvision)
+    try:
+        ret = dt_util.parse_datetime(value)
+    except ValueError:
+        return None
+    if ret is not None:
+        return dt_util.as_local(ret)
+    return None
 
 
 class EventManager:
@@ -176,36 +196,52 @@ class EventManager:
             # tns1:RuleEngine/CellMotionDetector/Motion
             topic = msg.Topic._value_1.rstrip("/.")  # noqa: SLF001
 
-            if not (parser := PARSERS.get(topic)):
+            try:
+                events = await onvif_parsers.parse(topic, unique_id, msg)
+                error = None
+            except onvif_parsers.errors.UnknownTopicError:
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.warning(
                         "%s: No registered handler for event from %s: %s",
                         self.name,
                         unique_id,
-                        msg,
+                        onvif_parsers.util.event_to_debug_format(msg),
                     )
                     UNHANDLED_TOPICS.add(topic)
                 continue
-
-            try:
-                event = await parser(unique_id, msg)
-                error = None
             except (AttributeError, KeyError) as e:
-                event = None
+                events = []
                 error = e
 
-            if not event:
+            if not events:
                 LOGGER.warning(
                     "%s: Unable to parse event from %s: %s: %s",
                     self.name,
                     unique_id,
                     error,
-                    msg,
+                    onvif_parsers.util.event_to_debug_format(msg),
                 )
-                return
+                continue
 
-            self.get_uids_by_platform(event.platform).add(event.uid)
-            self._events[event.uid] = event
+            for event in events:
+                value = event.value
+                if event.device_class == "timestamp" and isinstance(value, str):
+                    value = _local_datetime_or_none(value)
+
+                ha_event = Event(
+                    uid=event.uid,
+                    name=event.name,
+                    platform=event.platform,
+                    device_class=event.device_class,
+                    unit_of_measurement=event.unit_of_measurement,
+                    value=value,
+                    entity_category=ENTITY_CATEGORY_MAPPING.get(
+                        event.entity_category or ""
+                    ),
+                    entity_enabled=event.entity_enabled,
+                )
+                self.get_uids_by_platform(ha_event.platform).add(ha_event.uid)
+                self._events[ha_event.uid] = ha_event
 
     def get_uid(self, uid: str) -> Event | None:
         """Retrieve event for given id."""

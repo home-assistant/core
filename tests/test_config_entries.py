@@ -9875,3 +9875,133 @@ async def test_user_flow_not_dismiss_protected_on_configure(
         # User flows should not be marked as dismiss protected
         context = _get_flow_context(manager, result["flow_id"])
         assert "dismiss_protected" not in context
+
+
+async def test_orphaned_ignored_entries(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test orphaned ignored entries scanner creates a repair issue for missing (custom) integration."""
+    await hass.config_entries.async_initialize()
+    entry = MockConfigEntry(
+        domain="ghost_orphan_domain", source=config_entries.SOURCE_IGNORE
+    )
+    entry.add_to_hass(hass)
+
+    async def _raise(hass_param: HomeAssistant, domain: str) -> None:
+        raise loader.IntegrationNotFound(domain)
+
+    with patch(
+        "homeassistant.loader.async_get_integration", new=AsyncMock(side_effect=_raise)
+    ):
+        await hass.config_entries._async_scan_orphan_ignored_entries(None)
+
+    # If all went according to plan, an issue has been created.
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
+    )
+
+    assert issue is not None, "Expected repair issue for orphaned ignored entry"
+    assert issue.is_fixable
+    assert issue.is_persistent
+    assert issue.translation_key == "orphaned_ignored_config_entry"
+    assert issue.data == {
+        "domain": "ghost_orphan_domain",
+        "entry_id": entry.entry_id,
+    }
+
+
+async def test_orphaned_ignored_entries_existing_integration(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Just to be very thorough: test no repair issue is created for ignored entry with existing (custom) integration."""
+    await hass.config_entries.async_initialize()
+
+    # This time we mock we have an actual existing integration
+    mock_integration(hass, MockModule(domain="existing_domain"))
+
+    entry = MockConfigEntry(
+        domain="existing_domain", source=config_entries.SOURCE_IGNORE
+    )
+    entry.add_to_hass(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    # No issue should be made this time
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("safe_mode", "recovery_mode"),
+    [
+        (True, False),
+        (False, True),
+    ],
+)
+async def test_orphaned_ignored_entries_safe_recovery_mode(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    safe_mode: bool,
+    recovery_mode: bool,
+) -> None:
+    """Test orphaned ignored entry scan is skipped in safe or recovery mode."""
+    hass.config.safe_mode = safe_mode
+    hass.config.recovery_mode = recovery_mode
+
+    entry = MockConfigEntry(
+        domain="ghost_orphan_domain", source=config_entries.SOURCE_IGNORE
+    )
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 5,
+        "data": {
+            "entries": [
+                {
+                    "created_at": entry.created_at.isoformat(),
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "ghost_orphan_domain",
+                    "entry_id": entry.entry_id,
+                    "minor_version": 1,
+                    "modified_at": entry.modified_at.isoformat(),
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "ignore",
+                    "subentries": [],
+                    "title": "orphanage of the ignored",
+                    "unique_id": "123",
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
+    async def _raise(_: HomeAssistant, domain: str) -> None:
+        raise loader.IntegrationNotFound(domain)
+
+    with patch(
+        "homeassistant.loader.async_get_integration", new=AsyncMock(side_effect=_raise)
+    ):
+        await hass.config_entries.async_initialize()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    # No issue should be created at this point
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
+        )
+        is None
+    )
