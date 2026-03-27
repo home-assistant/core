@@ -18,6 +18,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "character_online": {
+        "name": "Online"
+      },
+      "server_vip": {
+        "name": "VIP mode"
+      }
+    },
     "sensor": {
       "buy_orders": {
         "name": "Buy orders"

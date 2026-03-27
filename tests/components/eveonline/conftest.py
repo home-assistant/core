@@ -81,10 +81,11 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         yield client
 
 
-def mock_server_status(players: int = 25000) -> ServerStatus:
+def mock_server_status(players: int = 25000, vip: bool | None = None) -> ServerStatus:
     """Return a mock ServerStatus with all required fields."""
     return ServerStatus(
         players=players,
         server_version="2345678",
         start_time=datetime(2026, 3, 27, 11, 0, 0, tzinfo=UTC),
+        vip=vip,
     )
