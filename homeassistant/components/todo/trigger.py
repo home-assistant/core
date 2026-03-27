@@ -210,12 +210,12 @@ class ItemChangeTriggerBase(ItemTriggerBase):
             # Entity just became available, so no old items to compare against
             return
 
-        new_item_ids = self._get_items_diff(old_item_ids, current_item_ids)
-        if new_item_ids:
+        different_item_ids = self._get_items_diff(old_item_ids, current_item_ids)
+        if different_item_ids:
             _LOGGER.debug(
-                "Detected new %s items with ids %s for entity %s",
+                "Detected %s items with ids %s for entity %s",
                 self._description,
-                new_item_ids,
+                different_item_ids,
                 entity_id,
             )
             payload = {
