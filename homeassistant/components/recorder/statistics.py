@@ -44,9 +44,36 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
-    ALL_UNIT_CONVERTERS,
-    PRIMARY_UNIT_CONVERTERS,
+    ApparentPowerConverter,
+    AreaConverter,
     BaseUnitConverter,
+    BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
+    ConductivityConverter,
+    DataRateConverter,
+    DistanceConverter,
+    DurationConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    EnergyConverter,
+    EnergyDistanceConverter,
+    InformationConverter,
+    MassConverter,
+    MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
+    PowerConverter,
+    PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
+    SpeedConverter,
+    SulphurDioxideConcentrationConverter,
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+    UnitlessRatioConverter,
+    VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 from .const import (
@@ -175,8 +202,43 @@ QUERY_STATISTICS_SUMMARY_SUM = (
     .label("rownum"),
 )
 
+_PRIMARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+    ApparentPowerConverter,
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
+    ConductivityConverter,
+    DataRateConverter,
+    DistanceConverter,
+    DurationConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    EnergyConverter,
+    EnergyDistanceConverter,
+    InformationConverter,
+    MassConverter,
+    MassVolumeConcentrationConverter,
+    PowerConverter,
+    PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    UnitlessRatioConverter,
+    VolumeConverter,
+    VolumeFlowRateConverter,
+]
+
+_SECONDARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+    CarbonMonoxideConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
+    SulphurDioxideConcentrationConverter,
+    TemperatureDeltaConverter,
+]
+
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
-    unit: conv for conv in PRIMARY_UNIT_CONVERTERS for unit in conv.VALID_UNITS
+    unit: conv for conv in _PRIMARY_UNIT_CONVERTERS for unit in conv.VALID_UNITS
 }
 """Map of units to unit converter.
 
@@ -184,7 +246,8 @@ This map includes units which can be converted without knowing the unit class.
 """
 
 UNIT_CLASS_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
-    conv.UNIT_CLASS: conv for conv in ALL_UNIT_CONVERTERS
+    conv.UNIT_CLASS: conv
+    for conv in chain(_PRIMARY_UNIT_CONVERTERS, _SECONDARY_UNIT_CONVERTERS)
 }
 """Map of unit class to converter."""
 
