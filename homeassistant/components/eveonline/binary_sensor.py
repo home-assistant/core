@@ -14,6 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator, EveOnlineData
 from .entity import EveOnlineCharacterEntity, EveOnlineServerEntity
 
@@ -58,10 +59,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up Eve Online binary sensors from a config entry."""
     coordinator = entry.runtime_data
-    entities: list[EveOnlineBinarySensor] = [
-        EveOnlineServerBinarySensor(coordinator, description)
-        for description in SERVER_BINARY_SENSORS
-    ]
+    entities: list[EveOnlineBinarySensor] = []
+
+    # Only create shared Tranquility server entities for the first loaded entry
+    # to avoid duplicate unique_ids when multiple characters are configured.
+    if not any(
+        e
+        for e in hass.config_entries.async_loaded_entries(DOMAIN)
+        if e.entry_id != entry.entry_id
+    ):
+        entities.extend(
+            EveOnlineServerBinarySensor(coordinator, description)
+            for description in SERVER_BINARY_SENSORS
+        )
+
     entities.extend(
         EveOnlineCharacterBinarySensor(coordinator, description)
         for description in CHARACTER_BINARY_SENSORS

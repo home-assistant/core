@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from eveonline.models import SkillQueueEntry, WalletBalance
 
+from homeassistant.components.eveonline.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -109,3 +110,58 @@ async def test_unavailable_character_sensor(
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
     assert state.state == "unavailable"
+
+
+async def test_server_sensors_not_duplicated_for_second_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_eveonline_client: AsyncMock,
+    setup_credentials: None,
+) -> None:
+    """Test that server sensors are created only once with multiple entries.
+
+    When a second character is added, the shared Tranquility server sensors
+    should not be duplicated. Only the first loaded entry creates them.
+    """
+    mock_eveonline_client.async_get_server_status.return_value = mock_server_status(
+        players=25000
+    )
+
+    # Set up first entry
+    await _setup_integration(hass, mock_config_entry, mock_eveonline_client)
+
+    # Create and set up a second entry for a different character
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Second Capsuleer",
+        unique_id="99999999",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token-2",
+                "refresh_token": "mock-refresh-token-2",
+                "expires_in": 1200,
+                "token_type": "Bearer",
+            },
+            "character_id": 99999999,
+            "character_name": "Second Capsuleer",
+        },
+    )
+    second_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.LOADED
+
+    # Server sensor should exist exactly once (from first entry)
+    state = hass.states.get("sensor.eve_online_tranquility_players_online")
+    assert state is not None
+    assert state.state == "25000"
+
+    # Both character sensors should exist
+    state = hass.states.get("sensor.test_capsuleer_wallet_balance")
+    assert state is not None
+
+    state = hass.states.get("sensor.second_capsuleer_wallet_balance")
+    assert state is not None

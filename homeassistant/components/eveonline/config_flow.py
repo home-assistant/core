@@ -141,11 +141,17 @@ def _decode_eve_jwt(token: str) -> dict[str, Any]:
 
     sub = decoded.get("sub", "")
     sub_parts = sub.split(":")
-    if len(sub_parts) != 3 or sub_parts[0] != "CHARACTER":
+    if len(sub_parts) != 3 or sub_parts[0] != "CHARACTER" or sub_parts[1] != "EVE":
         msg = f"Unexpected JWT subject format: {sub}"
         raise ValueError(msg)
 
+    try:
+        character_id = int(sub_parts[2])
+    except (TypeError, ValueError) as err:
+        msg = f"Invalid character id in JWT subject: {sub}"
+        raise ValueError(msg) from err
+
     return {
-        "character_id": int(sub_parts[2]),
+        "character_id": character_id,
         "character_name": decoded.get("name", "Unknown"),
     }
