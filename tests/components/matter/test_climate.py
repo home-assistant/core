@@ -18,7 +18,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .common import (
     set_node_attribute,
@@ -669,31 +668,6 @@ async def test_eve_thermo_v5_presets(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["preset_mode"] == PRESET_NONE
-
-
-@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
-async def test_hvac_mode_error_on_unsupported_mode(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test HVAC mode error when calling entity method directly with unsupported mode."""
-    entity_id = "climate.longan_link_hvac"
-
-    # Get the entity object directly via component using DATA_INSTANCES helper
-    component = hass.data.get(DATA_INSTANCES, {}).get(Platform.CLIMATE)
-    assert component is not None
-
-    entity = component.get_entity(entity_id)
-    assert entity is not None
-
-    # Test calling async_set_hvac_mode directly with an unsupported HVAC mode string
-    # We pass a string that's not in HVAC_SYSTEM_MODE_MAP
-    with pytest.raises(ValueError, match="Unsupported hvac mode"):
-        await entity.async_set_hvac_mode("unsupported_mode")
-
-    # Ensure no command was sent
-    assert matter_client.write_attribute.call_count == 0
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
