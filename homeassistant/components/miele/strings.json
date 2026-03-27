@@ -273,6 +273,7 @@
       "program_id": {
         "name": "Program",
         "state": {
+          "airfry": "AirFry",
           "almond_macaroons_1_tray": "Almond macaroons (1 tray)",
           "almond_macaroons_2_trays": "Almond macaroons (2 trays)",
           "amaranth": "Amaranth",
@@ -334,6 +335,7 @@
           "blanching": "Blanching",
           "blueberry_muffins": "Blueberry muffins",
           "bologna_sausage": "Bologna sausage",
+          "booster": "Booster",
           "bottling": "Bottling",
           "bottling_hard": "Bottling (hard)",
           "bottling_medium": "Bottling (medium)",
