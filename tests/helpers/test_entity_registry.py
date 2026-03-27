@@ -1,5 +1,6 @@
 """Tests for the Entity Registry."""
 
+import asyncio
 from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
@@ -502,6 +503,49 @@ async def test_loading_saving_data(
     assert new_entry2.supported_features == 5
     assert new_entry2.translation_key == "initial-translation_key"
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_entity_registry_loading_waits_for_device_registry(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test entity registry waits for device registry when loaded concurrently.
+
+    Both registries are loaded in parallel during bootstrap via asyncio.gather.
+    The entity registry accesses device registry during loading. This test delays
+    the device registry store load so entity registry attempts to load first.
+    """
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "entity_id": "test.my_entity",
+                    "device_id": "some-device",
+                    "platform": "test_platform",
+                    "unique_id": "unique-1",
+                },
+            ]
+        },
+    }
+
+    original_load = dr.DeviceRegistryStore.async_load
+
+    async def delayed_load(self: dr.DeviceRegistryStore) -> Any:
+        await asyncio.sleep(0)
+        return await original_load(self)
+
+    dr.async_setup(hass)
+
+    with patch.object(dr.DeviceRegistryStore, "async_load", delayed_load):
+        await asyncio.gather(
+            er.async_load(hass),
+            dr.async_load(hass),
+        )
+
+    registry = er.async_get(hass)
+    assert registry.async_get("test.my_entity") is not None
 
 
 def test_get_available_entity_id_considers_registered_entities(
@@ -1547,6 +1591,7 @@ async def test_migration_1_20(
             "deleted_devices": [],
         },
     }
+    dr.async_setup(hass)
     await dr.async_load(hass)
 
     # Entity registry data at version 1.20
