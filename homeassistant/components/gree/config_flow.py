@@ -71,10 +71,15 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await device.bind()
-            except (DeviceNotBoundError, DeviceTimeoutError):
+            except (DeviceNotBoundError, DeviceTimeoutError) as err:
+                _LOGGER.debug(
+                    "Failed to connect to Gree device at %s: %s", ip_address, err
+                )
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected error connecting to Gree device")
+                _LOGGER.exception(
+                    "Unexpected error connecting to Gree device at %s", ip_address
+                )
                 errors["base"] = "cannot_connect"
             else:
                 mac = device.device_info.mac
