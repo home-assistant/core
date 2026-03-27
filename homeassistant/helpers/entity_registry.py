@@ -1515,7 +1515,7 @@ class EntityRegistry(BaseRegistry):
         self.async_schedule_save()
 
     @callback
-    def async_device_modified(  # noqa: C901
+    def async_device_modified(
         self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle the removal or update of a device.
@@ -1599,27 +1599,20 @@ class EntityRegistry(BaseRegistry):
                 self, event.data["device_id"], include_disabled_entities=True
             )
             device_name = device.name_by_user or device.name
-            old_device_name = changes.get(
-                "name_by_user", device.name_by_user
-            ) or changes.get("name", device.name)
             for entity in entities:
                 if entity.has_entity_name:
                     continue
 
                 name: str | None | UndefinedType = UNDEFINED
-                if by_user:
-                    if entity.name is not None:
-                        name_unprefixed = _async_strip_prefix_from_entity_name(
-                            entity.name, old_device_name
-                        )
-                    else:
-                        name_unprefixed = entity.original_name_unprefixed
-
-                    if name_unprefixed is not None:
-                        if not name_unprefixed:
-                            name = device_name
-                        elif device_name:
-                            name = f"{device_name} {name_unprefixed}"
+                if (
+                    by_user
+                    and entity.name is None
+                    and (name_unprefixed := entity.original_name_unprefixed) is not None
+                ):
+                    if not name_unprefixed:
+                        name = device_name
+                    elif device_name:
+                        name = f"{device_name} {name_unprefixed}"
 
                 original_name_unprefixed = _async_strip_prefix_from_entity_name(
                     entity.original_name, device_name
