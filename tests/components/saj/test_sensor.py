@@ -1,21 +1,24 @@
 """Test the saj sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pysaj
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.saj import MIN_INTERVAL_SEC
 from homeassistant.components.saj.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -78,8 +81,8 @@ async def test_sensor_update_failure(
     with patch("pysaj.SAJ") as saj_cls:
         saj_instance = MagicMock()
         saj_instance.serialnumber = "TEST123"
-        # First two reads succeed (setup + initial), subsequent reads fail
-        saj_instance.read = AsyncMock(side_effect=[True, True, False, False])
+        # Setup read + initial scheduled poll succeed; next poll fails (unknown state).
+        saj_instance.read = AsyncMock(side_effect=[True, True, False])
         saj_cls.return_value = saj_instance
 
         with patch("pysaj.Sensors") as sensors_cls:
@@ -97,14 +100,22 @@ async def test_sensor_update_failure(
             entry = await setup_integration(hass, mock_config_entry_ethernet)
             assert entry.state is ConfigEntryState.LOADED
 
-            # Wait for initial update to complete
             await hass.async_block_till_done()
 
-            # Check that sensor exists
-            # Regular sensors use the format saj_{sensor_name}
             state = hass.states.get("sensor.saj_current_power")
-            # Sensor should exist
             assert state is not None
+            assert state.state == "5000.0"
+            assert saj_instance.read.await_count == 2
+
+            async_fire_time_changed(
+                hass, dt_util.utcnow() + timedelta(seconds=MIN_INTERVAL_SEC + 1)
+            )
+            await hass.async_block_till_done()
+
+            assert saj_instance.read.await_count == 3
+            state = hass.states.get("sensor.saj_current_power")
+            assert state is not None
+            assert state.state == STATE_UNKNOWN
 
 
 async def test_diagnostic_sensors(
@@ -149,7 +160,7 @@ async def test_diagnostic_sensors(
             assert serial_entity_id is not None
             serial_sensor = hass.states.get(serial_entity_id)
             assert serial_sensor is not None
-            assert serial_sensor.state == "TEST123"
+            assert serial_sensor.state == mock_config_entry_ethernet.unique_id
 
 
 async def test_yaml_import_creates_deprecated_issue(

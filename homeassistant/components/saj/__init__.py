@@ -51,9 +51,8 @@ def async_track_time_interval_backoff(
             else:
                 interval = min(interval * 2, MAX_INTERVAL_SEC)
         finally:
-            if stopped:
-                return
-            remove = async_call_later(hass, interval, interval_listener)
+            if not stopped:
+                remove = async_call_later(hass, interval, interval_listener)
 
     hass.async_create_task(interval_listener())
 
@@ -132,6 +131,7 @@ class SAJPolling:
         )
 
     async def _async_poll_with_notify(self) -> bool:
+        success = False
         try:
             success = await self._saj.read(self._sensor_def)
         except pysaj.UnauthorizedException:
@@ -139,15 +139,18 @@ class SAJPolling:
                 "Username and/or password rejected during polling for %s",
                 self._entry.title,
             )
-            success = False
         except pysaj.UnexpectedResponseException as err:
             _LOGGER.error(
                 "Error in SAJ, please check host/ip address. Original error: %s", err
             )
-            success = False
         except (TimeoutError, OSError) as err:
             _LOGGER.error("Error communicating with SAJ: %s", err)
-            success = False
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Unexpected error polling SAJ inverter %s: %s",
+                self._entry.title,
+                err,
+            )
 
         for listener in list(self._listeners):
             listener(success)

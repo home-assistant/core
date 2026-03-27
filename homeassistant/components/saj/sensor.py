@@ -75,7 +75,7 @@ async def async_setup_entry(
     sensor_def = runtime.sensor_def
 
     hass_sensors = [
-        SAJsensor(runtime, saj.serialnumber, sensor, inverter_name=None)
+        SAJsensor(runtime, entry.unique_id, sensor, inverter_name=None)
         for sensor in sensor_def
         if sensor.enabled
     ]
@@ -84,7 +84,9 @@ async def async_setup_entry(
         SAJDiagnosticSensor(entry, DIAG_KEY_IP, entry.data[CONF_HOST]),
         SAJDiagnosticSensor(entry, DIAG_KEY_CONNECTION_TYPE, entry.data[CONF_TYPE]),
         SAJDiagnosticSensor(
-            entry, DIAG_KEY_SERIAL_NUMBER, saj.serialnumber or "Unknown"
+            entry,
+            DIAG_KEY_SERIAL_NUMBER,
+            entry.unique_id or saj.serialnumber or "Unknown",
         ),
     ]
 
