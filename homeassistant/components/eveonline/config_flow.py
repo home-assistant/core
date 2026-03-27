@@ -46,8 +46,8 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         Decode the Eve SSO JWT access token to extract character_id and
         character_name, then create a config entry for that character.
         """
-        token = data["token"]["access_token"]
         try:
+            token = data["token"]["access_token"]
             character_info = _decode_eve_jwt(token)
         except ValueError, KeyError, binascii.Error:
             return self.async_abort(reason="oauth_error")
