@@ -1,19 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "character_online": {
-        "default": "mdi:account-off-outline",
-        "state": {
-          "on": "mdi:account-check"
-        }
-      },
-      "server_vip": {
-        "default": "mdi:shield-off-outline",
-        "state": {
-          "on": "mdi:shield-lock"
-        }
-      }
-    },
     "sensor": {
       "buy_orders": {
         "default": "mdi:cart-arrow-down"
