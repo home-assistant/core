@@ -10,6 +10,7 @@ from typing import Any
 
 import aiohttp
 from eveonline import EveOnlineClient, EveOnlineError
+from eveonline.exceptions import EveOnlineAuthenticationError
 from eveonline.models import (
     CharacterLocation,
     CharacterOnlineStatus,
@@ -26,6 +27,7 @@ from eveonline.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -87,9 +89,16 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch server status and character data from ESI."""
         try:
             server_status = await self.client.async_get_server_status()
+        except EveOnlineAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (EveOnlineError, aiohttp.ClientError) as err:
             raise UpdateFailed(
-                f"Error communicating with Eve Online API: {err}"
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         character_online = await self._fetch_optional(

@@ -1,0 +1,68 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "character_online": {
+        "default": "mdi:account-off-outline",
+        "state": {
+          "on": "mdi:account-check"
+        }
+      },
+      "server_vip": {
+        "default": "mdi:shield-off-outline",
+        "state": {
+          "on": "mdi:shield-lock"
+        }
+      }
+    },
+    "sensor": {
+      "buy_orders": {
+        "default": "mdi:cart-arrow-down"
+      },
+      "current_skill_finish": {
+        "default": "mdi:clock-end"
+      },
+      "current_training_skill": {
+        "default": "mdi:book-open-variant"
+      },
+      "industry_jobs": {
+        "default": "mdi:factory"
+      },
+      "jump_fatigue": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "location": {
+        "default": "mdi:map-marker"
+      },
+      "next_industry_finish": {
+        "default": "mdi:clock-end"
+      },
+      "players_online": {
+        "default": "mdi:account-group"
+      },
+      "sell_orders": {
+        "default": "mdi:cart-arrow-up"
+      },
+      "server_version": {
+        "default": "mdi:information-outline"
+      },
+      "ship": {
+        "default": "mdi:rocket-launch"
+      },
+      "skill_queue_count": {
+        "default": "mdi:format-list-numbered"
+      },
+      "total_sp": {
+        "default": "mdi:school"
+      },
+      "unallocated_sp": {
+        "default": "mdi:school-outline"
+      },
+      "unread_mail": {
+        "default": "mdi:email"
+      },
+      "wallet_balance": {
+        "default": "mdi:wallet"
+      }
+    }
+  }
+}

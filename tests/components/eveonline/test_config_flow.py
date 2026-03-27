@@ -19,9 +19,11 @@ from homeassistant.components.eveonline.const import (
     SCOPES,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -186,3 +188,140 @@ async def test_flow_rejects_duplicate_character(
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
+) -> None:
+    """Test reauthentication flow updates the config entry."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["step_id"] == "auth"
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    fake_jwt = _make_jwt(int(mock_config_entry.unique_id), mock_config_entry.title)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": fake_jwt,
+            "type": "Bearer",
+            "expires_in": 1200,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_account_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
+) -> None:
+    """Test reauthentication aborts when a different character is used."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    fake_jwt = _make_jwt(99999999, "Wrong Character")
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": fake_jwt,
+            "type": "Bearer",
+            "expires_in": 1200,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_account_mismatch"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
+) -> None:
+    """Test reconfiguration flow updates the config entry."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "auth"
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    fake_jwt = _make_jwt(int(mock_config_entry.unique_id), mock_config_entry.title)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "updated-refresh-token",
+            "access_token": fake_jwt,
+            "type": "Bearer",
+            "expires_in": 1200,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1

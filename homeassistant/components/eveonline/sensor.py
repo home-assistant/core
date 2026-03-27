@@ -19,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator, EveOnlineData
 from .entity import EveOnlineCharacterEntity, EveOnlineServerEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EveOnlineSensorDescription(SensorEntityDescription):
