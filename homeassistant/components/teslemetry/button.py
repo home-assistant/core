@@ -10,10 +10,12 @@ from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
+from .const import DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE
 from .entity import TeslemetryVehicleStreamEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
@@ -58,6 +60,21 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
     ),
 )
 
+CHARGE_ON_SOLAR_DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
+    TeslemetryButtonEntityDescription(
+        key="enable_charge_on_solar",
+        func=lambda self: handle_vehicle_command(
+            self.api.charge_on_solar(enabled=True)
+        ),
+    ),
+    TeslemetryButtonEntityDescription(
+        key="disable_charge_on_solar",
+        func=lambda self: handle_vehicle_command(
+            self.api.charge_on_solar(enabled=False)
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -66,10 +83,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Button platform from a config entry."""
 
+    descriptions = DESCRIPTIONS
+    if async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE):
+        descriptions += CHARGE_ON_SOLAR_DESCRIPTIONS
+
     async_add_entities(
         TeslemetryButtonEntity(vehicle, description)
         for vehicle in entry.runtime_data.vehicles
-        for description in DESCRIPTIONS
+        for description in descriptions
         if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
     )
 

@@ -6,6 +6,7 @@ from enum import StrEnum
 import logging
 
 DOMAIN = "teslemetry"
+LABS_CHARGE_ON_SOLAR_FEATURE = "charge_on_solar"
 
 LOGGER = logging.getLogger(__package__)
 

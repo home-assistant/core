@@ -256,6 +256,12 @@
       "boombox": {
         "name": "Play fart"
       },
+      "disable_charge_on_solar": {
+        "name": "Disable charge on solar"
+      },
+      "enable_charge_on_solar": {
+        "name": "Enable charge on solar"
+      },
       "enable_keyless_driving": {
         "name": "Keyless driving"
       },
@@ -1184,6 +1190,14 @@
     },
     "wake_up_timeout": {
       "message": "Timed out trying to wake up vehicle"
+    }
+  },
+  "preview_features": {
+    "charge_on_solar": {
+      "description": "Adds two vehicle buttons to enable and disable Tesla's charge on solar mode.\n\nThis feature does not currently expose a reliable state from the API, so only action buttons are provided.",
+      "disable_confirmation": "Charge-on-solar buttons will be removed from your Teslemetry vehicles.",
+      "enable_confirmation": "Charge-on-solar buttons will be added to your Teslemetry vehicles.",
+      "name": "Charge on solar buttons"
     }
   },
   "selector": {
