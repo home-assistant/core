@@ -246,6 +246,7 @@ class BaseUnitConverter:
         return {cls.UNIT_CLASS: data}
 
     @classmethod
+    @lru_cache
     def _get_from_to_ops(
         cls, from_unit: str | None, to_unit: str | None, for_ratio: bool = False
     ) -> list[UnitConvertOp]:
@@ -261,6 +262,7 @@ class BaseUnitConverter:
         return [*reversed(from_op), *to_op]
 
     @classmethod
+    @lru_cache
     def _get_op_info(
         cls, unit: str | None, for_ratio: bool
     ) -> Iterable[UnitConvertOpInfo]:
@@ -277,6 +279,7 @@ class BaseUnitConverter:
         return ops if not for_ratio else filter(_is_ratio_op, ops)
 
     @classmethod
+    @lru_cache
     def _get_inverse_op(
         cls, from_unit: str | None, to_unit: str | None, for_ratio: bool
     ) -> Iterable[UnitConvertOpInfo]:
@@ -915,39 +918,15 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     }
 
 
-# A list of all available unit converters
-ALL_UNIT_CONVERTERS: Final[list[type[BaseUnitConverter]]] = [
-    ApparentPowerConverter,
-    AreaConverter,
-    BloodGlucoseConcentrationConverter,
-    ConductivityConverter,
-    DataRateConverter,
-    DistanceConverter,
-    DurationConverter,
-    ElectricCurrentConverter,
-    ElectricPotentialConverter,
-    EnergyConverter,
-    EnergyDistanceConverter,
-    InformationConverter,
-    MassConverter,
-    MassVolumeConcentrationConverter,
-    PowerConverter,
-    PressureConverter,
-    ReactiveEnergyConverter,
-    ReactivePowerConverter,
-    SpeedConverter,
-    TemperatureConverter,
-    UnitlessRatioConverter,
-    VolumeConverter,
-    VolumeFlowRateConverter,
-    CarbonMonoxideConcentrationConverter,
-    NitrogenDioxideConcentrationConverter,
-    NitrogenMonoxideConcentrationConverter,
-    OzoneConcentrationConverter,
-    SulphurDioxideConcentrationConverter,
-    TemperatureDeltaConverter,
-]
+def _all_unit_converters() -> list[type[BaseUnitConverter]]:
+    """Return all available unit converters."""
+    return list(BaseUnitConverter.__subclasses__())
 
-PRIMARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+
+# A list of all available unit converters
+ALL_UNIT_CONVERTERS: Final[list[type[BaseUnitConverter]]] = _all_unit_converters()
+
+# Subset list containing only primary unit converters
+PRIMARY_UNIT_CONVERTERS: Final[list[type[BaseUnitConverter]]] = [
     conv for conv in ALL_UNIT_CONVERTERS if conv.IS_PRIMARY
 ]
