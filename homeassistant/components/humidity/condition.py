@@ -11,6 +11,10 @@ from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.weather import (
+    ATTR_WEATHER_HUMIDITY,
+    DOMAIN as WEATHER_DOMAIN,
+)
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
@@ -24,6 +28,9 @@ HUMIDITY_DOMAIN_SPECS = {
         value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.HUMIDITY),
+    WEATHER_DOMAIN: DomainSpec(
+        value_source=ATTR_WEATHER_HUMIDITY,
+    ),
 }
 
 CONDITIONS: dict[str, type[Condition]] = {
