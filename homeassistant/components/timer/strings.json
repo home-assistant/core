@@ -77,7 +77,7 @@
   "services": {
     "cancel": {
       "description": "Resets a timer's duration to the last known initial value without firing the timer finished event.",
-      "name": "Cancel"
+      "name": "Cancel timer"
     },
     "change": {
       "description": "Changes a timer by adding or subtracting a given duration.",
@@ -87,19 +87,19 @@
           "name": "Duration"
         }
       },
-      "name": "Change"
+      "name": "Change timer"
     },
     "finish": {
       "description": "Finishes a running timer earlier than scheduled.",
-      "name": "Finish"
+      "name": "Finish timer"
     },
     "pause": {
       "description": "Pauses a running timer, retaining the remaining duration for later continuation.",
-      "name": "[%key:common::action::pause%]"
+      "name": "Pause timer"
     },
     "reload": {
       "description": "Reloads timers from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload timers"
     },
     "start": {
       "description": "Starts a timer or restarts it with a provided duration.",
@@ -109,7 +109,7 @@
           "name": "Duration"
         }
       },
-      "name": "[%key:common::action::start%]"
+      "name": "Start timer"
     }
   },
   "title": "Timer"
