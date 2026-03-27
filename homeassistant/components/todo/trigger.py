@@ -186,7 +186,10 @@ class ItemChangeTriggerBase(ItemTriggerBase):
     def _get_items_diff(
         self, old_item_ids: set[str], current_item_ids: set[str]
     ) -> set[str]:
-        """Return the set of item ids that should be reported for this trigger based on the previous and current matching item ids."""
+        """Return the set of item ids that should be reported for this trigger.
+
+        The calculation is based on the previous and current matching item ids.
+        """
 
     @override
     @callback
