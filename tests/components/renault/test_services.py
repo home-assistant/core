@@ -155,6 +155,7 @@ async def test_service_charge_start_simple(
             DOMAIN, "charge_start", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
+    assert mock_action.mock_calls[0][1] == (None,)
 
 
 async def test_service_charge_start_with_date(
