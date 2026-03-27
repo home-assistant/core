@@ -703,9 +703,6 @@ LIGHT_LUX: Final = "lx"
 # UV Index units
 UV_INDEX: Final = "UV index"
 
-# Percentage units
-PERCENTAGE: Final = "%"
-
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
@@ -759,13 +756,19 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 # Concentration units
 class UnitOfConcentration(StrEnum):
-    """Generic concentration units."""
+    """Concentration units."""
 
     GRAMS_PER_CUBIC_METER = "g/m³"
     MILLIGRAMS_PER_CUBIC_METER = "mg/m³"
     MICROGRAMS_PER_CUBIC_METER = "μg/m³"
     MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
     PARTS_PER_CUBIC_METER = "p/m³"
+
+
+class UnitOfRatio(StrEnum):
+    """Ratio units."""
+
+    PERCENTAGE = "%"
     PARTS_PER_MILLION = "ppm"
     PARTS_PER_BILLION = "ppb"
 
@@ -858,11 +861,12 @@ CONCENTRATION_PARTS_PER_CUBIC_METER: Final = DeprecatedConstant(
     "p/m³", "UnitOfConcentration.PARTS_PER_CUBIC_METER", "2027.3"
 )
 CONCENTRATION_PARTS_PER_MILLION: Final = DeprecatedConstant(
-    "ppm", "UnitOfConcentration.PARTS_PER_MILLION", "2027.3"
+    "ppm", "UnitOfRatio.PARTS_PER_MILLION", "2027.3"
 )
 CONCENTRATION_PARTS_PER_BILLION: Final = DeprecatedConstant(
-    "ppb", "UnitOfConcentration.PARTS_PER_BILLION", "2027.3"
+    "ppb", "UnitOfRatio.PARTS_PER_BILLION", "2027.3"
 )
+PERCENTAGE: Final = DeprecatedConstant("%", "UnitOfRatio.PERCENTAGE", "2027.3")
 
 
 # States
