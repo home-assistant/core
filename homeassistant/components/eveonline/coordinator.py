@@ -161,7 +161,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch an optional endpoint, returning None on failure."""
         try:
             return await method(*args)
-        except EveOnlineError as err:
+        except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch %s: %s", method.__name__, err)
             return None
 
@@ -173,7 +173,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch a list endpoint, returning empty list on failure."""
         try:
             return await method(*args)
-        except EveOnlineError as err:
+        except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch %s: %s", method.__name__, err)
             return []
 
@@ -207,6 +207,6 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         try:
             resolved = await self.client.async_resolve_names(list(ids))
             return {entry.id: entry.name for entry in resolved}
-        except EveOnlineError as err:
+        except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to resolve names: %s", err)
             return {}
