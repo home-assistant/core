@@ -61,13 +61,11 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities: list[EveOnlineBinarySensor] = []
 
-    # Only create shared Tranquility server entities for the first loaded entry
-    # to avoid duplicate unique_ids when multiple characters are configured.
-    if not any(
-        e
-        for e in hass.config_entries.async_loaded_entries(DOMAIN)
-        if e.entry_id != entry.entry_id
-    ):
+    # Only create shared Tranquility server entities once across all entries.
+    # Track the owning entry in hass.data so ownership can transfer on unload.
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if "server_binary_sensor_entry" not in domain_data:
+        domain_data["server_binary_sensor_entry"] = entry.entry_id
         entities.extend(
             EveOnlineServerBinarySensor(coordinator, description)
             for description in SERVER_BINARY_SENSORS
