@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, REGISTRATIONS_FILE
+from .const import ATTR_ACTION, ATTR_DATA, ATTR_TAG, DOMAIN, REGISTRATIONS_FILE
 from .entity import HTML5Entity
 from .notify import _load_config
 
@@ -44,7 +44,7 @@ class HTML5EventEntity(HTML5Entity, EventEntity):
 
     @callback
     def _async_handle_event(
-        self, target: str, event_type: str, data: dict[str, Any]
+        self, target: str, event_type: str, event_data: dict[str, Any]
     ) -> None:
         """Handle the event."""
 
@@ -52,9 +52,9 @@ class HTML5EventEntity(HTML5Entity, EventEntity):
             self._trigger_event(
                 event_type,
                 {
-                    **data.get("data", {}),
-                    "action": data.get("action"),
-                    "tag": data.get("tag"),
+                    **event_data.get(ATTR_DATA, {}),
+                    ATTR_ACTION: event_data.get(ATTR_ACTION),
+                    ATTR_TAG: event_data.get(ATTR_TAG),
                 },
             )
             self.async_write_ha_state()

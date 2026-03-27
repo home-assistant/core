@@ -46,6 +46,8 @@ from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json_object
 
 from .const import (
+    ATTR_ACTION,
+    ATTR_TAG,
     ATTR_VAPID_EMAIL,
     ATTR_VAPID_PRV_KEY,
     ATTR_VAPID_PUB_KEY,
@@ -67,8 +69,6 @@ ATTR_AUTH = "auth"
 ATTR_P256DH = "p256dh"
 ATTR_EXPIRATIONTIME = "expirationTime"
 
-ATTR_TAG = "tag"
-ATTR_ACTION = "action"
 ATTR_ACTIONS = "actions"
 ATTR_TYPE = "type"
 ATTR_URL = "url"
