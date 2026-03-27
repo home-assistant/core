@@ -57,7 +57,7 @@ class AsyncConfigEntryAuth:
             if setup_in_progress:
                 raise ConfigEntryNotReady from ex
             raise
-        except (RefreshError, ClientResponseError, ClientError) as ex:
+        except ClientError as ex:
             if setup_in_progress:
                 if (
                     isinstance(ex, ClientResponseError)
