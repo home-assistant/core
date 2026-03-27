@@ -20,7 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 
@@ -129,7 +129,10 @@ class SAJPolling:
         try:
             success = await self._saj.read(self._sensor_def)
         except pysaj.UnauthorizedException:
-            self._entry.async_start_reauth(self._hass)
+            _LOGGER.error(
+                "Username and/or password rejected during polling for %s",
+                self._entry.title,
+            )
             success = False
         except pysaj.UnexpectedResponseException as err:
             _LOGGER.error(
@@ -204,7 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
     try:
         saj, sensor_def = await _async_connect()
     except pysaj.UnauthorizedException as err:
-        raise ConfigEntryAuthFailed("Authentication failed") from err
+        raise ConfigEntryNotReady("Authentication failed") from err
     except pysaj.UnexpectedResponseException as err:
         raise ConfigEntryNotReady(f"Connection error: {err}") from err
     except TimeoutError as err:

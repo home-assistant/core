@@ -4,9 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_unique_id": "Unable to identify device",
-      "not_saj_device": "Device is not a valid SAJ inverter",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -15,10 +12,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "confirm_discovery": {
-        "description": "Do you want to set up the SAJ inverter at {device}? If it uses Wi-Fi with login, add username and password when Home Assistant asks you to re-authenticate.",
-        "title": "SAJ Inverter discovered"
-      },
       "device_credentials": {
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -28,14 +21,6 @@
         "description": "The inverter required WiFi login. Adjust the name if you like and enter or correct username and password.",
         "title": "Device Credentials"
       },
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "description": "Credentials were rejected for {name}. Enter the Wi-Fi username and password for the inverter web interface.",
-        "title": "[%key:common::config_flow::title::reauth%]"
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -44,7 +29,7 @@
           "type": "Connection type",
           "username": "[%key:common::config_flow::data::username%]"
         },
-        "description": "Configure your SAJ solar inverter. Enter the IP address or hostname. For automatic discovery to work, the device hostname must start with 'saj-' or MAC address must start with '44:17:93'. If you use WiFi, username and password are optional here (open networks); if login is required you can enter them now or on the next step after we detect the inverter."
+        "description": "Configure your SAJ solar inverter. Enter the IP address or hostname. If you use WiFi, username and password are optional here (open networks); if login is required you can enter them now or on the next step after we detect the inverter."
       }
     }
   },
