@@ -821,7 +821,7 @@ def make_entity_target_state_trigger(
     """
     specs = _normalize_domain_specs(domain_specs)
 
-    if isinstance(to_states, (str | bool)):
+    if isinstance(to_states, (str, bool)):
         to_states_set = {to_states}
     else:
         to_states_set = to_states
