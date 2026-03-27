@@ -926,6 +926,106 @@ async def test_opening_state_sensor(
         assert hass.states.get(entity_id) is None
 
 
+async def test_opening_state_sensor_metadata_options_change(
+    hass: HomeAssistant,
+    hoppe_ehandle_connectsense: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test Opening state sensor is rediscovered when metadata options change."""
+    entity_id = "sensor.ehandle_connectsense_opening_state"
+    node = hoppe_ehandle_connectsense
+
+    # Verify initial state with 2 options
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Closed"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
+
+    # Simulate metadata update adding "Tilted" state
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Access Control",
+                "propertyKey": "Opening state",
+                "propertyName": "Access Control",
+                "propertyKeyName": "Opening state",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Opening state",
+                    "ccSpecific": {"notificationType": 6},
+                    "min": 0,
+                    "max": 255,
+                    "states": {
+                        "0": "Closed",
+                        "1": "Open",
+                        "2": "Tilted",
+                    },
+                    "stateful": True,
+                    "secret": False,
+                },
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Entity should be rediscovered with 3 options
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open", "Tilted"]
+
+    # Simulate metadata update removing "Tilted" state
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Access Control",
+                "propertyKey": "Opening state",
+                "propertyName": "Access Control",
+                "propertyKeyName": "Opening state",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Opening state",
+                    "ccSpecific": {"notificationType": 6},
+                    "min": 0,
+                    "max": 255,
+                    "states": {
+                        "0": "Closed",
+                        "1": "Open",
+                    },
+                    "stateful": True,
+                    "secret": False,
+                },
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Entity should be rediscovered with 2 options again
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
+
+
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
 # controller statistics with initial state of 0
 CONTROLLER_STATISTICS_SUFFIXES = {
