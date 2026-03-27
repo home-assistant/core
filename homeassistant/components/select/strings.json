@@ -1,4 +1,20 @@
 {
+  "conditions": {
+    "is_option_selected": {
+      "description": "Tests if one or more dropdowns have a specific option selected.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        },
+        "option": {
+          "description": "The options to check for.",
+          "name": "Option"
+        }
+      },
+      "name": "Option is selected"
+    }
+  },
   "device_automation": {
     "action_type": {
       "select_first": "Change {entity_name} to first option",
@@ -34,6 +50,14 @@
   "exceptions": {
     "not_valid_option": {
       "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
     }
   },
   "services": {
