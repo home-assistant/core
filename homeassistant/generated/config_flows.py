@@ -206,6 +206,7 @@ FLOWS = {
         "esphome",
         "essent",
         "eufylife_ble",
+        "eveonline",
         "evil_genius_labs",
         "ezviz",
         "faa_delays",

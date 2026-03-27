@@ -2194,6 +2194,9 @@ python-dropbox-api==0.1.3
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
 
+# homeassistant.components.eveonline
+python-eveonline==0.2.1
+
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.15
 

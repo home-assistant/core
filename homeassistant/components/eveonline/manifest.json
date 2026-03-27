@@ -1,0 +1,12 @@
+{
+  "domain": "eveonline",
+  "name": "Eve Online",
+  "codeowners": ["@ronaldvdmeer"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/eveonline",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["python-eveonline==0.2.1"]
+}

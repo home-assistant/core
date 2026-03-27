@@ -9,6 +9,7 @@ APPLICATION_CREDENTIALS = [
     "dropbox",
     "ekeybionyx",
     "electric_kiwi",
+    "eveonline",
     "fitbit",
     "gentex_homelink",
     "geocaching",
