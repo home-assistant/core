@@ -10,13 +10,12 @@ from functools import reduce
 from operator import ior
 from pathlib import Path
 
-from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.util.unit_conversion import ALL_UNIT_CONVERTERS
 
 Path("homeassistant/generated/unit-factors.json").write_text(
-    json_dumps(
-        reduce(ior, [conv.as_dict() for conv in ALL_UNIT_CONVERTERS], {}),
-        sort_keys=True,
+    json_dumps_sorted(
+        reduce(ior, [conv.as_dict() for conv in ALL_UNIT_CONVERTERS], {})
     ),
     encoding="utf8",
 )
