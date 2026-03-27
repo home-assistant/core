@@ -1544,6 +1544,202 @@ async def test_migration_1_18(
     assert hass_storage[er.STORAGE_KEY] == migrated_data
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_21(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from version 1.21.
+
+    Version 1.21 stored entity names in a new format, but was reverted.
+    """
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["mock_entry"],
+                    "config_entries_subentries": {"mock_entry": [None]},
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "device_1234",
+                    "identifiers": [["test", "device_1"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": "My Device",
+                    "primary_config_entry": "mock_entry",
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
+    entity_base = {
+        "aliases": [],
+        "area_id": None,
+        "capabilities": {},
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_id": "device_1234",
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "object_id_base": "Temperature",
+        "options": {},
+        "original_device_class": "temperature",
+        "original_icon": None,
+        "original_name": "Temperature",
+        "platform": "super_platform",
+        "previous_unique_id": None,
+        "suggested_object_id": None,
+        "supported_features": 0,
+        "translation_key": None,
+        "unit_of_measurement": None,
+        "device_class": None,
+    }
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 21,
+        "data": {
+            "entities": [
+                {
+                    **entity_base,
+                    "entity_id": "test.custom_name",
+                    "id": "entity_custom_name",
+                    "unique_id": "custom_name",
+                    "name": "My Custom Name",
+                    "name_v2": "My Custom Name",
+                },
+                {
+                    **entity_base,
+                    "entity_id": "test.stripped",
+                    "id": "entity_stripped",
+                    "unique_id": "stripped",
+                    "name": "My Device Temperature",
+                    "name_v2": "Temperature",
+                },
+                {
+                    **entity_base,
+                    "entity_id": "test.stripped_and_renamed",
+                    "id": "entity_stripped_and_renamed",
+                    "unique_id": "stripped_and_renamed",
+                    "name": "My Device Temperature",
+                    "name_v2": "Heat",
+                },
+            ],
+            "deleted_entities": [],
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "custom_name")
+    assert entry.name == "My Custom Name"
+
+    entry = registry.async_get_or_create("test", "super_platform", "stripped")
+    assert entry.name == "My Device Temperature"
+
+    entry = registry.async_get_or_create(
+        "test", "super_platform", "stripped_and_renamed"
+    )
+    assert entry.name == "My Device Heat"
+
+    # Check migrated data
+    await flush_store(registry._store)
+    migrated_data = hass_storage[er.STORAGE_KEY]
+
+    migrated_entity_base = {
+        "aliases": [],
+        "aliases_v2": [None],
+        "area_id": None,
+        "capabilities": {},
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_id": "device_1234",
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "object_id_base": "Temperature",
+        "options": {},
+        "original_device_class": "temperature",
+        "original_icon": None,
+        "original_name": "Temperature",
+        "platform": "super_platform",
+        "previous_unique_id": None,
+        "suggested_object_id": None,
+        "supported_features": 0,
+        "translation_key": None,
+        "unit_of_measurement": None,
+        "device_class": None,
+    }
+    assert migrated_data == {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "key": er.STORAGE_KEY,
+        "data": {
+            "entities": [
+                {
+                    **migrated_entity_base,
+                    "entity_id": "test.custom_name",
+                    "id": "entity_custom_name",
+                    "unique_id": "custom_name",
+                    "name": "My Custom Name",
+                },
+                {
+                    **migrated_entity_base,
+                    "entity_id": "test.stripped",
+                    "id": "entity_stripped",
+                    "unique_id": "stripped",
+                    "name": "My Device Temperature",
+                },
+                {
+                    **migrated_entity_base,
+                    "entity_id": "test.stripped_and_renamed",
+                    "id": "entity_stripped_and_renamed",
+                    "unique_id": "stripped_and_renamed",
+                    "name": "My Device Heat",
+                },
+            ],
+            "deleted_entities": [],
+        },
+    }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
+
+
 async def test_update_entity_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
