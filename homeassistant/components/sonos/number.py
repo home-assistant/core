@@ -1,13 +1,11 @@
 """Entity representing a Sonos number control."""
 
-import asyncio
 from collections.abc import Callable, Sequence
 from datetime import datetime
 import logging
 import time
 from typing import cast
 
-from soco.core import SoCo
 from soco.exceptions import SoCoException
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -185,54 +183,25 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         # Track last known role so we can update availability/value efficiently.
         self._is_coord: bool = False
 
-    def _coordinator_soco(self) -> SoCo:
-        """Return the coordinator SoCo for this speaker."""
-        return (self.speaker.coordinator or self.speaker).soco
-
-    def _is_coordinator(self) -> bool:
-        return (self.speaker.coordinator or self.speaker).uid == self.speaker.uid
-
+    @callback
     def _schedule_delayed_refresh(
         self, seconds: float = GROUP_VOLUME_REFRESH_DELAY
     ) -> None:
-        """Schedule a short delayed refresh on the HA loop (thread-safe)."""
+        """Schedule a short delayed refresh; must be called from the event loop."""
+        if self._delay_unsubscribe is not None:
+            self._delay_unsubscribe()
+            self._delay_unsubscribe = None
 
-        def _schedule() -> None:
-            # Cancel any pending timer
-            if self._delay_unsubscribe is not None:
-                self._delay_unsubscribe()
-                self._delay_unsubscribe = None
+        async def _delayed_refresh(_now: datetime) -> None:
+            self._delay_unsubscribe = None
+            await self._async_refresh_from_device()
 
-            loop = self.hass.loop
-            if not loop.is_running() or loop.is_closed():
-                return
-
-            async def _delayed_refresh(_now: datetime) -> None:
-                self._delay_unsubscribe = None
-                await self._async_refresh_from_device()
-
-            self._delay_unsubscribe = async_call_later(
-                self.hass, seconds, _delayed_refresh
-            )
-
-        # If we're already on the loop, call directly; otherwise hop to it safely.
-        try:
-            running = (
-                self.hass.loop.is_running()
-                and asyncio.get_running_loop() is self.hass.loop
-            )
-        except RuntimeError:
-            running = False
-        if running:
-            _schedule()
-        else:
-            # Ensure scheduling runs on the HA loop thread (not an executor)
-            self.hass.loop.call_soon_threadsafe(_schedule)
+        self._delay_unsubscribe = async_call_later(self.hass, seconds, _delayed_refresh)
 
     def _get_group_or_player_volume_safe(self) -> int | None:
         """Return the current volume for this speaker’s coordinator, handling SoCo/OSError exceptions."""
         try:
-            coord = self._coordinator_soco()
+            coord = (self.speaker.coordinator or self.speaker).soco
             group = getattr(coord, "group", None)
             members_any = getattr(group, "members", None) if group is not None else None
             members = cast(Sequence[object] | None, members_any)
@@ -259,7 +228,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             return
         self._last_refresh_ts = now
 
-        is_coord = self._is_coordinator()
+        is_coord = self.speaker.is_coordinator
 
         # Non-coordinators: visible but unavailable.
         if not is_coord:
@@ -283,7 +252,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     @property
     def available(self) -> bool:
         """Return whether this entity is available."""
-        return self._is_coordinator() and self.speaker.available
+        return self.speaker.is_coordinator and self.speaker.available
 
     @property
     def native_value(self) -> float | None:
@@ -293,15 +262,11 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     @soco_error()
     def set_native_value(self, value: float) -> None:
         """Set the group volume (0–100), or player volume when ungrouped."""
-        # Non-coordinators: visible but unavailable (ignore writes).
-        if not self._is_coordinator():
-            return
-
         level = int(value + 0.5)
 
         try:
-            coord = self._coordinator_soco()
-            group = getattr(coord, "group", None)
+            coord_soco = (self.speaker.coordinator or self.speaker).soco
+            group = getattr(coord_soco, "group", None)
             members_any = getattr(group, "members", None) if group is not None else None
             members = cast(Sequence[object] | None, members_any)
             grouped = members is not None and len(members) > 1
@@ -310,10 +275,13 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             return
 
         if grouped:
-            coord.group.volume = level
+            coord_soco.group.volume = level
         else:
             self.soco.volume = level
 
+    async def async_set_native_value(self, value: float) -> None:
+        """Run the blocking volume write in an executor, then schedule refresh on the loop."""
+        await self.hass.async_add_executor_job(self.set_native_value, value)
         self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
 
     async def async_update(self) -> None:
