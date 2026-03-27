@@ -47,6 +47,10 @@
     }
   },
   "issues": {
+    "deprecated_yaml": {
+      "description": "[%key:component::homeassistant::issues::deprecated_yaml::description%]",
+      "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
+    },
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nHome Assistant could not reach the inverter while importing your configuration. Check the host, network, and that the device is an SAJ inverter, then restart to retry the import, or remove the `sensor` / `saj` YAML and add the integration from the UI.",
       "title": "[%key:component::saj::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
