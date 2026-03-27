@@ -41,22 +41,28 @@ def async_track_time_interval_backoff(
     """Fire `action` on an interval; double the interval (capped) when it returns False."""
     remove: CALLBACK_TYPE | None = None
     interval = MIN_INTERVAL_SEC
+    stopped = False
 
     async def interval_listener(_now: datetime | None = None) -> None:
-        nonlocal interval, remove
+        nonlocal interval, remove, stopped
         try:
             if await action():
                 interval = MIN_INTERVAL_SEC
             else:
                 interval = min(interval * 2, MAX_INTERVAL_SEC)
         finally:
+            if stopped:
+                return
             remove = async_call_later(hass, interval, interval_listener)
 
     hass.async_create_task(interval_listener())
 
     def remove_listener() -> None:
+        nonlocal remove, stopped
+        stopped = True
         if remove:
             remove()
+            remove = None
 
     return remove_listener
 
