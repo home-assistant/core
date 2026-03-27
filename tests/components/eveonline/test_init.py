@@ -169,11 +169,10 @@ async def test_coordinator_auth_error_on_optional_endpoint(
     mock_eveonline_client: AsyncMock,
     setup_credentials: None,
 ) -> None:
-    """Test that auth errors on optional endpoints are not silently swallowed.
+    """Test that auth errors on optional endpoints trigger reauth.
 
-    Unlike generic EveOnlineError, EveOnlineAuthenticationError is re-raised
-    from _fetch_optional so it propagates upward instead of returning None.
-    During first refresh this causes the entry to fail setup (SETUP_RETRY).
+    Unlike generic EveOnlineError, EveOnlineAuthenticationError is translated
+    to ConfigEntryAuthFailed in _fetch_optional, triggering a reauth flow.
     """
     mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_wallet_balance.side_effect = (
@@ -183,8 +182,8 @@ async def test_coordinator_auth_error_on_optional_endpoint(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Auth errors propagate — entry should not be loaded
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # Auth errors become ConfigEntryAuthFailed → SETUP_ERROR + reauth
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_coordinator_list_endpoint_error(
@@ -244,7 +243,7 @@ async def test_coordinator_list_endpoint_auth_error(
     mock_eveonline_client: AsyncMock,
     setup_credentials: None,
 ) -> None:
-    """Test that auth errors on list endpoints propagate like optional endpoints."""
+    """Test that auth errors on list endpoints trigger reauth."""
     mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_skill_queue.side_effect = (
         EveOnlineAuthenticationError("Token revoked")
@@ -253,7 +252,7 @@ async def test_coordinator_list_endpoint_auth_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_coordinator_resolves_names(
