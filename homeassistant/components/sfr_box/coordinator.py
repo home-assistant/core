@@ -10,7 +10,14 @@ from typing import Any
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
-from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, VoipInfo, WanInfo
+from sfrbox_api.models import (
+    DslInfo,
+    FtthInfo,
+    SystemInfo,
+    VoipCallHistoryList,
+    VoipInfo,
+    WanInfo,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,6 +40,7 @@ class SFRRuntimeData:
     ftth: SFRDataUpdateCoordinator[FtthInfo]
     system: SFRDataUpdateCoordinator[SystemInfo]
     voip: SFRDataUpdateCoordinator[VoipInfo] | None
+    voip_callhistorylist: SFRDataUpdateCoordinator[VoipCallHistoryList] | None
     wan: SFRDataUpdateCoordinator[WanInfo]
 
 
