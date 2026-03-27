@@ -658,6 +658,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     MILLILITERS_PER_SECOND = "mL/s"
 
 
+# Area units
 class UnitOfArea(StrEnum):
     """Area units."""
 
@@ -686,6 +687,7 @@ class UnitOfMass(StrEnum):
     STONES = "st"
 
 
+# Conductivity units
 class UnitOfConductivity(StrEnum):
     """Conductivity units."""
 
@@ -715,6 +717,7 @@ class UnitOfIrradiance(StrEnum):
     BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h⋅ft²)"
 
 
+# Volumetric flux units
 class UnitOfVolumetricFlux(StrEnum):
     """Volumetric flux, commonly used for precipitation intensity.
 
@@ -735,6 +738,7 @@ class UnitOfVolumetricFlux(StrEnum):
     """Derived from mm³/(mm²⋅h)"""
 
 
+# Precipitation depth units
 class UnitOfPrecipitationDepth(StrEnum):
     """Precipitation depth.
 
@@ -753,13 +757,16 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
-CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
-CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
-CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
-CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
+class UnitOfConcentration(StrEnum):
+    """Generic concentration units."""
+
+    GRAMS_PER_CUBIC_METER = "g/m³"
+    MILLIGRAMS_PER_CUBIC_METER = "mg/m³"
+    MICROGRAMS_PER_CUBIC_METER = "μg/m³"
+    MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
+    PARTS_PER_CUBIC_METER = "p/m³"
+    PARTS_PER_MILLION = "ppm"
+    PARTS_PER_BILLION = "ppb"
 
 
 class UnitOfBloodGlucoseConcentration(StrEnum):
@@ -831,6 +838,26 @@ class UnitOfDataRate(StrEnum):
     KIBIBYTES_PER_SECOND = "KiB/s"
     MEBIBYTES_PER_SECOND = "MiB/s"
     GIBIBYTES_PER_SECOND = "GiB/s"
+
+
+# Map legacy concentration constants to UnitOfConcentration StrEnum
+CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = str(
+    UnitOfConcentration.GRAMS_PER_CUBIC_METER
+)
+CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = str(
+    UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER
+)
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = str(
+    UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER
+)
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = str(
+    UnitOfConcentration.MICROGRAMS_PER_CUBIC_FOOT
+)
+CONCENTRATION_PARTS_PER_CUBIC_METER: Final = str(
+    UnitOfConcentration.PARTS_PER_CUBIC_METER
+)
+CONCENTRATION_PARTS_PER_MILLION: Final = str(UnitOfConcentration.PARTS_PER_MILLION)
+CONCENTRATION_PARTS_PER_BILLION: Final = str(UnitOfConcentration.PARTS_PER_BILLION)
 
 
 # States
