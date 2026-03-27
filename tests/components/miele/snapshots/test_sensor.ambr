@@ -5243,6 +5243,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -5294,6 +5295,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
@@ -5856,6 +5858,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program',
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -5907,6 +5910,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
@@ -6449,6 +6453,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -6495,6 +6500,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program phase',
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -7624,6 +7630,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',
@@ -7707,6 +7714,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',
@@ -9041,6 +9049,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -9092,6 +9101,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
@@ -9654,6 +9664,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program',
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
         'amaranth',
@@ -9705,6 +9716,7 @@
         'blanching',
         'blueberry_muffins',
         'bologna_sausage',
+        'booster',
         'bottling',
         'bottling_hard',
         'bottling_medium',
@@ -10247,6 +10259,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -10293,6 +10306,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program phase',
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -11422,6 +11436,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',
@@ -11505,6 +11520,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',

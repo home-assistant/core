@@ -1229,7 +1229,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.1
+home-assistant-frontend==20260325.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1286,7 +1286,7 @@ icalendar==6.3.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.6.4
+idasen-ha==2.6.5
 
 # homeassistant.components.idrive_e2
 idrive-e2-client==0.1.1
@@ -3109,7 +3109,7 @@ thermopro-ble==1.1.3
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.9
+thinqconnect==1.0.11
 
 # homeassistant.components.tikteck
 tikteck==0.4
