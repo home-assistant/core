@@ -17,7 +17,6 @@ TUBE_LINES = [
     "Elizabeth line",
     "Hammersmith & City",
     "Jubilee",
-    "London Overground",  # no longer supported
     "Metropolitan",
     "Northern",
     "Piccadilly",
@@ -29,6 +28,8 @@ TUBE_LINES = [
     "Suffragette",
     "Weaver",
     "Windrush",
+    "Tram",
+    "IFS Cloud Cable Car",
 ]
 
 # Default lines to monitor if none selected
