@@ -216,14 +216,6 @@ WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
 )
 
 
-def _get_phone_status(value: str | None) -> str | None:
-    if value == "onhook":
-        return "idle"
-    if value == "offhook":
-        return value
-    return None
-
-
 def _value_to_option(value: str | None) -> str | None:
     if value is None or value == "Unknown":
         return None
