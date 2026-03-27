@@ -1,0 +1,128 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "bucket_not_found": "[%key:component::scaleway_object_storage::exceptions::bucket_not_found::message%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_bucket_name": "[%key:component::scaleway_object_storage::exceptions::invalid_bucket_name::message%]",
+      "server_unavailable": "[%key:component::scaleway_object_storage::exceptions::server_unavailable::message%]",
+      "unsuccessful_response": "Received unsuccessful server response from Scaleway."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {},
+        "description": "Your [Scaleway credentials]({api_key_docs}) for the `{bucket_name}` bucket are no longer valid. Please enter new, valid credentials.",
+        "sections": {
+          "credentials": {
+            "data": {
+              "access_key_id": "Access Key ID",
+              "secret_key": "Secret Key"
+            },
+            "data_description": {
+              "access_key_id": "Your API key's ID",
+              "secret_key": "The secret part of your API key"
+            },
+            "name": "Credentials"
+          }
+        },
+        "title": "Re-authenticate Scaleway Object Storage bucket"
+      },
+      "reconfigure": {
+        "data": {
+          "bucket": "Bucket Name",
+          "object_prefix": "Object Key Prefix",
+          "region": "Region"
+        },
+        "data_description": {
+          "bucket": "Bucket must already exist and be writable using the provided credentials.",
+          "object_prefix": "A prefix that will be added to every object key.",
+          "region": "The Scaleway region that you have created your bucket in."
+        },
+        "description": "Check out the Scaleway docs on how to [create a bucket]({bucket_docs}) or [an API key]({api_key_docs}).",
+        "sections": {
+          "credentials": {
+            "data": {
+              "access_key_id": "Access Key ID",
+              "secret_key": "Secret Key"
+            },
+            "data_description": {
+              "access_key_id": "Your API key's ID",
+              "secret_key": "The secret part of your API key"
+            },
+            "name": "Credentials"
+          }
+        },
+        "title": "Reconfigure Scaleway Object Storage backup"
+      },
+
+      "user": {
+        "data": {
+          "bucket": "Bucket Name",
+          "object_prefix": "Object Key Prefix",
+          "region": "Region"
+        },
+        "data_description": {
+          "bucket": "Bucket must already exist and be writable using the provided credentials.",
+          "object_prefix": "A prefix that will be added to every object key.",
+          "region": "The Scaleway region that you have created your bucket in."
+        },
+        "description": "Check out the Scaleway docs on how to [create a bucket]({bucket_docs}) or [an API key]({api_key_docs}).",
+        "sections": {
+          "credentials": {
+            "data": {
+              "access_key_id": "Access Key ID",
+              "secret_key": "Secret Key"
+            },
+            "data_description": {
+              "access_key_id": "Your API key's ID",
+              "secret_key": "The secret part of your API key"
+            },
+            "name": "Credentials"
+          }
+        },
+        "title": "Add Scaleway Object Storage backup"
+      }
+    }
+  },
+  "exceptions": {
+    "bucket_not_found": {
+      "message": "Bucket could not be found."
+    },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "invalid_bucket_name": {
+      "message": "Invalid bucket name."
+    },
+    "missing_object_metadata": {
+      "message": "Could not find backup metadata for object {object_key}."
+    },
+    "object_not_found": {
+      "message": "Could not find backup object {object_key}."
+    },
+    "server_unavailable": {
+      "message": "Scaleway service is temporarily unavailable."
+    },
+    "unsuccessful_response": {
+      "message": "Received unsuccessful server response with code {status_code}."
+    }
+  },
+  "selector": {
+    "regions": {
+      "options": {
+        "fr-par": "Paris, France",
+        "it-mil": "Milan, Italy",
+        "nl-ams": "Amsterdam, Netherlands",
+        "pl-waw": "Warsaw, Poland"
+      }
+    }
+  }
+}
