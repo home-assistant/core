@@ -18,7 +18,7 @@ from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) -> bool:
@@ -57,7 +57,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) -
     # Release server entity ownership so another entry can claim it on reload.
     if unload_ok:
         if domain_data := hass.data.get(DOMAIN):
-            if domain_data.get("server_sensor_entry") == entry.entry_id:
-                domain_data.pop("server_sensor_entry")
+            for key in ("server_sensor_entry", "server_binary_sensor_entry"):
+                if domain_data.get(key) == entry.entry_id:
+                    domain_data.pop(key)
 
     return unload_ok
