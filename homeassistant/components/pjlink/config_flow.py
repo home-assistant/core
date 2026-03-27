@@ -30,9 +30,9 @@ def validate_projector_connection(
     host: str, port: int | None, password: str | None
 ) -> str:
     """Validate that we can connect to the projector."""
-    projector = Projector.from_address(host, port)
-    projector.authenticate(password)
-    return projector.get_name()
+    with Projector.from_address(host, port) as projector:
+        projector.authenticate(password)
+        return projector.get_name()
 
 
 class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):

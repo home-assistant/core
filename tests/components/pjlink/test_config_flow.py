@@ -31,6 +31,7 @@ def mock_projector() -> Generator[AsyncMock]:
     ) as mock_projector:
         mock_instance = mock_projector.from_address.return_value
         mock_instance.get_name.return_value = "test name"
+        mock_instance.__enter__.return_value = mock_instance
         yield mock_projector
 
 
