@@ -21,7 +21,11 @@ from tests.components.common import (
 TRIGGER_STATES = [
     *parametrize_trigger_states(
         trigger="valve.closed",
-        target_states=[(ValveState.CLOSED, {ATTR_IS_CLOSED: True})],
+        target_states=[
+            (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
+            (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
+            (ValveState.OPENING, {ATTR_IS_CLOSED: True}),
+        ],
         other_states=[
             (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
             (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
