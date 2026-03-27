@@ -108,6 +108,17 @@ CONFIG_CLEAN_SEGMENTS_2 = {
     }
 }
 
+CONFIG_SEGMENTS_TOPIC = {
+    mqtt.DOMAIN: {
+        vacuum.DOMAIN: {
+            "name": "test",
+            "unique_id": "veryunique",
+            "segments_topic": "vacuum/segments",
+            "clean_segments_command_topic": "vacuum/clean_segment",
+        }
+    }
+}
+
 DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
 
 CONFIG_ALL_SERVICES = help_custom_config(
@@ -503,6 +514,100 @@ async def test_clean_segments_command_update(
     )
 
 
+@pytest.mark.parametrize("hass_config", [CONFIG_SEGMENTS_TOPIC])
+async def test_segments_topic_received(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test segments received from a segments_topic are returned by get_segments."""
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/segments",
+        json.dumps({"1": "Livingroom", "2": "Kitchen"}),
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+    ]
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_SEGMENTS_TOPIC])
+async def test_segments_topic_change_triggers_repair(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test that a repair issue is created when segments_topic reports new segments."""
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        mqtt.DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom", "group": None},
+                {"id": "2", "name": "Kitchen", "group": None},
+            ],
+        },
+    )
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+
+    # Publish segments matching last_seen_segments — no repair issue expected
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/segments",
+        json.dumps({"1": "Livingroom", "2": "Kitchen"}),
+    )
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
+
+    # Publish updated segments that differ from last_seen_segments
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/segments",
+        json.dumps({"1": "Livingroom", "2": "Kitchen", "3": "Diningroom"}),
+    )
+    await hass.async_block_till_done()
+
+    # A repair issue should be created
+    assert len(issue_registry.issues) == 1
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+        {"id": "3", "name": "Diningroom", "group": None},
+    ]
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -571,8 +676,17 @@ async def test_non_unique_segments(
                 DEFAULT_CONFIG,
                 ({"clean_segments_command_topic": "test-topic"},),
             ),
-            "Options `segments` and "
-            "`clean_segments_command_topic` must be defined together",
+            "Options `clean_segments_command_topic` and "
+            "`segments` or `segments_topic` must be defined together",
+        ),
+        (
+            help_custom_config(
+                vacuum.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"segments_topic": "test-topic"},),
+            ),
+            "Options `clean_segments_command_topic` and "
+            "`segments` or `segments_topic` must be defined together",
         ),
         (
             help_custom_config(
@@ -580,8 +694,8 @@ async def test_non_unique_segments(
                 DEFAULT_CONFIG,
                 ({"segments": ["Livingroom"]},),
             ),
-            "Options `segments` and "
-            "`clean_segments_command_topic` must be defined together",
+            "Options `clean_segments_command_topic` and "
+            "`segments` or `segments_topic` must be defined together",
         ),
         (
             help_custom_config(

@@ -144,12 +144,15 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 def validate_clean_area_config(config: ConfigType) -> ConfigType:
     """Check for a valid configuration and check segments."""
-    if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
-        if (CONF_SEGMENTS_TOPIC not in config) and (CONF_SEGMENTS not in config):
-            raise vol.Invalid(
-                f"Options `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` and "
-                f"`{CONF_SEGMENTS}` or `{CONF_SEGMENTS_TOPIC}` must be defined together"
-            )
+    has_segments = bool(config[CONF_SEGMENTS])
+    has_segments_topic = CONF_SEGMENTS_TOPIC in config
+    has_command_topic = CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
+
+    if has_command_topic != (has_segments or has_segments_topic):
+        raise vol.Invalid(
+            f"Options `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` and "
+            f"`{CONF_SEGMENTS}` or `{CONF_SEGMENTS_TOPIC}` must be defined together"
+        )
 
     segments: list[str]
     if segments := config[CONF_SEGMENTS]:
