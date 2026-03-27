@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import assert_entities, setup_platform
+from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_OK
 
 
@@ -114,3 +114,26 @@ async def test_press_charge_on_solar_button(
             blocking=True,
         )
         command.assert_called_once_with(enabled=enabled)
+
+
+async def test_disable_charge_on_solar_preview_removes_registry_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling preview removes charge-on-solar buttons from entity registry."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = await setup_platform(hass, [Platform.BUTTON])
+
+    assert entity_registry.async_get("button.test_enable_charge_on_solar") is not None
+    assert entity_registry.async_get("button.test_disable_charge_on_solar") is not None
+
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, False
+        )
+        await hass.async_block_till_done()
+
+    await reload_platform(hass, entry, [Platform.BUTTON])
+
+    assert entity_registry.async_get("button.test_enable_charge_on_solar") is None
+    assert entity_registry.async_get("button.test_disable_charge_on_solar") is None

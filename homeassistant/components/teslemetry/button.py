@@ -9,9 +9,14 @@ from typing import Any
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
@@ -76,6 +81,21 @@ CHARGE_ON_SOLAR_DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
 )
 
 
+def _async_remove_charge_on_solar_buttons(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> None:
+    """Remove stale charge-on-solar button entities when preview is disabled."""
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if entity_entry.domain == BUTTON_DOMAIN and entity_entry.translation_key in {
+            "enable_charge_on_solar",
+            "disable_charge_on_solar",
+        }:
+            entity_registry.async_remove(entity_entry.entity_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -86,6 +106,8 @@ async def async_setup_entry(
     descriptions = DESCRIPTIONS
     if async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE):
         descriptions += CHARGE_ON_SOLAR_DESCRIPTIONS
+    else:
+        _async_remove_charge_on_solar_buttons(hass, entry)
 
     async_add_entities(
         TeslemetryButtonEntity(vehicle, description)
