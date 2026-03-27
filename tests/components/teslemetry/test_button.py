@@ -26,10 +26,6 @@ async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> 
     await async_update_preview_feature(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True)
 
 
-ENABLE_CHARGE_ON_SOLAR_ENTITY_ID = "button.test_enable_charge_on_solar"
-DISABLE_CHARGE_ON_SOLAR_ENTITY_ID = "button.test_disable_charge_on_solar"
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button(
     hass: HomeAssistant,
@@ -76,8 +72,8 @@ async def test_charge_on_solar_buttons_disabled_by_default(
     """Test charge-on-solar buttons are disabled by default."""
     await setup_platform(hass, [Platform.BUTTON])
 
-    assert hass.states.get(ENABLE_CHARGE_ON_SOLAR_ENTITY_ID) is None
-    assert hass.states.get(DISABLE_CHARGE_ON_SOLAR_ENTITY_ID) is None
+    assert hass.states.get("button.test_enable_charge_on_solar") is None
+    assert hass.states.get("button.test_disable_charge_on_solar") is None
 
 
 async def test_charge_on_solar_buttons_enabled_by_labs(
@@ -87,15 +83,15 @@ async def test_charge_on_solar_buttons_enabled_by_labs(
     await _async_enable_charge_on_solar_preview_feature(hass)
     await setup_platform(hass, [Platform.BUTTON])
 
-    assert hass.states.get(ENABLE_CHARGE_ON_SOLAR_ENTITY_ID) is not None
-    assert hass.states.get(DISABLE_CHARGE_ON_SOLAR_ENTITY_ID) is not None
+    assert hass.states.get("button.test_enable_charge_on_solar") is not None
+    assert hass.states.get("button.test_disable_charge_on_solar") is not None
 
 
 @pytest.mark.parametrize(
     ("entity_id", "enabled"),
     [
-        (ENABLE_CHARGE_ON_SOLAR_ENTITY_ID, True),
-        (DISABLE_CHARGE_ON_SOLAR_ENTITY_ID, False),
+        ("button.test_enable_charge_on_solar", True),
+        ("button.test_disable_charge_on_solar", False),
     ],
 )
 async def test_press_charge_on_solar_button(
