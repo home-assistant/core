@@ -131,7 +131,6 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         """Initialize the Proxmox VM entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._vm_data = vm_data
         self.device_id = vm_data["vmid"]
         self.device_name = vm_data["name"]
 
@@ -187,7 +186,6 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         """Initialize the Proxmox Container entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._container_data = container_data
         self.device_id = container_data["vmid"]
         self.device_name = container_data["name"]
 
