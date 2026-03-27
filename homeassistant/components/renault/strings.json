@@ -276,6 +276,20 @@
         }
       },
       "name": "Update charge schedule"
+    },
+    "charge_start": {
+      "description": "Starts charging on vehicle.",
+      "fields": {
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        },
+        "when": {
+          "description": "Timestamp for charging to start (optional - defaults to now).",
+          "name": "When"
+        }
+      },
+      "name": "Start charging"
     }
   }
 }

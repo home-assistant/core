@@ -165,9 +165,11 @@ class RenaultVehicleProxy:
         return await self._vehicle.set_charge_mode(charge_mode)
 
     @with_error_wrapping
-    async def set_charge_start(self) -> models.KamereonVehicleChargingStartActionData:
+    async def set_charge_start(
+        self, when: datetime | None = None
+    ) -> models.KamereonVehicleChargingStartActionData:
         """Start vehicle charge."""
-        return await self._vehicle.set_charge_start()
+        return await self._vehicle.set_charge_start(when)
 
     @with_error_wrapping
     async def set_charge_stop(self) -> models.KamereonVehicleChargingStartActionData:
