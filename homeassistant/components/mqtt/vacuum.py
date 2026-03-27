@@ -54,6 +54,7 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
 }
 
 CONF_SEGMENTS = "segments"
+CONF_SEGMENTS_TOPIC = "segments_topic"
 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC = "clean_segments_command_topic"
 CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE = "clean_segments_command_template"
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -143,13 +144,13 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 def validate_clean_area_config(config: ConfigType) -> ConfigType:
     """Check for a valid configuration and check segments."""
-    if (config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config) or (
-        not config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
-    ):
-        raise vol.Invalid(
-            f"Options `{CONF_SEGMENTS}` and "
-            f"`{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` must be defined together"
-        )
+    if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
+        if (CONF_SEGMENTS_TOPIC not in config) and (CONF_SEGMENTS not in config):
+            raise vol.Invalid(
+                f"Options `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` and "
+                f"`{CONF_SEGMENTS}` or `{CONF_SEGMENTS_TOPIC}` must be defined together"
+            )
+
     segments: list[str]
     if segments := config[CONF_SEGMENTS]:
         if not config.get(CONF_UNIQUE_ID):
@@ -166,12 +167,19 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
                 )
             unique_segments.add(segment_id)
 
+    if CONF_SEGMENTS_TOPIC in config:
+        if not config.get(CONF_UNIQUE_ID):
+            raise vol.Invalid(
+                f"Option `{CONF_SEGMENTS_TOPIC}` requires `{CONF_UNIQUE_ID}` to be configured"
+            )
+
     return config
 
 
 _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_SEGMENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_SEGMENTS_TOPIC): valid_publish_topic,
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
@@ -269,15 +277,20 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
-        if config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
+
+        if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
-            segments: list[str] = config[CONF_SEGMENTS]
-            self._segments = [
-                Segment(id=segment_id, name=name or segment_id)
-                for segment_id, _, name in [
-                    segment.partition(".") for segment in segments
+
+            if CONF_SEGMENTS_TOPIC in config:
+                self._segments = []
+            if CONF_SEGMENTS in config:
+                segments: list[str] = config[CONF_SEGMENTS]
+                self._segments = [
+                    Segment(id=segment_id, name=name or segment_id)
+                    for segment_id, _, name in [
+                        segment.partition(".") for segment in segments
+                    ]
                 ]
-            ]
             self._clean_segments_command_topic = config[
                 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
             ]
@@ -336,12 +349,27 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._update_state_attributes(payload)
 
     @callback
+    def _segment_message_received(self, msg: ReceiveMessage) -> None:
+        payload = json_loads_object(msg.payload)
+        self._segments = [
+            Segment(id=segment_id, name=str(name or segment_id))
+            for segment_id, name in payload.items()
+        ]
+        self._process_entity_update()
+        self.async_write_ha_state()
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
             {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
+        )
+        self.add_subscription(
+            CONF_SEGMENTS_TOPIC,
+            self._segment_message_received,
+            None,
         )
 
     async def _subscribe_topics(self) -> None:
