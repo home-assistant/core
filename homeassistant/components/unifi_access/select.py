@@ -67,7 +67,8 @@ class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
             DoorLockRuleType.LOCK_NOW,
         ):
             return None
-        return rule_status.type.value
+        value = rule_status.type.value
+        return value if value in self.options else None
 
     @property
     def options(self) -> list[str]:

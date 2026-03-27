@@ -21,6 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from homeassistant.components.unifi_access.const import DOMAIN
+
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -228,7 +230,7 @@ async def test_select_option_raises_on_api_error(
         side_effect=UnifiAccessError("API error")
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             Platform.SELECT,
             "select_option",
@@ -238,3 +240,5 @@ async def test_select_option_raises_on_api_error(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "lock_rule_failed"
+    assert exc_info.value.translation_domain == DOMAIN

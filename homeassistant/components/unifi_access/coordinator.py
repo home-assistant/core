@@ -119,15 +119,16 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             if lock_rule_type == DoorLockRuleType.RESET
             else lock_rule_type
         )
-        self.async_set_updated_data(
-            replace(
-                self.data,
-                door_lock_rules={
-                    **self.data.door_lock_rules,
-                    door_id: new_status,
-                },
+        if self.last_update_success:
+            self.async_set_updated_data(
+                replace(
+                    self.data,
+                    door_lock_rules={
+                        **self.data.door_lock_rules,
+                        door_id: new_status,
+                    },
+                )
             )
-        )
 
     async def _async_setup(self) -> None:
         """Set up the WebSocket connection for push updates."""
