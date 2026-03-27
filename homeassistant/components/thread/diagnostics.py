@@ -151,8 +151,8 @@ async def async_get_config_entry_diagnostics(
             # We know that it is indeed a /64 mesh-local IPv6 NETWORK because Thread spec;
             # However, the "prefixes" field contains no /XX (prefix length) in their entries ATM,
             # so we use a IPv6Address in order to get a "prefixes" entry with no prefix length.
-            prefix_network = IPv6Address(mlp_item.data.ljust(16, b"\x00"))
-            network["prefixes"].add(str(prefix_network))
+            prefix_address = IPv6Address(mlp_item.data.ljust(16, b"\x00"))
+            network["prefixes"].add(str(prefix_address))
 
     # Find all routes currently act that might be thread related, so we can match them to
     # border routers as we process the zeroconf data.
