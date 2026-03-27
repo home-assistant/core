@@ -2,7 +2,7 @@
 #
 # To update, run python3 -m script.hassfest -p docker
 ARG BUILD_FROM
-FROM ${BUILD_FROM}
+FROM ${BUILD_FROM} as deps
 
 LABEL \
     io.hass.type="core" \
@@ -49,6 +49,8 @@ RUN \
     && uv pip install \
         --no-build \
         -r homeassistant/requirements_all.txt
+
+FROM deps
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
