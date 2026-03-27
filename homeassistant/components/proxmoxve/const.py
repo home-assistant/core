@@ -1,5 +1,7 @@
 """Constants for ProxmoxVE."""
 
+from enum import StrEnum
+
 DOMAIN = "proxmoxve"
 CONF_AUTH_METHOD = "auth_method"
 CONF_REALM = "realm"
@@ -33,4 +35,9 @@ TYPE_VM = 0
 TYPE_CONTAINER = 1
 UPDATE_INTERVAL = 60
 
-PERM_POWER = "VM.PowerMgmt"
+
+class ProxmoxPermission(StrEnum):
+    """Proxmox permissions."""
+
+    POWER = "VM.PowerMgmt"
+    SNAPSHOT = "VM.Snapshot"

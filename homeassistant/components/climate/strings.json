@@ -41,6 +41,20 @@
       },
       "name": "Climate-control device is heating"
     },
+    "is_hvac_mode": {
+      "description": "Tests if one or more climate-control devices are set to a specific HVAC mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "hvac_mode": {
+          "description": "The HVAC modes to test for.",
+          "name": "Modes"
+        }
+      },
+      "name": "Climate-control device HVAC mode"
+    },
     "is_off": {
       "description": "Tests if one or more climate-control devices are off.",
       "fields": {
