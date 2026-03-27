@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from eveonline import EveOnlineError
-from eveonline.exceptions import EveOnlineAuthenticationError
 from eveonline.models import (
     CharacterLocation,
     CharacterShip,
@@ -64,14 +63,14 @@ async def test_setup_entry_auth_error(
     setup_credentials: None,
 ) -> None:
     """Test setup failure when authentication fails."""
-    mock_eveonline_client.async_get_server_status.side_effect = (
-        EveOnlineAuthenticationError("Token expired")
+    mock_eveonline_client.async_get_server_status.side_effect = EveOnlineError(
+        "Token expired"
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_network_error(
@@ -169,21 +168,25 @@ async def test_coordinator_auth_error_on_optional_endpoint(
     mock_eveonline_client: AsyncMock,
     setup_credentials: None,
 ) -> None:
-    """Test that auth errors on optional endpoints trigger reauth.
+    """Test that auth errors on optional endpoints degrade gracefully.
 
-    Unlike generic EveOnlineError, EveOnlineAuthenticationError is translated
-    to ConfigEntryAuthFailed in _fetch_optional, triggering a reauth flow.
+    Without a reauth flow, auth errors on optional endpoints are treated
+    like any other error: the data is set to None and the sensor becomes
+    unavailable.
     """
     mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
-    mock_eveonline_client.async_get_wallet_balance.side_effect = (
-        EveOnlineAuthenticationError("Token revoked")
+    mock_eveonline_client.async_get_wallet_balance.side_effect = EveOnlineError(
+        "Token revoked"
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Auth errors become ConfigEntryAuthFailed → SETUP_ERROR + reauth
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.test_capsuleer_wallet_balance")
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_coordinator_list_endpoint_error(
@@ -243,16 +246,20 @@ async def test_coordinator_list_endpoint_auth_error(
     mock_eveonline_client: AsyncMock,
     setup_credentials: None,
 ) -> None:
-    """Test that auth errors on list endpoints trigger reauth."""
+    """Test that auth errors on list endpoints degrade gracefully."""
     mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
-    mock_eveonline_client.async_get_skill_queue.side_effect = (
-        EveOnlineAuthenticationError("Token revoked")
+    mock_eveonline_client.async_get_skill_queue.side_effect = EveOnlineError(
+        "Token revoked"
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.test_capsuleer_skill_queue")
+    assert state is not None
+    assert state.state == "0"
 
 
 async def test_coordinator_resolves_names(
