@@ -52,7 +52,7 @@ def saunabox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My sauna")
     type(product).model = PropertyMock(return_value="saunaBox")
-    return (feature, "climate.saunabox_thermostat")
+    return (feature, "climate.my_sauna_saunabox_thermostat")
 
 
 @pytest.fixture(name="thermobox")
@@ -75,7 +75,7 @@ def thermobox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My thermo")
     type(product).model = PropertyMock(return_value="thermoBox")
-    return (feature, "climate.thermobox_thermostat")
+    return (feature, "climate.my_thermo_thermobox_thermostat")
 
 
 async def test_init(
@@ -88,7 +88,7 @@ async def test_init(
     assert entry.unique_id == "BleBox-saunaBox-1afe34db9437-thermostat"
 
     state = hass.states.get(entity_id)
-    assert state.name == "saunaBox-thermostat"
+    assert state.name == "My sauna saunaBox-thermostat"
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
