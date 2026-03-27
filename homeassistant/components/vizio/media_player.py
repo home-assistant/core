@@ -250,7 +250,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self._handle_coordinator_update()
 
         async def _async_write_state(*_: Any) -> None:
-            self.async_write_ha_state()
+            self._handle_coordinator_update()
 
         self.async_on_remove(self._config_entry.add_update_listener(_async_write_state))
 
