@@ -58,22 +58,17 @@ def mock_api() -> Generator[MagicMock]:
             f"gpe_price_{hour:02d}_tomorrow": 25.0 + (hour * 1.0) for hour in range(24)
         }
 
-        # 15-minute resolution keys for today (gpe_price_HH_MM).
-        # Price formula: 20.0 + hour + minute/100 Cent/kWh so each slot is
-        # distinct and predictable in tests.
         today_15min = {
             f"gpe_price_{hour:02d}_{minute:02d}": 20.0 + hour + minute / 100
             for hour in range(24)
             for minute in (0, 15, 30, 45)
         }
-        # 15-minute resolution keys for tomorrow (gpe_price_HH_MM_tomorrow).
         tomorrow_15min = {
             f"gpe_price_{hour:02d}_{minute:02d}_tomorrow": 25.0 + hour + minute / 100
             for hour in range(24)
             for minute in (0, 15, 30, 45)
         }
 
-        # Combine all prices
         all_prices = {
             **today_prices,
             **tomorrow_prices,

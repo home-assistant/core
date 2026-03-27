@@ -18,7 +18,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
-from .coordinator import GreenPlanetEnergyUpdateCoordinator
 
 SERVICE_GET_PRICES = "get_prices"
 ATTR_HOURS = "hours"
@@ -67,26 +66,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_loaded",
             )
-        if len(loaded_entries) > 1:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="multiple_config_entries",
-            )
 
         entry = loaded_entries[0]
-        coordinator: GreenPlanetEnergyUpdateCoordinator = entry.runtime_data
-        data = coordinator.data
+        data = entry.runtime_data.data
         hours: float = call.data[ATTR_HOURS]
 
         now = dt_util.now()
-        # Snap back to the start of the current 15-minute slot.
         slot_start = now.replace(
             minute=(now.minute // 15) * 15, second=0, microsecond=0
         )
         end_time = slot_start + timedelta(hours=hours)
-
-        today_date = slot_start.date()
-        tomorrow_date = (slot_start + timedelta(days=1)).date()
 
         slots: list[JsonValueType] = []
         current = slot_start
@@ -94,14 +83,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
             slot_end = current + timedelta(minutes=15)
             h = current.hour
             m = current.minute
-            d = current.date()
 
-            if d == today_date:
+            if current.date() == slot_start.date():
                 key = f"gpe_price_{h:02d}_{m:02d}"
-            elif d == tomorrow_date:
+            elif current.date() == (slot_start + timedelta(days=1)).date():
                 key = f"gpe_price_{h:02d}_{m:02d}_tomorrow"
             else:
-                # Beyond tomorrow — no data available, skip silently.
                 current = slot_end
                 continue
 
