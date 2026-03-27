@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "voip_hook_status": {
+        "default": "mdi:phone",
+        "state": {
+          "offhook": "mdi:phone-in-talk"
+        }
+      }
+    }
+  }
+}
