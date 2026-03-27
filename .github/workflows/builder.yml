@@ -190,8 +190,7 @@ jobs:
             BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
           cache-gha: false
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          cosign-base-identity: "https://github.com/home-assistant/docker/.*"
-          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          cosign: false
           push: false
           load: true
           target: deps
