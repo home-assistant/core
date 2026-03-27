@@ -132,7 +132,7 @@ async def test_service_set_ac_start_with_date(
     assert mock_action.mock_calls[0][1] == (temperature, when)
 
 
-async def test_service_start_charge_simple(
+async def test_service_charge_start_simple(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Test that service invokes renault_api with correct data."""
