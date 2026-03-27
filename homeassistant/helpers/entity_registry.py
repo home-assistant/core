@@ -848,7 +848,24 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for entity in data["entities"]:
                     entity["object_id_base"] = entity["original_name"]
 
-            # Version 1.21 has been reverted.
+            if old_minor_version == 21:
+                # Version 1.21 has been reverted.
+                # We try to preserve entity names assigned by users since the initial
+                # migration to that version.
+                device_registry = dr.async_get(self.hass)
+
+                for entity in data["entities"]:
+                    old_name = entity["name"]
+                    name = entity.pop("name_v2")
+                    if (
+                        (name != old_name)
+                        and (device_id := entity["device_id"]) is not None
+                        and (device := device_registry.async_get(device_id)) is not None
+                        and (device_name := device.name_by_user or device.name)
+                    ):
+                        name = f"{device_name} {name}"
+
+                    entity["name"] = name
 
             if old_minor_version < 22:
                 # Version 1.22 adds support for COMPUTED_NAME in aliases and starts preserving
