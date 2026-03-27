@@ -144,8 +144,8 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         translation_key="industry_jobs",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="jobs",
-        value_fn=lambda data: len(
-            [j for j in data.industry_jobs if j.status == "active"]
+        value_fn=lambda data: sum(
+            1 for j in data.industry_jobs if j.status == "active"
         ),
     ),
     EveOnlineSensorDescription(
@@ -162,16 +162,14 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         translation_key="sell_orders",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="orders",
-        value_fn=lambda data: len(
-            [o for o in data.market_orders if not o.is_buy_order]
-        ),
+        value_fn=lambda data: sum(1 for o in data.market_orders if not o.is_buy_order),
     ),
     EveOnlineSensorDescription(
         key="buy_orders",
         translation_key="buy_orders",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="orders",
-        value_fn=lambda data: len([o for o in data.market_orders if o.is_buy_order]),
+        value_fn=lambda data: sum(1 for o in data.market_orders if o.is_buy_order),
     ),
     EveOnlineSensorDescription(
         key="jump_fatigue",
